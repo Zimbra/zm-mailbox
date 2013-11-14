@@ -434,8 +434,9 @@ public class DefangFilter extends DefaultFilter {
     // matches functions (like url(), expression(), etc), except rgb()
     private static final Pattern STYLE_UNWANTED_FUNC =
             Pattern.compile(LC.defang_style_unwanted_func.value(), Pattern.CASE_INSENSITIVE);
-    private static final Pattern STYLE_UNWANTED_IMPORT = Pattern.compile(LC.defang_style_import.value(), Pattern.CASE_INSENSITIVE);
-
+    private static final Pattern STYLE_UNWANTED_IMPORT = Pattern.compile(
+        "@import(\\s)*((\'|\")?(\\s)*(http://|https://)?([^\\s;]*)(\\s)*(\'|\")?(\\s)*;?)",
+        Pattern.CASE_INSENSITIVE);
 
     private static String sanitizeStyleValue(String value) {
         // remove comments
