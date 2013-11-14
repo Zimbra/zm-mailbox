@@ -2199,11 +2199,13 @@ public final class ToXML {
                 method = Invite.lookupMethod(invCi.getMethod());
             }
             Invite invite = invCi;
+            ItemId calendarItemId = info.getCalendarItemId();
             if (info.calItemCreated()) {
                 try {
-                    calItem = mbox.getCalendarItemById(octxt, info.getCalendarItemId());
+                    calItem = mbox.getCalendarItemById(octxt, calendarItemId);
                 } catch (MailServiceException.NoSuchItemException e) {
-                    // ignore
+                    // Calendar item has been deleted. Bug 84877 - don't include stale references to it in SOAP response
+                    calendarItemId = null;
                 } catch (ServiceException e) {
                     // eat PERM_DENIED
                     if (e.getCode() != ServiceException.PERM_DENIED) {
@@ -2278,7 +2280,7 @@ public final class ToXML {
             if (invite != null) {
                 setCalendarItemType(ie, invite.getItemType());
                 encodeTimeZoneMap(ie, invite.getTimeZoneMap());
-                encodeInviteComponent(ie, ifmt, octxt, calItem, info.getCalendarItemId(), invite, fields, neuter);
+                encodeInviteComponent(ie, ifmt, octxt, calItem, calendarItemId, invite, fields, neuter);
                 ICalTok invMethod = Invite.lookupMethod(invite.getMethod());
                 if (ICalTok.REQUEST.equals(invMethod) || ICalTok.PUBLISH.equals(invMethod)) {
                     InviteChanges invChanges = info.getInviteChanges();
