@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -2156,11 +2156,13 @@ public final class ToXML {
                 method = Invite.lookupMethod(invCi.getMethod());
             }
             Invite invite = invCi;
+            ItemId calendarItemId = info.getCalendarItemId();
             if (info.calItemCreated()) {
                 try {
-                    calItem = mbox.getCalendarItemById(octxt, info.getCalendarItemId());
+                    calItem = mbox.getCalendarItemById(octxt, calendarItemId);
                 } catch (MailServiceException.NoSuchItemException e) {
-                    // ignore
+                    // Calendar item has been deleted. Bug 84877 - don't include stale references to it in SOAP response
+                    calendarItemId = null;
                 } catch (ServiceException e) {
                     // eat PERM_DENIED
                     if (e.getCode() != ServiceException.PERM_DENIED) {
@@ -2235,7 +2237,7 @@ public final class ToXML {
             if (invite != null) {
                 setCalendarItemType(ie, invite.getItemType());
                 encodeTimeZoneMap(ie, invite.getTimeZoneMap());
-                encodeInviteComponent(ie, ifmt, octxt, calItem, info.getCalendarItemId(), invite, fields, neuter);
+                encodeInviteComponent(ie, ifmt, octxt, calItem, calendarItemId, invite, fields, neuter);
                 ICalTok invMethod = Invite.lookupMethod(invite.getMethod());
                 if (ICalTok.REQUEST.equals(invMethod) || ICalTok.PUBLISH.equals(invMethod)) {
                     InviteChanges invChanges = info.getInviteChanges();
