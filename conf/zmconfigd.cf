@@ -333,7 +333,9 @@ SECTION ldap
 	LOCAL ldap_common_toolthreads
 	LOCAL ldap_common_writetimeout
 	LOCAL ldap_db_maxsize
+	LOCAL ldap_db_envflags
 	LOCAL ldap_accesslog_maxsize
+	LOCAL ldap_accesslog_envflags
 	LOCAL ldap_overlay_syncprov_checkpoint
 	LOCAL ldap_overlay_accesslog_logpurge
 	LDAP ldap_common_loglevel LOCAL ldap_common_loglevel
@@ -342,7 +344,9 @@ SECTION ldap
 	LDAP ldap_common_toolthreads LOCAL ldap_common_toolthreads
 	LDAP ldap_common_writetimeout LOCAL ldap_common_writetimeout
 	LDAP ldap_db_maxsize LOCAL ldap_db_maxsize
+	LDAP ldap_db_envflags LOCAL ldap_db_envflags
 	LDAP ldap_accesslog_maxsize LOCAL ldap_accesslog_maxsize
+	LDAP ldap_accesslog_envflags LOCAL ldap_accesslog_envflags
 	LDAP ldap_overlay_syncprov_checkpoint LOCAL ldap_overlay_syncprov_checkpoint
 	LDAP ldap_overlay_accesslog_logpurge LOCAL ldap_overlay_accesslog_logpurge
 
