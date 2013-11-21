@@ -22073,6 +22073,78 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
+     * Whether to permit syncing shared contact folders
+     *
+     * @return zimbraMobileShareContactEnabled, or false if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1570)
+    public boolean isMobileShareContactEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraMobileShareContactEnabled, false);
+    }
+
+    /**
+     * Whether to permit syncing shared contact folders
+     *
+     * @param zimbraMobileShareContactEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1570)
+    public void setMobileShareContactEnabled(boolean zimbraMobileShareContactEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileShareContactEnabled, zimbraMobileShareContactEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to permit syncing shared contact folders
+     *
+     * @param zimbraMobileShareContactEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1570)
+    public Map<String,Object> setMobileShareContactEnabled(boolean zimbraMobileShareContactEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileShareContactEnabled, zimbraMobileShareContactEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether to permit syncing shared contact folders
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1570)
+    public void unsetMobileShareContactEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileShareContactEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to permit syncing shared contact folders
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1570)
+    public Map<String,Object> unsetMobileShareContactEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileShareContactEnabled, "");
+        return attrs;
+    }
+
+    /**
      * indicates whether the application can forward original email as RFC
      * 822 .eml attachment. Note: this setting is applicable only to the
      * devices using activesync smart forward for forwarding email messages.

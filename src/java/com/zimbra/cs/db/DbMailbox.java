@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -408,8 +408,9 @@ public final class DbMailbox {
             Collections.reverse(tables);
 
             for (String tableName : tables) {
-                if (tableName == null)
+                if (tableName == null) {
                     continue;
+                }
 
                 PreparedStatement stmt = null;
                 try {
@@ -443,8 +444,9 @@ public final class DbMailbox {
     }
 
     public static void renameMailbox(Mailbox mbox, String newName) throws ServiceException {
-        if (DebugConfig.externalMailboxDirectory)
+        if (DebugConfig.externalMailboxDirectory) {
             return;
+        }
 
         int mailboxId = mbox.getId();
         ZimbraLog.mailbox.info("Renaming email/comment of mailbox " + mailboxId + " to " + newName);
@@ -630,6 +632,27 @@ public final class DbMailbox {
             }
         } catch (SQLException e) {
             throw ServiceException.FAILURE("setting metadata section '" + section + "' in mailbox " + mbox.getId(), e);
+        } finally {
+            DbPool.closeStatement(stmt);
+        }
+    }
+
+    public static void deleteConfig(Mailbox mbox, String sectionPart) throws ServiceException {
+        DbConnection conn = mbox.getOperationConnection();
+        PreparedStatement stmt = null;
+        try {
+            stmt = conn.prepareStatement("DELETE FROM " + qualifyZimbraTableName(mbox, TABLE_METADATA) +
+                    " WHERE " + DbMailItem.IN_THIS_MAILBOX_AND + "section = ?");
+            int pos = 1;
+            if (!DebugConfig.disableMailboxGroups) {
+                stmt.setInt(pos++, mbox.getId());
+            }
+            stmt.setString(pos++, sectionPart);
+            stmt.executeUpdate();
+            stmt.close();
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE(
+                    "delete metadata sections like '" + sectionPart + "' in mailbox " + mbox.getId(), e);
         } finally {
             DbPool.closeStatement(stmt);
         }
@@ -851,8 +874,9 @@ public final class DbMailbox {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
-            if (DebugConfig.disableMailboxGroups)
+            if (DebugConfig.disableMailboxGroups) {
                 Db.getInstance().registerDatabaseInterest(conn, getDatabaseName(mailboxId));
+            }
 
             // note that if groups are disabled, mailboxId == groupId
             stmt = conn.prepareStatement(
@@ -997,8 +1021,9 @@ public final class DbMailbox {
     }
 
     private static void addToDeletedAccount(DbConnection conn, Mailbox mbox) throws ServiceException {
-        if (DebugConfig.externalMailboxDirectory)
+        if (DebugConfig.externalMailboxDirectory) {
             return;
+        }
 
         // Get email address for mailbox by querying the mailbox table.  We can't get it by
         // calling mbox.getAccount().getName() because the account was already deleted from LDAP.

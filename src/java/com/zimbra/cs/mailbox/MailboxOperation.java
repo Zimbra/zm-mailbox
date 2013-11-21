@@ -107,7 +107,8 @@ public enum MailboxOperation {
     RefreshMountpoint(89),
     ExpireAccess(90),
     SetDisableActiveSync(91),
-    SetWebOfflineSyncDays(92);
+    SetWebOfflineSyncDays(92),
+    DeleteConfig(93);
 
     private MailboxOperation(int c) {
         code = c;

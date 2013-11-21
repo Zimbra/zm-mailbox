@@ -209,10 +209,12 @@ public class DbMailItem {
     }
 
     private static void checkNamingConstraint(Mailbox mbox, int folderId, String name, int modifiedItemId) throws ServiceException {
-        if (name == null || name.equals(""))
+        if (name == null || name.equals("")) {
             return;
-        if (Db.supports(Db.Capability.UNIQUE_NAME_INDEX) && !Db.supports(Db.Capability.CASE_SENSITIVE_COMPARISON))
+        }
+        if (Db.supports(Db.Capability.UNIQUE_NAME_INDEX) && !Db.supports(Db.Capability.CASE_SENSITIVE_COMPARISON)) {
             return;
+        }
 
         DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
@@ -226,8 +228,9 @@ public class DbMailItem {
             stmt.setInt(pos++, modifiedItemId);
             stmt.setString(pos++, StringUtil.trimTrailingSpaces(name));
             rs = stmt.executeQuery();
-            if (!rs.next() || rs.getInt(1) > 0)
+            if (!rs.next() || rs.getInt(1) > 0) {
                 throw MailServiceException.ALREADY_EXISTS(name);
+            }
         } catch (SQLException e) {
             throw ServiceException.FAILURE("checking for naming conflicts", e);
         } finally {
@@ -324,8 +327,9 @@ public class DbMailItem {
             pos = setMailboxId(stmt, mbox, pos);
             stmt.setInt(pos++, calItem.getId());
             int num = stmt.executeUpdate();
-            if (num != 1)
+            if (num != 1) {
                 throw ServiceException.FAILURE("failed to create object", null);
+            }
         } catch (SQLException e) {
             // catch item_id uniqueness constraint violation and return failure
             if (Db.errorMatches(e, Db.Error.DUPLICATE_ROW)) {
@@ -502,8 +506,9 @@ public class DbMailItem {
     }
 
     public static void purgeRevisions(MailItem item, int revision, boolean includeOlderRevisions) throws ServiceException {
-        if (revision <= 0)
+        if (revision <= 0) {
             return;
+        }
 
         Mailbox mbox = item.getMailbox();
         DbConnection conn = mbox.getOperationConnection();
@@ -588,18 +593,20 @@ public class DbMailItem {
             stmt.executeUpdate();
         } catch (SQLException e) {
             // catch item_id uniqueness constraint violation and return failure
-            if (Db.errorMatches(e, Db.Error.DUPLICATE_ROW))
+            if (Db.errorMatches(e, Db.Error.DUPLICATE_ROW)) {
                 throw MailServiceException.ALREADY_EXISTS(item.getName(), e);
-            else
+            } else {
                 throw ServiceException.FAILURE("writing new folder data for item " + item.getId(), e);
+            }
         } finally {
             DbPool.closeStatement(stmt);
         }
     }
 
     public static void setFolder(List<Message> msgs, Folder folder) throws ServiceException {
-        if (msgs == null || msgs.isEmpty())
+        if (msgs == null || msgs.isEmpty()) {
             return;
+        }
         Mailbox mbox = folder.getMailbox();
         DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
@@ -637,8 +644,9 @@ public class DbMailItem {
                 stmt.setInt(pos++, mbox.getOperationChangeID());
                 stmt.setInt(pos++, mbox.getOperationTimestamp());
                 pos = setMailboxId(stmt, mbox, pos);
-                for (int index = i; index < i + count; index++)
+                for (int index = i; index < i + count; index++) {
                     stmt.setInt(pos++, msgs.get(index).getId());
+                }
                 stmt.executeUpdate();
                 stmt.close();
                 stmt = null;
@@ -820,8 +828,9 @@ public class DbMailItem {
     }
 
     public static void setParent(MailItem[] children, MailItem parent) throws ServiceException {
-        if (children == null || children.length == 0)
+        if (children == null || children.length == 0) {
             return;
+        }
         Mailbox mbox = children[0].getMailbox();
         if (parent != null && mbox != parent.getMailbox()) {
             throw MailServiceException.WRONG_MAILBOX();
@@ -835,15 +844,17 @@ public class DbMailItem {
                             " SET parent_id = ?, mod_metadata = ?, change_date = ?" +
                             " WHERE " + IN_THIS_MAILBOX_AND + DbUtil.whereIn("id", count));
                 int pos = 1;
-                if (parent == null || parent instanceof VirtualConversation)
+                if (parent == null || parent instanceof VirtualConversation) {
                     stmt.setNull(pos++, Types.INTEGER);
-                else
+                } else {
                     stmt.setInt(pos++, parent.getId());
+                }
                 stmt.setInt(pos++, mbox.getOperationChangeID());
                 stmt.setInt(pos++, mbox.getOperationTimestamp());
                 pos = setMailboxId(stmt, mbox, pos);
-                for (int index = i; index < i + count; index++)
+                for (int index = i; index < i + count; index++) {
                     stmt.setInt(pos++, children[index].getId());
+                }
                 stmt.executeUpdate();
                 stmt.close();
                 stmt = null;
@@ -856,8 +867,9 @@ public class DbMailItem {
     }
 
     public static void reparentChildren(MailItem oldParent, MailItem newParent) throws ServiceException {
-        if (oldParent == newParent)
+        if (oldParent == newParent) {
             return;
+        }
         Mailbox mbox = oldParent.getMailbox();
         if (mbox != newParent.getMailbox()) {
             throw MailServiceException.WRONG_MAILBOX();
@@ -926,10 +938,11 @@ public class DbMailItem {
             stmt.setInt(pos++, item.getUnreadCount());
             stmt.setString(pos++, checkMetadataLength(metadata.toString()));
             stmt.setInt(pos++, item.getModifiedSequence());
-            if (item.getChangeDate() > 0)
+            if (item.getChangeDate() > 0) {
                 stmt.setInt(pos++, (int) (item.getChangeDate() / 1000));
-            else
+            } else {
                 stmt.setNull(pos++, Types.INTEGER);
+            }
             stmt.setInt(pos++, item.getSavedSequence());
             pos = setMailboxId(stmt, mbox, pos);
             stmt.setInt(pos++, item.getId());
@@ -1277,8 +1290,9 @@ public class DbMailItem {
 
     public static void alterUnread(Mailbox mbox, List<Integer> itemIDs, boolean unread)
     throws ServiceException {
-        if (itemIDs == null || itemIDs.isEmpty())
+        if (itemIDs == null || itemIDs.isEmpty()) {
             return;
+        }
 
         DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
@@ -1358,8 +1372,9 @@ public class DbMailItem {
                 while (rs.next()) {
                     int convId = rs.getInt(1), count = rs.getInt(2);
                     List<Integer> targets = counts.get(count);
-                    if (targets == null)
+                    if (targets == null) {
                         counts.put(count, targets = new ArrayList<Integer>());
+                    }
                     targets.add(convId);
                 }
                 rs.close();
@@ -1378,8 +1393,9 @@ public class DbMailItem {
                         stmt.setInt(pos++, mbox.getOperationChangeID());
                         stmt.setInt(pos++, mbox.getOperationTimestamp());
                         pos = setMailboxId(stmt, mbox, pos);
-                        for (int index = i; index < i + count; index++)
+                        for (int index = i; index < i + count; index++) {
                             stmt.setInt(pos++, convIDs.get(index));
+                        }
                         stmt.executeUpdate();
                         stmt.close();
                     }
@@ -1502,12 +1518,14 @@ public class DbMailItem {
                             " WHERE " + IN_THIS_MAILBOX_AND + DbUtil.whereIn("id", count) + " AND size <= 0");
                 int pos = 1;
                 pos = setMailboxId(stmt, mbox, pos);
-                for (int index = i; index < i + count; index++)
+                for (int index = i; index < i + count; index++) {
                     stmt.setInt(pos++, it.next());
+                }
                 rs = stmt.executeQuery();
 
-                while (rs.next())
+                while (rs.next()) {
                     purgedConvs.add(rs.getInt(1));
+                }
                 rs.close(); rs = null;
                 stmt.close(); stmt = null;
             }
@@ -1529,8 +1547,9 @@ public class DbMailItem {
      */
     public static void delete(Mailbox mbox, MailItem item, PendingDelete info, boolean fromDumpster)
     throws ServiceException {
-        if (item instanceof Tag)
+        if (item instanceof Tag) {
             return;
+        }
         List<Integer> allIds = info.itemIds.getAllIds();
         if (item != null) {
             allIds.remove(Integer.valueOf(item.getId()));
@@ -1549,10 +1568,12 @@ public class DbMailItem {
         delete(mbox, allIds, fromDumpster);
         // then delete the folders
         delete(mbox, allFolders, fromDumpster);
-        if (item instanceof VirtualConversation)
+        if (item instanceof VirtualConversation) {
             return;
-        if (item instanceof Conversation && info.incomplete)
+        }
+        if (item instanceof Conversation && info.incomplete) {
             return;
+        }
         // delete the item itself
         if (item != null) {
             delete(mbox, Collections.singletonList(item.getId()), fromDumpster);
@@ -1565,30 +1586,34 @@ public class DbMailItem {
      */
     public static void delete(Mailbox mbox, Collection<Integer> ids, boolean fromDumpster) throws ServiceException {
         // trim out any non-persisted items
-        if (ids == null || ids.size() == 0)
+        if (ids == null || ids.size() == 0) {
             return;
+        }
         List<Integer> targets = new ArrayList<Integer>();
         for (int id : ids) {
             if (id > 0) {
                 targets.add(id);
             }
         }
-        if (targets.isEmpty())
+        if (targets.isEmpty()) {
             return;
+        }
 
         DbConnection conn = mbox.getOperationConnection();
         for (int offset = 0; offset < targets.size(); offset += Db.getINClauseBatchSize()) {
             PreparedStatement stmt = null;
             try {
                 int count = Math.min(Db.getINClauseBatchSize(), targets.size() - offset);
-                if (!fromDumpster && mbox.dumpsterEnabled())
+                if (!fromDumpster && mbox.dumpsterEnabled()) {
                     copyToDumpster(conn, mbox, targets, offset, count);
+                }
                 stmt = conn.prepareStatement("DELETE FROM " + getMailItemTableName(mbox, fromDumpster) +
                             " WHERE " + IN_THIS_MAILBOX_AND + DbUtil.whereIn("id", count));
                 int pos = 1;
                 pos = setMailboxId(stmt, mbox, pos);
-                for (int i = offset; i < offset + count; ++i)
+                for (int i = offset; i < offset + count; ++i) {
                     stmt.setInt(pos++, targets.get(i));
+                }
                 stmt.executeUpdate();
             } catch (SQLException e) {
                 throw ServiceException.FAILURE("deleting " + ids.size() + " item(s): " + getIdListForLogging(ids), e);
@@ -1644,8 +1669,9 @@ public class DbMailItem {
             int pos = 1;
             miCopyStmt.setInt(pos++, mbox.getOperationTimestamp());
             pos = setMailboxId(miCopyStmt, mbox, pos);
-            for (int i = offset; i < offset + count; ++i)
+            for (int i = offset; i < offset + count; ++i) {
                 miCopyStmt.setInt(pos++, ids.get(i));
+            }
             miCopyStmt.executeUpdate();
         } finally {
             DbPool.closeStatement(miCopyStmt);
@@ -1660,8 +1686,9 @@ public class DbMailItem {
             int pos = 1;
             pos = setMailboxId(ciCopyStmt, mbox, pos);
             pos = setMailboxId(ciCopyStmt, mbox, pos);
-            for (int i = offset; i < offset + count; ++i)
+            for (int i = offset; i < offset + count; ++i) {
                 ciCopyStmt.setInt(pos++, ids.get(i));
+            }
             ciCopyStmt.executeUpdate();
         } finally {
             DbPool.closeStatement(ciCopyStmt);
@@ -1676,8 +1703,9 @@ public class DbMailItem {
             int pos = 1;
             pos = setMailboxId(revCopyStmt, mbox, pos);
             pos = setMailboxId(revCopyStmt, mbox, pos);
-            for (int i = offset; i < offset + count; ++i)
+            for (int i = offset; i < offset + count; ++i) {
                 revCopyStmt.setInt(pos++, ids.get(i));
+            }
             revCopyStmt.executeUpdate();
         } finally {
             DbPool.closeStatement(revCopyStmt);
@@ -1685,8 +1713,9 @@ public class DbMailItem {
     }
 
     public static void writeTombstones(Mailbox mbox, TypedIdList tombstones) throws ServiceException {
-        if (tombstones == null || tombstones.isEmpty())
+        if (tombstones == null || tombstones.isEmpty()) {
             return;
+        }
 
         for (Map.Entry<MailItem.Type, List<TypedIdList.ItemInfo>> entry : tombstones) {
             MailItem.Type type = entry.getKey();
@@ -1716,8 +1745,9 @@ public class DbMailItem {
     }
 
     private static void writeTombstone(Mailbox mbox, MailItem.Type type, String row) throws ServiceException {
-        if (Strings.isNullOrEmpty(row))
+        if (Strings.isNullOrEmpty(row)) {
             return;
+        }
 
         DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
@@ -1759,8 +1789,9 @@ public class DbMailItem {
             while (rs.next()) {
                 MailItem.Type type = MailItem.Type.of(rs.getByte(1));
                 String row = rs.getString(2);
-                if (row == null || row.equals(""))
+                if (row == null || row.equals("")) {
                     continue;
+                }
 
                 // the list of tombstones is comma-delimited
                 for (String stone : row.split(",")) {
@@ -2362,8 +2393,9 @@ public class DbMailItem {
             }
         }
 
-        if (!conversations.isEmpty())
+        if (!conversations.isEmpty()) {
             completeConversations(mbox, conn, conversations);
+        }
         return result;
     }
 
@@ -2435,8 +2467,9 @@ public class DbMailItem {
             Set<Integer> convIds = Sets.newHashSetWithExpectedSize(3);
             while (rs.next()) {
                 int id = rs.getInt(CI_ID);
-                if (convIds.contains(id))
+                if (convIds.contains(id)) {
                     continue;
+                }
 
                 UnderlyingData data = constructItem(rs);
                 if (data.type == MailItem.Type.CONVERSATION.toByte()) {
@@ -2503,8 +2536,9 @@ public class DbMailItem {
 
     private static void completeConversations(Mailbox mbox, DbConnection conn, List<UnderlyingData> convData)
     throws ServiceException {
-        if (convData == null || convData.isEmpty())
+        if (convData == null || convData.isEmpty()) {
             return;
+        }
 
         for (UnderlyingData data : convData) {
             if (data.type != MailItem.Type.CONVERSATION.toByte()) {
@@ -2636,7 +2670,9 @@ public class DbMailItem {
         ResultSet rs = null;
         HashSet<Integer> outdatedIds= new HashSet<Integer>();
 
-        if(before<=0)  return outdatedIds;
+        if (before <= 0) {
+            return outdatedIds;
+        }
 
         try {
             StringBuilder constraint = new StringBuilder();
@@ -2934,8 +2970,9 @@ public class DbMailItem {
                     " WHERE mi.id = rev.item_id AND " + DbUtil.whereIn("mi.id", versioned.size()) +
                     (DebugConfig.disableMailboxGroups ? "" : " AND mi.mailbox_id = ? AND mi.mailbox_id = rev.mailbox_id"));
             int pos = 1;
-            for (int vid : versioned)
+            for (int vid : versioned) {
                 stmt.setInt(pos++, vid);
+            }
             pos = setMailboxId(stmt, mbox, pos);
             rs = stmt.executeQuery();
 
@@ -3031,8 +3068,9 @@ public class DbMailItem {
     }
 
     public static void resolveSharedIndex(Mailbox mbox, PendingDelete info) throws ServiceException {
-        if (info.sharedIndex == null || info.sharedIndex.isEmpty())
+        if (info.sharedIndex == null || info.sharedIndex.isEmpty()) {
             return;
+        }
         List<Integer> indexIDs = new ArrayList<Integer>(info.sharedIndex);
 
         DbConnection conn = mbox.getOperationConnection();
@@ -3045,8 +3083,9 @@ public class DbMailItem {
                             " WHERE " + IN_THIS_MAILBOX_AND + DbUtil.whereIn("index_id", count));
                 int pos = 1;
                 pos = setMailboxId(stmt, mbox, pos);
-                for (int index = i; index < i + count; index++)
+                for (int index = i; index < i + count; index++) {
                     stmt.setInt(pos++, indexIDs.get(index));
+                }
                 rs = stmt.executeQuery();
                 while (rs.next()) {
                     info.sharedIndex.remove(rs.getInt(1));
@@ -3192,8 +3231,9 @@ public class DbMailItem {
             stmt.setInt(pos++, item.getId());
             rs = stmt.executeQuery();
 
-            while (rs.next())
+            while (rs.next()) {
                 dlist.add(constructRevision(rs, item, fromDumpster));
+            }
             return dlist;
         } catch (SQLException e) {
             throw ServiceException.FAILURE("getting old revisions for item: " + item.getId(), e);
@@ -3227,8 +3267,9 @@ public class DbMailItem {
             stmt.setInt(pos++, folder.getId());
             rs = stmt.executeQuery();
 
-            while (rs.next())
+            while (rs.next()) {
                 result.add(rs.getInt(1));
+            }
             return result;
         } catch (SQLException e) {
             throw ServiceException.FAILURE("fetching item list for folder " + folder.getId(), e);
@@ -3574,8 +3615,9 @@ public class DbMailItem {
             pos = setMailboxId(stmt, mbox, pos);
             rs = stmt.executeQuery();
 
-            if (rs.next())
+            if (rs.next()) {
                 return constructItem(rs);
+            }
             return null;
         } catch (SQLException e) {
             throw ServiceException.FAILURE("fetching calendar items for mailbox " + mbox.getId(), e);
@@ -3603,8 +3645,9 @@ public class DbMailItem {
             rs = stmt.executeQuery();
 
             List<UnderlyingData> result = new ArrayList<UnderlyingData>();
-            while (rs.next())
+            while (rs.next()) {
                 result.add(constructItem(rs));
+            }
             return result;
         } catch (SQLException e) {
             throw ServiceException.FAILURE("fetching calendar items for mailbox " + mbox.getId(), e);
@@ -3629,11 +3672,13 @@ public class DbMailItem {
                         " AND " + DbUtil.whereIn("ci.uid", count));
                 int pos = 1;
                 pos = setMailboxId(stmt, mbox, pos);
-                for (int index = i; index < i + count; index++)
+                for (int index = i; index < i + count; index++) {
                     stmt.setString(pos++, uids.get(index));
+                }
                 rs = stmt.executeQuery();
-                while (rs.next())
+                while (rs.next()) {
                     result.add(constructItem(rs));
+                }
                 stmt.close();
                 stmt = null;
             }
@@ -3689,8 +3734,9 @@ public class DbMailItem {
         String typeConstraint = type == MailItem.Type.UNKNOWN ? "type IN " + CALENDAR_TYPES : typeIn(type);
 
         String excludeFolderPart = "";
-        if (excludeFolderIds != null && excludeFolderIds.length > 0)
+        if (excludeFolderIds != null && excludeFolderIds.length > 0) {
             excludeFolderPart = " AND " + DbUtil.whereNotIn("folder_id", excludeFolderIds.length);
+        }
 
         PreparedStatement stmt = conn.prepareStatement("SELECT " + fields +
                 " FROM " + getCalendarItemTableName(mbox, "ci") + ", " + getMailItemTableName(mbox, "mi") +
@@ -3706,77 +3752,173 @@ public class DbMailItem {
             stmt.setTimestamp(pos++, new Timestamp(start));
         }
         pos = setMailboxId(stmt, mbox, pos);
-        if (folderSpecified)
+        if (folderSpecified) {
             stmt.setInt(pos++, folderId);
+        }
         if (excludeFolderIds != null) {
-            for (int id : excludeFolderIds)
+            for (int id : excludeFolderIds) {
                 stmt.setInt(pos++, id);
+            }
         }
 
         return stmt;
     }
 
-    public static List<Integer> getItemIdList(Mailbox mbox, MailItem.Type type, int folderId, SearchOpts searchOpts) throws ServiceException {
-        boolean allTypes = type == MailItem.Type.UNKNOWN;
-        List<Integer> result = new ArrayList<Integer>();
+    public static void addToCalendarItemTable(CalendarItem calItem) throws ServiceException {
+        Mailbox mbox = calItem.getMailbox();
+
+        long start = calItem.getStartTime();
+        long end = calItem.getEndTime();
+        Timestamp startTs = new Timestamp(start);
+        Timestamp endTs = getEnd(start, end);
+
+        DbConnection conn = mbox.getOperationConnection();
+        PreparedStatement stmt = null;
+        try {
+            String mailbox_id = DebugConfig.disableMailboxGroups ? "" : "mailbox_id, ";
+            stmt = conn.prepareStatement("INSERT INTO " + getCalendarItemTableName(mbox) +
+                    " (" + mailbox_id + "uid, item_id, start_time, end_time)" +
+                    " VALUES (" + (DebugConfig.disableMailboxGroups ? "" : "?, ") + "?, ?, ?, ?)");
+            int pos = 1;
+            pos = setMailboxId(stmt, mbox, pos);
+            stmt.setString(pos++, calItem.getUid());
+            stmt.setInt(pos++, calItem.getId());
+            stmt.setTimestamp(pos++, startTs);
+            stmt.setTimestamp(pos++, endTs);
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("writing invite to calendar item table: UID=" + calItem.getUid(), e);
+        } finally {
+            DbPool.closeStatement(stmt);
+        }
+    }
+
+    private static long MAX_DATE = new GregorianCalendar(9999, 1, 1).getTimeInMillis();
+
+    /**
+     * Return the {@link Timestamp} to be associated with {@code end} Value used to be: new Timestamp(end <= 0 ? MAX_DATE : end); This means you
+     * couldn't have an end date before 1970. This treatment was introduced without explanation in change 7809. Other changes at that time
+     * Recurrence.java had these lines added in the same change which MAY be related? // get the last time (-1 means forever) for which the rule has
+     * instances public ParsedDateTime getEndTime() throws ServiceException; Code now loosens the restrictions so that most likely situations where
+     * "end" had a special value which should be translated to MAX_DATE will be covered just in case, whilst allowing likely real world real end dates
+     * to remain uncorrupted.
+     */
+    private static Timestamp getEnd(long start, long end) {
+        if (end <= 0) {
+            if ((end == 0) || (end == -1) || (end < start) || (end > start + Constants.MILLIS_PER_DAY * 366)) {
+                end = MAX_DATE;
+            }
+        }
+        return new Timestamp(end);
+    }
+
+
+    public static void updateInCalendarItemTable(CalendarItem calItem) throws ServiceException {
+        Mailbox mbox = calItem.getMailbox();
+        long start = calItem.getStartTime();
+        long end = calItem.getEndTime();
+        Timestamp startTs = new Timestamp(start);
+        Timestamp endTs = getEnd(start, end);
+
+        DbConnection conn = mbox.getOperationConnection();
+        PreparedStatement stmt = null;
+        try {
+            String command = Db.supports(Db.Capability.REPLACE_INTO) ? "REPLACE" : "INSERT";
+            String mailbox_id = DebugConfig.disableMailboxGroups ? "" : "mailbox_id, ";
+            stmt = conn.prepareStatement(command + " INTO " + getCalendarItemTableName(mbox) +
+                    " (" + mailbox_id + "uid, item_id, start_time, end_time)" +
+                    " VALUES (" + MAILBOX_ID_VALUE + "?, ?, ?, ?)");
+            int pos = 1;
+            pos = setMailboxId(stmt, mbox, pos);
+            stmt.setString(pos++, calItem.getUid());
+            stmt.setInt(pos++, calItem.getId());
+            stmt.setTimestamp(pos++, startTs);
+            stmt.setTimestamp(pos++, endTs);
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            if (Db.errorMatches(e, Db.Error.DUPLICATE_ROW)) {
+                try {
+                    DbPool.closeStatement(stmt);
+
+                    stmt = conn.prepareStatement("UPDATE " + getCalendarItemTableName(mbox) +
+                            " SET item_id = ?, start_time = ?, end_time = ? WHERE " + IN_THIS_MAILBOX_AND + "uid = ?");
+                    int pos = 1;
+                    stmt.setInt(pos++, calItem.getId());
+                    stmt.setTimestamp(pos++, startTs);
+                    stmt.setTimestamp(pos++, endTs);
+                    pos = setMailboxId(stmt, mbox, pos);
+                    stmt.setString(pos++, calItem.getUid());
+                    stmt.executeUpdate();
+                } catch (SQLException nested) {
+                    throw ServiceException.FAILURE("updating data in calendar item table " + calItem.getUid(), nested);
+                }
+            } else {
+                throw ServiceException.FAILURE("writing invite to calendar item table " + calItem.getUid(), e);
+            }
+        } finally {
+            DbPool.closeStatement(stmt);
+        }
+    }
+
+    /**
+     * @param start start time of range, in milliseconds. {@code -1} means to leave the start time unconstrained.
+     * @param end end time of range, in milliseconds. {@code -1} means to leave the end time unconstrained.
+     */
+    public static List<CalendarItem.CalendarMetadata> getCalendarItemMetadata(Folder folder, long start, long end)
+            throws ServiceException {
+        Mailbox mbox = folder.getMailbox();
+
+        ArrayList<CalendarItem.CalendarMetadata> result = new ArrayList<CalendarItem.CalendarMetadata>();
 
         DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
-            String typeConstraint = allTypes ? "" : "type = ? AND ";
-            StringBuilder statement = new StringBuilder();
-            statement.append("SELECT id FROM ").append(getMailItemTableName(mbox))
-                     .append(" WHERE ").append(IN_THIS_MAILBOX_AND).append(typeConstraint).append("folder_id = ?");
-            if (searchOpts.isByDate) {
-                statement.append(" AND date > ? AND date < ?");
-            }
-            statement.append(" ORDER BY date").append(searchOpts.isDescending ? " DESC" : "");
-            stmt = conn.prepareStatement(statement.toString());
+            // Note - Negative times are valid.  However, treat -1 as meaning "unconstrained"
+            // Want appointments that end after the start time
+            String startConstraint = (start != -1) ? " AND ci.end_time > ?" : "";
+            // Want appointments that start before the end time
+            String endConstraint = (end != -1) ? " AND ci.start_time < ?" : "";
+            String folderConstraint = " AND mi.folder_id = ?";
+            stmt = conn.prepareStatement(
+                    "SELECT mi.mailbox_id, mi.id, ci.uid, mi.mod_metadata, mi.mod_content, ci.start_time, ci.end_time" +
+                            " FROM " + getMailItemTableName(mbox, "mi") + ", " + getCalendarItemTableName(mbox, "ci") +
+                            " WHERE mi.mailbox_id = ci.mailbox_id AND mi.id = ci.item_id" +
+                            (DebugConfig.disableMailboxGroups ? "" : " AND mi.mailbox_id = ? ") +
+                            startConstraint + endConstraint + folderConstraint);
             int pos = 1;
             pos = setMailboxId(stmt, mbox, pos);
-            if (!allTypes) {
-                stmt.setByte(pos++, type.toByte());
+            if (!startConstraint.isEmpty()) {
+                stmt.setTimestamp(pos++, new Timestamp(start));
             }
-            stmt.setInt(pos++, folderId);
-            if (searchOpts.isByDate) {
-                stmt.setInt(pos++, (int)(searchOpts.start / 1000));
-                stmt.setInt(pos++, (int)(searchOpts.end / 1000));
+            if (!endConstraint.isEmpty()) {
+                stmt.setTimestamp(pos++, new Timestamp(end));
             }
-
+            stmt.setInt(pos++, folder.getId());
             rs = stmt.executeQuery();
-
-            while (rs.next())
-                result.add(rs.getInt(1));
-            return result;
+            while (rs.next()) {
+                result.add(new CalendarItem.CalendarMetadata(
+                        rs.getInt(1),
+                        rs.getInt(2),
+                        rs.getString(3),
+                        rs.getInt(4),
+                        rs.getInt(5),
+                        rs.getTimestamp(6).getTime(),
+                        rs.getTimestamp(7).getTime()));
+            }
         } catch (SQLException e) {
-            throw ServiceException.FAILURE("finding items between dates", e);
+            throw ServiceException.FAILURE("fetching CalendarItem Metadata for mbox " + mbox.getId(), e);
         } finally {
             DbPool.closeResults(rs);
             DbPool.closeStatement(stmt);
         }
-    }
-
-    public static class SearchOpts {
-        private boolean isByDate = false;
-        private long start = 0L;
-        private long end = 0L;
-        private boolean isDescending = true;
-
-        public SearchOpts(long start, long end, boolean isDescending) {
-            this.isByDate = true;
-            this.start = start;
-            this.end = end;
-            this.isDescending = isDescending;
-        }
-
-        public SearchOpts(boolean isDescending) {
-            this.isDescending = isDescending;
-        }
+        return result;
     }
 
     public static class QueryParams {
         private final SortedSet<Integer> folderIds = new TreeSet<Integer>();
+        private Integer dateBefore;
+        private Integer dateAfter;
         private Integer changeDateBefore;
         private Integer changeDateAfter;
         private Integer modifiedSequenceBefore;
@@ -3784,6 +3926,7 @@ public class DbMailItem {
         private Integer offset;
         private final Set<MailItem.Type> includedTypes = EnumSet.noneOf(MailItem.Type.class);
         private final Set<MailItem.Type> excludedTypes = EnumSet.noneOf(MailItem.Type.class);
+        private final List<String> orderBy = new ArrayList<String>();
 
         public SortedSet<Integer> getFolderIds() {
             return Collections.unmodifiableSortedSet(folderIds);
@@ -3815,6 +3958,28 @@ public class DbMailItem {
             excludedTypes.clear();
             excludedTypes.addAll(types);
             return this;
+        }
+
+        public QueryParams setOrderBy(List<String> orders) {
+            orderBy.clear();
+            orderBy.addAll(orders);
+            return this;
+        }
+
+        public Integer getDateBefore() {
+            return dateBefore;
+        }
+
+        public void setDateBefore(Integer dateBefore) {
+            this.dateBefore = dateBefore;
+        }
+
+        public Integer getDateAfter() {
+            return dateAfter;
+        }
+
+        public void setDateAfter(Integer dateAfter) {
+            this.dateAfter = dateAfter;
         }
 
         /**
@@ -3914,6 +4079,18 @@ public class DbMailItem {
                     buf.append(")");
                 }
             }
+            if (dateBefore != null) {
+                if (buf.length() > 0) {
+                    buf.append(" AND ");
+                }
+                buf.append("date < ").append(dateBefore);
+            }
+            if (dateAfter != null) {
+                if (buf.length() > 0) {
+                    buf.append(" AND ");
+                }
+                buf.append("date > ").append(dateAfter);
+            }
             if (changeDateBefore != null) {
                 if (buf.length() > 0) {
                     buf.append(" AND ");
@@ -3935,6 +4112,17 @@ public class DbMailItem {
             return buf.toString();
         }
 
+        public String getOrderBy() {
+            StringBuilder buf = new StringBuilder();
+            if (!orderBy.isEmpty()) {
+                buf.append(" ORDER BY");
+                for (String order : orderBy) {
+                    buf.append(" ").append(order);
+                }
+            }
+            return buf.toString();
+        }
+
         public String getLimitClause() {
             if (rowLimit != null && Db.supports(Db.Capability.LIMIT_CLAUSE)) {
                 if (offset != null) {
@@ -3948,16 +4136,17 @@ public class DbMailItem {
 
         @Override
         public String toString() {
-            return getWhereClause() + " " + getLimitClause();
+            return getWhereClause() + " " + getOrderBy() + " " + getLimitClause();
         }
     }
 
     /**
      * Returns the ids of items that match the given query parameters.
+     * 
      * @return the matching ids, or an empty <tt>Set</tt>
      */
     public static Set<Integer> getIds(Mailbox mbox, DbConnection conn, QueryParams params, boolean fromDumpster)
-    throws ServiceException {
+            throws ServiceException {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         Set<Integer> ids = new HashSet<Integer>();
@@ -3996,165 +4185,107 @@ public class DbMailItem {
         }
     }
 
-    public static void addToCalendarItemTable(CalendarItem calItem) throws ServiceException {
-        Mailbox mbox = calItem.getMailbox();
-
-        long start = calItem.getStartTime();
-        long end = calItem.getEndTime();
-        Timestamp startTs = new Timestamp(start);
-        Timestamp endTs = getEnd(start, end);
-
-        DbConnection conn = mbox.getOperationConnection();
-        PreparedStatement stmt = null;
-        try {
-            String mailbox_id = DebugConfig.disableMailboxGroups ? "" : "mailbox_id, ";
-            stmt = conn.prepareStatement("INSERT INTO " + getCalendarItemTableName(mbox) +
-                        " (" + mailbox_id + "uid, item_id, start_time, end_time)" +
-                        " VALUES (" + (DebugConfig.disableMailboxGroups ? "" : "?, ") + "?, ?, ?, ?)");
-            int pos = 1;
-            pos = setMailboxId(stmt, mbox, pos);
-            stmt.setString(pos++, calItem.getUid());
-            stmt.setInt(pos++, calItem.getId());
-            stmt.setTimestamp(pos++, startTs);
-            stmt.setTimestamp(pos++, endTs);
-            stmt.executeUpdate();
-        } catch (SQLException e) {
-            throw ServiceException.FAILURE("writing invite to calendar item table: UID=" + calItem.getUid(), e);
-        } finally {
-            DbPool.closeStatement(stmt);
-        }
-    }
-
-    private static long MAX_DATE = new GregorianCalendar(9999, 1, 1).getTimeInMillis();
     /**
-     * Return the {@link Timestamp} to be associated with {@code end}
-     * Value used to be:
-     *     new Timestamp(end <= 0 ? MAX_DATE : end);
-     * This means you couldn't have an end date before 1970.
-     * This treatment was introduced without explanation in change 7809.  Other changes at that time
-     * Recurrence.java had these lines added in the same change which MAY be related?
-     *       // get the last time (-1 means forever) for which the rule has instances
-     *       public ParsedDateTime getEndTime() throws ServiceException;
-     * Code now loosens the restrictions so that most likely situations where "end" had a special value
-     * which should be translated to MAX_DATE will be covered just in case, whilst allowing likely real
-     * world real end dates to remain uncorrupted.
+     * Returns the ordered ids of items that match the given query parameters
+     * 
+     * @return the matching ids in order, or an empty <tt>List</tt>
      */
-    private static Timestamp getEnd(long start, long end) {
-        if (end <= 0) {
-            if ((end == 0) || (end == -1) || (end < start) || (end > start + Constants.MILLIS_PER_DAY * 366)) {
-                end = MAX_DATE;
-            }
-        }
-        return new Timestamp(end);
-    }
-
-
-    public static void updateInCalendarItemTable(CalendarItem calItem) throws ServiceException {
-        Mailbox mbox = calItem.getMailbox();
-        long start = calItem.getStartTime();
-        long end = calItem.getEndTime();
-        Timestamp startTs = new Timestamp(start);
-        Timestamp endTs = getEnd(start, end);
-
-        DbConnection conn = mbox.getOperationConnection();
-        PreparedStatement stmt = null;
-        try {
-            String command = Db.supports(Db.Capability.REPLACE_INTO) ? "REPLACE" : "INSERT";
-            String mailbox_id = DebugConfig.disableMailboxGroups ? "" : "mailbox_id, ";
-            stmt = conn.prepareStatement(command + " INTO " + getCalendarItemTableName(mbox) +
-                        " (" + mailbox_id + "uid, item_id, start_time, end_time)" +
-                        " VALUES (" + MAILBOX_ID_VALUE + "?, ?, ?, ?)");
-            int pos = 1;
-            pos = setMailboxId(stmt, mbox, pos);
-            stmt.setString(pos++, calItem.getUid());
-            stmt.setInt(pos++, calItem.getId());
-            stmt.setTimestamp(pos++, startTs);
-            stmt.setTimestamp(pos++, endTs);
-            stmt.executeUpdate();
-        } catch (SQLException e) {
-            if (Db.errorMatches(e, Db.Error.DUPLICATE_ROW)) {
-                try {
-                    DbPool.closeStatement(stmt);
-
-                    stmt = conn.prepareStatement("UPDATE " + getCalendarItemTableName(mbox) +
-                            " SET item_id = ?, start_time = ?, end_time = ? WHERE " + IN_THIS_MAILBOX_AND + "uid = ?");
-                    int pos = 1;
-                    stmt.setInt(pos++, calItem.getId());
-                    stmt.setTimestamp(pos++, startTs);
-                    stmt.setTimestamp(pos++, endTs);
-                    pos = setMailboxId(stmt, mbox, pos);
-                    stmt.setString(pos++, calItem.getUid());
-                    stmt.executeUpdate();
-                } catch (SQLException nested) {
-                    throw ServiceException.FAILURE("updating data in calendar item table " + calItem.getUid(), nested);
-                }
-            } else {
-                throw ServiceException.FAILURE("writing invite to calendar item table " + calItem.getUid(), e);
-            }
-        } finally {
-            DbPool.closeStatement(stmt);
-        }
-    }
-
-    /**
-     * @param start     start time of range, in milliseconds. {@code -1} means to leave the start time unconstrained.
-     * @param end       end time of range, in milliseconds. {@code -1} means to leave the end time unconstrained.
-     */
-    public static List<CalendarItem.CalendarMetadata> getCalendarItemMetadata(Folder folder, long start, long end)
-    throws ServiceException {
-        Mailbox mbox = folder.getMailbox();
-
-        ArrayList<CalendarItem.CalendarMetadata> result = new ArrayList<CalendarItem.CalendarMetadata>();
-
-        DbConnection conn = mbox.getOperationConnection();
+    public static List<Integer> getIdsInOrder(Mailbox mbox, DbConnection conn, QueryParams params, boolean fromDumpster)
+            throws ServiceException {
         PreparedStatement stmt = null;
         ResultSet rs = null;
+        List<Integer> ids = new ArrayList<Integer>();
         try {
-            // Note - Negative times are valid.  However, treat -1 as meaning "unconstrained"
-            // Want appointments that end after the start time
-            String startConstraint = (start != -1) ? " AND ci.end_time > ?" : "";
-            // Want appointments that start before the end time
-            String endConstraint = (end != -1) ? " AND ci.start_time < ?" : "";
-            String folderConstraint = " AND mi.folder_id = ?";
-            stmt = conn.prepareStatement(
-                    "SELECT mi.mailbox_id, mi.id, ci.uid, mi.mod_metadata, mi.mod_content, ci.start_time, ci.end_time" +
-                        " FROM " + getMailItemTableName(mbox, "mi") + ", " + getCalendarItemTableName(mbox, "ci") +
-                        " WHERE mi.mailbox_id = ci.mailbox_id AND mi.id = ci.item_id" +
-                        (DebugConfig.disableMailboxGroups ? "" : " AND mi.mailbox_id = ? ") +
-                        startConstraint + endConstraint + folderConstraint);
+            // Prepare the statement based on query parameters.
+            StringBuilder buf = new StringBuilder();
+            buf.append("SELECT id FROM " + getMailItemTableName(mbox, fromDumpster) + " WHERE " + IN_THIS_MAILBOX_AND);
+            String whereClause = params.getWhereClause();
+            if (!StringUtil.isNullOrEmpty(whereClause)) {
+                buf.append(whereClause);
+            } else {
+                buf.append("1 = 1");
+            }
+            String orderBy = params.getOrderBy();
+            if (!StringUtil.isNullOrEmpty(orderBy)) {
+                buf.append(orderBy);
+            }
+            String limitClause = params.getLimitClause();
+            if (!StringUtil.isNullOrEmpty(limitClause)) {
+                buf.append(" ").append(limitClause);
+            }
+            stmt = conn.prepareStatement(buf.toString());
+
+            // Bind values, execute query, return results.
             int pos = 1;
             pos = setMailboxId(stmt, mbox, pos);
-            if (!startConstraint.isEmpty()) {
-                stmt.setTimestamp(pos++, new Timestamp(start));
-            }
-            if (!endConstraint.isEmpty()) {
-                stmt.setTimestamp(pos++, new Timestamp(end));
-            }
-            stmt.setInt(pos++, folder.getId());
+
             rs = stmt.executeQuery();
+
             while (rs.next()) {
-                result.add(new CalendarItem.CalendarMetadata(
-                            rs.getInt(1),
-                            rs.getInt(2),
-                            rs.getString(3),
-                            rs.getInt(4),
-                            rs.getInt(5),
-                            rs.getTimestamp(6).getTime(),
-                            rs.getTimestamp(7).getTime()));
+                ids.add(rs.getInt(1));
             }
+            return ids;
         } catch (SQLException e) {
-            throw ServiceException.FAILURE("fetching CalendarItem Metadata for mbox " + mbox.getId(), e);
+            throw ServiceException.FAILURE("getting ids in order", e);
         } finally {
             DbPool.closeResults(rs);
             DbPool.closeStatement(stmt);
         }
-        return result;
     }
 
+    /**
+     * Returns the ordered ids of items that match the given query parameters
+     * 
+     * @return the matching ids in order, or an empty <tt>List</tt>
+     */
+    public static List<Pair<Integer, Integer>> getDatesAndIdsInOrder(Mailbox mbox, DbConnection conn,
+            QueryParams params, boolean fromDumpster)
+            throws ServiceException {
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        List<Pair<Integer, Integer>> result = new ArrayList<Pair<Integer, Integer>>();
+        try {
+            // Prepare the statement based on query parameters.
+            StringBuilder buf = new StringBuilder();
+            buf.append("SELECT date,id FROM " + getMailItemTableName(mbox, fromDumpster) + " WHERE " + IN_THIS_MAILBOX_AND);
+            String whereClause = params.getWhereClause();
+            if (!StringUtil.isNullOrEmpty(whereClause)) {
+                buf.append(whereClause);
+            } else {
+                buf.append("1 = 1");
+            }
+            String orderBy = params.getOrderBy();
+            if (!StringUtil.isNullOrEmpty(orderBy)) {
+                buf.append(orderBy);
+            }
+            String limitClause = params.getLimitClause();
+            if (!StringUtil.isNullOrEmpty(limitClause)) {
+                buf.append(" ").append(limitClause);
+            }
+            stmt = conn.prepareStatement(buf.toString());
+
+            // Bind values, execute query, return results.
+            int pos = 1;
+            pos = setMailboxId(stmt, mbox, pos);
+
+            rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                result.add(new Pair<Integer, Integer>(rs.getInt(1), rs.getInt(2)));
+            }
+            return result;
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("getting (change_date,id)s in order", e);
+        } finally {
+            DbPool.closeResults(rs);
+            DbPool.closeStatement(stmt);
+        }
+    }
 
     public static void consistencyCheck(MailItem item, UnderlyingData data, String metadata) throws ServiceException {
-        if (item.getId() <= 0)
+        if (item.getId() <= 0) {
             return;
+        }
         Mailbox mbox = item.getMailbox();
 
         DbConnection conn = mbox.getOperationConnection();
@@ -4181,33 +4312,73 @@ public class DbMailItem {
             String dataSender = item.getSortSender(), dbdataSender = dbsender == null ? "" : dbsender;
             String failures = "";
 
-            if (data.id != dbdata.id)                    failures += " ID";
-            if (data.type != dbdata.type)                failures += " TYPE";
-            if (data.folderId != dbdata.folderId)        failures += " FOLDER_ID";
-            if (data.indexId != dbdata.indexId)          failures += " INDEX_ID";
-            if (data.imapId != dbdata.imapId)            failures += " IMAP_ID";
-            if (!StringUtil.equal(data.locator, dbdata.locator)) failures += " LOCATOR";
-            if (data.date != dbdata.date)                failures += " DATE";
-            if (data.size != dbdata.size)                failures += " SIZE";
-            if (dbdata.type != MailItem.Type.CONVERSATION.toByte()) {
-                if (data.unreadCount != dbdata.unreadCount)  failures += " UNREAD";
-                if (data.getFlags() != dbdata.getFlags())    failures += " FLAGS";
-                if (!TagUtil.tagsMatch(data.getTags(), dbdata.getTags()))  failures += " TAGS";
+            if (data.id != dbdata.id) {
+                failures += " ID";
             }
-            if (data.modMetadata != dbdata.modMetadata)  failures += " MOD_METADATA";
-            if (data.dateChanged != dbdata.dateChanged)  failures += " CHANGE_DATE";
-            if (data.modContent != dbdata.modContent)    failures += " MOD_CONTENT";
-            if (Math.max(data.parentId, -1) != dbdata.parentId)  failures += " PARENT_ID";
-            if (dataBlobDigest != dbdataBlobDigest && (dataBlobDigest == null || !dataBlobDigest.equals(dbdataBlobDigest)))  failures += " BLOB_DIGEST";
-            if (dataSender != dbdataSender && (dataSender == null || !dataSender.equalsIgnoreCase(dbdataSender)))  failures += " SENDER";
+            if (data.type != dbdata.type) {
+                failures += " TYPE";
+            }
+            if (data.folderId != dbdata.folderId) {
+                failures += " FOLDER_ID";
+            }
+            if (data.indexId != dbdata.indexId) {
+                failures += " INDEX_ID";
+            }
+            if (data.imapId != dbdata.imapId) {
+                failures += " IMAP_ID";
+            }
+            if (!StringUtil.equal(data.locator, dbdata.locator)) {
+                failures += " LOCATOR";
+            }
+            if (data.date != dbdata.date) {
+                failures += " DATE";
+            }
+            if (data.size != dbdata.size) {
+                failures += " SIZE";
+            }
+            if (dbdata.type != MailItem.Type.CONVERSATION.toByte()) {
+                if (data.unreadCount != dbdata.unreadCount) {
+                    failures += " UNREAD";
+                }
+                if (data.getFlags() != dbdata.getFlags()) {
+                    failures += " FLAGS";
+                }
+                if (!TagUtil.tagsMatch(data.getTags(), dbdata.getTags())) {
+                    failures += " TAGS";
+                }
+            }
+            if (data.modMetadata != dbdata.modMetadata) {
+                failures += " MOD_METADATA";
+            }
+            if (data.dateChanged != dbdata.dateChanged) {
+                failures += " CHANGE_DATE";
+            }
+            if (data.modContent != dbdata.modContent) {
+                failures += " MOD_CONTENT";
+            }
+            if (Math.max(data.parentId, -1) != dbdata.parentId) {
+                failures += " PARENT_ID";
+            }
+            if (dataBlobDigest != dbdataBlobDigest && (dataBlobDigest == null || !dataBlobDigest.equals(dbdataBlobDigest))) {
+                failures += " BLOB_DIGEST";
+            }
+            if (dataSender != dbdataSender && (dataSender == null || !dataSender.equalsIgnoreCase(dbdataSender))) {
+                failures += " SENDER";
+            }
             if (data.getSubject() != dbdata.getSubject() &&
                     (data.getSubject() == null || !data.getSubject().equals(dbdata.getSubject()))) {
                 failures += " SUBJECT";
             }
-            if (data.name != dbdata.name && (data.name == null || !data.name.equals(dbdata.name)))                 failures += " NAME";
-            if (metadata != dbdata.metadata && (metadata == null || !metadata.equals(dbdata.metadata)))            failures += " METADATA";
+            if (data.name != dbdata.name && (data.name == null || !data.name.equals(dbdata.name))) {
+                failures += " NAME";
+            }
+            if (metadata != dbdata.metadata && (metadata == null || !metadata.equals(dbdata.metadata))) {
+                failures += " METADATA";
+            }
 
-            if (item instanceof Folder && dbdata.folderId != dbdata.parentId)  failures += " FOLDER!=PARENT";
+            if (item instanceof Folder && dbdata.folderId != dbdata.parentId) {
+                failures += " FOLDER!=PARENT";
+            }
 
             if (!failures.equals("")) {
                 throw ServiceException.FAILURE("consistency check failed: " + item.getType() + " " + item.getId() +
@@ -4259,8 +4430,9 @@ public class DbMailItem {
         int len = result.length();
         if (len > MAX_MEDIUMTEXT_LENGTH / 4) {  // every char uses 4 bytes in worst case
             if (StringUtil.isAsciiString(result)) {
-                if (len > MAX_MEDIUMTEXT_LENGTH)
+                if (len > MAX_MEDIUMTEXT_LENGTH) {
                     throw ServiceException.FAILURE("metadata too long", null);
+                }
             } else {
                 try {
                     if (result.getBytes("utf-8").length > MAX_MEDIUMTEXT_LENGTH) {
@@ -4401,8 +4573,9 @@ public class DbMailItem {
      * more than 200 characters long, cuts off the list and appends &quot...&quot.
      */
     static String getIdListForLogging(Collection<Integer> ids) {
-        if (ids == null)
+        if (ids == null) {
             return null;
+        }
         StringBuilder idList = new StringBuilder();
         boolean firstTime = true;
         for (Integer id : ids) {

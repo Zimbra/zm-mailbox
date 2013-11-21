@@ -354,3 +354,22 @@ Resume sync with a device or all devices attached to an account if currently sus
     [<lastUsedDate>{last_used_date}</lastUsedDate>]
   </device>]*
 </ResumeDeviceResponse>
+
+---------------------
+<GetSyncStateRequest>
+---------------------
+
+Get SyncState of a given folder from a given device, this can be used to trouble shooting items that are supposed to be on device
+
+<GetSyncStateRequest xmlns="urn:zimbraAdmin">
+  <account by="id|name">...</account>
+  <device id="{device_id}" />
+  <folder id="{folder_id}" class="{Email|Calendar|Contacts}" showItems="true|false" />
+  <item id="itemId" />
+</GetSyncStateRequest>
+
+<GetSyncStateResponse>
+  <syncstate>
+     Description of SyncState
+  </syncstate>
+</GetSyncStateResponse>

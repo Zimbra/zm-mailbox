@@ -7832,4 +7832,9 @@ TODO: delete them permanently from here
   <desc>IP Address(es) of the root DNS servers to be used by the DNS cache service</desc>
 </attr>
 
+<attr id="1570" name="zimbraMobileShareContactEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="8.5.0">
+  <defaultCOSValue>FALSE</defaultCOSValue>
+  <desc>Whether to permit syncing shared contact folders</desc>
+</attr>
+
 </attrs>
