@@ -8169,6 +8169,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMobilePolicyUnapprovedInROMApplication = "zimbraMobilePolicyUnapprovedInROMApplication";
 
     /**
+     * Whether to permit syncing shared contact folders
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1570)
+    public static final String A_zimbraMobileShareContactEnabled = "zimbraMobileShareContactEnabled";
+
+    /**
      * indicates whether the application can forward original email as RFC
      * 822 .eml attachment. Note: this setting is applicable only to the
      * devices using activesync smart forward for forwarding email messages.

@@ -56,6 +56,9 @@ public final class SyncConstants {
     public static final String E_REMOTE_WIPE_ACK_TIME = "remoteWipeAckTime";
     public static final String E_RECOVERY_PASSWORD = "recoveryPassword";
     public static final String E_LAST_USED_DATE = "lastUsedDate";
+    public static final String E_FOLDER = "folder";
+    public static final String E_SYNCSTATE = "syncState";
+    public static final String E_ITEMS = "item";
 
     public static final String A_ID = "id";
     public static final String A_TYPE = "type";
@@ -67,4 +70,6 @@ public final class SyncConstants {
     public static final String A_OS = "os";
     public static final String A_OSLANGUAGE = "os_language";
     public static final String A_PHONENUMBER = "phone_number";
+    public static final String A_CLASS = "class";
+    public static final String A_SHOWITEM = "showItems";
 }
