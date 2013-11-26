@@ -2,18 +2,19 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2009, 2010, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
 package com.zimbra.cs.dav.resource;
 
+import java.util.ArrayList;
 import java.util.Locale;
 
 import org.dom4j.Element;
@@ -22,6 +23,7 @@ import org.dom4j.QName;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.L10nUtil;
 import com.zimbra.common.util.L10nUtil.MsgKey;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.dav.DavContext;
@@ -65,7 +67,7 @@ public class AddressbookCollection extends Collection {
         setProperty(DavElements.E_GETCTAG, mCtag);
     }
 
-    private String mCtag;
+    private final String mCtag;
 
     private static QName[] SUPPORTED_REPORTS = {
             DavElements.CardDav.E_ADDRESSBOOK_MULTIGET,
@@ -81,4 +83,23 @@ public class AddressbookCollection extends Collection {
     protected QName[] getSupportedReports() {
         return SUPPORTED_REPORTS;
     }
+
+    /**
+     * Filter out non-contact related children.  Apple Mac OS X Mavericks Contacts doesn't cope well with them.
+     */
+    @Override
+    public java.util.Collection<DavResource> getChildren(DavContext ctxt) throws DavException {
+        ArrayList<DavResource> children = new ArrayList<DavResource>();
+        java.util.Collection<DavResource> allChildren = super.getChildren(ctxt);
+        for (DavResource child: allChildren) {
+            if (child.isCollection() || child instanceof AddressObject) {
+                children.add(child);
+            } else {
+                ZimbraLog.dav.debug("Ignoring non-address resource %s (class %s) AddressbookCollection child",
+                        child.getUri(), child.getClass().getName());
+            }
+        }
+        return children;
+    }
+
 }
