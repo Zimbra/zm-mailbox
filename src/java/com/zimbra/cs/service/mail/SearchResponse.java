@@ -179,9 +179,9 @@ final class SearchResponse {
 
     private Element add(ConversationHit hit) throws ServiceException {
         if (params.getFetchMode() == SearchParams.Fetch.IDS) {
-            Element el = element.addElement(MailConstants.E_CONV);
+            Element el = element.addNonUniqueElement(MailConstants.E_CONV);
             for (MessageHit mhit : hit.getMessageHits()) {
-                el.addElement(MailConstants.E_MSG).addAttribute(
+                el.addNonUniqueElement(MailConstants.E_MSG).addAttribute(
                         MailConstants.A_ID, ifmt.formatItemId(mhit.getItemId()));
             }
             return el;
@@ -193,14 +193,15 @@ final class SearchResponse {
 
             for (MessageHit mh : hit.getMessageHits()) {
                 Message msg = mh.getMessage();
-                Element mel = el.addElement(MailConstants.E_MSG).addAttribute(
+                Element mel = el.addNonUniqueElement(MailConstants.E_MSG).addAttribute(
                         MailConstants.A_ID, ifmt.formatItemId(msg));
                 // if it's a 1-message conversation,
-                // hand back the folder and size for the lone message
+                // hand back size for the lone message
                 if (el.getAttributeLong(MailConstants.A_NUM, 0) == 1) {
-                    mel.addAttribute(MailConstants.A_SIZE, msg.getSize()).addAttribute(
-                            MailConstants.A_FOLDER, msg.getFolderId());
+                    mel.addAttribute(MailConstants.A_SIZE, msg.getSize());
                 }
+                // Useful for when undoing a move to a different folder.
+                mel.addAttribute(MailConstants.A_FOLDER, msg.getFolderId());
                 if (msg.isDraft() && msg.getDraftAutoSendTime() != 0) {
                     mel.addAttribute(MailConstants.A_AUTO_SEND_TIME, msg.getDraftAutoSendTime());
                 }
