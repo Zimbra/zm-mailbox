@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -108,18 +108,51 @@ public abstract class Element implements Cloneable {
      */
     public abstract void destroy();
 
-    /** Creates a new child <tt>Element</tt> with the given name and adds it
-     *  to this <tt>Element</tt>. */
-    public abstract Element addElement(String name) throws ContainerException;
-    /** Creates a new child <tt>Element</tt> with the given QName and adds it
-     *  to this <tt>Element</tt>. */
-    public abstract Element addElement(QName qname) throws ContainerException;
-    /** Adds an existing <tt>Element</tt> to this <tt>Element</tt>. */
-    public abstract Element addElement(Element elt) throws ContainerException;
+    /** Creates a new child {@link Element} with the given name and adds it to this {@link Element}.<br />
+     * This is a legacy equivalent to {@link addNonUniqueElement}.  It has been deprecated to discourage
+     * use when {@link addUniqueElement} would be more appropriate.
+     *  @Deprecated - replaced by either {@link addNonUniqueElement} or {@link addUniqueElement}
+     */
+    @Deprecated
+    public Element addElement(String name) throws ContainerException {
+        return addNonUniqueElement(name);
+    }
 
-    public Element addUniqueElement(String name) throws ContainerException  { return addElement(name); }
-    public Element addUniqueElement(QName qname) throws ContainerException  { return addElement(qname); }
-    public Element addUniqueElement(Element elt) throws ContainerException  { return addElement(elt); }
+    /** Creates a new child {@link Element} with the given QName and adds it to this {@link Element}.<br />
+     * This is a legacy equivalent to {@link addNonUniqueElement}.  It has been deprecated to discourage
+     * use when {@link addUniqueElement} would be more appropriate.
+     *  @Deprecated - replaced by either {@link addNonUniqueElement} or {@link addUniqueElement}
+     */
+    @Deprecated
+    public Element addElement(QName qname) throws ContainerException {
+        return addNonUniqueElement(qname);
+    }
+
+    /** Adds an existing {@code Element} to this {@code Element}.<br />
+     * This is a legacy equivalent to {@link addNonUniqueElement}.  It has been deprecated to discourage
+     * use when {@link addUniqueElement} would be more appropriate.
+     *  @Deprecated - replaced by either {@link addNonUniqueElement} or {@link addUniqueElement}
+     */
+    @Deprecated
+    public Element addElement(Element elt) throws ContainerException {
+        return addNonUniqueElement(elt);
+    }
+
+    /** Creates a new child {@link Element} with the given name and adds it to this {@link Element}.<br />
+     */
+    public abstract Element addNonUniqueElement(String name) throws ContainerException;
+
+    /** Creates a new child {@link Element} with the given QName and adds it to this {@link Element}.<br />
+     */
+    public abstract Element addNonUniqueElement(QName qname) throws ContainerException;
+
+    /** Adds an existing {@code Element} to this {@code Element}.<br />
+     */
+    public abstract Element addNonUniqueElement(Element elt) throws ContainerException;
+
+    public Element addUniqueElement(String name) throws ContainerException  { return addNonUniqueElement(name); }
+    public Element addUniqueElement(QName qname) throws ContainerException  { return addNonUniqueElement(qname); }
+    public Element addUniqueElement(Element elt) throws ContainerException  { return addNonUniqueElement(elt); }
 
     /**
      * The approach to namespaces is to ALWAYS store them on elements that use them (for either the element's name
@@ -685,7 +718,7 @@ public abstract class Element implements Cloneable {
                 // need to treat XHTML as text
                 return flattenDOM(d4root, factory);
             } else {
-                elt.addElement(convertDOM(d4elt, factory));
+                elt.addNonUniqueElement(convertDOM(d4elt, factory));
             }
         }
         String content = d4root.getText();
@@ -762,7 +795,7 @@ public abstract class Element implements Cloneable {
             ordered.add(child);
         }
         for (Element child : ordered) {
-            top.addElement(child);
+            top.addNonUniqueElement(child);
         }
         return top;
     }
@@ -932,18 +965,18 @@ public abstract class Element implements Cloneable {
         }
 
         @Override
-        public Element addElement(String name) throws ContainerException {
-            return addElement(new JSONElement(name));
+        public Element addNonUniqueElement(String name) throws ContainerException {
+            return addNonUniqueElement(new JSONElement(name));
         }
 
         @Override
-        public Element addElement(QName qname) throws ContainerException {
-            return addElement(new JSONElement(qname));
+        public Element addNonUniqueElement(QName qname) throws ContainerException {
+            return addNonUniqueElement(new JSONElement(qname));
         }
 
 
         @Override
-        public Element addElement(Element elt) throws ContainerException {
+        public Element addNonUniqueElement(Element elt) throws ContainerException {
             if (elt == null || elt.mParent == this) {
                 return elt;
             } else if (elt.mParent != null) {
@@ -1209,7 +1242,7 @@ public abstract class Element implements Cloneable {
                 } else if (value instanceof List<?>) {
                     for (Object child : (List<?>) value) {
                         if (child instanceof Element) {
-                            clone.addElement(((Element) child).clone());
+                            clone.addNonUniqueElement(((Element) child).clone());
                         } else {
                             Object childclone = child instanceof JSONKeyValuePair ? ((JSONKeyValuePair) child).clone() : child;
                             List<Object> children = (List<Object>) clone.mAttributes.get(key);
@@ -1405,7 +1438,7 @@ public abstract class Element implements Cloneable {
                         case '{':  elt.addUniqueElement(parseElement(jsr, key, factory, elt));  break;
                         case '[':  jsr.skipChar();
                                    while (jsr.peekChar() != ']') {
-                                       elt.addElement(parseElement(jsr, key, factory, elt));
+                                       elt.addNonUniqueElement(parseElement(jsr, key, factory, elt));
                                        switch (jsr.peekChar()) {
                                            case ']':  break;
                                            case ',':
@@ -1585,7 +1618,7 @@ public abstract class Element implements Cloneable {
             XMLKeyValuePair(String key, String value, String eltname, String attrname)  { this(key, value, eltname, attrname, true); }
             XMLKeyValuePair(String key, String value, String eltname, String attrname, boolean register)  {
                 (mTarget = new XMLElement(eltname)).addAttribute(mAttrName = attrname, key).setText(value);
-                if (register)  addElement(mTarget);
+                if (register)  addNonUniqueElement(mTarget);
             }
 
             @Override
@@ -1640,17 +1673,17 @@ public abstract class Element implements Cloneable {
         }
 
         @Override
-        public Element addElement(String name) throws ContainerException {
-            return addElement(new XMLElement(name));
+        public Element addNonUniqueElement(String name) throws ContainerException {
+            return addNonUniqueElement(new XMLElement(name));
         }
 
         @Override
-        public Element addElement(QName qname) throws ContainerException {
-            return addElement(new XMLElement(qname));
+        public Element addNonUniqueElement(QName qname) throws ContainerException {
+            return addNonUniqueElement(new XMLElement(qname));
         }
 
         @Override
-        public Element addElement(Element elt) throws ContainerException {
+        public Element addNonUniqueElement(Element elt) throws ContainerException {
             if (elt == null || elt.mParent == this) {
                 return elt;
             } else if (elt.mParent != null) {
@@ -1696,7 +1729,7 @@ public abstract class Element implements Cloneable {
             // a null value leaves it unset; a non-null value places the attribute appropriately
             if (value != null) {
                 if (disp == Disposition.CONTENT) {
-                    addElement(key).setText(value);
+                    addNonUniqueElement(key).setText(value);
                 } else {
                     if (mAttributes == null) {
                         mAttributes = new HashMap<String, Object>();
@@ -1896,7 +1929,7 @@ public abstract class Element implements Cloneable {
             }
             if (mChildren != null) {
                 for (Element child : mChildren)
-                    clone.addElement(child.clone());
+                    clone.addNonUniqueElement(child.clone());
             }
             return clone;
         }
@@ -2053,17 +2086,17 @@ public abstract class Element implements Cloneable {
         }
 
         @Override
-        public Element addElement(String name) {
+        public Element addNonUniqueElement(String name) {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public Element addElement(QName qname) {
+        public Element addNonUniqueElement(QName qname) {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public Element addElement(Element elt) {
+        public Element addNonUniqueElement(Element elt) {
             throw new UnsupportedOperationException();
         }
 
@@ -2162,7 +2195,7 @@ public abstract class Element implements Cloneable {
 
         SoapProtocol proto = SoapProtocol.SoapJS;
         Element ctxt = new JSONElement(proto.getHeaderQName()).addUniqueElement(HeaderConstants.E_CONTEXT);
-        ctxt.addElement(HeaderConstants.E_SESSION).setText("3").addAttribute(HeaderConstants.A_ID, 3);
+        ctxt.addNonUniqueElement(HeaderConstants.E_SESSION).setText("3").addAttribute(HeaderConstants.A_ID, 3);
         System.out.println(ctxt.getAttribute(HeaderConstants.E_SESSION, null));
 
         Element env = testMessage(new JSONElement(proto.getEnvelopeQName()), proto, qm);
@@ -2214,22 +2247,22 @@ public abstract class Element implements Cloneable {
         env.addUniqueElement(proto.getBodyQName()).addUniqueElement(MailConstants.GET_MSG_RESPONSE)
            .addUniqueElement(qm).addAttribute("id", 1115).addAttribute("f", "aw").addAttribute("t", "64,67")
            .addAttribute("s", "Subject of the message has a \"\\\" in it", Disposition.CONTENT).addAttribute("mid", "<kashdfgiai67r3wtuwfg@goo.com>", Disposition.CONTENT)
-           .addElement("mp").addAttribute("part", "TEXT").addAttribute("ct", "multipart/mixed").addAttribute("s", 3718);
+           .addNonUniqueElement("mp").addAttribute("part", "TEXT").addAttribute("ct", "multipart/mixed").addAttribute("s", 3718);
         String orig = env.toString(), clone = env.clone().toString();
         System.out.println("< " + orig);  System.out.println("> " + clone);
         return env;
     }
 
     private static Element testContacts(Element parent) {
-        parent.addElement("cn");
-        Element cn = parent.addElement("cn").addAttribute("id", 256).addAttribute("md", 1111196674000L).addAttribute("l", 7).addAttribute("x", false);
+        parent.addNonUniqueElement("cn");
+        Element cn = parent.addNonUniqueElement("cn").addAttribute("id", 256).addAttribute("md", 1111196674000L).addAttribute("l", 7).addAttribute("x", false);
         cn.addKeyValuePair("workPhone", "(408) 973-0500 x112", "pm", "name");
         cn.addKeyValuePair("notes", "These are &\nrandom notes", "pm", "name");
         cn.addKeyValuePair("firstName", "Ross \"Killa\"", "pm", "name");
         cn.addKeyValuePair("lastName", "Dargahi", "pm", "name");
         cn.addKeyValuePair("lastName", "Dangerous", "pm", "name");
         cn.addKeyValuePair("image", null, "pm", "name").addAttribute("size", 34102).addAttribute("ct", "image/png").addAttribute("part", "1");
-        cn = parent.addElement("cn").addAttribute("id", 257).addAttribute("md", 1111196674000L).addAttribute("l", 7);
+        cn = parent.addNonUniqueElement("cn").addAttribute("id", 257).addAttribute("md", 1111196674000L).addAttribute("l", 7);
         cn.addKeyValuePair("workPhone", "(408) 973-0500 x111");
         cn.addKeyValuePair("jobTitle", "CEO");
         cn.addKeyValuePair("firstName", "Satish");
