@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -21,6 +21,7 @@ import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -179,7 +180,8 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
         mOptions.addOption(new Option(null, LO_NO_JAXB, false,
                     "Disallow use of JAXB to aid building request from command line."));
 
-        opt = new Option("f", LO_FILE, true, "Read request from file.");
+        opt = new Option("f", LO_FILE, true,
+                    "Read request from file.  For JSON, the request pair should be the child of the root object.");
         opt.setArgName("path");
         mOptions.addOption(opt);
 
@@ -455,6 +457,19 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
             try {
                 if (mUseJson) {
                     element = Element.parseJSON(in);
+                    if (element != null) {
+                        if (!element.getName().endsWith("Request")) {
+                            Iterator<Element> iter = element.elementIterator();
+                            while (iter.hasNext()) {
+                                Element child = iter.next();
+                                if (child.getName().endsWith("Request")) {
+                                    child.detach();
+                                    element = child;
+                                    break;
+                                }
+                            }
+                        }
+                    }
                 } else {
                     element = Element.parseXML(in);
                 }
