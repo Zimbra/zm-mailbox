@@ -356,8 +356,8 @@ SECTION 10: GNU Lesser General Public License, V2.1
 
    >>> aspell-0.60.6.1
    >>> firefox-nss-4.0.1-zimbra
-   >>> jcommon-1.0.16
-   >>> jfreechart-1.0.14
+   >>> jcommon-1.0.20
+   >>> jfreechart-1.0.16
    >>> jna-3.4.0
    >>> perl-mozilla-ca-20120823
    >>> perl-test-nowarnings-1.04
@@ -28452,7 +28452,7 @@ Version: MPL 1.1/GPL 2.0/LGPL 2.1
      the terms of any one of the MPL, the GPL or the LGPL.
 
 
->>> jcommon-1.0.16
+>>> jcommon-1.0.20
 
 (C)opyright, 2000-2009, by Object Refinery Limited and Contributors.
 
@@ -28479,7 +28479,7 @@ If you have any comments, suggestions or bugs to report, please post a
 message in the JCommon forum.
 
 
->>> jfreechart-1.0.14
+>>> jfreechart-1.0.16
 
 JFreeChart : a free chart library for the Java(tm) platform
 
