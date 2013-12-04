@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -31,9 +31,9 @@ import com.zimbra.common.account.Key;
 import com.zimbra.common.mime.InternetAddress;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.accesscontrol.Rights.User;
 import com.zimbra.cs.server.NioConnection;
 import com.zimbra.cs.server.NioHandler;
@@ -298,15 +298,19 @@ public final class MilterHandler implements NioHandler {
         }
         if (prov.isDistributionList(rcpt)) {
             Group group = prov.getGroupBasic(Key.DistributionListBy.name, rcpt);
-            if (group != null && !accessMgr.canDo(sender, group, User.R_sendToDistList, false)) {
-                ZimbraLog.milter.debug("Sender is not allowed to email this distribution list: " + rcpt);
-                SMFIR_ReplyCode("571", "571 Sender is not allowed to email this distribution list: " + rcpt);
-                return;
+            if (group != null) {
+                if (!accessMgr.canDo(sender, group, User.R_sendToDistList, false)) {
+                    ZimbraLog.milter.debug("Sender is not allowed to email this distribution list: %s", rcpt);
+                    SMFIR_ReplyCode("571", "571 Sender is not allowed to email this distribution list: " + rcpt);
+                    return;
+                }
+                lists.add(group);
+                ZimbraLog.milter.debug("group %s has been added into the list.", group);
+            } else {
+                ZimbraLog.milter.debug("rcpt %s is a list but not a group?", rcpt);
             }
-            lists.add(group);
-            ZimbraLog.milter.debug("group " + group + " has been added into the list.");
         } else {
-            ZimbraLog.milter.debug(rcpt + " is not a distribution list.");
+            ZimbraLog.milter.debug("%s is not a distribution list.", rcpt);
         }
         connection.send(new MilterPacket(SMFIR_CONTINUE));
     }
@@ -350,6 +354,10 @@ public final class MilterHandler implements NioHandler {
         Set<String> listAddrs = Sets.newHashSetWithExpectedSize(lists.size());
         Set<String> replyToAddrs = Sets.newHashSetWithExpectedSize(lists.size());
         for (Group group : lists) {
+            if (group == null) {
+                ZimbraLog.milter.warn("null group in group list!?!");
+                continue;
+            }
             listAddrs.add(group.getMail());
             if (group.isPrefReplyToEnabled()) {
                 String addr = group.getPrefReplyToAddress();
