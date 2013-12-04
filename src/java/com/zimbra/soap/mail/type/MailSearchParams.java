@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -205,7 +205,7 @@ public class MailSearchParams implements SearchParameters {
 
 
     /**
-     * @zm-api-field-tag
+     * @zm-api-field-tag need-can-expand
      * @zm-api-field-description If 'needExp' is set in the request, two additional flags
      *   may be included in <b>&lt;e></b> elements for messages returned inline.
      * <ul>
@@ -262,6 +262,16 @@ public class MailSearchParams implements SearchParameters {
      */
     @XmlAttribute(name=MailConstants.A_RESULT_MODE /* resultMode */, required=false)
     private String resultMode;
+
+    /**
+     * @zm-api-field-tag full-conversation
+     * @zm-api-field-description By default, only matching messages are included in conversation results.<br />
+     * Set to <b>1 (true)</b> to include all messages in the conversation, even if they don't match the search,
+     * including items in Trash and Junk folders.
+     */
+    @ZimbraJsonAttribute
+    @XmlAttribute(name=MailConstants.A_FULL_CONVERSATION /* fullConversation */, required=false)
+    private ZmBoolean fullConversation;
 
     /**
      * @zm-api-field-tag default-field
@@ -459,6 +469,9 @@ public class MailSearchParams implements SearchParameters {
     @Override
     public CursorInfo getCursor() { return cursor; }
 
+    public ZmBoolean getFullConversation() { return fullConversation; }
+    public void setFullConversation(ZmBoolean fullConversation) { this.fullConversation = fullConversation; }
+
     public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("includeTagDeleted", includeTagDeleted)
@@ -481,6 +494,7 @@ public class MailSearchParams implements SearchParameters {
             .add("wantRecipients", wantRecipients)
             .add("prefetch", prefetch)
             .add("resultMode", resultMode)
+            .add("fullConversation", fullConversation)
             .add("field", field)
             .add("limit", limit)
             .add("offset", offset)
