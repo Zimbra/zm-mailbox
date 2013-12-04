@@ -1394,7 +1394,7 @@ Tags:
     [fetch="1|all|{item-id}"] [read="*0|1"] [max="{max-inlined-length}"] [html="*0|1"] [neuter="0|*1"] [needExp="1|*0"]
     [field={default_field}] [calExpandInstStart=TIME_IN_MSEC] [calExpandInstEnd=TIME_IN_MSEC]
     [allowableTaskStatus="need,inprogress,completed,canceled"] [includeTagDeleted="{include-imap-deleted}"] [includeTagMuted="{include-muted}"]
-    [resultMode="{result-mode}"] [inDumpster="*0|1"]
+    [resultMode="{result-mode}"] [fullConversation="*0|1"] [inDumpster="*0|1"]
     [warmup="*0|1"] [quick="*0|1"]>
 
   *(<header n="{header-name}/>)
@@ -1531,6 +1531,10 @@ if include-muted="0", items with the \Muted flag are omitted from the search res
                       NORMAL|IDS
                   NORMAL : everything
                   IDS    : only IDs
+
+  fullConversation: By default, only matching messages are included in conversation results.
+                    Set to 1 (true) to include all messages in the conversation, even if they don't match the search,
+                    including items in Trash and Junk folders.
 
   warmup: When this option is specified, all other options are simply ignored, so you can't include this option in
    regular search requests. This option gives a hint to the index system to open the index data and primes it for

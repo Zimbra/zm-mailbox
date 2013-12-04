@@ -14,6 +14,7 @@
  */
 package com.zimbra.cs.service.mail;
 
+import java.util.Collection;
 import java.util.List;
 
 import com.zimbra.common.localconfig.LC;
@@ -51,6 +52,7 @@ import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.ZimbraSoapContext;
+import com.zimbra.soap.mail.type.ConversationMsgHitInfo;
 import com.zimbra.soap.mail.type.MessageHitInfo;
 import com.zimbra.soap.util.JaxbInfo;
 
@@ -181,8 +183,8 @@ final class SearchResponse {
         if (params.getFetchMode() == SearchParams.Fetch.IDS) {
             Element el = element.addNonUniqueElement(MailConstants.E_CONV);
             for (MessageHit mhit : hit.getMessageHits()) {
-                el.addNonUniqueElement(MailConstants.E_MSG).addAttribute(
-                        MailConstants.A_ID, ifmt.formatItemId(mhit.getItemId()));
+                ConversationMsgHitInfo cMsgHit = new ConversationMsgHitInfo(ifmt.formatItemId(mhit.getItemId()));
+                cMsgHit.toElement(el);
             }
             return el;
         } else {
@@ -191,23 +193,36 @@ final class SearchResponse {
             Element el = ToXML.encodeConversationSummary(element, ifmt, octxt, conv,
                     mhit == null ? null : mhit.getMessage(), params.getWantRecipients());
 
-            for (MessageHit mh : hit.getMessageHits()) {
-                Message msg = mh.getMessage();
-                Element mel = el.addNonUniqueElement(MailConstants.E_MSG).addAttribute(
-                        MailConstants.A_ID, ifmt.formatItemId(msg));
-                // if it's a 1-message conversation,
-                // hand back size for the lone message
-                if (el.getAttributeLong(MailConstants.A_NUM, 0) == 1) {
-                    mel.addAttribute(MailConstants.A_SIZE, msg.getSize());
+            Collection<MessageHit> msgHits = hit.getMessageHits();
+            long numMsgs = el.getAttributeLong(MailConstants.A_NUM, 0);
+            if (!params.fullConversation() || numMsgs == msgHits.size()) {
+                for (MessageHit mh : msgHits) {
+                    Message msg = mh.getMessage();
+                    doConvMsgHit(el, msg, numMsgs);
                 }
-                // Useful for when undoing a move to a different folder.
-                mel.addAttribute(MailConstants.A_FOLDER, msg.getFolderId());
-                if (msg.isDraft() && msg.getDraftAutoSendTime() != 0) {
-                    mel.addAttribute(MailConstants.A_AUTO_SEND_TIME, msg.getDraftAutoSendTime());
+            } else {
+                for (Message msg : conv.getMailbox().getMessagesByConversation(octxt, conv.getId(), SortBy.DATE_DESC,
+                        -1 /* limit */, false /* excludeSpamAndTrash */)) {
+                    doConvMsgHit(el, msg, numMsgs);
                 }
             }
             return el;
         }
+    }
+
+    private Element doConvMsgHit(Element el, Message msg, long numMsgsInConv) {
+        // Folder ID useful when undoing a move to different folder, also determining whether in junk/trash
+        ConversationMsgHitInfo cMsgHit =
+                ConversationMsgHitInfo.fromIdAndFolderId(ifmt.formatItemId(msg), msg.getFolderId());
+        // if it's a 1-message conversation, hand back size for the lone message
+        if (numMsgsInConv == 1) {
+            cMsgHit.setSize(msg.getSize());
+        }
+        if (msg.isDraft() && msg.getDraftAutoSendTime() != 0) {
+            cMsgHit.setAutoSendTime(msg.getDraftAutoSendTime());
+        }
+        cMsgHit.toElement(el);
+        return el;
     }
 
     private boolean isInlineExpand(MessageHit hit) throws ServiceException {

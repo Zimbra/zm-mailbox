@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -45,7 +45,10 @@ import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.session.PendingModifications.Change;
+import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
+import com.zimbra.soap.mail.message.SearchConvRequest;
+import com.zimbra.soap.type.ZmBoolean;
 
 /**
  * @since Nov 30, 2004
@@ -60,12 +63,13 @@ public final class SearchConv extends Search {
         Mailbox mbox = getRequestedMailbox(zsc);
         OperationContext octxt = getOperationContext(zsc, context);
         ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
-        boolean nest = request.getAttributeBool(MailConstants.A_NEST_MESSAGES, false);
+        SearchConvRequest req = JaxbUtil.elementToJaxb(request);
+        boolean nest = ZmBoolean.toBool(req.getNestMessages(), false);
         Account acct = getRequestedAccount(zsc);
-        SearchParams params = SearchParams.parse(request, zsc, acct.getPrefMailInitialSearch());
+        SearchParams params = SearchParams.parse(req, zsc, acct.getPrefMailInitialSearch());
 
         // append (conv:(convid)) onto the beginning of the queryStr
-        ItemId cid = new ItemId(request.getAttribute(MailConstants.A_CONV_ID), zsc);
+        ItemId cid = new ItemId(req.getConversationId(), zsc);
         params.setQueryString("conv:\"" + cid.toString(ifmt) + "\" (" + params.getQueryString() + ')');
 
         // force to group-by-message

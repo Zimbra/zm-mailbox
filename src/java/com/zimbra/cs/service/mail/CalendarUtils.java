@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
+import com.google.common.base.Objects;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.calendar.CalendarUtil;
@@ -77,6 +78,8 @@ import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.mailbox.calendar.ZRecur;
 import com.zimbra.cs.mailbox.util.TypedIdList;
 import com.zimbra.cs.util.AccountUtil.AccountAddressMatcher;
+import com.zimbra.soap.base.CalTZInfoInterface;
+import com.zimbra.soap.type.TzOnsetInfo;
 
 public class CalendarUtils {
     // Start of Microsoft time
@@ -905,6 +908,54 @@ public class CalendarUtils {
             ICalTimeZone tz = parseTzElement(tzElem);
             tzMap.add(tz);
         }
+    }
+
+    /**
+     * Parse a <tz> definition, as described in soap-calendar.txt and soap.txt (SearchRequest)
+     */
+    public static ICalTimeZone parseTimeZone(CalTZInfoInterface calTZ) throws ServiceException {
+        String tzid = calTZ.getId();
+        if (null == calTZ.getTzStdOffset()) {
+            throw ServiceException.INVALID_REQUEST("Unknown TZ: \"" + tzid +
+                    "\" and no " + MailConstants.A_CAL_TZ_STDOFFSET + " specified", null);
+        }
+        int standardOffset = calTZ.getTzStdOffset();
+        int daylightOffset = Objects.firstNonNull(calTZ.getTzDayOffset(), standardOffset);
+        // minutes to milliseconds
+        standardOffset *= 60 * 1000;
+        daylightOffset *= 60 * 1000;
+
+        SimpleOnset standardOnset = null;
+        SimpleOnset daylightOnset = null;
+        if (daylightOffset != standardOffset) {
+            TzOnsetInfo standard = calTZ.getStandardTzOnset();
+            TzOnsetInfo daylight = calTZ.getDaylightTzOnset();
+            if (standard == null || daylight == null)
+                throw ServiceException.INVALID_REQUEST(
+                                "DST time zone missing standard and/or daylight onset",
+                                null);
+            standardOnset = parseSimpleOnset(standard);
+            daylightOnset = parseSimpleOnset(daylight);
+        }
+
+        String standardTzname = calTZ.getStandardTZName();
+        String daylightTzname = calTZ.getDaylightTZName();
+        return ICalTimeZone.lookup(tzid, standardOffset, standardOnset, standardTzname, daylightOffset, daylightOnset, daylightTzname);
+    }
+
+    private static SimpleOnset parseSimpleOnset(TzOnsetInfo onsetInfo)
+    throws ServiceException {
+        int week = Objects.firstNonNull(onsetInfo.getWeek(), 0);
+        int wkday = Objects.firstNonNull(onsetInfo.getDayOfWeek(), 0);
+        if (null == onsetInfo.getMonth()) {
+                throw ServiceException.INVALID_REQUEST("Timezone onset information missing month", null);
+        }
+        int month = onsetInfo.getMonth();
+        int mday = Objects.firstNonNull(onsetInfo.getDayOfMonth(), 0);
+        int hour = Objects.firstNonNull(onsetInfo.getHour(), 0);
+        int minute = Objects.firstNonNull(onsetInfo.getMinute(), 0);
+        int second = Objects.firstNonNull(onsetInfo.getSecond(), 0);
+        return new SimpleOnset(week, wkday, month, mday, hour, minute, second);
     }
 
     /**

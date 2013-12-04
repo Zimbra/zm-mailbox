@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.base.Objects;
 import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Closeables;
@@ -58,7 +59,9 @@ import com.zimbra.cs.mailbox.calendar.cache.CalendarItemData;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.util.AccountUtil;
+import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
+import com.zimbra.soap.mail.message.SearchRequest;
 
 /**
  * @since May 26, 2004
@@ -72,12 +75,13 @@ public class Search extends MailDocumentHandler  {
         Account account = getRequestedAccount(zsc);
         OperationContext octxt = getOperationContext(zsc, context);
 
-        if (request.getAttributeBool(MailConstants.A_WARMUP, false)) {
+        SearchRequest req = JaxbUtil.elementToJaxb(request);
+        if (Objects.firstNonNull(req.getWarmup(), false)) {
             mbox.index.getIndexStore().warmup();
             return zsc.createElement(MailConstants.SEARCH_RESPONSE);
         }
 
-        SearchParams params = SearchParams.parse(request, zsc, account.getPrefMailInitialSearch());
+        SearchParams params = SearchParams.parse(req, zsc, account.getPrefMailInitialSearch());
         if (params.getLocale() == null) {
             params.setLocale(mbox.getAccount().getLocale());
         }

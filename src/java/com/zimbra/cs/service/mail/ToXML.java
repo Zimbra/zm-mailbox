@@ -163,7 +163,20 @@ import com.zimbra.soap.mail.type.XProp;
 public final class ToXML {
     private static final Log LOG = LogFactory.getLog(ToXML.class);
 
-    public static enum OutputParticipants { PUT_SENDERS, PUT_RECIPIENTS, PUT_BOTH }
+    public static enum OutputParticipants {
+        PUT_SENDERS(0),
+        PUT_RECIPIENTS(1),
+        PUT_BOTH(2);
+
+        private int value;
+        OutputParticipants(int value) {
+            this.value = value;
+        }
+
+        public int getIntValue() {
+            return value;
+        }
+    }
 
     // we usually don't want to return last modified date...
     public static final int NOTIFY_FIELDS = Change.ALL_FIELDS & ~Change.CONFLICT;
