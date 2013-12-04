@@ -128,21 +128,12 @@ public class WsdlDocGenerator {
         }
     }
 
-    private static String badCmdError(String cmdName, String subtype) {
-        String fmt = "No JAXB Class associated with %s for command %s.  Is JaxbUtil.MESSAGE_CLASSES up to date?\n" +
-                     "Does 'ant test wsdl-client-support' succeed?";
-        return String.format(fmt, subtype, cmdName);
-    }
-
     private static void populateWithJavadocInfo(Root root, Map<String,ApiClassDocumentation> javadocInfo) {
         for (Command cmd : root.getAllCommands()) {
-            XmlElementDescription reqDesc = cmd.getRequest();
-            if (reqDesc  == null) {
-                throw new RuntimeException(badCmdError(cmd.getName(), "request"));
-            }
-            Class<?> reqKlass = reqDesc.getJaxbClass();
+            Class<?> reqKlass = cmd.getRequest().getJaxbClass();
             if (reqKlass  == null) {
-                throw new RuntimeException(badCmdError(cmd.getName(), "request"));
+                throw new RuntimeException("No JAXB Class associated with request for command " + cmd.getName() +
+                        " .  Is JaxbUtil.MESSAGE_CLASSES up to date?");
             }
             String reqClass = reqKlass.getName();
             ApiClassDocumentation doc = javadocInfo.get(reqClass);
@@ -153,13 +144,10 @@ public class WsdlDocGenerator {
                 cmd.setAuthRequiredDescription(doc.getAuthRequiredDescription());
                 cmd.setAdminAuthRequiredDescription(doc.getAdminAuthRequiredDescription());
             } else {
-                XmlElementDescription respDesc = cmd.getResponse();
-                if (respDesc  == null) {
-                    throw new RuntimeException(badCmdError(cmd.getName(), "response"));
-                }
-                Class<?> respKlass = respDesc.getJaxbClass();
+                Class<?> respKlass = cmd.getResponse().getJaxbClass();
                 if (respKlass  == null) {
-                    throw new RuntimeException(badCmdError(cmd.getName(), "response"));
+                    throw new RuntimeException("No JAXB Class associated with response for command " + cmd.getName() +
+                            " .  Is JaxbUtil.MESSAGE_CLASSES up to date?");
                 }
                 String respClass = respKlass.getName();
                 doc = javadocInfo.get(respClass);
@@ -222,9 +210,6 @@ public class WsdlDocGenerator {
                 desc = XmlElementDescription.createTopLevel(jaxbInfo, namespace, jaxbInfo.getRootElementName());
                 markupDuplicateElements(desc);
                 cmd.setRootResponseElement(desc);
-            } else {
-                throw new RuntimeException(
-                        String.format("Cannot handle top level class %s.  Expecting Request or Response", className));
             }
         }
         populateWithJavadocInfo(root, javadocInfo);

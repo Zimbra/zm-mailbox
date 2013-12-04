@@ -100,13 +100,6 @@ public class FolderActionSelector extends ActionSelector {
     @XmlElement(name=MailConstants.E_RETENTION_POLICY /* retentionPolicy */, required=false)
     private RetentionPolicy retentionPolicy;
 
-    /**
-     * @zm-api-field-tag web-offline-sync-days
-     * @zm-api-field-description Number of days for which web client would sync folder data for offline use
-     */
-    @XmlAttribute(name=MailConstants.A_NUM_DAYS /* numDays */, required=false)
-    private Integer numDays;
-
     public FolderActionSelector() {
         this((String) null, (String) null);
     }
@@ -138,7 +131,6 @@ public class FolderActionSelector extends ActionSelector {
     }
 
     public void setRetentionPolicy(RetentionPolicy retentionPolicy) { this.retentionPolicy = retentionPolicy; }
-    public void setNumDays(Integer numDays) { this.numDays = numDays; }
     public Boolean getRecursive() { return ZmBoolean.toBool(recursive); }
     public String getUrl() { return url; }
     public Boolean getExcludeFreebusy() { return ZmBoolean.toBool(excludeFreebusy); }
@@ -150,7 +142,6 @@ public class FolderActionSelector extends ActionSelector {
         return Collections.unmodifiableList(grants);
     }
     public RetentionPolicy getRetentionPolicy() { return retentionPolicy; }
-    public Integer getNumDays() { return numDays; }
 
     public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         helper = super.addToStringInfo(helper);
@@ -163,8 +154,7 @@ public class FolderActionSelector extends ActionSelector {
             .add("view", view)
             .add("grant", grant)
             .add("grants", grants)
-            .add("retentionPolicy", retentionPolicy)
-            .add("numDays", numDays);
+            .add("retentionPolicy", retentionPolicy);
     }
 
     @Override

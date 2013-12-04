@@ -16,7 +16,6 @@
 package com.zimbra.soap.type;
 
 import java.util.Arrays;
-
 import javax.xml.bind.annotation.XmlEnum;
 
 import com.zimbra.common.service.ServiceException;
@@ -27,7 +26,7 @@ import com.zimbra.common.service.ServiceException;
 @XmlEnum
 public enum TargetType {
     // case must match protocol
-    account, calresource, cos, dl, group, domain, server, alwaysoncluster, ucservice,
+    account, calresource, cos, dl, group, domain, server, ucservice,
     xmppcomponent, zimlet, config, global;
 
     public static TargetType fromString(String s)

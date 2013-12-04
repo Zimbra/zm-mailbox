@@ -227,20 +227,16 @@ public class SearchMultiMailboxRequest implements SearchParameters {
     /**
      * @zm-api-field-tag want-recipients
      * @zm-api-field-description Want recipients setting.
-     * <table border="1">
-     * <tr> <td> <b>unset [default]</b> </td> <td> return "From:" Senders only </td> </tr>
-     * <tr> <td> <b>1</b> </td> <td>
-     *     <ul>
-     *         <li>returned sent messages will contain the set of "To:" recipients instead of the sender
-     *         <li>returned conversations whose first hit was sent by the user will contain that hit's "To:" recipients
-     *             instead of the conversation's sender list
-     *     </ul>
-     * </td> </tr>
-     * <tr> <td> <b>2</b> </td> <td> return both "From:" Senders and "To:" recipients </td> </tr>
-     * </table>
+     * <br />
+     * If set to <b>1 (true)</b>:
+     * <ul>
+     * <li> returned sent messages will contain the set of "To:" recipients instead of the sender
+     * <li> returned conversations whose first hit was sent by the user will contain that hit's "To:" recipients
+     *      instead of the conversation's sender list
+     * </ul>
      */
     @XmlAttribute(name=MailConstants.A_RECIPIENTS /* recip */, required=false)
-    private Integer wantRecipients;
+    private ZmBoolean wantRecipients;
 
     /**
      * @zm-api-field-description Prefetch
@@ -376,7 +372,7 @@ public class SearchMultiMailboxRequest implements SearchParameters {
     @Override
     public void setNeuterImages(Boolean neuterImages) { this.neuterImages = ZmBoolean.fromBool(neuterImages); }
     @Override
-    public void setWantRecipients(Integer wantRecipients) { this.wantRecipients = wantRecipients; }
+    public void setWantRecipients(Boolean wantRecipients) { this.wantRecipients = ZmBoolean.fromBool(wantRecipients); }
     @Override
     public void setPrefetch(Boolean prefetch) { this.prefetch = ZmBoolean.fromBool(prefetch); }
     @Override
@@ -414,8 +410,8 @@ public class SearchMultiMailboxRequest implements SearchParameters {
         }
     }
 
-    public void addMailbox(NameOrId mailbox) {
-        this.mailboxes.add(mailbox);
+    public void addMailboxe(NameOrId mailboxe) {
+        this.mailboxes.add(mailboxe);
     }
 
     @Override
@@ -453,7 +449,7 @@ public class SearchMultiMailboxRequest implements SearchParameters {
     @Override
     public Boolean getNeuterImages() { return ZmBoolean.toBool(neuterImages); }
     @Override
-    public Integer getWantRecipients() { return wantRecipients; }
+    public Boolean getWantRecipients() { return ZmBoolean.toBool(wantRecipients); }
     @Override
     public Boolean getPrefetch() { return ZmBoolean.toBool(prefetch); }
     @Override

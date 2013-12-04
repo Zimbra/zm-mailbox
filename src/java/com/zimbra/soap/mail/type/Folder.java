@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- *
+ * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- *
+ * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -33,8 +33,8 @@ import javax.xml.bind.annotation.XmlType;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.soap.json.jackson.annotate.ZimbraUniqueElement;
 import com.zimbra.soap.type.ZmBoolean;
+import com.zimbra.soap.json.jackson.annotate.ZimbraUniqueElement;
 
 // Root element name needed to differentiate between types of folder
 @XmlRootElement(name=MailConstants.E_FOLDER /* folder */)
@@ -237,16 +237,9 @@ public class Folder {
      */
     @XmlAttribute(name=MailConstants.A_URL /* url */, required=false)
     private String url;
-
+    
     @XmlAttribute(name=MailConstants.A_ACTIVESYNC_DISABLED /* activesyncdisabled */, required=false)
     private ZmBoolean activeSyncDisabled;
-
-    /**
-     * @zm-api-field-tag num-days
-     * @zm-api-field-description Number of days for which web client would sync folder data for offline use
-     */
-    @XmlAttribute(name=MailConstants.A_WEB_OFFLINE_SYNC_DAYS /* webOfflineSyncDays */, required=false)
-    private Integer webOfflineSyncDays;
 
     /**
      * @zm-api-field-tag effective-perms
@@ -327,7 +320,6 @@ public class Folder {
 
     public String getUrl() { return url; }
     public Boolean isActiveSyncDisabled() { return ZmBoolean.toBool(activeSyncDisabled); }
-    public Integer getWebOfflineSyncDays() { return webOfflineSyncDays; }
     public String getPerm() { return perm; }
     public List<Folder> getSubfolders() {
         return Collections.unmodifiableList(subfolders);
@@ -368,7 +360,6 @@ public class Folder {
     public void setView(View view) { this.view = view; }
     public void setUrl(String url) { this.url = url; }
     public void setDisableActiveSync(Boolean disableActiveSync) { this.recursive = ZmBoolean.fromBool(disableActiveSync); }
-    public void setWebOfflineSyncDays(Integer webOfflineSyncDays) { this.webOfflineSyncDays = webOfflineSyncDays; }
     public void setPerm(String perm) { this.perm = perm; }
     public void setRestUrl(String restUrl) { this.restUrl = restUrl; }
 
