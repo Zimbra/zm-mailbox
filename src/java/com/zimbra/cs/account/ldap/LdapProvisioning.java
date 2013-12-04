@@ -8081,6 +8081,7 @@ public class LdapProvisioning extends LdapProv {
                     removeGroupFromCache(dlBy, entry.mEntryIdentity);
                 }
             } else {
+                allDLs.clear();
                 groupCache.clear();
             }
             return;
