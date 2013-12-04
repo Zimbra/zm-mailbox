@@ -201,14 +201,22 @@ public class WsdlGenerator {
             msgElem.addAttribute("name", reqMsgName);
             // wsdl:definitions/wsdl:message/wsdl:part
             Element partElem = msgElem.addElement(part);
-            partElem.addAttribute("name", "parameters");
+            /**
+             * Bug 79898 - changed "name" from "parameters" to "params".
+             * http://msdn.microsoft.com/en-us/magazine/cc188906.aspx
+             *    Side Effects of "Parameters"
+             *    Both wsdl.exe and the WebMethod infrastructure exercise special behavior when a special part name,
+             *    "parameters," is used in a WSDL definition. The exact behavior is undocumented, but it's critical
+             *    to understand the convention if you happen to use it.
+             */
+            partElem.addAttribute("name", "params");
             partElem.addAttribute("element", xsdPrefix + ":" + requestName);
             // wsdl:definitions/wsdl:message - for response
             msgElem = root.addElement(wsdlMessage);
             msgElem.addAttribute("name", respMsgName);
             // wsdl:definitions/wsdl:message/wsdl:part
             partElem = msgElem.addElement(part);
-            partElem.addAttribute("name", "parameters");
+            partElem.addAttribute("name", "params");
             partElem.addAttribute("element", xsdPrefix + ":" + responseName);
     }
 
