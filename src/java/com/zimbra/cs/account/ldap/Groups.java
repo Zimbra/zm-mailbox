@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -23,20 +23,19 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.ldap.LdapProv;
 import com.zimbra.cs.ldap.IAttributes;
-import com.zimbra.cs.ldap.ZLdapFilterFactory;
 import com.zimbra.cs.ldap.SearchLdapOptions.SearchLdapVisitor;
+import com.zimbra.cs.ldap.ZLdapFilterFactory;
 
 
 public class Groups {
-    
+
     private LdapProv mProv;
     private Set<String> mAllDLs = null; // email addresses of all distribution lists on the system
-    
+
     private static class GetAllDLsVisitor extends SearchLdapVisitor {
         Set<String> allDLs = new HashSet<String>();
-        
+
         @Override
         public void visit(String dn, Map<String, Object> attrs, IAttributes ldapAttrs) {
             Object addrs = attrs.get(Provisioning.A_mail);
@@ -47,24 +46,24 @@ public class Groups {
                     allDLs.add(addr.toLowerCase());
             }
         }
-        
+
         private Set<String> getResult() {
             return allDLs;
         }
     }
-    
+
     public Groups(LdapProv prov) {
         mProv = prov;
     }
-    
+
     private synchronized Set<String> getAllDLs() throws ServiceException {
         if (mAllDLs == null) {
             try {
                 GetAllDLsVisitor visitor = new GetAllDLsVisitor();
-                mProv.searchLdapOnReplica(mProv.getDIT().mailBranchBaseDN(), 
+                mProv.searchLdapOnReplica(mProv.getDIT().mailBranchBaseDN(),
                         ZLdapFilterFactory.getInstance().allGroups(),
                         new String[] {Provisioning.A_mail}, visitor);
-                
+
                 // all is well, swap in the result Set and cache it
                 mAllDLs = Collections.synchronizedSet(visitor.getResult());
             } catch (ServiceException e) {
@@ -73,7 +72,11 @@ public class Groups {
         }
         return mAllDLs;
     }
-    
+
+    public synchronized void clear() {
+        mAllDLs = null;
+    }
+
     public void addGroup(Group dl) {
         try {
             Set<String> allGroups = getAllDLs();
@@ -84,7 +87,7 @@ public class Groups {
             // ignore
         }
     }
-    
+
     public void removeGroup(Set<String> addrs) {
         try {
             Set<String> allGroups = getAllDLs();
@@ -95,7 +98,7 @@ public class Groups {
             // ignore
         }
     }
-    
+
     public void removeGroup(String addr) {
         try {
             Set<String> allGroups = getAllDLs();
@@ -104,7 +107,7 @@ public class Groups {
             // ignore
         }
     }
-    
+
     /**
      * returns if addr is a group (distribution list)
      * @param addr
