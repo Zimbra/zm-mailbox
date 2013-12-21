@@ -3530,8 +3530,27 @@ public class Mailbox {
         }
     }
 
-    public List<Integer> listTombstones(int lastSync) throws ServiceException {
-        return getTombstones(lastSync).getAllIds();
+    public List<Integer> getTombstones(int lastSync, Set<MailItem.Type> types) throws ServiceException {
+        lock.lock(false);
+        try {
+            if (!isTrackingSync()) {
+                throw ServiceException.FAILURE("not tracking sync", null);
+            } else if (lastSync < getSyncCutoff()) {
+                throw MailServiceException.TOMBSTONES_EXPIRED();
+            }
+
+            boolean success = false;
+            try {
+                beginReadTransaction("getTombstones", null);
+                List<Integer> tombstones = DbMailItem.readTombstones(this, getOperationConnection(), lastSync, types);
+                success = true;
+                return tombstones;
+            } finally {
+                endTransaction(success);
+            }
+        } finally {
+            lock.release();
+        }
     }
 
     public TypedIdList getTombstones(int lastSync) throws ServiceException {

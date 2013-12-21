@@ -1770,6 +1770,65 @@ public class DbMailItem {
         }
     }
 
+    public static List<Integer> readTombstones(Mailbox mbox, DbConnection conn, long lastSync, Set<MailItem.Type> types)
+            throws ServiceException {
+        List<Integer> tombstones = new ArrayList<Integer>();
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        StringBuilder typesValue = new StringBuilder();
+        if (types.size() > 1) {
+            typesValue.append("(");
+            int i = 0;
+            for (MailItem.Type type : types) {
+                if (i != 0) {
+                    typesValue.append(",");
+                }
+                typesValue.append(type.toByte());
+                i = 1;
+            }
+            typesValue.append(")");
+        }
+        try {
+            stmt = conn.prepareStatement("SELECT ids FROM " + getTombstoneTableName(mbox) +
+                    " WHERE " + IN_THIS_MAILBOX_AND + "sequence > ? And type" +
+                    (types.size() == 1 ? " = " + types.iterator().next().toByte() : " IN " + typesValue) +
+                    " AND ids IS NOT NULL ORDER BY sequence");
+            Db.getInstance().enableStreaming(stmt);
+            int pos = 1;
+            pos = setMailboxId(stmt, mbox, pos);
+            stmt.setLong(pos++, lastSync);
+            rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                String row = rs.getString(1);
+                if (row == null || row.equals("")) {
+                    continue;
+                }
+
+                // the list of tombstones is comma-delimited
+                for (String stone : row.split(",")) {
+                    try {
+                        // a tombstone may either be ID or ID:UUID, so parse accordingly
+                        int delimiter = stone.indexOf(':');
+                        if (delimiter == -1) {
+                            tombstones.add(Integer.parseInt(stone));
+                        } else {
+                            tombstones.add(Integer.parseInt(stone.substring(0, delimiter)));
+                        }
+                    } catch (NumberFormatException nfe) {
+                        ZimbraLog.sync.warn("unparseable TOMBSTONE entry: " + stone);
+                    }
+                }
+            }
+            return tombstones;
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("reading tombstones since change: " + lastSync, e);
+        } finally {
+            DbPool.closeResults(rs);
+            DbPool.closeStatement(stmt);
+        }
+    }
+
     public static TypedIdList readTombstones(Mailbox mbox, long lastSync) throws ServiceException {
         TypedIdList tombstones = new TypedIdList();
 
