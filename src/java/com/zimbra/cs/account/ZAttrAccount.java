@@ -42265,13 +42265,13 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * <p>Valid values: [always, never, prompt]
      *
-     * @return zimbraPrefMailSendReadReceipts, or ZAttrProvisioning.PrefMailSendReadReceipts.never if unset and/or has invalid value
+     * @return zimbraPrefMailSendReadReceipts, or ZAttrProvisioning.PrefMailSendReadReceipts.prompt if unset and/or has invalid value
      *
      * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=822)
     public ZAttrProvisioning.PrefMailSendReadReceipts getPrefMailSendReadReceipts() {
-        try { String v = getAttr(Provisioning.A_zimbraPrefMailSendReadReceipts); return v == null ? ZAttrProvisioning.PrefMailSendReadReceipts.never : ZAttrProvisioning.PrefMailSendReadReceipts.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.PrefMailSendReadReceipts.never; }
+        try { String v = getAttr(Provisioning.A_zimbraPrefMailSendReadReceipts); return v == null ? ZAttrProvisioning.PrefMailSendReadReceipts.prompt : ZAttrProvisioning.PrefMailSendReadReceipts.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.PrefMailSendReadReceipts.prompt; }
     }
 
     /**
@@ -42279,13 +42279,13 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * <p>Valid values: [always, never, prompt]
      *
-     * @return zimbraPrefMailSendReadReceipts, or "never" if unset
+     * @return zimbraPrefMailSendReadReceipts, or "prompt" if unset
      *
      * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=822)
     public String getPrefMailSendReadReceiptsAsString() {
-        return getAttr(Provisioning.A_zimbraPrefMailSendReadReceipts, "never");
+        return getAttr(Provisioning.A_zimbraPrefMailSendReadReceipts, "prompt");
     }
 
     /**
