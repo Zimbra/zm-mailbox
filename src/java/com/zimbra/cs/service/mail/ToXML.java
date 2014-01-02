@@ -457,16 +457,21 @@ public final class ToXML {
         elem.addAttribute(MailConstants.A_UUID, folder.getUuid());
 
         if (folderId != Mailbox.ID_FOLDER_ROOT) {
+            boolean encodedPath = false;
             if (needToOutput(fields, Change.NAME)) {
                 String name = folder.getName();
                 if (!Strings.isNullOrEmpty(name)) {
                     elem.addAttribute(MailConstants.A_NAME, name);
                 }
                 elem.addAttribute(MailConstants.A_ABS_FOLDER_PATH, folder.getPath());
+                encodedPath = true;
             }
             if (needToOutput(fields, Change.FOLDER)) {
                 elem.addAttribute(MailConstants.A_FOLDER, ifmt.formatItemId(folder.getFolderId()));
                 elem.addAttribute(MailConstants.A_FOLDER_UUID, folder.getFolderUuid());
+                if (!encodedPath) {
+                    elem.addAttribute(MailConstants.A_ABS_FOLDER_PATH, folder.getPath());
+                }
             }
         }
 
