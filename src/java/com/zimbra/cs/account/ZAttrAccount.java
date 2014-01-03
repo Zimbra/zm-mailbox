@@ -5420,7 +5420,8 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * zimbraId of child accounts
+     * Deprecated since: 8.5.0. family mailbox feature is deprecated. Orig
+     * desc: zimbraId of child accounts
      *
      * @return zimbraChildAccount, or empty array if unset
      */
@@ -5430,7 +5431,8 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * zimbraId of child accounts
+     * Deprecated since: 8.5.0. family mailbox feature is deprecated. Orig
+     * desc: zimbraId of child accounts
      *
      * @param zimbraChildAccount new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -5443,7 +5445,8 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * zimbraId of child accounts
+     * Deprecated since: 8.5.0. family mailbox feature is deprecated. Orig
+     * desc: zimbraId of child accounts
      *
      * @param zimbraChildAccount new value
      * @param attrs existing map to populate, or null to create a new map
@@ -5457,7 +5460,8 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * zimbraId of child accounts
+     * Deprecated since: 8.5.0. family mailbox feature is deprecated. Orig
+     * desc: zimbraId of child accounts
      *
      * @param zimbraChildAccount new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -5470,7 +5474,8 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * zimbraId of child accounts
+     * Deprecated since: 8.5.0. family mailbox feature is deprecated. Orig
+     * desc: zimbraId of child accounts
      *
      * @param zimbraChildAccount new to add to existing values
      * @param attrs existing map to populate, or null to create a new map
@@ -5484,7 +5489,8 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * zimbraId of child accounts
+     * Deprecated since: 8.5.0. family mailbox feature is deprecated. Orig
+     * desc: zimbraId of child accounts
      *
      * @param zimbraChildAccount existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -5497,7 +5503,8 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * zimbraId of child accounts
+     * Deprecated since: 8.5.0. family mailbox feature is deprecated. Orig
+     * desc: zimbraId of child accounts
      *
      * @param zimbraChildAccount existing value to remove
      * @param attrs existing map to populate, or null to create a new map
@@ -5511,7 +5518,8 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * zimbraId of child accounts
+     * Deprecated since: 8.5.0. family mailbox feature is deprecated. Orig
+     * desc: zimbraId of child accounts
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -5523,7 +5531,8 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * zimbraId of child accounts
+     * Deprecated since: 8.5.0. family mailbox feature is deprecated. Orig
+     * desc: zimbraId of child accounts
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -35290,7 +35299,8 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * zimbraId of visible child accounts
+     * Deprecated since: 8.5.0. family mailbox feature is deprecated. Orig
+     * desc: zimbraId of visible child accounts
      *
      * @return zimbraPrefChildVisibleAccount, or empty array if unset
      *
@@ -35302,7 +35312,8 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * zimbraId of visible child accounts
+     * Deprecated since: 8.5.0. family mailbox feature is deprecated. Orig
+     * desc: zimbraId of visible child accounts
      *
      * @param zimbraPrefChildVisibleAccount new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -35317,7 +35328,8 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * zimbraId of visible child accounts
+     * Deprecated since: 8.5.0. family mailbox feature is deprecated. Orig
+     * desc: zimbraId of visible child accounts
      *
      * @param zimbraPrefChildVisibleAccount new value
      * @param attrs existing map to populate, or null to create a new map
@@ -35333,7 +35345,8 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * zimbraId of visible child accounts
+     * Deprecated since: 8.5.0. family mailbox feature is deprecated. Orig
+     * desc: zimbraId of visible child accounts
      *
      * @param zimbraPrefChildVisibleAccount new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -35348,7 +35361,8 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * zimbraId of visible child accounts
+     * Deprecated since: 8.5.0. family mailbox feature is deprecated. Orig
+     * desc: zimbraId of visible child accounts
      *
      * @param zimbraPrefChildVisibleAccount new to add to existing values
      * @param attrs existing map to populate, or null to create a new map
@@ -35364,7 +35378,8 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * zimbraId of visible child accounts
+     * Deprecated since: 8.5.0. family mailbox feature is deprecated. Orig
+     * desc: zimbraId of visible child accounts
      *
      * @param zimbraPrefChildVisibleAccount existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -35379,7 +35394,8 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * zimbraId of visible child accounts
+     * Deprecated since: 8.5.0. family mailbox feature is deprecated. Orig
+     * desc: zimbraId of visible child accounts
      *
      * @param zimbraPrefChildVisibleAccount existing value to remove
      * @param attrs existing map to populate, or null to create a new map
@@ -35395,7 +35411,8 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * zimbraId of visible child accounts
+     * Deprecated since: 8.5.0. family mailbox feature is deprecated. Orig
+     * desc: zimbraId of visible child accounts
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -35409,7 +35426,8 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * zimbraId of visible child accounts
+     * Deprecated since: 8.5.0. family mailbox feature is deprecated. Orig
+     * desc: zimbraId of visible child accounts
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
