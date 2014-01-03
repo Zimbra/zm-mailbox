@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -50,16 +50,16 @@ import com.zimbra.soap.type.GalSearchType;
 
 
 public abstract class GalGroup {
-    
+
     public enum GroupInfo {
         IS_GROUP,   // address is a group
         CAN_EXPAND  // address is a group and the authed account has right to expand it
     };
-    
+
     private static final Provisioning prov = Provisioning.getInstance();
     private static Map<String, DomainGalGroupCache> groups = new HashMap<String, DomainGalGroupCache>();
     private static ThreadPool syncGalGroupThreadPool = new ThreadPool("SyncGalGroup", 10);
-    
+
     private interface GalGroupCache {
         boolean isInternalGroup(String addr);
         boolean isExternalGroup(String addr);
@@ -67,7 +67,7 @@ public abstract class GalGroup {
 
     private static class GalGroupCacheFullException extends Exception {
     }
-    
+
     public static void flushCache(CacheEntry[] domains) throws ServiceException {
         if (domains != null) {
             for (CacheEntry entry : domains) {
@@ -81,15 +81,15 @@ public abstract class GalGroup {
             GalGroup.flushCache((Domain)null);
         }
     }
-    
+
     /**
-     * returns whether addr is a GAL(internal or external) group according to the GAL 
+     * returns whether addr is a GAL(internal or external) group according to the GAL
      * setting on the domain of the requestedAcct.
-     * 
-     * This method uses the GAL group cache, domain (of the requestedAcct) attribute 
-     * zimbraGalGroupIndicatorEnabled must be set to TRUE for this call to return meaningful answer.   
+     *
+     * This method uses the GAL group cache, domain (of the requestedAcct) attribute
+     * zimbraGalGroupIndicatorEnabled must be set to TRUE for this call to return meaningful answer.
      * If zimbraGalGroupIndicatorEnabled is FALSE, this method always returns false.
-     * 
+     *
      * @param addr
      * @param requestedAcct
      * @return
@@ -97,7 +97,7 @@ public abstract class GalGroup {
     public static boolean isGroup(String addr, Account requestedAcct) {
         return GroupInfo.IS_GROUP == GalGroupInfoProvider.getInstance().getGroupInfo(addr, false, requestedAcct, null);
     }
-    
+
     public static GroupInfo getGroupInfo(String addr, boolean needCanExpand, Account requestedAcct, Account authedAcct) {
         Domain domain = null;
         try {
@@ -105,27 +105,27 @@ public abstract class GalGroup {
         } catch (ServiceException e) {
             ZimbraLog.gal.warn("GalGroup - unable to get domain for account " + requestedAcct, e);
         }
-        
+
         if (domain == null)
             return null;
-        
+
         if (!domain.isGalGroupIndicatorEnabled())
             return null;
-        
+
         GalGroupCache galGroup = null;
-        
+
         try {
             galGroup = GalGroup.getGalGroupForDomain(requestedAcct, domain);
         } catch (GalGroupCacheFullException e) {
             return null;
         }
-        
+
         if (galGroup == null) {
             // GalGroup for the domain is still syncing, do a GAL search
-            // this should not happen once the syncing is finished 
+            // this should not happen once the syncing is finished
             galGroup = new EmailAddrGalGroupCache(addr, requestedAcct);
         }
-        
+
         // we have a fully synced GalGroup object for the domain
         if (galGroup.isInternalGroup(addr)) {
             if (needCanExpand && canExpandGroup(prov, addr, authedAcct))
@@ -138,7 +138,7 @@ public abstract class GalGroup {
             else
                 return GroupInfo.IS_GROUP;
         }
-            
+
         return null;
     }
 
@@ -166,17 +166,17 @@ public abstract class GalGroup {
         }
     }
 
-    private static synchronized GalGroupCache getGalGroupForDomain(Account requestedAcct, Domain domain) 
+    private static synchronized GalGroupCache getGalGroupForDomain(Account requestedAcct, Domain domain)
     throws GalGroupCacheFullException{
         String domainName = domain.getName();
         DomainGalGroupCache galGroup = groups.get(domainName);
-        
+
         if (galGroup == null) {
             // see if there is room for a new domain
             int maxDomains = LC.gal_group_cache_maxsize_domains.intValue();
             if (groups.size() >= maxDomains) {
-                String msg = "GalGroup - group cache has reached maxsize of " + 
-                        maxDomains + " domains, group indicator for messages are temporiry unavailable " +
+                String msg = "GalGroup - group cache has reached maxsize of " +
+                        maxDomains + " domains, group indicator for messages are temporarily unavailable " +
                         "for domain " + domainName;
                 if (hadWarnedDomainForCacheFull(domain)) {
                     // log at debug level so we don't flood the log
@@ -187,29 +187,29 @@ public abstract class GalGroup {
                 }
                 throw new GalGroupCacheFullException();
             }
-            
+
             //
             // add group cache for the domain
-            // 
+            //
             clearHadWarnedDomainForCacheFull(domain);
-            
+
             galGroup = new DomainGalGroupCache(domainName);
             GalGroup.putInCache(domainName, galGroup);
             DomainGalGroupCache.SyncThread syncThread = new DomainGalGroupCache.SyncThread(domain, galGroup);
             syncGalGroupThreadPool.execute(syncThread);
         }
-        
+
         if (galGroup.isSyncing()) {
             ZimbraLog.gal.debug("GalGroup - Still syncing GalGroup for domain " + domain.getName());
             return null;
-        } else if (galGroup.isExpired()) { 
+        } else if (galGroup.isExpired()) {
             GalGroup.removeFromCache(domainName, "group cache expired");
             return null;
         } else {
             return galGroup;
         }
     }
-    
+
     private static boolean hadWarnedDomainForCacheFull(Domain domain) {
         Boolean domainHadBeenWarned = (Boolean)domain.getCachedData(EntryCacheDataKey.DOMAIN_GROUP_CACHE_FULL_HAD_BEEN_WARNED.getKeyName());
         if (domainHadBeenWarned == null)
@@ -217,25 +217,25 @@ public abstract class GalGroup {
         else
             return true;
     }
-    
+
     private static void setHadWarnedDomainForCacheFull(Domain domain) {
         domain.setCachedData(EntryCacheDataKey.DOMAIN_GROUP_CACHE_FULL_HAD_BEEN_WARNED.getKeyName(), Boolean.TRUE);
     }
-    
+
     private static void clearHadWarnedDomainForCacheFull(Domain domain) {
         domain.setCachedData(EntryCacheDataKey.DOMAIN_GROUP_CACHE_FULL_HAD_BEEN_WARNED.getKeyName(), null);
     }
-    
+
     private static synchronized void putInCache(String domainName, DomainGalGroupCache galGroup) {
         ZimbraLog.gal.debug("GalGroup - adding GalGroup cache for domain " + domainName);
         groups.put(domainName, galGroup);
     }
-    
+
     private static synchronized void removeFromCache(String domainName, String reason) {
         ZimbraLog.gal.debug("GalGroup - removing GalGroup cache for domain " + domainName + ", " + reason);
         groups.remove(domainName);
     }
-    
+
     private static boolean canExpandGroup(Provisioning prov, String groupName, Account authedAcct) {
         try {
             // get the dl object for ACL checking
@@ -255,19 +255,19 @@ public abstract class GalGroup {
             ZimbraLog.gal.warn("GalGroup - unable to check permission for gal group expansion: " + groupName);
             return false;
         }
-        
+
         return true;
     }
-    
+
     private static class GalGroupCallback extends GalSearchResultCallback {
         protected GalGroupCallback(GalSearchParams params) {
             super(params);
         }
-        
+
         protected boolean isZimbraInternalGroup(String email, String zimbraId) {
             return (zimbraId != null && prov.isDistributionList(email));
         }
-        
+
         protected String getSingleAttr(Object contact, String attr) {
             if (contact instanceof Contact)
                 return ((Contact)contact).get(attr);
@@ -276,18 +276,18 @@ public abstract class GalGroup {
             else
                 return getSingleAttr((HashMap<String,Object>)contact, attr);
         }
-        
+
         private String getSingleAttr(HashMap<String,Object> map, String attr) {
             Object val = map.get(attr);
-            if (val instanceof String) 
+            if (val instanceof String)
                 return (String) val;
-            else if (val instanceof String[]) 
+            else if (val instanceof String[])
                 return ((String[])val)[0];
-            else 
+            else
                 return null;
         }
     }
-    
+
     /**
      * GAL group search result for a domain (all GAL groups in the domain's GAL)
      */
@@ -298,104 +298,104 @@ public abstract class GalGroup {
         private boolean isSyncing;
         private Set<String> internalGroups;
         private Set<String> externalGroups;
-        
-        
+
+
         private DomainGalGroupCache(String domainName) {
-            lifeTime = 0;  // life starts when the sync is completed 
-            max = LC.gal_group_cache_maxsize_per_domain.intValue(); // 0 is unlimited    
-            
+            lifeTime = 0;  // life starts when the sync is completed
+            max = LC.gal_group_cache_maxsize_per_domain.intValue(); // 0 is unlimited
+
             this.domainName = domainName;
             isSyncing = true;
             internalGroups = new HashSet<String>();
             externalGroups = new HashSet<String>();
         }
-        
+
         private synchronized boolean isSyncing() {
             return isSyncing;
         }
-        
+
         private synchronized boolean isExpired() {
             return (!isSyncing && (lifeTime < System.currentTimeMillis()));
         }
-        
+
         private synchronized void setDoneSyncing() {
             isSyncing = false;
-            
+
             // start life, refresh interval must be between 15 min and 30 days
             lifeTime = System.currentTimeMillis() + (LC.gal_group_cache_maxage.intValueWithinRange(15, 43200) * Constants.MILLIS_PER_MINUTE);
         }
-        
+
         // no need to synchronize because it can only be called from the syncing thread
         private void addInternalGroup(String addr) {
             if (reachedMax()) {
                 ZimbraLog.gal.debug("GalGroup - NOT adding internal group: " + addr + ", limit (" + max + ") reached, domain=" + domainName);
                 return;
             }
-                
+
             ZimbraLog.gal.debug("GalGroup - Adding internal group: " + addr + ", domain=" + domainName);
             internalGroups.add(addr.toLowerCase());
         }
-        
+
         // no need to synchronize because it can only be called from the syncing thread
         private void addExternalGroup(String addr) {
             if (reachedMax()) {
                 ZimbraLog.gal.debug("GalGroup - NOT adding external group: " + addr + ", limit (" + max + ") reached, domain=" + domainName);
                 return;
             }
-            
+
             ZimbraLog.gal.debug("GalGroup - Adding external group: " + addr + ", domain=" + domainName);
             externalGroups.add(addr.toLowerCase());
         }
-        
+
         private boolean reachedMax() {
             if (max == 0)
                 return false;
             else
                 return ((internalGroups.size() + externalGroups.size()) >= max);
         }
-        
+
         // no need to synchronize because we would never modify/get the set concurrently.
-        // No one would call this method when the GalGroup object is still syncing  
+        // No one would call this method when the GalGroup object is still syncing
         @Override
         public boolean isInternalGroup(String addr) {
             return internalGroups.contains(addr.toLowerCase());
         }
-        
+
         // no need to synchronize because we would never modify/get the set concurrently.
-        // No one would call this method when the GalGroup object is still syncing  
+        // No one would call this method when the GalGroup object is still syncing
         @Override
         public boolean isExternalGroup(String addr) {
             return externalGroups.contains(addr.toLowerCase());
         }
-        
+
         private int getMax() {
             return max;
         }
-        
+
         private static class SyncThread implements Runnable {
             AuthToken adminAuthToken; // admin auth token for the search
             Domain domain;
             DomainGalGroupCache galGroup;
-        
+
             private SyncThread(Domain domain, DomainGalGroupCache galGroup) {
                 this.domain = domain;
                 this.galGroup = galGroup;
             }
-            
+
             @Override
             public void run() {
-                
+
                 try {
                     Account admin = Provisioning.getInstance().get(AccountBy.adminName, LC.zimbra_ldap_user.value());
                     ZimbraLog.addAccountNameToContext(admin.getName());
                     adminAuthToken =  AuthProvider.getAuthToken(admin, true);
-    
+
                     long startTime = System.currentTimeMillis();
                     ZimbraLog.gal.info("GalGroup - Start syncing gal groups for domain " + domain.getName());
-                
+
                     sync();
                     galGroup.setDoneSyncing();
-                    
+
                     long elapsedTime = System.currentTimeMillis() - startTime;
                     ZimbraLog.gal.info("GalGroup - Finished syncing gal groups for domain " + domain.getName() +
                             ", elapsed time = " + elapsedTime + "msec");
@@ -404,22 +404,22 @@ public abstract class GalGroup {
                     GalGroup.removeFromCache(domain.getName(), "sync failed");
                 }
             }
-    
+
             // sync all groups in the domain's GAL
             private void sync() throws ServiceException {
                 int offset = 0;
                 int max = galGroup.getMax(); // 0 is unlimited
                 int pageSize = 1000;
                 int limit = (max == 0) ? pageSize : Math.min(pageSize, max); // page size for GAL sync account search
-                
+
                 GalSearchType searchType = GalSearchType.group;
-                
+
                 boolean hasMore = true;
-                
+
                 while (hasMore && !galGroup.reachedMax()) {
                     ZimbraSoapContext zsc = new ZimbraSoapContext(adminAuthToken, null, SoapProtocol.Soap12, SoapProtocol.Soap12);
                     GalSearchParams params = new GalSearchParams(domain, zsc);
-                    
+
                     // create a request in case the GAL sync account search needs to be proxied,
                     Element request = Element.create(SoapProtocol.Soap12, AdminConstants.SEARCH_GAL_REQUEST);
                     request.addAttribute(AdminConstants.A_DOMAIN, domain.getName());
@@ -427,54 +427,54 @@ public abstract class GalGroup {
                     request.addAttribute(MailConstants.A_QUERY_OFFSET, offset);
                     request.addAttribute(MailConstants.A_QUERY_LIMIT, limit);
                     params.setRequest(request);
-                    
+
                     params.setType(searchType);
                     params.setLimit(limit);
                     params.setLdapLimit(max); // set ldap limit to configured max if the search falls back to ldap search
                     params.setResponseName(AdminConstants.SEARCH_GAL_RESPONSE);
-                    
+
                     SyncGalGroupCallback resultCallback = new SyncGalGroupCallback(params, galGroup);
                     params.setResultCallback(resultCallback);
                     GalSearchControl gal = new GalSearchControl(params);
-                    
+
                     ZimbraLog.gal.debug("GalGroup - searching GAL for groups: domain=" + domain.getName() + ", max="+ max + ", limit=" + limit + ", offset=" + offset);
                     gal.search();
-                    
+
                     offset += limit;
-                    
+
                     if (resultCallback.isPagingSupported())
                         hasMore = resultCallback.getHasMore();
                     else
                         hasMore = false;
                 }
             }
-            
+
             private static class SyncGalGroupCallback extends GalGroupCallback {
                 private DomainGalGroupCache galGroup;
                 private boolean hasMore;
                 private boolean pagingSupported; // default to false
-                
+
                 // extra email fields on gal entries, e.g. aliases
                 private String[] EXTRA_EMAIL_FIELDS = new String[] {
-                        "email2", "email3", "email4", "email5", "email6", "email7", "email8", "email9", 
+                        "email2", "email3", "email4", "email5", "email6", "email7", "email8", "email9",
                         "email10", "email11", "email12", "email13", "email14", "email15", "email16"
                 };
-                
+
                 private SyncGalGroupCallback(GalSearchParams params, DomainGalGroupCache galGroup) {
                     super(params);
                     this.galGroup = galGroup;
                 }
-                
+
                 @Override
                 public Element handleContact(Contact contact) throws ServiceException {
                     if (!contact.isGroup())
                         return null;
-                    
+
                     String email = getSingleAttr(contact, ContactConstants.A_email);
                     String zimbraId = getSingleAttr(contact, ContactConstants.A_zimbraId);
-                    
+
                     if (email == null) {
-                        ZimbraLog.gal.info("GalGroup - handle Contact: contact " + 
+                        ZimbraLog.gal.info("GalGroup - handle Contact: contact " +
                                 contact.getFileAsString() + "(" + contact.getId() + ")" + " does not have an email address." +
                                 " Not adding to gal group cache.");
                     } else {
@@ -482,42 +482,42 @@ public abstract class GalGroup {
                     }
                     return null;
                 }
-                
+
                 @Override
                 public void handleContact(GalContact galContact) throws ServiceException {
                     if (!galContact.isGroup())
                         return;
-                    
-                    String email = getSingleAttr(galContact, ContactConstants.A_email); 
+
+                    String email = getSingleAttr(galContact, ContactConstants.A_email);
                     String zimbraId = getSingleAttr(galContact, ContactConstants.A_zimbraId);
-                    
+
                     if (email == null) {
-                        ZimbraLog.gal.info("GalGroup - handle GalContact: contact " + 
+                        ZimbraLog.gal.info("GalGroup - handle GalContact: contact " +
                                 galContact.getId() + " does not have an email address." +
                                 " Not adding to gal group cache.");
                     } else {
                         addResult(email, zimbraId, galContact);
                     }
                 }
-                
+
                 @Override
                 public void handleElement(Element e) throws ServiceException {
                     HashMap<String,Object> contact = parseContactElement(e);
                     if (!Contact.isGroup(contact))
                         return;
-                    
-                    String email = getSingleAttr(contact, ContactConstants.A_email); 
+
+                    String email = getSingleAttr(contact, ContactConstants.A_email);
                     String zimbraId = getSingleAttr(contact, ContactConstants.A_zimbraId);
-                    
+
                     if (email == null) {
-                        ZimbraLog.gal.info("GalGroup - handle Element: contact " + 
+                        ZimbraLog.gal.info("GalGroup - handle Element: contact " +
                                 e.toString() + " does not have an email address." +
                                 " Not adding to gal group cache.");
                     } else {
                         addResult(email, zimbraId, contact);
                     }
                 }
-    
+
                 private void addResult(String email, String zimbraId, Object contact) {
                     if (isZimbraInternalGroup(email, zimbraId)) {
                         galGroup.addInternalGroup(email);
@@ -535,35 +535,35 @@ public abstract class GalGroup {
                         }
                     }
                 }
-                
+
                 @Override
                 public void setQueryOffset(int offset) {
                     pagingSupported = true;
                 }
-                
+
                 @Override
                 public void setHasMoreResult(boolean more) {
                     hasMore = more;
                 }
-                
+
                 private boolean getHasMore() {
                     return hasMore;
                 }
-                
+
                 private boolean isPagingSupported() {
                     return pagingSupported;
                 }
-                
+
             }
         }
     }
-    
+
     /**
-     * GAL group search result for an email address 
+     * GAL group search result for an email address
      */
     private static class EmailAddrGalGroupCache implements GalGroupCache {
         SearchGroupCallback resultCallback;
-        
+
         EmailAddrGalGroupCache(String addr, Account requestedAcct) {
             GalSearchParams params = new GalSearchParams(requestedAcct);
             params.setQuery(addr);
@@ -571,7 +571,7 @@ public abstract class GalGroup {
             params.setLimit(1);
             resultCallback = new SearchGroupCallback(params);
             params.setResultCallback(resultCallback);
-            
+
             GalSearchControl gal = new GalSearchControl(params);
             try {
                 gal.search();
@@ -579,53 +579,53 @@ public abstract class GalGroup {
                 ZimbraLog.gal.warn("GalGroup - unable to search GAL group for addr:" + addr, e);
             }
         }
-        
+
         @Override
         public boolean isInternalGroup(String addr) {
             return resultCallback.isInternalGroup();
         }
-        
+
         @Override
         public boolean isExternalGroup(String addr) {
             return resultCallback.isExternalGroup();
         }
-        
+
         private static class SearchGroupCallback extends GalGroupCallback {
             private boolean isInternalGroup;
             private boolean isExternalGroup;
-            
+
             private SearchGroupCallback(GalSearchParams params) {
                 super(params);
             }
-            
+
             @Override
             public Element handleContact(Contact contact) throws ServiceException {
                 if (!contact.isGroup())
                     return null;
-                
+
                 String email = getSingleAttr(contact, ContactConstants.A_email);
                 String zimbraId = getSingleAttr(contact, ContactConstants.A_zimbraId);
                 setResult(email, zimbraId);
                 return null;
             }
-            
+
             @Override
             public void handleContact(GalContact galContact) throws ServiceException {
                 if (!galContact.isGroup())
                     return;
-                
-                String email = getSingleAttr(galContact, ContactConstants.A_email); 
+
+                String email = getSingleAttr(galContact, ContactConstants.A_email);
                 String zimbraId = getSingleAttr(galContact, ContactConstants.A_zimbraId);
                 setResult(email, zimbraId);
             }
-            
+
             @Override
             public void handleElement(Element e) throws ServiceException {
                 HashMap<String,Object> contact = parseContactElement(e);
                 if (!Contact.isGroup(contact))
                     return;
-                
-                String email = getSingleAttr(contact, ContactConstants.A_email); 
+
+                String email = getSingleAttr(contact, ContactConstants.A_email);
                 String zimbraId = getSingleAttr(contact, ContactConstants.A_zimbraId);
                 setResult(email, zimbraId);
             }
@@ -636,15 +636,15 @@ public abstract class GalGroup {
                 else
                     isExternalGroup = true;
             }
-            
+
             private boolean isInternalGroup() {
                 return isInternalGroup;
             }
-            
+
             private boolean isExternalGroup() {
                 return isExternalGroup;
             }
-            
+
         }
     }
 
