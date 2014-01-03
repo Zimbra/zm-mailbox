@@ -291,66 +291,35 @@ public final class HttpUtil {
             return result.toString();
         }
 
-        // Now here's where it gets fun. Some browsers don't do well with any encoding
-        // Newer browsers.. Chrome 11+, FF5+ IE 9+ support RFC 5987 for encoding non-ascii filenames
+        // Now here's where it gets fun. Some browsers don't do well with any
+        // encoding -- see <http://stackoverflow.com/questions/1361604> for a
+        // list. Most browsers support RFC 5987 for encoding non-ascii
+        // filenames.
         String pathInfo = request.getPathInfo();
         String ua = request.getHeader("User-Agent");
         Browser browser = guessBrowser(ua);
 
         int majorVer = browser.getMajorVersion(ua);
-        try {
-            switch (browser) {
-                case IE:
-                    result.append("filename=")
-                          .append(new String(URLCodec.encodeUrl(IE_URL_SAFE, filename.getBytes(Charsets.UTF_8)),
-                                  Charsets.ISO_8859_1));
-                    break;
-                case SAFARI:
-                    // Safari still doesn't support any encoding.
-                    // If we have a path info that matches our filename, we'll leave out the
-                    // filename= part of the header and let the browser use that
-                    // if we don't we'll force it over to ASCII and '?' any of the characters we don't know.
 
-                    if (pathInfo != null && pathInfo.endsWith(filename)) {
-                        // The filename is already here. no need to do anything special
-                        break;
-                    }
-
-                    // Ok, so now we're stuck with ascii encoding.
-                    result.append("filename=")
-                          .append(new String(filename.getBytes(Charsets.ISO_8859_1), Charsets.ISO_8859_1));
-                    break;
-                case CHROME:
-                    // Chrome.. ah chrome.. if its 11+, we'll encode with 5987, if its less we'll do the
-                    // same hacks we did for safari.
-                    if (majorVer >= 11) {
-                        result.append("filename*=") // note: the *= is not a typo
-                              .append("UTF-8''")
-                              // encode it just like IE
-                              .append(new String(URLCodec.encodeUrl(IE_URL_SAFE, filename.getBytes(Charsets.UTF_8)),
-                                      Charsets.ISO_8859_1));
-                        break;
-                    }
-
-                    // must be less than 11,
-                    if (pathInfo.endsWith(filename)) {
-                        // The filename is already here. no need to do anything special
-                        break;
-                    }
-
-                    // Ok, so now we're stuck with ascii encoding.
-                    result.append("filename=")
-                          .append(new String(filename.getBytes(Charsets.ISO_8859_1), Charsets.ISO_8859_1));
-                    break;
-                case FIREFOX:
-                default:
-                    result.append("filename=\"")
-                          .append(MimeUtility.encodeText(filename, "utf-8", "B"))
-                          .append("\"");
-            }
-        } catch(UnsupportedEncodingException uee) {
-            // no need to do anything..
-            uee.printStackTrace();
+        if (pathInfo != null && pathInfo.endsWith(filename)) {
+            // If we have a path info that matches our filename, we'll leave out the
+            // filename= part of the header and let the browser use that
+        } else if (browser == Browser.IE && majorVer < 9) {
+            result.append("filename=")
+                  .append(new String(URLCodec.encodeUrl(IE_URL_SAFE, filename.getBytes(Charsets.UTF_8)),
+                                     Charsets.ISO_8859_1));
+        } else if (browser == Browser.SAFARI && majorVer < 6 ||
+                   browser == Browser.CHROME && majorVer < 11) {
+            // force it over to Latin 1 and '?' any of the characters we don't know.
+            result.append("filename=")
+                 .append(new String(filename.getBytes(Charsets.ISO_8859_1), Charsets.ISO_8859_1));
+        } else {
+            // use RFC 5987
+            result.append("filename*=") // note: the *= is not a typo
+                  .append("UTF-8''")
+                  // encode it just like IE
+                  .append(new String(URLCodec.encodeUrl(IE_URL_SAFE, filename.getBytes(Charsets.UTF_8)),
+                          Charsets.ISO_8859_1));
         }
 
 
