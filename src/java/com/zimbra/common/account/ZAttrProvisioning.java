@@ -3589,7 +3589,8 @@ public class ZAttrProvisioning {
     public static final String A_zimbraChangePasswordURL = "zimbraChangePasswordURL";
 
     /**
-     * zimbraId of child accounts
+     * Deprecated since: 8.5.0. family mailbox feature is deprecated. Orig
+     * desc: zimbraId of child accounts
      */
     @ZAttr(id=449)
     public static final String A_zimbraChildAccount = "zimbraChildAccount";
@@ -9896,7 +9897,8 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefCalendarWorkingHours = "zimbraPrefCalendarWorkingHours";
 
     /**
-     * zimbraId of visible child accounts
+     * Deprecated since: 8.5.0. family mailbox feature is deprecated. Orig
+     * desc: zimbraId of visible child accounts
      *
      * @since ZCS 5.0.0
      */
