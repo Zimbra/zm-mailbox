@@ -3308,25 +3308,25 @@ public class DbMailItem {
         PreparedStatement stmt = null;
         try {
             stmt = conn.prepareStatement("SELECT id, mod_content, locator, blob_digest FROM " + getMailItemTableName(mbox) +
-                    " WHERE " + IN_THIS_MAILBOX_AND + "blob_digest IS NOT NULL");
+                    " WHERE " + IN_THIS_MAILBOX_AND + "blob_digest IS NOT NULL AND locator IS NOT NULL");
             getAllBlobs(stmt, mbox.getAccountId(), mbox.getId(), blobs);
             stmt.close();
             stmt = null;
 
             stmt = conn.prepareStatement("SELECT id, mod_content, locator, blob_digest FROM " + getMailItemTableName(mbox, true) +
-                    " WHERE " + IN_THIS_MAILBOX_AND + "blob_digest IS NOT NULL");
+                    " WHERE " + IN_THIS_MAILBOX_AND + "blob_digest IS NOT NULL AND locator IS NOT NULL");
             getAllBlobs(stmt, mbox.getAccountId(), mbox.getId(), blobs);
             stmt.close();
             stmt = null;
 
             stmt = conn.prepareStatement("SELECT item_id, mod_content, locator, blob_digest FROM " + getRevisionTableName(mbox) +
-                    " WHERE " + IN_THIS_MAILBOX_AND + "blob_digest IS NOT NULL");
+                    " WHERE " + IN_THIS_MAILBOX_AND + "blob_digest IS NOT NULL AND locator IS NOT NULL");
             getAllBlobs(stmt, mbox.getAccountId(), mbox.getId(), blobs);
             stmt.close();
             stmt = null;
 
             stmt = conn.prepareStatement("SELECT item_id, mod_content, locator, blob_digest FROM " + getRevisionTableName(mbox, true) +
-                    " WHERE " + IN_THIS_MAILBOX_AND + "blob_digest IS NOT NULL");
+                    " WHERE " + IN_THIS_MAILBOX_AND + "blob_digest IS NOT NULL AND locator IS NOT NULL");
             getAllBlobs(stmt, mbox.getAccountId(), mbox.getId(), blobs);
 
             ZimbraLog.mailbox.info("got blob list for mailbox %d (%d blobs)", mbox.getId(), blobs.size());
@@ -3934,6 +3934,7 @@ public class DbMailItem {
 
     /**
      * Returns the ids of items that match the given query parameters.
+     *
      * @return the matching ids, or an empty <tt>Set</tt>
      */
     public static Set<Integer> getIds(Mailbox mbox, DbConnection conn, QueryParams params, boolean fromDumpster)
