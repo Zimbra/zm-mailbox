@@ -1195,6 +1195,9 @@ public final class LC {
     @Supported
     public static final KnownKey external_store_local_cache_min_lifetime = KnownKey.newKey(Constants.MILLIS_PER_MINUTE);
 
+    @Supported
+    public static final KnownKey external_store_delete_max_ioexceptions = KnownKey.newKey(25);
+
     //Triton integration
     public static final KnownKey triton_store_url = KnownKey.newKey("");
     public static final KnownKey triton_hash_type = KnownKey.newKey("SHA0");
