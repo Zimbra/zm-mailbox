@@ -131,8 +131,27 @@ public abstract class ExternalStoreManager extends StoreManager implements Exter
     @Override
     public boolean deleteStore(Mailbox mbox, Iterable<MailboxBlob.MailboxBlobInfo> blobs) throws IOException, ServiceException {
         // the default implementation iterates through the mailbox's blobs and deletes them one by one
+        IOException ioException = null;
+        int consecutiveIoExceptions = 0;
         for (MailboxBlob.MailboxBlobInfo mbinfo : blobs) {
-            delete(getMailboxBlob(mbox, mbinfo.itemId, mbinfo.revision, mbinfo.locator));
+            try {
+                delete(getMailboxBlob(mbox, mbinfo.itemId, mbinfo.revision, mbinfo.locator));
+                consecutiveIoExceptions = 0;
+            } catch (IOException ioe) {
+                if (ioException == null) {
+                    ioException = ioe;
+                }
+                consecutiveIoExceptions++;
+                ZimbraLog.store.warn("IOException during deleteStore() for mbox [%d] item [%d] revision [%d] locator [%s]"
+                    , mbox.getId(), mbinfo.itemId, mbinfo.revision, mbinfo.locator, ioe);
+                if (consecutiveIoExceptions > LC.external_store_delete_max_ioexceptions.intValue()) {
+                    ZimbraLog.store.error("too many consecutive IOException during delete store, bailing");
+                    break;
+                }
+            }
+        }
+        if (ioException != null) {
+            throw new IOException("deleteStore failed due to IOException", ioException);
         }
         return true;
     }
