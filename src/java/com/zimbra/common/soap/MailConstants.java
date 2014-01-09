@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- *
+ * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- *
+ * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -723,7 +723,6 @@ public final class MailConstants {
     public static final String A_CAL_EXPAND_INST_START = "calExpandInstStart";
     public static final String A_CAL_EXPAND_INST_END = "calExpandInstEnd";
     public static final String A_RESULT_MODE = "resultMode";
-    public static final String A_FULL_CONVERSATION = "fullConversation";
     public static final String A_PREFETCH = "prefetch";
     public static final String A_VERBOSE = "verbose";
     public static final String A_CSVFORMAT = "csvfmt";
@@ -736,8 +735,6 @@ public final class MailConstants {
     public static final String A_MAX_MEMBERS = "maxMembers";
     public static final String A_TOO_MANY_MEMBERS = "tooManyMembers";
     public static final String A_ACTIVESYNC_DISABLED = "activesyncdisabled";
-    public static final String A_WEB_OFFLINE_SYNC_DAYS = "webOfflineSyncDays";
-    public static final String A_NUM_DAYS = "numDays";
 
     // contact group
     public static final String E_CONTACT_GROUP_MEMBER = "m";
@@ -758,7 +755,7 @@ public final class MailConstants {
     public static final String A_PART = "part";
     public static final String A_BODY = "body";
     public static final String A_CONTENT_TYPE = "ct";
-    public static final String A_CONTENT_DISPOSITION = "cd";
+    public static final String A_CONTENT_DISPOSTION = "cd";
     public static final String A_CONTENT_DESCRIPTION = "cde";
     public static final String A_CONTENT_ID = "ci";
     public static final String A_CONTENT_LOCATION = "cl";

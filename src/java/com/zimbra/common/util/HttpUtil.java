@@ -19,6 +19,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLDecoder;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.HashMap;
@@ -34,6 +35,7 @@ import org.apache.commons.httpclient.HttpsURL;
 
 import com.google.common.base.Charsets;
 import com.google.common.primitives.Bytes;
+import com.mysql.jdbc.StringUtils;
 
 public final class HttpUtil {
 
@@ -68,7 +70,7 @@ public final class HttpUtil {
          * @return The index (like String.indexof) if present, -1 if not
          */
         int indexOf(String str) {
-            if (StringUtil.isNullOrEmpty(str)) {
+            if (StringUtils.isNullOrEmpty(str)) {
                 return -1;
             }
             return str.indexOf(userAgentStr);
@@ -291,35 +293,66 @@ public final class HttpUtil {
             return result.toString();
         }
 
-        // Now here's where it gets fun. Some browsers don't do well with any
-        // encoding -- see <http://stackoverflow.com/questions/1361604> for a
-        // list. Most browsers support RFC 5987 for encoding non-ascii
-        // filenames.
+        // Now here's where it gets fun. Some browsers don't do well with any encoding
+        // Newer browsers.. Chrome 11+, FF5+ IE 9+ support RFC 5987 for encoding non-ascii filenames
         String pathInfo = request.getPathInfo();
         String ua = request.getHeader("User-Agent");
         Browser browser = guessBrowser(ua);
 
         int majorVer = browser.getMajorVersion(ua);
+        try {
+            switch (browser) {
+                case IE:
+                    result.append("filename=")
+                          .append(new String(URLCodec.encodeUrl(IE_URL_SAFE, filename.getBytes(Charsets.UTF_8)),
+                                  Charsets.ISO_8859_1));
+                    break;
+                case SAFARI:
+                    // Safari still doesn't support any encoding.
+                    // If we have a path info that matches our filename, we'll leave out the
+                    // filename= part of the header and let the browser use that
+                    // if we don't we'll force it over to ASCII and '?' any of the characters we don't know.
 
-        if (pathInfo != null && pathInfo.endsWith(filename)) {
-            // If we have a path info that matches our filename, we'll leave out the
-            // filename= part of the header and let the browser use that
-        } else if (browser == Browser.IE && majorVer < 9) {
-            result.append("filename=")
-                  .append(new String(URLCodec.encodeUrl(IE_URL_SAFE, filename.getBytes(Charsets.UTF_8)),
-                                     Charsets.ISO_8859_1));
-        } else if (browser == Browser.SAFARI && majorVer < 6 ||
-                   browser == Browser.CHROME && majorVer < 11) {
-            // force it over to Latin 1 and '?' any of the characters we don't know.
-            result.append("filename=")
-                 .append(new String(filename.getBytes(Charsets.ISO_8859_1), Charsets.ISO_8859_1));
-        } else {
-            // use RFC 5987
-            result.append("filename*=") // note: the *= is not a typo
-                  .append("UTF-8''")
-                  // encode it just like IE
-                  .append(new String(URLCodec.encodeUrl(IE_URL_SAFE, filename.getBytes(Charsets.UTF_8)),
-                          Charsets.ISO_8859_1));
+                    if (pathInfo != null && pathInfo.endsWith(filename)) {
+                        // The filename is already here. no need to do anything special
+                        break;
+                    }
+
+                    // Ok, so now we're stuck with ascii encoding.
+                    result.append("filename=")
+                          .append(new String(filename.getBytes(Charsets.ISO_8859_1), Charsets.ISO_8859_1));
+                    break;
+                case CHROME:
+                    // Chrome.. ah chrome.. if its 11+, we'll encode with 5987, if its less we'll do the
+                    // same hacks we did for safari.
+                    if (majorVer >= 11) {
+                        result.append("filename*=") // note: the *= is not a typo
+                              .append("UTF-8''")
+                              // encode it just like IE
+                              .append(new String(URLCodec.encodeUrl(IE_URL_SAFE, filename.getBytes(Charsets.UTF_8)),
+                                      Charsets.ISO_8859_1));
+                        break;
+                    }
+
+                    // must be less than 11,
+                    if (pathInfo.endsWith(filename)) {
+                        // The filename is already here. no need to do anything special
+                        break;
+                    }
+
+                    // Ok, so now we're stuck with ascii encoding.
+                    result.append("filename=")
+                          .append(new String(filename.getBytes(Charsets.ISO_8859_1), Charsets.ISO_8859_1));
+                    break;
+                case FIREFOX:
+                default:
+                    result.append("filename=\"")
+                          .append(MimeUtility.encodeText(filename, "utf-8", "B"))
+                          .append("\"");
+            }
+        } catch(UnsupportedEncodingException uee) {
+            // no need to do anything..
+            uee.printStackTrace();
         }
 
 
@@ -484,7 +517,7 @@ public final class HttpUtil {
             return buf.toString();
         return str;
     }
-
+    
     public static String urlEscapeIncludingSlash(String str) {
         String escaped = urlEscape(str);
         return escaped.replaceAll("/", "%2F");
@@ -553,9 +586,9 @@ public final class HttpUtil {
                 fragments.add(urlUnescape(encodedFragment));
             }
         }
-        return fragments.toArray(new String[0]);
+        return fragments.toArray(new String[0]);  
     }
-
+    
     /**
      * Make the uri from decoded fragments
      * @param fragments
@@ -563,7 +596,7 @@ public final class HttpUtil {
      * @param tralingSlash
      * @return
      */
-
+    
     public static URI getUriFromFragments(String[] fragments, String queryString, boolean leadingSlash, boolean tralingSlash) {
         StringBuilder sb = new StringBuilder();
         if (leadingSlash) {
@@ -581,7 +614,7 @@ public final class HttpUtil {
         }
         return URI.create(sb.toString());
     }
-
+    
     public static void main(String[] args) {
         System.out.println(getURIParams((String) null));
         System.out.println(getURIParams("foo=bar"));
