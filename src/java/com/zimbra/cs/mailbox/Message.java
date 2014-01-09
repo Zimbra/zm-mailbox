@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -626,6 +626,47 @@ public class Message extends MailItem {
         return false;
     }
 
+    /**
+     * Return the value of the "X-Zimbra-Calendar-Intended-For" header if present and non-empty.
+     */
+    private static String getCalendarIntendedFor(MimeMessage msg) {
+        String headerVal;
+        try {
+            headerVal = msg.getHeader(CalendarMailSender.X_ZIMBRA_CALENDAR_INTENDED_FOR, null);
+        } catch (MessagingException e) {
+            ZimbraLog.calendar.warn("ignoring error while checking for %s header on incoming message",
+                    CalendarMailSender.X_ZIMBRA_CALENDAR_INTENDED_FOR, e);
+            return null;
+        }
+        if (headerVal == null || headerVal.length() == 0) {
+            return null;
+        }
+        return headerVal;
+    }
+
+    /**
+     * If this invite doesn't appear in the mailbox for this user, this will retrieve details for it if it is in
+     * a shared calendar that this user manages.
+     */
+    public com.zimbra.soap.mail.type.CalendarItemInfo getRemoteCalendarItem(Invite invite) {
+        com.zimbra.soap.mail.type.CalendarItemInfo remoteCalendarItem = null;
+        String headerVal;
+        try {
+            headerVal = getCalendarIntendedFor(getMimeMessage());
+            if (headerVal != null && headerVal.length() > 0) {
+                AccountAddressMatcher acctMatcher = new AccountAddressMatcher(mMailbox.getAccount());
+                if (!acctMatcher.matches(headerVal) && manageCalendar(headerVal)) {
+                    Provisioning prov = Provisioning.getInstance();
+                    Account ownerAcct = prov.get(AccountBy.name, headerVal);
+                    remoteCalendarItem = mMailbox.getRemoteCalItemByUID(ownerAcct, invite.getUid(), true, false);
+                }
+            }
+        } catch (ServiceException e) {
+            return null;
+        }
+        return remoteCalendarItem;
+    }
+
     private class ProcessInvitesStatus {
         // since this is the first time we've seen this Invite Message, we need to process it
         // and see if it updates an existing CalendarItem in the database table, or whatever...
@@ -647,21 +688,15 @@ public class Message extends MailItem {
 
         ProcessInvitesStatus(Account acct, ParsedMessage pm) throws ServiceException {
             account = acct;
-            try {
-                String headerVal = pm.getMimeMessage().getHeader(CalendarMailSender.X_ZIMBRA_CALENDAR_INTENDED_FOR, null);
-                if (headerVal != null && headerVal.length() > 0) {
-                    isForwardedInvite = true;
-                    intendedForAddress = headerVal;
-                    intendedForMe = getAcctMatcher().matches(headerVal);
-                    if (!intendedForMe) {
-                        calendarIntendedFor = headerVal;
-                        intendedForCalendarIManage = manageCalendar(calendarIntendedFor);
-                    }
+            String headerVal = getCalendarIntendedFor(pm.getMimeMessage());
+            if (headerVal != null && headerVal.length() > 0) {
+                isForwardedInvite = true;
+                intendedForAddress = headerVal;
+                intendedForMe = getAcctMatcher().matches(headerVal);
+                if (!intendedForMe) {
+                    calendarIntendedFor = headerVal;
+                    intendedForCalendarIManage = manageCalendar(calendarIntendedFor);
                 }
-            } catch (MessagingException e) {
-                ZimbraLog.calendar.warn(
-                        "ignoring error while checking for " + CalendarMailSender.X_ZIMBRA_CALENDAR_INTENDED_FOR +
-                        " header on incoming message", e);
             }
         }
 

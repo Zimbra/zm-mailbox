@@ -102,6 +102,7 @@ import com.zimbra.cs.store.StagedBlob;
 import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.util.AccountUtil.AccountAddressMatcher;
 import com.zimbra.cs.util.JMSession;
+import com.zimbra.soap.mail.type.CalendarReply;
 
 /**
  * An APPOINTMENT consists of one or more INVITES in the same series -- ie that
@@ -2772,6 +2773,28 @@ public abstract class CalendarItem extends MailItem {
             ZAttendee at = metaAttendee != null ? new ZAttendee(metaAttendee) : null;
             ReplyInfo ri = new ReplyInfo(at, seq, dtstamp, recurId);
             return ri;
+        }
+
+        public CalendarReply toJAXB() {
+            ZAttendee attendee = getAttendee();
+            CalendarReply jaxb = new CalendarReply(getSeq(), getDtStamp(), attendee.getAddress());
+            if (attendee.hasSentBy()) {
+                jaxb.setSentBy(attendee.getSentBy());
+            }
+            if (attendee.hasPartStat()) {
+                jaxb.setPartStat(attendee.getPartStat());
+            }
+            RecurId rid = getRecurId();
+            if (rid != null) {
+                jaxb.setRecurrenceRangeType(rid.getRange());
+                ParsedDateTime dateTime = rid.getDt();
+                jaxb.setRecurrenceId(dateTime.getDateTimePartString(false));
+                if (dateTime.hasTime()) {
+                    jaxb.setTimezone(dateTime.getTZName());
+                    jaxb.setRecurIdZ(rid.getDtZ());
+                }
+            }
+            return jaxb;
         }
 
         @Override

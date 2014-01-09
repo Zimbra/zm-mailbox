@@ -150,6 +150,7 @@ import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.soap.admin.type.DataSourceType;
 import com.zimbra.soap.mail.type.AlarmDataInfo;
+import com.zimbra.soap.mail.type.CalendarReply;
 import com.zimbra.soap.mail.type.Policy;
 import com.zimbra.soap.mail.type.RetentionPolicy;
 import com.zimbra.soap.mail.type.XParam;
@@ -1610,26 +1611,14 @@ public final class ToXML {
     }
 
     private static void encodeCalendarReplies(Element parent, List<CalendarItem.ReplyInfo> replies) {
-        if (!replies.isEmpty()) {
-            Element repliesElt = parent.addElement(MailConstants.E_CAL_REPLIES);
-            for (CalendarItem.ReplyInfo repInfo : replies) {
-                Element curElt = repliesElt.addElement(MailConstants.E_CAL_REPLY);
-                curElt.addAttribute(MailConstants.A_SEQ, repInfo.getSeq()); //zdsync
-                curElt.addAttribute(MailConstants.A_DATE, repInfo.getDtStamp());
-                ZAttendee attendee = repInfo.getAttendee();
-                curElt.addAttribute(MailConstants.A_CAL_ATTENDEE, attendee.getAddress());
-                if (attendee.hasSentBy()) {
-                    curElt.addAttribute(MailConstants.A_CAL_SENTBY, attendee.getSentBy());
-                }
-                if (attendee.hasPartStat()) {
-                    curElt.addAttribute(MailConstants.A_CAL_PARTSTAT, attendee.getPartStat());
-                }
-                RecurId rid = repInfo.getRecurId();
-                if (rid != null) {
-                    rid.toXml(curElt);
-                }
-            }
+        if (replies.isEmpty()) {
+            return;
         }
+        List<CalendarReply> jaxbReplies = Lists.newArrayList();
+        for (CalendarItem.ReplyInfo repInfo : replies) {
+            jaxbReplies.add(repInfo.toJAXB());
+        }
+        CalendarReply.encodeCalendarReplyList(parent, jaxbReplies);
     }
 
     private static String getDefaultCharset(MailItem item) throws ServiceException {
@@ -2204,7 +2193,7 @@ public final class ToXML {
             return parent;
         }
 
-        Element ie = parent.addElement(MailConstants.E_INVITE);
+        Element ie = parent.addNonUniqueElement(MailConstants.E_INVITE);
 
         Mailbox mbox = msg.getMailbox();
 
@@ -2298,6 +2287,13 @@ public final class ToXML {
             if (invite != null) {
                 setCalendarItemType(ie, invite.getItemType());
                 encodeTimeZoneMap(ie, invite.getTimeZoneMap());
+                com.zimbra.soap.mail.type.CalendarItemInfo remoteCalendarItem = null;
+                if (calItem == null) {
+                    remoteCalendarItem = msg.getRemoteCalendarItem(invite);
+                    if (remoteCalendarItem != null) {
+                        calendarItemId = new ItemId(remoteCalendarItem.getId(), (String)null);
+                    }
+                }
                 encodeInviteComponent(ie, ifmt, octxt, calItem, calendarItemId, invite, fields, neuter);
                 ICalTok invMethod = Invite.lookupMethod(invite.getMethod());
                 if (ICalTok.REQUEST.equals(invMethod) || ICalTok.PUBLISH.equals(invMethod)) {
@@ -2314,6 +2310,8 @@ public final class ToXML {
                             RecurId rid = invite.getRecurId();
                             encodeCalendarReplies(ie, calItem, invite, rid != null ? rid.getDtZ() : null);
                         }
+                    } else if (null != remoteCalendarItem){
+                        CalendarReply.encodeCalendarReplyList(ie, remoteCalendarItem.getCalendarReplies());
                     }
                 }
             }
