@@ -11,9 +11,10 @@
     <fileset dir="jars">
     	<include name="**/*.jar" />
     </fileset>
-  	<fileset dir="jars-test/easymock-3.0">
+    <fileset dir="jars-test/easymock-3.0">
   		<include name="**/*.jar" />
-  	</fileset>
+    </fileset>
+    <fileset dir="jars-internal/jars"><include name="**/*.jar" /></fileset>
   </path>
 
   <!-- Targets -->

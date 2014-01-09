@@ -61,7 +61,7 @@ public class Packet {
     }
 
     public boolean hasRemaining() {
-        return payload[0].remaining() > 0 && payload[1].remaining() > 0;
+        return payload[0].remaining() > 0 || payload[1].remaining() > 0;
     }
 
     private Packet(String clientId, PeerServer server, ByteBuffer message) {
