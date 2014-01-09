@@ -11069,6 +11069,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefWebClientOfflineAccessEnabled = "zimbraPrefWebClientOfflineAccessEnabled";
 
     /**
+     * set of known keys corresponding to browsers used by the user for web
+     * client offline access
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1571)
+    public static final String A_zimbraPrefWebClientOfflineBrowserKey = "zimbraPrefWebClientOfflineBrowserKey";
+
+    /**
      * if replying/forwarding a message in this folder, use this identity
      * (deprecatedSince 5.0 in account)
      */
