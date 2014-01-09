@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -20,10 +20,10 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
-import com.zimbra.common.util.StringUtil;
 import org.apache.commons.codec.binary.Hex;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.GuestAccount;
@@ -152,7 +152,23 @@ public final class ACL {
          *  <tt>Grant</tt>.  If the grant does not apply to the Account,
          *  returns <tt>0</tt>. */
         public short getGrantedRights(Account acct, ACL acl) throws ServiceException {
-            return !isExpired(acl) && matches(acct) ? mRights : 0;
+            if (isExpired(acl)) {
+                if (ZimbraLog.acl.isTraceEnabled()) {
+                    ZimbraLog.acl.trace("ACL.GrantedRights 0 for acl=%s (expired)", acl);
+                }
+                return 0;
+            }
+            if (matches(acct)) {
+                if (ZimbraLog.acl.isTraceEnabled()) {
+                    ZimbraLog.acl.trace("ACL.GrantedRights %s for acl=%s", mRights, acl);
+                }
+                return mRights;
+            }
+            if (ZimbraLog.acl.isTraceEnabled()) {
+                ZimbraLog.acl.trace("ACL.GrantedRights 0 for acl=%s (does not match %s)",
+                        acl, acct == null ? "'null acct'" : acct.getName());
+            }
+            return 0;
         }
 
         private boolean isExpired(ACL acl) {
@@ -370,15 +386,23 @@ public final class ACL {
      * @return A <tt>Short</tt> containing the OR'ed-together rights
      *         granted to the user, or <tt>null</tt>. */
     public Short getGrantedRights(Account authuser) throws ServiceException {
-        if (mGrants.isEmpty())
+        if (mGrants.isEmpty()) {
+            if (ZimbraLog.acl.isTraceEnabled()) {
+                ZimbraLog.acl.trace("ACL.GrantedRights NULL (no grants)");
+            }
             return null;
+        }
 
         short rightsGranted = 0;
-        for (Grant grant : mGrants)
+        for (Grant grant : mGrants) {
             rightsGranted |= grant.getGrantedRights(authuser, this);
+        }
         if ((rightsGranted & SUBFOLDER_RIGHTS) == SUBFOLDER_RIGHTS)
             rightsGranted |= RIGHT_SUBFOLDER;
 
+        if (ZimbraLog.acl.isTraceEnabled()) {
+            ZimbraLog.acl.trace("ACL.GrantedRights %s from %s grants", rightsGranted, mGrants.size());
+        }
         return Short.valueOf(rightsGranted);
     }
 

@@ -4506,23 +4506,83 @@ public class LdapProvisioning extends LdapProv {
                 EntryCacheDataKey.GROUPEDENTRY_MEMBERSHIP_ADMINS_ONLY :
                     EntryCacheDataKey.GROUPEDENTRY_MEMBERSHIP;
 
-        GroupMembership groups = (GroupMembership)acct.getCachedData(cacheKey);
-        if (groups != null) {
-            return groups;
+        GroupMembership cacheableGroups = (GroupMembership)acct.getCachedData(cacheKey);
+        if (cacheableGroups == null) {
+            cacheableGroups = setupGroupedEntryCacheData(acct, adminGroupsOnly);
         }
+        GroupMembershipAtTime membersAtTime =
+                (GroupMembershipAtTime)acct.getCachedData(EntryCacheDataKey.GROUPEDENTRY_MEMBERSHIP_BY_CUSTOM_URL);
+        GroupMembership customUrlDefinedGroups = null;
+        boolean recalc = true;
+        if (membersAtTime != null) {
+            // Account objects time to live in the accounts cache is 15 minutes.  We could choose to accept that
+            // custom URL based groups can be up to that much out of date, however, this mechanism allows
+            // us to have a smaller tolerance for inaccuracy.
+            long now = System.currentTimeMillis();
+            if (now < membersAtTime.getCorrectAtTime() +
+                    LC.ldap_cache_custom_dynamic_group_membership_maxage_ms.intValue()) {
+                recalc = false;
+                customUrlDefinedGroups = membersAtTime.getMembership();
+            }
+        }
+        if (recalc) {
+            customUrlDefinedGroups = setupGroupsDefinedByCustomURL(acct);
+        }
+        if (adminGroupsOnly) {
+            customUrlDefinedGroups = getAdminAclGroups(customUrlDefinedGroups);
+        }
+        GroupMembership groups = cacheableGroups.clone();
+        return groups.mergeFrom(customUrlDefinedGroups);
+    }
 
+    private GroupMembership setupGroupsDefinedByCustomURL(Account acct)
+    throws ServiceException {
+        GroupMembership groups = new GroupMembership();
+        for (Domain domain : getAllDomains()) {
+            groups = addGroupsDefinedByCustomURL(acct, domain, groups);
+        }
+        acct.setCachedData(EntryCacheDataKey.GROUPEDENTRY_MEMBERSHIP_BY_CUSTOM_URL,
+                new GroupMembershipAtTime(groups, System.currentTimeMillis()));
+        return groups;
+    }
+
+    private GroupMembership addGroupsDefinedByCustomURL(Account acct, Domain domain, GroupMembership groups)
+    throws ServiceException {
+        List dls = getAllGroups(domain);
+        for (Iterator it = dls.iterator(); it.hasNext(); ) {
+            Group dl = (Group) it.next();
+            if (dl instanceof DynamicGroup) {
+                DynamicGroup dynGroup = (DynamicGroup) dl;
+                if (dynGroup.isMembershipDefinedByCustomURL()) {
+                    String[] allMembers = dynGroup.getAllMembers(true);
+                    for (String member : allMembers) {
+                        // Assumption is that member cannot be a group.  Doesn't seem too unreasonable as
+                        // you aren't allowed to add a group as a member of an classic dynamic group.
+                        if (member.equals(acct.getName())) {
+                            groups.append(new MemberOf(dynGroup.getId(), dynGroup.isIsAdminGroup(), true),
+                                    dynGroup.getId());
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        return groups;
+    }
+
+    private GroupMembership setupGroupedEntryCacheData(Account acct, boolean adminGroupsOnly)
+    throws ServiceException {
         //
         // static groups
         //
-        groups = computeUpwardMembership(acct);
+        GroupMembership groups = computeUpwardMembership(acct);
 
         //
         // append dynamic groups
         //
         List<DynamicGroup> dynGroups = getContainingDynamicGroups(acct);
         for (DynamicGroup dynGroup : dynGroups) {
-            groups.append(new MemberOf(dynGroup.getId(), dynGroup.isIsAdminGroup(), true),
-                    dynGroup.getId());
+            groups.append(new MemberOf(dynGroup.getId(), dynGroup.isIsAdminGroup(), true), dynGroup.getId());
         }
 
         // cache it
@@ -5830,7 +5890,7 @@ public class LdapProvisioning extends LdapProv {
 
         LdapDynamicGroup group = new LdapDynamicGroup(dn, emailAddress, attrs, this);
 
-        if (group.isIsACLGroup()) {
+        if (!group.isMembershipDefinedByCustomURL()) {
             // load dynamic unit
             String dynamicUnitDN = mDIT.dynamicGroupUnitNameToDN(
                     DYNAMIC_GROUP_DYNAMIC_UNIT_NAME, dn);
@@ -6755,6 +6815,7 @@ public class LdapProvisioning extends LdapProv {
         acct.setCachedData(EntryCacheDataKey.ACCOUNT_DIRECT_DLS, null);
         acct.setCachedData(EntryCacheDataKey.GROUPEDENTRY_MEMBERSHIP, null);
         acct.setCachedData(EntryCacheDataKey.GROUPEDENTRY_MEMBERSHIP_ADMINS_ONLY, null);
+        acct.setCachedData(EntryCacheDataKey.GROUPEDENTRY_MEMBERSHIP_BY_CUSTOM_URL, null);
         acct.setCachedData(EntryCacheDataKey.GROUPEDENTRY_DIRECT_GROUPIDS.getKeyName(), null);
     }
 
@@ -8778,6 +8839,9 @@ public class LdapProvisioning extends LdapProv {
     /*
      * only called from ProvUtil and GetAccountMembership SOAP handler.
      * can't use getGroupMembership because it needs via.
+     *
+     * i.e. currently excludes dynamic groups this account is a member of because it satisfies the LDAP filter
+     *      specified in the group's MemberURL.
      */
     @Override
     public List<Group> getGroups(Account acct, boolean directOnly, Map<String,String> via)
@@ -8803,13 +8867,6 @@ public class LdapProvisioning extends LdapProv {
 
     @Override
     public String[] getGroupMembers(Group group) throws ServiceException {
-        if (group instanceof DynamicGroup) {
-            DynamicGroup dynGroup = (DynamicGroup)group;
-            if (!dynGroup.isIsACLGroup()) {
-                return new String[0];
-            }
-        }
-
         EntryCacheDataKey cacheKey = EntryCacheDataKey.GROUP_MEMBERS;
 
         String[] members = (String[])group.getCachedData(cacheKey);
@@ -8835,7 +8892,9 @@ public class LdapProvisioning extends LdapProv {
         GroupMemberEmailAddrs addrs = new GroupMemberEmailAddrs();
         if (group.isDynamic()) {
             LdapDynamicGroup ldapDynGroup = (LdapDynamicGroup)group;
-            if (ldapDynGroup.isIsACLGroup()) {
+            if (ldapDynGroup.isMembershipDefinedByCustomURL()) {
+                addrs.setGroupAddr(group.getName());
+            } else {
                 if (ldapDynGroup.hasExternalMembers()) {
                     // internal members
                     final List<String> internalMembers = Lists.newArrayList();
@@ -8849,10 +8908,7 @@ public class LdapProvisioning extends LdapProv {
                 } else {
                     addrs.setGroupAddr(group.getName());
                 }
-            } else {
-                addrs.setGroupAddr(group.getName());
             }
-
         } else {
             String[] members = getGroupMembers(group);
             Set<String> internalMembers = Sets.newHashSet();
@@ -9097,16 +9153,11 @@ public class LdapProvisioning extends LdapProv {
                 }
                 isACLGroup = true;
             } else {
-                // if a custom memberURL is provided, zimbraIsACLGroup must also be specified
-                // and specifically set to FALSE
-                if (!ProvisioningConstants.FALSE.equals(specifiedIsACLGroup)) {
-                    throw ServiceException.INVALID_REQUEST(
-                            "Custom " + A_memberURL + " is provided, " +
-                            A_zimbraIsACLGroup + " must be set to FALSE", null);
-                }
-                isACLGroup = false;
+                // We want to be able to use dynamic groups as ACLs, for instance when sharing a folder with a group
+                // This used to be disallowed via a requirement that zimbraIsACLGroup be specified and set to FALSE.
+                // That requirement has been dropped.
+                isACLGroup = !ProvisioningConstants.FALSE.equals(specifiedIsACLGroup);
             }
-
 
             // by default a dynamic group is always created enabled
             if (!entry.hasAttribute(Provisioning.A_zimbraMailStatus)) {
@@ -9519,7 +9570,7 @@ public class LdapProvisioning extends LdapProv {
 
     private void addDynamicGroupMembers(LdapDynamicGroup group, String[] members)
     throws ServiceException {
-        if (!group.isIsACLGroup()) {
+        if (group.isMembershipDefinedByCustomURL()) {
             throw ServiceException.INVALID_REQUEST(
                     "cannot add members to dynamic group with custom memberURL", null);
         }
@@ -9605,9 +9656,10 @@ public class LdapProvisioning extends LdapProv {
 
     private void removeDynamicGroupMembers(LdapDynamicGroup group, String[] members, boolean externalOnly)
     throws ServiceException {
-        if (!group.isIsACLGroup()) {
+        if (group.isMembershipDefinedByCustomURL()) {
             throw ServiceException.INVALID_REQUEST(
-                    "cannot remove members from dynamic group with custom memberURL", null);
+                    String.format("cannot remove members from dynamic group '%s' with custom memberURL",
+                            group.getName()), null);
         }
 
         String groupId = group.getId();
@@ -9699,6 +9751,14 @@ public class LdapProvisioning extends LdapProv {
         cleanGroupMembersCache(group);
     }
 
+    /**
+     * Get Dynamic Groups this account is a member of due to the value of the "zimbraMemberOf" attribute.
+     * i.e. excludes groups this account is a member of because it satisfies the LDAP filter specified in the
+     *      group's MemberURL where that MemberURL is a custom one.
+     * @param acct
+     * @return
+     * @throws ServiceException
+     */
     private List<DynamicGroup> getContainingDynamicGroups(Account acct) throws ServiceException {
         List<DynamicGroup> groups = new ArrayList<DynamicGroup>();
 
@@ -9714,7 +9774,7 @@ public class LdapProvisioning extends LdapProv {
 
         for (String groupId : memberOf) {
             DynamicGroup dynGroup = getDynamicGroupBasic(Key.DistributionListBy.id, groupId, null);
-            if (dynGroup != null && dynGroup.isIsACLGroup()) {
+            if (dynGroup != null && !dynGroup.isMembershipDefinedByCustomURL()) {
                 groups.add(dynGroup);
             }
         }
@@ -9796,7 +9856,7 @@ public class LdapProvisioning extends LdapProv {
      * returns all internal and external member addresses of the DynamicGroup
      */
     private List<String> searchDynamicGroupMembers(DynamicGroup group) throws ServiceException {
-        if (!group.isIsACLGroup()) {
+        if (group.isMembershipDefinedByCustomURL()) {
             throw ServiceException.INVALID_REQUEST(
                     "cannot search members to dynamic group with custom memberURL", null);
         }
