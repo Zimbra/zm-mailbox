@@ -7839,4 +7839,8 @@ TODO: delete them permanently from here
   <desc>Whether to permit syncing shared contact folders</desc>
 </attr>
 
+<attr id="1571" name="zimbraPrefWebClientOfflineBrowserKey" type="string" cardinality="multi" optionalIn="account" since="8.5.0">
+  <desc>set of known keys corresponding to browsers used by the user for web client offline access</desc>
+</attr>
+
 </attrs>

@@ -48131,6 +48131,149 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * set of known keys corresponding to browsers used by the user for web
+     * client offline access
+     *
+     * @return zimbraPrefWebClientOfflineBrowserKey, or empty array if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1571)
+    public String[] getPrefWebClientOfflineBrowserKey() {
+        return getMultiAttr(Provisioning.A_zimbraPrefWebClientOfflineBrowserKey);
+    }
+
+    /**
+     * set of known keys corresponding to browsers used by the user for web
+     * client offline access
+     *
+     * @param zimbraPrefWebClientOfflineBrowserKey new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1571)
+    public void setPrefWebClientOfflineBrowserKey(String[] zimbraPrefWebClientOfflineBrowserKey) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefWebClientOfflineBrowserKey, zimbraPrefWebClientOfflineBrowserKey);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * set of known keys corresponding to browsers used by the user for web
+     * client offline access
+     *
+     * @param zimbraPrefWebClientOfflineBrowserKey new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1571)
+    public Map<String,Object> setPrefWebClientOfflineBrowserKey(String[] zimbraPrefWebClientOfflineBrowserKey, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefWebClientOfflineBrowserKey, zimbraPrefWebClientOfflineBrowserKey);
+        return attrs;
+    }
+
+    /**
+     * set of known keys corresponding to browsers used by the user for web
+     * client offline access
+     *
+     * @param zimbraPrefWebClientOfflineBrowserKey new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1571)
+    public void addPrefWebClientOfflineBrowserKey(String zimbraPrefWebClientOfflineBrowserKey) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraPrefWebClientOfflineBrowserKey, zimbraPrefWebClientOfflineBrowserKey);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * set of known keys corresponding to browsers used by the user for web
+     * client offline access
+     *
+     * @param zimbraPrefWebClientOfflineBrowserKey new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1571)
+    public Map<String,Object> addPrefWebClientOfflineBrowserKey(String zimbraPrefWebClientOfflineBrowserKey, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraPrefWebClientOfflineBrowserKey, zimbraPrefWebClientOfflineBrowserKey);
+        return attrs;
+    }
+
+    /**
+     * set of known keys corresponding to browsers used by the user for web
+     * client offline access
+     *
+     * @param zimbraPrefWebClientOfflineBrowserKey existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1571)
+    public void removePrefWebClientOfflineBrowserKey(String zimbraPrefWebClientOfflineBrowserKey) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraPrefWebClientOfflineBrowserKey, zimbraPrefWebClientOfflineBrowserKey);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * set of known keys corresponding to browsers used by the user for web
+     * client offline access
+     *
+     * @param zimbraPrefWebClientOfflineBrowserKey existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1571)
+    public Map<String,Object> removePrefWebClientOfflineBrowserKey(String zimbraPrefWebClientOfflineBrowserKey, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraPrefWebClientOfflineBrowserKey, zimbraPrefWebClientOfflineBrowserKey);
+        return attrs;
+    }
+
+    /**
+     * set of known keys corresponding to browsers used by the user for web
+     * client offline access
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1571)
+    public void unsetPrefWebClientOfflineBrowserKey() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefWebClientOfflineBrowserKey, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * set of known keys corresponding to browsers used by the user for web
+     * client offline access
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1571)
+    public Map<String,Object> unsetPrefWebClientOfflineBrowserKey(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefWebClientOfflineBrowserKey, "");
+        return attrs;
+    }
+
+    /**
      * if replying/forwarding a message in this folder, use this identity
      * (deprecatedSince 5.0 in account)
      *
