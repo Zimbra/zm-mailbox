@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -29,7 +29,7 @@ import com.zimbra.cs.ldap.ZAttributes;
  */
 public class LdapDynamicGroup extends DynamicGroup implements LdapEntry {
 
-    private String dn;
+    private final String dn;
     private DynamicUnit dynamicUnit;
     private StaticUnit staticUnit;
 
@@ -65,7 +65,11 @@ public class LdapDynamicGroup extends DynamicGroup implements LdapEntry {
 
     @Override
     public String[] getAllMembers() throws ServiceException {
-        return ((LdapProvisioning) getProvisioning()).getDynamicGroupMembers(this);
+        if (this.isMembershipDefinedByCustomURL()) {
+            return ((LdapProvisioning) getProvisioning()).getNonDefaultDynamicGroupMembers(this);
+        } else {
+            return ((LdapProvisioning) getProvisioning()).getDynamicGroupMembers(this);
+        }
     }
 
     @Override
@@ -76,17 +80,16 @@ public class LdapDynamicGroup extends DynamicGroup implements LdapEntry {
     @Override
     public String[] getAllMembers(boolean supportNonDefaultMemberURL)
     throws ServiceException {
-        if (isIsACLGroup()) {
-            // is a dynamic group with default memberURL, expand it by searching memberOf
-            return getAllMembers();
-        } else {
+        if (isMembershipDefinedByCustomURL()) {
             if (supportNonDefaultMemberURL) {
                 return ((LdapProvisioning) getProvisioning()).getNonDefaultDynamicGroupMembers(this);
             } else {
                 return new String[0];
             }
+        } else {
+            // is a classic dynamic group with a standard MemberURL - expand it by searching memberOf
+            return getAllMembers();
         }
-
     }
 
     public static String getDefaultDynamicUnitMemberURL(String zimbraId) {
@@ -127,7 +130,7 @@ public class LdapDynamicGroup extends DynamicGroup implements LdapEntry {
     public static class StaticUnit extends NamedEntry implements LdapEntry {
         public static final String MEMBER_ATTR = Provisioning.A_zimbraMailForwardingAddress;
 
-        private String dn;
+        private final String dn;
 
         public StaticUnit(String dn, String name, ZAttributes attrs, Provisioning prov)
         throws LdapException {

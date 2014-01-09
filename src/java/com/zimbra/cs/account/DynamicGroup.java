@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -24,10 +24,13 @@ import com.zimbra.common.service.ServiceException;
  */
 public abstract class DynamicGroup extends ZAttrDynamicGroup {
 
+    private Boolean hasCustomMemberURL = null;
+
     public DynamicGroup(String name, String id, Map<String, Object> attrs, Provisioning prov) {
         super(name, id, attrs, prov);
     }
 
+    @Override
     public EntryType getEntryType() {
         return EntryType.DYNAMICGROUP;
     }
@@ -70,6 +73,17 @@ public abstract class DynamicGroup extends ZAttrDynamicGroup {
     public String[] getAllMembers(boolean supportNonDefaultMemberURL)
     throws ServiceException {
         return getAllMembers();
+    }
+
+    public boolean isMembershipDefinedByCustomURL() {
+        if (hasCustomMemberURL == null) {
+            hasCustomMemberURL = false;
+            String memberURL = getMemberURL();
+            if ((memberURL != null) && (!memberURL.startsWith("ldap:///??sub?(|(zimbraMemberOf="))) {
+                hasCustomMemberURL = true;
+            }
+        }
+        return hasCustomMemberURL;
     }
 
 }

@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -662,6 +662,27 @@ public abstract class Provisioning extends ZAttrProvisioning {
         }
     }
 
+    /**
+     * Intended to store membership information only related to groups who define their membership by a custom
+     * MemberURL.  As we can't control what updates affect these, the only handle we have on whether the
+     * the information is valid is how long ago it was accurate.
+     *
+     */
+    public static class GroupMembershipAtTime {
+        final GroupMembership membership;
+        final long correctAtTime;
+        public GroupMembershipAtTime(GroupMembership members, long accurateAtTime) {
+            membership = members;
+            correctAtTime = accurateAtTime;
+        }
+        public GroupMembership getMembership() {
+            return membership;
+        }
+        public long getCorrectAtTime() {
+            return correctAtTime;
+        }
+    }
+
     public static class GroupMembership {
         List<MemberOf> mMemberOf;  // list of MemberOf
         List<String> mGroupIds;    // list of group ids
@@ -681,12 +702,30 @@ public abstract class Provisioning extends ZAttrProvisioning {
             mGroupIds.add(groupId);
         }
 
+        public GroupMembership mergeFrom(GroupMembership other) {
+            for (int i = 0; i < other.mMemberOf.size(); i++) {
+                if (!mGroupIds.contains(other.mGroupIds.get(i))) {
+                    append(other.mMemberOf.get(i), other.mGroupIds.get(i));
+                }
+            }
+            return this;
+        }
+
         public List<MemberOf> memberOf() {
             return mMemberOf;
         }
 
         public List<String> groupIds() {
             return mGroupIds;
+        }
+
+        @Override
+        public GroupMembership clone() {
+            GroupMembership copy = new GroupMembership();
+            for (int i = 0; i < mMemberOf.size(); i++) {
+                copy.append(mMemberOf.get(i), mGroupIds.get(i));
+            }
+            return copy;
         }
     }
 

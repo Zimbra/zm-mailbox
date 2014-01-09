@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -1222,10 +1222,15 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         } else {
             granted = folder.checkRights(rightsNeeded, authuser, asAdmin);
         }
+        short subset = (short) (granted & rightsNeeded);
         // FIXME: check to see what access has been granted on the item's tags
         //   granted |= getTags().getGrantedRights(rightsNeeded, authuser);
         // and see if the granted rights are sufficient
-        return (short) (granted & rightsNeeded);
+        if (ZimbraLog.acl.isTraceEnabled()) {
+            ZimbraLog.acl.trace("checkRights '%s' returned=%s granted=%s needed=%s",
+                    getPath(), subset, granted, rightsNeeded);
+        }
+        return subset;
     }
 
     /**
@@ -3586,12 +3591,36 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
     protected short checkACL(short rightsNeeded, Account authuser, boolean asAdmin) throws ServiceException {
         // check the ACLs to see if access has been explicitly granted
         Short granted = rights != null ? rights.getGrantedRights(authuser) : null;
-        if (granted != null)
+        short subset;
+        if (granted != null) {
+            subset = (short) (granted.shortValue() & rightsNeeded);
+            if (ZimbraLog.acl.isTraceEnabled()) {
+                ZimbraLog.acl.trace("checkACL '%s' returned=%s granted=%s needed=%s (R)",
+                        getPath(), subset, granted, rightsNeeded);
+            }
             return (short) (granted.shortValue() & rightsNeeded);
+        }
         // no ACLs apply; can we check parent folder for inherited rights?
-        if (mId == Mailbox.ID_FOLDER_ROOT || isTagged(Flag.FlagInfo.NO_INHERIT))
+        if (mId == Mailbox.ID_FOLDER_ROOT) {
+            if (ZimbraLog.acl.isTraceEnabled()) {
+                ZimbraLog.acl.trace("checkACL '%s' returned=0 granted=0 needed=%s (ROOT)", getPath(), rightsNeeded);
+            }
             return 0;
-        return getParent().checkACL(rightsNeeded, authuser, asAdmin);
+        }
+        if (isTagged(Flag.FlagInfo.NO_INHERIT)) {
+            if (ZimbraLog.acl.isTraceEnabled()) {
+                ZimbraLog.acl.trace("checkACL '%s' returned=0 granted=0 needed=%s (no inherit)",
+                        getPath(), rightsNeeded);
+            }
+            return 0;
+        }
+        granted = getParent().checkACL(rightsNeeded, authuser, asAdmin);
+        subset = (short) (granted.shortValue() & rightsNeeded);
+        if (ZimbraLog.acl.isTraceEnabled()) {
+            ZimbraLog.acl.trace("checkACL '%s' returned=%s granted=%s needed=%s (P)",
+                    getPath(), subset, granted, rightsNeeded);
+        }
+        return granted;
     }
 
     /** Grants the specified set of rights to the target and persists them

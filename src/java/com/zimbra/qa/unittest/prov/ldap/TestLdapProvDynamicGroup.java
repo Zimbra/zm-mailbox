@@ -2,19 +2,23 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
 package com.zimbra.qa.unittest.prov.ldap;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -27,7 +31,8 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.google.common.collect.Sets;
-import com.zimbra.common.account.Key.*;
+import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.Key.DistributionListBy;
 import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
@@ -36,13 +41,14 @@ import com.zimbra.cs.account.DynamicGroup;
 import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.GroupMemberEmailAddrs;
 import com.zimbra.cs.account.Provisioning.GroupMembership;
 import com.zimbra.cs.account.Provisioning.MemberOf;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.ldap.entry.LdapAccount;
 import com.zimbra.cs.account.ldap.entry.LdapDynamicGroup;
 import com.zimbra.cs.gal.GalGroupMembers;
+import com.zimbra.cs.ldap.LdapException;
 import com.zimbra.qa.unittest.TestUtil;
 import com.zimbra.qa.unittest.prov.Verify;
 
@@ -84,7 +90,6 @@ public class TestLdapProvDynamicGroup extends LdapTest {
     @Test
     public void createDynamicGroup() throws Exception {
         DynamicGroup group = createDynamicGroup(genGroupNameLocalPart());
-        assertEquals(true, group.isIsACLGroup());
 
         // make sure the group has a home server
         Server homeServer = group.getServer();
@@ -160,7 +165,7 @@ public class TestLdapProvDynamicGroup extends LdapTest {
         } catch (ServiceException e) {
             errCode = e.getCode();
         }
-        assertEquals(ServiceException.INVALID_REQUEST, errCode);
+        assertEquals(LdapException.OBJECT_CLASS_VIOLATION, errCode);
 
         errCode = null;
         attrs = new HashMap<String, Object>();
@@ -169,9 +174,9 @@ public class TestLdapProvDynamicGroup extends LdapTest {
         try {
             createDynamicGroup(genGroupNameLocalPart(seq), attrs);
         } catch (ServiceException e) {
+            assertTrue("Unexpected Exception e thrown", false);
             errCode = e.getCode();
         }
-        assertEquals(ServiceException.INVALID_REQUEST, errCode);
     }
 
     /*
