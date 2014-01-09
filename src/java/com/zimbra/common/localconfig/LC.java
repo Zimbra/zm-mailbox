@@ -479,6 +479,9 @@ public final class LC {
     @Supported
     public static final KnownKey ldap_cache_zimlet_maxage = KnownKey.newKey(15);
 
+    public static final KnownKey ldap_cache_custom_dynamic_group_membership_maxage_ms =
+            KnownKey.newKey(2 * Constants.MILLIS_PER_MINUTE);
+
     public static final KnownKey ldap_cache_reverseproxylookup_domain_maxsize = KnownKey.newKey(100);
     public static final KnownKey ldap_cache_reverseproxylookup_domain_maxage = KnownKey.newKey(15);
     public static final KnownKey ldap_cache_reverseproxylookup_server_maxsize = KnownKey.newKey(100);
