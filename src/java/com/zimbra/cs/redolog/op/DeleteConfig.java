@@ -1,11 +1,12 @@
-package com.zimbra.cs.redolog;
+package com.zimbra.cs.redolog.op;
 
 import java.io.IOException;
 
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxOperation;
-import com.zimbra.cs.redolog.op.RedoableOp;
+import com.zimbra.cs.redolog.RedoLogInput;
+import com.zimbra.cs.redolog.RedoLogOutput;
 
 public class DeleteConfig extends RedoableOp {
 

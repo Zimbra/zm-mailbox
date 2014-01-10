@@ -642,7 +642,7 @@ public final class DbMailbox {
         PreparedStatement stmt = null;
         try {
             stmt = conn.prepareStatement("DELETE FROM " + qualifyZimbraTableName(mbox, TABLE_METADATA) +
-                    " WHERE " + DbMailItem.IN_THIS_MAILBOX_AND + "section = ?");
+                    " WHERE " + DbMailItem.IN_THIS_MAILBOX_AND + "section like ?");
             int pos = 1;
             if (!DebugConfig.disableMailboxGroups) {
                 stmt.setInt(pos++, mbox.getId());
