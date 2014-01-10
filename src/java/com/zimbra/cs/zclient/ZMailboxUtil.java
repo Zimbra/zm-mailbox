@@ -200,6 +200,9 @@ public class ZMailboxUtil implements DebugListener {
         if (num < 0) {
             throw ServiceException.INVALID_REQUEST("Timeout can't be negative", null);
         }
+        if (num > 2147483) {
+            throw ServiceException.INVALID_REQUEST("Timeout can't exceed 2147483 seconds", null);
+        }
         mTimeout = num * 1000;
     }
 
