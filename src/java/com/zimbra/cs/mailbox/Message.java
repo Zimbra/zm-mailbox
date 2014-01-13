@@ -148,7 +148,17 @@ public class Message extends MailItem {
         }
 
         public String getCalOwner() { return calOwner; }
-        public ItemId getCalendarItemId() { return new ItemId(calOwner, mCalendarItemId); }
+
+        /**
+         * @return Item Id of the corresponding calendar item or null if there isn't one.
+         */
+        public ItemId getCalendarItemId() {
+            if (!calItemCreated()) {
+                return null;
+            }
+            return new ItemId(calOwner, mCalendarItemId);
+        }
+
         public int getComponentNo()    { return mComponentNo; }
         public Invite getInvite() { return mInvite; }
         public InviteChanges getInviteChanges() { return mInviteChanges; }

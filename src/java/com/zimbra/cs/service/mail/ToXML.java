@@ -2031,7 +2031,7 @@ public final class ToXML {
             } else if (calItem != null) {
                 itemId = ifmt.formatItemId(calItem);
             }
-            if (itemId != null) {
+            if ((itemId != null) && !("0".equals(itemId))) {
                 e.addAttribute(MailConstants.A_CAL_ID /* calItemId */, itemId);
                 if (invite.isEvent()) {
                     e.addAttribute(MailConstants.A_APPT_ID_DEPRECATE_ME /* apptId */, itemId);  // for backward compat
