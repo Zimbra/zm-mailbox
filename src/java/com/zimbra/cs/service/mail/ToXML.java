@@ -1407,9 +1407,12 @@ public final class ToXML {
             }
 
             if (wantExpandGroupInfo) {
+                ZimbraLog.gal.trace("want expand group info");
                 Account authedAcct = octxt.getAuthenticatedUser();
                 Account requestedAcct = msg.getMailbox().getAccount();
                 encodeAddrsWithGroupInfo(m, requestedAcct, authedAcct);
+            } else {
+                ZimbraLog.gal.trace("do not want expand group info");
             }
 
             success = true;
@@ -3146,6 +3149,10 @@ public final class ToXML {
                     }
                 }
             }
+        } else if (ZimbraLog.gal.isTraceEnabled()) {
+            ZimbraLog.gal.trace("group info bypassed; account [%s] does not have required attributes isFeatureGalEnabled [%s]"
+                    + " isFeatureGalAutoCompleteEnabled [%s] isPrefGalAutoCompleteEnabled [%s]", requestedAcct,
+                    requestedAcct.isFeatureGalEnabled(), requestedAcct.isFeatureGalAutoCompleteEnabled(), requestedAcct.isPrefGalAutoCompleteEnabled());
         }
     }
 

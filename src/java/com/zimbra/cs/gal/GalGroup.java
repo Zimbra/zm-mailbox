@@ -99,6 +99,7 @@ public abstract class GalGroup {
     }
 
     public static GroupInfo getGroupInfo(String addr, boolean needCanExpand, Account requestedAcct, Account authedAcct) {
+        ZimbraLog.gal.trace("GalGroup - getting group info for addr [%s] requestedAcct [%s] authedAcct [%s]", addr, requestedAcct, authedAcct);
         Domain domain = null;
         try {
             domain = prov.getDomain(requestedAcct);
@@ -106,17 +107,17 @@ public abstract class GalGroup {
             ZimbraLog.gal.warn("GalGroup - unable to get domain for account " + requestedAcct, e);
         }
 
-        if (domain == null)
+        if (domain == null || !domain.isGalGroupIndicatorEnabled()) {
+            ZimbraLog.gal.trace("GalGroup - domain null or gal group indicator disabled [%s]", domain);
             return null;
-
-        if (!domain.isGalGroupIndicatorEnabled())
-            return null;
+        }
 
         GalGroupCache galGroup = null;
 
         try {
             galGroup = GalGroup.getGalGroupForDomain(requestedAcct, domain);
         } catch (GalGroupCacheFullException e) {
+            ZimbraLog.gal.trace("GalGroup - cache full exception", e);
             return null;
         }
 
@@ -128,16 +129,19 @@ public abstract class GalGroup {
 
         // we have a fully synced GalGroup object for the domain
         if (galGroup.isInternalGroup(addr)) {
+            ZimbraLog.gal.trace("GalGroup - internal group");
             if (needCanExpand && canExpandGroup(prov, addr, authedAcct))
                 return GroupInfo.CAN_EXPAND;
             else
                 return GroupInfo.IS_GROUP;
         } else if (galGroup.isExternalGroup(addr)) {
+            ZimbraLog.gal.trace("GalGroup - external group");
             if (needCanExpand)
                 return GroupInfo.CAN_EXPAND;
             else
                 return GroupInfo.IS_GROUP;
         }
+        ZimbraLog.gal.trace("GalGroup - neither internal nor external group");
 
         return null;
     }
@@ -239,6 +243,8 @@ public abstract class GalGroup {
     private static boolean canExpandGroup(Provisioning prov, String groupName, Account authedAcct) {
         try {
             // get the dl object for ACL checking
+            ZimbraLog.gal.trace("GalGroup - canExpandGroup() account [%s] group [%s]",
+                    authedAcct == null ? "null" : authedAcct.getName(), groupName);
             Group group = prov.getGroupBasic(Key.DistributionListBy.name, groupName);
 
             // the DL might have been deleted since the last GAL sync account sync, throw.
@@ -248,14 +254,16 @@ public abstract class GalGroup {
                 return false;
             }
 
-            if (!AccessManager.getInstance().canDo(authedAcct, group, User.R_viewDistList, false))
+            if (!AccessManager.getInstance().canDo(authedAcct, group, User.R_viewDistList, false)) {
+                ZimbraLog.gal.trace("GalGroup - canDo returned false");
                 return false;
+            }
 
         } catch (ServiceException e) {
             ZimbraLog.gal.warn("GalGroup - unable to check permission for gal group expansion: " + groupName);
             return false;
         }
-
+        ZimbraLog.gal.trace("GalGroup - canExpandGroup() true");
         return true;
     }
 
