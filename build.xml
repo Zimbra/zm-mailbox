@@ -168,6 +168,9 @@
     <replaceregexp match="(tns|zimbra*|ns[0-9]):zmBoolean" replace="xs:boolean" flags="g" byline="true">
       <fileset dir="${xml.schema.dir}" includes="*.xsd"/>
     </replaceregexp>
+    <java classname="com.zimbra.soap.util.XsdCleaner" classpathref="class.path" fork="true" failonerror="true">
+            <arg line="--dir ${xml.schema.dir}"/>
+    </java>
   </target>
 
   <!-- used to build WSDL client support artifacts for a particular service -->

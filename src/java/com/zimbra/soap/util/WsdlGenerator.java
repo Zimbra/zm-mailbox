@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -25,12 +25,14 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import javax.xml.XMLConstants;
+
 import org.dom4j.Document;
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
 import org.dom4j.Namespace;
-import org.dom4j.io.OutputFormat;
 import org.dom4j.QName;
+import org.dom4j.io.OutputFormat;
 import org.dom4j.io.XMLWriter;
 
 import com.google.common.collect.Lists;
@@ -49,7 +51,7 @@ import com.zimbra.soap.JaxbUtil;
 /**
  * This class represents a utility to generate the top level WSDL files for
  * Zimbra SOAP interfaces
- * 
+ *
  * @author gren
  *
  */
@@ -60,7 +62,7 @@ public class WsdlGenerator {
 
     private static final String svcPrefix = "svc"; // Namespace prefix used for references to targetNamespace
     private static final Namespace nsSoap = new Namespace("soap", "http://schemas.xmlsoap.org/wsdl/soap/");
-    private static final Namespace nsXsd = new Namespace( "xsd", "http://www.w3.org/2001/XMLSchema");
+    private static final Namespace nsXsd = new Namespace( "xsd", XMLConstants.W3C_XML_SCHEMA_NS_URI);
     private static final Namespace nsWsdl = new Namespace("wsdl", "http://schemas.xmlsoap.org/wsdl/");
     private static final Namespace nsZimbra = new Namespace("zimbra", ZimbraNamespace.ZIMBRA_STR);
     private static final String targetNsBase = "http://www.zimbra.com/wsdl/";
@@ -83,7 +85,7 @@ public class WsdlGenerator {
 
     /**
      * Reads the command line arguments.
-     * 
+     *
      * @param    args        the arguments
      */
     private static void readArguments(String[] args) {
@@ -337,10 +339,10 @@ public class WsdlGenerator {
         ALL("ZimbraService.wsdl", "ZimbraService", targetNsBase + "ZimbraService.wsdl"),
         ADMIN("ZimbraAdminService.wsdl", "ZimbraAdminService", targetNsBase + "ZimbraAdminService.wsdl"),
         USER("ZimbraUserService.wsdl", "ZimbraUserService", targetNsBase + "ZimbraAdminService.wsdl");
-        
-        private String fileName;
-        private String serviceName;
-        private String targetNamespace;
+
+        private final String fileName;
+        private final String serviceName;
+        private final String targetNamespace;
         private WsdlDefinition(String fileName, String serviceName, String targetNamespace) {
             this.fileName = fileName;
             this.serviceName = serviceName;
