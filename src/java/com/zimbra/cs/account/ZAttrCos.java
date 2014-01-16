@@ -17568,6 +17568,150 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
+     * Whether to force devices using Active Sync 2.5
+     *
+     * @return zimbraMobileForceProtocol25, or false if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1573)
+    public boolean isMobileForceProtocol25() {
+        return getBooleanAttr(Provisioning.A_zimbraMobileForceProtocol25, false);
+    }
+
+    /**
+     * Whether to force devices using Active Sync 2.5
+     *
+     * @param zimbraMobileForceProtocol25 new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1573)
+    public void setMobileForceProtocol25(boolean zimbraMobileForceProtocol25) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileForceProtocol25, zimbraMobileForceProtocol25 ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to force devices using Active Sync 2.5
+     *
+     * @param zimbraMobileForceProtocol25 new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1573)
+    public Map<String,Object> setMobileForceProtocol25(boolean zimbraMobileForceProtocol25, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileForceProtocol25, zimbraMobileForceProtocol25 ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether to force devices using Active Sync 2.5
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1573)
+    public void unsetMobileForceProtocol25() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileForceProtocol25, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to force devices using Active Sync 2.5
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1573)
+    public Map<String,Object> unsetMobileForceProtocol25(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileForceProtocol25, "");
+        return attrs;
+    }
+
+    /**
+     * Whether to force Samsung devices using Active Sync 2.5
+     *
+     * @return zimbraMobileForceSamsungProtocol25, or true if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1572)
+    public boolean isMobileForceSamsungProtocol25() {
+        return getBooleanAttr(Provisioning.A_zimbraMobileForceSamsungProtocol25, true);
+    }
+
+    /**
+     * Whether to force Samsung devices using Active Sync 2.5
+     *
+     * @param zimbraMobileForceSamsungProtocol25 new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1572)
+    public void setMobileForceSamsungProtocol25(boolean zimbraMobileForceSamsungProtocol25) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileForceSamsungProtocol25, zimbraMobileForceSamsungProtocol25 ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to force Samsung devices using Active Sync 2.5
+     *
+     * @param zimbraMobileForceSamsungProtocol25 new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1572)
+    public Map<String,Object> setMobileForceSamsungProtocol25(boolean zimbraMobileForceSamsungProtocol25, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileForceSamsungProtocol25, zimbraMobileForceSamsungProtocol25 ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether to force Samsung devices using Active Sync 2.5
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1572)
+    public void unsetMobileForceSamsungProtocol25() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileForceSamsungProtocol25, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to force Samsung devices using Active Sync 2.5
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1572)
+    public Map<String,Object> unsetMobileForceSamsungProtocol25(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileForceSamsungProtocol25, "");
+        return attrs;
+    }
+
+    /**
      * Max size of items in a folder that server tracks, categorized by
      * collection type (Email,Calendar,Contacts,Tasks). e.g. Email:3000 makes
      * the max size of items to track for an Email folder to be 3000. If not
