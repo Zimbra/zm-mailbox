@@ -5,7 +5,11 @@ Useful for exercising marshaling and unmarshaling for JAXB objects under src/jav
 
 ant "wsdl-test" target
 ======================
-These tests require Zimbra to be installed on the system under test with starndard test users in place.
+These tests require Zimbra Network to be installed on the system under test with standard test users in place.
+One way to achieve this is to do:
+
+    cd ZimbraNetwork;ant dev-deploy-all
+
 They rely on Java API files automatically generated from WSDL files by the ant target "wsdl-client-support".
 The main intention is to validate that correct, working WSDL client software can be written based on our WSDL.
 The JAXB classes under src/java/ are NOT typically tested directly by these tests, although to some extent

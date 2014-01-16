@@ -48,14 +48,13 @@ import org.junit.rules.TestName;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.zimbra.soap.JaxbUtil;
-import com.zimbra.soap.account.JaxbToElementTest;
 import com.zimbra.soap.account.message.CreateDistributionListResponse;
 import com.zimbra.soap.account.message.GetDistributionListResponse;
-import com.zimbra.soap.account.message.GetInfoResponse;
 import com.zimbra.soap.admin.message.AuthResponse;
 import com.zimbra.soap.admin.message.CreateXMbxSearchRequest;
 import com.zimbra.soap.admin.message.VerifyIndexResponse;
 import com.zimbra.soap.account.message.GetDistributionListMembersResponse;
+import com.zimbra.soap.account.type.Attr;
 import com.zimbra.soap.account.type.DistributionListGranteeInfo;
 import com.zimbra.soap.account.type.DistributionListInfo;
 import com.zimbra.soap.account.type.DLInfo;
@@ -71,6 +70,7 @@ import com.zimbra.soap.jaxb.KeyValuePairsTester;
 import com.zimbra.soap.jaxb.MixedAnyTester;
 import com.zimbra.soap.jaxb.MixedTester;
 import com.zimbra.soap.jaxb.NamespaceDeltaElem;
+import com.zimbra.soap.jaxb.OddKeyValuePairsTester;
 import com.zimbra.soap.jaxb.StringAttrStringElem;
 import com.zimbra.soap.jaxb.StringAttribIntValue;
 import com.zimbra.soap.jaxb.TransientTester;
@@ -370,11 +370,6 @@ public class JaxbToJsonTest {
         jsonElem.addKeyValuePair("key1", "value1");
         jsonElem.addKeyValuePair("key2", "value2-a");
         jsonElem.addKeyValuePair("key2", "value2-b");
-        // TODO: Update if this changes
-        // Currently KVPairs has this field definition:
-        //    @XmlElement(name=Element.XMLElement.E_ATTRIBUTE /* a */)
-        //    @ZimbraKeyValuePairs
-        //    private List<KeyValuePair> keyValuePairs;
         KVPairs kvPairs = new KVPairs();
         kvPairs.addKeyValuePair(new KeyValuePair("key1", "value1"));
         kvPairs.addKeyValuePair(new KeyValuePair("key2", "value2-a"));
@@ -391,9 +386,27 @@ public class JaxbToJsonTest {
     }
 
     /**
-     * Note that can only roundtrip JAXB --> JSON --> JAXB with keyvalue pairs if the {@link XmlElement} name
-     * is {@code.XMLElement.E_ATTRIBUTE} which is "a".
-     * Desired JSON :
+     * Check that JSON can be deserialised into a JAXB object when some of the JSON represents Zimbra KeyValuePairs
+     * (i.e. An "_attrs" array).
+     * In this case, the target objects for each keyvalue pair use the defaults of "a" for the element name and
+     * "n" for the attribute name in the XML form.
+     * Desired XML :<br />
+     * &lt;key-value-pairs-tester xmlns="urn:zimbraTest">
+     *   &lt;a n="key1">value1&lt;/a>
+     *   &lt;a n="key2">value2-a&lt;/a>
+     *   &lt;a n="key2">value2-b&lt;/a>
+     * &lt;/key-value-pairs-tester>
+     *<br />
+     * Desired JSON :<br />
+     * {
+     *   "_attrs": {
+     *     "key1": "value1",
+     *     "key2": [
+     *       "value2-a",
+     *       "value2-b"]
+     *   },
+     *   "_jsns": "urn:zimbraTest"
+     * }
      */
     @Test
     public void zimbraKeyValuePairsAnnotation() throws Exception {
@@ -406,6 +419,8 @@ public class JaxbToJsonTest {
         attrs.add(new KeyValuePair("key2", "value2-a"));
         attrs.add(new KeyValuePair("key2", "value2-b"));
         KeyValuePairsTester jaxb = new KeyValuePairsTester(attrs);
+        logInfo("XMLElement (from JAXB) ---> prettyPrint\n%1$s",
+                JaxbUtil.jaxbToElement(jaxb, Element.XMLElement.mFactory, true, false).prettyPrint());
         Element jsonJaxbElem = JacksonUtil.jaxbToJSONElement(jaxb);
         logInfo("JSONElement (for comparison) ---> prettyPrint\n%1$s", jsonElem.prettyPrint());
         logInfo("JSONElement from JAXB ---> prettyPrint\n%1$s", jsonJaxbElem.prettyPrint());
@@ -415,6 +430,60 @@ public class JaxbToJsonTest {
         Assert.assertEquals("prettyPrint", jsonElem.prettyPrint(), jsonJaxbElem.prettyPrint());
         List<KeyValuePair> kvps = roundtripped.getAttrList();
         Assert.assertEquals("roundtripped kvps num", 3, kvps.size());
+    }
+
+    /**
+     * Check that JSON can be deserialised into a JAXB object when some of the JSON represents Zimbra KeyValuePairs
+     * (i.e. An "_attrs" array).
+     * In this case, the target objects for each keyvalue pair do NOT use the defaults of "a" for the element name and
+     * "n" for the attribute name in the XML form.
+     * Desired XML :<br />
+     * &lt;key-value-pairs-tester xmlns="urn:zimbraTest">
+     *   &lt;oddElemName name="key1">value1&lt;/oddElemName>
+     *   &lt;oddElemName name="key2">value2-a&lt;/oddElemName>
+     *   &lt;oddElemName name="key2">value2-b&lt;/oddElemName>
+     * &lt;/key-value-pairs-tester>
+     *<br />
+     * Desired JSON :<br />
+     * {
+     *   "_attrs": {
+     *     "key1": "value1",
+     *     "key2": [
+     *       "value2-a",
+     *       "value2-b"]
+     *   },
+     *   "_jsns": "urn:zimbraTest"
+     * }
+     */
+    @Test
+    public void zimbraOddKeyValuePairsAnnotation() throws Exception {
+        Element jsonElem = JSONElement.mFactory.createElement(QName.get("key-value-pairs", "urn:zimbraTest"));
+        jsonElem.addKeyValuePair("key1", "value1", "oddElemName", "name");
+        jsonElem.addKeyValuePair("key2", "value2-a", "oddElemName", "name");
+        jsonElem.addKeyValuePair("key2", "value2-b", "oddElemName", "name");
+        List<Attr> attrs = Lists.newArrayList();
+        attrs.add(new Attr("key1", "value1"));
+        attrs.add(new Attr("key2", "value2-a"));
+        attrs.add(new Attr("key2", "value2-b"));
+        OddKeyValuePairsTester jaxb = new OddKeyValuePairsTester(attrs);
+        logInfo("XMLElement (from JAXB) ---> prettyPrint\n%1$s",
+                JaxbUtil.jaxbToElement(jaxb, Element.XMLElement.mFactory, true, false).prettyPrint());
+        Element jsonJaxbElem = JacksonUtil.jaxbToJSONElement(jaxb);
+        logInfo("JSONElement (for comparison) ---> prettyPrint\n%1$s", jsonElem.prettyPrint());
+        String origJson = jsonJaxbElem.prettyPrint();
+        logInfo("JSONElement from JAXB ---> prettyPrint\n%1$s", origJson);
+        OddKeyValuePairsTester roundtripped = JaxbUtil.elementToJaxb(jsonJaxbElem, OddKeyValuePairsTester.class);
+        List<com.zimbra.common.soap.Element.KeyValuePair> elemKVPs = jsonJaxbElem.listKeyValuePairs();
+        Assert.assertEquals("elemKVP num", 3, elemKVPs.size());
+        Assert.assertEquals("prettyPrint", jsonElem.prettyPrint(), jsonJaxbElem.prettyPrint());
+        List<Attr> kvps = roundtripped.getAttrList();
+        Assert.assertEquals("roundtripped kvps num", 3, kvps.size());
+        jsonJaxbElem = JacksonUtil.jaxbToJSONElement(roundtripped);
+        String finalJson = jsonJaxbElem.prettyPrint();
+        if (!origJson.equals(finalJson)) {
+            logInfo("JSONElement from roundtripped JAXB ---> prettyPrint\n%1$s", jsonJaxbElem.prettyPrint());
+            Assert.assertEquals("roundtripped JSON pretty print", origJson, finalJson);
+        }
     }
 
     /**

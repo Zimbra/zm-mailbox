@@ -49,7 +49,7 @@ public class ActionSelector {
      * <br />
      * For ConvAction    - delete|read|flag|priority|tag|move|spam|trash
      * <br />
-     * For FolderAction  - read|delete|rename|move|trash|empty|color|[!]grant|revokeorphangrants|url|import|sync|fb|[!]check|update|[!]syncon|retentionpolicy|[!]disableactivesync
+     * For FolderAction  - read|delete|rename|move|trash|empty|color|[!]grant|revokeorphangrants|url|import|sync|fb|[!]check|update|[!]syncon|retentionpolicy|[!]disableactivesync|webofflinesyncdays
      * <br />
      * For TagAction     - read|rename|color|delete|update|retentionpolicy
      * <br />

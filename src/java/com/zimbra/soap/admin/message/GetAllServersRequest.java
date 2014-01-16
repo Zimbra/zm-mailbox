@@ -17,6 +17,7 @@ package com.zimbra.soap.admin.message;
 
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
+
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.type.ZmBoolean;
 
@@ -38,6 +39,13 @@ public class GetAllServersRequest {
     private String service;
 
     /**
+     * @zm-api-field-tag alwaysOnClusterId
+     * @zm-api-field-description alwaysOnClusterId.
+     */
+    @XmlAttribute(name=AdminConstants.A_ALWAYSONCLUSTER_ID /* alwaysOnClusterId */, required=false)
+    private String alwaysOnClusterId;
+
+    /**
      * @zm-api-field-tag apply-config
      * @zm-api-field-description if {apply-config} is 1 (true), then certain unset attrs on a server will get their
      * value from the global config.
@@ -56,8 +64,18 @@ public class GetAllServersRequest {
         setApplyConfig(applyConfig);
     }
 
+    public GetAllServersRequest(String service, Boolean applyConfig, String clusterId) {
+        setService(service);
+        setApplyConfig(applyConfig);
+        setAlwaysOnClusterId(clusterId);
+    }
+
     public void setService(String service) {
         this.service = service;
+    }
+
+    public void setAlwaysOnClusterId(String alwaysOnClusterId) {
+        this.alwaysOnClusterId = alwaysOnClusterId;
     }
 
     public void setApplyConfig(Boolean applyConfig) {
@@ -65,5 +83,6 @@ public class GetAllServersRequest {
     }
 
     public String getService() { return service; }
+    public String getAlwaysOnClusterId() { return alwaysOnClusterId; }
     public Boolean isApplyConfig() { return ZmBoolean.toBool(applyConfig); }
 }

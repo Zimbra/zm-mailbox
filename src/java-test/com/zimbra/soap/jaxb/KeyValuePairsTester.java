@@ -31,7 +31,6 @@ import com.zimbra.soap.type.KeyValuePair;
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name="key-value-pairs-tester")
 public class KeyValuePairsTester {
-    // Note: Can use a different name BUT won't be able to round trip back to JAXB from JSON if you do
     @XmlElement(name=Element.XMLElement.E_ATTRIBUTE /* a */)
     @ZimbraKeyValuePairs
     private List<KeyValuePair> attrList;

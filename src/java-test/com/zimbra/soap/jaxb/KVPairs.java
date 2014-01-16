@@ -40,7 +40,7 @@ import com.zimbra.soap.type.KeyValuePairs;
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name="key-value-pairs")
 public class KVPairs implements KeyValuePairs {
-    // Note: Can use a different name BUT won't be able to round trip back to JAXB from JSON if you do
+    // Note: This is the default name for a KeyValuePair - although it can be different
     @XmlElement(name=Element.XMLElement.E_ATTRIBUTE /* a */)
     @ZimbraKeyValuePairs
     private List<KeyValuePair> keyValuePairs;

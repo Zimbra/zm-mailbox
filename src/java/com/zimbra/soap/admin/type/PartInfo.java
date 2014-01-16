@@ -63,7 +63,7 @@ implements PartInfoInterface {
      * @zm-api-field-tag content-disp
      * @zm-api-field-description MIME Content-Disposition
      */
-    @XmlAttribute(name=MailConstants.A_CONTENT_DISPOSTION /* cd */, required=false)
+    @XmlAttribute(name=MailConstants.A_CONTENT_DISPOSITION /* cd */, required=false)
     private String contentDisposition;
 
     /**
