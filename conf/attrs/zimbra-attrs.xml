@@ -7206,7 +7206,7 @@ TODO: delete them permanently from here
 </attr>
 
 <attr id="1444" name="zimbraMobilePolicyRequireStorageCardEncryption" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.5.0">
-  <defaultCOSValue>TRUE</defaultCOSValue>
+  <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>
     require data encryption on storage card;
     ignored if zimbraFeatureMobilePolicyEnabled=FALSE

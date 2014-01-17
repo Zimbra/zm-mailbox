@@ -21913,13 +21913,13 @@ public abstract class ZAttrCos extends NamedEntry {
      * require data encryption on storage card; ignored if
      * zimbraFeatureMobilePolicyEnabled=FALSE
      *
-     * @return zimbraMobilePolicyRequireStorageCardEncryption, or true if unset
+     * @return zimbraMobilePolicyRequireStorageCardEncryption, or false if unset
      *
      * @since ZCS 8.5.0
      */
     @ZAttr(id=1444)
     public boolean isMobilePolicyRequireStorageCardEncryption() {
-        return getBooleanAttr(Provisioning.A_zimbraMobilePolicyRequireStorageCardEncryption, true);
+        return getBooleanAttr(Provisioning.A_zimbraMobilePolicyRequireStorageCardEncryption, false);
     }
 
     /**
