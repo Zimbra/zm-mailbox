@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -20,13 +20,11 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.GregorianCalendar;
-import java.util.HashSet;
 import java.util.HashMap;
-import java.util.Iterator;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -42,14 +40,14 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailItem.Type;
-import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxListener;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.service.mail.ToXML;
 
 public abstract class FreeBusyProvider {
-    
+
     public static class Listener extends MailboxListener {
 
         @Override
@@ -58,19 +56,19 @@ public abstract class FreeBusyProvider {
         }
 
         private static final Set<Type> TYPES = EnumSet.of(MailItem.Type.APPOINTMENT);
-        
+
         @Override
         public Set<Type> registerForItemTypes() {
             return TYPES;
         }
     }
-    
-    protected static class Request {
-        
+
+    public static class Request {
+
         public Request(Account req, String em, long s, long e, int f) {
             this(req, em, s, e, f, -1);
         }
-        
+
         public Request(Account req, String em, long s, long e, int f, int hops) {
             requestor = req; email = em;
             Calendar cal = GregorianCalendar.getInstance();
@@ -90,39 +88,39 @@ public abstract class FreeBusyProvider {
         int folder;
         Object data;
         int hopcount;
-        
+
         public Account getRequestor() {
             return requestor;
         }
-        
+
         public String getEmail() {
             return email;
         }
-        
+
         public long getStart() {
             return start;
         }
-        
+
         public long getEnd() {
             return end;
         }
-        
+
         public int getFolder() {
             return folder;
         }
-        
+
         public Object getData() {
             return data;
         }
-        
+
         public void setData(Object obj) {
             data = obj;
         }
-        
+
         public int getHopcount() {
             return hopcount;
         }
-        
+
         public void incrementHopcount() {
             if (hopcount < 0 )
                 hopcount = 0;
@@ -131,7 +129,7 @@ public abstract class FreeBusyProvider {
         }
     }
     @SuppressWarnings("serial")
-    protected static class FreeBusyUserNotFoundException extends Exception {
+    public static class FreeBusyUserNotFoundException extends Exception {
         public FreeBusyUserNotFoundException() {
             // empty constructor
         }
@@ -177,7 +175,7 @@ public abstract class FreeBusyProvider {
     public static void mailboxChanged(String accountId) {
         mailboxChanged(accountId, EnumSet.of(MailItem.Type.APPOINTMENT));
     }
-    
+
     public static void mailboxChanged(String accountId, Set<MailItem.Type> changedType) {
         for (FreeBusyProvider prov : sPROVIDERS)
             if (prov.registerForMailboxChanges(accountId) && !Collections.disjoint(changedType, prov.registerForItemTypes())) {
@@ -234,9 +232,9 @@ public abstract class FreeBusyProvider {
                 }
                 freebusyList.add(fb);
             }
-        } 
+        }
         // filter the duplicate and take one freebusy result for each user.
-        for (Map.Entry<String, ArrayList<FreeBusy>> entry : freebusyMap.entrySet()) {   
+        for (Map.Entry<String, ArrayList<FreeBusy>> entry : freebusyMap.entrySet()) {
             ArrayList<FreeBusy> freebusyList = entry.getValue();
             FreeBusy freebusy = null;
             for (FreeBusy fb : freebusyList) {
@@ -245,7 +243,7 @@ public abstract class FreeBusyProvider {
                 } else {
                     // check if fb is better response than freebusy.
                     if (!fb.getBusiest().equals(IcalXmlStrMap.FBTYPE_FREE))
-                        freebusy = fb;                            
+                        freebusy = fb;
                 }
             }
             ret.add(freebusy);
@@ -286,7 +284,7 @@ public abstract class FreeBusyProvider {
             ret.add(FreeBusy.nodataFreeBusy(r.email, r.start, r.end));
         return ret;
     }
-    
+
     public FreeBusySyncQueue getSyncQueue() {
         return sPUSHQUEUES.get(getName());
     }
