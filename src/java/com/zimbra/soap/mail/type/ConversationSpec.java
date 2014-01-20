@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -15,11 +15,6 @@
 
 package com.zimbra.soap.mail.type;
 
-import com.google.common.base.Objects;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-
-import java.util.Collections;
 import java.util.List;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -27,6 +22,9 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 
+import com.google.common.base.Objects;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.type.AttributeName;
 import com.zimbra.soap.type.ZmBoolean;
@@ -74,6 +72,14 @@ public class ConversationSpec {
     private List<AttributeName> headers = Lists.newArrayList();
 
     /**
+     * @zm-api-field-tag need-can-expand
+     * @zm-api-field-description Set to return group info (isGroup and exp flags) on <b>&lt;e></b> elements in the
+     * response (default is unset.)
+     */
+    @XmlAttribute(name=MailConstants.A_NEED_EXP /* needExp */, required=false)
+    private ZmBoolean needCanExpand;
+
+    /**
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
@@ -88,6 +94,7 @@ public class ConversationSpec {
     public void setInlineRule(String inlineRule) { this.inlineRule = inlineRule; }
     public void setWantHtml(Boolean wantHtml) { this.wantHtml = ZmBoolean.fromBool(wantHtml); }
     public void setMaxInlinedLength(Integer maxInlinedLength) { this.maxInlinedLength = maxInlinedLength; }
+    public void setNeedCanExpand(Boolean needCanExpand) { this.needCanExpand = ZmBoolean.fromBool(needCanExpand); }
     public void setHeaders(Iterable <AttributeName> headers) {
         this.headers.clear();
         if (headers != null) {
@@ -103,6 +110,7 @@ public class ConversationSpec {
     public String getInlineRule() { return inlineRule; }
     public Boolean getWantHtml() { return ZmBoolean.toBool(wantHtml); }
     public Integer getMaxInlinedLength() { return maxInlinedLength; }
+    public Boolean getNeedCanExpand() { return ZmBoolean.toBool(needCanExpand); }
     public List<AttributeName> getHeaders() {
         return headers;
     }
