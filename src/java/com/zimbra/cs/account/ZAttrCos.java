@@ -24859,7 +24859,9 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * whether actionable address objects result from autocomplete is enabled
+     * Deprecated since: 8.5.0. address bubbles always enabled since 8.5.0.
+     * Orig desc: whether actionable address objects result from autocomplete
+     * is enabled
      *
      * @return zimbraPrefAutocompleteAddressBubblesEnabled, or true if unset
      *
@@ -24871,7 +24873,9 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * whether actionable address objects result from autocomplete is enabled
+     * Deprecated since: 8.5.0. address bubbles always enabled since 8.5.0.
+     * Orig desc: whether actionable address objects result from autocomplete
+     * is enabled
      *
      * @param zimbraPrefAutocompleteAddressBubblesEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -24886,7 +24890,9 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * whether actionable address objects result from autocomplete is enabled
+     * Deprecated since: 8.5.0. address bubbles always enabled since 8.5.0.
+     * Orig desc: whether actionable address objects result from autocomplete
+     * is enabled
      *
      * @param zimbraPrefAutocompleteAddressBubblesEnabled new value
      * @param attrs existing map to populate, or null to create a new map
@@ -24902,7 +24908,9 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * whether actionable address objects result from autocomplete is enabled
+     * Deprecated since: 8.5.0. address bubbles always enabled since 8.5.0.
+     * Orig desc: whether actionable address objects result from autocomplete
+     * is enabled
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -24916,7 +24924,9 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * whether actionable address objects result from autocomplete is enabled
+     * Deprecated since: 8.5.0. address bubbles always enabled since 8.5.0.
+     * Orig desc: whether actionable address objects result from autocomplete
+     * is enabled
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs

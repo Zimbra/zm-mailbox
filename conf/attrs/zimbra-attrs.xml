@@ -5307,9 +5307,10 @@ TODO: delete them permanently from here
   </desc>
 </attr>
 
-<attr id="1146" name="zimbraPrefAutocompleteAddressBubblesEnabled" type="boolean" min="0" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="7.0.0">
+<attr id="1146" name="zimbraPrefAutocompleteAddressBubblesEnabled" type="boolean" min="0" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="7.0.0" deprecatedSince="8.5.0">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>whether actionable address objects result from autocomplete is enabled</desc>
+  <deprecateDesc>address bubbles always enabled since 8.5.0</deprecateDesc>
 </attr>
 
 <attr id="1147" name="zimbraPhoneticFirstName" type="string" max="256" cardinality="single" optionalIn="account" flags="domainAdminModifiable" since="7.0.0">
