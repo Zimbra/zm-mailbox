@@ -9558,7 +9558,9 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefAutoAddAddressEnabled = "zimbraPrefAutoAddAddressEnabled";
 
     /**
-     * whether actionable address objects result from autocomplete is enabled
+     * Deprecated since: 8.5.0. address bubbles always enabled since 8.5.0.
+     * Orig desc: whether actionable address objects result from autocomplete
+     * is enabled
      *
      * @since ZCS 7.0.0
      */
