@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -38,7 +38,7 @@ public enum GranteeType {
     GT_AUTHUSER("all",  com.zimbra.soap.type.GranteeType.all, (                      GranteeFlag.F_AUTHUSER)), // all authenticated users
     GT_DOMAIN("dom",    com.zimbra.soap.type.GranteeType.dom, (short)(GranteeFlag.F_ADMIN | GranteeFlag.F_DOMAIN     | GranteeFlag.F_IS_ZIMBRA_ENTRY)),  // only for the admin crossDomainAdmin right and user rights
     // "edom" - Used for grantee type in conjunction with sendToDistList for non-Zimbra domains
-    GT_EXT_DOMAIN("edom",com.zimbra.soap.type.GranteeType.dom,(                             GranteeFlag.F_INDIVIDUAL)),
+    GT_EXT_DOMAIN("edom",com.zimbra.soap.type.GranteeType.edom,(                            GranteeFlag.F_INDIVIDUAL)),
     GT_GUEST("gst",     com.zimbra.soap.type.GranteeType.gst, (short)(                      GranteeFlag.F_INDIVIDUAL                                  | GranteeFlag.F_HAS_SECRET)),
     GT_KEY("key",       com.zimbra.soap.type.GranteeType.key, (short)(                      GranteeFlag.F_INDIVIDUAL                                  | GranteeFlag.F_HAS_SECRET)),
     GT_PUBLIC("pub",    com.zimbra.soap.type.GranteeType.pub, (                      GranteeFlag.F_PUBLIC)),
