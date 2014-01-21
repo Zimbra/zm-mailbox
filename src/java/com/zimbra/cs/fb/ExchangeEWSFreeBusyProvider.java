@@ -748,7 +748,7 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
             return true;
 
         } catch (Exception e) {
-            ZimbraLog.fb.error("error commucating to " + serverInfo.url, e);
+            ZimbraLog.fb.error("error communicating with " + serverInfo.url, e);
         } finally {
             ZimbraLog.fb.debug("Exiting handleMailboxChange() for account : " + accountId);
         }
@@ -939,7 +939,7 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
                 ret.addAll(this.getFreeBusyForHost(entry.getKey(),
                     entry.getValue()));
             } catch (IOException e) {
-                ZimbraLog.fb.error("error communicating to " + entry.getKey(),
+                ZimbraLog.fb.error("error communicating with " + entry.getKey(),
                     e);
             }
         }
