@@ -206,7 +206,7 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
             try {
                 ret.addAll(this.getFreeBusyForHost(entry.getKey(), entry.getValue()));
             } catch (IOException e) {
-                ZimbraLog.fb.error("error communicating to "+entry.getKey(), e);
+                ZimbraLog.fb.error("error communicating with "+entry.getKey(), e);
                 return getEmptyList(entry.getValue());
             }
         }
@@ -352,7 +352,7 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
                 return false;  // retry
             }
         } catch (IOException ioe) {
-            ZimbraLog.fb.error("error commucating to "+serverInfo.url, ioe);
+            ZimbraLog.fb.error("error communicating with "+serverInfo.url, ioe);
             return false;  // retry
         } finally {
             method.releaseConnection();
