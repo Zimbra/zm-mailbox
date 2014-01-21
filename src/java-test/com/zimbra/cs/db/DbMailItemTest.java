@@ -16,6 +16,8 @@ package com.zimbra.cs.db;
 
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.junit.After;
@@ -291,5 +293,51 @@ public final class DbMailItemTest {
         params.setChangeDateAfter(now);
         Set<Integer> idsAfterNow = DbMailItem.getIds(mbox, conn, params, false);
         Assert.assertTrue((idsAfterNow.size()-idsInitAftereNow.size()) == afterNowCount);
+    }
+
+    @Test
+    public void readTombstones() throws Exception {
+        int now = (int) (System.currentTimeMillis() / 1000);
+        DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.tombstone " +
+                "(mailbox_id, sequence, date, type, ids) " +
+                "VALUES(?, ?, ?, ?, ?)", mbox.getId(), 100, now, MailItem.Type.MESSAGE.toByte(), "1,2,3");
+        DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.tombstone " +
+                "(mailbox_id, sequence, date, type, ids) " +
+                "VALUES(?, ?, ?, ?, ?)", mbox.getId(), 100, now, MailItem.Type.APPOINTMENT.toByte(), "11,12,13,14");
+        DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.tombstone " +
+                "(mailbox_id, sequence, date, type, ids) " +
+                "VALUES(?, ?, ?, ?, ?)", mbox.getId(), 100, now, MailItem.Type.TASK.toByte(), "21,22,23,24,25");
+        DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.tombstone " +
+                "(mailbox_id, sequence, date, type, ids) " +
+                "VALUES(?, ?, ?, ?, ?)", mbox.getId(), 100, now, MailItem.Type.CONTACT.toByte(), "31,32");
+        Set<MailItem.Type> types = new HashSet<MailItem.Type>();
+        types.add(MailItem.Type.MESSAGE);
+        List<Integer> tombstones = DbMailItem.readTombstones(mbox, conn, 0, types);
+        Assert.assertEquals(tombstones.size(), 3);
+        types.add(MailItem.Type.APPOINTMENT);
+        tombstones = DbMailItem.readTombstones(mbox, conn, 0, types);
+        Assert.assertEquals(tombstones.size(), 7);
+
+        types = new HashSet<MailItem.Type>();
+        types.add(MailItem.Type.APPOINTMENT);
+        tombstones = DbMailItem.readTombstones(mbox, conn, 0, types);
+        Assert.assertEquals(tombstones.size(), 4);
+
+        types = new HashSet<MailItem.Type>();
+        types.add(MailItem.Type.TASK);
+        tombstones = DbMailItem.readTombstones(mbox, conn, 0, types);
+        Assert.assertEquals(tombstones.size(), 5);
+
+        types = new HashSet<MailItem.Type>();
+        types.add(MailItem.Type.CONTACT);
+        tombstones = DbMailItem.readTombstones(mbox, conn, 0, types);
+        Assert.assertEquals(tombstones.size(), 2);
+
+        types = new HashSet<MailItem.Type>();
+        types.add(MailItem.Type.MESSAGE);
+        types.add(MailItem.Type.APPOINTMENT);
+        types.add(MailItem.Type.TASK);
+        tombstones = DbMailItem.readTombstones(mbox, conn, 0, types);
+        Assert.assertEquals(tombstones.size(), 12);
     }
 }
