@@ -7853,4 +7853,9 @@ TODO: delete them permanently from here
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>Whether to force devices using Active Sync 2.5</desc>
 </attr>
+<attr id="1574" name="zimbraFeatureEwsEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.5.0">
+  <defaultCOSValue>TRUE</defaultCOSValue>
+  <desc>Whether to allow a user to access EWS service</desc>
+</attr>
+
 </attrs>
