@@ -4903,6 +4903,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureDistributionListFolderEnabled = "zimbraFeatureDistributionListFolderEnabled";
 
     /**
+     * Whether to allow a user to access EWS service
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1574)
+    public static final String A_zimbraFeatureEwsEnabled = "zimbraFeatureEwsEnabled";
+
+    /**
      * whether export folder feature is enabled
      *
      * @since ZCS 7.1.0
