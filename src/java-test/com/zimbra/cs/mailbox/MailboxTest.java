@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -449,6 +450,29 @@ public final class MailboxTest {
             }
         }
 
+        Collection<InternetAddress> addrs = new ArrayList<InternetAddress>();
+        addrs.add(new InternetAddress("user2@email.com"));
+        addrs.add(new InternetAddress("user3@email.com"));
+        addrs.add(new InternetAddress("user4@email.com"));
+        List<Contact> contactList = mbox.createAutoContact(null, addrs);
+        Assert.assertEquals(3, addrs.size());
+
+        int[] contacts = new int[addrs.size()];
+        int i = 0;
+        for (Contact c : contactList) {
+            contacts[i++] = c.mId;
+        }
+        mbox.delete(null, contacts, MailItem.Type.CONTACT, null);
+        Set<MailItem.Type> types = new HashSet<MailItem.Type>();
+        types.add(MailItem.Type.CONTACT);
+        List<Integer> contactTombstones = mbox.getTombstones(token, types);
+        Assert.assertEquals(addrs.size(), contactTombstones.size());
+        types = new HashSet<MailItem.Type>();
+        types.add(MailItem.Type.DOCUMENT);
+        List<Integer> docTombstones = mbox.getTombstones(token, types);
+        Assert.assertEquals(2, docTombstones.size());
+        types.add(MailItem.Type.CONTACT);
+        Assert.assertEquals(5, mbox.getTombstones(token, types).size());
 
         token = mbox.getLastChangeID();
 
@@ -462,6 +486,13 @@ public final class MailboxTest {
 
         mbox.move(null, new int[] { doc3.getId(), msg.getId() }, MailItem.Type.UNKNOWN, folder.getId(), null);
         mbox.delete(null, folder.getId(), MailItem.Type.FOLDER, null);
+
+        types = new HashSet<MailItem.Type>();
+        types.add(MailItem.Type.MESSAGE);
+        Assert.assertEquals(1, mbox.getTombstones(token, types).size());
+        types = new HashSet<MailItem.Type>();
+        types.add(MailItem.Type.CONTACT);
+        Assert.assertEquals(0, mbox.getTombstones(token, types).size());
 
         tombstones = mbox.getTombstones(token);
         Assert.assertEquals("3 tombstones", 3, tombstones.size());
