@@ -24,8 +24,8 @@ package com.zimbra.cs.account.cache;
 import java.util.Map;
 
 import com.zimbra.common.util.MapUtil;
-
 import com.zimbra.common.stats.Counter;
+import com.zimbra.common.stats.HitRateCounter;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 
@@ -35,8 +35,8 @@ public class AccountCache implements IAccountCache {
     private Map<String, CacheEntry> mIdCache;
     private Map<String, CacheEntry> mAliasCache;
     private Map<String, CacheEntry> mForeignPrincipalCache;
-    private Counter mHitRate = new Counter();
-    
+    private Counter mHitRate = new HitRateCounter();
+
     private long mRefreshTTL;
 
     static class CacheEntry {
@@ -163,7 +163,7 @@ public class AccountCache implements IAccountCache {
      */
     @Override
     public synchronized double getHitRate() {
-        return mHitRate.getAverage();
+    	 return mHitRate.getAverage();
     }
 }
 

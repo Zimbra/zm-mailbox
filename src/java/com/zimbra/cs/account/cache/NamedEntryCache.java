@@ -25,8 +25,8 @@ import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.util.MapUtil;
-
 import com.zimbra.common.stats.Counter;
+import com.zimbra.common.stats.HitRateCounter;
 import com.zimbra.cs.account.NamedEntry;
 
 /**
@@ -38,7 +38,8 @@ public class NamedEntryCache<E extends NamedEntry> implements INamedEntryCache<E
     private Map mIdCache;
     
     private long mRefreshTTL;
-    private Counter mHitRate = new Counter();
+    private Counter mHitRate = new HitRateCounter();
+   
 
     static class CacheEntry<E extends NamedEntry> {
         long mLifetime;
@@ -140,6 +141,7 @@ public class NamedEntryCache<E extends NamedEntry> implements INamedEntryCache<E
         return mIdCache.size();
     }
     
+  
     /**
      * Returns the cache hit rate as a value between 0 and 100.
      */
