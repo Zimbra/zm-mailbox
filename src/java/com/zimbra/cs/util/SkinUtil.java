@@ -119,8 +119,8 @@ public class SkinUtil {
 		}
 
 		// Nothing in ldap has a valid skin.
-		// fallback to serenity if selected skin not available
-		String usuallyAvailableSkin = "serenity";
+		// fallback to harmony if selected skin not available
+		String usuallyAvailableSkin = "harmony";
 		if (prefSkin != usuallyAvailableSkin) {
 			if (checkSkin(usuallyAvailableSkin, installedSkins, allowedSkins)) {
 				ZimbraLog.webclient.debug("Loading default skin "+usuallyAvailableSkin );
