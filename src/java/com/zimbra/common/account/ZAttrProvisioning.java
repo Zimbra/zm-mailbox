@@ -13380,6 +13380,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraZimletIsExtension = "zimbraZimletIsExtension";
 
     /**
+     * Whether to enable JSP compilation for Zimlets (i.e. for /service
+     * webapp)
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1575)
+    public static final String A_zimbraZimletJspEnabled = "zimbraZimletJspEnabled";
+
+    /**
      * Server side object keyword used for indexing and search for this
      * Zimlet
      */
