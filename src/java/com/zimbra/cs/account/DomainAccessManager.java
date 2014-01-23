@@ -21,6 +21,7 @@ import java.util.Set;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.EmailUtil;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.accesscontrol.Right;
 
@@ -42,15 +43,17 @@ public class DomainAccessManager extends AccessManager {
         if (!at.isZimbraUser())
             return false;
 
-        checkDomainStatus(target);
+        boolean isDomainTheSame = StringUtil.equal(at.getAccount().getDomainId(), target.getDomainId());
+        if (!isDomainTheSame) {
+            checkDomainStatus(target);
+        }
 
         if (asAdmin && at.isAdmin()) return true;
         if (isParentOf(at, target)) return true;
         if (!(asAdmin && at.isDomainAdmin())) return false;
         // don't allow a domain-only admin to access a global admin's account
         if (target.getBooleanAttr(Provisioning.A_zimbraIsAdminAccount, false)) return false;
-        Provisioning prov = Provisioning.getInstance();
-        return getDomain(at).getId().equals(prov.getDomain(target).getId());
+        return isDomainTheSame;
     }
 
     @Override
@@ -72,7 +75,10 @@ public class DomainAccessManager extends AccessManager {
         if (credentials == null)
             return false;
 
-        checkDomainStatus(target);
+        boolean isDomainTheSame = StringUtil.equal(credentials.getDomainId(), target.getDomainId());
+        if (!isDomainTheSame) {
+            checkDomainStatus(target);
+        }
 
         // admin auth account will always succeed
         if (asAdmin && credentials.getBooleanAttr(Provisioning.A_zimbraIsAdminAccount, false))
@@ -87,7 +93,7 @@ public class DomainAccessManager extends AccessManager {
         if (target.getBooleanAttr(Provisioning.A_zimbraIsAdminAccount, false))
             return false;
         // domain admins succeed if the target is in the same domain
-        if (target.getDomainName() != null && target.getDomainName().equals(credentials.getDomainName()))
+        if (isDomainTheSame)
             return credentials.getBooleanAttr(Provisioning.A_zimbraIsDomainAdminAccount, false);
         // everyone else is out of luck
         return false;

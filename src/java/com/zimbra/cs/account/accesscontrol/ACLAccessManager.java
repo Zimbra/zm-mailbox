@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -23,6 +23,7 @@ import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.CosBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.EmailUtil;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
@@ -56,18 +57,20 @@ public class ACLAccessManager extends AccessManager implements AdminConsoleCapab
     }
 
     private Account actualTargetForAdminLoginAs(Account target) throws ServiceException {
-        if (target.isCalendarResource())
+        if (target.isCalendarResource()) {
             // need a CalendarResource instance for RightChecker
             return Provisioning.getInstance().get(Key.CalendarResourceBy.id, target.getId());
-        else
+        } else {
             return target;
+        }
     }
 
     private AdminRight actualRightForAdminLoginAs(Account target) {
-        if (target.isCalendarResource())
+        if (target.isCalendarResource()) {
             return Admin.R_adminLoginCalendarResourceAs;
-        else
+        } else {
             return Admin.R_adminLoginAs;
+        }
     }
 
     @Override
@@ -80,7 +83,9 @@ public class ACLAccessManager extends AccessManager implements AdminConsoleCapab
     public boolean canAccessAccount(AuthToken at, Account target, boolean asAdmin)
     throws ServiceException {
 
-        checkDomainStatus(target);
+        if (!StringUtil.equal(at.getAccount().getDomainId(), target.getDomainId())) {
+            checkDomainStatus(target);
+        }
 
         if (isParentOf(at, target)) {
             return true;
@@ -231,8 +236,9 @@ public class ACLAccessManager extends AccessManager implements AdminConsoleCapab
 
         // check hard rules
         Boolean hardRulesResult = HardRules.checkHardRules(grantee, asAdmin, target, rightNeeded);
-        if (hardRulesResult != null)
+        if (hardRulesResult != null) {
             return hardRulesResult.booleanValue();
+        }
 
         // check pseudo rights
         if (asAdmin) {
