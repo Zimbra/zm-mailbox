@@ -35618,6 +35618,83 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Whether to enable JSP compilation for Zimlets (i.e. for /service
+     * webapp)
+     *
+     * @return zimbraZimletJspEnabled, or false if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1575)
+    public boolean isZimletJspEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraZimletJspEnabled, false);
+    }
+
+    /**
+     * Whether to enable JSP compilation for Zimlets (i.e. for /service
+     * webapp)
+     *
+     * @param zimbraZimletJspEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1575)
+    public void setZimletJspEnabled(boolean zimbraZimletJspEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraZimletJspEnabled, zimbraZimletJspEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to enable JSP compilation for Zimlets (i.e. for /service
+     * webapp)
+     *
+     * @param zimbraZimletJspEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1575)
+    public Map<String,Object> setZimletJspEnabled(boolean zimbraZimletJspEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraZimletJspEnabled, zimbraZimletJspEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether to enable JSP compilation for Zimlets (i.e. for /service
+     * webapp)
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1575)
+    public void unsetZimletJspEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraZimletJspEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to enable JSP compilation for Zimlets (i.e. for /service
+     * webapp)
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1575)
+    public Map<String,Object> unsetZimletJspEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraZimletJspEnabled, "");
+        return attrs;
+    }
+
+    /**
      * list of host:port for zookeeper servers; set to empty value to disable
      * the use of zookeeper
      *
