@@ -1250,14 +1250,13 @@ public class RightCommand {
             if (granteeType == GranteeType.GT_EXT_GROUP) {
                 // must be system admin
                 if (!AccessControlUtil.isGlobalAdmin(authedAcct)) {
-                    throw ServiceException.PERM_DENIED("only global admins can grant to " +
-                            "external group");
+                    throw ServiceException.PERM_DENIED("only global admins can grant to external group");
                 }
             } else {
                 boolean canGrant = am.canPerform(authedAcct, targetEntry, right, true, null, true, null);
                 if (!canGrant) {
-                    throw ServiceException.PERM_DENIED("insuffcient right to " +
-                            (revoking?"revoke":"grant"));
+                    throw ServiceException.PERM_DENIED(String.format("insufficient right to %s '%s' right",
+                            (revoking?"revoke":"grant"), right.getName()));
                 }
 
                 ParticallyDenied.checkPartiallyDenied(authedAcct, targetType, targetEntry, right);
