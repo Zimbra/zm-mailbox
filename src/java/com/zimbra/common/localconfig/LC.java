@@ -601,7 +601,7 @@ public final class LC {
             " -XX:SoftRefLRUPolicyMSPerMB=1" +
             " -verbose:gc" +
             " -XX:+PrintGCDetails" +
-            " -XX:+PrintGCTimeStamps" +
+            " -XX:+PrintGCDateStamps" +
             " -XX:+PrintGCApplicationStoppedTime" +
             " -XX:-OmitStackTraceInFastThrow");
     @Supported
