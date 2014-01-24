@@ -29,6 +29,7 @@ import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Cos;
+import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Group;
@@ -39,6 +40,8 @@ import com.zimbra.cs.account.accesscontrol.RightBearer.Grantee;
 import com.zimbra.cs.account.accesscontrol.RightCommand.AllEffectiveRights;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.account.accesscontrol.Rights.User;
+import com.zimbra.cs.account.accesscontrol.generated.UserRights;
+import com.zimbra.cs.account.names.NameUtil;
 
 /**
  * @author pshao
@@ -412,6 +415,10 @@ public class ACLAccessManager extends AccessManager implements AdminConsoleCapab
             return hardRulesResult.booleanValue();
         }
 
+        if (checkOverridingRules(grantee, asAdmin, target, rightNeeded)) {
+            return true;
+        }
+
         boolean allowed = false;
         if (rightNeeded.isPresetRight()) {
             allowed = checkPresetRight(grantee, target, rightNeeded, canDelegateNeeded, asAdmin, viaGrant);
@@ -432,6 +439,62 @@ public class ACLAccessManager extends AccessManager implements AdminConsoleCapab
         }
 
         return allowed;
+    }
+
+    /**
+     * Check for cases where the grantee has capabilities that automatically mean they should be able to perform
+     * the grant.
+     * Initial only case is a domain admin assigning an owner to a DL.
+     * @return true if this grantee should be allowed the right.
+     */
+    private boolean checkOverridingRules(MailTarget grantee, boolean asAdmin, Entry target, Right rightNeeded) {
+        return checkForDomainAdminAssigningDLowner(grantee, asAdmin, target, rightNeeded);
+    }
+
+    /**
+     * Check whether this is a domain admin assigning an owner to a DL.  If so, then having
+     * createGroup / createDistributionList caps for the target DL should be sufficient as specifying an owner
+     * can be considered to be part of the creation process.  (Note - the equivalent modify caps are not preset rights
+     * so "canDo" can't be used on them, hence sticking with the create caps)
+     *
+     * This is needed because there is a bootstrapping problem for assigning owners to DLs created by a domain admin.
+     * Without this over-ride, only a full admin or someone who already has ownDistList rights could assign owners.
+     * Also, it isn't possible to assign ownDistList rights to domain admins for all DLs in a domain because
+     * the only valid target for ownDistList is a DL.
+     * @return true if this grantee should be allowed the right.
+     */
+    private boolean checkForDomainAdminAssigningDLowner(
+            MailTarget grantee, boolean asAdmin, Entry target, Right rightNeeded) {
+        if (!UserRights.R_ownDistList.equals(rightNeeded)) {
+            return false;
+        }
+        if ((grantee instanceof Account) && (target instanceof DistributionList)) {
+            Account authedAcct = (Account) grantee;
+            DistributionList dl = (DistributionList) target;
+            if (!AccessControlUtil.isDelegatedAdmin(authedAcct, asAdmin)) {
+                return false;
+            }
+            String domainName;
+            try {
+                domainName = NameUtil.EmailAddress.getDomainNameFromEmail(dl.getName());
+                Domain domain = Provisioning.getInstance().get(Key.DomainBy.name, domainName);
+                if (domain == null) {
+                    return false;
+                }
+                checkDomainStatus(domain);
+                Right alternativeRight = dl.isDynamic() ? Admin.R_createGroup : Admin.R_createDistributionList;
+                if (canDo(authedAcct, domain, alternativeRight, true, null)) {
+                    ZimbraLog.acl.debug(
+                        "Right [%s] ALLOWED to '%s' for DL '%s' because %s is allowed right [%s] for domain '%s'",
+                        rightNeeded.getName(), authedAcct.getName(), dl.getName(), authedAcct.getName(),
+                        alternativeRight.getName(), domain.getName());
+                    return true;
+                }
+            } catch (ServiceException e) {
+                return false;
+            }
+        }
+        return false;
     }
 
     @Override

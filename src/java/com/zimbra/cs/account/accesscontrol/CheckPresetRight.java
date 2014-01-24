@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -426,10 +426,9 @@ public class CheckPresetRight extends CheckRight {
     private Boolean gotResult(ZimbraACE ace) throws ServiceException {
         if (ace.deny()) {
             if (sLog.isDebugEnabled()) {
-                sLog.debug("Right " + "[" + mRightNeeded.getName() + "]" +
-                        " DENIED to " + mGranteeMailTarget.getName() +
-                        " via grant: " + ace.dump(false) + " on: " +
-                        ace.getTargetType().getCode() + ace.getTargetName());
+                sLog.debug("Right [%s] DENIED to %s via grant: %s on: %s=%s", mRightNeeded.getName(),
+                        mGranteeMailTarget.getName(), ace.dump(false),
+                        ace.getTargetType().getCode(), ace.getTargetName());
             }
 
             if (mVia != null) {
@@ -444,10 +443,9 @@ public class CheckPresetRight extends CheckRight {
             return Boolean.FALSE;
         } else {
             if (sLog.isDebugEnabled()) {
-                sLog.debug("Right " + "[" + mRightNeeded.getName() + "]" +
-                        " ALLOWED to " + mGranteeMailTarget.getName() +
-                        " via grant: " + ace.dump(false) + " on: " +
-                        ace.getTargetType().getCode() + ace.getTargetName());
+                sLog.debug("Right [%s] ALLOWED to %s via grant: %s on: %s=%s", mRightNeeded.getName(),
+                        mGranteeMailTarget.getName(), ace.dump(false),
+                        ace.getTargetType().getCode(), ace.getTargetName());
             }
 
             if (mVia != null) {
