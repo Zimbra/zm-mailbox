@@ -10756,6 +10756,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefOutOfOfficeStatusAlertOnLogin = "zimbraPrefOutOfOfficeStatusAlertOnLogin";
 
     /**
+     * If TRUE, OOO reply is not sent to external senders, when the user
+     * enables OOO for the account
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1576)
+    public static final String A_zimbraPrefOutOfOfficeSuppressExternalReply = "zimbraPrefOutOfOfficeSuppressExternalReply";
+
+    /**
      * out of office notifications (if enabled) are sent only if current date
      * is before this date
      */
