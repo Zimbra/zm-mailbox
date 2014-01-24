@@ -44661,6 +44661,83 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * If TRUE, OOO reply is not sent to external senders, when the user
+     * enables OOO for the account
+     *
+     * @return zimbraPrefOutOfOfficeSuppressExternalReply, or false if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1576)
+    public boolean isPrefOutOfOfficeSuppressExternalReply() {
+        return getBooleanAttr(Provisioning.A_zimbraPrefOutOfOfficeSuppressExternalReply, false);
+    }
+
+    /**
+     * If TRUE, OOO reply is not sent to external senders, when the user
+     * enables OOO for the account
+     *
+     * @param zimbraPrefOutOfOfficeSuppressExternalReply new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1576)
+    public void setPrefOutOfOfficeSuppressExternalReply(boolean zimbraPrefOutOfOfficeSuppressExternalReply) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefOutOfOfficeSuppressExternalReply, zimbraPrefOutOfOfficeSuppressExternalReply ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * If TRUE, OOO reply is not sent to external senders, when the user
+     * enables OOO for the account
+     *
+     * @param zimbraPrefOutOfOfficeSuppressExternalReply new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1576)
+    public Map<String,Object> setPrefOutOfOfficeSuppressExternalReply(boolean zimbraPrefOutOfOfficeSuppressExternalReply, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefOutOfOfficeSuppressExternalReply, zimbraPrefOutOfOfficeSuppressExternalReply ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * If TRUE, OOO reply is not sent to external senders, when the user
+     * enables OOO for the account
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1576)
+    public void unsetPrefOutOfOfficeSuppressExternalReply() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefOutOfOfficeSuppressExternalReply, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * If TRUE, OOO reply is not sent to external senders, when the user
+     * enables OOO for the account
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1576)
+    public Map<String,Object> unsetPrefOutOfOfficeSuppressExternalReply(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefOutOfOfficeSuppressExternalReply, "");
+        return attrs;
+    }
+
+    /**
      * out of office notifications (if enabled) are sent only if current date
      * is before this date
      *

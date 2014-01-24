@@ -319,10 +319,16 @@ public class Notification implements LmtpCallback {
 
             // Body
             // check whether to send "external" OOO reply
-            boolean sendExternalReply = account.isPrefOutOfOfficeExternalReplyEnabled() &&
-                    !isInternalSender(destination, account) && isOfExternalSenderType(destination, account, mbox);
+            if (account.isPrefOutOfOfficeSuppressExternalReply() && isOfExternalSenderType(destination, account, mbox)
+            		&&  !isInternalSender(destination, account)) {
+            	ZimbraLog.mailbox.info(destination
+        				+ " is external user and no external reply option is set, so no OOO will be sent. ");
+        		return;
+            }
+            boolean sendExternalReply = account.isPrefOutOfOfficeExternalReplyEnabled() 
+                   && !isInternalSender(destination, account) && isOfExternalSenderType(destination, account, mbox);
             String body = account.getAttr(sendExternalReply ?
-                    Provisioning.A_zimbraPrefOutOfOfficeExternalReply : Provisioning.A_zimbraPrefOutOfOfficeReply, "");
+                    Provisioning.A_zimbraPrefOutOfOfficeExternalReply : Provisioning.A_zimbraPrefOutOfOfficeReply, "");   
             charset = getCharset(account, body);
             out.setText(body, charset);
 
