@@ -7860,9 +7860,9 @@ TODO: delete them permanently from here
 </attr>
 
 <attr id="1575" name="zimbraZimletJspEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
-  <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>Whether to enable JSP compilation for Zimlets (i.e. for /service webapp)</desc>
-  </attr>
+</attr>
+
 <attr id="1576" name="zimbraPrefOutOfOfficeSuppressExternalReply" type="boolean" cardinality="single" optionalIn="account" since="8.5.0">
   <desc>If TRUE, OOO reply is not sent to external senders, when the user enables OOO for the account</desc>
 </attr>
