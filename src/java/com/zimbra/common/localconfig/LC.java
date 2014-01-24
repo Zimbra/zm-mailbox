@@ -460,7 +460,7 @@ public final class LC {
     public static final KnownKey ldap_cache_share_locator_maxage = KnownKey.newKey(15);
 
     @Supported
-    public static final KnownKey ldap_cache_domain_maxsize = KnownKey.newKey(100);
+    public static final KnownKey ldap_cache_domain_maxsize = KnownKey.newKey(500);
 
     @Supported
     public static final KnownKey ldap_cache_domain_maxage = KnownKey.newKey(15);
@@ -469,7 +469,7 @@ public final class LC {
     public static final KnownKey ldap_cache_mime_maxage = KnownKey.newKey(15);
 
 
-    public static final KnownKey ldap_cache_external_domain_maxsize = KnownKey.newKey(2000);
+    public static final KnownKey ldap_cache_external_domain_maxsize = KnownKey.newKey(10000);
     public static final KnownKey ldap_cache_external_domain_maxage = KnownKey.newKey(15);
     public static final KnownKey ldap_cache_group_maxsize = KnownKey.newKey(2000);
     public static final KnownKey ldap_cache_group_maxage = KnownKey.newKey(15);
