@@ -24,9 +24,9 @@ package com.zimbra.cs.account.cache;
 import java.util.Map;
 
 import com.zimbra.common.util.MapUtil;
-
 import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.common.stats.Counter;
+import com.zimbra.common.stats.HitRateCounter;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 
@@ -42,7 +42,8 @@ public class DomainCache implements IDomainCache {
     private Map mKrb5RealmCache;
     
     private long mRefreshTTL;
-    private Counter mHitRate = new Counter();
+    private Counter mHitRate = new HitRateCounter();
+
     
     public enum GetFromDomainCacheOption {
         POSITIVE, // only get from positive cache
@@ -392,10 +393,10 @@ public class DomainCache implements IDomainCache {
     }
     
     /**
-     * Returns the cache hit rate as a value between 0 and 100.
+     * Returns the cache hit rate as a value between 0 and 100.<br />
      */
     @Override
     public synchronized double getHitRate() {
-        return mHitRate.getAverage();
+    	 return mHitRate.getAverage();
     }
 }
