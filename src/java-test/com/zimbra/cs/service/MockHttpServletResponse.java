@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -21,6 +21,7 @@ import java.util.Collection;
 import java.util.Locale;
 
 import javax.servlet.ServletOutputStream;
+import javax.servlet.WriteListener;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
 
@@ -30,7 +31,7 @@ public class MockHttpServletResponse implements HttpServletResponse {
     @Override
     public void flushBuffer() throws IOException {
         // TODO Auto-generated method stub
-        
+
     }
 
     @Override
@@ -62,6 +63,16 @@ public class MockHttpServletResponse implements HttpServletResponse {
         public void write(int b) throws IOException {
             output.write(b);
         }
+
+        @Override
+        public boolean isReady() {
+            return true;
+        }
+
+        @Override
+        public void setWriteListener(WriteListener listener) {
+            //stubbed for now...should implement if we want to support async IO
+        }
     }
 
     @Override
@@ -83,67 +94,67 @@ public class MockHttpServletResponse implements HttpServletResponse {
     @Override
     public void reset() {
         // TODO Auto-generated method stub
-        
+
     }
 
     @Override
     public void resetBuffer() {
         // TODO Auto-generated method stub
-        
+
     }
 
     @Override
     public void setBufferSize(int arg0) {
         // TODO Auto-generated method stub
-        
+
     }
 
     @Override
     public void setCharacterEncoding(String arg0) {
         // TODO Auto-generated method stub
-        
+
     }
 
     @Override
     public void setContentLength(int arg0) {
         // TODO Auto-generated method stub
-        
+
     }
 
     @Override
     public void setContentType(String arg0) {
         // TODO Auto-generated method stub
-        
+
     }
 
     @Override
     public void setLocale(Locale arg0) {
         // TODO Auto-generated method stub
-        
+
     }
 
     @Override
     public void addCookie(Cookie arg0) {
         // TODO Auto-generated method stub
-        
+
     }
 
     @Override
     public void addDateHeader(String arg0, long arg1) {
         // TODO Auto-generated method stub
-        
+
     }
 
     @Override
     public void addHeader(String arg0, String arg1) {
         // TODO Auto-generated method stub
-        
+
     }
 
     @Override
     public void addIntHeader(String arg0, int arg1) {
         // TODO Auto-generated method stub
-        
+
     }
 
     @Override
@@ -179,49 +190,49 @@ public class MockHttpServletResponse implements HttpServletResponse {
     @Override
     public void sendError(int arg0) throws IOException {
         // TODO Auto-generated method stub
-        
+
     }
 
     @Override
     public void sendError(int arg0, String arg1) throws IOException {
         // TODO Auto-generated method stub
-        
+
     }
 
     @Override
     public void sendRedirect(String arg0) throws IOException {
         // TODO Auto-generated method stub
-        
+
     }
 
     @Override
     public void setDateHeader(String arg0, long arg1) {
         // TODO Auto-generated method stub
-        
+
     }
 
     @Override
     public void setHeader(String arg0, String arg1) {
         // TODO Auto-generated method stub
-        
+
     }
 
     @Override
     public void setIntHeader(String arg0, int arg1) {
         // TODO Auto-generated method stub
-        
+
     }
 
     @Override
     public void setStatus(int arg0) {
         // TODO Auto-generated method stub
-        
+
     }
 
     @Override
     public void setStatus(int arg0, String arg1) {
         // TODO Auto-generated method stub
-        
+
     }
 
     @Override
@@ -246,6 +257,12 @@ public class MockHttpServletResponse implements HttpServletResponse {
     public int getStatus() {
         // TODO Auto-generated method stub
         return 0;
+    }
+
+    @Override
+    public void setContentLengthLong(long arg0) {
+        // TODO Auto-generated method stub
+
     }
 
 }

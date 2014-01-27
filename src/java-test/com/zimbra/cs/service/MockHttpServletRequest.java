@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -29,6 +29,7 @@ import java.util.Map;
 
 import javax.servlet.AsyncContext;
 import javax.servlet.DispatcherType;
+import javax.servlet.ReadListener;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
@@ -39,6 +40,7 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import javax.servlet.http.HttpUpgradeHandler;
 import javax.servlet.http.Part;
 
 import com.zimbra.common.mime.shim.JavaMailInternetHeaders.IteratorEnumeration;
@@ -88,6 +90,24 @@ public class MockHttpServletRequest implements HttpServletRequest {
         @Override
         public int read() throws IOException {
             return bais.read();
+        }
+
+        @Override
+        public boolean isFinished() {
+            // TODO Auto-generated method stub
+            return false;
+        }
+
+        @Override
+        public boolean isReady() {
+            // TODO Auto-generated method stub
+            return false;
+        }
+
+        @Override
+        public void setReadListener(ReadListener arg0) {
+            // TODO Auto-generated method stub
+
         }
     }
 
@@ -213,19 +233,19 @@ public class MockHttpServletRequest implements HttpServletRequest {
     @Override
     public void removeAttribute(String name) {
         // TODO Auto-generated method stub
-        
+
     }
 
     @Override
     public void setAttribute(String name, Object o) {
         // TODO Auto-generated method stub
-        
+
     }
 
     @Override
     public void setCharacterEncoding(String env) throws UnsupportedEncodingException {
         // TODO Auto-generated method stub
-        
+
     }
 
     @Override
@@ -440,12 +460,31 @@ public class MockHttpServletRequest implements HttpServletRequest {
     @Override
     public void login(String arg0, String arg1) throws ServletException {
         // TODO Auto-generated method stub
-        
+
     }
 
     @Override
     public void logout() throws ServletException {
         // TODO Auto-generated method stub
-        
+
+    }
+
+    @Override
+    public long getContentLengthLong() {
+        // TODO Auto-generated method stub
+        return 0;
+    }
+
+    @Override
+    public String changeSessionId() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public <T extends HttpUpgradeHandler> T upgrade(Class<T> arg0)
+            throws IOException, ServletException {
+        // TODO Auto-generated method stub
+        return null;
     }
 }
