@@ -6,7 +6,7 @@ BUILD_ROOT := $(shell pwd)
 BUILD_PLATFORM := $(shell sh $(BUILD_ROOT)/../ZimbraBuild/rpmconf/Build/get_plat_tag.sh)
 
 SHARED := -shared
-JAVAINC := -I/usr/local/java/include -I/usr/local/java/include/linux
+JAVAINC := -I${JAVA_HOME}/include -I${JAVA_HOME}include/linux
 SHARED_EXT := so
 PUSHED_EXT := so.Linux.i386
 CF := -fPIC -g
