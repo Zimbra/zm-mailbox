@@ -71,6 +71,7 @@ public class AclPushTest {
 				"a4e41fbe-9c3e-4ab5-8b34-c42f17e251cd");
 		attrs.put(Provisioning.A_zimbraSharingUpdatePublishInterval, "10s");
 		prov.createAccount("principal@zimbra.com", "secret", attrs);
+		ScheduledTaskManager.startup();
 	}
 
 	@Before
@@ -98,7 +99,6 @@ public class AclPushTest {
 				new Folder.FolderOptions()
 						.setDefaultView(MailItem.Type.DOCUMENT));
 		OperationContext octxt = new OperationContext(owner);
-		ScheduledTaskManager.startup();
 
 		mbox.grantAccess(octxt, folder.getId(), grantee.getId(),
 				ACL.GRANTEE_USER, ACL.stringToRights("r"), null);
@@ -133,7 +133,6 @@ public class AclPushTest {
 						.setDefaultView(MailItem.Type.DOCUMENT));
 
 		OperationContext octxt = new OperationContext(owner);
-		ScheduledTaskManager.startup();
 
 		mbox.grantAccess(octxt, folder.getId(), grantee.getId(),
 				ACL.GRANTEE_USER, ACL.stringToRights("r"), null);
