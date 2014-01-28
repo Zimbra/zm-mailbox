@@ -47,13 +47,32 @@ public class DbPendingAclPush {
         PreparedStatement stmt = null;
         boolean supportsReplace = Db.supports(Db.Capability.REPLACE_INTO);
         try {
-            String command = supportsReplace ? "REPLACE" : "INSERT";
-            stmt = conn.prepareStatement(
-                    command + " INTO " + TABLE_PENDING_ACL_PUSH + " (mailbox_id, item_id, date) VALUES (?, ?, ?)");
+        	
+        	stmt = conn.prepareStatement(
+                    "SELECT mailbox_id, item_id, date FROM " + TABLE_PENDING_ACL_PUSH + " WHERE mailbox_id = ? AND item_id = ? ");
             stmt.setInt(1, mbox.getId());
             stmt.setInt(2, itemId);
-            stmt.setLong(3, System.currentTimeMillis());
-            stmt.executeUpdate();
+            ResultSet rs = stmt.executeQuery();
+            
+			if (rs.next()) {
+				stmt = conn.prepareStatement("UPDATE " + TABLE_PENDING_ACL_PUSH
+						+ " SET date = ? WHERE mailbox_id = ? AND item_id = ?");
+
+				stmt.setLong(1, System.currentTimeMillis());
+				stmt.setInt(2, mbox.getId());
+				stmt.setInt(3, itemId);
+				stmt.executeUpdate();
+			} else {
+        	
+	            String command = supportsReplace ? "REPLACE" : "INSERT";
+	            stmt = conn.prepareStatement(
+	                    command + " INTO " + TABLE_PENDING_ACL_PUSH + " (mailbox_id, item_id, date) VALUES (?, ?, ?)");
+	            stmt.setInt(1, mbox.getId());
+	            stmt.setInt(2, itemId);
+	            stmt.setLong(3, System.currentTimeMillis());
+	            stmt.executeUpdate();
+            }
+			
         } catch (SQLException e) {
             throw ServiceException.FAILURE(
                     "Unable to queue for ACL push - mailbox " + mbox.getId() + " item " + itemId, e);
@@ -86,7 +105,7 @@ public class DbPendingAclPush {
             stmt.setLong(1, uptoTime.getTime());
             rs = stmt.executeQuery();
             while (rs.next()) {
-                mboxIdToItemIds.put(rs.getInt(1), rs.getInt(2));
+            	mboxIdToItemIds.put(rs.getInt(1), rs.getInt(2));
             }
         } catch (SQLException e) {
             throw ServiceException.FAILURE("Unable to get entries recorded before " + uptoTime + " for ACL push", e);
@@ -107,6 +126,27 @@ public class DbPendingAclPush {
             stmt = conn.prepareStatement(
                     "DELETE FROM " + TABLE_PENDING_ACL_PUSH + " WHERE date < ?");
             stmt.setLong(1, uptoTime.getTime());
+            stmt.executeUpdate();
+            conn.commit();
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("Unable to delete UID's", e);
+        } finally {
+            DbPool.closeStatement(stmt);
+            DbPool.quietClose(conn);
+        }
+    }
+    
+    public static void deleteEntry(int mailboxId, int itemId) throws ServiceException {
+        ZimbraLog.misc.debug("Deleting entry for ACL push for mailbox: %d, item : %d", mailboxId, itemId);
+        DbConnection conn = null;
+        PreparedStatement stmt = null;
+        try {
+            conn = DbPool.getConnection();
+            stmt = conn.prepareStatement(
+                    "DELETE FROM " + TABLE_PENDING_ACL_PUSH + " WHERE mailbox_id=? AND" +
+                    		" item_id=?");
+            stmt.setInt(1, mailboxId);
+            stmt.setInt(2, itemId);
             stmt.executeUpdate();
             conn.commit();
         } catch (SQLException e) {

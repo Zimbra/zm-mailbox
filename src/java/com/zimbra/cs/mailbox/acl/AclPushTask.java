@@ -57,8 +57,11 @@ public class AclPushTask extends TimerTask {
         if (!supported)
             return;
         ZimbraLog.misc.debug("Starting pending ACL push");
+        
+        int mailboxIdUnderProcess = -1;
+        int itemIdUnderProcess = -1;
         try {
-            Date now = new Date();
+        	Date now = new Date();
             Multimap<Integer, Integer> mboxIdToItemIds = DbPendingAclPush.getEntries(now);
 
             for (int mboxId : mboxIdToItemIds.keySet()) {
@@ -78,6 +81,8 @@ public class AclPushTask extends TimerTask {
                     if (itemIds.size() > 1) {
                         List<MailItem> itemList = new ArrayList<MailItem>();
                         for (int itemId : itemIds) {
+                        	itemIdUnderProcess = itemId;
+                        	mailboxIdUnderProcess = mbox.getId();
                             try {
                                 itemList.add(mbox.getItemById(null, itemId, MailItem.Type.UNKNOWN));
                             } catch (MailServiceException.NoSuchItemException ignored) {
@@ -121,6 +126,16 @@ public class AclPushTask extends TimerTask {
             }
 
             DbPendingAclPush.deleteEntries(now);
+        } catch (ServiceException e){
+        	if (e.getCode() == ServiceException.WRONG_HOST) {
+        		try {
+        			DbPendingAclPush.deleteEntry(mailboxIdUnderProcess, itemIdUnderProcess);
+        		} catch (ServiceException e2) {
+        			ZimbraLog.misc.warn("Wrong host error during ACL push task and deleting ACL push entry.");
+        		}
+        	}
+        	ZimbraLog.misc.warn("Error during ACL push task", e);
+        	
         } catch (Throwable t) {  //don't let exceptions kill the timer
             ZimbraLog.misc.warn("Error during ACL push task", t);
         }
