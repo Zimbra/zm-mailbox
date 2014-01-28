@@ -917,6 +917,7 @@ public class DefangFilterTest {
     }
     
     
+    
     @Test
     public void testBug85478() throws Exception {
         String html = "<a href=\"data:text/html;base64,PHNjcmlwdD5hbGVydCgiSGVsbG8hIik7PC9zY3JpcHQ+\" "
@@ -961,7 +962,6 @@ public class DefangFilterTest {
         htmlStream = new ByteArrayInputStream(html.getBytes());
         result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream,
             true);
-        System.out.println(result);
         Assert.assertTrue(result.contains("DaTa:image/jpeg;base64,/9j/4AAAAAxITGlubwIQAABtbnRyUkdCI"));
         
         

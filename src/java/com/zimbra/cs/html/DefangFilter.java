@@ -99,8 +99,9 @@ public class DefangFilter extends DefaultFilter {
 
  // regex for URLs href. TODO: beef this up
     private static final Pattern VALID_EXT_URL = Pattern.compile(LC.defang_valid_ext_url.value(), Pattern.CASE_INSENSITIVE);
-    private static final Pattern VALID_INT_IMG = Pattern.compile(LC.defang_valid_int_img.value(), Pattern.CASE_INSENSITIVE);
     private static final Pattern VALID_IMG_FILE = Pattern.compile(LC.defang_valid_img_file.value());
+    private static final Pattern VALID_INT_IMG = Pattern.compile(LC.defang_valid_int_img.value(), 
+    		Pattern.CASE_INSENSITIVE);
 
     // matches the file format that convertd uses so it doesn't get 'pnsrc'ed
     private static final Pattern VALID_CONVERTD_FILE = Pattern
@@ -720,8 +721,8 @@ public class DefangFilter extends DefaultFilter {
         	else if (!VALID_INT_IMG.matcher(result).find()) {
         		result = result.replaceAll("(?i)data:", "DATAURI-BLOCKED");
         	}
+
         }
-        
         if (aName.equalsIgnoreCase("style")) {
             result = sanitizeStyleValue(value);
         }
