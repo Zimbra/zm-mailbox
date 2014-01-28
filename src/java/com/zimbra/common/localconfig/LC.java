@@ -708,6 +708,12 @@ public final class LC {
     public static final KnownKey mailboxd_output_rotate_interval = KnownKey.newKey(86400);
 
     @Supported
+    public static final KnownKey client_ssl_truststore = KnownKey.newKey("${mailboxd_truststore}");
+
+    @Supported
+    public static final KnownKey client_ssl_truststore_password = KnownKey.newKey("${mailboxd_truststore_password}");
+
+    @Supported
     public static final KnownKey ssl_allow_untrusted_certs = KnownKey.newKey(false);
 
     public static final KnownKey ssl_allow_mismatched_certs = KnownKey.newKey(true);
