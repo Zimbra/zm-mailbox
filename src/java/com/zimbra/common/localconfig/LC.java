@@ -1219,9 +1219,9 @@ public final class LC {
         KnownKey.newKey("[\\S&&[^:]]+(?<!(rgb|and|not|media|,))\\s*\\(.*\\)");
     public static final KnownKey defang_valid_ext_url =
         KnownKey.newKey("^(https?://[\\w-].*|mailto:.*|notes:.*|smb:.*|ftp:.*|gopher:.*|news:.*|tel:.*|callto:.*|webcal:.*|feed:.*:|file:.*|#.+)");
-    public static final KnownKey defang_valid_int_img = KnownKey.newKey("^data:image/|^cid:");
     public static final KnownKey defang_valid_img_file = KnownKey.newKey("\\.(jpg|jpeg|png|gif)((\\?)?)");
-
+    public static final KnownKey defang_valid_int_img = KnownKey.newKey("^data:image/|^cid:");
+    
     public static final KnownKey defang_valid_convertd_file = KnownKey.newKey("^index\\..*\\..*\\.(jpg|jpeg|png|gif)$");
     public static final KnownKey defang_comment = KnownKey.newKey("/\\*.*?\\*/");
     public static final KnownKey defang_av_js_entity = KnownKey.newKey("&\\{[^}]*\\}");
