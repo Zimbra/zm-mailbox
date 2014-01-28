@@ -839,4 +839,64 @@ public class DefangFilterTest {
         Assert.assertTrue(result.contains("p { color : #f00; }"));
         Assert.assertTrue(!result.contains("import3.css"));
     }
+    
+    
+    @Test
+    public void testBug85478() throws Exception {
+        String html = "<a href=\"data:text/html;base64,PHNjcmlwdD5hbGVydCgiSGVsbG8hIik7PC9zY3JpcHQ+\" "
+        		+ "data-mce-href=\"data:text/html;base64,PHNjcmlwdD5hbGVydCgiSGVsbG8hIik7PC9zY3JpcHQ+\">Bug</a>";
+        InputStream htmlStream = new ByteArrayInputStream(html.getBytes());
+        String result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream,
+            true);
+        Assert.assertTrue(result.contains("DATAURI-BLOCKED"));
+
+        html = "<a href=\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAErkJggg==\" />Bug</a>";
+        htmlStream = new ByteArrayInputStream(html.getBytes());
+        result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream,
+            true);
+        Assert.assertTrue(result.contains("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAErkJggg=="));
+        
+        html = "<a target=_blank href=\"data:text/html,<script>alert(opener.document.body.innerHTML)</script>\">"
+        		+" clickme in Opera/FF</a>";
+        htmlStream = new ByteArrayInputStream(html.getBytes());
+        result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream,
+            true);
+        Assert.assertTrue(result.contains("DATAURI-BLOCKED"));
+        
+        html = "<a target=_blank href=\"data.html\"> Data fIle</a>";
+        htmlStream = new ByteArrayInputStream(html.getBytes());
+        result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream,
+            true);
+        Assert.assertTrue(result.contains("data.html"));
+        
+        html = "<a href=\"data:;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAErkJggg==\" />Bug</a>";
+        htmlStream = new ByteArrayInputStream(html.getBytes());
+        result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream,
+            true);
+        Assert.assertTrue(result.contains("DATAURI-BLOCKED"));
+        
+        html = "<img src=\"data:image/jpeg;base64,/9j/4AAAAAxITGlubwIQAABtbnRyUkdCI\"><br>";
+        htmlStream = new ByteArrayInputStream(html.getBytes());
+        result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream,
+            true);
+        Assert.assertTrue(result.contains("data:image/jpeg;base64,/9j/4AAAAAxITGlubwIQAABtbnRyUkdCI"));
+        
+        html = "<img src=\"DaTa:image/jpeg;base64,/9j/4AAAAAxITGlubwIQAABtbnRyUkdCI\"><br>";
+        htmlStream = new ByteArrayInputStream(html.getBytes());
+        result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream,
+            true);
+        Assert.assertTrue(result.contains("DaTa:image/jpeg;base64,/9j/4AAAAAxITGlubwIQAABtbnRyUkdCI"));
+        
+        
+        html = "<a href=\"DATA:;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAErkJggg==\" />Bug</a>";
+        htmlStream = new ByteArrayInputStream(html.getBytes());
+        result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream,
+            true);
+        Assert.assertTrue(result.contains("DATAURI-BLOCKED"));
+        
+    }
+    
+    
+    
+   
 }
