@@ -64,12 +64,12 @@ public class AclPushTest {
 		HashMap<String, Object> attrs = new HashMap<String, Object>();
 		attrs.put(Provisioning.A_zimbraId,
 				"17dd075e-2b47-44e6-8cb8-7fdfa18c1a9f");
-		attrs.put(Provisioning.A_zimbraSharingUpdatePublishInterval, "5s");
+		attrs.put(Provisioning.A_zimbraSharingUpdatePublishInterval, "10s");
 		prov.createAccount("owner@zimbra.com", "secret", attrs);
 		attrs = new HashMap<String, Object>();
 		attrs.put(Provisioning.A_zimbraId,
 				"a4e41fbe-9c3e-4ab5-8b34-c42f17e251cd");
-		attrs.put(Provisioning.A_zimbraSharingUpdatePublishInterval, "5s");
+		attrs.put(Provisioning.A_zimbraSharingUpdatePublishInterval, "10s");
 		prov.createAccount("principal@zimbra.com", "secret", attrs);
 	}
 
@@ -125,7 +125,7 @@ public class AclPushTest {
 				"principal@zimbra.com");
 		Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(owner);
 
-		Folder folder = mbox.createFolder(null, "shared",
+		Folder folder = mbox.createFolder(null, "shared1",
 				new Folder.FolderOptions()
 						.setDefaultView(MailItem.Type.DOCUMENT));
 		Folder folder2 = mbox.createFolder(null, "shared; hello",
