@@ -103,6 +103,10 @@ public class AclPushSerializer {
         if (granteeType == ACL.GRANTEE_GUEST && granteeId != null) {
             granteeId = granteeId.toLowerCase();
         }
+        
+        if (path.contains(";")) {
+        	path = path.replaceAll(";", SEMICOLON_ESCAPE_SEQ);
+        }
         StringBuilder sb = new StringBuilder().
                 append("granteeId:").append(granteeId).
                 append(";granteeName:").append(granteeName).
@@ -122,9 +126,16 @@ public class AclPushSerializer {
     public static ShareInfoData deserialize(String sharedItemInfo) throws ServiceException {
         String[] parts = sharedItemInfo.split(";");
         Map<String, String> attrs = new HashMap<String, String>();
+        String key = null;
         for (String part : parts) {
             String x[] = part.split(":", 2);
-            attrs.put(x[0], x[1]);
+            if (x.length == 2) {
+            	attrs.put(x[0], x[1]);
+            	key = x[0];
+            } else {
+            	String value = attrs.get(key);
+            	attrs.put(key, value + ";" + x[0]);
+            }
         }
         ShareInfoData obj = new ShareInfoData();
 
@@ -136,7 +147,13 @@ public class AclPushSerializer {
         obj.setItemId(Integer.valueOf(attrs.get("folderId")));
         String uuid = attrs.get("folderUuid");
         obj.setItemUuid("null".equals(uuid) ? null : uuid);
-        obj.setPath(attrs.get("folderPath"));
+        if (attrs.get("folderPath").contains(SEMICOLON_ESCAPE_SEQ)) {
+        	String temp = attrs.get("folderPath").replaceAll("\\*ASCII59\\*", ";");
+        	obj.setPath(temp);	
+        } else {
+        	obj.setPath(attrs.get("folderPath"));
+        }
+        
         obj.setFolderDefaultView(MailItem.Type.of(attrs.get("folderDefaultView")));
         obj.setRights(ACL.stringToRights(attrs.get("rights")));
         String type = attrs.get("type");
@@ -151,4 +168,6 @@ public class AclPushSerializer {
         }
         return obj;
     }
+    
+    public static final String SEMICOLON_ESCAPE_SEQ = "*ASCII59*";
 }
