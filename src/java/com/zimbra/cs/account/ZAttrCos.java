@@ -35876,11 +35876,11 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * Skin to use for this account
      *
-     * @return zimbraPrefSkin, or "serenity" if unset
+     * @return zimbraPrefSkin, or "harmony" if unset
      */
     @ZAttr(id=355)
     public String getPrefSkin() {
-        return getAttr(Provisioning.A_zimbraPrefSkin, "serenity");
+        return getAttr(Provisioning.A_zimbraPrefSkin, "harmony");
     }
 
     /**
