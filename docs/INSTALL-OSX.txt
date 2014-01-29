@@ -117,29 +117,6 @@ http://www.perforce.com/perforce/doc.current/manuals/p4guide/01_install.html#107
   Username: admin / Password: test123
 
 
-CONFIGURE JDK FOR ZIMBRA COMMAND LINE TOOLS
-================================================================================
-
-Command-line tools like zmprov, zmmailbox, zmsoap, etc., depend on the JDK to be
-in /opt/zimbra/java.
-
-Find the location of your JDK 1.7 install. This varies on different Mac OS X versions. 
-For example on Mountain Lion (10.8.x) install the Oracle 1.7.0u21 JDK is placed in:  
-
-/Library/Java/JavaVirtualMachines/jdk1.7.0_21.jdk/Contents/Home
-
-The exact path will vary by release and may be changed by Oracle or Apple at any time
-
-1. $ cd /opt/zimbra
-2. $ sudo ln -s /Library/Java/JavaVirtualMachines/jdk1.7.0_21.jdk/Contents/Home/ java
-3. $ zmlocalconfig -e zimbra_java_home=/opt/zimbra/java
-
-For RHEL:
-
-1. $ cd /opt/zimbra
-2. $ sudo ln -s /usr/java/latest/ java
-
-
 NETWORK EDITION DEPLOYMENT
 ================================================================================
 

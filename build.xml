@@ -1129,6 +1129,14 @@
     <target name="install-thirdparty" depends="install-thirdparty-unix,install-thirdparty-windows" description="Installs third party binaries" />
 
     <target name="install-thirdparty-unix" description="Installs third party binaries on unix" if="is-unix">
+      <if>
+        <not><available file="${zimbra.home.dir}/java"/></not>
+        <then>
+          <echo message="Creating symbolic link from ${zimbra.home.dir}/java to ${java.home}" />
+          <symlink link="${zimbra.home.dir}/java" resource="${java.home}" />
+        </then>
+      </if>
+
       <if><available file="../ZimbraServer/src/perl/install-thirdparty"/> <!-- Not available for community build. -->
         <then>
           <antcall target="stop-webserver"/>
