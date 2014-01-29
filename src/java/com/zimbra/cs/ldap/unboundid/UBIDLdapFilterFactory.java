@@ -244,8 +244,9 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
 
         FILTER_ALL_NON_SYSTEM_INTERNAL_ACCOUNTS =
             Filter.createANDFilter(
-                    FILTER_ALL_ACCOUNTS_ONLY,
+                    FILTER_ALL_ACCOUNTS,
                     Filter.createNOTFilter(FILTER_IS_SYSTEM_RESOURCE),
+                    Filter.createNOTFilter(FILTER_ALL_CALENDAR_RESOURCES),
                     Filter.createNOTFilter(FILTER_IS_EXTERNAL_ACCOUNT));
 
         FILTER_ALL_GROUPS =
