@@ -156,12 +156,17 @@ public class CalendarCollection extends Collection {
             try {
                 int start = href.lastIndexOf('/') + 1;
                 int end = href.lastIndexOf(".ics");
-                String uid = href.substring(start, end);
-                uid = URLDecoder.decode(uid, "UTF-8");
-                if (start > 0 && end > 0 && end > start)
-                    uidmap.put(uid, href);
-            } catch (IOException e) {
-                ZimbraLog.dav.warn("can't decode href "+href, e);
+                if ((start >= 0) && (end > start)) {
+                    String uid = href.substring(start, end);
+                    uid = URLDecoder.decode(uid, "UTF-8");
+                    if (start > 0 && end > 0 && end > start) {
+                        uidmap.put(uid, href);
+                    }
+                } else {
+                    ZimbraLog.dav.warn("Unexpected href '%s' for a calendar item - ignoring it.", href);
+                }
+            } catch (Exception e) {
+                ZimbraLog.dav.warn("can't decode href %s", href, e);
             }
         }
         return uidmap;
