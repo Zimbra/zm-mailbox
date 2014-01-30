@@ -15,8 +15,9 @@
 
 package com.zimbra.cs.mailbox.acl;
 
-import static org.junit.Assert.*;
-
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -44,6 +45,7 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.ScheduledTaskManager;
+import com.zimbra.cs.util.Zimbra;
 
 /**
  * @author zimbra
@@ -64,13 +66,12 @@ public class AclPushTest {
 		HashMap<String, Object> attrs = new HashMap<String, Object>();
 		attrs.put(Provisioning.A_zimbraId,
 				"17dd075e-2b47-44e6-8cb8-7fdfa18c1a9f");
-		attrs.put(Provisioning.A_zimbraSharingUpdatePublishInterval, "5s");
 		prov.createAccount("owner@zimbra.com", "secret", attrs);
 		attrs = new HashMap<String, Object>();
 		attrs.put(Provisioning.A_zimbraId,
 				"a4e41fbe-9c3e-4ab5-8b34-c42f17e251cd");
-		attrs.put(Provisioning.A_zimbraSharingUpdatePublishInterval, "5s");
 		prov.createAccount("principal@zimbra.com", "secret", attrs);
+		ScheduledTaskManager.startup();
 	}
 
 	@Before
@@ -98,21 +99,23 @@ public class AclPushTest {
 				new Folder.FolderOptions()
 						.setDefaultView(MailItem.Type.DOCUMENT));
 		OperationContext octxt = new OperationContext(owner);
-		ScheduledTaskManager.startup();
-
+		Multimap<Integer, Integer> mboxIdToItemIds = null;
+		synchronized (mbox) {
 		mbox.grantAccess(octxt, folder.getId(), grantee.getId(),
 				ACL.GRANTEE_USER, ACL.stringToRights("r"), null);
 		mbox.grantAccess(octxt, folder.getId(), grantee.getId(),
 				ACL.GRANTEE_USER, ACL.stringToRights("rw"), null);
-		Multimap<Integer, Integer> mboxIdToItemIds = DbPendingAclPush
+		
+		mboxIdToItemIds = DbPendingAclPush
 				.getEntries(new Date());
+		}
 		assertTrue(mboxIdToItemIds.size() == 1);
-		Thread.sleep(5000);
+		
+		Thread.sleep(1000);
 		mboxIdToItemIds = DbPendingAclPush.getEntries(new Date());
 		assertTrue(mboxIdToItemIds.size() == 0);
 		short rights = folder.getACL().getGrantedRights(grantee);
 		assertEquals(3, rights);
-
 	}
 
 	@Test
@@ -133,18 +136,20 @@ public class AclPushTest {
 						.setDefaultView(MailItem.Type.DOCUMENT));
 
 		OperationContext octxt = new OperationContext(owner);
-		ScheduledTaskManager.startup();
-
+		Multimap<Integer, Integer> mboxIdToItemIds = null;
+		
+		synchronized (mbox) {
 		mbox.grantAccess(octxt, folder.getId(), grantee.getId(),
 				ACL.GRANTEE_USER, ACL.stringToRights("r"), null);
 		mbox.grantAccess(octxt, folder2.getId(), grantee.getId(),
 				ACL.GRANTEE_USER, ACL.stringToRights("rw"), null);
 
-		Multimap<Integer, Integer> mboxIdToItemIds = DbPendingAclPush
+		mboxIdToItemIds = DbPendingAclPush
 				.getEntries(new Date());
+		}
 		assertTrue(mboxIdToItemIds.size() == 2);
 
-		Thread.sleep(5000);
+		Thread.sleep(1000);
 		mboxIdToItemIds = DbPendingAclPush.getEntries(new Date());
 		assertTrue(mboxIdToItemIds.size() == 0);
 		} catch (Exception e) {
