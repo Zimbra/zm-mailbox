@@ -93,11 +93,11 @@ public class MailSender {
     private boolean mRedirectMode = false;
     private boolean mCalendarMode = false;
     private boolean mSkipHeaderUpdate = false;
-    private List<String> mSmtpHosts = new ArrayList<String>();
+    private final List<String> mSmtpHosts = new ArrayList<String>();
     private Session mSession;
     private boolean mTrackBadHosts = true;
     private int mCurrentHostIndex = 0;
-    private List<String> mRecipients = new ArrayList<String>();
+    private final List<String> mRecipients = new ArrayList<String>();
     private String mEnvelopeFrom;
     private String mDsn;
 
@@ -471,9 +471,12 @@ public class MailSender {
                 authuser = acct;
             }
             boolean isDelegatedRequest = !acct.getId().equalsIgnoreCase(authuser.getId());
+            boolean allowSaveToSent = true; // like mSaveToSent but not over-ridden by authuser peference
 
             if (mSaveToSent == null) {
                 mSaveToSent = authuser.isPrefSaveToSent();
+            } else {
+                allowSaveToSent = mSaveToSent;
             }
 
             // slot the message in the parent's conversation if subjects match
@@ -580,8 +583,10 @@ public class MailSender {
                 }
             }
 
-            // for delegated sends automatically save a copy to the "From" user's mailbox
-            if (hasRecipients && isDelegatedRequest && acct.isPrefSaveToSent()) {
+            // for delegated sends automatically save a copy to the "From" user's mailbox, unless we've been
+            // specifically requested not to do the save (for instance BES does its own save to Sent, so does'nt
+            // want it done here).
+            if (allowSaveToSent && hasRecipients && isDelegatedRequest && acct.isPrefSaveToSent()) {
                 int flags = Flag.BITMASK_UNREAD | Flag.BITMASK_FROM_ME;
                 // save the sent copy using the target's credentials, as the sender doesn't necessarily have write access
                 OperationContext octxtTarget = new OperationContext(acct);
@@ -1152,7 +1157,7 @@ public class MailSender {
      */
     public static class SafeMessagingException extends MessagingException {
         private static final long serialVersionUID = -4652297855877992478L;
-        private MessagingException mMex;
+        private final MessagingException mMex;
 
         public SafeMessagingException(MessagingException mex) {
             mMex = mex;
@@ -1213,7 +1218,7 @@ public class MailSender {
 
     public static class SafeSendFailedException extends SafeMessagingException {
         private static final long serialVersionUID = 5625565177360027934L;
-        private SendFailedException mSfe;
+        private final SendFailedException mSfe;
 
         public SafeSendFailedException(SendFailedException sfe) {
             super(sfe);
