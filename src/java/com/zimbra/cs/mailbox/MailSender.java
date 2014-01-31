@@ -89,11 +89,11 @@ public class MailSender {
     private Boolean mSendPartial;
     private boolean mReplyToSender = false;
     private boolean mSkipSendAsCheck = false;
-    private List<String> mSmtpHosts = new ArrayList<String>();
+    private final List<String> mSmtpHosts = new ArrayList<String>();
     private Session mSession;
     private boolean mTrackBadHosts = true;
     private int mCurrentHostIndex = 0;
-    private List<String> mRecipients = new ArrayList<String>();
+    private final List<String> mRecipients = new ArrayList<String>();
     private String mEnvelopeFrom;
     private ItemId savedDraftId;
 
@@ -447,9 +447,13 @@ public class MailSender {
             if (authuser == null)
                 authuser = acct;
             boolean isDelegatedRequest = !acct.getId().equalsIgnoreCase(authuser.getId());
+            boolean allowSaveToSent = true; // like mSaveToSent but not over-ridden by authuser peference
 
-            if (mSaveToSent == null)
+            if (mSaveToSent == null) {
                 mSaveToSent = authuser.getBooleanAttr(Provisioning.A_zimbraPrefSaveToSent, true);
+            } else {
+                allowSaveToSent = mSaveToSent;
+            }
 
             // slot the message in the parent's conversation if subjects match
             int convId = Mailbox.ID_AUTO_INCREMENT;
@@ -534,9 +538,10 @@ public class MailSender {
                 }
             }
 
-            // for delegated sends where the authenticated user is reflected in the Sender header (c.f. updateHeaders),
-            //   automatically save a copy to the "From" user's mailbox
-            if (hasRecipients && isDelegatedRequest && mm.getSender() != null && acct.getBooleanAttr(Provisioning.A_zimbraPrefSaveToSent, true)) {
+            // for delegated sends automatically save a copy to the "From" user's mailbox, unless we've been
+            // specifically requested not to do the save (for instance BES does its own save to Sent, so does'nt
+            // want it done here).
+            if (allowSaveToSent && hasRecipients && isDelegatedRequest && acct.getBooleanAttr(Provisioning.A_zimbraPrefSaveToSent, true)) {
                 int flags = Flag.BITMASK_UNREAD | Flag.BITMASK_FROM_ME;
                 // save the sent copy using the target's credentials, as the sender doesn't necessarily have write access
                 OperationContext octxtTarget = new OperationContext(acct);
@@ -1066,7 +1071,7 @@ public class MailSender {
      */
     public static class SafeMessagingException extends MessagingException {
         private static final long serialVersionUID = -4652297855877992478L;
-        private MessagingException mMex;
+        private final MessagingException mMex;
 
         public SafeMessagingException(MessagingException mex) {
             mMex = mex;
@@ -1125,7 +1130,7 @@ public class MailSender {
 
     public static class SafeSendFailedException extends SafeMessagingException {
         private static final long serialVersionUID = 5625565177360027934L;
-        private SendFailedException mSfe;
+        private final SendFailedException mSfe;
 
         public SafeSendFailedException(SendFailedException sfe) {
             super(sfe);
