@@ -40,7 +40,7 @@ SECTION 1: BSD-STYLE, MIT-STYLE, OR SIMILAR STYLE LICENSES
    >>> bouncycastle-1.46
    >>> bouncycastle-zimbra-20110708
    >>> chunkin-nginx-module-0.23rc2
-   >>> curl-7.31.0
+   >>> curl-7.35.0
    >>> cyrus-sasl-zimbra-2.1.26
    >>> dom4j-1.5.2
    >>> freetype-2.4.9
@@ -64,19 +64,19 @@ SECTION 1: BSD-STYLE, MIT-STYLE, OR SIMILAR STYLE LICENSES
    >>> jzlib-1.0.7
    >>> keyview-10.13.0.0
    >>> kxml2-2.3.0
-   >>> libevent-2.0.16
+   >>> libevent-2.0.21
    >>> libmemcached-1.0.6
    >>> libpng-1.5.10
    >>> libxml2-2.7.8-zimbra
    >>> md5.js-2.1
-   >>> memcached-1.4.10
+   >>> memcached-1.4.17
    >>> net-snmp-5.7.2
    >>> nginx-1.2-zimbra
    >>> nist-sip-1.2
    >>> nviennot-nginx-tcp-keepalive-4d7186d
-   >>> opendkim-2.8.4
+   >>> opendkim-2.9.0
    >>> openldap-2.4.38
-   >>> openssl-1.0.1e
+   >>> openssl-1.0.1f
    >>> perl-data-uuid-1.218
    >>> perl-geography-countries-2009041301
    >>> perl-locale-maketext-simple-0.21
@@ -113,7 +113,7 @@ SECTION 2: Apache License, V2.0
    >>> apache-commons-logging-1.1.1
    >>> apache-commons-pool-1.6
    >>> apache-derby-10.5.3.0
-   >>> apache-httpd-2.4.4
+   >>> apache-httpd-2.4.7
    >>> apache-jcs-1.3
    >>> apache-log4j-1.2.16
    >>> apache-log4j-extras-1.0
@@ -223,11 +223,11 @@ SECTION 7: GNU General Public License, V1.0
 SECTION 8: GNU General Public License, V2.0
 
    >>> amavisd-2.8.0
-   >>> clamav-0.97.8
+   >>> clamav-0.98.1
    >>> cluebringer-2.1.0-beta
    >>> libtool-2.2.6b
    >>> libwww-perl-6.04
-   >>> mysql-5.5.32
+   >>> mysql-5.5.35
    >>> mysql-connector-java-5.1.18
    >>> perl-archive-tar-1.90
    >>> perl-archive-zip-1.30
@@ -259,7 +259,7 @@ SECTION 8: GNU General Public License, V2.0
    >>> perl-digest-sha1-2.13
    >>> perl-encode-locale-1.03
    >>> perl-extutils-constant-0.23
-   >>> perl-extutils-makemaker-6.62
+   >>> perl-extutils-makemaker-6.78
    >>> perl-extutils-parsexs-3.18
    >>> perl-file-copy-recursive-0.38
    >>> perl-file-grep-0.02
@@ -382,7 +382,7 @@ SECTION 12: GNU Library General Public License, V2.0
 
 SECTION 13: IBM Public License, V1.0
 
-   >>> postfix-2.10.1
+   >>> postfix-2.10.2
 
 
 
@@ -860,7 +860,7 @@ NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
->>> curl-7.31.0
+>>> curl-7.35.0
 
 COPYRIGHT AND PERMISSION NOTICE
 
@@ -889,7 +889,7 @@ ADDITIONAL LICENSE INFORMATION:
 
 > BSD
 
-curl-7.31.0.tar.gz\curl-7.31.0.tar\curl-7.31.0\lib\security.c
+curl-7.35.0.tar.gz\curl-7.35.0.tar\curl-7.35.0\lib\security.c
 
 
 Copyright (c) 1998, 1999 Kungliga Tekniska Hgskolan
@@ -930,7 +930,7 @@ SUCH DAMAGE.
 > RSA Data Security
 
 
-curl-7.31.0.tar.gz\curl-7.31.0.tar\curl-7.31.0\lib\md4.c
+curl-7.35.0.tar.gz\curl-7.35.0.tar\curl-7.35.0\lib\md4.c
 
 
 Copyright (C) 1990-2, RSA Data Security, Inc. All rights reserved.
@@ -1356,7 +1356,7 @@ SUCH DAMAGE.
  University of Illinois, Urbana-Champaign.
 
 
->>> google-perftools-2.0
+>>> google-perftools-2.1
 
 Copyright (c) 2005, Google Inc.
 All rights reserved.
@@ -9587,7 +9587,7 @@ included with JRE 7, JDK 7, and OpenJDK 7, except where noted:
 --------------------------------------------------------------------------------
 
 
->>> jdk-1.7.0_25
+>>> jdk-1.7.0_45
 
 [USE OF THIS PACKAGE IS SUBJECT TO THE TERMS AND CONDITIONS OF YOUR TELLIGENT END USER LICENSE AGREEMENT. ADDITIONAL COPYRIGHT NOTICES AND LICENSE TERMS APPLICABLE TO PORTIONS OF THIS PACKAGE ARE SET FORTH BELOW.]
 
@@ -14294,7 +14294,7 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
 
 
->>> libevent-2.0.16
+>>> libevent-2.0.21
 
 Libevent is available for use under the following license, commonly known
 as the 3-clause (or "modified") BSD license:
@@ -14658,7 +14658,7 @@ Neither the name of the author nor the names of its contributors may be used to 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
->>> memcached-1.4.10
+>>> memcached-1.4.17
 
 Copyright (c) 2003, Danga Interactive, Inc.
 All rights reserved.
@@ -15208,7 +15208,7 @@ Copyright (C) 2011 Nicolas Viennot <nicolas@viennot.biz>
 This file is subject to the terms and conditions of the MIT License.
 
 
->>> opendkim-2.8.4
+>>> opendkim-2.9.0
 
 Copyright (c) 2009, 2010, 2012, The Trusted Domain Project.
 All rights reserved.
@@ -15248,7 +15248,7 @@ ADDITIONAL LICENSE INFORMATION :
 
 > SENDMAIL OPEN SOURCE LICENSE
 
-opendkim-2.8.4.tar.gz\opendkim-2.8.4.tar\opendkim-2.8.4\LICENSE
+opendkim-2.9.0.tar.gz\opendkim-2.9.0.tar\opendkim-2.9.0\LICENSE
 
 The following license terms and conditions apply to this open source
 software ("Software"), unless a different license is obtained directly
@@ -15329,7 +15329,7 @@ $Revision: 1.1 $ $Date: 2009/07/16 18:43:18 $
 
 > MIT
 
-opendkim-2.8.4.tar.gz\opendkim-2.8.4.tar\opendkim-2.8.4\libopendkim\base32.c
+opendkim-2.9.0.tar.gz\opendkim-2.9.0.tar\opendkim-2.9.0\libopendkim\base32.c
 
 Copyright (c) 2006-2009 Bjorn Andersson <flex@kryo.se>,
 Erik Ekman <yarrick@kryo.se>
@@ -15352,7 +15352,7 @@ Portions Copyright (c) 2010-2012, The Trusted Domain Project.
 All rights reserved.
 
 
->>> openldap-2.4.35
+>>> openldap-2.4.38
 
 The OpenLDAP Public License
 Version 2.8, 17 August 2003
@@ -15403,7 +15403,7 @@ California, USA.  All Rights Reserved.  Permission to copy and
 distribute verbatim copies of this document is granted.
 
 
->>> openssl-1.0.1e
+>>> openssl-1.0.1f
 
 LICENSE ISSUES
   ==============
@@ -17108,7 +17108,7 @@ Portions of this software were originally based on the following:
 ====================================================
 
 
->>> apache-httpd-2.4.4
+>>> apache-httpd-2.4.7
 
 copyright 2013 The Apache Software Foundation.
 
@@ -26088,7 +26088,7 @@ A copy of the license is included in the section entitled "GNU
 Free Documentation License".
 
 
->>> clamav-0.97.8
+>>> clamav-0.98.1
 
 Copyright (C)2008 Sourcefire, Inc.
 
@@ -26112,7 +26112,7 @@ ADDITIONAL LICENSE INFORMATION :
 
 > BSD
 
-clamav-0.97.8.tar.gz\clamav-0.97.8.tar\clamav-0.97.8\COPYING.bzip2
+clamav-0.98.1.tar.gz\clamav-0.98.1.tar\clamav-0.98.1\COPYING.bzip2
 
 This program, "bzip2", the associated library "libbzip2", and all
 documentation, are copyright (C) 1996-2006 Julian R Seward.  All
@@ -26155,7 +26155,7 @@ bzip2/libbzip2 version 1.0.4 of 20 December 2006
 
 > MIT
 
-clamav-0.97.8.tar.gz\clamav-0.97.8.tar\clamav-0.97.8\COPYING.getopt
+clamav-0.98.1.tar.gz\clamav-0.98.1.tar\clamav-0.98.1\COPYING.getopt
 
 getopt.c - my re-implementation of getopt.
 Copyright 1997, 2000, 2001, 2002, 2006, Benjamin Sittler
@@ -26182,7 +26182,7 @@ DEALINGS IN THE SOFTWARE.
 
 > LLVM License
 
-clamav-0.97.8.tar.gz\clamav-0.97.8.tar\clamav-0.97.8\COPYING.llvm
+clamav-0.98.1.tar.gz\clamav-0.98.1.tar\clamav-0.98.1\COPYING.llvm
 
 LLVM Release License
 ==============================================================================
@@ -26229,7 +26229,7 @@ SOFTWARE.
 
 > Public Domain
 
-clamav-0.97.8.tar.gz\clamav-0.97.8.tar\clamav-0.97.8\COPYING.lzma
+clamav-0.98.1.tar.gz\clamav-0.98.1.tar\clamav-0.98.1\COPYING.lzma
 
 The original lzma.txt license file, a small portion of which is reproduced below,
 is available under libclamav/7z/lzma.txt.
@@ -26241,7 +26241,7 @@ LZMA SDK is written and placed in the public domain by Igor Pavlov
 
 > Unrar License
 
-C:\Documents and Settings\jasdeep.singh\My Documents\Downloads\clamav-0.97.8.tar.gz\clamav-0.97.8.tar\clamav-0.97.8\COPYING.unrar
+C:\Documents and Settings\jasdeep.singh\My Documents\Downloads\clamav-0.98.1.tar.gz\clamav-0.98.1.tar\clamav-0.98.1\COPYING.unrar
 
 The libclamunrar code is based on the work of Alexander L. Roshal (C)
 
@@ -26295,7 +26295,7 @@ Thank you for your interest in RAR and UnRAR.
 
 > LGPL 2.1
 
-clamav-0.97.8.tar.gz\clamav-0.97.8.tar\clamav-0.97.8\libclamunrar_iface\unrar_iface.h
+clamav-0.98.1.tar.gz\clamav-0.98.1.tar\clamav-0.98.1\libclamunrar_iface\unrar_iface.h
 
 Interface to libclamunrar
 Copyright (C) 2007 Sourcefire, Inc.
@@ -26312,7 +26312,7 @@ Lesser General Public License for more details.
 
 > LGPL 2.0
 
-clamav-0.97.8.tar.gz\clamav-0.97.8.tar\clamav-0.97.8\libltdl\argz.c
+clamav-0.98.1.tar.gz\clamav-0.98.1.tar\clamav-0.98.1\libltdl\argz.c
 
 Copyright (C) 2004, 2006, 2007, 2008 Free Software Foundation, Inc.
 Written by Gary V. Vaughan, 2004
@@ -26439,7 +26439,7 @@ COPYRIGHT
 This library is free software; you can redistribute it and/or modify it under the same terms as Perl itself.
 
 
->>> mysql-5.5.32
+>>> mysql-5.5.35
 
 Copyright (c) 2000, 2013, Oracle and/or its affiliates. All rights reserved.
 
@@ -26477,7 +26477,7 @@ ADDITIONAL LICENSE INFORMATION:
 
 > LGPL 2.0
 
-mysql-5.5.32.tar.gz\mysql-5.5.32.tar\mysql-5.5.32\client\completion_hash.h
+mysql-5.5.35.tar.gz\mysql-5.5.35.tar\mysql-5.5.35\client\completion_hash.h
 
 Copyright (C) 2000-2002 MySQL AB
 
@@ -26499,7 +26499,7 @@ MA 02111-1307, USA
 
 > BSD
 
-mysql-5.5.32.tar.gz\mysql-5.5.32.tar\mysql-5.5.32\cmd-line-utils\libedit\np\fgetln.c
+mysql-5.5.35.tar.gz\mysql-5.5.35.tar\mysql-5.5.35\cmd-line-utils\libedit\np\fgetln.c
 
 Copyright (c) 1998 The NetBSD Foundation, Inc.
 All rights reserved.
@@ -26531,7 +26531,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 > MIT Style
 
-mysql-5.5.32.tar.gz\mysql-5.5.32.tar\mysql-5.5.32\cmd-line-utils\libedit\np\strlcat.c
+mysql-5.5.35.tar.gz\mysql-5.5.35.tar\mysql-5.5.35\cmd-line-utils\libedit\np\strlcat.c
 
 Copyright (c) 1998 Todd C. Miller <Todd.Miller@courtesan.com>
 
@@ -26550,7 +26550,7 @@ CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 > Public Domain
 
-mysql-5.5.32.tar.gz\mysql-5.5.32.tar\mysql-5.5.32\dbug\dbug.c
+mysql-5.5.35.tar.gz\mysql-5.5.35.tar\mysql-5.5.35\dbug\dbug.c
 
 N O T I C E
 
@@ -27122,7 +27122,7 @@ file.
 Copyright  2001, 2002, 2005 Nicholas Clark
 
 
->>> perl-extutils-makemaker-6.62
+>>> perl-extutils-makemaker-6.78
 
 [PLEASE NOTE:  TELLIGENT, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 2.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 2.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
@@ -28743,7 +28743,7 @@ Boston, MA 02111-1307, USA.
 IBM Public License, V1.0 is applicable to the following component(s).
 
 
->>> postfix-2.10.1
+>>> postfix-2.10.2
 
 License: IBM Public License 1.0
 
@@ -28751,7 +28751,7 @@ Additional license information:
 
 >BSD
 
-postfix_2.10.1.orig.tar.gz\postfix_2.10.1.orig.tar\postfix-2.10.1\COPYRIGHT
+postfix_2.10.2.orig.tar.gz\postfix_2.10.2.orig.tar\postfix-2.10.2\COPYRIGHT
 
 Copyright (c) 1987, 1993
 The Regents of the University of California.  All rights reserved.
