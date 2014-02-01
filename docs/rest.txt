@@ -209,6 +209,9 @@ The second format is used to reference something by its mail item id:
 /home/roland/?id=945&fmt=vcf              // contact formatted as a vcard
 /home/roland/?id=100&part=2.3             // mime part 2.3 from message with id 100
 /home/roland/?id=100&part=1,4,5&fmt=zip   // zipfile containing mime parts 1, 4, and 5 from message with id 100
+/home/roland/?id=100&part=2&view=text     // Used for show original of a message attachment (part 2 in this case)
+                                          // To avoid problems with browsers, given Content-Type: text/plain
+                                          // instead of message/rfc822
 
 When we support documents in a folder, we'd use the document's name as you'd expect:
 

@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -196,6 +196,7 @@ public final class NativeFormatter extends Formatter {
     }
 
     private static final String HTML_VIEW = "html";
+    private static final String TEXT_VIEW = "text";
 
     private void handleMessagePart(UserServletContext context, MimePart mp, MailItem item) throws IOException, MessagingException, ServletException {
         if (mp == null) {
@@ -220,6 +221,12 @@ public final class NativeFormatter extends Formatter {
             if (browser == HttpUtil.Browser.IE && contentType.length() > 80)
                 contentType = shortContentType;
 
+            // useful for show original of message attachment
+            boolean simpleText = (context.hasView() && context.getView().equals(TEXT_VIEW) &&
+                    MimeConstants.CT_MESSAGE_RFC822.equals(contentType));
+            if (simpleText) {
+                contentType = MimeConstants.CT_TEXT_PLAIN;
+            }
             boolean html = checkGlobalOverride(Provisioning.A_zimbraAttachmentsViewInHtmlOnly,
                     context.getAuthAccount()) || (context.hasView() && context.getView().equals(HTML_VIEW));
             InputStream in = null;
@@ -255,7 +262,13 @@ public final class NativeFormatter extends Formatter {
                         size = enc == null || enc.equals("7bit") || enc.equals("8bit") || enc.equals("binary") ? mp.getSize() : 0;
                     }
                     String defaultCharset = context.targetAccount.getAttr(Provisioning.A_zimbraPrefMailDefaultCharset, null);
-                    sendbackOriginalDoc(in, contentType, defaultCharset, Mime.getFilename(mp), mp.getDescription(), size, context.req, context.resp);
+                    if (simpleText) {
+                        sendbackBinaryData(context.req, context.resp, in, contentType, Part.INLINE,
+                                null /* filename */, size, true);
+                    } else {
+                        sendbackOriginalDoc(in, contentType, defaultCharset, Mime.getFilename(mp), mp.getDescription(),
+                                size, context.req, context.resp);
+                    }
                 } else {
                     in = mp.getInputStream();
                     handleConversion(context, in, Mime.getFilename(mp), contentType, item.getDigest(), mp.getSize());
@@ -531,13 +544,16 @@ public final class NativeFormatter extends Formatter {
         { '<', 'S', 'C', 'R', 'I', 'P', 'T' }
     };
 
-    public static void sendbackBinaryData(HttpServletRequest req,
-                                          HttpServletResponse resp,
-                                          InputStream in,
-                                          String contentType,
-                                          String disposition,
-                                          String filename,
-                                          long size) throws IOException {
+    public static void sendbackBinaryData(HttpServletRequest req, HttpServletResponse resp, InputStream in,
+                                          String contentType, String disposition, String filename, long size)
+    throws IOException {
+        sendbackBinaryData(req, resp, in, contentType, disposition, filename, size, false);
+    }
+
+    public static void sendbackBinaryData(HttpServletRequest req, HttpServletResponse resp, InputStream in,
+                                          String contentType, String disposition, String filename,
+                                          long size, boolean ignoreContentDisposition)
+    throws IOException {
         resp.setContentType(contentType);
         if (disposition == null) {
             String disp = req.getParameter(UserServlet.QP_DISP);
@@ -579,8 +595,10 @@ public final class NativeFormatter extends Formatter {
             if (bytesRead > 0)
                 pis.unread(buf, 0, bytesRead);
         }
-        String cd = HttpUtil.createContentDisposition(req, disposition, filename == null ? "unknown" : filename);
-        resp.addHeader("Content-Disposition", cd);
+        if (!ignoreContentDisposition) {
+            String cd = HttpUtil.createContentDisposition(req, disposition, filename == null ? "unknown" : filename);
+            resp.addHeader("Content-Disposition", cd);
+        }
         if (size > 0)
             resp.setContentLength((int)size);
         ByteUtil.copy(pis, true, resp.getOutputStream(), false);
