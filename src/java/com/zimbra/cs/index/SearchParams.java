@@ -453,7 +453,9 @@ public final class SearchParams implements Cloneable {
                 el.addElement(MailConstants.A_HEADER).addAttribute(MailConstants.A_ATTRIBUTE_NAME, name);
             }
         }
-        el.addAttribute(MailConstants.A_RECIPIENTS, recipients.getIntValue());
+        if (recipients != null) {
+            el.addAttribute(MailConstants.A_RECIPIENTS, recipients.getIntValue());
+        }
 
         if (getLocale() != null) {
             el.addElement(MailConstants.E_LOCALE).setText(getLocale().toString());
