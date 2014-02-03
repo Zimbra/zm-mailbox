@@ -172,7 +172,7 @@ public abstract class ExternalStoreManager extends StoreManager implements Exter
 
     @Override
     public InputStream getContent(Blob blob) throws IOException {
-        return new BlobInputStream(blob);
+        return new ExternalBlobInputStream(blob);
     }
 
     protected Blob getLocalBlob(Mailbox mbox, String locator, boolean fromCache) throws IOException {
@@ -180,7 +180,10 @@ public abstract class ExternalStoreManager extends StoreManager implements Exter
         if (fromCache) {
             cached = localCache.get(locator);
             if (cached != null) {
-                return new ExternalBlob(cached);
+                ExternalBlob blob = new ExternalBlob(cached);
+                blob.setLocator(locator);
+                blob.setMbox(mbox);
+                return blob;
             }
         }
 
@@ -189,7 +192,10 @@ public abstract class ExternalStoreManager extends StoreManager implements Exter
             throw new IOException("Store " + this.getClass().getName() +" returned null for locator " + locator);
         } else {
             cached = localCache.put(locator, is);
-            return new ExternalBlob(cached);
+            ExternalBlob blob = new ExternalBlob(cached);
+            blob.setLocator(locator);
+            blob.setMbox(mbox);
+            return blob;
         }
     }
 
