@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -241,7 +241,7 @@ public final class SendMsg extends MailDocumentHandler {
                     String orgAddress = org.getAddress();
                     Account orgAccount = Provisioning.getInstance().getAccountByName(orgAddress);
                     if (orgAccount != null && !orgAccount.getId().equals(mbox.getAccount().getId())) {
-                        MimeMessage notifyMimeMsg = CalendarMailSender.createForwardNotifyMessage(mbox.getAccount(), 
+                        MimeMessage notifyMimeMsg = CalendarMailSender.createForwardNotifyMessage(mbox.getAccount(),
                                 orgAccount, orgAddress, mm.getAllRecipients(), mv.getOriginalInvite());
                         CalendarMailSender.sendPartial(oc, mbox, notifyMimeMsg, null, null, null, null, false, true);
                     }
@@ -415,7 +415,7 @@ public final class SendMsg extends MailDocumentHandler {
             this.needFixup = fixup;
             return this;
         }
-        
+
         public OutlookICalendarFixupMimeVisitor setIsCalendarForward(boolean forward) {
             this.isCalendarForward = forward;
             return this;
@@ -424,7 +424,7 @@ public final class SendMsg extends MailDocumentHandler {
         public boolean isCalendarMessage() {
             return isCalendarMessage;
         }
-        
+
         public Invite getOriginalInvite() {
             return origInvite;
         }
@@ -504,7 +504,7 @@ public final class SendMsg extends MailDocumentHandler {
                     return false;
                 }
                 isCalendarMessage = true;
-                
+
                 if (!(needFixup || isCalendarForward))
                     return false;
 
@@ -513,7 +513,7 @@ public final class SendMsg extends MailDocumentHandler {
                 if (cs != null)
                     charset = cs;
                 ical = ZCalendarBuilder.build(is, charset);
-                
+
                 if (isCalendarForward) {
                     // Populate Invite for ical
                     List<Invite> inviteList = Invite.createFromCalendar(mAccount, null, ical, false);
@@ -528,7 +528,7 @@ public final class SendMsg extends MailDocumentHandler {
                     }
                     origInvite = defInvite;
                 }
-                
+
                 if (!needFixup) {
                     return false;
                 }

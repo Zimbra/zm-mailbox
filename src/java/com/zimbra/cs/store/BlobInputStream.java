@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2008, 2009, 2010, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -21,6 +21,7 @@ import java.io.InputStream;
 
 import javax.mail.internet.SharedInputStream;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.MimePart.InputStreamSource;
 import com.zimbra.common.util.Log;
@@ -113,6 +114,7 @@ implements SharedInputStream, InputStreamSource {
      * @param start starting index, or <tt>null</tt> for beginning of file
      * @param end ending index (exclusive), or <tt>null</tt> for end of file
      */
+    @VisibleForTesting
     public BlobInputStream(File file, long rawSize, Long start, Long end) throws IOException {
         this(file, rawSize, start, end, null);
     }
@@ -126,7 +128,7 @@ implements SharedInputStream, InputStreamSource {
      * @param parent the parent stream, or <tt>null</tt> if this is the first stream.
      * If non-null, the file from the parent is used.
      */
-    private BlobInputStream(File file, long rawSize, Long start, Long end, BlobInputStream parent)
+    protected BlobInputStream(File file, long rawSize, Long start, Long end, BlobInputStream parent)
     throws IOException {
         if (parent == null) {
             // Top-level stream.
@@ -137,8 +139,9 @@ implements SharedInputStream, InputStreamSource {
             }
         } else {
             // New stream.  Get settings from the parent and add this stream to the group.
+            setMailboxLocator(parent);
             mRoot = parent.mRoot;
-            file = mRoot.mFile;
+            file = parent.getRootFile();
             if (!file.exists() && !getFileDescriptorCache().contains(file.getPath())) {
                 throw new FileNotFoundException(file.getPath() + " does not exist");
             }
@@ -170,6 +173,18 @@ implements SharedInputStream, InputStreamSource {
             this, file.getPath(), file.length(), mRawSize, start, end, parent, mStart, mEnd);
     }
 
+    protected File getRootFile() throws IOException {
+        return mRoot.mFile;
+    }
+
+    protected void setMailboxLocator(BlobInputStream parent) {
+        //default empty implementation; provided for extension
+    }
+
+    protected BlobInputStream initializeSubStream(File file, long rawSize, Long start, Long end, BlobInputStream parent) throws IOException {
+        return new BlobInputStream(file, rawSize, start, end, parent);
+    }
+
     private static FileDescriptorCache mFileDescriptorCache;
 
     public static void setFileDescriptorCache(FileDescriptorCache fdcache) {
@@ -185,7 +200,7 @@ implements SharedInputStream, InputStreamSource {
      */
     public void closeFile() {
         try {
-            getFileDescriptorCache().remove(mRoot.mFile.getPath());
+            getFileDescriptorCache().remove(getRootFile().getPath());
         } catch (IOException e) {
             sLog.warn("Unable to close mRoot.mFile", e);
         }
@@ -245,7 +260,7 @@ implements SharedInputStream, InputStreamSource {
      */
     private int fillBuffer(long pos) throws IOException {
         int numToRead = (int) Math.min(mBuf.length, mEnd - pos);
-        int numRead = getFileDescriptorCache().read(mRoot.mFile.getPath(), mRawSize, pos, mBuf, 0, numToRead);
+        int numRead = getFileDescriptorCache().read(getRootFile().getPath(), mRawSize, pos, mBuf, 0, numToRead);
         if (numRead > 0) {
             mBufPos = pos;
             mBufSize = numRead;
@@ -276,7 +291,7 @@ implements SharedInputStream, InputStreamSource {
         } else {
             if (len > mBuf.length) {
                 // Read directly from the file.
-                numRead = getFileDescriptorCache().read(mRoot.mFile.getPath(), mRawSize, mPos, b, off, len);
+                numRead = getFileDescriptorCache().read(getRootFile().getPath(), mRawSize, mPos, b, off, len);
             } else {
                 // Fill the buffer and copy data.
                 int numReadIntoBuffer = fillBuffer(mPos);
@@ -340,7 +355,8 @@ implements SharedInputStream, InputStreamSource {
         return mPos - mStart;
     }
 
-    @Override public InputStream newStream(long start, long end) {
+    @Override
+    public InputStream newStream(long start, long end) {
         if (start < 0) {
             throw new IllegalArgumentException("start cannot be less than 0");
         }
@@ -356,7 +372,7 @@ implements SharedInputStream, InputStreamSource {
 
         BlobInputStream newStream = null;
         try {
-            newStream = new BlobInputStream(null, mRawSize, start, end, this);
+            newStream = initializeSubStream(null, mRawSize, start, end, this);
         } catch (IOException e) {
             sLog.warn("Unable to create substream for %s", mRoot.mFile.getPath(), e);
         }

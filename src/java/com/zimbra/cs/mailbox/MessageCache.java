@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -33,7 +33,6 @@ import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.mime.ExpandMimeMessage;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.stats.ZimbraPerf;
-import com.zimbra.cs.store.BlobInputStream;
 import com.zimbra.cs.store.MailboxBlob;
 import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.util.JMSession;
@@ -231,10 +230,11 @@ public class MessageCache {
         if (mblob == null)
             throw ServiceException.FAILURE("missing blob for id: " + item.getId() + ", change: " + item.getModifiedSequence(), null);
 
-        if (item.getSize() < MESSAGE_CACHE_DISK_STREAMING_THRESHOLD)
+        if (item.getSize() < MESSAGE_CACHE_DISK_STREAMING_THRESHOLD) {
             return StoreManager.getInstance().getContent(mblob);
-        else
-            return new BlobInputStream(mblob.getLocalBlob());
+        } else {
+            return StoreManager.getInstance().getContent(mblob.getLocalBlob());
+        }
     }
 
     /**

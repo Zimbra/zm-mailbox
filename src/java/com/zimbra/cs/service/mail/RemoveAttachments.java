@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -46,8 +46,7 @@ import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
-import com.zimbra.cs.store.Blob;
-import com.zimbra.cs.store.BlobInputStream;
+import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -72,8 +71,7 @@ public class RemoveAttachments extends MailDocumentHandler {
 
         InputStream is = null;
         try {
-            Blob blob = msg.getBlob().getLocalBlob();
-            MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSession(), is = new BlobInputStream(blob));
+            MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSession(), is = StoreManager.getInstance().getContent(msg.getBlob().getLocalBlob()));
             for (String part : parts)
                 stripPart(mm, part);
             mm.saveChanges();
