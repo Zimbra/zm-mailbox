@@ -2407,6 +2407,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraAmavisEnableDKIMVerification = "zimbraAmavisEnableDKIMVerification";
 
     /**
+     * Whether or not Amavis disclaimers should only be attached to emails
+     * going to an external delivery domain. Defaults to FALSE
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1577)
+    public static final String A_zimbraAmavisExternalDisclaimerOnly = "zimbraAmavisExternalDisclaimerOnly";
+
+    /**
      * Amavis final destination for Spam. Default is to discard it
      *
      * @since ZCS 8.5.0
@@ -13389,7 +13398,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraZimletIsExtension = "zimbraZimletIsExtension";
 
     /**
-     * Whether to enable JSP compilation for Zimlets (i.e. for /service
+     * Whether to enable JSP compilation for Zimlets (i.e. for /zimlet
      * webapp)
      *
      * @since ZCS 8.5.0
