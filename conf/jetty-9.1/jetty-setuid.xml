@@ -103,12 +103,10 @@
         <Set name="groupname">zimbra</Set>
   
         <Set name="RLimitNoFiles">
-          <Arg>
             <New class="org.eclipse.jetty.setuid.RLimit">
               <Set name="soft">65536</Set>
               <Set name="hard">65536</Set>
             </New>
-          </Arg>
         </Set>
 
       </New>
