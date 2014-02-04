@@ -1917,6 +1917,83 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * Whether or not Amavis disclaimers should only be attached to emails
+     * going to an external delivery domain. Defaults to FALSE
+     *
+     * @return zimbraAmavisExternalDisclaimerOnly, or false if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1577)
+    public boolean isAmavisExternalDisclaimerOnly() {
+        return getBooleanAttr(Provisioning.A_zimbraAmavisExternalDisclaimerOnly, false);
+    }
+
+    /**
+     * Whether or not Amavis disclaimers should only be attached to emails
+     * going to an external delivery domain. Defaults to FALSE
+     *
+     * @param zimbraAmavisExternalDisclaimerOnly new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1577)
+    public void setAmavisExternalDisclaimerOnly(boolean zimbraAmavisExternalDisclaimerOnly) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAmavisExternalDisclaimerOnly, zimbraAmavisExternalDisclaimerOnly ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether or not Amavis disclaimers should only be attached to emails
+     * going to an external delivery domain. Defaults to FALSE
+     *
+     * @param zimbraAmavisExternalDisclaimerOnly new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1577)
+    public Map<String,Object> setAmavisExternalDisclaimerOnly(boolean zimbraAmavisExternalDisclaimerOnly, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAmavisExternalDisclaimerOnly, zimbraAmavisExternalDisclaimerOnly ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether or not Amavis disclaimers should only be attached to emails
+     * going to an external delivery domain. Defaults to FALSE
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1577)
+    public void unsetAmavisExternalDisclaimerOnly() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAmavisExternalDisclaimerOnly, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether or not Amavis disclaimers should only be attached to emails
+     * going to an external delivery domain. Defaults to FALSE
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1577)
+    public Map<String,Object> unsetAmavisExternalDisclaimerOnly(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAmavisExternalDisclaimerOnly, "");
+        return attrs;
+    }
+
+    /**
      * Amavis final destination for Spam. Default is to discard it
      *
      * <p>Valid values: [D_REJECT, D_DISCARD, D_BOUNCE, D_PASS]
@@ -54830,7 +54907,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Whether to enable JSP compilation for Zimlets (i.e. for /service
+     * Whether to enable JSP compilation for Zimlets (i.e. for /zimlet
      * webapp)
      *
      * @return zimbraZimletJspEnabled, or false if unset
@@ -54843,7 +54920,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Whether to enable JSP compilation for Zimlets (i.e. for /service
+     * Whether to enable JSP compilation for Zimlets (i.e. for /zimlet
      * webapp)
      *
      * @param zimbraZimletJspEnabled new value
@@ -54859,7 +54936,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Whether to enable JSP compilation for Zimlets (i.e. for /service
+     * Whether to enable JSP compilation for Zimlets (i.e. for /zimlet
      * webapp)
      *
      * @param zimbraZimletJspEnabled new value
@@ -54876,7 +54953,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Whether to enable JSP compilation for Zimlets (i.e. for /service
+     * Whether to enable JSP compilation for Zimlets (i.e. for /zimlet
      * webapp)
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -54891,7 +54968,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Whether to enable JSP compilation for Zimlets (i.e. for /service
+     * Whether to enable JSP compilation for Zimlets (i.e. for /zimlet
      * webapp)
      *
      * @param attrs existing map to populate, or null to create a new map

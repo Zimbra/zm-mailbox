@@ -7868,4 +7868,9 @@ TODO: delete them permanently from here
   <desc>If TRUE, OOO reply is not sent to external senders, when the user enables OOO for the account</desc>
 </attr>
 
+<attr id="1577" name="zimbraAmavisExternalDisclaimerOnly" type="boolean" cardinality="single" optionalIn="globalConfig" requiresRestart="mta" since="8.5.0">
+  <globalConfigValue>FALSE</globalConfigValue>
+  <desc>Whether or not Amavis disclaimers should only be attached to emails going to an external delivery domain.  Defaults to FALSE</desc>
+</attr>
+
 </attrs>

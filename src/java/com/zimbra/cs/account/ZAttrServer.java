@@ -35618,7 +35618,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Whether to enable JSP compilation for Zimlets (i.e. for /service
+     * Whether to enable JSP compilation for Zimlets (i.e. for /zimlet
      * webapp)
      *
      * @return zimbraZimletJspEnabled, or false if unset
@@ -35631,7 +35631,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Whether to enable JSP compilation for Zimlets (i.e. for /service
+     * Whether to enable JSP compilation for Zimlets (i.e. for /zimlet
      * webapp)
      *
      * @param zimbraZimletJspEnabled new value
@@ -35647,7 +35647,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Whether to enable JSP compilation for Zimlets (i.e. for /service
+     * Whether to enable JSP compilation for Zimlets (i.e. for /zimlet
      * webapp)
      *
      * @param zimbraZimletJspEnabled new value
@@ -35664,7 +35664,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Whether to enable JSP compilation for Zimlets (i.e. for /service
+     * Whether to enable JSP compilation for Zimlets (i.e. for /zimlet
      * webapp)
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -35679,7 +35679,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Whether to enable JSP compilation for Zimlets (i.e. for /service
+     * Whether to enable JSP compilation for Zimlets (i.e. for /zimlet
      * webapp)
      *
      * @param attrs existing map to populate, or null to create a new map
