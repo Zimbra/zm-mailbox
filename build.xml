@@ -838,6 +838,9 @@
             <fileset dir="${zimbra.home.dir}/bin"/>
             <fileset dir="${zimbra.home.dir}/libexec"/>
         </chmod>
+    	<delete file="${zimbra.home.dir}/jetty/start.ini"/>
+        <delete file="${zimbra.home.dir}/jetty/start.d/http.ini"/>
+    	
         <!-- ant does not preserve perms on copy -->
     </target>
 
