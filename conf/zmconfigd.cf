@@ -274,6 +274,7 @@ SECTION mailbox
 	REWRITE mailboxd/etc/jetty.xml.in mailboxd/etc/jetty.xml
 	REWRITE conf/spnego_java_options.in conf/spnego_java_options
 	REWRITE mailboxd/modules/setuid.mod.in mailboxd/modules/setuid.mod
+	REWRITE mailboxd/start.d/setuid.ini.in mailboxd/start.d/setuid.ini
 	RESTART mailboxd
 
 SECTION proxy

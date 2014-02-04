@@ -12,7 +12,7 @@
       <Map>
         <Entry>
           <Item>zimbraLmtpBindAddress</Item>
-          <Item><New class="java.lang.String"><Arg><Property name="zimbraLmtpBindAddress"/></Arg></New></Item>
+          <Item><New class="java.lang.String"><Arg><Property name="zimbraLmtpBindAddress" default=""/></Arg></New></Item>
         </Entry>
         <Entry>
           <Item>zimbraLmtpBindPort</Item>
@@ -28,7 +28,7 @@
         </Entry>
         <Entry>
           <Item>zimbraImapBindAddress</Item>
-          <Item><New class="java.lang.String"><Arg><Property name="zimbraImapBindAddress"/></Arg></New></Item>
+          <Item><New class="java.lang.String"><Arg><Property name="zimbraImapBindAddress" default=""/></Arg></New></Item>
         </Entry>
         <Entry>
           <Item>zimbraImapBindPort</Item>
@@ -40,7 +40,7 @@
         </Entry>
         <Entry>
           <Item>zimbraImapSSLBindAddress</Item>
-          <Item><New class="java.lang.String"><Arg><Property name="zimbraImapSSLBindAddress"/></Arg></New></Item>
+          <Item><New class="java.lang.String"><Arg><Property name="zimbraImapSSLBindAddress" default=""/></Arg></New></Item>
         </Entry>
         <Entry>
           <Item>zimbraImapSSLBindPort</Item>
@@ -52,7 +52,7 @@
         </Entry>
         <Entry>
           <Item>zimbraPop3BindAddress</Item>
-          <Item><New class="java.lang.String"><Arg><Property name="zimbraPop3BindAddress"/></Arg></New></Item>
+          <Item><New class="java.lang.String"><Arg><Property name="zimbraPop3BindAddress" default=""/></Arg></New></Item>
         </Entry>
         <Entry>
           <Item>zimbraPop3BindPort</Item>
@@ -64,7 +64,7 @@
         </Entry>
         <Entry>
           <Item>zimbraPop3SSLBindAddress</Item>
-          <Item><New class="java.lang.String"><Arg><Property name="zimbraPop3SSLBindAddress"/></Arg></New></Item>
+          <Item><New class="java.lang.String"><Arg><Property name="zimbraPop3SSLBindAddress" default=""/></Arg></New></Item>
         </Entry>
         <Entry>
           <Item>zimbraPop3SSLBindPort</Item>
@@ -72,7 +72,7 @@
         </Entry>
         <Entry>
           <Item>zimbraSSLExcludeCipherSuites</Item>
-          <Item><New class="java.lang.String"><Arg><Property name="zimbraSSLExcludeCipherSuites"/></Arg></New></Item>
+          <Item><New class="java.lang.String"><Arg><Property name="zimbraSSLExcludeCipherSuites" default=""/></Arg></New></Item>
         </Entry>
         <Entry>
           <Item>nio_imap_enabled</Item>
@@ -84,11 +84,11 @@
         </Entry>
         <Entry>
           <Item>mailboxd_keystore_password</Item>
-          <Item><New class="java.lang.String"><Arg><Property name="mailboxd_keystore_password"/></Arg></New></Item>
+          <Item><New class="java.lang.String"><Arg><Property name="mailboxd_keystore_password" default=""/></Arg></New></Item>
         </Entry>
         <Entry>
           <Item>mailboxd_truststore_password</Item>
-          <Item><New class="java.lang.String"><Arg><Property name="mailboxd_truststore_password"/></Arg></New></Item>
+          <Item><New class="java.lang.String"><Arg><Property name="mailboxd_truststore_password" default=""/></Arg></New></Item>
         </Entry>
       </Map>
     </Arg>
@@ -101,10 +101,10 @@
         <Set name="umask">23</Set>
         <Set name="username">zimbra</Set>
         <Set name="groupname">zimbra</Set>
-
+  
         <Set name="RLimitNoFiles">
           <Arg>
-            <New class="org.mortbay.setuid.RLimit">
+            <New class="org.eclipse.jetty.setuid.RLimit">
               <Set name="soft">65536</Set>
               <Set name="hard">65536</Set>
             </New>
