@@ -1048,7 +1048,6 @@
     <copy tofile="${dist.jetty.dir}/etc/jettyrc" file="${config.dir}/jetty-9.1/jettyrc" overwrite="true"/>
     <copy tofile="${dist.jetty.dir}/etc/jetty.xml" file="${jetty.xml.file}" overwrite="true"/>
     <copy tofile="${dist.jetty.dir}/etc/zimbra.policy.example" file="${jetty.policy.file}" overwrite="true"/>
-    <copy tofile="${dist.jetty.dir}/etc/start.config" file="${config.dir}/jetty-9.1/start.config" overwrite="true"/>
     <copy tofile="${dist.jetty.dir}/etc/webdefault.xml"
           file="${config.dir}/jetty-9.1/webdefault.xml${production.suffix}" overwrite="true"/>
   	<copy todir="${dist.jetty.dir}/modules" overwrite="true">
