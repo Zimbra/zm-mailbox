@@ -212,8 +212,11 @@ public class UBIDLdapContext extends ZLdapContext {
     LDAPConnection getConn() {
         return conn;
     }
-    
+
     private LdapException mapToLdapException(String message, LDAPException e) {
+        if (ResultCode.TIMEOUT == e.getResultCode()) {
+            this.closeContext();
+        }
         if (isZimbraLdap) {
             return UBIDLdapException.mapToLdapException(message, e);
         } else {
