@@ -466,6 +466,20 @@ If verifyAccount="0" (default), only the auth token is verified and any <account
   {requested-skin} = if specified the name of the skin requested by client
 
   {skin-name} = if requested-skin specified, the name of the skin to use
+  
+Additional Notes about Auth behavior when mailstore is accessed via reverse proxy (i.e. nginx)
+
+1. All mail stores are capable of validating the user and generating an Auth Token. Nginx will direct the auth request to an arbitrary server based on round robin balancing.
+
+2. When a session context is requested, AuthRequest will only return a session context if the request was passed to the mail store that holds the user account being accessed.
+Any other mail store will validate the user, and generate an Auth Token, BUT will not return a session context.
+
+3. For single node configurations (with no nginx proxy) - the session ID can be passed in either manner - as a cookie -or- in the Soap Header. For code portability it is best to use the cookie method.  
+
+4. For a multi-node configuration passing the Auth Token in the SOAP Header of subsequent SOAP requests will NOT allow nginx to direct those requests to the correct mail store for the user account.
+The Auth Token MUST instead be sent as a cookie "ZM_AUTH_TOKEN=...Auth Token returned from AuthRequest..." as this is how nginx tells which mail store the request needs to be sent to.
+
+See also //depot/zimbra/main/ThirdParty/nginx/docs/HTTP for more details on the semantics of auth and nginx.
 
 ---------
 
