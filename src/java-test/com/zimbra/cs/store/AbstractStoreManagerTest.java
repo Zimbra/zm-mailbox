@@ -272,4 +272,12 @@ public abstract class AbstractStoreManagerTest {
         sm.delete(mblob);
 
     }
+
+    @Test
+    public void nonExistingBlob() throws Exception {
+        StoreManager sm = StoreManager.getInstance();
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        MailboxBlob blob = sm.getMailboxBlob(mbox, 999, 1, "1");
+        Assert.assertNull("expect null blob", blob);
+    }
 }

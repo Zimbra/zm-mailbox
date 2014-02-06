@@ -205,7 +205,8 @@ public abstract class ExternalStoreManager extends StoreManager implements Exter
 
     @Override
     public MailboxBlob getMailboxBlob(Mailbox mbox, int itemId, int revision, String locator) throws ServiceException {
-        return new ExternalMailboxBlob(mbox, itemId, revision, locator);
+        ExternalMailboxBlob mblob = new ExternalMailboxBlob(mbox, itemId, revision, locator);
+        return mblob.validateBlob() ? mblob : null;
     }
 
     @Override
