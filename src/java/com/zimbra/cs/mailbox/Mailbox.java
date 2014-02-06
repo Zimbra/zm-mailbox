@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -42,6 +42,7 @@ import javax.mail.internet.MimeMessage;
 
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Strings;
+import com.google.common.collect.Lists;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.Rfc822ValidationInputStream;
 import com.zimbra.common.service.ServiceException;
@@ -3149,6 +3150,22 @@ public class Mailbox {
         }
 
         return isVisible ? node : null;
+    }
+
+    public static boolean isCalendarFolder(Folder f) {
+        byte view = f.getDefaultView();
+        return (view == MailItem.TYPE_APPOINTMENT || view == MailItem.TYPE_TASK);
+    }
+
+    public synchronized List<Mountpoint> getCalendarMountpoints(OperationContext octxt, SortBy sort)
+    throws ServiceException {
+        List<Mountpoint> calFolders = Lists.newArrayList();
+        for (MailItem item : getItemList(octxt, MailItem.TYPE_MOUNTPOINT, -1, sort)) {
+            if (isCalendarFolder((Mountpoint) item)) {
+                calFolders.add((Mountpoint) item);
+            }
+        }
+        return calFolders;
     }
 
     public synchronized List<Folder> getCalendarFolders(OperationContext octxt, SortBy sort) throws ServiceException {

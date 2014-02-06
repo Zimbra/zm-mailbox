@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -45,6 +45,7 @@ import com.zimbra.cs.dav.DavProtocol;
 import com.zimbra.cs.dav.caldav.CalDavUtils;
 import com.zimbra.cs.fb.FreeBusy;
 import com.zimbra.cs.fb.FreeBusyQuery;
+import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -206,6 +207,7 @@ public class ScheduleOutbox extends Collection {
         }
 
         Element scheduleResponse = ctxt.getDavResponse().getTop(DavElements.E_SCHEDULE_RESPONSE);
+        validateRequest(isOrganizerMethod, originator, organizer, ctxt, req);
         for (String rcpt : rcptArray) {
             ZimbraLog.dav.debug("recipient email: "+rcpt);
             Element resp = scheduleResponse.addElement(DavElements.E_CALDAV_RESPONSE);
@@ -220,6 +222,46 @@ public class ScheduleOutbox extends Collection {
                 throw new DavException("unrecognized request: "+req.getTok(), HttpServletResponse.SC_BAD_REQUEST);
             }
         }
+    }
+
+    /**
+     * Check for illegal requests like trying to CANCEL a meeting when not the organizer or a delegate for
+     * the organizer
+     * e.g. Bug 85875 Mac OS X/10.8.5 Calendar sometimes sending CANCEL when ATTENDEE deletes an instance,
+     *      resulting in other attendees getting invalid CANCELs
+	 */
+    private void validateRequest(boolean isOrganizerMethod, String originator, String organizer,
+            DavContext ctxt, ZComponent req) throws ServiceException, DavException {
+        if ((!isOrganizerMethod) || (organizer != null && organizer.equals(originator))) {
+            return;
+        }
+        // If here, only the ORGANIZER or a delegate acting as the ORGANIZER should be able to do this
+        String originatorEmail = stripMailto(originator);
+        AccountAddressMatcher acctMatcher = new AccountAddressMatcher(ctxt.getAuthAccount());
+        if (!acctMatcher.matches(originatorEmail)) {
+            throw new DavException(String.format(
+                "invalid POST to scheduling outbox '%s'. originator '%s' is not authorized account or ORGANIZER",
+                ctxt.getRequest().getRequestURI(), originatorEmail), HttpServletResponse.SC_BAD_REQUEST);
+        }
+        String organizerEmail = stripMailto(organizer);
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(ctxt.getAuthAccount());
+        List<com.zimbra.cs.mailbox.Mountpoint> sharedCalendars =
+                    mbox.getCalendarMountpoints(ctxt.getOperationContext(), SortBy.NONE);
+        if (sharedCalendars != null) {
+            for (com.zimbra.cs.mailbox.Mountpoint sharedCalendar : sharedCalendars) {
+                Account acct = Provisioning.getInstance().get(AccountBy.id, sharedCalendar.getOwnerId());
+                if (acct != null) {
+                    acctMatcher = new AccountAddressMatcher(acct);
+                    if (acctMatcher.matches(organizerEmail)) {
+                        return;
+                    }
+                }
+            }
+        }
+        // We haven't found a shared calendar for the ORGANIZER that we are a delegate for.
+        throw new DavException(String.format(
+            "invalid POST to scheduling outbox '%s'. '%s' cannot act as ORGANIZER '%s'",
+            ctxt.getRequest().getRequestURI(), originatorEmail, organizerEmail), HttpServletResponse.SC_BAD_REQUEST);
     }
 
 	private void handleFreebusyRequest(DavContext ctxt, ZComponent vfreebusy, String originator, String rcpt, Element resp) throws DavException, ServiceException {
