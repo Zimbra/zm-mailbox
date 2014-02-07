@@ -297,6 +297,26 @@ public class UrlNamespace {
         return HttpUtil.urlEscape(PRINCIPALS_PATH);
     }
 
+    public static String getSchedulingInboxUrl(String authUser, String user) {
+        StringBuilder url = new StringBuilder();
+        // always use authenticated user's inbox.
+        url.append(DavServlet.DAV_PATH).append("/").append(authUser).append("/Inbox/");
+        if (!authUser.equals(user)) {
+            url.append(user).append("/");
+        }
+        return url.toString();
+    }
+
+    public static String getSchedulingOutboxUrl(String authUser, String user) {
+        StringBuilder url = new StringBuilder();
+        // always use authenticated user's outbox.
+        url.append(DavServlet.DAV_PATH).append("/").append(authUser).append("/Sent/");
+        if (!authUser.equals(user)) {
+            url.append(user).append("/");
+        }
+        return url.toString();
+    }
+
     public static String getResourceUrl(Account user, String path) throws ServiceException {
         return getAbsoluteUrl(user, DavServlet.DAV_PATH + "/" + user.getName() + path);
     }
@@ -611,7 +631,7 @@ public class UrlNamespace {
         Provisioning prov = Provisioning.getInstance();
         Account account = prov.get(AccountBy.name, user);
         if (account == null)
-            throw new DavException("no such accout "+user, HttpServletResponse.SC_NOT_FOUND, null);
+            throw new DavException("no such account "+user, HttpServletResponse.SC_NOT_FOUND, null);
 
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
         return mbox.getItemById(ctxt.getOperationContext(), id, MailItem.Type.UNKNOWN);

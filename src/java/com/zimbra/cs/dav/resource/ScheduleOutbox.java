@@ -144,14 +144,14 @@ public class ScheduleOutbox extends Collection {
         if (isVEventOrVTodo && delegationInfo.getOriginator() != null && ctxt.getAuthAccount() != null) {
             AccountAddressMatcher acctMatcher = new AccountAddressMatcher(ctxt.getAuthAccount());
             if (acctMatcher.matches(delegationInfo.getOriginatorEmail())) {
-                boolean changed = false;
                 if (isOrganizerMethod) {
                     if (organizer != null) {
                         String organizerEmail = CalDavUtils.stripMailto(organizer);
                         if (!organizerEmail.equalsIgnoreCase(delegationInfo.getOriginatorEmail()) &&
                             acctMatcher.matches(organizerEmail)) {
                             delegationInfo.setOriginator(organizer);
-                            changed = true;
+                            ZimbraLog.dav.debug("changing originator to %s to match address/alias used in ORGANIZER",
+                                    delegationInfo.getOriginator());
                         }
                     }
                 } else {
@@ -161,14 +161,11 @@ public class ScheduleOutbox extends Collection {
                             break;
                         } else if (acctMatcher.matches(atEmail)) {
                             delegationInfo.setOriginator(at);
-                            changed = true;
+                            ZimbraLog.dav.debug("changing originator to %s to match address/alias used in ATTENDEE",
+                                    delegationInfo.getOriginator());
                             break;
                         }
                     }
-                }
-                if (changed) {
-                    ZimbraLog.dav.debug("changing originator to %s to match address/alias used in ORGANIZER/ATTENDEE",
-                            delegationInfo.getOriginator());
                 }
             }
         }
@@ -212,7 +209,9 @@ public class ScheduleOutbox extends Collection {
                                     }
                                 }
                                 if (!isAttendee) {
-                                    ZimbraLog.dav.info("Ignoring non-attendee recipient " + rcpt + " of CANCEL request; likely a client bug");
+                                    ZimbraLog.dav.info(
+                                        "Ignoring non-attendee recipient '%s' of CANCEL request; likely a client bug",
+                                        rcpt);
                                     continue;
                                 }
                             }
@@ -241,12 +240,54 @@ public class ScheduleOutbox extends Collection {
                 if (isOrganizerMethod) {
                     adjustOrganizer(ctxt, vcalendar, req, delegationInfo);
                 }
+                validateRequest(isOrganizerMethod, delegationInfo, organizer, ctxt, req);
                 handleEventRequest(ctxt, vcalendar, req, delegationInfo, rcpt, resp);
                 break;
             default:
                 throw new DavException("unrecognized request: "+req.getTok(), HttpServletResponse.SC_BAD_REQUEST);
             }
         }
+    }
+
+    /**
+     * Check for illegal requests like trying to CANCEL a meeting when not the organizer or a delegate for
+     * the organizer
+     * e.g. Bug 85875 Mac OS X/10.8.5 Calendar sometimes sending CANCEL when ATTENDEE deletes an instance,
+     *      resulting in other attendees getting invalid CANCELs
+     */
+    private void validateRequest(boolean isOrganizerMethod, DelegationInfo delegationInfo, String organizer,
+            DavContext ctxt, ZComponent req) throws ServiceException, DavException {
+        if ((!isOrganizerMethod) || (organizer != null && organizer.equals(delegationInfo.getOriginator()))) {
+            return;
+        }
+        // If here, only the ORGANIZER or a delegate acting as the ORGANIZER should be able to do this
+        AccountAddressMatcher acctMatcher = new AccountAddressMatcher(ctxt.getAuthAccount());
+        if (!acctMatcher.matches(delegationInfo.getOriginatorEmail())) {
+            throw new DavException(String.format(
+                    "invalid POST to scheduling outbox '%s'. originator '%s' is not authorized account or ORGANIZER",
+                    ctxt.getRequest().getRequestURI(), delegationInfo.getOriginatorEmail()),
+                    HttpServletResponse.SC_BAD_REQUEST);
+        }
+        String organizerEmail = CalDavUtils.stripMailto(organizer);
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(ctxt.getAuthAccount());
+        List<com.zimbra.cs.mailbox.Mountpoint> sharedCalendars =
+                    mbox.getCalendarMountpoints(ctxt.getOperationContext(), SortBy.NONE);
+        if (sharedCalendars != null) {
+            for (com.zimbra.cs.mailbox.Mountpoint sharedCalendar : sharedCalendars) {
+                Account acct = Provisioning.getInstance().get(AccountBy.id, sharedCalendar.getOwnerId());
+                if (acct != null) {
+                    acctMatcher = new AccountAddressMatcher(acct);
+                    if (acctMatcher.matches(organizerEmail)) {
+                        return;
+                    }
+                }
+            }
+        }
+        // We haven't found a shared calendar for the ORGANIZER that we are a delegate for.
+        throw new DavException(String.format(
+                "invalid POST to scheduling outbox '%s'. '%s' cannot act as ORGANIZER '%s'",
+                ctxt.getRequest().getRequestURI(), delegationInfo.getOriginatorEmail(), organizerEmail),
+                HttpServletResponse.SC_BAD_REQUEST);
     }
 
     private void handleFreebusyRequest(DavContext ctxt, ZComponent vfreebusy, String originator, String rcpt, Element resp) throws DavException, ServiceException {
@@ -503,8 +544,10 @@ public class ScheduleOutbox extends Collection {
     }
 
     private class DelegationInfo {
+        /** The originator of this iTip request - who might be the organizer or an attendee */
         private String originator;
         private String originatorEmail;
+        /** The organizer of the matching calendar entry if appropriate */
         private String owner;
         private String ownerEmail;
         private String ownerCn;
