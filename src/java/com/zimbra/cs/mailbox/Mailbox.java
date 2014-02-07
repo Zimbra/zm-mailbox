@@ -7402,7 +7402,7 @@ public class Mailbox {
             } catch (ServiceException e) {
                 if (e.getCode().equals(MailServiceException.TOO_MANY_CONTACTS)) {
                     ZimbraLog.mailbox.warn("Aborting contact addition, " +
-                    		"Failed to auto-add contact addr=%s", addr, e);
+                            "Failed to auto-add contact addr=%s", addr, e);
                     return result;
                 }
                 ZimbraLog.mailbox.warn("Failed to auto-add contact addr=%s", addr, e);

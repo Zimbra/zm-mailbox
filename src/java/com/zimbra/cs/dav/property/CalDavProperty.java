@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -23,19 +23,19 @@ import java.util.Collections;
 import org.dom4j.Element;
 import org.dom4j.QName;
 
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.calendar.ICalTimeZone;
 import com.zimbra.common.calendar.ZCalendar;
 import com.zimbra.common.mime.MimeConstants;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
-import com.zimbra.cs.dav.property.ResourceProperty;
 import com.zimbra.cs.dav.resource.CalendarObject;
 import com.zimbra.cs.dav.resource.Principal;
+import com.zimbra.cs.dav.resource.UrlNamespace;
 import com.zimbra.cs.dav.service.DavServlet;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
@@ -203,7 +203,7 @@ public class CalDavProperty extends ResourceProperty {
     }
 
     private static class ScheduleInboxURL extends CalDavProperty {
-        private String mUser;
+        private final String mUser;
         public ScheduleInboxURL(String user) {
             super(DavElements.E_SCHEDULE_INBOX_URL);
             mUser = user;
@@ -217,16 +217,13 @@ public class CalDavProperty extends ResourceProperty {
                 authUser = Principal.getOwner(ctxt.getAuthAccount(), ctxt.getUri());
             } catch (ServiceException se) {
             }
-            String url = DavServlet.DAV_PATH + "/" + authUser + "/Inbox/";
-            if (!authUser.equals(mUser))
-                url += mUser + "/";
-            inboxUrl.add(createHref(url));
+            inboxUrl.add(createHref(UrlNamespace.getSchedulingInboxUrl(authUser, mUser)));
             return inboxUrl;
         }
     }
 
     private static class ScheduleOutboxURL extends CalDavProperty {
-        private String mUser;
+        private final String mUser;
         public ScheduleOutboxURL(String user) {
             super(DavElements.E_SCHEDULE_OUTBOX_URL);
             mUser = user;
@@ -240,11 +237,7 @@ public class CalDavProperty extends ResourceProperty {
                 authUser = Principal.getOwner(ctxt.getAuthAccount(), ctxt.getUri());
             } catch (ServiceException se) {
             }
-            // always use authenticated user's outbox.
-            String url = DavServlet.DAV_PATH + "/" + authUser + "/Sent/";
-            if (!authUser.equals(mUser))
-                url += mUser + "/";
-            outboxUrl.add(createHref(url));
+            outboxUrl.add(createHref(UrlNamespace.getSchedulingOutboxUrl(authUser, mUser)));
             return outboxUrl;
         }
     }
@@ -327,7 +320,7 @@ public class CalDavProperty extends ResourceProperty {
     }
 
     private static class CalendarTimezone extends CalDavProperty {
-        private Account account;
+        private final Account account;
         public CalendarTimezone(Account a) {
             super(DavElements.E_CALENDAR_TIMEZONE);
             account = a;
