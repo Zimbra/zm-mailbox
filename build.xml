@@ -2016,10 +2016,6 @@
     </java>
     <java classname="com.zimbra.cs.localconfig.LocalConfigCLI" fork="true" classpathref="class.path" failonerror="true">
       <sysproperty key="zimbra.config" value="${dist.dir}/conf/localconfig-2.xml"/>
-      <arg line="-e zmstat_log_directory=${zimbra.home.dir}/zmstat-2"/>
-    </java>
-    <java classname="com.zimbra.cs.localconfig.LocalConfigCLI" fork="true" classpathref="class.path" failonerror="true">
-      <sysproperty key="zimbra.config" value="${dist.dir}/conf/localconfig-2.xml"/>
       <arg line="-e debug_mock_multiserver_install=true"/>
     </java>
   </target>
