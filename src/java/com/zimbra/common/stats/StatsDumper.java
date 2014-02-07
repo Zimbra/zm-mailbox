@@ -34,7 +34,7 @@ public class StatsDumper
 implements Callable<Void> {
     
     public final static int SYSLOG_ELIDING_THRESHOLD = 800;
-    private static final File STATS_DIR = new File(LC.zmstat_log_directory.value());
+    private static final File STATS_DIR = new File("/opt/zimbra/zmstat");
     private static final ThreadGroup statsGroup = new ThreadGroup("ZimbraPerf Stats");
 
     private StatsDumperDataSource mDataSource;
