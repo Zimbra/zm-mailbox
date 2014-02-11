@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -18,8 +18,8 @@
  */
 package com.zimbra.cs.servlet;
 
-import java.io.InputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -41,6 +41,8 @@ import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.InputStreamRequestEntity;
 import org.apache.commons.httpclient.methods.PostMethod;
 
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
@@ -60,9 +62,6 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
-import com.zimbra.common.account.Key;
-import com.zimbra.common.account.Key.AccountBy;
-import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.service.AuthProvider;
@@ -82,15 +81,15 @@ public class ZimbraServlet extends HttpServlet {
     protected static final String WWW_AUTHENTICATE_HEADER = "WWW-Authenticate";
     public static final String QP_ZAUTHTOKEN = "zauthtoken";
 
-    protected String getRealmHeader(String realm)  { 
+    protected String getRealmHeader(String realm)  {
         if (realm == null)
             realm = "Zimbra";
-        return "BASIC realm=\"" + realm + "\""; 
+        return "BASIC realm=\"" + realm + "\"";
     }
-    
-    protected String getRealmHeader(HttpServletRequest req, Domain domain)  { 
+
+    protected String getRealmHeader(HttpServletRequest req, Domain domain)  {
         String realm = null;
-        
+
         if (domain == null) {
             // get domain by virtual host
             String host = HttpUtil.getVirtualHost(req);
@@ -103,13 +102,13 @@ public class ZimbraServlet extends HttpServlet {
                 }
             }
         }
-        
+
         if (domain != null)
             realm = domain.getBasicAuthRealm();
 
         return getRealmHeader(realm);
     }
-    
+
     protected static final String ZIMBRA_FAULT_CODE_HEADER    = "X-Zimbra-Fault-Code";
     protected static final String ZIMBRA_FAULT_MESSAGE_HEADER = "X-Zimbra-Fault-Message";
 
@@ -144,13 +143,13 @@ public class ZimbraServlet extends HttpServlet {
                     else if (port != 0)  // 0 is a legit value for those ports that are disabled
                 	allowedPorts.add(port);
                 }
-                
+
                 mAllowedPorts = new int[allowedPorts.size()];
                 for (int i=0; i<allowedPorts.size(); i++)
                     mAllowedPorts[i] = allowedPorts.get(i);
             }
-            
-            // Store reference to this servlet for accessor 
+
+            // Store reference to this servlet for accessor
             synchronized (sServlets) {
                 String name = getServletName();
                 if (sServlets.containsKey(name)) {
@@ -163,7 +162,7 @@ public class ZimbraServlet extends HttpServlet {
             Zimbra.halt("Unable to initialize servlet " + getServletName() + "; halting", t);
         }
     }
-    
+
     public static ZimbraServlet getServlet(String name) {
         synchronized (sServlets) {
             return sServlets.get(name);
@@ -227,11 +226,11 @@ public class ZimbraServlet extends HttpServlet {
     throws IOException {
         return getAuthTokenFromHttpReq(req, resp, true, doNotSendHttpError);
     }
-    
+
     public static AuthToken getAdminAuthTokenFromCookie(HttpServletRequest req) {
         return getAuthTokenFromHttpReq(req, true);
     }
-    
+
     public static AuthToken getAuthTokenFromHttpReq(HttpServletRequest req,
                                                     HttpServletResponse resp,
                                                     boolean isAdminReq,
@@ -264,7 +263,7 @@ public class ZimbraServlet extends HttpServlet {
             authToken = AuthProvider.getAuthToken(req, isAdminReq);
             if (authToken == null)
                 return null;
-            
+
             if (authToken.isExpired())
                 return null;
 
@@ -324,14 +323,14 @@ public class ZimbraServlet extends HttpServlet {
         Cookie[] cookies = state.getCookies();
         if (cookies == null)
             return false;
-        
+
         for (Cookie c: cookies) {
             if (c.getName().equals(ZimbraCookie.COOKIE_ZM_AUTH_TOKEN))
                 return true;
         }
         return false;
     }
-    
+
     public static void proxyServletRequest(HttpServletRequest req, HttpServletResponse resp, HttpMethod method, HttpState state)
     throws IOException, ServiceException {
         // create an HTTP client with the same cookies
@@ -382,7 +381,7 @@ public class ZimbraServlet extends HttpServlet {
         Header[] headers = method.getResponseHeaders();
         for (int i = 0; i < headers.length; i++) {
             String hname = headers[i].getName(), hlc = hname.toLowerCase();
-            if (hlc.startsWith("x-") || hlc.startsWith("content-") || hlc.startsWith("www-"))    
+            if (hlc.startsWith("x-") || hlc.startsWith("content-") || hlc.startsWith("www-"))
                 resp.addHeader(hname, headers[i].getValue());
         }
         InputStream responseStream = method.getResponseBodyAsStream();
@@ -404,7 +403,7 @@ public class ZimbraServlet extends HttpServlet {
         return false;
     }
 
-    public AuthToken cookieAuthRequest(HttpServletRequest req, HttpServletResponse resp) 
+    public AuthToken cookieAuthRequest(HttpServletRequest req, HttpServletResponse resp)
     throws IOException, ServiceException {
         AuthToken at = isAdminRequest(req) ? getAdminAuthTokenFromCookie(req, resp, true) : getAuthTokenFromCookie(req, resp, true);
         return at;
@@ -421,7 +420,8 @@ public class ZimbraServlet extends HttpServlet {
         // TODO: more liberal parsing of Authorization value...
         if (auth == null || !auth.startsWith("Basic ")) {
             if (sendChallenge) {
-                resp.addHeader(WWW_AUTHENTICATE_HEADER, getRealmHeader(req, null));            
+                resp.addHeader(WWW_AUTHENTICATE_HEADER, getRealmHeader(req, null));
+                ZimbraLog.dav.debug("calling sendError [%s] 'must authenticate'", HttpServletResponse.SC_UNAUTHORIZED);
                 resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, "must authenticate");
             }
             return null;
@@ -430,8 +430,10 @@ public class ZimbraServlet extends HttpServlet {
         // 6 comes from "Basic ".length();
         String userPass = new String(Base64.decodeBase64(auth.substring(6).getBytes()), "UTF-8");
 
-        int loc = userPass.indexOf(":"); 
+        int loc = userPass.indexOf(":");
         if (loc == -1) {
+            ZimbraLog.dav.debug("calling sendError [%s] 'invalid basic auth credentials'",
+                    HttpServletResponse.SC_BAD_REQUEST);
             resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "invalid basic auth credentials");
             return null;
         }
@@ -449,12 +451,16 @@ public class ZimbraServlet extends HttpServlet {
                 if (d != null) user += "@" + d.getName();
             }
         }
+        ZimbraLog.dav.debug("Auth user passed in '%s'.  User being used '%s'", userPassedIn, user);
 
         Account acct = prov.get(AccountBy.name, user);
         if (acct == null) {
             if (sendChallenge) {
                 resp.addHeader(WWW_AUTHENTICATE_HEADER, getRealmHeader(req, null));
+                ZimbraLog.dav.debug("calling sendError [%s] 'invalid username/password'",
+                        HttpServletResponse.SC_UNAUTHORIZED);
                 resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, "invalid username/password");
+                return null;  // Makes no sense to return a guest account if we've already done sendError
             }
             return new GuestAccount(user, pass);
         }
@@ -468,6 +474,8 @@ public class ZimbraServlet extends HttpServlet {
         } catch (ServiceException se) {
             if (sendChallenge) {
                 resp.addHeader(WWW_AUTHENTICATE_HEADER, getRealmHeader(req, prov.getDomain(acct)));
+                ZimbraLog.dav.debug("calling sendError [%s] 'invalid username/password'",
+                        HttpServletResponse.SC_UNAUTHORIZED);
                 resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, "invalid username/password");
             }
             return null;
@@ -475,11 +483,10 @@ public class ZimbraServlet extends HttpServlet {
         return acct;
     }
 
-
     public static String getAccountPath(Account acct) {
         return "/" + acct.getName();
     }
-    
+
     public static String getServiceUrl(Account acct, String path) throws ServiceException {
         Provisioning prov = Provisioning.getInstance();
         Server server = prov.getServer(acct);
@@ -516,7 +523,7 @@ public class ZimbraServlet extends HttpServlet {
         RemoteIP remoteIp = new RemoteIP(req, getTrustedIPs());
         return remoteIp.getOrigIP();
     }
-    
+
     public static String getClientIp(HttpServletRequest req) {
         RemoteIP remoteIp = new RemoteIP(req, getTrustedIPs());
         return remoteIp.getClientIP();
@@ -536,7 +543,7 @@ public class ZimbraServlet extends HttpServlet {
         }
         return new RemoteIP.TrustedIPs(null);
     }
-    
+
     public static void addUAToLoggingContext(HttpServletRequest req) {
         ZimbraLog.addUserAgentToContext(req.getHeader("User-Agent"));
     }

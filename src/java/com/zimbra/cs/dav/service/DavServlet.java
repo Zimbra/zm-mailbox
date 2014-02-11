@@ -212,14 +212,27 @@ public class DavServlet extends ZimbraServlet {
 
     private void sendError(HttpServletResponse resp, int statusCode, String logMsg, Exception e, Level level)
     throws IOException {
-        if (ZimbraLog.dav.isEnabledFor(level)) {
-            if (e == null) {
-                ZimbraLog.dav.log(level, logMsg + ".  Sending HTTP Error - StatusCode " + statusCode);
-            } else {
-                ZimbraLog.dav.log(level, logMsg + ".  Sending HTTP Error - StatusCode " + statusCode, e);
+        try {
+            resp.sendError(statusCode);
+            if (ZimbraLog.dav.isEnabledFor(level)) {
+                if (e == null) {
+                    ZimbraLog.dav.log(level, "%s.  Sending HTTP Error - StatusCode %s", logMsg, statusCode);
+                } else {
+                    ZimbraLog.dav.log(level, "%s.  Sending HTTP Error - StatusCode %s", logMsg, statusCode, e);
+                }
             }
+        } catch (Exception except) {
+            if (e == null) {
+                ZimbraLog.dav.log(level,
+                        "2nd call to sendError will be ignored %s. StatusCode=%s newException=%s:%s",
+                        logMsg, statusCode, except.getClass().getName(), except.getMessage());
+            } else {
+                ZimbraLog.dav.log(level,
+                        "2nd call to sendError will be ignored %s. StatusCode=%s 1st exception=%s newException=%s:%s",
+                        logMsg, statusCode, e.getMessage(), except.getClass().getName(), except.getMessage());
+            }
+            throw except;
         }
-        resp.sendError(statusCode);
     }
 
     private void sendError(HttpServletResponse resp, int statusCode, String logMsg, Exception e) throws IOException {
@@ -233,6 +246,7 @@ public class DavServlet extends ZimbraServlet {
         ZimbraLog.addUserAgentToContext(req.getHeader(DavProtocol.HEADER_USER_AGENT));
 
         RequestType rtype = getAllowedRequestType(req);
+        ZimbraLog.dav.debug("Allowable request types %s", rtype);
 
         if (rtype == RequestType.none) {
             sendError(resp, HttpServletResponse.SC_NOT_ACCEPTABLE, "Not an allowed request type", null, Level.debug);
