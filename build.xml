@@ -578,6 +578,7 @@
           <include name="asm-*.jar"/>
           <include name="jsr*.jar"/>
           <include name="cxf-*.jar"/>
+          <include name="javax.ws.rs-api-*.jar"/>
           <include name="httpasyncclient-*.jar"/>
           <include name="httpclient-*.jar"/>
           <include name="httpcore-*.jar"/>
