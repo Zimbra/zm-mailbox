@@ -73,7 +73,7 @@ public class W3cDomUtil {
                         // However, property does not appear to be recognized on Java 6
                         dbf.setAttribute("http://apache.org/xml/properties/entity-expansion-limit", new Integer("100"));
                     } catch (IllegalArgumentException iae) {
-                        ZimbraLog.misc.debug("Setting entity expansion limit not supported", iae);
+                        ZimbraLog.misc.debug("Setting entity expansion limit not supported %s", iae.getMessage());
                     }
                     try {
                         dbf.setAttribute("http://apache.org/xml/features/disallow-doctype-decl", true);
