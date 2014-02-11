@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -27,13 +27,15 @@ import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
 import org.dom4j.QName;
 
+import com.zimbra.client.ZFolder;
+import com.zimbra.client.ZMailbox;
+import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
@@ -42,15 +44,13 @@ import com.zimbra.cs.dav.property.CalDavProperty;
 import com.zimbra.cs.dav.property.CardDavProperty;
 import com.zimbra.cs.dav.property.ResourceProperty;
 import com.zimbra.cs.mailbox.ACL;
+import com.zimbra.cs.mailbox.ACL.Grant;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Mountpoint;
-import com.zimbra.cs.mailbox.ACL.Grant;
 import com.zimbra.cs.service.AuthProvider;
-import com.zimbra.client.ZFolder;
-import com.zimbra.client.ZMailbox;
 
 public class User extends Principal {
 
@@ -75,7 +75,11 @@ public class User extends Principal {
             addrs.add(addr);
         for (String alias : account.getMailAlias())
             addrs.add(alias);
-        addrs.add(url);
+        String principalAddr = UrlNamespace.getPrincipalUrl(account);
+        if (principalAddr.endsWith("/")) {
+            principalAddr = principalAddr.substring(0, principalAddr.length() - 1);
+        }
+        addrs.add(principalAddr);
         addProperty(CalDavProperty.getCalendarUserAddressSet(addrs));
         addProperty(CardDavProperty.getAddressbookHomeSet(user));
         setProperty(DavElements.E_HREF, url);
@@ -273,7 +277,7 @@ public class User extends Principal {
             mReadOnly = readOnly;
             setProtected(true);
         }
-        private boolean mReadOnly;
+        private final boolean mReadOnly;
         @Override
         public Element toElement(DavContext ctxt, Element parent, boolean nameOnly) {
             Element group = super.toElement(ctxt, parent, nameOnly);
