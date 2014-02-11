@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -366,9 +366,9 @@ public final class HttpUtilTest {
         EasyMock.replay(mocks);
 
         Assert.assertEquals("attachement; filename=\"ascii.txt\"", HttpUtil.createContentDisposition(request,  "attachement", asciiFilename));
-        Assert.assertEquals("attachement; filename=space%22%20space.txt", HttpUtil.createContentDisposition(request,  "attachement", asciiQuote));
-        Assert.assertEquals("attachement; filename=Wikip%C3%A9dia.txt", HttpUtil.createContentDisposition(request,  "attachement", iso8859Filename));
-        Assert.assertEquals("attachement; filename=%ED%95%9C%EA%B5%AD%EC%96%B4%2520%EC%88%98%EC%8B%A0%EC%9E%90.pdf", HttpUtil.createContentDisposition(request,  "attachement", unicodeFilename));
+        Assert.assertEquals("attachement; filename*=UTF-8''space%22%20space.txt", HttpUtil.createContentDisposition(request,  "attachement", asciiQuote));
+        Assert.assertEquals("attachement; filename*=UTF-8''Wikip%C3%A9dia.txt", HttpUtil.createContentDisposition(request,  "attachement", iso8859Filename));
+        Assert.assertEquals("attachement; filename*=UTF-8''%ED%95%9C%EA%B5%AD%EC%96%B4%2520%EC%88%98%EC%8B%A0%EC%9E%90.pdf", HttpUtil.createContentDisposition(request,  "attachement", unicodeFilename));
 
 
     }
@@ -543,9 +543,9 @@ public final class HttpUtilTest {
         EasyMock.replay(mocks);
 
         Assert.assertEquals("attachement; filename=\"ascii.txt\"", HttpUtil.createContentDisposition(request,  "attachement", asciiFilename));
-        Assert.assertEquals("attachement; filename=\"space\" space.txt\"", HttpUtil.createContentDisposition(request,  "attachement", asciiQuote));
-        Assert.assertEquals("attachement; filename=\"=?utf-8?B?V2lraXDDqWRpYS50eHQ=?=\"", HttpUtil.createContentDisposition(request,  "attachement", iso8859Filename));
-        Assert.assertEquals("attachement; filename=\"=?utf-8?B?7ZWc6rWt7Ja0JTIw7IiY7Iug7J6QLnBkZg==?=\"", HttpUtil.createContentDisposition(request,  "attachement", unicodeFilename));
+        Assert.assertEquals("attachement; filename*=UTF-8''space%22%20space.txt", HttpUtil.createContentDisposition(request,  "attachement", asciiQuote));
+        Assert.assertEquals("attachement; filename*=UTF-8''Wikip%C3%A9dia.txt", HttpUtil.createContentDisposition(request,  "attachement", iso8859Filename));
+        Assert.assertEquals("attachement; filename*=UTF-8''%ED%95%9C%EA%B5%AD%EC%96%B4%2520%EC%88%98%EC%8B%A0%EC%9E%90.pdf", HttpUtil.createContentDisposition(request,  "attachement", unicodeFilename));
 
     }
 }

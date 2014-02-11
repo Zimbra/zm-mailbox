@@ -39,6 +39,8 @@ public final class SyncAdminConstants {
     public static final String E_SUSPEND_DEVICE_RESPONSE = "SuspendDeviceResponse";
     public static final String E_RESUME_DEVICE_REQUEST = "ResumeDeviceRequest";
     public static final String E_RESUME_DEVICE_RESPONSE = "ResumeDeviceResponse";
+    public static final String E_GET_SYNC_STATE_REQUEST = "GetSyncStateRequest";
+    public static final String E_GET_SYNC_STATE_RESPONSE = "GetSyncStateResponse";
 
     public static final QName GET_DEVICES_COUNT_REQUEST = QName.get(E_GET_DEVICES_COUNT_REQUEST, NAMESPACE);
     public static final QName GET_DEVICES_COUNT_RESPONSE = QName.get(E_GET_DEVICES_COUNT_RESPONSE, NAMESPACE);
@@ -58,6 +60,8 @@ public final class SyncAdminConstants {
     public static final QName SUSPEND_DEVICE_RESPONSE = QName.get(E_SUSPEND_DEVICE_RESPONSE, NAMESPACE);
     public static final QName RESUME_DEVICE_REQUEST = QName.get(E_RESUME_DEVICE_REQUEST, NAMESPACE);
     public static final QName RESUME_DEVICE_RESPONSE = QName.get(E_RESUME_DEVICE_RESPONSE, NAMESPACE);
+    public static final QName GET_SYNC_STATE_REQUEST = QName.get(E_GET_SYNC_STATE_REQUEST, NAMESPACE);
+    public static final QName GET_SYNC_STATE_RESPONSE = QName.get(E_GET_SYNC_STATE_RESPONSE, NAMESPACE);
 
     public static final String E_LAST_USED_DATE = "lastUsedDate";
 
