@@ -431,9 +431,12 @@ public class GetCalendarItemSummaries extends CalendarRequest {
 
                 calItemElem.addAttribute(MailConstants.A_CAL_ISORG, defaultInvite.isOrganizer());
                 calItemElem.addAttribute(MailConstants.A_ID, ifmt.formatItemId(calItem));
-                calItemElem.addAttribute(MailConstants.A_CAL_INV_ID, ifmt.formatItemId(calItem, defaultInvite.getMailItemId()));
+                calItemElem.addAttribute(MailConstants.A_CAL_INV_ID,
+                        ifmt.formatItemId(calItem, defaultInvite.getMailItemId()));
                 calItemElem.addAttribute(MailConstants.A_CAL_COMPONENT_NUM, defaultInvite.getComponentNum());
-                calItemElem.addAttribute(MailConstants.A_FOLDER, ifmt.formatItemId(calItem.getFolderId()));
+                calItemElem.addAttribute(MailConstants.A_FOLDER,
+                        ifmt.formatItemId(new ItemId(calItem.getMailbox().getAccountId(), calItem.getFolderId())));
+
                 calItemElem.addAttribute(MailConstants.A_CAL_STATUS, defaultInvite.getStatus());
                 calItemElem.addAttribute(MailConstants.A_CAL_CLASS, defaultInvite.getClassProp());
                 if (!defaultInvite.isTodo())

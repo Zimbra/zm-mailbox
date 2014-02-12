@@ -270,7 +270,7 @@ public class Search extends MailDocumentHandler  {
                     Map.Entry<String, List<Integer>> acctEntry = acctIter.next();
                     String acctId = acctEntry.getKey();
                     List<Integer> folderIds = acctEntry.getValue();
-                    ItemIdFormatter ifmt = new ItemIdFormatter(authAcct.getId(), acctId, false);
+                    ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
                     // for each folder
                     for (Iterator<Integer> iterFolderId = folderIds.iterator(); iterFolderId.hasNext(); ) {
                         int folderId = iterFolderId.next();
@@ -286,12 +286,12 @@ public class Search extends MailDocumentHandler  {
                             String ecode = e.getCode();
                             if (ecode.equals(ServiceException.PERM_DENIED)) {
                                 // share permission was revoked
-                                ZimbraLog.calendar.warn(
-                                        "Ignoring permission error during calendar search of folder " + ifmt.formatItemId(folderId), e);
+                                ZimbraLog.calendar.warn("Ignoring permission error during calendar search of folder %s",
+                                        ifmt.formatItemId(folderId), e);
                             } else if (ecode.equals(MailServiceException.NO_SUCH_FOLDER)) {
                                 // shared calendar folder was deleted by the owner
-                                ZimbraLog.calendar.warn(
-                                        "Ignoring deleted calendar folder " + ifmt.formatItemId(folderId));
+                                ZimbraLog.calendar.warn("Ignoring deleted calendar folder %s",
+                                        ifmt.formatItemId(folderId));
                             } else {
                                 throw e;
                             }
