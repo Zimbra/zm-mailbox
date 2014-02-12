@@ -45,7 +45,7 @@ public class ConversationMsgHitInfo {
      * @zm-api-field-description Folder ID
      */
     @XmlAttribute(name=MailConstants.A_FOLDER /* l */, required=false)
-    private Integer folderId;
+    private String folderId;
 
     /**
      * @zm-api-field-tag auto-send-time
@@ -67,20 +67,20 @@ public class ConversationMsgHitInfo {
         this.id = id;
     }
 
-    public static ConversationMsgHitInfo fromIdAndFolderId(String id, Integer fId) {
+    public static ConversationMsgHitInfo fromIdAndFolderId(String id, String fId) {
         ConversationMsgHitInfo hit = new ConversationMsgHitInfo(id);
         hit.setFolderId(fId);
         return hit;
     }
 
     public void setSize(Long size) { this.size = size; }
-    public void setFolderId(Integer folderId) { this.folderId = folderId; }
+    public void setFolderId(String folderId) { this.folderId = folderId; }
     public void setAutoSendTime(Long autoSendTime) {
         this.autoSendTime = autoSendTime;
     }
     public String getId() { return id; }
     public Long getSize() { return size; }
-    public Integer getFolderId() { return folderId; }
+    public String getFolderId() { return folderId; }
     public Long getAutoSendTime() { return autoSendTime; }
 
     /** Done like this rather than using JAXB for performance reasons */
