@@ -3483,6 +3483,17 @@ public class ZMailbox implements ToZJSONObject {
         invoke(newRequestElement(MailConstants.NO_OP_REQUEST));
     }
 
+    /**
+     * A blocking NoOpRequest which waits up to the specified timeout
+     *
+     */
+    public void noOp(long timeout) throws ServiceException {
+        Element e = newRequestElement(MailConstants.NO_OP_REQUEST);
+        e.addAttribute(MailConstants.A_WAIT, true);
+        e.addAttribute(MailConstants.A_TIMEOUT, timeout);
+        invoke(e);
+    }
+
     public enum OwnerBy {
         BY_ID, BY_NAME;
 
