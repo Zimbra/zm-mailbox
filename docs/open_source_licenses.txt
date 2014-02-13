@@ -85,7 +85,7 @@ SECTION 1: BSD-STYLE, MIT-STYLE, OR SIMILAR STYLE LICENSES
    >>> perl-socket6-0.23
    >>> perl-try-tiny-0.11
    >>> php-5.4.17
-   >>> sendmail-8.14.5
+   >>> sendmail-8.14.8
    >>> slf4j-1.6.4
    >>> soundmanager2-2.0b
    >>> spymemcached-2.6
@@ -137,7 +137,7 @@ SECTION 2: Apache License, V2.0
    >>> org.openid4java-0.9.5
    >>> selenium-2.23.1
    >>> smack-3.2.1
-   >>> spamassassin-3.4.0-20130401
+   >>> spamassassin-3.4.0
    >>> sqlite-xerial-jdbc-3.7.6.2
    >>> testng-5.12.1
    >>> xerces-c-3.1.1
@@ -15862,7 +15862,7 @@ May you find forgiveness for yourself and forgive others.
 May you share freely, never taking more than you give.
 
 
->>> sendmail-8.14.5
+>>> sendmail-8.14.8
 
 SENDMAIL LICENSE
 
@@ -23232,7 +23232,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 
 
->>> spamassassin-3.4.0-20130401
+>>> spamassassin-3.4.0
 
 License: Apache 2.0
 
