@@ -703,8 +703,8 @@ public final class LC {
     public static final KnownKey imap_thread_keep_alive_time = KnownKey.newKey(60);
     public static final KnownKey imap_max_idle_time = KnownKey.newKey(60);
     public static final KnownKey imap_authenticated_max_idle_time = KnownKey.newKey(1800);
-    public static final KnownKey imap_throttle_ip_limit = KnownKey.newKey(250);
-    public static final KnownKey imap_throttle_acct_limit = KnownKey.newKey(250);
+    public static final KnownKey imap_throttle_ip_limit = KnownKey.newKey(5000);
+    public static final KnownKey imap_throttle_acct_limit = KnownKey.newKey(5000);
     public static final KnownKey imap_throttle_command_limit = KnownKey.newKey(25);
     public static final KnownKey imap_throttle_fetch = KnownKey.newKey(true);
     public static final KnownKey data_source_imap_reuse_connections = KnownKey.newKey(false);
@@ -712,8 +712,8 @@ public final class LC {
     public static final KnownKey pop3_write_timeout = KnownKey.newKey(10);
     public static final KnownKey pop3_thread_keep_alive_time = KnownKey.newKey(60);
     public static final KnownKey pop3_max_idle_time = KnownKey.newKey(60);
-    public static final KnownKey pop3_throttle_ip_limit = KnownKey.newKey(200);
-    public static final KnownKey pop3_throttle_acct_limit = KnownKey.newKey(200);
+    public static final KnownKey pop3_throttle_ip_limit = KnownKey.newKey(5000);
+    public static final KnownKey pop3_throttle_acct_limit = KnownKey.newKey(5000);
     public static final KnownKey pop3_max_consecutive_error = KnownKey.newKey(5);
 
     public static final KnownKey lmtp_throttle_ip_limit = KnownKey.newKey(0);
@@ -1220,7 +1220,7 @@ public final class LC {
         KnownKey.newKey("^(https?://[\\w-].*|mailto:.*|notes:.*|smb:.*|ftp:.*|gopher:.*|news:.*|tel:.*|callto:.*|webcal:.*|feed:.*:|file:.*|#.+)");
     public static final KnownKey defang_valid_img_file = KnownKey.newKey("\\.(jpg|jpeg|png|gif)((\\?)?)");
     public static final KnownKey defang_valid_int_img = KnownKey.newKey("^data:image/|^cid:");
-    
+
     public static final KnownKey defang_valid_convertd_file = KnownKey.newKey("^index\\..*\\..*\\.(jpg|jpeg|png|gif)$");
     public static final KnownKey defang_comment = KnownKey.newKey("/\\*.*?\\*/");
     public static final KnownKey defang_av_js_entity = KnownKey.newKey("&\\{[^}]*\\}");
