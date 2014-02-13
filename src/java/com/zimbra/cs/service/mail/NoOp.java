@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -28,8 +28,8 @@ import org.eclipse.jetty.continuation.ContinuationSupport;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.soap.SoapServlet;
@@ -37,24 +37,24 @@ import com.zimbra.soap.ZimbraSoapContext;
 
 /**
  * Do nothing. The main intent of this Soap call is for the client
- * to fetch new notifications (which are automatically added onto the empty 
- * response). 
- * 
+ * to fetch new notifications (which are automatically added onto the empty
+ * response).
+ *
  * The caller may set wait=1 for this request in which case the request will
  * block until there are new notifications.
  */
 public class NoOp extends MailDocumentHandler  {
-    
+
     private static final long DEFAULT_TIMEOUT;
     private static final long MIN_TIMEOUT;
     private static final long MAX_TIMEOUT;
-    
+
     static {
         DEFAULT_TIMEOUT = LC.zimbra_noop_default_timeout.longValue() * 1000;
         MIN_TIMEOUT = LC.zimbra_noop_min_timeout.longValue() * 1000;
         MAX_TIMEOUT = LC.zimbra_noop_max_timeout.longValue() * 1000;
     }
-    
+
     private static long parseTimeout(Element request) throws ServiceException {
         long timeout = request.getAttributeLong(MailConstants.A_TIMEOUT, DEFAULT_TIMEOUT);
         if (timeout < MIN_TIMEOUT)
@@ -63,30 +63,31 @@ public class NoOp extends MailDocumentHandler  {
             timeout = MAX_TIMEOUT;
         return timeout;
     }
-    
+
     @Override
     public void preProxy(Element request, Map<String, Object> context) throws ServiceException {
         setProxyTimeout(parseTimeout(request) + 10 * Constants.MILLIS_PER_SECOND);
         super.preProxy(request, context);
     }
-    
-    ConcurrentHashMap<String /*AccountId*/, ZimbraSoapContext> sBlockedNops = 
+
+    ConcurrentHashMap<String /*AccountId*/, ZimbraSoapContext> sBlockedNops =
         new ConcurrentHashMap<String /*AccountId*/, ZimbraSoapContext>(5000, 0.75f, 50);
 
-	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
+	@Override
+    public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 	    ZimbraSoapContext zsc = getZimbraSoapContext(context);
         boolean wait = request.getAttributeBool(MailConstants.A_WAIT, false);
         boolean includeDelegates = request.getAttributeBool(MailConstants.A_DELEGATE, true);
         HttpServletRequest servletRequest = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
-        
+
         boolean enforceLimit = request.getAttributeBool(MailConstants.A_LIMIT_TO_ONE_BLOCKED, false);
         boolean blockingUnsupported = false;
-        
+
         // See bug 16494 - if a session is new, we should return from the NoOp immediately so the client
-        // gets the <refresh> block 
+        // gets the <refresh> block
         if (zsc.hasCreatedSession())
             wait = false;
-        
+
         if (wait) {
             if (!zsc.hasSession()) {
                 throw ServiceException.INVALID_REQUEST("Cannot execute a NoOpRequest with wait=\"1\" without a session."+
@@ -104,10 +105,10 @@ public class NoOp extends MailDocumentHandler  {
                             otherContext.signalNotification(true);
                         }
                     }
-                    
+
                     synchronized (zsc) {
                         if (zsc.waitingForNotifications()) {
-                            //assert (!(continuation instanceof WaitingContinuation) || ((WaitingContinuation) continuation).getMutex() == zsc); 
+                            //assert (!(continuation instanceof WaitingContinuation) || ((WaitingContinuation) continuation).getMutex() == zsc);
                             long timeout = parseTimeout(request);
                             if (ZimbraLog.soap.isTraceEnabled())
                                 ZimbraLog.soap.trace("Suspending <NoOpRequest> for %dms", timeout);
@@ -141,7 +142,7 @@ public class NoOp extends MailDocumentHandler  {
         if (blockingUnsupported) {
             toRet.addAttribute(MailConstants.A_WAIT_DISALLOWED, true);
         }
-        
+
         return toRet;
 	}
 }

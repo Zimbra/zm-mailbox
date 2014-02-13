@@ -33,6 +33,7 @@ import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.soap.SoapTransport;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
@@ -46,6 +47,7 @@ import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.acl.AclPushSerializer;
 import com.zimbra.cs.service.AuthProvider;
+import com.zimbra.cs.servlet.continuation.ResumeContinuationListener;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.session.SoapSession;
@@ -136,7 +138,7 @@ public final class ZimbraSoapContext {
     private boolean mUnqualifiedItemIds;
     private boolean mWaitForNotifications;
     private boolean mCanceledWaitForNotifications = false;
-    private Continuation mContinuation;  // used for blocking requests
+    private ResumeContinuationListener continuationResume;  // used for blocking requests
 
     private ProxyTarget mProxyTarget;
     private boolean mIsProxyRequest;
@@ -692,7 +694,7 @@ public final class ZimbraSoapContext {
 
     public boolean beginWaitForNotifications(Continuation continuation, boolean includeDelegates) throws ServiceException {
         mWaitForNotifications = true;
-        mContinuation = continuation;
+        continuationResume = new ResumeContinuationListener(continuation);
 
         Session session = SessionCache.lookup(mSessionInfo.sessionId, mAuthTokenAccountId);
         if (!(session instanceof SoapSession))
@@ -712,9 +714,7 @@ public final class ZimbraSoapContext {
     synchronized public void signalNotification(boolean canceled) {
         mWaitForNotifications = false;
         mCanceledWaitForNotifications = canceled;
-        if (mContinuation.isSuspended()) {
-            mContinuation.resume();
-        }
+        continuationResume.resumeIfSuspended();
     }
 
     synchronized public boolean isCanceledWaitForNotifications() {
