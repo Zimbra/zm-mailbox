@@ -412,7 +412,7 @@ public final class NativeFormatter extends Formatter {
             String charset = Mime.getCharset(contentType);
             resp.setCharacterEncoding(Strings.isNullOrEmpty(charset) ? Charsets.UTF_8.name() : charset);
             if (!content.isEmpty()) {
-                resp.setContentLength(content.length());
+                resp.setContentLength(content.getBytes().length);
             }
             resp.getWriter().write(content);
         } else {
