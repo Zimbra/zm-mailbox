@@ -186,6 +186,10 @@ public final class MailboxIndex {
         return search(SoapProtocol.Soap12, octxt, params);
     }
 
+    public ZimbraQueryResults search(OperationContext octxt, SearchParams params) throws ServiceException {
+    	return search(SoapProtocol.Soap12, octxt, params);
+    }
+    
     public ZimbraQueryResults search(OperationContext octxt, String queryString, Set<MailItem.Type> types,
             SortBy sortBy, int chunkSize) throws ServiceException {
         return search(octxt, queryString, types, sortBy, chunkSize, false);

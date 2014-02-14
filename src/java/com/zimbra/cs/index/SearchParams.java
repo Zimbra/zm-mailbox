@@ -58,8 +58,11 @@ import com.zimbra.soap.type.ZmBoolean;
  */
 public final class SearchParams implements Cloneable {
 
+	private static final int DEFAULT_LIMIT = 10; // Default limit per query
     private static final int MAX_OFFSET = 10000000; // 10M
+    private static final int MAX_PARSABLE_LIMIT = 1000; // 1K
     private static final int MAX_LIMIT = 10000000; // 10M
+    
     private final static Pattern LOCALE_PATTERN = Pattern.compile("([a-zA-Z]{2})(?:[-_]([a-zA-Z]{2})([-_](.+))?)?");
 
     private ZimbraSoapContext requestContext;
@@ -771,9 +774,9 @@ public final class SearchParams implements Cloneable {
 
     private static int parseLimit(Integer limit) throws ServiceException {
         if ((null == limit) || (limit <= 0)) {
-            return 10;
-        } else if (limit > 1000) {
-            return 1000;
+            return DEFAULT_LIMIT;
+        } else if (limit > MAX_PARSABLE_LIMIT) {
+            return MAX_PARSABLE_LIMIT;
         }
         return limit;
     }
