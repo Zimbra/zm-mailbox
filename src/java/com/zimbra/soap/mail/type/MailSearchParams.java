@@ -163,7 +163,23 @@ public class MailSearchParams implements SearchParameters {
      * <br />
      * if fetch="{item-id}", only the message with the given {item-id} is expanded inline
      * <br />
-     * if fetch="all", all hits are expanded inline
+     * if fetch="{item-id-1,item-id-2,...,item-id-n}", messages with ids in the comma-separated list will be expanded
+     * <br />
+     * if fetch="all", all messages are expanded inline
+     * <br />
+     * if fetch="!", only the first message in the conversation will be expanded, whether it's a hit or not
+     * <br />
+     * if fetch="u" (or fetch="unread"), all unread hits are expanded
+     * <br />
+     * if fetch="u1" (or fetch="unread-first"), if there are any unread hits, they are expanded, otherwise the first
+     * hit is expanded.
+     * <br />
+     * if fetch="u1!", if there are any unread hits, they are expanded, otherwise the first hit and the first message
+     * are expanded (those may be the same)
+     * <br />
+     * if fetch="hits", all hits are expanded
+     * <br />
+     * if fetch="hits!", all hits are expanded if there are any, otherwise the first message is expanded
      * <br />
      * + if html="1" is also specified, inlined hits will return HTML parts if available
      * <br />
