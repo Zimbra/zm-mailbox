@@ -1264,7 +1264,7 @@ public class LdapProvisioning extends LdapProv {
             if (acct == null) {
                 throw ServiceException.FAILURE(
                         "unable to get account after creating LDAP account entry: " +
-                        emailAddress + ", check ldap log for possible BDB deadlock", null);
+                        emailAddress + ", check ldap log for possible error", null);
             }
 
             AttributeManager.getInstance().postModify(acctAttrs, acct, callbackContext);
