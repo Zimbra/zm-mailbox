@@ -609,7 +609,27 @@
     <desc>generate CSR on the target server</desc>
 </right>
 
+<!-- 
+========================================================
+                    alwaysOnCluster rights
+========================================================
+-->   
 
+<right name="getAlwaysOnCluster" type="getAttrs" targetType="alwaysoncluster">
+  <desc>get all alwaysOnCluster attributes</desc>
+</right>
+
+<right name="modifyAlwaysOnCluster" type="setAttrs" targetType="alwaysoncluster">
+  <desc>set all alwaysOnCluster attributes</desc>
+</right>
+
+<right name="listAlwaysOnCluster" type="preset" targetType="alwaysoncluster">
+  <desc>see alwaysOnCluster in GetAllAlwaysOnClusters</desc>
+</right>
+
+<right name="deleteAlwaysOnCluster" type="preset" targetType="alwaysoncluster">
+  <desc>delete alwaysOnCluster</desc>
+</right>
     
 <!-- 
 ========================================================
@@ -696,6 +716,10 @@
 
 <right name="createServer" type="preset" targetType="global">
   <desc>create server</desc>
+</right>
+
+<right name="createAlwaysOnCluster" type="preset" targetType="global">
+  <desc>create alwaysOnCluster</desc>
 </right>
 
 <right name="createUCService" type="preset" targetType="global">
