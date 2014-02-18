@@ -15,8 +15,10 @@
 
 package com.zimbra.cs.index;
 
+import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -62,7 +64,7 @@ public final class SearchParams implements Cloneable {
     private static final int MAX_OFFSET = 10000000; // 10M
     private static final int MAX_PARSABLE_LIMIT = 1000; // 1K
     private static final int MAX_LIMIT = 10000000; // 10M
-    
+
     private final static Pattern LOCALE_PATTERN = Pattern.compile("([a-zA-Z]{2})(?:[-_]([a-zA-Z]{2})([-_](.+))?)?");
 
     private ZimbraSoapContext requestContext;
@@ -852,6 +854,29 @@ public final class SearchParams implements Cloneable {
          */
         public static final ExpandResults ALL = new ExpandResults("all");
 
+        /**
+         * For searchConv: expand only the first message in the conversation
+         */
+        public static final ExpandResults FIRST_MSG = new ExpandResults("first-msg");
+
+        /**
+         * For searchConv: if there are matching hits, expand them, otherwise expand the first message in the conversation
+         */
+        public static final ExpandResults HITS_OR_FIRST_MSG = new ExpandResults("hits!");
+
+        /**
+         * For searchConv: if there are unread matching hits, expand them, otherwise expand first message in the conversation
+         * This is a little ambiguous - should 1st msg be expanded if there are no matching hits at all, or if there are no UNREAD matching hits?
+         * For now, expand 1st msg if there are no UNREAD matching hits (or no matching hits at all, obviously)
+         */
+        public static final ExpandResults U_OR_FIRST_MSG = new ExpandResults("u!");
+
+        /**
+         * For searchConv: if there are unread matching hits, expand them, otherwise expand first hit AND first message in conversation
+         * Somewhat ambiguous: what to do if no matching hits? For now, expand the first message.
+         */
+        public static final ExpandResults U1_OR_FIRST_MSG = new ExpandResults("u1!");
+
         private static final Map<String, ExpandResults> MAP = ImmutableMap.<String, ExpandResults>builder()
             .put(NONE.name, NONE).put("0", NONE).put("false", NONE)
             .put(FIRST.name, FIRST).put("1", FIRST)
@@ -859,26 +884,30 @@ public final class SearchParams implements Cloneable {
             .put(UNREAD_FIRST.name, UNREAD_FIRST).put("u1", UNREAD_FIRST)
             .put(HITS.name, HITS)
             .put(ALL.name, ALL)
+            .put(FIRST_MSG.name, FIRST_MSG).put("!",FIRST_MSG)
+            .put(HITS_OR_FIRST_MSG.name,HITS_OR_FIRST_MSG)
+            .put(U_OR_FIRST_MSG.name,U_OR_FIRST_MSG)
+            .put(U1_OR_FIRST_MSG.name,U1_OR_FIRST_MSG).put("u!1",U1_OR_FIRST_MSG)
             .build();
 
         private final String name;
-        private ItemId itemId;
+        private List<ItemId> itemIds;
 
         private ExpandResults(String name) {
             this.name = name;
         }
 
-        private ExpandResults(String name, ItemId id) {
-            this.name = name;
-            this.itemId = id;
+        private ExpandResults(String name,List<ItemId> ids)
+        {
+        	this.name = name;
+        	this.itemIds = ids;
         }
-
         public boolean matches(MailItem item) {
-            return itemId != null && item != null && matches(new ItemId(item));
+            return itemIds != null && item != null && matches(new ItemId(item));
         }
 
         public boolean matches(ItemId id) {
-            return id != null && id.equals(itemId);
+        	return itemIds != null && itemIds.contains(id);
         }
 
         public static ExpandResults valueOf(String value, ZimbraSoapContext zsc) throws ServiceException {
@@ -891,7 +920,12 @@ public final class SearchParams implements Cloneable {
                 return result;
             }
             try {
-                return new ExpandResults(value, new ItemId(value, zsc));
+            	String[] split = value.split(",");
+            	ArrayList<ItemId> itemIds = new ArrayList<ItemId>();
+            	for (int i = 0; i < split.length; i++) {
+            		itemIds.add(new ItemId(split[i],zsc));
+            	}
+            	return new ExpandResults(value,itemIds);
             } catch (Exception e) {
                 throw ServiceException.INVALID_REQUEST("invalid 'fetch' value: " + value, null);
             }

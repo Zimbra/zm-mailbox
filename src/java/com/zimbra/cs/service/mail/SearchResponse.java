@@ -134,7 +134,13 @@ final class SearchResponse {
      * @param hit hit to append
      * @throws ServiceException error
      */
-    void add(ZimbraHit hit) throws ServiceException {
+    void add(ZimbraHit zimbraHit) throws ServiceException{
+		add(zimbraHit,false);
+		
+	}
+    /* We need to pass in a boolean signifying whether to expand the message or not (bug 75990)
+    */
+    void add(ZimbraHit hit, boolean expandMsg) throws ServiceException {
         Element el = null;
         if (params.getFetchMode() == SearchParams.Fetch.IDS) {
             if (hit instanceof ConversationHit) {
@@ -153,7 +159,7 @@ final class SearchResponse {
             if (hit instanceof ConversationHit) {
                 el = add((ConversationHit) hit);
             } else if (hit instanceof MessageHit) {
-                el = add((MessageHit) hit);
+                el = add((MessageHit) hit,expandMsg);
             } else if (hit instanceof MessagePartHit) {
                 el = add((MessagePartHit) hit);
             } else if (hit instanceof ContactHit) {
@@ -226,27 +232,11 @@ final class SearchResponse {
         return el;
     }
 
-    private boolean isInlineExpand(MessageHit hit) throws ServiceException {
-        if (expand == ExpandResults.FIRST) {
-            return size == 0;
-        } else if (expand == ExpandResults.ALL) {
-            return true;
-        } else if (expand == ExpandResults.HITS) {
-            return true;
-        } else if (expand == ExpandResults.UNREAD) {
-            return hit.getMessage().isUnread();
-        } else if (expand == ExpandResults.UNREAD_FIRST) {
-            return allRead ? size == 0 : hit.getMessage().isUnread();
-        } else {
-            return expand.matches(hit.getParsedItemID());
-        }
-    }
-
-    private Element add(MessageHit hit) throws ServiceException {
+    //for bug 75990, we are now passing an expandMsg boolean instead of calculating in isInLineExpand
+    private Element add(MessageHit hit, boolean expandMsg) throws ServiceException {
         Message msg = hit.getMessage();
-        boolean inline = isInlineExpand(hit);
         // for bug 7568, mark-as-read must happen before the response is encoded.
-        if (inline && msg.isUnread() && params.getMarkRead()) {
+        if (expandMsg && msg.isUnread() && params.getMarkRead()) {
             // Mark the message as READ
             try {
                 msg.getMailbox().alterTag(octxt, msg.getId(), msg.getType(), Flag.FlagInfo.UNREAD, false, null);
@@ -260,7 +250,7 @@ final class SearchResponse {
         }
 
         Element el;
-        if (inline) {
+        if (expandMsg) {
             el = ToXML.encodeMessageAsMP(element, ifmt, octxt, msg, null, params.getMaxInlinedLength(),
                     params.getWantHtml(), params.getNeuterImages(), params.getInlinedHeaders(), true,
                     params.getWantExpandGroupInfo(), LC.mime_encode_missing_blob.booleanValue());
@@ -369,5 +359,7 @@ final class SearchResponse {
             }
         }
     }
+
+
 
 }
