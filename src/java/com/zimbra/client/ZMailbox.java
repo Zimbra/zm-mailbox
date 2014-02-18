@@ -54,6 +54,7 @@ import org.json.JSONException;
 
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableMap;
 import com.zimbra.client.ZFolder.Color;
 import com.zimbra.client.ZGrant.GranteeType;
 import com.zimbra.client.ZInvite.ZTimeZone;
@@ -170,16 +171,60 @@ public class ZMailbox implements ToZJSONObject {
         SocketFactories.registerProtocols();
     }
 
-    public enum Fetch {
-        none, first, hits, all;
+    public static final class Fetch {
+        public static final Fetch none              = new Fetch("none");
+        public static final Fetch first			    = new Fetch("first");
+        public static final Fetch hits 			    = new Fetch("hits");
+        public static final Fetch all 			    = new Fetch("all");
+        public static final Fetch unread            = new Fetch("unread");
+        public static final Fetch u1                = new Fetch("u1");
+        public static final Fetch first_msg         = new Fetch("!");
+        public static final Fetch hits_or_first_msg = new Fetch("hits!");
+        public static final Fetch u_or_first_msg    = new Fetch("u!");
+        public static final Fetch u1_or_first_msg   = new Fetch("u1!");
 
-        public static Fetch fromString(String s) throws ServiceException {
-            try {
-                return Fetch.valueOf(s);
-            } catch (IllegalArgumentException e) {
-                throw ZClientException.CLIENT_ERROR("invalid fetch: "+s+", valid values: "+Arrays.asList(Fetch.values()), e);
+        private final String name;
+
+        public Fetch(String name){
+            this.name = name;
+        }
+
+        private static final Map<String, Fetch> MAP = ImmutableMap.<String, Fetch>builder()
+                .put(none.name, none)
+                .put(first.name, first)
+                .put(unread.name, unread)
+                .put(u1.name, u1)
+                .put(hits.name, hits)
+                .put(all.name, all)
+                .put(first_msg.name, first_msg)
+                .put(hits_or_first_msg.name,hits_or_first_msg)
+                .put(u_or_first_msg.name,u_or_first_msg)
+                .put(u1_or_first_msg.name,u1_or_first_msg)
+                .build();
+
+        public static Fetch fromString(String s) throws Exception {
+            Fetch result = MAP.get(s);
+            if (result != null) {
+                return result;
+            }
+            else {
+                String[] ids = s.split(",");
+                for (String id: ids) {
+                    try {
+                        Integer.parseInt(id);
+                    }
+                    catch (NumberFormatException e) {
+                        throw ZClientException.CLIENT_ERROR("invalid fetch: "+s, e);
+                    }
+                }
+                return new Fetch(s);
             }
         }
+
+        public String name(){
+            return name;
+        }
+
     }
 
     private enum NotifyPreference {
@@ -674,7 +719,7 @@ public class ZMailbox implements ToZJSONObject {
         for (Element notify : context.listElements(ZimbraNamespace.E_NOTIFY)) {
             mTransport.setMaxNotifySeq(
                     Math.max(mTransport.getMaxNotifySeq(),
-                             notify.getAttributeLong(HeaderConstants.A_SEQNO, 0)));
+                            notify.getAttributeLong(HeaderConstants.A_SEQNO, 0)));
             // MUST DO IN THIS ORDER!
             handleDeleted(notify.getOptionalElement(ZimbraNamespace.E_DELETED));
             handleCreated(notify.getOptionalElement(ZimbraNamespace.E_CREATED));
@@ -1072,15 +1117,15 @@ public class ZMailbox implements ToZJSONObject {
     }
 
     public ZLicenses getLicenses() throws ServiceException {
-            return getLicenses(false);
+        return getLicenses(false);
     }
 
     public ZLicenses getLicenses(boolean refresh) throws ServiceException {
-            return getAccountInfo(refresh).getLicenses();
+        return getAccountInfo(refresh).getLicenses();
     }
 
     private static Set<InfoSection> NOT_ZIMLETS = Collections.unmodifiableSet(
-        EnumSet.complementOf(EnumSet.of(InfoSection.zimlets)));
+            EnumSet.complementOf(EnumSet.of(InfoSection.zimlets)));
 
     public ZGetInfoResult getAccountInfo(boolean refresh) throws ServiceException {
         if (mGetInfoResult == null || refresh) {
@@ -1334,13 +1379,13 @@ public class ZMailbox implements ToZJSONObject {
 
         nameDesc, nameAsc;
 
-         public static ContactSortBy fromString(String s) throws ServiceException {
-             try {
-                 return ContactSortBy.valueOf(s);
-             } catch (IllegalArgumentException e) {
-                 throw ZClientException.CLIENT_ERROR("invalid sortBy: "+s+", valid values: "+Arrays.asList(ContactSortBy.values()), e);
-             }
-         }
+        public static ContactSortBy fromString(String s) throws ServiceException {
+            try {
+                return ContactSortBy.valueOf(s);
+            } catch (IllegalArgumentException e) {
+                throw ZClientException.CLIENT_ERROR("invalid sortBy: "+s+", valid values: "+Arrays.asList(ContactSortBy.values()), e);
+            }
+        }
     }
 
     /**
@@ -1409,7 +1454,7 @@ public class ZMailbox implements ToZJSONObject {
         @Override
         public String toString() {
             return String.format("%s: {attachmentId=%s, partName=%s, itemId=%s}",
-                ZAttachmentInfo.class.getSimpleName(), mAttachmentId, mPartName, mItemId);
+                    ZAttachmentInfo.class.getSimpleName(), mAttachmentId, mPartName, mItemId);
         }
     }
 
@@ -1453,7 +1498,7 @@ public class ZMailbox implements ToZJSONObject {
      * @throws ServiceException
      */
     public ZContact createContact(String folderId, String tags, Map<String, String> attrs, Map<String, ZAttachmentInfo> attachments, Map<String, String> members)
-    throws ServiceException {
+            throws ServiceException {
         Element req = newRequestElement(MailConstants.CREATE_CONTACT_REQUEST);
         Element cn = req.addUniqueElement(MailConstants.E_CONTACT);
         if (folderId != null) {
@@ -1543,7 +1588,7 @@ public class ZMailbox implements ToZJSONObject {
      * @throws ServiceException on error
      */
     public ZContact modifyContact(String id, boolean replace, Map<String, String> attrs, Map<String, ZAttachmentInfo> attachments, Map<String, String> members)
-    throws ServiceException {
+            throws ServiceException {
         Element req = newRequestElement(MailConstants.MODIFY_CONTACT_REQUEST);
         if (replace) {
             req.addAttribute(MailConstants.A_REPLACE, replace);
@@ -2139,12 +2184,12 @@ public class ZMailbox implements ToZJSONObject {
     }
 
     public String uploadContentAsStream(String name, InputStream in, String contentType, long contentLength, int msTimeout)
-    throws ServiceException {
+            throws ServiceException {
         return uploadContentAsStream(name, in, contentType, contentLength, msTimeout, false);
     }
 
     public String uploadContentAsStream(String name, InputStream in, String contentType, long contentLength, int msTimeout, boolean limitByFileUploadMaxSize)
-        throws ServiceException {
+            throws ServiceException {
         String aid = null;
         if (name != null) {
             contentType += "; name=" + name;
@@ -2245,7 +2290,7 @@ public class ZMailbox implements ToZJSONObject {
      */
     public String addMessage(
             String folderId, String flags, String tags, long receivedDate, String content, boolean noICal, boolean filterSent)
-            throws ServiceException {
+                    throws ServiceException {
         Element req = newRequestElement(MailConstants.ADD_MSG_REQUEST);
         if (filterSent) {
             req.addAttribute(MailConstants.A_FILTER_SENT, filterSent);
@@ -2296,8 +2341,8 @@ public class ZMailbox implements ToZJSONObject {
      * @throws ServiceException on error
      */
     public String addMessage(String folderId, String flags, String tags, long receivedDate,
-                             InputStream in, long contentLength, boolean noICal)
-    throws ServiceException {
+            InputStream in, long contentLength, boolean noICal)
+                    throws ServiceException {
         // first, upload the content via the FileUploadServlet
         String aid = uploadContentAsStream("message", in, "message/rfc822", contentLength, 5000);
 
@@ -2671,7 +2716,7 @@ public class ZMailbox implements ToZJSONObject {
     public void getRESTResource(
             String relativePath, OutputStream os, boolean closeOs,
             String startTimeArg, String endTimeArg, int msecTimeout, String alternateUrl)
-    throws ServiceException {
+                    throws ServiceException {
         InputStream in = null;
         try {
             in = getRESTResource(relativePath, startTimeArg, endTimeArg, msecTimeout, alternateUrl);
@@ -2685,7 +2730,7 @@ public class ZMailbox implements ToZJSONObject {
 
     private InputStream getRESTResource(String relativePath, String startTimeArg, String endTimeArg,
             int msecTimeout, String alternateUrl)
-    throws ServiceException {
+                    throws ServiceException {
         GetMethod get = null;
         URI uri = null;
 
@@ -2740,7 +2785,7 @@ public class ZMailbox implements ToZJSONObject {
      * @throws ServiceException on error
      */
     public InputStream getRESTResource(String relativePath)
-    throws ServiceException {
+            throws ServiceException {
         return getRESTResource(relativePath, null, null, getTimeout(), null);
     }
 
@@ -2758,9 +2803,9 @@ public class ZMailbox implements ToZJSONObject {
      * @throws ServiceException on error
      */
     public void postRESTResource(String relativePath, InputStream is, boolean closeIs, long length,
-                                 String contentType, boolean ignoreAndContinueOnError, boolean preserveAlarms,
-                                 int msecTimeout, String alternateUrl)
-    throws ServiceException {
+            String contentType, boolean ignoreAndContinueOnError, boolean preserveAlarms,
+            int msecTimeout, String alternateUrl)
+                    throws ServiceException {
         PostMethod post = null;
 
         try {
@@ -2818,9 +2863,9 @@ public class ZMailbox implements ToZJSONObject {
      * @throws ServiceException on error
      */
     public void postRESTResource(String relativePath, InputStream is, boolean closeIs, long length,
-                                 String contentType,
-                                 int msecTimeout)
-    throws ServiceException {
+            String contentType,
+            int msecTimeout)
+                    throws ServiceException {
         postRESTResource(relativePath, is, closeIs, length, contentType, false, false, msecTimeout, null);
     }
 
@@ -2909,7 +2954,7 @@ public class ZMailbox implements ToZJSONObject {
      * @param color color of folder
      */
     public ZSearchFolder createSearchFolder(String parentId, String name,
-                String query, String types, SearchSortBy sortBy, ZFolder.Color color) throws ServiceException {
+            String query, String types, SearchSortBy sortBy, ZFolder.Color color) throws ServiceException {
         Element req = newRequestElement(MailConstants.CREATE_SEARCH_FOLDER_REQUEST);
         Element folderEl = req.addUniqueElement(MailConstants.E_SEARCH);
         folderEl.addAttribute(MailConstants.A_NAME, name);
@@ -3174,7 +3219,7 @@ public class ZMailbox implements ToZJSONObject {
             ZFolder folder = getFolderById(folderId);
             for (ZGrant g : folder.getGrants()) {
                 if (g.getGranteeType() == GranteeType.key &&
-                    g.getGranteeId().equals(grantreeId)) {
+                        g.getGranteeId().equals(grantreeId)) {
                     String key = null;
                     Element eAction = r.getResponse().getOptionalElement(MailConstants.E_ACTION);
                     if (eAction != null) {
@@ -3270,7 +3315,7 @@ public class ZMailbox implements ToZJSONObject {
         if (convId != null) {
             name = MailConstants.SEARCH_CONV_REQUEST;
         } else if (params.getTypes().equals(ZSearchParams.TYPE_VOICE_MAIL) ||
-                   params.getTypes().equals(ZSearchParams.TYPE_CALL)) {
+                params.getTypes().equals(ZSearchParams.TYPE_CALL)) {
             name = VoiceConstants.SEARCH_VOICE_REQUEST;
         } else if (params.getTypes().equals(ZSearchParams.TYPE_GAL)) {
             name = AccountConstants.SEARCH_GAL_REQUEST;
@@ -3344,24 +3389,24 @@ public class ZMailbox implements ToZJSONObject {
         }
 
         if (params.getTypes().equals(ZSearchParams.TYPE_VOICE_MAIL) ||
-            params.getTypes().equals(ZSearchParams.TYPE_CALL)) {
+                params.getTypes().equals(ZSearchParams.TYPE_CALL)) {
             getAllPhoneAccounts();
             setVoiceStorePrincipal(req);
         }
         Element resp = invoke(req);
         if (params.getTypes().equals(ZSearchParams.TYPE_GAL)) {
-             try{
-                 resp.getAttribute(MailConstants.A_SORTBY);
+            try{
+                resp.getAttribute(MailConstants.A_SORTBY);
 
-             }catch (Exception e){
-                    resp.addAttribute(MailConstants.A_SORTBY,params.getSortBy().name());
-             }
-             try{
-                 resp.getAttribute(MailConstants.A_QUERY_OFFSET);
+            }catch (Exception e){
+                resp.addAttribute(MailConstants.A_SORTBY,params.getSortBy().name());
+            }
+            try{
+                resp.getAttribute(MailConstants.A_QUERY_OFFSET);
 
-             }catch (Exception e){
-                    resp.addAttribute(MailConstants.A_QUERY_OFFSET,params.getOffset());
-             }
+            }catch (Exception e){
+                resp.addAttribute(MailConstants.A_QUERY_OFFSET,params.getOffset());
+            }
         }
         return new ZSearchResult(resp, nest, params.getTimeZone() != null ? params.getTimeZone() : getPrefs().getTimeZone());
     }
@@ -3947,7 +3992,7 @@ public class ZMailbox implements ToZJSONObject {
      */
     public synchronized ZMessage saveDraft(
             ZOutgoingMessage message, String existingDraftId, String folderId, long autoSendTime)
-            throws ServiceException {
+                    throws ServiceException {
         Element req = newRequestElement(MailConstants.SAVE_DRAFT_REQUEST);
 
         ZMountpoint mountpoint = getMountpoint(message);
@@ -3979,12 +4024,12 @@ public class ZMailbox implements ToZJSONObject {
     }
 
     public synchronized CheckSpellingResponse checkSpelling(String text, String dictionary)
-    throws ServiceException {
+            throws ServiceException {
         return checkSpelling(text, dictionary, null);
     }
 
     public synchronized CheckSpellingResponse checkSpelling(String text, String dictionary, List<String> ignore)
-    throws ServiceException {
+            throws ServiceException {
         String ignoreList = (ignore == null ? null : StringUtil.join(",", ignore));
         CheckSpellingRequest req = new CheckSpellingRequest(dictionary, ignoreList, text);
         return invokeJaxb(req);
@@ -4192,7 +4237,7 @@ public class ZMailbox implements ToZJSONObject {
     }
 
     public String createDocument(String folderId, String name, String attachmentId, boolean isNote)
-    throws ServiceException {
+            throws ServiceException {
         Element req = newRequestElement(MailConstants.SAVE_DOCUMENT_REQUEST);
         Element doc = req.addUniqueElement(MailConstants.E_DOC);
         doc.addAttribute(MailConstants.A_NAME, name);
@@ -4255,7 +4300,7 @@ public class ZMailbox implements ToZJSONObject {
         return result;
     }
 
-	public List<String> getAvailableLocales() throws ServiceException {
+    public List<String> getAvailableLocales() throws ServiceException {
         Element req = newRequestElement(AccountConstants.GET_AVAILABLE_LOCALES_REQUEST);
         Element resp = invoke(req);
         List<String> result = new ArrayList<String>();
@@ -4303,8 +4348,8 @@ public class ZMailbox implements ToZJSONObject {
         public GalEntryType getGalEntryType() { return mType; }
     }
 
-      public void applyConditions(ArrayList<Object> conditions, Element parentCondition)
-      {
+    public void applyConditions(ArrayList<Object> conditions, Element parentCondition)
+    {
         for(Object condition: conditions)
         {
             if(condition instanceof ArrayList)
@@ -4323,9 +4368,9 @@ public class ZMailbox implements ToZJSONObject {
                 conditionElem.addAttribute(AccountConstants.A_ENTRY_SEARCH_FILTER_VALUE, conditionAttr[2]);
             }
         }
-      }
+    }
 
-      public ZSearchGalResult searchGal(String query, ArrayList<Object> conditions, GalEntryType type) throws ServiceException {
+    public ZSearchGalResult searchGal(String query, ArrayList<Object> conditions, GalEntryType type) throws ServiceException {
         Element req = newRequestElement(AccountConstants.SEARCH_GAL_REQUEST);
         if (type != null) {
             req.addAttribute(AccountConstants.A_TYPE, type.name());
@@ -4344,7 +4389,7 @@ public class ZMailbox implements ToZJSONObject {
         Element resp = invoke(req);
         List<ZContact> contacts = new ArrayList<ZContact>();
         for (Element contact : resp.listElements(MailConstants.E_CONTACT)) {
-                contacts.add(new ZContact(contact, true, this));
+            contacts.add(new ZContact(contact, true, this));
         }
         return new ZSearchGalResult(contacts, resp.getAttributeBool(AccountConstants.A_MORE, false), query, type);
     }
@@ -4359,7 +4404,7 @@ public class ZMailbox implements ToZJSONObject {
         Element resp = invoke(req);
         List<ZContact> contacts = new ArrayList<ZContact>();
         for (Element contact : resp.listElements(MailConstants.E_CONTACT)) {
-                contacts.add(new ZContact(contact, true, this));
+            contacts.add(new ZContact(contact, true, this));
         }
         return new ZSearchGalResult(contacts, resp.getAttributeBool(AccountConstants.A_MORE, false), query, type);
     }
@@ -4813,10 +4858,10 @@ public class ZMailbox implements ToZJSONObject {
 
     public com.zimbra.soap.mail.type.CalendarItemInfo getRemoteCalItemByUID(String requestedAccountId, String uid,
             boolean includeInvites, boolean includeContent)
-    throws ServiceException {
+                    throws ServiceException {
         GetAppointmentResponse resp = invokeJaxbOnTargetAccount(
-                        GetAppointmentRequest.createForUidInvitesContent(uid, includeInvites, includeContent),
-                        requestedAccountId);
+                GetAppointmentRequest.createForUidInvitesContent(uid, includeInvites, includeContent),
+                requestedAccountId);
         return resp == null ? null : resp.getItem();
     }
 
@@ -4940,12 +4985,12 @@ public class ZMailbox implements ToZJSONObject {
         List<ZAppointmentHit> result = new ArrayList<ZAppointmentHit>();
         for (ZFreeBusyTimeSlot slot : slots) {
             switch (slot.getType()) {
-                case BUSY:
-                case TENTATIVE:
-                case UNAVAILABLE:
-                case NODATA:
-                    result.add(new ZAppointmentHit(slot));
-                    break;
+            case BUSY:
+            case TENTATIVE:
+            case UNAVAILABLE:
+            case NODATA:
+                result.add(new ZAppointmentHit(slot));
+                break;
             }
         }
         return result;
