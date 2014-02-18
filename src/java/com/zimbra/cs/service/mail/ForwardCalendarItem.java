@@ -101,34 +101,55 @@ public class ForwardCalendarItem extends CalendarRequest {
         MimeMessage mm =
             ParseMimeMessage.parseMimeMsgSoap(zsc, octxt, mbox, msgElem,
                 null, ParseMimeMessage.NO_INV_ALLOWED_PARSER, parsedMessageData);
+        Element exc = request.getOptionalElement(MailConstants.E_CAL_EXCEPTION_ID);
+        Element tzElem = request.getOptionalElement(MailConstants.E_CAL_TZ);
+        CalendarItem calItem = mbox.getCalendarItemById(octxt, iid.getId());
+        if (calItem == null) {
+            throw MailServiceException.NO_SUCH_CALITEM(iid.toString(), "Could not find calendar item");
+        }
+        RecurId rid = null;
+        if (exc != null) {
+            TimeZoneMap tzmap = calItem.getTimeZoneMap();
+            ICalTimeZone tz = null;
+            if (tzElem != null) {
+                tz = CalendarUtils.parseTzElement(tzElem);
+                tzmap.add(tz);
+            }
+            ParsedDateTime exceptDt = CalendarUtils.parseDateTime(exc, tzmap);
+            rid = new RecurId(exceptDt, RecurId.RANGE_NONE);
+        }
+        Pair<List<MimeMessage>, List<MimeMessage>> mimePair = forwardCalItem(mbox, octxt, calItem, rid, mm, senderAcct);
+        sendForwardMessages(mbox, octxt, mimePair);
+        Element response = getResponseElement(zsc);
+        return response;
+    }
 
+
+    public static void sendForwardMessages(Mailbox mbox,  OperationContext octxt, Pair<List<MimeMessage>, List<MimeMessage>> pair) throws ServiceException {
+        List<MimeMessage> fwdMsgs = pair.getFirst();
+        List<MimeMessage> notifyMsgs = pair.getSecond();
+        if(fwdMsgs != null) {
+            for (MimeMessage mmFwd : fwdMsgs) {
+                sendFwdMsg(octxt, mbox, mmFwd);
+            }
+        }
+        if(notifyMsgs != null) {
+            for (MimeMessage mmNotify : notifyMsgs) {
+            // Send Forward notification as Admin
+                sendFwdNotifyMsg(octxt, mbox, mmNotify);
+            }
+        }
+    }
+
+    public static Pair<List<MimeMessage>, List<MimeMessage>> forwardCalItem(Mailbox mbox,  OperationContext octxt,CalendarItem calItem,RecurId rid, MimeMessage mm,Account senderAcct) throws ServiceException  {
         List<MimeMessage> fwdMsgs = new ArrayList<MimeMessage>();
         List<MimeMessage> notifyMsgs = new ArrayList<MimeMessage>();
+        Pair<List<MimeMessage>, List<MimeMessage>> pair = new Pair<List<MimeMessage>, List<MimeMessage>>(fwdMsgs, notifyMsgs);
         mbox.lock.lock();
         try {
-            CalendarItem calItem = mbox.getCalendarItemById(octxt, iid.getId());
-            if (calItem == null) {
-                throw MailServiceException.NO_SUCH_CALITEM(iid.toString(), "Could not find calendar item");
-            }
-
-            RecurId rid = null;
-            Element exc = request.getOptionalElement(MailConstants.E_CAL_EXCEPTION_ID);
-            if (exc != null) {
-                TimeZoneMap tzmap = calItem.getTimeZoneMap();
-                Element tzElem = request.getOptionalElement(MailConstants.E_CAL_TZ);
-                ICalTimeZone tz = null;
-                if (tzElem != null) {
-                    tz = CalendarUtils.parseTzElement(tzElem);
-                    tzmap.add(tz);
-                }
-                ParsedDateTime exceptDt = CalendarUtils.parseDateTime(exc, tzmap);
-                rid = new RecurId(exceptDt, RecurId.RANGE_NONE);
-            }
             if (rid == null) {
                 // Forwarding entire appointment
-                Pair<List<MimeMessage>, List<MimeMessage>> pair = getSeriesFwdMsgs(octxt, senderAcct, calItem, mm);
-                fwdMsgs.addAll(pair.getFirst());
-                notifyMsgs.addAll(pair.getSecond());
+                pair = getSeriesFwdMsgs(octxt, senderAcct, calItem, mm);
             } else {
                 // Forwarding an instance
                 Invite inv = calItem.getInvite(rid);
@@ -158,30 +179,18 @@ public class ForwardCalendarItem extends CalendarRequest {
                     mmInv = calItem.getSubpartMessage(seriesInv.getMailItemId());
                 }
                 ZVCalendar cal = inv.newToICalendar(true);
-                Pair<MimeMessage, MimeMessage> pair = getInstanceFwdMsg(senderAcct, inv, cal, mmInv, mm);
-                if (pair.getFirst() != null) {
-                    fwdMsgs.add(pair.getFirst());
+                Pair<MimeMessage, MimeMessage> instancePair = getInstanceFwdMsg(senderAcct, inv, cal, mmInv, mm);
+                if (instancePair.getFirst() != null) {
+                    fwdMsgs.add(instancePair.getFirst());
                 }
-                if (pair.getSecond() != null) {
-                    notifyMsgs.add(pair.getSecond());
+                if (instancePair.getSecond() != null) {
+                    notifyMsgs.add(instancePair.getSecond());
                 }
-                    
             }
         } finally {
             mbox.lock.release();
         }
-
-        for (MimeMessage mmFwd : fwdMsgs) {
-            sendFwdMsg(octxt, mbox, mmFwd);
-        }
-        
-        for (MimeMessage mmNotify : notifyMsgs) {
-            // Send Forward notification as Admin
-            sendFwdNotifyMsg(octxt, mbox, mmNotify);
-        }
-
-        Element response = getResponseElement(zsc);
-        return response;
+        return pair;
     }
 
     protected static ItemId sendFwdMsg(OperationContext octxt, Mailbox mbox, MimeMessage mmFwd)
