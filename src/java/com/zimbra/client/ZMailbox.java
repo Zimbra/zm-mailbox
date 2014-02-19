@@ -202,7 +202,7 @@ public class ZMailbox implements ToZJSONObject {
                 .put(u1_or_first_msg.name,u1_or_first_msg)
                 .build();
 
-        public static Fetch fromString(String s) throws Exception {
+        public static Fetch fromString(String s) throws ServiceException {
             Fetch result = MAP.get(s);
             if (result != null) {
                 return result;
