@@ -112,9 +112,7 @@ public class NoOp extends MailDocumentHandler  {
                             long timeout = parseTimeout(request);
                             if (ZimbraLog.soap.isTraceEnabled())
                                 ZimbraLog.soap.trace("Suspending <NoOpRequest> for %dms", timeout);
-                            continuation.setTimeout(timeout);
-                            continuation.suspend();
-                            continuation.undispatch();
+                            zsc.suspendAndUndispatch(timeout);
                         }
                         // bug 63230: Commenting out the below assertion.  continuation can be a RetryContinuation object, apparently.
                         //assert(continuation instanceof WaitingContinuation); // this part of code only reached if we're using WaitingContinuations

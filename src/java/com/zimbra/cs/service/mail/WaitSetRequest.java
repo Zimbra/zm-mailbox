@@ -245,9 +245,7 @@ public class WaitSetRequest extends MailDocumentHandler {
                         long timeout = getTimeoutMillis(request, adminAllowed);
                         if (ZimbraLog.soap.isTraceEnabled())
                             ZimbraLog.soap.trace("Suspending <WaitSetRequest> for %dms", timeout);
-                        continuation.setTimeout(timeout);
-                        continuation.suspend();
-                        continuation.undispatch();
+                        cb.continuationResume.suspendAndUndispatch(timeout);
                     }
                 }
             }

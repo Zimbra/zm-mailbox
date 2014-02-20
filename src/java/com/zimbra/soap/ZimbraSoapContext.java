@@ -33,7 +33,6 @@ import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.soap.SoapTransport;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
@@ -708,6 +707,10 @@ public final class ZimbraSoapContext {
             case BLOCKING:    return true;
             default:          return false;
         }
+    }
+
+    public void suspendAndUndispatch(long timeout) {
+        continuationResume.suspendAndUndispatch(timeout);
     }
 
     /** Called by the Session object if a new notification comes in. */

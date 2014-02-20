@@ -29,7 +29,9 @@ import com.zimbra.common.util.ZimbraLog;
 
 @Ignore //long running test; kept for dev purposes only
 public class TestNoOp extends TestCase {
-
+    //long running test; kept for dev purposes only
+    //need to set zmlocalconfig -e zimbra_session_limit_soap=100 before running this test
+    //also need to comment out the min timeout code in NoOp.java
     private static final String USER_NAME = "user1";
     private static final String NAME_PREFIX = TestNoOp.class.getSimpleName();
     private static final int THREAD_COUNT = 5;

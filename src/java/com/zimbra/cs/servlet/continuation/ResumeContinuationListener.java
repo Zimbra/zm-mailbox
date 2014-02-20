@@ -16,8 +16,11 @@ package com.zimbra.cs.servlet.continuation;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import javax.servlet.ServletRequest;
+
 import org.eclipse.jetty.continuation.Continuation;
 import org.eclipse.jetty.continuation.ContinuationListener;
+import org.eclipse.jetty.continuation.ContinuationSupport;
 
 import com.zimbra.common.util.ZimbraLog;
 
@@ -33,10 +36,13 @@ public class ResumeContinuationListener implements ContinuationListener {
 
     public ResumeContinuationListener(Continuation continuation) {
         this.continuation = continuation;
-        this.readyToResume = new AtomicBoolean(true);
+        this.readyToResume = new AtomicBoolean(false);
         continuation.addContinuationListener(this);
     }
 
+    public static ResumeContinuationListener getResumableContinuation(ServletRequest request) {
+        return new ResumeContinuationListener(ContinuationSupport.getContinuation(request));
+    }
 
     @Override
     public void onComplete(Continuation continuation) {
@@ -51,7 +57,7 @@ public class ResumeContinuationListener implements ContinuationListener {
     /**
      * Attempt to resume continuation if it is currently suspended.
      */
-    public void resumeIfSuspended() {
+    public synchronized void resumeIfSuspended() {
         if (readyToResume.compareAndSet(true, false)) {
             try {
                 continuation.resume();
@@ -65,6 +71,17 @@ public class ResumeContinuationListener implements ContinuationListener {
                 }
             }
         }
+    }
+
+    /**
+     * Put the continuation into suspended state.
+     * @param timeout
+     */
+    public synchronized void suspendAndUndispatch(long timeout) {
+        readyToResume.set(true);
+        continuation.setTimeout(timeout);
+        continuation.suspend();
+        continuation.undispatch();
     }
 
     public Continuation getContinuation() {
