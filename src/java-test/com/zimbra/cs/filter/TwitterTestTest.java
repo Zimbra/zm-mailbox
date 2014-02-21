@@ -62,17 +62,25 @@ public final class TwitterTestTest {
         account.setMailSieveScript("if twitter { tag \"twitter\"; }");
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
 
-        // direct message email
+        // direct message email: the old way the filter worked
         List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox, new ParsedMessage(
                 "From: Twitter <dm-lfnfnxv=mvzoen.pbz-4fa92@postmaster.twitter.com>\n".getBytes(), false),
                 0, account.getName(), new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
         Assert.assertEquals(1, ids.size());
         Message msg = mbox.getMessageById(null, ids.get(0).getId());
-        Assert.assertEquals("twitter", ArrayUtil.getFirstElement(msg.getTags()));
+        Assert.assertEquals(null, ArrayUtil.getFirstElement(msg.getTags()));
 
-        // mention email
+        // mention email : the old way the filter worked
         ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox, new ParsedMessage(
                 "From: Twitter <mention-lfnfnxv=mvzoen.pbz-4fa92@postmaster.twitter.com>\n".getBytes(), false),
+                0, account.getName(), new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
+        Assert.assertEquals(1, ids.size());
+        msg = mbox.getMessageById(null, ids.get(0).getId());
+        Assert.assertEquals(null, ArrayUtil.getFirstElement(msg.getTags()));
+        
+        
+        ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox, new ParsedMessage(
+                "From: sharuki2 (via Twitter) <notify@twitter.com>\n".getBytes(), false),
                 0, account.getName(), new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
         Assert.assertEquals(1, ids.size());
         msg = mbox.getMessageById(null, ids.get(0).getId());

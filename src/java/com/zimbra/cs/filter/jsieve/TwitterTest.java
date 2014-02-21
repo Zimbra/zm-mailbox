@@ -38,7 +38,8 @@ import com.zimbra.cs.mime.ParsedAddress;
 public final class TwitterTest extends AbstractTest {
 
     @Override
-    protected boolean executeBasic(MailAdapter mail, Arguments args, SieveContext ctx) throws SieveException {
+    protected boolean executeBasic(MailAdapter mail, Arguments args, SieveContext ctx) 
+    		throws SieveException {
         if (!(mail instanceof ZimbraMailAdapter)) {
             return false;
         }
@@ -46,8 +47,7 @@ public final class TwitterTest extends AbstractTest {
         ParsedAddress sender = adapter.getParsedMessage().getParsedSender();
         if (!Strings.isNullOrEmpty(sender.emailPart)) {
             String email = sender.emailPart.toLowerCase();
-            if (email.endsWith("@postmaster.twitter.com") &&
-                    (email.startsWith("dm-") || email.startsWith("mention-"))) {
+            if (email.equals("notify@twitter.com")) {
                 return true;
             }
         }
