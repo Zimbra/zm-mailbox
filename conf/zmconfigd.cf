@@ -30,6 +30,7 @@ SECTION amavis
 	VAR zimbraQuarantineBannedItems
 	VAR zimbraAmavisFinalSpamDestiny
 	VAR zimbraAmavisLogLevel
+	VAR zimbraAmavisSALogLevel
 	VAR zimbraAmavisExternalDisclaimerOnly
 	RESTART archiving antispam antivirus mta
 

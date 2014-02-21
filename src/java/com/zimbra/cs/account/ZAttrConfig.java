@@ -2418,6 +2418,83 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * Loglevel for SpamAssassin when called via Amavis. Defaults to 0
+     * (info). Can be 0 or 1 (info, all)
+     *
+     * @return zimbraAmavisSALogLevel, or 0 if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1578)
+    public int getAmavisSALogLevel() {
+        return getIntAttr(Provisioning.A_zimbraAmavisSALogLevel, 0);
+    }
+
+    /**
+     * Loglevel for SpamAssassin when called via Amavis. Defaults to 0
+     * (info). Can be 0 or 1 (info, all)
+     *
+     * @param zimbraAmavisSALogLevel new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1578)
+    public void setAmavisSALogLevel(int zimbraAmavisSALogLevel) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAmavisSALogLevel, Integer.toString(zimbraAmavisSALogLevel));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Loglevel for SpamAssassin when called via Amavis. Defaults to 0
+     * (info). Can be 0 or 1 (info, all)
+     *
+     * @param zimbraAmavisSALogLevel new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1578)
+    public Map<String,Object> setAmavisSALogLevel(int zimbraAmavisSALogLevel, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAmavisSALogLevel, Integer.toString(zimbraAmavisSALogLevel));
+        return attrs;
+    }
+
+    /**
+     * Loglevel for SpamAssassin when called via Amavis. Defaults to 0
+     * (info). Can be 0 or 1 (info, all)
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1578)
+    public void unsetAmavisSALogLevel() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAmavisSALogLevel, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Loglevel for SpamAssassin when called via Amavis. Defaults to 0
+     * (info). Can be 0 or 1 (info, all)
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1578)
+    public Map<String,Object> unsetAmavisSALogLevel(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAmavisSALogLevel, "");
+        return attrs;
+    }
+
+    /**
      * delay between each batch for zmspamextract
      *
      * @return zimbraAntispamExtractionBatchDelay, or 100 if unset
