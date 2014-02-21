@@ -589,7 +589,7 @@ public class ZimbraMailAdapter implements MailAdapter {
         for (String hdrValue : hdrValues) {
             for (InternetAddress addr : InternetAddress.parseHeader(hdrValue)) {
                 String emailAddr = addr.getAddress();
-                if (emailAddr != null)
+                if (emailAddr != null && emailAddr.contains("@"))
                     retVal.add(new FilterAddress(emailAddr));
             }
         }
