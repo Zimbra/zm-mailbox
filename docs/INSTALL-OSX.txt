@@ -2,9 +2,10 @@ Setup Development Environment for Mac OSX
 ================================================================================
 
 1. Download Perforce - P4 Command-Line Client
-  http://www.perforce.com/perforce/downloads/index.html
-  Macintosh > Mac OSX for PPC/x86 > P4
-2. $ sudo mv p4 /usr/local/bin
+  http://www.perforce.com/downloads/Perforce/Customer
+  Perforce Clients -> P4: Command-line client
+  Macintosh > Mac OS X 10.5 for x86_64
+2. $ sudo mv p4 /usr/local/bin    (may need to create local/bin)
 3. $ chmod +x /usr/local/bin/p4
 
 You may also want to download and install P4V, a visual Perforce client.
@@ -14,10 +15,9 @@ http://www.perforce.com/perforce/doc.current/manuals/p4guide/01_install.html#107
 
 4. $ vi ~/.bash_profile
 
-  export P4PORT=perforce-zimbra.eng.vmware.com:1666
+  export P4PORT=localhost:1066
   export P4USER={your p4 username}
   export P4CONFIG=.p4config
-  export P4HOST=localhost
   export P4EDITOR=/usr/bin/vi
   export PATH=$PATH:/opt/zimbra/bin
   export ZIMBRA_HOSTNAME={your computer name}.local
@@ -26,12 +26,9 @@ http://www.perforce.com/perforce/doc.current/manuals/p4guide/01_install.html#107
 6. $ sudo mkdir -p /opt/zimbra
 7. $ mkdir ~/p4 
    $ mkdir ~/p4/main
-   $ cd ~/p4/main
-8. $ vi .p4config
-  P4CLIENT={your p4 username}-main
-9. $ p4 login
-  * enter your NT domain password
-10. $ p4 client
+8. $ p4 login
+  * enter your password (after setting up SSH tunnel)
+9. $ p4 client
 
   View:
 	//depot/zimbra/main/... //{workspace}/...
@@ -50,11 +47,12 @@ http://www.perforce.com/perforce/doc.current/manuals/p4guide/01_install.html#107
    That view may have a lot more than you need, so you may want to consider explicitly listing
    only what you need. Take a look at the clients of others in your group for examples.
 
+10. $ cd ~/p4/main
 11. $ p4 sync
 
 12. Download MySQL - MySQL Community Server & install it.
   http://dev.mysql.com/downloads/mysql/
-  GA > Mac OSX ver 10.6 (x86, 64-bit)
+  GA > Mac OSX ver 10.7 (x86, 64-bit)
 
   Grab the DMG version and install the two packages (MySQL and the startup item).
 
@@ -62,10 +60,11 @@ http://www.perforce.com/perforce/doc.current/manuals/p4guide/01_install.html#107
 
 14. $ sudo chown {username} /opt/zimbra
 
-15. $ sudo vi /opt/zimbra/mysql/data/my.cnf (RHEL command, sudo vi /var/lib/mysql)
+15. $ sudo vi /opt/zimbra/mysql/my.cnf (RHEL command, sudio vi /var/lib/mysql)
 
   [mysqld]
   port = 7306
+  socket = /opt/zimbra/mysql/data/mysql.sock
 
 16. $ sudo -b /opt/zimbra/mysql/bin/mysqld_safe --user=mysql
   * With MySQLStartupItem package installed, mysqld will start automatically on reboot.
@@ -73,7 +72,7 @@ http://www.perforce.com/perforce/doc.current/manuals/p4guide/01_install.html#107
   * MySQL log file can be found at: /opt/zimbra/mysql/data/{server-name}.err
   * May need to press Enter to return to the prompt
 
-17. $ /opt/zimbra/mysql/bin/mysqladmin -u root password zimbra
+17. $ /opt/zimbra/mysql/bin/mysqladmin  -S /opt/zimbra/mysql/data/mysql.sock -u root password zimbra
 
 
 18. $ sudo visudo
@@ -84,7 +83,8 @@ http://www.perforce.com/perforce/doc.current/manuals/p4guide/01_install.html#107
 
 19. $ cd ~/p4/main/ZimbraServer
 20. Install the JDK 1.7 from Oracle if not already present on your system.
-21. $ ant reset-all
+21. $ mkdir ~/p4/main/ZimbraWebClient/WebRoot/help
+22. $ ant reset-all
 
   * $ ant -p
   Buildfile: build.xml
@@ -108,7 +108,7 @@ http://www.perforce.com/perforce/doc.current/manuals/p4guide/01_install.html#107
    test                    Run unit tests
   Default target: jar
 
-22. open http://localhost:7070/zimbra
+23. open http://localhost:7070/zimbra
 
   Username: user1 / Password: test123
 
