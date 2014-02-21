@@ -2457,6 +2457,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraAmavisQuarantineAccount = "zimbraAmavisQuarantineAccount";
 
     /**
+     * Loglevel for SpamAssassin when called via Amavis. Defaults to 0
+     * (info). Can be 0 or 1 (info, all)
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1578)
+    public static final String A_zimbraAmavisSALogLevel = "zimbraAmavisSALogLevel";
+
+    /**
      * delay between each batch for zmspamextract
      *
      * @since ZCS 8.0.5
