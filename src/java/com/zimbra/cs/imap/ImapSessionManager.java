@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -17,7 +17,6 @@ package com.zimbra.cs.imap;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
 import java.util.TimerTask;
@@ -28,6 +27,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
@@ -65,7 +65,16 @@ final class ImapSessionManager {
     private static final boolean TERMINATE_ON_CLOSE = DebugConfig.imapTerminateSessionOnClose;
     private static final boolean SERIALIZE_ON_CLOSE = DebugConfig.imapSerializeSessionOnClose;
 
-    private final LinkedHashMap<ImapSession, Object> sessions = new LinkedHashMap<ImapSession, Object>(128, 0.75F, true);
+    /**
+     * ConcurrentLinkedHashMap is used because it has good concurrency attributes, offers fast access by key and
+     * maintains information to easily iterate over the keys by order of most recent access.
+     * Note that the values are not currently used at all.
+     */
+    private final ConcurrentLinkedHashMap<ImapSession, Object> sessions =
+            new ConcurrentLinkedHashMap.Builder<ImapSession, Object>()
+            .initialCapacity(128)
+            .maximumWeightedCapacity(Long.MAX_VALUE) // we manually manage evictions
+            .build();
     private final Cache activeSessionCache; // not LRU'ed
     private final Cache inactiveSessionCache; // LRU'ed
 
@@ -97,17 +106,18 @@ final class ImapSessionManager {
         return SINGLETON;
     }
 
+    /**
+     * Record that this session has been used.  The underlying ConcurrentLinkedHashMap uses this information to
+     * ensure that the iterator associated with ascendingKeySet() / descendingKeySet() will have the correct order.
+     *  i.e. iterator returns the keys whose order of iteration is the ascending order in which its entries are
+     *       considered eligible for retention, from the least-likely to be retained to the most-likely or vice versa.
+     */
     void recordAccess(ImapSession session) {
-        synchronized (sessions) {
-            // LinkedHashMap bumps to beginning of iterator order on access
-            sessions.get(session);
-        }
+        sessions.get(session);
     }
 
     void uncacheSession(ImapSession session) {
-        synchronized (sessions) {
-            sessions.remove(session);
-        }
+        sessions.remove(session);
     }
 
     /**
@@ -132,32 +142,38 @@ final class ImapSessionManager {
                 List<ImapSession> pageable = new ArrayList<ImapSession>();
                 List<ImapSession> droppable = new ArrayList<ImapSession>();
 
-                synchronized (sessions) {
-                    // first, figure out the set of sessions that'll need to be brought into memory and reserialized
-                    int footprint = 0, maxOverflow = 0, noninteractive = 0;
-                    for (ImapSession session : sessions.keySet()) {
-                        if (session.requiresReload()) {
-                            overflow.add(session);
-                            // note that these will add to the memory footprint temporarily, so need the largest size...
-                            maxOverflow = Math.max(maxOverflow, session.getEstimatedSize());
-                        }
+                // first, figure out the set of sessions that'll need to be brought into memory and reserialized
+                int maxOverflow = 0;
+                Iterator<ImapSession> unorderedIterator = sessions.keySet().iterator();
+                while (unorderedIterator.hasNext()) {
+                    ImapSession session = unorderedIterator.next();
+                    if (session.requiresReload()) {
+                        overflow.add(session);
+                        // note that these will add to the memory footprint temporarily, so need the largest size...
+                        maxOverflow = Math.max(maxOverflow, session.getEstimatedSize());
                     }
-                    footprint += Math.min(maxOverflow, TOTAL_SESSION_FOOTPRINT_LIMIT - 1000);
+                }
+                int footprint = Math.min(maxOverflow, TOTAL_SESSION_FOOTPRINT_LIMIT - 1000);
+                int noninteractive = 0;
 
-                    // next, get the set of in-memory sessions that need to get serialized out
-                    for (ImapSession session : sessions.keySet()) {
-                        int size = session.getEstimatedSize();
-                        // want to serialize enough sessions to get below the memory threshold
-                        // also going to serialize anything that's been idle for a while
-                        if (!session.isInteractive() && ++noninteractive > MAX_NONINTERACTIVE_SESSIONS) {
-                            droppable.add(session);
-                        } else if (!session.isSerialized() && session.getLastAccessTime() < cutoff) {
-                            pageable.add(session);
-                        } else if (footprint + size > TOTAL_SESSION_FOOTPRINT_LIMIT) {
-                            pageable.add(session);
-                        } else {
-                            footprint += size;
-                        }
+                // next, get the set of in-memory sessions that need to get serialized out or dropped.
+
+                // As we are more likely to decide to drop or page out sessions we process later, we want to start
+                // with the most recently used ones as they are more likely to be useful again.
+                Iterator<ImapSession> mostRecentToLeastRecentIterator = sessions.descendingKeySet().iterator();
+                while (mostRecentToLeastRecentIterator.hasNext()) {
+                    ImapSession session = mostRecentToLeastRecentIterator.next();
+                    int size = session.getEstimatedSize();
+                    // want to serialize enough sessions to get below the memory threshold
+                    // also going to serialize anything that's been idle for a while
+                    if (!session.isInteractive() && ++noninteractive > MAX_NONINTERACTIVE_SESSIONS) {
+                        droppable.add(session);
+                    } else if (!session.isSerialized() && session.getLastAccessTime() < cutoff) {
+                        pageable.add(session);
+                    } else if (footprint + size > TOTAL_SESSION_FOOTPRINT_LIMIT) {
+                        pageable.add(session);
+                    } else {
+                        footprint += size;
                     }
                 }
 
@@ -307,9 +323,7 @@ final class ImapSessionManager {
             try {
                 session = new ImapSession(i4folder, handler);
                 session.register();
-                synchronized (sessions) {
-                    sessions.put(session, null);
-                }
+                sessions.put(session, session /* cannot be null for ConcurrentLinkedHashMap */);
                 return new Pair<ImapSession, InitialFolderValues>(session, initial);
             } catch (ServiceException e) {
                 if (session != null) {
