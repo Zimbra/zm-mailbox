@@ -1055,6 +1055,7 @@ public final class LC {
     public static final KnownKey zimbra_activesync_heartbeat_interval_max = KnownKey.newKey(3540); //3540 Seconds = 59 mins
     public static final KnownKey zimbra_activesync_search_max_results = KnownKey.newKey(500);
     public static final KnownKey zimbra_activesync_general_cache_size = KnownKey.newKey(500); //active device number
+    public static final KnownKey zimbra_activesync_parallel_sync_enabled = KnownKey.newKey(false);
 
     public static final KnownKey zimbra_slow_logging_enabled = KnownKey.newKey(false);
     public static final KnownKey zimbra_slow_logging_threshold = KnownKey.newKey(5000);
