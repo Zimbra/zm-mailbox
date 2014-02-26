@@ -30607,13 +30607,13 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtp_tls_CAfile
      *
-     * @return zimbraMtaSmtpTlsCAfile, or empty array if unset
+     * @return zimbraMtaSmtpTlsCAfile, or null if unset
      *
      * @since ZCS 8.5.0
      */
     @ZAttr(id=1565)
-    public String[] getMtaSmtpTlsCAfile() {
-        return getMultiAttr(Provisioning.A_zimbraMtaSmtpTlsCAfile);
+    public String getMtaSmtpTlsCAfile() {
+        return getAttr(Provisioning.A_zimbraMtaSmtpTlsCAfile, null);
     }
 
     /**
@@ -30625,7 +30625,7 @@ public abstract class ZAttrConfig extends Entry {
      * @since ZCS 8.5.0
      */
     @ZAttr(id=1565)
-    public void setMtaSmtpTlsCAfile(String[] zimbraMtaSmtpTlsCAfile) throws com.zimbra.common.service.ServiceException {
+    public void setMtaSmtpTlsCAfile(String zimbraMtaSmtpTlsCAfile) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMtaSmtpTlsCAfile, zimbraMtaSmtpTlsCAfile);
         getProvisioning().modifyAttrs(this, attrs);
@@ -30641,71 +30641,9 @@ public abstract class ZAttrConfig extends Entry {
      * @since ZCS 8.5.0
      */
     @ZAttr(id=1565)
-    public Map<String,Object> setMtaSmtpTlsCAfile(String[] zimbraMtaSmtpTlsCAfile, Map<String,Object> attrs) {
+    public Map<String,Object> setMtaSmtpTlsCAfile(String zimbraMtaSmtpTlsCAfile, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMtaSmtpTlsCAfile, zimbraMtaSmtpTlsCAfile);
-        return attrs;
-    }
-
-    /**
-     * Value for postconf smtp_tls_CAfile
-     *
-     * @param zimbraMtaSmtpTlsCAfile new to add to existing values
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.5.0
-     */
-    @ZAttr(id=1565)
-    public void addMtaSmtpTlsCAfile(String zimbraMtaSmtpTlsCAfile) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraMtaSmtpTlsCAfile, zimbraMtaSmtpTlsCAfile);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * Value for postconf smtp_tls_CAfile
-     *
-     * @param zimbraMtaSmtpTlsCAfile new to add to existing values
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.5.0
-     */
-    @ZAttr(id=1565)
-    public Map<String,Object> addMtaSmtpTlsCAfile(String zimbraMtaSmtpTlsCAfile, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraMtaSmtpTlsCAfile, zimbraMtaSmtpTlsCAfile);
-        return attrs;
-    }
-
-    /**
-     * Value for postconf smtp_tls_CAfile
-     *
-     * @param zimbraMtaSmtpTlsCAfile existing value to remove
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.5.0
-     */
-    @ZAttr(id=1565)
-    public void removeMtaSmtpTlsCAfile(String zimbraMtaSmtpTlsCAfile) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraMtaSmtpTlsCAfile, zimbraMtaSmtpTlsCAfile);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * Value for postconf smtp_tls_CAfile
-     *
-     * @param zimbraMtaSmtpTlsCAfile existing value to remove
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.5.0
-     */
-    @ZAttr(id=1565)
-    public Map<String,Object> removeMtaSmtpTlsCAfile(String zimbraMtaSmtpTlsCAfile, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraMtaSmtpTlsCAfile, zimbraMtaSmtpTlsCAfile);
         return attrs;
     }
 
@@ -30741,13 +30679,13 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtp_tls_CApath
      *
-     * @return zimbraMtaSmtpTlsCApath, or empty array if unset
+     * @return zimbraMtaSmtpTlsCApath, or null if unset
      *
      * @since ZCS 8.5.0
      */
     @ZAttr(id=1566)
-    public String[] getMtaSmtpTlsCApath() {
-        return getMultiAttr(Provisioning.A_zimbraMtaSmtpTlsCApath);
+    public String getMtaSmtpTlsCApath() {
+        return getAttr(Provisioning.A_zimbraMtaSmtpTlsCApath, null);
     }
 
     /**
@@ -30759,7 +30697,7 @@ public abstract class ZAttrConfig extends Entry {
      * @since ZCS 8.5.0
      */
     @ZAttr(id=1566)
-    public void setMtaSmtpTlsCApath(String[] zimbraMtaSmtpTlsCApath) throws com.zimbra.common.service.ServiceException {
+    public void setMtaSmtpTlsCApath(String zimbraMtaSmtpTlsCApath) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMtaSmtpTlsCApath, zimbraMtaSmtpTlsCApath);
         getProvisioning().modifyAttrs(this, attrs);
@@ -30775,71 +30713,9 @@ public abstract class ZAttrConfig extends Entry {
      * @since ZCS 8.5.0
      */
     @ZAttr(id=1566)
-    public Map<String,Object> setMtaSmtpTlsCApath(String[] zimbraMtaSmtpTlsCApath, Map<String,Object> attrs) {
+    public Map<String,Object> setMtaSmtpTlsCApath(String zimbraMtaSmtpTlsCApath, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMtaSmtpTlsCApath, zimbraMtaSmtpTlsCApath);
-        return attrs;
-    }
-
-    /**
-     * Value for postconf smtp_tls_CApath
-     *
-     * @param zimbraMtaSmtpTlsCApath new to add to existing values
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.5.0
-     */
-    @ZAttr(id=1566)
-    public void addMtaSmtpTlsCApath(String zimbraMtaSmtpTlsCApath) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraMtaSmtpTlsCApath, zimbraMtaSmtpTlsCApath);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * Value for postconf smtp_tls_CApath
-     *
-     * @param zimbraMtaSmtpTlsCApath new to add to existing values
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.5.0
-     */
-    @ZAttr(id=1566)
-    public Map<String,Object> addMtaSmtpTlsCApath(String zimbraMtaSmtpTlsCApath, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraMtaSmtpTlsCApath, zimbraMtaSmtpTlsCApath);
-        return attrs;
-    }
-
-    /**
-     * Value for postconf smtp_tls_CApath
-     *
-     * @param zimbraMtaSmtpTlsCApath existing value to remove
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.5.0
-     */
-    @ZAttr(id=1566)
-    public void removeMtaSmtpTlsCApath(String zimbraMtaSmtpTlsCApath) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraMtaSmtpTlsCApath, zimbraMtaSmtpTlsCApath);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * Value for postconf smtp_tls_CApath
-     *
-     * @param zimbraMtaSmtpTlsCApath existing value to remove
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.5.0
-     */
-    @ZAttr(id=1566)
-    public Map<String,Object> removeMtaSmtpTlsCApath(String zimbraMtaSmtpTlsCApath, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraMtaSmtpTlsCApath, zimbraMtaSmtpTlsCApath);
         return attrs;
     }
 
@@ -32755,13 +32631,13 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtpd_tls_CAfile
      *
-     * @return zimbraMtaSmtpdTlsCAfile, or empty array if unset
+     * @return zimbraMtaSmtpdTlsCAfile, or null if unset
      *
      * @since ZCS 8.5.0
      */
     @ZAttr(id=1563)
-    public String[] getMtaSmtpdTlsCAfile() {
-        return getMultiAttr(Provisioning.A_zimbraMtaSmtpdTlsCAfile);
+    public String getMtaSmtpdTlsCAfile() {
+        return getAttr(Provisioning.A_zimbraMtaSmtpdTlsCAfile, null);
     }
 
     /**
@@ -32773,7 +32649,7 @@ public abstract class ZAttrConfig extends Entry {
      * @since ZCS 8.5.0
      */
     @ZAttr(id=1563)
-    public void setMtaSmtpdTlsCAfile(String[] zimbraMtaSmtpdTlsCAfile) throws com.zimbra.common.service.ServiceException {
+    public void setMtaSmtpdTlsCAfile(String zimbraMtaSmtpdTlsCAfile) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMtaSmtpdTlsCAfile, zimbraMtaSmtpdTlsCAfile);
         getProvisioning().modifyAttrs(this, attrs);
@@ -32789,71 +32665,9 @@ public abstract class ZAttrConfig extends Entry {
      * @since ZCS 8.5.0
      */
     @ZAttr(id=1563)
-    public Map<String,Object> setMtaSmtpdTlsCAfile(String[] zimbraMtaSmtpdTlsCAfile, Map<String,Object> attrs) {
+    public Map<String,Object> setMtaSmtpdTlsCAfile(String zimbraMtaSmtpdTlsCAfile, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMtaSmtpdTlsCAfile, zimbraMtaSmtpdTlsCAfile);
-        return attrs;
-    }
-
-    /**
-     * Value for postconf smtpd_tls_CAfile
-     *
-     * @param zimbraMtaSmtpdTlsCAfile new to add to existing values
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.5.0
-     */
-    @ZAttr(id=1563)
-    public void addMtaSmtpdTlsCAfile(String zimbraMtaSmtpdTlsCAfile) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraMtaSmtpdTlsCAfile, zimbraMtaSmtpdTlsCAfile);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * Value for postconf smtpd_tls_CAfile
-     *
-     * @param zimbraMtaSmtpdTlsCAfile new to add to existing values
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.5.0
-     */
-    @ZAttr(id=1563)
-    public Map<String,Object> addMtaSmtpdTlsCAfile(String zimbraMtaSmtpdTlsCAfile, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraMtaSmtpdTlsCAfile, zimbraMtaSmtpdTlsCAfile);
-        return attrs;
-    }
-
-    /**
-     * Value for postconf smtpd_tls_CAfile
-     *
-     * @param zimbraMtaSmtpdTlsCAfile existing value to remove
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.5.0
-     */
-    @ZAttr(id=1563)
-    public void removeMtaSmtpdTlsCAfile(String zimbraMtaSmtpdTlsCAfile) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraMtaSmtpdTlsCAfile, zimbraMtaSmtpdTlsCAfile);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * Value for postconf smtpd_tls_CAfile
-     *
-     * @param zimbraMtaSmtpdTlsCAfile existing value to remove
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.5.0
-     */
-    @ZAttr(id=1563)
-    public Map<String,Object> removeMtaSmtpdTlsCAfile(String zimbraMtaSmtpdTlsCAfile, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraMtaSmtpdTlsCAfile, zimbraMtaSmtpdTlsCAfile);
         return attrs;
     }
 
@@ -32889,13 +32703,13 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtpd_tls_CApath
      *
-     * @return zimbraMtaSmtpdTlsCApath, or empty array if unset
+     * @return zimbraMtaSmtpdTlsCApath, or null if unset
      *
      * @since ZCS 8.5.0
      */
     @ZAttr(id=1564)
-    public String[] getMtaSmtpdTlsCApath() {
-        return getMultiAttr(Provisioning.A_zimbraMtaSmtpdTlsCApath);
+    public String getMtaSmtpdTlsCApath() {
+        return getAttr(Provisioning.A_zimbraMtaSmtpdTlsCApath, null);
     }
 
     /**
@@ -32907,7 +32721,7 @@ public abstract class ZAttrConfig extends Entry {
      * @since ZCS 8.5.0
      */
     @ZAttr(id=1564)
-    public void setMtaSmtpdTlsCApath(String[] zimbraMtaSmtpdTlsCApath) throws com.zimbra.common.service.ServiceException {
+    public void setMtaSmtpdTlsCApath(String zimbraMtaSmtpdTlsCApath) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMtaSmtpdTlsCApath, zimbraMtaSmtpdTlsCApath);
         getProvisioning().modifyAttrs(this, attrs);
@@ -32923,71 +32737,9 @@ public abstract class ZAttrConfig extends Entry {
      * @since ZCS 8.5.0
      */
     @ZAttr(id=1564)
-    public Map<String,Object> setMtaSmtpdTlsCApath(String[] zimbraMtaSmtpdTlsCApath, Map<String,Object> attrs) {
+    public Map<String,Object> setMtaSmtpdTlsCApath(String zimbraMtaSmtpdTlsCApath, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMtaSmtpdTlsCApath, zimbraMtaSmtpdTlsCApath);
-        return attrs;
-    }
-
-    /**
-     * Value for postconf smtpd_tls_CApath
-     *
-     * @param zimbraMtaSmtpdTlsCApath new to add to existing values
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.5.0
-     */
-    @ZAttr(id=1564)
-    public void addMtaSmtpdTlsCApath(String zimbraMtaSmtpdTlsCApath) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraMtaSmtpdTlsCApath, zimbraMtaSmtpdTlsCApath);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * Value for postconf smtpd_tls_CApath
-     *
-     * @param zimbraMtaSmtpdTlsCApath new to add to existing values
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.5.0
-     */
-    @ZAttr(id=1564)
-    public Map<String,Object> addMtaSmtpdTlsCApath(String zimbraMtaSmtpdTlsCApath, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraMtaSmtpdTlsCApath, zimbraMtaSmtpdTlsCApath);
-        return attrs;
-    }
-
-    /**
-     * Value for postconf smtpd_tls_CApath
-     *
-     * @param zimbraMtaSmtpdTlsCApath existing value to remove
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.5.0
-     */
-    @ZAttr(id=1564)
-    public void removeMtaSmtpdTlsCApath(String zimbraMtaSmtpdTlsCApath) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraMtaSmtpdTlsCApath, zimbraMtaSmtpdTlsCApath);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * Value for postconf smtpd_tls_CApath
-     *
-     * @param zimbraMtaSmtpdTlsCApath existing value to remove
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.5.0
-     */
-    @ZAttr(id=1564)
-    public Map<String,Object> removeMtaSmtpdTlsCApath(String zimbraMtaSmtpdTlsCApath, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraMtaSmtpdTlsCApath, zimbraMtaSmtpdTlsCApath);
         return attrs;
     }
 
