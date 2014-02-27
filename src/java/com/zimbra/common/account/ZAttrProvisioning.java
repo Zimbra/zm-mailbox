@@ -8241,7 +8241,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMobileSyncKeyFormatConvertedFolders = "zimbraMobileSyncKeyFormatConvertedFolders";
 
     /**
-     * Value for postconf alias_maps
+     * Value for postconf alias_maps. Comma separated list.
      *
      * @since ZCS 8.5.0
      */
@@ -8655,7 +8655,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMtaSaslSmtpdMechList = "zimbraMtaSaslSmtpdMechList";
 
     /**
-     * Value for postconf sender_canonical_maps
+     * Value for postconf sender_canonical_maps. Comma separated list.
      *
      * @since ZCS 8.5.0
      */
@@ -8872,7 +8872,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMtaSmtpSaslMechanismFilter = "zimbraMtaSmtpSaslMechanismFilter";
 
     /**
-     * Value for postconf smtp_sasl_password_maps
+     * Value for postconf smtp_sasl_password_maps. Comma separated list.
      *
      * @since ZCS 8.5.0
      */
@@ -8967,7 +8967,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMtaTlsSecurityLevel = "zimbraMtaTlsSecurityLevel";
 
     /**
-     * Value for postconf transport_maps
+     * Value for postconf transport_maps. Comma separated list.
      *
      * @since ZCS 8.5.0
      */
@@ -8975,7 +8975,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMtaTransportMaps = "zimbraMtaTransportMaps";
 
     /**
-     * Value for postconf virtual_alias_domains
+     * Value for postconf virtual_alias_domains. Comma separated list.
      *
      * @since ZCS 8.5.0
      */
@@ -8991,7 +8991,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMtaVirtualAliasExpansionLimit = "zimbraMtaVirtualAliasExpansionLimit";
 
     /**
-     * Value for postconf virtual_alias_maps
+     * Value for postconf virtual_alias_maps. Comma separated list.
      *
      * @since ZCS 8.5.0
      */
@@ -8999,7 +8999,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMtaVirtualAliasMaps = "zimbraMtaVirtualAliasMaps";
 
     /**
-     * Value for postconf virtual_mailbox_domains
+     * Value for postconf virtual_mailbox_domains. Comma separated list.
      *
      * @since ZCS 8.5.0
      */
@@ -9007,7 +9007,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMtaVirtualMailboxDomains = "zimbraMtaVirtualMailboxDomains";
 
     /**
-     * Value for postconf virtual_mailbox_maps
+     * Value for postconf virtual_mailbox_maps. Comma separated list.
      *
      * @since ZCS 8.5.0
      */
