@@ -15,30 +15,41 @@
     <!-- Server Thread Pool                                          -->
     <!-- =========================================================== -->
 	
-    <Arg name="ThreadPool">
-      <!-- Default queued blocking threadpool -->
-      <New id="pool" class="org.eclipse.jetty.util.thread.QueuedThreadPool">
-        <Set name="minThreads">10</Set>
-        <Set name="maxThreads">%%zimbraHttpNumThreads%%</Set>
-        <Set name="idleTimeout">%%zimbraHttpThreadPoolMaxIdleTimeMillis%%</Set>
-      </New>
-    </Arg>
-
-    <Call class="com.zimbra.common.jetty.JettyMonitor" name="setThreadPool">
-      <Arg><Ref id="pool"/></Arg>
-    </Call>
+	<Get name="ThreadPool" id="pool">
+		<Set name="minThreads" type="int">10</Set>
+		<Set name="maxThreads" type="int">%%zimbraHttpNumThreads%%</Set>
+		<Set name="idleTimeout" type="int">%%zimbraHttpThreadPoolMaxIdleTimeMillis%%</Set>
+		<Set name="detailedDump">false</Set>
+	</Get>
     
-	<New id="httpConfig" class="org.eclipse.jetty.server.HttpConfiguration">
-		<Set name="outputBufferSize">32768</Set>
-		<Set name="requestHeaderSize">8192</Set>
-		<Set name="responseHeaderSize">8192</Set>
-		<Set name="sendServerVersion">false</Set>
-		<Set name="sendDateHeader">false</Set>
-		<Set name="headerCacheSize">512</Set>
+	<Call class="com.zimbra.common.jetty.JettyMonitor" name="setThreadPool">
+		<Arg><Ref id="pool"/></Arg>
+	</Call>
 
-		<!-- Uncomment to enable handling of X-Forwarded- style headers <Call name="addCustomizer"> 
-			<Arg><New class="org.eclipse.jetty.server.ForwardedRequestCustomizer"/></Arg> 
-			</Call> -->
+	<New id="httpConfig" class="org.eclipse.jetty.server.HttpConfiguration">
+		<Set name="outputBufferSize">%%zimbraHttpOutputBufferSize%%</Set>
+		<Set name="requestHeaderSize">%%zimbraHttpRequestHeaderSize%%</Set>
+		<Set name="responseHeaderSize">%%zimbraHttpResponseHeaderSize%%</Set>
+		<Set name="sendServerVersion">false</Set>
+		<Set name="sendDateHeader">true</Set>
+		<Set name="headerCacheSize">%%zimbraHttpHeaderCacheSize%%</Set>
+		<Set name="securePort">%%zimbraMailSSLPort%%</Set>
+ 		<Call name="addCustomizer">
+			<Arg>
+				<New class="org.eclipse.jetty.server.ForwardedRequestCustomizer">
+					<Set name="forwardedForHeader">bogus</Set>
+				</New>
+			</Arg>
+		</Call>
+	<!-- HOSTHEADERBEGIN %%comment VAR:zimbraPublicServiceHostname,-->%%
+		<Call name="addCustomizer">
+			<Arg>
+				<New class="org.eclipse.jetty.server.HostHeaderCustomizer">
+					<Arg>%%zimbraPublicServiceHostname%%</Arg>
+				</New>
+			</Arg>
+		</Call>
+	%%comment VAR:zimbraPublicServiceHostname,<!--%% HOSTHEADEREND -->
 	</New>
 	
 	<New id="sslHttpConfig" class="org.eclipse.jetty.server.HttpConfiguration">
@@ -726,6 +737,23 @@
     </Call>    
 	%%comment VAR:zimbraSpnegoAuthEnabled,<!--%% -->
 
+    <!-- THREADMONITORBEGIN %%comment VAR:zimbraThreadMonitorEnabled,-->%%
+	<Call name="addBean">
+		<Arg>
+			<New class="org.eclipse.jetty.monitor.ThreadMonitor">
+				<Set name="scanInterval">2000</Set>
+				<Set name="busyThreshold">90</Set>
+				<Set name="stackDepth">5</Set>
+				<Set name="trailLength">4</Set>
+				<Set name="logInterval">10000</Set>
+				<Set name="logThreshold">65</Set>
+				<Set name="dumpable">
+					<Ref id="Server" />
+				</Set>
+			</New>
+		</Arg>
+	</Call>
+	%%comment VAR:zimbraThreadMonitorEnabled,<!--%% THREADMONITOREND -->
 
     <!-- =========================================================== -->
     <!-- Configure Request Log                                       -->
