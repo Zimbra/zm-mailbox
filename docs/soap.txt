@@ -1404,10 +1404,12 @@ Tags:
 
 ----------
 
-<SearchRequest [limit="..."] [offset="..."] [sortBy="{sort-by}"] [groupBy="{group-by}"] [types="{types}"] [recip="*0|1"]
+<SearchRequest [limit="..."] [offset="..."] [sortBy="{sort-by}"] [groupBy="{group-by}"]
+    [types="{types}"] [recip="*0|1|2"]
     [fetch="1|all|{item-id}"] [read="*0|1"] [max="{max-inlined-length}"] [html="*0|1"] [neuter="0|*1"] [needExp="1|*0"]
     [field={default_field}] [calExpandInstStart=TIME_IN_MSEC] [calExpandInstEnd=TIME_IN_MSEC]
-    [allowableTaskStatus="need,inprogress,completed,canceled"] [includeTagDeleted="{include-imap-deleted}"] [includeTagMuted="{include-muted}"]
+    [allowableTaskStatus="need,inprogress,completed,canceled"]
+    [includeTagDeleted="{include-imap-deleted}"] [includeTagMuted="{include-muted}"]
     [resultMode="{result-mode}"] [fullConversation="*0|1"] [inDumpster="*0|1"]
     [warmup="*0|1"] [quick="*0|1"]>
 
@@ -1487,14 +1489,19 @@ if fetch="all", all hits are expanded inline
     + if max="{max-inlined-length}" is specified, inlined body content in limited to the given length;
          if the part is truncated, truncated="1" is specified on the <mp> in question
 
-if recip="2" is specified
-      returned both "From:" Senders and "To:" recipients
-else if recip="1" is specified
-    + returned sent messages will contain the set of "To:" recipients instead of the sender
-    + returned conversations whose first hit was sent by the user will contain
-      that hit's "To:" recipients instead of the conversation's sender list
-else
-    return "From:" Senders only
+Setting specifying which recipients should be returned.
+recip="0" [default]
+    returned sent messages will contain "From:" Senders only
+    returned conversations will contain an aggregated list of "From:" Senders from messages in the conversation
+    (maximum of 8) 
+recip="1"
+    returned sent messages will contain the set of "To:" Recipients instead of the Sender
+    returned conversations whose first hit was sent by the user will contain that hit's "To:" recipients instead
+    of the conversation's sender list (maximum of 8) 
+recip="2"
+    returned sent messages will contain the sets of both "From:" Senders and "To:" Recipients
+    returned conversations will contain an aggregated list of "From:" Senders and "To:" Recipients from messages
+    in the conversation (maximum of 8 of each) 
 
 unless include-imap-deleted="1", items with the \Deleted flag are omitted from the search results (defaults to "0")
 if include-muted="0", items with the \Muted flag are omitted from the search results (defaults to "1")

@@ -1027,6 +1027,46 @@ public final class ToXML {
         return c;
     }
 
+    private static class ToRecipsList {
+        private static final int MAX_COUNT = 8;
+
+        private final List<ParsedAddress> aggregatedRecipients = Lists.newArrayListWithCapacity(MAX_COUNT);
+        private boolean mIsElided = false;
+
+        public ToRecipsList()  {}
+
+        public ToRecipsList add(Message msg) {
+            InternetAddress toRecips[] = Mime.parseAddressHeader(msg.getRecipients());
+            String sender = msg.getSender();
+            if (sender == null || sender.trim().equals("")) {
+                return this;
+            }
+
+            for (InternetAddress ia : toRecips) {
+                ParsedAddress pa = new ParsedAddress(ia);
+                aggregatedRecipients.remove(pa);
+                aggregatedRecipients.add(0, pa);
+            }
+            while (aggregatedRecipients.size() > MAX_COUNT) {
+                aggregatedRecipients.remove(MAX_COUNT);
+                mIsElided = true;
+            }
+            return this;
+        }
+
+        public boolean isElided()  { return mIsElided; }
+
+        public List<ParsedAddress> getLastAddresses() {
+            if (aggregatedRecipients == null || aggregatedRecipients.isEmpty())
+                return Collections.emptyList();
+            List<ParsedAddress> addrs = Lists.newArrayList(aggregatedRecipients);
+            if (addrs.size() > 1) {
+                Collections.reverse(addrs);
+            }
+            return addrs;
+        }
+    }
+
     /**
      * This version lets you specify the Date and Fragment -- we use this when sending Query Results back to the client,
      * the conversation date returned and fragment correspond to those of the matched message.
@@ -1063,14 +1103,16 @@ public final class ToXML {
     private static Element encodeConversationSummary(Element parent, ItemIdFormatter ifmt, OperationContext octxt,
             Conversation conv, List<Message> msgs, Message msgHit, OutputParticipants output, int fields, boolean alwaysSerialize)
             throws ServiceException {
-        boolean addRecips  = msgHit != null && (output == OutputParticipants.PUT_RECIPIENTS || output == OutputParticipants.PUT_BOTH);
-        boolean addSenders = (output == OutputParticipants.PUT_BOTH || output == OutputParticipants.PUT_SENDERS) && needToOutput(fields, Change.SENDERS);
+        boolean addFirstHitRecips  = msgHit != null && (output == OutputParticipants.PUT_RECIPIENTS);
+        boolean addAggregatedRecips  = !addFirstHitRecips && (output == OutputParticipants.PUT_BOTH);
+        boolean addSenders = (output == OutputParticipants.PUT_BOTH || output == OutputParticipants.PUT_SENDERS)
+                                && needToOutput(fields, Change.SENDERS);
 
         Mailbox mbox = conv.getMailbox();
 
         boolean noneVisible = msgs != null && msgs.isEmpty();
         Element c = noneVisible && !alwaysSerialize ? null : encodeConversationCommon(parent, ifmt, octxt, conv, msgs, fields);
-        if (noneVisible) {
+        if (noneVisible || c == null) {
             return c;
         }
         if (needToOutput(fields, Change.DATE)) {
@@ -1079,12 +1121,12 @@ public final class ToXML {
         if (needToOutput(fields, Change.SUBJECT)) {
             c.addAttribute(MailConstants.E_SUBJECT, msgHit != null ? msgHit.getSubject() : conv.getSubject(), Element.Disposition.CONTENT);
         }
+        List<Message> msgsByConv = null;
         if (fields == NOTIFY_FIELDS && msgHit != null) {
             /*
              * bug: 75104
              * we need to encode fragment of the first message in the conv instead of the first hit
              */
-            List<Message> msgsByConv = null;
             if (msgHit.inTrash() || msgHit.inSpam()) {
                 msgsByConv = mbox.getMessagesByConversation(octxt, conv.getId(), SortBy.DATE_DESC, 1);
             } else {
@@ -1092,9 +1134,10 @@ public final class ToXML {
             }
             c.addAttribute(MailConstants.E_FRAG, msgsByConv.isEmpty() == false ? msgsByConv.get(0).getFragment() : msgHit.getFragment(), Element.Disposition.CONTENT);
         }
-        if (addRecips && msgHit != null) {
+        if (addFirstHitRecips && msgHit != null) {
             addEmails(c, Mime.parseAddressHeader(msgHit.getRecipients()), EmailType.TO);
         }
+        boolean elided = false;
         if (addSenders) {
             SenderList sl;
             try {
@@ -1115,12 +1158,39 @@ public final class ToXML {
                 return c;
             }
 
-            if (sl.isElided()) {
-                c.addAttribute(MailConstants.A_ELIDED, true);
-            }
+            elided = elided || sl.isElided();
             for (ParsedAddress pa : sl.getLastAddresses()) {
                 encodeEmail(c, pa, EmailType.FROM);
             }
+        }
+        if (addAggregatedRecips) {
+            ToRecipsList aggregatedToRecips;
+            aggregatedToRecips = new ToRecipsList();
+            if (msgs != null) {
+                for (Message msg : msgs) {
+                    if (!msg.isTagged(Flag.FlagInfo.DELETED)) {
+                        aggregatedToRecips.add(msg);
+                    }
+                }
+            } else {
+                if (msgsByConv == null) {
+                    msgsByConv = mbox.getMessagesByConversation(octxt, conv.getId(), SortBy.DATE_DESC, -1, true);
+                }
+                if (msgsByConv != null) {
+                    for (Message msg : msgsByConv) {
+                        if (!msg.isTagged(Flag.FlagInfo.DELETED)) {
+                            aggregatedToRecips.add(msg);
+                        }
+                    }
+                }
+            }
+            elided = elided || aggregatedToRecips.isElided();
+            for (ParsedAddress pa : aggregatedToRecips.getLastAddresses()) {
+                encodeEmail(c, pa, EmailType.TO);
+            }
+        }
+        if (elided) {
+            c.addAttribute(MailConstants.A_ELIDED, true);
         }
 
         if (needToOutput(fields, Change.CONFLICT)) {
