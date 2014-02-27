@@ -3,67 +3,78 @@ This install doc is aimed at developers internal to Zimbra. You'll see paths to 
 Ref: https://wiki.eng.vmware.com/Zimbra/devEnvironment/windows
 
 1. Install Perforce (P4) (www.perforce.com)
-Configure server port to "perforce-zimbra.eng.vmware.com:1666".
+Configure server port to "localhost:1066".
+Make sure to check out the repository code in "C" drive .
 (PS: After successfully installing Perforce, create a new workspace which would help you to track the checked out code from "eric" server. )
 
-2. Checkout the following from Perforce:
-//depot/main/ZimbraServer/...
-//depot/main/ZimbraSoap/...
-//depot/main/ZimbraCommon/...
-//depot/main/ZimbraIM/...
-//depot/main/ZimbraLicenses/...
-//depot/main/ZimbraTagLib/...
-//depot/main/ZimbraWebClient/...
-//depot/main/Zimlet/...
-//depot/main/ThirdParty/jetty/...
-//depot/main/ThirdPartyBuilds/windows/...
+2. Checkout the following from Perforce with below workspace mapping :
+"kumars_desktop_windows" is my workspace name. Make sure to replace "kumars_desktop_windows" with your workspace name .
+
+//depot/zimbra/main/... //kumars_desktop_windows/main/...
+-//depot/zimbra/main/ZimbraPS/... //kumars_desktop_windows/main/ZimbraPS/...
+-//depot/zimbra/main/ZimbraCustomerServices/... //kumars_desktop_windows/main/ZimbraCustomerServices/...
+-//depot/zimbra/main/ThirdParty/... //kumars_desktop_windows/main/ThirdParty/...
+-//depot/zimbra/main/ThirdPartyBuilds/... //kumars_desktop_windows/main/ThirdPartyBuilds/...
+-//depot/zimbra/main/ZimbraAppliance/... //kumars_desktop_windows/main/ZimbraAppliance/...
+-//depot/zimbra/main/ZimbraDocs/... //kumars_desktop_windows/main/ZimbraDocs/...
+-//depot/zimbra/main/Prototypes/... //kumars_desktop_windows/main/Prototypes/...
+-//depot/zimbra/main/Support/... //kumars_desktop_windows/main/Support/...
+-//depot/zimbra/main/Gallery/... //kumars_desktop_windows/main/Gallery/...
+-//depot/zimbra/main/ZimbraSupportPortal/... //kumars_desktop_windows/main/ZimbraSupportPortal/...
+-//depot/zimbra/main/ZimbraPerf/data/... //kumars_desktop_windows/main/ZimbraPerf/data/...
+-//depot/zimbra/main/ZimbraNetwork/ZimbraImportWizard/... //kumars_desktop_windows/main/ZimbraNetwork/ZimbraImportWizard/...
+-//depot/zimbra/main/ZimbraServer/src/windows/... //kumars_desktop_windows/main/ZimbraServer/src/windows/...
+-//depot/zimbra/main/ZimbraQA/ThirdParty/Scality/... //kumars_desktop_windows/main/ZimbraQA/ThirdParty/Scality/...
+-//depot/zimbra/main/ZimbraAdminExt/mobileZAC/build/... //kumars_desktop_windows/main/ZimbraAdminExt/mobileZAC/build/...
+//depot/zimbra/main/ThirdParty/jetty/jetty-distribution-9.1.1.v20140108.tar.gz //kumars_desktop_windows/main/ThirdParty/jetty/jetty-distribution-9.1.1.v20140108.tar.gz
+//depot/zimbra/main/ThirdPartyBuilds/windows/openldap/... //kumars_desktop_windows/main/ThirdPartyBuilds/windows/openldap/...
 
 Optional: ThirdParty - not needed to run, but has javadocs and source for the various 3rd party jars/servers. It's very very large since all the built servers and 3rd Party code (multiple versions) are in there.
 
-3. Install latest 1.6.x JDK. Need full JDK, not just a JRE. 
-Recommend installing in c:\opt\zimbra\java
-Set the JAVA_HOME environment variable to point to the installed JDK location.
-Add the installed JDK location to the PATH environment variable.
+3. Install the JDK ::--   Install latest 1.7.x JDK. Need full JDK, not just a JRE. 
+The one which we have installed is java version "1.7.0_51" .
+Make sure to install it  in c:\opt\zimbra\java
+Set the JAVA_HOME environment variable to point to the installed JDK location. (i.e JAVA_HOME =C:\opt\zimbra\java )
+Add the installed JDK BIN location to the PATH environment variable.
 
-4. Install Eclipse (www.eclipse.org) You should install the Perforce plugin for Eclipse. To install, select Help | Software Updates | Find and Install... Then select the "Search for new features to install" and hit Next. From this screen, add a new remote site using the URL: http://www.perforce.com/downloads/http/p4-wsad/install/
-This will add a P4 entry to the list on the left. Select that and continue through the wizard.
-NOTE: You will need to configure the plugin with your Perforce information before using the Perforce Perspective. If you are setting up eclipse inside vmware domain; you need to enable the HTTP proxy in Eclipse.
+4. Install MYSQL 5.  The installation package we use is mysql-essential-5.1.73-winx64.msi (Avialable at http://dev.mysql.com/get/Downloads/MySQL-5.1/mysql-essential-5.1.73-winx64.msi).  Do a custom install and configure it to run on port 7306.  Make sure to install it in c:\opt\zimbra\mysql.  The admin account should be called “root” with a password of “zimbra”.  The build.xml file in ZimbraServer relies on the root account to create the Zimbra database with user and password.  Install MYSQL as a Windows service.
 
-5. To Open Perforce Perspective select Windows | Open Perspective | Perforce
-Add New Server from context menu in the Depots Explorer (fill port as perforce-zimbra.eng.vmware.com:1666)
-Once you get the Perforce Perspective open right click on  ZimbraServer and select "Import as project".
-Do the same for ZimbraWebClient. Alternatively, you can right click on the project -> team -> share project. Select perforce -> use existing server connection. 
+5 . Install Ant.  A current installation package that works is apache-ant-1.9.3-bin.zip.  Unzip the ant package, and place the unzipped files in c:\ant.  Put c:\ant\bin in the PATH variable.
+Set the ANT_HOME environment variable to point to the ANT location. (i.e ANT_HOME =C:\ant)
 
-6. Install the latest version of MySQL 5.x On Windows, install MySQL to c:\opt\zimbra\mysql Install it to run on port 7306 We expect for now an admin account of "root" with password "zimbra". This is different then the OS root account (if on Linux). The ZimbraServer/build.xml file relies on the root account to create the zimbra database and user/pass. On Linux, you can run the script ./configure in the main directory of the binary mysql distribtion. This script creates a minimal mysql system, and starts up mqsql server. Use can use "{mysql-path}/mysqld_safe --no-defaults" to start the server and use "kill `cat {mysql-path}/data/{hostname}.pid`" to shut it down. Also on linux after you have started the server, you have to allow connections to mysql which you can do by running the mqsql command line: $ mysql -u root -P 7306 -p
-Password: zimbra 
-mysql> grant all on *.* to "root"@"localhost.localdomain" identified by 'zimbra' with grant option;
-Query OK, 0 rows affected (0.02 sec)
-mysql> flush privileges;
-Query OK, 0 rows affected (0.00 sec)
-On Windows, follow instructions to install MySQL as a service with the required database admin user password.
+6. Install OpenLDAP ::- In this step, we install openldap as windows service by using symas-openldap-gold-win.NT_i686-2.4.23.1.exe .
+And , then install CDS-Silver-3.7.1-Setup.exe available in \main\ThirdPartyBuilds\windows\openldap to "C:\opt\zimbra\openldap" as client side library containing the necessary dll and exec. 
+The detailed description is below ::-- 
+First, install openldap as windows service by using symas-openldap-gold-win.NT_i686-2.4.23.1.exe available in \main\ThirdPartyBuilds\windows\openldap to it's default location, "C:\Program Files (x86)\" .Then, you need to copy slapd.conf.win7 file from ZimbraServer/conf/ldap, and put it in the location "C:\Program Files (x86)\symas-openldap-gold-win\etc\openldap"  and rename "slapd.conf.win7" to  slapd.conf file . Copy the amavis and zimbra schemas that come from Perforce (C:\Perforce\main\ZimbraServer\build\dist\openldap\etc\schema) in this location (C:\Program Files (x86)\symas-openldap-gold-win\etc\openldap\schema) . Then try to run , openldap as windows service.
+In case if you are getting windows service error code 19, try the following things ::--
 
-7. Install OpenLDAP, get it from p4: main\ThirdPartyBuilds\windows\openldap What you want to install is the CDS Silver build. On Windows, install to c:\opt\zimbra\openldap. Then go to the openldap directory and run "slapd install CDSSilverSlapd" to install it as a Windows service named "CDSSilverSlapd".
+a . Create manually a folder structure as "C:\opt\zimbra\data\ldap\mdb\db", if a folder structure like this doesnot exist, as openldap reads this path from slapd.condslapd.conf, while starting .
+b . Go to Contorl panel > admistratiove tools > Local Security Settings > local policies > User Rights Assignment .
+Add the logged in user for these two policies : "Allow Log on locally" and "Log on as a Service"
+c . for slapd.conf file, give the logged in user the full permission .
+Now, try to run openldap as windows service. It will get started .
+
+Next, install CDS-Silver-3.7.1-Setup.exe available in \main\ThirdPartyBuilds\windows\openldap to "C:\opt\zimbra". This will install some dll and exec, which are required in "ant reset-all" command .
 
 Note:  Check your Windows Services to verify that the new service is called "CDSSilverSlapd".  If it's called something else (i.e. OpenLDAP-slapd) then you can create a build-custom.properties file in the same directory as build.xml, and add a local variable like this:
 ldap.service.windows = OpenLDAP-slapd
 
-or run "slapd remove" followed by "slapd install CDSSilverSlapd"
-
-8. Initialize system From inside Eclipse on the Java Perspective select:
-Window -> Show View -> Ant
-Add: ZimbraServer/build.xml
-Run the "reset-all" target.
+7. If you install ant standalone, you can also run "ant reset-all" from within the ZimbraServer root directory.
 This will wipe out parts of /opt/zimbra, install jetty, reload the database, inject the sample messages, and compile/deploy the DHTML interface and the Admin Console.
-If you install ant standalone, you can also run "ant reset-all" from within the ZimbraServer root directory.
-(Note: Before this step; you can set the ZIMBRA_HOSTNAME environment variable on windows; also, alternatively you can run "reset-the-world" ant target).
 
-9. Test deployment You should now be able to go to: http://localhost:7070/zimbra/
+
+8. Test deployment You should now be able to go to: http://localhost:7070/zimbra/
 and login as "user1[@{hostname}]" (the domain is optional), with password "test123", where {hostname} is the name of your local machine. 
+Note : Here, if you are getting error "HTTP ERROR: 503 Problem accessing /. Reason: Service Unavailable", then 
+go to windows task manager > process tab . End java.exe by clicking on "End Process Tree" context menu .
+Now, again go to ZimbraServer root directory and run this command "ant start-jetty" .
+You will get the login page
+
 You can log into the Admin Console by going to:
 https://localhost:7071/zimbraAdmin
 and login as "admin@{hostname}" (the domain is mandatory), with the password "test123", where {hostname} is the name of your local machine.
 
-10. Set up a local mail server. This will allow you to actually send mail from the development build.
+9. Set up a local mail server. This will allow you to actually send mail from the development build.
 Install ActiveState Perl
 Download the active state perl windows msi installer from the following location:
 http://www.activestate.com/activeperl/downloads
@@ -73,8 +84,10 @@ Net-LMTP
 SMTP-Server 
 Net-DNS
 
+(The below steps can be ignored)
+
 NOTE:
-If you are in vmware.com domain you need to configure the HTTP proxy for the PPM. 
+10. If you are in vmware.com domain you need to configure the HTTP proxy for the PPM. 
 Follow the instructions from:
 http://docs.activestate.com/activeperl/5.10/faq/ActivePerl-faq2.html#ppm_and_proxies
 
@@ -83,7 +96,7 @@ http://docs.activestate.com/activeperl/5.10/faq/ActivePerl-faq2.html#install_pac
 
 set the ZIMBRA_HOSTNAME environment variable to be the name of your computer. run ZimbraServer\src\perl\zMTAHack.pl
 
-12. See jetty.txt for details on how to start/stop jetty server and how to debug zimbra server.
+11. See jetty.txt for details on how to start/stop jetty server and how to debug zimbra server.
 
 
 Troubleshooting:
