@@ -7898,7 +7898,7 @@ TODO: delete them permanently from here
   <desc>The maximum allowed size in bytes for a HTTP header field cache in Jetty</desc>
 </attr>
 
-<attr id="1583" name="zimbraThreadMontorEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="8.5.0">
+<attr id="1583" name="zimbraThreadMonitorEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="8.5.0">
   <globalConfigValue>FALSE</globalConfigValue>
   <desc>Whether or not Jetty thread monitor is enabled.  Defaults to FALSE</desc>
 </attr>

@@ -51311,43 +51311,43 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Whether or not Jetty thread monitor is enabled. Defaults to FALSE
      *
-     * @return zimbraThreadMontorEnabled, or false if unset
+     * @return zimbraThreadMonitorEnabled, or false if unset
      *
      * @since ZCS 8.5.0
      */
     @ZAttr(id=1583)
-    public boolean isThreadMontorEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraThreadMontorEnabled, false);
+    public boolean isThreadMonitorEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraThreadMonitorEnabled, false);
     }
 
     /**
      * Whether or not Jetty thread monitor is enabled. Defaults to FALSE
      *
-     * @param zimbraThreadMontorEnabled new value
+     * @param zimbraThreadMonitorEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
      * @since ZCS 8.5.0
      */
     @ZAttr(id=1583)
-    public void setThreadMontorEnabled(boolean zimbraThreadMontorEnabled) throws com.zimbra.common.service.ServiceException {
+    public void setThreadMonitorEnabled(boolean zimbraThreadMonitorEnabled) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraThreadMontorEnabled, zimbraThreadMontorEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        attrs.put(Provisioning.A_zimbraThreadMonitorEnabled, zimbraThreadMonitorEnabled ? Provisioning.TRUE : Provisioning.FALSE);
         getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
      * Whether or not Jetty thread monitor is enabled. Defaults to FALSE
      *
-     * @param zimbraThreadMontorEnabled new value
+     * @param zimbraThreadMonitorEnabled new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
      * @since ZCS 8.5.0
      */
     @ZAttr(id=1583)
-    public Map<String,Object> setThreadMontorEnabled(boolean zimbraThreadMontorEnabled, Map<String,Object> attrs) {
+    public Map<String,Object> setThreadMonitorEnabled(boolean zimbraThreadMonitorEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraThreadMontorEnabled, zimbraThreadMontorEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        attrs.put(Provisioning.A_zimbraThreadMonitorEnabled, zimbraThreadMonitorEnabled ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
     }
 
@@ -51359,9 +51359,9 @@ public abstract class ZAttrConfig extends Entry {
      * @since ZCS 8.5.0
      */
     @ZAttr(id=1583)
-    public void unsetThreadMontorEnabled() throws com.zimbra.common.service.ServiceException {
+    public void unsetThreadMonitorEnabled() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraThreadMontorEnabled, "");
+        attrs.put(Provisioning.A_zimbraThreadMonitorEnabled, "");
         getProvisioning().modifyAttrs(this, attrs);
     }
 
@@ -51374,9 +51374,9 @@ public abstract class ZAttrConfig extends Entry {
      * @since ZCS 8.5.0
      */
     @ZAttr(id=1583)
-    public Map<String,Object> unsetThreadMontorEnabled(Map<String,Object> attrs) {
+    public Map<String,Object> unsetThreadMonitorEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraThreadMontorEnabled, "");
+        attrs.put(Provisioning.A_zimbraThreadMonitorEnabled, "");
         return attrs;
     }
 
