@@ -12873,7 +12873,7 @@ public class ZAttrProvisioning {
      * @since ZCS 8.5.0
      */
     @ZAttr(id=1583)
-    public static final String A_zimbraThreadMontorEnabled = "zimbraThreadMontorEnabled";
+    public static final String A_zimbraThreadMonitorEnabled = "zimbraThreadMonitorEnabled";
 
     /**
      * Hosts to ignore during IP based throttling. Account and command rate
