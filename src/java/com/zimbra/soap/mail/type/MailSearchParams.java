@@ -245,17 +245,29 @@ public class MailSearchParams implements SearchParameters {
 
     /**
      * @zm-api-field-tag want-recipients
-     * @zm-api-field-description Want recipients setting.
+     * @zm-api-field-description Setting specifying which recipients should be returned.
      * <table border="1">
-     * <tr> <td> <b>unset [default]</b> </td> <td> return "From:" Senders only </td> </tr>
-     * <tr> <td> <b>1</b> </td> <td>
+     * <tr> <td> <b>0 [default]</b> </td> <td>
      *     <ul>
-     *         <li>returned sent messages will contain the set of "To:" recipients instead of the sender
-     *         <li>returned conversations whose first hit was sent by the user will contain that hit's "To:" recipients
-     *             instead of the conversation's sender list
+     *         <li>returned sent messages will contain "From:" Senders only
+     *         <li>returned conversations will contain an aggregated list of "From:" Senders
+     *             from messages in the conversation (maximum of 8)
      *     </ul>
      * </td> </tr>
-     * <tr> <td> <b>2</b> </td> <td> return both "From:" Senders and "To:" recipients </td> </tr>
+     * <tr> <td> <b>1</b> </td> <td>
+     *     <ul>
+     *         <li>returned sent messages will contain the set of "To:" Recipients instead of the Sender
+     *         <li>returned conversations whose first hit was sent by the user will contain that hit's "To:" recipients
+     *             instead of the conversation's sender list (maximum of 8)
+     *     </ul>
+     * </td> </tr>
+     * <tr> <td> <b>2</b> </td> <td>
+     *     <ul>
+     *         <li>returned sent messages will contain the sets of both "From:" Senders and "To:" Recipients
+     *         <li>returned conversations will contain an aggregated list of "From:" Senders and "To:" Recipients
+     *             from messages in the conversation (maximum of 8 of each)
+     *     </ul>
+     * </td> </tr>
      * </table>
      */
     @XmlAttribute(name=MailConstants.A_RECIPIENTS /* recip */, required=false)
