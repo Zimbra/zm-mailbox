@@ -16054,19 +16054,19 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Value for postconf alias_maps
+     * Value for postconf alias_maps. Comma separated list.
      *
-     * @return zimbraMtaAliasMaps, or empty array if unset
+     * @return zimbraMtaAliasMaps, or "lmdb:/etc/aliases" if unset
      *
      * @since ZCS 8.5.0
      */
     @ZAttr(id=1493)
-    public String[] getMtaAliasMaps() {
-        String[] value = getMultiAttr(Provisioning.A_zimbraMtaAliasMaps); return value.length > 0 ? value : new String[] {"lmdb:/etc/aliases"};
+    public String getMtaAliasMaps() {
+        return getAttr(Provisioning.A_zimbraMtaAliasMaps, "lmdb:/etc/aliases");
     }
 
     /**
-     * Value for postconf alias_maps
+     * Value for postconf alias_maps. Comma separated list.
      *
      * @param zimbraMtaAliasMaps new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -16074,14 +16074,14 @@ public abstract class ZAttrServer extends NamedEntry {
      * @since ZCS 8.5.0
      */
     @ZAttr(id=1493)
-    public void setMtaAliasMaps(String[] zimbraMtaAliasMaps) throws com.zimbra.common.service.ServiceException {
+    public void setMtaAliasMaps(String zimbraMtaAliasMaps) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMtaAliasMaps, zimbraMtaAliasMaps);
         getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
-     * Value for postconf alias_maps
+     * Value for postconf alias_maps. Comma separated list.
      *
      * @param zimbraMtaAliasMaps new value
      * @param attrs existing map to populate, or null to create a new map
@@ -16090,76 +16090,14 @@ public abstract class ZAttrServer extends NamedEntry {
      * @since ZCS 8.5.0
      */
     @ZAttr(id=1493)
-    public Map<String,Object> setMtaAliasMaps(String[] zimbraMtaAliasMaps, Map<String,Object> attrs) {
+    public Map<String,Object> setMtaAliasMaps(String zimbraMtaAliasMaps, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMtaAliasMaps, zimbraMtaAliasMaps);
         return attrs;
     }
 
     /**
-     * Value for postconf alias_maps
-     *
-     * @param zimbraMtaAliasMaps new to add to existing values
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.5.0
-     */
-    @ZAttr(id=1493)
-    public void addMtaAliasMaps(String zimbraMtaAliasMaps) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraMtaAliasMaps, zimbraMtaAliasMaps);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * Value for postconf alias_maps
-     *
-     * @param zimbraMtaAliasMaps new to add to existing values
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.5.0
-     */
-    @ZAttr(id=1493)
-    public Map<String,Object> addMtaAliasMaps(String zimbraMtaAliasMaps, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraMtaAliasMaps, zimbraMtaAliasMaps);
-        return attrs;
-    }
-
-    /**
-     * Value for postconf alias_maps
-     *
-     * @param zimbraMtaAliasMaps existing value to remove
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.5.0
-     */
-    @ZAttr(id=1493)
-    public void removeMtaAliasMaps(String zimbraMtaAliasMaps) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraMtaAliasMaps, zimbraMtaAliasMaps);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * Value for postconf alias_maps
-     *
-     * @param zimbraMtaAliasMaps existing value to remove
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.5.0
-     */
-    @ZAttr(id=1493)
-    public Map<String,Object> removeMtaAliasMaps(String zimbraMtaAliasMaps, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraMtaAliasMaps, zimbraMtaAliasMaps);
-        return attrs;
-    }
-
-    /**
-     * Value for postconf alias_maps
+     * Value for postconf alias_maps. Comma separated list.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -16173,7 +16111,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Value for postconf alias_maps
+     * Value for postconf alias_maps. Comma separated list.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -20402,19 +20340,19 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Value for postconf sender_canonical_maps
+     * Value for postconf sender_canonical_maps. Comma separated list.
      *
-     * @return zimbraMtaSenderCanonicalMaps, or empty array if unset
+     * @return zimbraMtaSenderCanonicalMaps, or "proxy:ldap:/opt/zimbra/conf/ldap-scm.cf" if unset
      *
      * @since ZCS 8.5.0
      */
     @ZAttr(id=1548)
-    public String[] getMtaSenderCanonicalMaps() {
-        String[] value = getMultiAttr(Provisioning.A_zimbraMtaSenderCanonicalMaps); return value.length > 0 ? value : new String[] {"proxy:ldap:/opt/zimbra/conf/ldap-scm.cf"};
+    public String getMtaSenderCanonicalMaps() {
+        return getAttr(Provisioning.A_zimbraMtaSenderCanonicalMaps, "proxy:ldap:/opt/zimbra/conf/ldap-scm.cf");
     }
 
     /**
-     * Value for postconf sender_canonical_maps
+     * Value for postconf sender_canonical_maps. Comma separated list.
      *
      * @param zimbraMtaSenderCanonicalMaps new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -20422,14 +20360,14 @@ public abstract class ZAttrServer extends NamedEntry {
      * @since ZCS 8.5.0
      */
     @ZAttr(id=1548)
-    public void setMtaSenderCanonicalMaps(String[] zimbraMtaSenderCanonicalMaps) throws com.zimbra.common.service.ServiceException {
+    public void setMtaSenderCanonicalMaps(String zimbraMtaSenderCanonicalMaps) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMtaSenderCanonicalMaps, zimbraMtaSenderCanonicalMaps);
         getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
-     * Value for postconf sender_canonical_maps
+     * Value for postconf sender_canonical_maps. Comma separated list.
      *
      * @param zimbraMtaSenderCanonicalMaps new value
      * @param attrs existing map to populate, or null to create a new map
@@ -20438,76 +20376,14 @@ public abstract class ZAttrServer extends NamedEntry {
      * @since ZCS 8.5.0
      */
     @ZAttr(id=1548)
-    public Map<String,Object> setMtaSenderCanonicalMaps(String[] zimbraMtaSenderCanonicalMaps, Map<String,Object> attrs) {
+    public Map<String,Object> setMtaSenderCanonicalMaps(String zimbraMtaSenderCanonicalMaps, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMtaSenderCanonicalMaps, zimbraMtaSenderCanonicalMaps);
         return attrs;
     }
 
     /**
-     * Value for postconf sender_canonical_maps
-     *
-     * @param zimbraMtaSenderCanonicalMaps new to add to existing values
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.5.0
-     */
-    @ZAttr(id=1548)
-    public void addMtaSenderCanonicalMaps(String zimbraMtaSenderCanonicalMaps) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraMtaSenderCanonicalMaps, zimbraMtaSenderCanonicalMaps);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * Value for postconf sender_canonical_maps
-     *
-     * @param zimbraMtaSenderCanonicalMaps new to add to existing values
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.5.0
-     */
-    @ZAttr(id=1548)
-    public Map<String,Object> addMtaSenderCanonicalMaps(String zimbraMtaSenderCanonicalMaps, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraMtaSenderCanonicalMaps, zimbraMtaSenderCanonicalMaps);
-        return attrs;
-    }
-
-    /**
-     * Value for postconf sender_canonical_maps
-     *
-     * @param zimbraMtaSenderCanonicalMaps existing value to remove
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.5.0
-     */
-    @ZAttr(id=1548)
-    public void removeMtaSenderCanonicalMaps(String zimbraMtaSenderCanonicalMaps) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraMtaSenderCanonicalMaps, zimbraMtaSenderCanonicalMaps);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * Value for postconf sender_canonical_maps
-     *
-     * @param zimbraMtaSenderCanonicalMaps existing value to remove
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.5.0
-     */
-    @ZAttr(id=1548)
-    public Map<String,Object> removeMtaSenderCanonicalMaps(String zimbraMtaSenderCanonicalMaps, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraMtaSenderCanonicalMaps, zimbraMtaSenderCanonicalMaps);
-        return attrs;
-    }
-
-    /**
-     * Value for postconf sender_canonical_maps
+     * Value for postconf sender_canonical_maps. Comma separated list.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -20521,7 +20397,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Value for postconf sender_canonical_maps
+     * Value for postconf sender_canonical_maps. Comma separated list.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -21076,19 +20952,19 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Value for postconf smtp_sasl_password_maps
+     * Value for postconf smtp_sasl_password_maps. Comma separated list.
      *
-     * @return zimbraMtaSmtpSaslPasswordMaps, or empty array if unset
+     * @return zimbraMtaSmtpSaslPasswordMaps, or null if unset
      *
      * @since ZCS 8.5.0
      */
     @ZAttr(id=1529)
-    public String[] getMtaSmtpSaslPasswordMaps() {
-        return getMultiAttr(Provisioning.A_zimbraMtaSmtpSaslPasswordMaps);
+    public String getMtaSmtpSaslPasswordMaps() {
+        return getAttr(Provisioning.A_zimbraMtaSmtpSaslPasswordMaps, null);
     }
 
     /**
-     * Value for postconf smtp_sasl_password_maps
+     * Value for postconf smtp_sasl_password_maps. Comma separated list.
      *
      * @param zimbraMtaSmtpSaslPasswordMaps new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -21096,14 +20972,14 @@ public abstract class ZAttrServer extends NamedEntry {
      * @since ZCS 8.5.0
      */
     @ZAttr(id=1529)
-    public void setMtaSmtpSaslPasswordMaps(String[] zimbraMtaSmtpSaslPasswordMaps) throws com.zimbra.common.service.ServiceException {
+    public void setMtaSmtpSaslPasswordMaps(String zimbraMtaSmtpSaslPasswordMaps) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMtaSmtpSaslPasswordMaps, zimbraMtaSmtpSaslPasswordMaps);
         getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
-     * Value for postconf smtp_sasl_password_maps
+     * Value for postconf smtp_sasl_password_maps. Comma separated list.
      *
      * @param zimbraMtaSmtpSaslPasswordMaps new value
      * @param attrs existing map to populate, or null to create a new map
@@ -21112,76 +20988,14 @@ public abstract class ZAttrServer extends NamedEntry {
      * @since ZCS 8.5.0
      */
     @ZAttr(id=1529)
-    public Map<String,Object> setMtaSmtpSaslPasswordMaps(String[] zimbraMtaSmtpSaslPasswordMaps, Map<String,Object> attrs) {
+    public Map<String,Object> setMtaSmtpSaslPasswordMaps(String zimbraMtaSmtpSaslPasswordMaps, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMtaSmtpSaslPasswordMaps, zimbraMtaSmtpSaslPasswordMaps);
         return attrs;
     }
 
     /**
-     * Value for postconf smtp_sasl_password_maps
-     *
-     * @param zimbraMtaSmtpSaslPasswordMaps new to add to existing values
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.5.0
-     */
-    @ZAttr(id=1529)
-    public void addMtaSmtpSaslPasswordMaps(String zimbraMtaSmtpSaslPasswordMaps) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraMtaSmtpSaslPasswordMaps, zimbraMtaSmtpSaslPasswordMaps);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * Value for postconf smtp_sasl_password_maps
-     *
-     * @param zimbraMtaSmtpSaslPasswordMaps new to add to existing values
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.5.0
-     */
-    @ZAttr(id=1529)
-    public Map<String,Object> addMtaSmtpSaslPasswordMaps(String zimbraMtaSmtpSaslPasswordMaps, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraMtaSmtpSaslPasswordMaps, zimbraMtaSmtpSaslPasswordMaps);
-        return attrs;
-    }
-
-    /**
-     * Value for postconf smtp_sasl_password_maps
-     *
-     * @param zimbraMtaSmtpSaslPasswordMaps existing value to remove
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.5.0
-     */
-    @ZAttr(id=1529)
-    public void removeMtaSmtpSaslPasswordMaps(String zimbraMtaSmtpSaslPasswordMaps) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraMtaSmtpSaslPasswordMaps, zimbraMtaSmtpSaslPasswordMaps);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * Value for postconf smtp_sasl_password_maps
-     *
-     * @param zimbraMtaSmtpSaslPasswordMaps existing value to remove
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.5.0
-     */
-    @ZAttr(id=1529)
-    public Map<String,Object> removeMtaSmtpSaslPasswordMaps(String zimbraMtaSmtpSaslPasswordMaps, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraMtaSmtpSaslPasswordMaps, zimbraMtaSmtpSaslPasswordMaps);
-        return attrs;
-    }
-
-    /**
-     * Value for postconf smtp_sasl_password_maps
+     * Value for postconf smtp_sasl_password_maps. Comma separated list.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -21195,7 +21009,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Value for postconf smtp_sasl_password_maps
+     * Value for postconf smtp_sasl_password_maps. Comma separated list.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -24374,19 +24188,19 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Value for postconf transport_maps
+     * Value for postconf transport_maps. Comma separated list.
      *
-     * @return zimbraMtaTransportMaps, or empty array if unset
+     * @return zimbraMtaTransportMaps, or "proxy:ldap:/opt/zimbra/conf/ldap-transport.cf" if unset
      *
      * @since ZCS 8.5.0
      */
     @ZAttr(id=1555)
-    public String[] getMtaTransportMaps() {
-        String[] value = getMultiAttr(Provisioning.A_zimbraMtaTransportMaps); return value.length > 0 ? value : new String[] {"proxy:ldap:/opt/zimbra/conf/ldap-transport.cf"};
+    public String getMtaTransportMaps() {
+        return getAttr(Provisioning.A_zimbraMtaTransportMaps, "proxy:ldap:/opt/zimbra/conf/ldap-transport.cf");
     }
 
     /**
-     * Value for postconf transport_maps
+     * Value for postconf transport_maps. Comma separated list.
      *
      * @param zimbraMtaTransportMaps new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -24394,14 +24208,14 @@ public abstract class ZAttrServer extends NamedEntry {
      * @since ZCS 8.5.0
      */
     @ZAttr(id=1555)
-    public void setMtaTransportMaps(String[] zimbraMtaTransportMaps) throws com.zimbra.common.service.ServiceException {
+    public void setMtaTransportMaps(String zimbraMtaTransportMaps) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMtaTransportMaps, zimbraMtaTransportMaps);
         getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
-     * Value for postconf transport_maps
+     * Value for postconf transport_maps. Comma separated list.
      *
      * @param zimbraMtaTransportMaps new value
      * @param attrs existing map to populate, or null to create a new map
@@ -24410,76 +24224,14 @@ public abstract class ZAttrServer extends NamedEntry {
      * @since ZCS 8.5.0
      */
     @ZAttr(id=1555)
-    public Map<String,Object> setMtaTransportMaps(String[] zimbraMtaTransportMaps, Map<String,Object> attrs) {
+    public Map<String,Object> setMtaTransportMaps(String zimbraMtaTransportMaps, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMtaTransportMaps, zimbraMtaTransportMaps);
         return attrs;
     }
 
     /**
-     * Value for postconf transport_maps
-     *
-     * @param zimbraMtaTransportMaps new to add to existing values
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.5.0
-     */
-    @ZAttr(id=1555)
-    public void addMtaTransportMaps(String zimbraMtaTransportMaps) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraMtaTransportMaps, zimbraMtaTransportMaps);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * Value for postconf transport_maps
-     *
-     * @param zimbraMtaTransportMaps new to add to existing values
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.5.0
-     */
-    @ZAttr(id=1555)
-    public Map<String,Object> addMtaTransportMaps(String zimbraMtaTransportMaps, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraMtaTransportMaps, zimbraMtaTransportMaps);
-        return attrs;
-    }
-
-    /**
-     * Value for postconf transport_maps
-     *
-     * @param zimbraMtaTransportMaps existing value to remove
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.5.0
-     */
-    @ZAttr(id=1555)
-    public void removeMtaTransportMaps(String zimbraMtaTransportMaps) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraMtaTransportMaps, zimbraMtaTransportMaps);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * Value for postconf transport_maps
-     *
-     * @param zimbraMtaTransportMaps existing value to remove
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.5.0
-     */
-    @ZAttr(id=1555)
-    public Map<String,Object> removeMtaTransportMaps(String zimbraMtaTransportMaps, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraMtaTransportMaps, zimbraMtaTransportMaps);
-        return attrs;
-    }
-
-    /**
-     * Value for postconf transport_maps
+     * Value for postconf transport_maps. Comma separated list.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -24493,7 +24245,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Value for postconf transport_maps
+     * Value for postconf transport_maps. Comma separated list.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -24508,19 +24260,19 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Value for postconf virtual_alias_domains
+     * Value for postconf virtual_alias_domains. Comma separated list.
      *
-     * @return zimbraMtaVirtualAliasDomains, or empty array if unset
+     * @return zimbraMtaVirtualAliasDomains, or "proxy:ldap:/opt/zimbra/conf/ldap-vad.cf" if unset
      *
      * @since ZCS 8.5.0
      */
     @ZAttr(id=1556)
-    public String[] getMtaVirtualAliasDomains() {
-        String[] value = getMultiAttr(Provisioning.A_zimbraMtaVirtualAliasDomains); return value.length > 0 ? value : new String[] {"proxy:ldap:/opt/zimbra/conf/ldap-vad.cf"};
+    public String getMtaVirtualAliasDomains() {
+        return getAttr(Provisioning.A_zimbraMtaVirtualAliasDomains, "proxy:ldap:/opt/zimbra/conf/ldap-vad.cf");
     }
 
     /**
-     * Value for postconf virtual_alias_domains
+     * Value for postconf virtual_alias_domains. Comma separated list.
      *
      * @param zimbraMtaVirtualAliasDomains new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -24528,14 +24280,14 @@ public abstract class ZAttrServer extends NamedEntry {
      * @since ZCS 8.5.0
      */
     @ZAttr(id=1556)
-    public void setMtaVirtualAliasDomains(String[] zimbraMtaVirtualAliasDomains) throws com.zimbra.common.service.ServiceException {
+    public void setMtaVirtualAliasDomains(String zimbraMtaVirtualAliasDomains) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMtaVirtualAliasDomains, zimbraMtaVirtualAliasDomains);
         getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
-     * Value for postconf virtual_alias_domains
+     * Value for postconf virtual_alias_domains. Comma separated list.
      *
      * @param zimbraMtaVirtualAliasDomains new value
      * @param attrs existing map to populate, or null to create a new map
@@ -24544,76 +24296,14 @@ public abstract class ZAttrServer extends NamedEntry {
      * @since ZCS 8.5.0
      */
     @ZAttr(id=1556)
-    public Map<String,Object> setMtaVirtualAliasDomains(String[] zimbraMtaVirtualAliasDomains, Map<String,Object> attrs) {
+    public Map<String,Object> setMtaVirtualAliasDomains(String zimbraMtaVirtualAliasDomains, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMtaVirtualAliasDomains, zimbraMtaVirtualAliasDomains);
         return attrs;
     }
 
     /**
-     * Value for postconf virtual_alias_domains
-     *
-     * @param zimbraMtaVirtualAliasDomains new to add to existing values
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.5.0
-     */
-    @ZAttr(id=1556)
-    public void addMtaVirtualAliasDomains(String zimbraMtaVirtualAliasDomains) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraMtaVirtualAliasDomains, zimbraMtaVirtualAliasDomains);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * Value for postconf virtual_alias_domains
-     *
-     * @param zimbraMtaVirtualAliasDomains new to add to existing values
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.5.0
-     */
-    @ZAttr(id=1556)
-    public Map<String,Object> addMtaVirtualAliasDomains(String zimbraMtaVirtualAliasDomains, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraMtaVirtualAliasDomains, zimbraMtaVirtualAliasDomains);
-        return attrs;
-    }
-
-    /**
-     * Value for postconf virtual_alias_domains
-     *
-     * @param zimbraMtaVirtualAliasDomains existing value to remove
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.5.0
-     */
-    @ZAttr(id=1556)
-    public void removeMtaVirtualAliasDomains(String zimbraMtaVirtualAliasDomains) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraMtaVirtualAliasDomains, zimbraMtaVirtualAliasDomains);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * Value for postconf virtual_alias_domains
-     *
-     * @param zimbraMtaVirtualAliasDomains existing value to remove
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.5.0
-     */
-    @ZAttr(id=1556)
-    public Map<String,Object> removeMtaVirtualAliasDomains(String zimbraMtaVirtualAliasDomains, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraMtaVirtualAliasDomains, zimbraMtaVirtualAliasDomains);
-        return attrs;
-    }
-
-    /**
-     * Value for postconf virtual_alias_domains
+     * Value for postconf virtual_alias_domains. Comma separated list.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -24627,7 +24317,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Value for postconf virtual_alias_domains
+     * Value for postconf virtual_alias_domains. Comma separated list.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -24714,19 +24404,19 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Value for postconf virtual_alias_maps
+     * Value for postconf virtual_alias_maps. Comma separated list.
      *
-     * @return zimbraMtaVirtualAliasMaps, or empty array if unset
+     * @return zimbraMtaVirtualAliasMaps, or "proxy:ldap:/opt/zimbra/conf/ldap-vam.cf" if unset
      *
      * @since ZCS 8.5.0
      */
     @ZAttr(id=1557)
-    public String[] getMtaVirtualAliasMaps() {
-        String[] value = getMultiAttr(Provisioning.A_zimbraMtaVirtualAliasMaps); return value.length > 0 ? value : new String[] {"proxy:ldap:/opt/zimbra/conf/ldap-vam.cf"};
+    public String getMtaVirtualAliasMaps() {
+        return getAttr(Provisioning.A_zimbraMtaVirtualAliasMaps, "proxy:ldap:/opt/zimbra/conf/ldap-vam.cf");
     }
 
     /**
-     * Value for postconf virtual_alias_maps
+     * Value for postconf virtual_alias_maps. Comma separated list.
      *
      * @param zimbraMtaVirtualAliasMaps new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -24734,14 +24424,14 @@ public abstract class ZAttrServer extends NamedEntry {
      * @since ZCS 8.5.0
      */
     @ZAttr(id=1557)
-    public void setMtaVirtualAliasMaps(String[] zimbraMtaVirtualAliasMaps) throws com.zimbra.common.service.ServiceException {
+    public void setMtaVirtualAliasMaps(String zimbraMtaVirtualAliasMaps) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMtaVirtualAliasMaps, zimbraMtaVirtualAliasMaps);
         getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
-     * Value for postconf virtual_alias_maps
+     * Value for postconf virtual_alias_maps. Comma separated list.
      *
      * @param zimbraMtaVirtualAliasMaps new value
      * @param attrs existing map to populate, or null to create a new map
@@ -24750,76 +24440,14 @@ public abstract class ZAttrServer extends NamedEntry {
      * @since ZCS 8.5.0
      */
     @ZAttr(id=1557)
-    public Map<String,Object> setMtaVirtualAliasMaps(String[] zimbraMtaVirtualAliasMaps, Map<String,Object> attrs) {
+    public Map<String,Object> setMtaVirtualAliasMaps(String zimbraMtaVirtualAliasMaps, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMtaVirtualAliasMaps, zimbraMtaVirtualAliasMaps);
         return attrs;
     }
 
     /**
-     * Value for postconf virtual_alias_maps
-     *
-     * @param zimbraMtaVirtualAliasMaps new to add to existing values
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.5.0
-     */
-    @ZAttr(id=1557)
-    public void addMtaVirtualAliasMaps(String zimbraMtaVirtualAliasMaps) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraMtaVirtualAliasMaps, zimbraMtaVirtualAliasMaps);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * Value for postconf virtual_alias_maps
-     *
-     * @param zimbraMtaVirtualAliasMaps new to add to existing values
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.5.0
-     */
-    @ZAttr(id=1557)
-    public Map<String,Object> addMtaVirtualAliasMaps(String zimbraMtaVirtualAliasMaps, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraMtaVirtualAliasMaps, zimbraMtaVirtualAliasMaps);
-        return attrs;
-    }
-
-    /**
-     * Value for postconf virtual_alias_maps
-     *
-     * @param zimbraMtaVirtualAliasMaps existing value to remove
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.5.0
-     */
-    @ZAttr(id=1557)
-    public void removeMtaVirtualAliasMaps(String zimbraMtaVirtualAliasMaps) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraMtaVirtualAliasMaps, zimbraMtaVirtualAliasMaps);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * Value for postconf virtual_alias_maps
-     *
-     * @param zimbraMtaVirtualAliasMaps existing value to remove
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.5.0
-     */
-    @ZAttr(id=1557)
-    public Map<String,Object> removeMtaVirtualAliasMaps(String zimbraMtaVirtualAliasMaps, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraMtaVirtualAliasMaps, zimbraMtaVirtualAliasMaps);
-        return attrs;
-    }
-
-    /**
-     * Value for postconf virtual_alias_maps
+     * Value for postconf virtual_alias_maps. Comma separated list.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -24833,7 +24461,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Value for postconf virtual_alias_maps
+     * Value for postconf virtual_alias_maps. Comma separated list.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -24848,19 +24476,19 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Value for postconf virtual_mailbox_domains
+     * Value for postconf virtual_mailbox_domains. Comma separated list.
      *
-     * @return zimbraMtaVirtualMailboxDomains, or empty array if unset
+     * @return zimbraMtaVirtualMailboxDomains, or "proxy:ldap:/opt/zimbra/conf/ldap-vmd.cf" if unset
      *
      * @since ZCS 8.5.0
      */
     @ZAttr(id=1558)
-    public String[] getMtaVirtualMailboxDomains() {
-        String[] value = getMultiAttr(Provisioning.A_zimbraMtaVirtualMailboxDomains); return value.length > 0 ? value : new String[] {"proxy:ldap:/opt/zimbra/conf/ldap-vmd.cf"};
+    public String getMtaVirtualMailboxDomains() {
+        return getAttr(Provisioning.A_zimbraMtaVirtualMailboxDomains, "proxy:ldap:/opt/zimbra/conf/ldap-vmd.cf");
     }
 
     /**
-     * Value for postconf virtual_mailbox_domains
+     * Value for postconf virtual_mailbox_domains. Comma separated list.
      *
      * @param zimbraMtaVirtualMailboxDomains new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -24868,14 +24496,14 @@ public abstract class ZAttrServer extends NamedEntry {
      * @since ZCS 8.5.0
      */
     @ZAttr(id=1558)
-    public void setMtaVirtualMailboxDomains(String[] zimbraMtaVirtualMailboxDomains) throws com.zimbra.common.service.ServiceException {
+    public void setMtaVirtualMailboxDomains(String zimbraMtaVirtualMailboxDomains) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMtaVirtualMailboxDomains, zimbraMtaVirtualMailboxDomains);
         getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
-     * Value for postconf virtual_mailbox_domains
+     * Value for postconf virtual_mailbox_domains. Comma separated list.
      *
      * @param zimbraMtaVirtualMailboxDomains new value
      * @param attrs existing map to populate, or null to create a new map
@@ -24884,76 +24512,14 @@ public abstract class ZAttrServer extends NamedEntry {
      * @since ZCS 8.5.0
      */
     @ZAttr(id=1558)
-    public Map<String,Object> setMtaVirtualMailboxDomains(String[] zimbraMtaVirtualMailboxDomains, Map<String,Object> attrs) {
+    public Map<String,Object> setMtaVirtualMailboxDomains(String zimbraMtaVirtualMailboxDomains, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMtaVirtualMailboxDomains, zimbraMtaVirtualMailboxDomains);
         return attrs;
     }
 
     /**
-     * Value for postconf virtual_mailbox_domains
-     *
-     * @param zimbraMtaVirtualMailboxDomains new to add to existing values
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.5.0
-     */
-    @ZAttr(id=1558)
-    public void addMtaVirtualMailboxDomains(String zimbraMtaVirtualMailboxDomains) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraMtaVirtualMailboxDomains, zimbraMtaVirtualMailboxDomains);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * Value for postconf virtual_mailbox_domains
-     *
-     * @param zimbraMtaVirtualMailboxDomains new to add to existing values
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.5.0
-     */
-    @ZAttr(id=1558)
-    public Map<String,Object> addMtaVirtualMailboxDomains(String zimbraMtaVirtualMailboxDomains, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraMtaVirtualMailboxDomains, zimbraMtaVirtualMailboxDomains);
-        return attrs;
-    }
-
-    /**
-     * Value for postconf virtual_mailbox_domains
-     *
-     * @param zimbraMtaVirtualMailboxDomains existing value to remove
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.5.0
-     */
-    @ZAttr(id=1558)
-    public void removeMtaVirtualMailboxDomains(String zimbraMtaVirtualMailboxDomains) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraMtaVirtualMailboxDomains, zimbraMtaVirtualMailboxDomains);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * Value for postconf virtual_mailbox_domains
-     *
-     * @param zimbraMtaVirtualMailboxDomains existing value to remove
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.5.0
-     */
-    @ZAttr(id=1558)
-    public Map<String,Object> removeMtaVirtualMailboxDomains(String zimbraMtaVirtualMailboxDomains, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraMtaVirtualMailboxDomains, zimbraMtaVirtualMailboxDomains);
-        return attrs;
-    }
-
-    /**
-     * Value for postconf virtual_mailbox_domains
+     * Value for postconf virtual_mailbox_domains. Comma separated list.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -24967,7 +24533,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Value for postconf virtual_mailbox_domains
+     * Value for postconf virtual_mailbox_domains. Comma separated list.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -24982,19 +24548,19 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Value for postconf virtual_mailbox_maps
+     * Value for postconf virtual_mailbox_maps. Comma separated list.
      *
-     * @return zimbraMtaVirtualMailboxMaps, or empty array if unset
+     * @return zimbraMtaVirtualMailboxMaps, or "proxy:ldap:/opt/zimbra/conf/ldap-vmm.cf" if unset
      *
      * @since ZCS 8.5.0
      */
     @ZAttr(id=1559)
-    public String[] getMtaVirtualMailboxMaps() {
-        String[] value = getMultiAttr(Provisioning.A_zimbraMtaVirtualMailboxMaps); return value.length > 0 ? value : new String[] {"proxy:ldap:/opt/zimbra/conf/ldap-vmm.cf"};
+    public String getMtaVirtualMailboxMaps() {
+        return getAttr(Provisioning.A_zimbraMtaVirtualMailboxMaps, "proxy:ldap:/opt/zimbra/conf/ldap-vmm.cf");
     }
 
     /**
-     * Value for postconf virtual_mailbox_maps
+     * Value for postconf virtual_mailbox_maps. Comma separated list.
      *
      * @param zimbraMtaVirtualMailboxMaps new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -25002,14 +24568,14 @@ public abstract class ZAttrServer extends NamedEntry {
      * @since ZCS 8.5.0
      */
     @ZAttr(id=1559)
-    public void setMtaVirtualMailboxMaps(String[] zimbraMtaVirtualMailboxMaps) throws com.zimbra.common.service.ServiceException {
+    public void setMtaVirtualMailboxMaps(String zimbraMtaVirtualMailboxMaps) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMtaVirtualMailboxMaps, zimbraMtaVirtualMailboxMaps);
         getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
-     * Value for postconf virtual_mailbox_maps
+     * Value for postconf virtual_mailbox_maps. Comma separated list.
      *
      * @param zimbraMtaVirtualMailboxMaps new value
      * @param attrs existing map to populate, or null to create a new map
@@ -25018,76 +24584,14 @@ public abstract class ZAttrServer extends NamedEntry {
      * @since ZCS 8.5.0
      */
     @ZAttr(id=1559)
-    public Map<String,Object> setMtaVirtualMailboxMaps(String[] zimbraMtaVirtualMailboxMaps, Map<String,Object> attrs) {
+    public Map<String,Object> setMtaVirtualMailboxMaps(String zimbraMtaVirtualMailboxMaps, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMtaVirtualMailboxMaps, zimbraMtaVirtualMailboxMaps);
         return attrs;
     }
 
     /**
-     * Value for postconf virtual_mailbox_maps
-     *
-     * @param zimbraMtaVirtualMailboxMaps new to add to existing values
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.5.0
-     */
-    @ZAttr(id=1559)
-    public void addMtaVirtualMailboxMaps(String zimbraMtaVirtualMailboxMaps) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraMtaVirtualMailboxMaps, zimbraMtaVirtualMailboxMaps);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * Value for postconf virtual_mailbox_maps
-     *
-     * @param zimbraMtaVirtualMailboxMaps new to add to existing values
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.5.0
-     */
-    @ZAttr(id=1559)
-    public Map<String,Object> addMtaVirtualMailboxMaps(String zimbraMtaVirtualMailboxMaps, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraMtaVirtualMailboxMaps, zimbraMtaVirtualMailboxMaps);
-        return attrs;
-    }
-
-    /**
-     * Value for postconf virtual_mailbox_maps
-     *
-     * @param zimbraMtaVirtualMailboxMaps existing value to remove
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.5.0
-     */
-    @ZAttr(id=1559)
-    public void removeMtaVirtualMailboxMaps(String zimbraMtaVirtualMailboxMaps) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraMtaVirtualMailboxMaps, zimbraMtaVirtualMailboxMaps);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * Value for postconf virtual_mailbox_maps
-     *
-     * @param zimbraMtaVirtualMailboxMaps existing value to remove
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.5.0
-     */
-    @ZAttr(id=1559)
-    public Map<String,Object> removeMtaVirtualMailboxMaps(String zimbraMtaVirtualMailboxMaps, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraMtaVirtualMailboxMaps, zimbraMtaVirtualMailboxMaps);
-        return attrs;
-    }
-
-    /**
-     * Value for postconf virtual_mailbox_maps
+     * Value for postconf virtual_mailbox_maps. Comma separated list.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -25101,7 +24605,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Value for postconf virtual_mailbox_maps
+     * Value for postconf virtual_mailbox_maps. Comma separated list.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs

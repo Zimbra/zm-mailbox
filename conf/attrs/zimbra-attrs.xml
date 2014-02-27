@@ -7457,9 +7457,9 @@ TODO: delete them permanently from here
   <desc>external social URL</desc>
 </attr>
 
-<attr id="1493" name="zimbraMtaAliasMaps" type="string" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
+<attr id="1493" name="zimbraMtaAliasMaps" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
   <globalConfigValue>lmdb:/etc/aliases</globalConfigValue>
-  <desc>Value for postconf alias_maps</desc>
+  <desc>Value for postconf alias_maps. Comma separated list.</desc>
 </attr>
 
 <attr id="1494" name="zimbraMtaAlwaysAddMissingHeaders" type="enum" value="yes,no" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
@@ -7634,8 +7634,8 @@ TODO: delete them permanently from here
   <desc>Value for postconf smtp_sasl_mechanism_filter</desc>
 </attr>
 
-<attr id="1529" name="zimbraMtaSmtpSaslPasswordMaps" type="string" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
-  <desc>Value for postconf smtp_sasl_password_maps</desc>
+<attr id="1529" name="zimbraMtaSmtpSaslPasswordMaps" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
+  <desc>Value for postconf smtp_sasl_password_maps.  Comma separated list.</desc>
 </attr>
 
 <attr id="1530" name="zimbraMtaPolicyTimeLimit" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
@@ -7729,9 +7729,9 @@ TODO: delete them permanently from here
   <desc>Value for postconf propagate_unmatched_extensions</desc>
 </attr>
 
-<attr id="1548" name="zimbraMtaSenderCanonicalMaps" type="string" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
+<attr id="1548" name="zimbraMtaSenderCanonicalMaps" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
   <globalConfigValue>proxy:ldap:/opt/zimbra/conf/ldap-scm.cf</globalConfigValue>
-  <desc>Value for postconf sender_canonical_maps</desc>
+  <desc>Value for postconf sender_canonical_maps. Comma separated list.</desc>
 </attr>
 
 <attr id="1549" name="zimbraMtaSmtpSaslSecurityOptions" type="enum" value="noplaintext,noactive,nodictionary,noanonymous,mutual_auth" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
@@ -7764,29 +7764,29 @@ TODO: delete them permanently from here
   <desc>Value for postconf smtpd_data_restrictions</desc>
 </attr>
 
-<attr id="1555" name="zimbraMtaTransportMaps" type="string" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
+<attr id="1555" name="zimbraMtaTransportMaps" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
   <globalConfigValue>proxy:ldap:/opt/zimbra/conf/ldap-transport.cf</globalConfigValue>
-  <desc>Value for postconf transport_maps</desc>
+  <desc>Value for postconf transport_maps. Comma separated list.</desc>
 </attr>
 
-<attr id="1556" name="zimbraMtaVirtualAliasDomains" type="string" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
+<attr id="1556" name="zimbraMtaVirtualAliasDomains" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
   <globalConfigValue>proxy:ldap:/opt/zimbra/conf/ldap-vad.cf</globalConfigValue>
-  <desc>Value for postconf virtual_alias_domains</desc>
+  <desc>Value for postconf virtual_alias_domains. Comma separated list.</desc>
 </attr>
 
-<attr id="1557" name="zimbraMtaVirtualAliasMaps" type="string" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
+<attr id="1557" name="zimbraMtaVirtualAliasMaps" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
   <globalConfigValue>proxy:ldap:/opt/zimbra/conf/ldap-vam.cf</globalConfigValue>
-  <desc>Value for postconf virtual_alias_maps</desc>
+  <desc>Value for postconf virtual_alias_maps. Comma separated list.</desc>
 </attr>
 
-<attr id="1558" name="zimbraMtaVirtualMailboxDomains" type="string" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
+<attr id="1558" name="zimbraMtaVirtualMailboxDomains" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
   <globalConfigValue>proxy:ldap:/opt/zimbra/conf/ldap-vmd.cf</globalConfigValue>
-  <desc>Value for postconf virtual_mailbox_domains</desc>
+  <desc>Value for postconf virtual_mailbox_domains. Comma separated list.</desc>
 </attr>
 
-<attr id="1559" name="zimbraMtaVirtualMailboxMaps" type="string" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
+<attr id="1559" name="zimbraMtaVirtualMailboxMaps" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
   <globalConfigValue>proxy:ldap:/opt/zimbra/conf/ldap-vmm.cf</globalConfigValue>
-  <desc>Value for postconf virtual_mailbox_maps</desc>
+  <desc>Value for postconf virtual_mailbox_maps. Comma separated list.</desc>
 </attr>
 
 <attr id="1560" name="zimbraMtaSaslSmtpdMechList" type="string" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
