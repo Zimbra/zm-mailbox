@@ -6212,10 +6212,28 @@ public class ZAttrProvisioning {
     public static final String A_zimbraHttpDosFilterMaxRequestsPerSec = "zimbraHttpDosFilterMaxRequestsPerSec";
 
     /**
+     * The maximum allowed size in bytes for a HTTP header field cache in
+     * Jetty
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1582)
+    public static final String A_zimbraHttpHeaderCacheSize = "zimbraHttpHeaderCacheSize";
+
+    /**
      * number of http handler threads
      */
     @ZAttr(id=518)
     public static final String A_zimbraHttpNumThreads = "zimbraHttpNumThreads";
+
+    /**
+     * The size in bytes of the output buffer used to aggregate HTTP output
+     * in Jetty
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1579)
+    public static final String A_zimbraHttpOutputBufferSize = "zimbraHttpOutputBufferSize";
 
     /**
      * the http proxy URL to connect to when making outgoing connections
@@ -6223,6 +6241,22 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=388)
     public static final String A_zimbraHttpProxyURL = "zimbraHttpProxyURL";
+
+    /**
+     * The maximum allowed size in bytes for a HTTP request header in Jetty
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1580)
+    public static final String A_zimbraHttpRequestHeaderSize = "zimbraHttpRequestHeaderSize";
+
+    /**
+     * The maximum allowed size in bytes for a HTTP response header in Jetty
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1581)
+    public static final String A_zimbraHttpResponseHeaderSize = "zimbraHttpResponseHeaderSize";
 
     /**
      * Deprecated since: 5.0. not applicable for jetty. Orig desc: number of
@@ -12832,6 +12866,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=393)
     public static final String A_zimbraTextAnalyzer = "zimbraTextAnalyzer";
+
+    /**
+     * Whether or not Jetty thread monitor is enabled. Defaults to FALSE
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1583)
+    public static final String A_zimbraThreadMontorEnabled = "zimbraThreadMontorEnabled";
 
     /**
      * Hosts to ignore during IP based throttling. Account and command rate
