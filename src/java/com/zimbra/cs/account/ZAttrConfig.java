@@ -15874,6 +15874,83 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * The maximum allowed size in bytes for a HTTP header field cache in
+     * Jetty
+     *
+     * @return zimbraHttpHeaderCacheSize, or 512 if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1582)
+    public int getHttpHeaderCacheSize() {
+        return getIntAttr(Provisioning.A_zimbraHttpHeaderCacheSize, 512);
+    }
+
+    /**
+     * The maximum allowed size in bytes for a HTTP header field cache in
+     * Jetty
+     *
+     * @param zimbraHttpHeaderCacheSize new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1582)
+    public void setHttpHeaderCacheSize(int zimbraHttpHeaderCacheSize) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraHttpHeaderCacheSize, Integer.toString(zimbraHttpHeaderCacheSize));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The maximum allowed size in bytes for a HTTP header field cache in
+     * Jetty
+     *
+     * @param zimbraHttpHeaderCacheSize new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1582)
+    public Map<String,Object> setHttpHeaderCacheSize(int zimbraHttpHeaderCacheSize, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraHttpHeaderCacheSize, Integer.toString(zimbraHttpHeaderCacheSize));
+        return attrs;
+    }
+
+    /**
+     * The maximum allowed size in bytes for a HTTP header field cache in
+     * Jetty
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1582)
+    public void unsetHttpHeaderCacheSize() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraHttpHeaderCacheSize, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The maximum allowed size in bytes for a HTTP header field cache in
+     * Jetty
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1582)
+    public Map<String,Object> unsetHttpHeaderCacheSize(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraHttpHeaderCacheSize, "");
+        return attrs;
+    }
+
+    /**
      * number of http handler threads
      *
      * @return zimbraHttpNumThreads, or 250 if unset
@@ -15932,6 +16009,83 @@ public abstract class ZAttrConfig extends Entry {
     public Map<String,Object> unsetHttpNumThreads(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraHttpNumThreads, "");
+        return attrs;
+    }
+
+    /**
+     * The size in bytes of the output buffer used to aggregate HTTP output
+     * in Jetty
+     *
+     * @return zimbraHttpOutputBufferSize, or 32768 if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1579)
+    public int getHttpOutputBufferSize() {
+        return getIntAttr(Provisioning.A_zimbraHttpOutputBufferSize, 32768);
+    }
+
+    /**
+     * The size in bytes of the output buffer used to aggregate HTTP output
+     * in Jetty
+     *
+     * @param zimbraHttpOutputBufferSize new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1579)
+    public void setHttpOutputBufferSize(int zimbraHttpOutputBufferSize) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraHttpOutputBufferSize, Integer.toString(zimbraHttpOutputBufferSize));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The size in bytes of the output buffer used to aggregate HTTP output
+     * in Jetty
+     *
+     * @param zimbraHttpOutputBufferSize new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1579)
+    public Map<String,Object> setHttpOutputBufferSize(int zimbraHttpOutputBufferSize, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraHttpOutputBufferSize, Integer.toString(zimbraHttpOutputBufferSize));
+        return attrs;
+    }
+
+    /**
+     * The size in bytes of the output buffer used to aggregate HTTP output
+     * in Jetty
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1579)
+    public void unsetHttpOutputBufferSize() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraHttpOutputBufferSize, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The size in bytes of the output buffer used to aggregate HTTP output
+     * in Jetty
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1579)
+    public Map<String,Object> unsetHttpOutputBufferSize(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraHttpOutputBufferSize, "");
         return attrs;
     }
 
@@ -16057,6 +16211,150 @@ public abstract class ZAttrConfig extends Entry {
     public Map<String,Object> unsetHttpProxyURL(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraHttpProxyURL, "");
+        return attrs;
+    }
+
+    /**
+     * The maximum allowed size in bytes for a HTTP request header in Jetty
+     *
+     * @return zimbraHttpRequestHeaderSize, or 8192 if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1580)
+    public int getHttpRequestHeaderSize() {
+        return getIntAttr(Provisioning.A_zimbraHttpRequestHeaderSize, 8192);
+    }
+
+    /**
+     * The maximum allowed size in bytes for a HTTP request header in Jetty
+     *
+     * @param zimbraHttpRequestHeaderSize new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1580)
+    public void setHttpRequestHeaderSize(int zimbraHttpRequestHeaderSize) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraHttpRequestHeaderSize, Integer.toString(zimbraHttpRequestHeaderSize));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The maximum allowed size in bytes for a HTTP request header in Jetty
+     *
+     * @param zimbraHttpRequestHeaderSize new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1580)
+    public Map<String,Object> setHttpRequestHeaderSize(int zimbraHttpRequestHeaderSize, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraHttpRequestHeaderSize, Integer.toString(zimbraHttpRequestHeaderSize));
+        return attrs;
+    }
+
+    /**
+     * The maximum allowed size in bytes for a HTTP request header in Jetty
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1580)
+    public void unsetHttpRequestHeaderSize() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraHttpRequestHeaderSize, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The maximum allowed size in bytes for a HTTP request header in Jetty
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1580)
+    public Map<String,Object> unsetHttpRequestHeaderSize(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraHttpRequestHeaderSize, "");
+        return attrs;
+    }
+
+    /**
+     * The maximum allowed size in bytes for a HTTP response header in Jetty
+     *
+     * @return zimbraHttpResponseHeaderSize, or 8192 if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1581)
+    public int getHttpResponseHeaderSize() {
+        return getIntAttr(Provisioning.A_zimbraHttpResponseHeaderSize, 8192);
+    }
+
+    /**
+     * The maximum allowed size in bytes for a HTTP response header in Jetty
+     *
+     * @param zimbraHttpResponseHeaderSize new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1581)
+    public void setHttpResponseHeaderSize(int zimbraHttpResponseHeaderSize) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraHttpResponseHeaderSize, Integer.toString(zimbraHttpResponseHeaderSize));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The maximum allowed size in bytes for a HTTP response header in Jetty
+     *
+     * @param zimbraHttpResponseHeaderSize new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1581)
+    public Map<String,Object> setHttpResponseHeaderSize(int zimbraHttpResponseHeaderSize, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraHttpResponseHeaderSize, Integer.toString(zimbraHttpResponseHeaderSize));
+        return attrs;
+    }
+
+    /**
+     * The maximum allowed size in bytes for a HTTP response header in Jetty
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1581)
+    public void unsetHttpResponseHeaderSize() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraHttpResponseHeaderSize, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The maximum allowed size in bytes for a HTTP response header in Jetty
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1581)
+    public Map<String,Object> unsetHttpResponseHeaderSize(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraHttpResponseHeaderSize, "");
         return attrs;
     }
 
@@ -51007,6 +51305,78 @@ public abstract class ZAttrConfig extends Entry {
     public Map<String,Object> unsetTableMaintenanceOperation(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraTableMaintenanceOperation, "");
+        return attrs;
+    }
+
+    /**
+     * Whether or not Jetty thread monitor is enabled. Defaults to FALSE
+     *
+     * @return zimbraThreadMontorEnabled, or false if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1583)
+    public boolean isThreadMontorEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraThreadMontorEnabled, false);
+    }
+
+    /**
+     * Whether or not Jetty thread monitor is enabled. Defaults to FALSE
+     *
+     * @param zimbraThreadMontorEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1583)
+    public void setThreadMontorEnabled(boolean zimbraThreadMontorEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraThreadMontorEnabled, zimbraThreadMontorEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether or not Jetty thread monitor is enabled. Defaults to FALSE
+     *
+     * @param zimbraThreadMontorEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1583)
+    public Map<String,Object> setThreadMontorEnabled(boolean zimbraThreadMontorEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraThreadMontorEnabled, zimbraThreadMontorEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether or not Jetty thread monitor is enabled. Defaults to FALSE
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1583)
+    public void unsetThreadMontorEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraThreadMontorEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether or not Jetty thread monitor is enabled. Defaults to FALSE
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1583)
+    public Map<String,Object> unsetThreadMontorEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraThreadMontorEnabled, "");
         return attrs;
     }
 

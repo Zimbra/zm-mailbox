@@ -7878,4 +7878,29 @@ TODO: delete them permanently from here
   <desc>Loglevel for SpamAssassin when called via Amavis. Defaults to 0 (info).  Can be 0 or 1 (info, all)</desc>
 </attr>
 
+<attr id="1579" name="zimbraHttpOutputBufferSize" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="8.5.0">
+  <globalConfigValue>32768</globalConfigValue>
+  <desc>The size in bytes of the output buffer used to aggregate HTTP output in Jetty</desc>
+</attr>
+
+<attr id="1580" name="zimbraHttpRequestHeaderSize" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="8.5.0">
+  <globalConfigValue>8192</globalConfigValue>
+  <desc>The maximum allowed size in bytes for a HTTP request header in Jetty</desc>
+</attr>
+
+<attr id="1581" name="zimbraHttpResponseHeaderSize" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="8.5.0">
+  <globalConfigValue>8192</globalConfigValue>
+  <desc>The maximum allowed size in bytes for a HTTP response header in Jetty</desc>
+</attr>
+
+<attr id="1582" name="zimbraHttpHeaderCacheSize" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="8.5.0">
+  <globalConfigValue>512</globalConfigValue>
+  <desc>The maximum allowed size in bytes for a HTTP header field cache in Jetty</desc>
+</attr>
+
+<attr id="1583" name="zimbraThreadMontorEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="8.5.0">
+  <globalConfigValue>FALSE</globalConfigValue>
+  <desc>Whether or not Jetty thread monitor is enabled.  Defaults to FALSE</desc>
+</attr>
+
 </attrs>
