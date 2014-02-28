@@ -113,6 +113,12 @@ ANT_OPTS="-Xdebug -Xnoagent -Djava.compiler=NONE -Djava.library.path=/opt/zimbra
 
 This will start jetty-ant plugin but blocks on listening on port 4000.
 
+If you run into Out Of Memory errors, you may also want to increase the memory size by adding PermSize and MaxPermSize options.
+
+The command line will look like this with additional memory allocation options:
+
+ANT_OPTS="-Xdebug -Xnoagent -Djava.compiler=NONE -Djava.library.path=/opt/zimbra/lib -Xrunjdwp:transport=dt_socket,address=4000,server=y,suspend=y, -XX:PermSize=64M -XX:MaxPermSize=256M" ant -buildfile jetty-ant.xml jetty.run 
+
 Now go to Eclipse and select Run/Debug... and right click on Remote
 Java Application to "New" a configuration.  Call it anything you want
 such as "jetty-ant".  Select any project as the debug project.  Set
