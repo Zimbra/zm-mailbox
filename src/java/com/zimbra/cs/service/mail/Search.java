@@ -38,6 +38,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
+import com.zimbra.cs.index.MessageHit;
 import com.zimbra.cs.index.QueryInfo;
 import com.zimbra.cs.index.ResultsPager;
 import com.zimbra.cs.index.SearchParams;
@@ -126,8 +127,14 @@ public class Search extends MailDocumentHandler  {
     private void putHits(ZimbraSoapContext zsc, OperationContext octxt, Element el, ZimbraQueryResults results,
             SearchParams params) throws ServiceException {
 
-        if (params.getInlineRule() == ExpandResults.HITS) {
-            // "hits" is not a valid value for Search...
+        if (params.getInlineRule() == ExpandResults.HITS ||
+            params.getInlineRule() == ExpandResults.FIRST_MSG ||
+            params.getInlineRule() == ExpandResults.HITS_OR_FIRST_MSG ||
+            params.getInlineRule() == ExpandResults.UNREAD ||
+            params.getInlineRule() == ExpandResults.UNREAD_FIRST ||
+            params.getInlineRule() == ExpandResults.U_OR_FIRST_MSG ||
+            params.getInlineRule() == ExpandResults.U1_OR_FIRST_MSG) {
+            // these are not valid values for Search (according to soap.txt)
             params.setInlineRule(ExpandResults.NONE);
         }
 
@@ -146,16 +153,38 @@ public class Search extends MailDocumentHandler  {
         SearchResponse resp = new SearchResponse(zsc, octxt, el, params);
         resp.setIncludeMailbox(false);
         resp.setSortOrder(pager.getSortOrder());
-
+        boolean expand;
+        ExpandResults expandValue = params.getInlineRule();
+        int hitNum = 0;
         while (pager.hasNext() && resp.size() < params.getLimit()) {
+            hitNum ++;
             ZimbraHit hit = pager.getNextHit();
-            resp.add(hit);
-        }
+            if (hit instanceof MessageHit) {
+                /*
+                 * Determine whether or not to expand MessageHits.
+                 * This logic used to be in SearchResponse.isInlineExpand, but was moved
+                 * to the handler classes because in some cases
+                 * the decision to expand any particular hit is dependent on
+                 * other hits (see SearchConv)
+                 */
+                if (expandValue == ExpandResults.NONE) {
+                    expand = false;
+                } else if (expandValue == ExpandResults.ALL) {
+                    expand = true;
+                } else if (expandValue == ExpandResults.FIRST) {
+                    expand = params.getOffset() > 0 ? false : hitNum == 1;
+                } else {
+                    expand = expandValue.matches(hit.getParsedItemID());
+                }
+                resp.add(hit, expand);
+            } else {
+                resp.add(hit);
+            }
 
         resp.addHasMore(pager.hasNext());
         resp.add(results.getResultInfo());
     }
-
+    }
     // Calendar summary cache stuff
 
     /**
