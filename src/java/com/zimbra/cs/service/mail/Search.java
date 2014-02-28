@@ -180,10 +180,9 @@ public class Search extends MailDocumentHandler  {
             } else {
                 resp.add(hit);
             }
-
+        }
         resp.addHasMore(pager.hasNext());
         resp.add(results.getResultInfo());
-    }
     }
     // Calendar summary cache stuff
 
