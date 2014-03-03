@@ -29,7 +29,6 @@ import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Cos;
-import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Group;
@@ -241,6 +240,10 @@ public class ACLAccessManager extends AccessManager implements AdminConsoleCapab
         Boolean hardRulesResult = HardRules.checkHardRules(grantee, asAdmin, target, rightNeeded);
         if (hardRulesResult != null) {
             return hardRulesResult.booleanValue();
+        }
+
+        if (checkOverridingRules(grantee, asAdmin, target, rightNeeded)) {
+            return true;
         }
 
         // check pseudo rights
@@ -468,25 +471,25 @@ public class ACLAccessManager extends AccessManager implements AdminConsoleCapab
         if (!UserRights.R_ownDistList.equals(rightNeeded)) {
             return false;
         }
-        if ((grantee instanceof Account) && (target instanceof DistributionList)) {
+        if ((grantee instanceof Account) && (target instanceof Group)) {
             Account authedAcct = (Account) grantee;
-            DistributionList dl = (DistributionList) target;
+            Group group = (Group) target;
             if (!AccessControlUtil.isDelegatedAdmin(authedAcct, asAdmin)) {
                 return false;
             }
             String domainName;
             try {
-                domainName = NameUtil.EmailAddress.getDomainNameFromEmail(dl.getName());
+                domainName = NameUtil.EmailAddress.getDomainNameFromEmail(group.getName());
                 Domain domain = Provisioning.getInstance().get(Key.DomainBy.name, domainName);
                 if (domain == null) {
                     return false;
                 }
                 checkDomainStatus(domain);
-                Right alternativeRight = dl.isDynamic() ? Admin.R_createGroup : Admin.R_createDistributionList;
+                Right alternativeRight = group.isDynamic() ? Admin.R_createGroup : Admin.R_createDistributionList;
                 if (canDo(authedAcct, domain, alternativeRight, true, null)) {
                     ZimbraLog.acl.debug(
-                        "Right [%s] ALLOWED to '%s' for DL '%s' because %s is allowed right [%s] for domain '%s'",
-                        rightNeeded.getName(), authedAcct.getName(), dl.getName(), authedAcct.getName(),
+                        "Right [%s] ALLOWED to '%s' for Group '%s' because %s is allowed right [%s] for domain '%s'",
+                        rightNeeded.getName(), authedAcct.getName(), group.getName(), authedAcct.getName(),
                         alternativeRight.getName(), domain.getName());
                     return true;
                 }
