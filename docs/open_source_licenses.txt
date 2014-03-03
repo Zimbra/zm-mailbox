@@ -1,6 +1,6 @@
 open_source_license.txt
 
-Zimbra Collaboration Suite 8.0.6 GA
+Zimbra Collaboration Suite 8.0.7 GA
 
 
 ===========================================================================
