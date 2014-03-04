@@ -101,8 +101,8 @@ SECTION 1: BSD-STYLE, MIT-STYLE, OR SIMILAR STYLE LICENSES
 SECTION 2: Apache License, V2.0
 
    >>> apache-ant-1.7.0
-   >>> apache-apr-1.4.6
-   >>> apache-apr-util-1.5.1
+   >>> apache-apr-1.5.0
+   >>> apache-apr-util-1.5.3
    >>> apache-commons-beanutils-1.8.0
    >>> apache-commons-cli-1.2
    >>> apache-commons-codec-1.6
@@ -16409,7 +16409,7 @@ information on the Apache Software Foundation, please see
 <http://www.apache.org/>.
 
 
->>> apache-apr-1.4.6
+>>> apache-apr-1.5.0
 
 Licensed to the Apache Software Foundation (ASF) under one or more
 contributor license agreements.  See the NOTICE file distributed with
@@ -16566,7 +16566,7 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 
 
->>> apache-apr-util-1.5.1
+>>> apache-apr-util-1.5.3
 
 Apache Portable Runtime Utility Library
 Copyright (c) 2011 The Apache Software Foundation.
