@@ -363,7 +363,7 @@ SECTION 10: GNU Lesser General Public License, V2.1
    >>> perl-test-nowarnings-1.04
    >>> syslog4j-0.9.46
    >>> tinymce-3.5.4.1
-   >>> unbound-ldap-sdk-2.3.1
+   >>> unbound-ldap-sdk-2.3.5
 
 
 
@@ -28622,7 +28622,7 @@ License: http://tinymce.moxiecode.com/license
 Contributing: http://tinymce.moxiecode.com/contributing
 
 
->>> unbound-ldap-sdk-2.3.1
+>>> unbound-ldap-sdk-2.3.5
 
 [PLEASE NOTE:  TELLIGENT, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE LGPL 2.1.PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE LGPL 2.1 THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.] 
 
