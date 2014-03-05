@@ -1310,7 +1310,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>provider class name for redo logging</desc>
 </attr>
 
-<attr id="226" name="zimbraMtaRestriction" type="string" max="2048" cardinality="multi" optionalIn="globalConfig,server">
+<attr id="226" name="zimbraMtaRestriction" type="string" max="2048" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited">
   <globalConfigValue>reject_invalid_helo_hostname</globalConfigValue>
   <globalConfigValue>reject_non_fqdn_sender</globalConfigValue>
   <desc>smtpd_recipient_restrictions used to reject email in various scenarios</desc>
