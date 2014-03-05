@@ -169,7 +169,7 @@ public abstract class LdapClient {
     
     public static void closeContext(ZLdapContext lctxt) {
         if (lctxt != null) {
-            lctxt.closeContext();
+            lctxt.closeContext(false);
         }
     }
     

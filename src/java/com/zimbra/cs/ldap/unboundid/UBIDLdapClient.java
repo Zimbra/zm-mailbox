@@ -76,7 +76,7 @@ public class UBIDLdapClient extends LdapClient {
                 }
             } finally {
                 if (zlc != null) {
-                    zlc.closeContext();
+                    zlc.closeContext(false);
                 }
             }
         }
