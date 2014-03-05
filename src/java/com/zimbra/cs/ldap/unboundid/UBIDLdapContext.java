@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -66,23 +66,23 @@ import com.zimbra.cs.ldap.ZSearchResultEnumeration;
 import com.zimbra.cs.stats.ZimbraPerf;
 
 public class UBIDLdapContext extends ZLdapContext {
-    
+
     private static boolean initialized = false;
-    
+
     private static ZimbraLdapConfig replicaConfig;
     private static ZimbraLdapConfig masterConfig;
-    
+
     private static LDAPConnectionPool replicaConnPool;
     private static LDAPConnectionPool masterConnPool;
-    
+
     private LDAPConnectionPool connPool;
     private LDAPConnection conn;
     private boolean isZimbraLdap;
     private DereferencePolicy derefAliasPolicy;
-    
+
     public static synchronized void init(boolean alwaysUseMaster) throws LdapException {
         assert(!initialized);
-        
+
         if (initialized) {
             return;
         }
@@ -116,32 +116,32 @@ public class UBIDLdapContext extends ZLdapContext {
             }
         }
     }
-    
-    // only called from TestLdapConnectivity unittest, so we can run multiple 
+
+    // only called from TestLdapConnectivity unittest, so we can run multiple
     // ldap configs (ldap, ldaps, etc) in one VM
     public static synchronized void shutdown() {
         LdapConnectionPool.closeAll();
-        
+
         initialized = false;
-        
+
         replicaConfig = null;
         masterConfig = null;
-        
+
         replicaConnPool = null;
         masterConnPool = null;
     }
-    
-    
+
+
     @Override
     public void debug() {
         // TODO Auto-generated method stub
-        
+
     }
 
     static synchronized void alwaysUseMaster() {
         replicaConnPool = masterConnPool;
     }
-    
+
     /*
      * Zimbra LDAP
      */
@@ -149,16 +149,16 @@ public class UBIDLdapContext extends ZLdapContext {
         super(usage);
         isZimbraLdap = true;
         derefAliasPolicy = DereferencePolicy.NEVER;
-        
+
         if (serverType.isMaster()) {
             connPool = masterConnPool;
         } else {
             connPool = replicaConnPool;
         }
-        
+
         conn = getConnection(connPool);
     }
-    
+
     /*
      * External LDAP
      */
@@ -166,7 +166,7 @@ public class UBIDLdapContext extends ZLdapContext {
         super(usage);
         isZimbraLdap = false;
         setDerefAliasPolicy(config);
-        
+
         connPool = LdapConnectionPool.getConnPoolByConfig(config);
         conn = getConnection(connPool);
     }
@@ -175,47 +175,47 @@ public class UBIDLdapContext extends ZLdapContext {
     public LDAPConnection getNative() {
         return conn;
     }
-    
-    private LDAPConnection getConnection(LDAPConnectionPool pool) 
+
+    private LDAPConnection getConnection(LDAPConnectionPool pool)
     throws LdapException {
         try {
-            
+
            // TODO: this is for backward compatibility with the legacy code - remvoe or enhance
             // TODO: should have a timer for each connection pool
             long start = 0;
             if (isZimbraLdap) {
                 start = ZimbraPerf.STOPWATCH_LDAP_DC.start();
             }
-            
+
             LDAPConnection connection = UBIDLdapOperation.GET_CONNECTION.execute(this, pool);
-            
+
             if (isZimbraLdap) {
                 ZimbraPerf.STOPWATCH_LDAP_DC.stop(start);
             }
-            
+
             LdapConnectionPool.debugCheckOut(pool, connection);
             return connection;
         } catch (LDAPException e) {
             throw mapToLdapException("unable to get connection", e);
         }
     }
-    
+
     public LDAPConnectionPool getConnectionPool() {
         String connPoolName = conn.getConnectionPoolName();
         return LdapConnectionPool.getConnPoolByName(connPoolName);
     }
-    
+
     public String getConnectionName() {
         return conn.getConnectionName();
     }
-    
+
     LDAPConnection getConn() {
         return conn;
     }
 
     private LdapException mapToLdapException(String message, LDAPException e) {
         if (ResultCode.TIMEOUT == e.getResultCode()) {
-            this.closeContext();
+            this.closeContext(true); //force connection to be terminated
         }
         if (isZimbraLdap) {
             return UBIDLdapException.mapToLdapException(message, e);
@@ -227,7 +227,7 @@ public class UBIDLdapContext extends ZLdapContext {
     }
 
     private void setDerefAliasPolicy(ExternalLdapConfig config) {
-        
+
         String derefPolicy = config.getDerefAliasPolicy();
 
         if (derefPolicy == null) {
@@ -246,23 +246,27 @@ public class UBIDLdapContext extends ZLdapContext {
             derefAliasPolicy = DereferencePolicy.NEVER;
         }
     }
-  
-    
+
     @Override
-    public void closeContext() {
-        
+    public void closeContext(boolean forceClose) {
+
         LdapConnectionPool.debugCheckIn(connPool, conn);
-        
+
         UBIDLogger.beforeOp(LdapOp.REL_CONN, conn);
-        // NOTE: do NOT call conn.close() because it will unbind from the server 
+        // NOTE: do NOT call conn.close() because it will unbind from the server
         //       and close the connection and defunt the connection from the pool.
         //       Just release it to the pool.
-        // 
-        connPool.releaseConnection(conn);
+        //
+        if (forceClose) {
+            connPool.releaseDefunctConnection(conn);
+        } else {
+            connPool.releaseConnection(conn);
+        }
+
         conn = null;
         // TODO check out this creature releaseConnectionAfterException
     }
-    
+
     @Override
     public void createEntry(ZMutableEntry entry) throws ServiceException {
         try {
@@ -271,19 +275,19 @@ public class UBIDLdapContext extends ZLdapContext {
             throw mapToLdapException("unable to create entry", e);
         }
     }
-    
+
     @Override
     public void createEntry(String dn, String objectClass, String[] attrs)
     throws ServiceException {
         UBIDMutableEntry entry = new UBIDMutableEntry();
         entry.setDN(dn);
-        
+
         entry.setAttr(LdapConstants.ATTR_objectClass, objectClass);
-        
+
         for (int i=0; i < attrs.length; i += 2) {
             entry.setAttr(attrs[i], attrs[i+1]);
         }
-        
+
         createEntry(entry);
     }
 
@@ -292,17 +296,17 @@ public class UBIDLdapContext extends ZLdapContext {
     throws ServiceException {
         UBIDMutableEntry entry = new UBIDMutableEntry();
         entry.setDN(dn);
-        
+
         Set<String> ocs = new HashSet<String>(Arrays.asList(objectClasses));
         entry.addAttr(LdapConstants.ATTR_objectClass, ocs);
-        
+
         for (int i=0; i < attrs.length; i += 2) {
             entry.setAttr(attrs[i], attrs[i+1]);
         }
-        
+
         createEntry(entry);
     }
-    
+
     @Override
     public ZModificationList createModificationList() {
         return new UBIDModificationList();
@@ -310,26 +314,26 @@ public class UBIDLdapContext extends ZLdapContext {
 
     @Override
     public void deleteChildren(String dn) throws ServiceException {
-        
+
         try {
-            // use ZLdapFilter instead of just the native Filter so it's 
+            // use ZLdapFilter instead of just the native Filter so it's
             // convenient for stating
             ZLdapFilter filter = ZLdapFilterFactory.getInstance().anyEntry();
             // Filter filter = Filter.createPresenceFilter(LdapConstants.ATTR_OBJECTCLASS);
-            
-            SearchRequest searchRequest = new SearchRequest(dn, 
+
+            SearchRequest searchRequest = new SearchRequest(dn,
                     SearchScope.ONE,
                     derefAliasPolicy,
                     0,  // size limit
                     0,  // time limit
                     false, // getTypesOnly
-                    ((UBIDLdapFilter) filter).getNative()  
-                    ); 
-                    
+                    ((UBIDLdapFilter) filter).getNative()
+                    );
+
             searchRequest.setAttributes("dn");
-            
+
             SearchResult result = UBIDLdapOperation.SEARCH.execute(this, searchRequest, filter);
-            
+
             List<SearchResultEntry> entries = result.getSearchEntries();
             for (SearchResultEntry entry : entries) {
                 deleteEntry(entry.getDN());
@@ -338,12 +342,12 @@ public class UBIDLdapContext extends ZLdapContext {
             throw mapToLdapException("unable to delete children", e);
         }
     }
-    
+
     @Override
     public ZAttributes getAttributes(String dn, String[] attrs) throws LdapException {
         try {
             SearchResultEntry entry = UBIDLdapOperation.GET_ENTRY.execute(this, dn, attrs);
-            
+
             if (entry == null) {
                 throw LdapException.ENTRY_NOT_FOUND("entry not found at " + dn, null);
             }
@@ -352,12 +356,12 @@ public class UBIDLdapContext extends ZLdapContext {
             throw mapToLdapException("unable to get attributes", e);
         }
     }
-    
+
     @Override
     public ZLdapSchema getSchema() throws LdapException {
         try {
             Schema schema;
-            
+
             if (InMemoryLdapServer.isOn()) {
                 schema = InMemoryLdapServer.getSchema(InMemoryLdapServer.ZIMBRA_LDAP_SERVER);
             } else {
@@ -368,9 +372,9 @@ public class UBIDLdapContext extends ZLdapContext {
             throw mapToLdapException("unable to get schema", e);
         }
     }
-    
+
     @Override
-    public void modifyAttributes(String dn, ZModificationList modList) 
+    public void modifyAttributes(String dn, ZModificationList modList)
     throws LdapException {
         try {
             LDAPResult result = UBIDLdapOperation.MODIFY_ATTRS.execute(
@@ -382,12 +386,12 @@ public class UBIDLdapContext extends ZLdapContext {
 
     @Override
     public boolean testAndModifyAttributes(String dn,
-            ZModificationList modList, ZLdapFilter testFilter) 
+            ZModificationList modList, ZLdapFilter testFilter)
     throws LdapException {
         try {
             ModifyRequest modReq = new ModifyRequest(dn, ((UBIDModificationList)modList).getModList());
             modReq.addControl(new AssertionRequestControl(((UBIDLdapFilter) testFilter).getNative()));
-            
+
             LDAPResult result = UBIDLdapOperation.TEST_AND_MODIFY_ATTRS.execute(this, modReq);
             return true;
         } catch (LDAPException e) {
@@ -400,64 +404,64 @@ public class UBIDLdapContext extends ZLdapContext {
             }
         }
     }
-    
+
     @Override
     public void moveChildren(String oldDn, String newDn) throws ServiceException {
         try {
-            // use ZLdapFilter instead of just the native Filter so it's 
+            // use ZLdapFilter instead of just the native Filter so it's
             // convenient for stating
             ZLdapFilter filter = ZLdapFilterFactory.getInstance().anyEntry();
             // Filter filter = Filter.createPresenceFilter(LdapConstants.ATTR_OBJECTCLASS);
-            
-            SearchRequest searchRequest = new SearchRequest(oldDn, 
+
+            SearchRequest searchRequest = new SearchRequest(oldDn,
                     SearchScope.ONE,
                     derefAliasPolicy,
                     0,  // size limit
                     0,  // time limit
                     false, // getTypesOnly
-                    ((UBIDLdapFilter) filter).getNative()  
-                    ); 
-                    
+                    ((UBIDLdapFilter) filter).getNative()
+                    );
+
             searchRequest.setAttributes("dn");
-            
+
             SearchResult result = UBIDLdapOperation.SEARCH.execute(this, searchRequest, filter);
-            
+
             List<SearchResultEntry> entries = result.getSearchEntries();
             for (SearchResultEntry entry : entries) {
                 DN entryDN = entry.getParsedDN();
                 String childDn = entryDN.toNormalizedString();
                 String childRdn = entryDN.getRDNString();
-                
+
                 UBIDLdapOperation.MODIFY_DN.execute(this, childDn, childRdn, true, newDn);
             }
         } catch (LDAPException e) {
             throw mapToLdapException("unable to move children", e);
         }
     }
-    
+
     @Override
     public void renameEntry(String oldDn, String newDn) throws LdapException {
         try {
             DN newDN = new DN(newDn);
             String newRDN = newDN.getRDNString();
             String newSuperiorDN = newDN.getParentString();
-            
+
             UBIDLdapOperation.MODIFY_DN.execute(this, oldDn, newRDN, true, newSuperiorDN);
         } catch (LDAPException e) {
             throw mapToLdapException("unable to rename entry", e);
         }
     }
-    
+
     @Override
     public void replaceAttributes(String dn, ZAttributes attrs) throws LdapException {
         Map<String, Object> attrMap = attrs.getAttrs();
-        
+
         UBIDModificationList modList = new UBIDModificationList();
         modList.replaceAll(attrMap);
         modifyAttributes(dn, modList);
     }
-    
-    
+
+
     @Override
     public void searchPaged(SearchLdapOptions searchOptions) throws ServiceException {
         int maxResults = searchOptions.getMaxResults();
@@ -466,11 +470,11 @@ public class UBIDLdapContext extends ZLdapContext {
         Set<String> binaryAttrs = searchOptions.getBinaryAttrs();
         SearchScope searchScope = ((UBIDSearchScope) searchOptions.getSearchScope()).getNative();
         SearchLdapOptions.SearchLdapVisitor visitor = searchOptions.getVisitor();
-        
+
         boolean wantPartialResult = true;  // TODO: this is the legacy behavior, we can make it a param
-        
+
         try {
-            SearchRequest searchRequest = new SearchRequest(base, 
+            SearchRequest searchRequest = new SearchRequest(base,
                     searchScope,
                     derefAliasPolicy,
                     maxResults,
@@ -479,7 +483,7 @@ public class UBIDLdapContext extends ZLdapContext {
                     ((UBIDLdapFilter) filter).getNative());
 
             searchRequest.setAttributes(searchOptions.getReturnAttrs());
-            
+
             //Set the page size and initialize the cookie that we pass back in subsequent pages
             int pageSize = searchOptions.getResultPageSize();
             ASN1OctetString cookie = null;
@@ -515,7 +519,7 @@ public class UBIDLdapContext extends ZLdapContext {
                     // always re-throw
                     throw e;
                 }
-                
+
                 for (SearchResultEntry entry : result.getSearchEntries()) {
                     String dn = entry.getDN();
                     UBIDAttributes ubidAttrs = new UBIDAttributes(entry);
@@ -533,64 +537,64 @@ public class UBIDLdapContext extends ZLdapContext {
                     }
                 }
             } while ((cookie != null) && (cookie.getValueLength() > 0));
-        } catch (SearchLdapOptions.StopIteratingException e) { 
+        } catch (SearchLdapOptions.StopIteratingException e) {
             // break out of the loop and close the ne
         } catch (LDAPException e) {
             throw mapToLdapException("unable to search ldap", e);
         }
     }
-    
+
     @Override
-    public ZSearchResultEnumeration searchDir(String baseDN, ZLdapFilter filter, 
+    public ZSearchResultEnumeration searchDir(String baseDN, ZLdapFilter filter,
             ZSearchControls searchControls) throws LdapException {
-        
+
         UBIDSearchControls sc = (UBIDSearchControls)searchControls;
-        
+
         try {
-            SearchRequest searchRequest = new SearchRequest(baseDN, 
+            SearchRequest searchRequest = new SearchRequest(baseDN,
                     sc.getSearchScope(),
                     derefAliasPolicy,
                     sc.getSizeLimit(),
                     sc.getTimeLimit(),
                     sc.getTypesOnly(),
                     ((UBIDLdapFilter) filter).getNative());
-            
+
             searchRequest.setAttributes(sc.getReturnAttrs());
-            
+
             SearchResult result = UBIDLdapOperation.SEARCH.execute(this, searchRequest, filter);
-            
+
             return new UBIDSearchResultEnumeration(result);
         } catch (LDAPException e) {
             throw mapToLdapException("unable to search ldap", e);
         }
     }
-    
+
     @Override
-    public long countEntries(String baseDN, ZLdapFilter filter, 
+    public long countEntries(String baseDN, ZLdapFilter filter,
             ZSearchControls searchControls) throws LdapException {
-        
+
         UBIDSearchControls sc = (UBIDSearchControls)searchControls;
-        
+
         try {
-            SearchRequest searchRequest = new SearchRequest(baseDN, 
+            SearchRequest searchRequest = new SearchRequest(baseDN,
                     sc.getSearchScope(),
                     derefAliasPolicy,
                     sc.getSizeLimit(),
                     sc.getTimeLimit(),
                     sc.getTypesOnly(),
                     ((UBIDLdapFilter) filter).getNative());
-            
+
             NoopSearchControl noopSearchCtl = new NoopSearchControl();
             searchRequest.addControl(noopSearchCtl);
-            
+
             // searchRequest.setAttributes(sc.getReturnAttrs());
             // no point to request attributes
             if (sc.getReturnAttrs() != null) {
                 throw LdapException.INVALID_REQUEST("return attributes are not allowed for countEntries", null);
             }
-            
+
             SearchResult result = UBIDLdapOperation.SEARCH.execute(this, searchRequest, filter);
-            
+
             NoopSearchControl control = NoopSearchControl.get(result);
             if (control == null) {
                 throw LdapException.LDAP_ERROR("Noop search control is not present in response", null);
@@ -600,7 +604,7 @@ public class UBIDLdapContext extends ZLdapContext {
             throw mapToLdapException("unable to search ldap", e);
         }
     }
-    
+
     @Override
     public void deleteEntry(String dn) throws LdapException {
         try {
@@ -612,11 +616,11 @@ public class UBIDLdapContext extends ZLdapContext {
 
     /**
      * authenticate to LDAP server.
-     * 
+     *
      * This is method is called for:
      *   - external LDAP auth
      *   - auth to Zimbra LDAP server when the stored password is not SSHA.
-     *   
+     *
      * @param urls
      * @param wantStartTLS
      * @param bindDN
@@ -624,34 +628,34 @@ public class UBIDLdapContext extends ZLdapContext {
      * @param note
      * @throws ServiceException
      */
-    private static void ldapAuthenticate(LdapServerConfig config, 
-            String bindDN, String password, LdapUsage usage) 
+    private static void ldapAuthenticate(LdapServerConfig config,
+            String bindDN, String password, LdapUsage usage)
     throws ServiceException {
         /*
          * About dereferencing alias.
-         * 
-         * The legacy JNDI implementation supports specifying deref 
-         * alias policy during bind, via the "java.naming.ldap.derefAliases" 
+         *
+         * The legacy JNDI implementation supports specifying deref
+         * alias policy during bind, via the "java.naming.ldap.derefAliases"
          * DirContext env property.
-         * 
-         * Doesn't look like unboundid has an obvious way to specify 
+         *
+         * Doesn't look like unboundid has an obvious way to specify
          * deref alias policy during bind.
-         * 
+         *
          * The LDAP protocol http://tools.ietf.org/html/rfc4511 disallows
          * LDAP server to deref alias during bind anyway.
-         * 
-         * section 4.2 
+         *
+         * section 4.2
          * ..., it SHALL NOT perform alias dereferencing.
-         * 
+         *
          * Therefore, we do *not* support dereferencing alias during bind anymore.
-         * 
+         *
          */
 
-        boolean succeeded = false;        
+        boolean succeeded = false;
         LdapServerPool serverPool = new LdapServerPool(config);
         LDAPConnection connection = null;
         BindResult bindResult = null;
-        
+
         long startTime = UBIDLdapOperation.GENERIC_OP.begin();
         try {
             if (InMemoryLdapServer.isOn()) {
@@ -660,14 +664,14 @@ public class UBIDLdapContext extends ZLdapContext {
             } else {
                 connection = serverPool.getServerSet().getConnection();
             }
-            
+
             if (serverPool.getConnectionType() == LdapConnType.STARTTLS) {
-                SSLContext startTLSContext = 
+                SSLContext startTLSContext =
                     LdapSSLUtil.createSSLContext(config.sslAllowUntrustedCerts());
                 ExtendedResult extendedResult = connection.processExtendedOperation(
                         new StartTLSExtendedRequest(startTLSContext));
-                
-                // NOTE:  
+
+                // NOTE:
                 // The processExtendedOperation method will only throw an exception
                 // if a problem occurs while trying to send the request or read the
                 // response.  It will not throw an exception because of a non-success
@@ -677,30 +681,30 @@ public class UBIDLdapContext extends ZLdapContext {
                             "unable to send or receive startTLS extended operation", null);
                 }
             }
-            
+
             bindResult = connection.bind(bindDN, password);
             if (bindResult.getResultCode() != ResultCode.SUCCESS) {
                 throw ServiceException.FAILURE("unable to bind", null);
             }
             succeeded = true;
         } catch (LDAPException e) {
-            throw UBIDLdapException.mapToExternalLdapException("unable to ldap authenticate", e);    
+            throw UBIDLdapException.mapToExternalLdapException("unable to ldap authenticate", e);
         } finally {
             UBIDLdapOperation.GENERIC_OP.end(LdapOp.OPEN_CONN, usage, startTime,
                     succeeded,
-                    bindResult, 
+                    bindResult,
                     String.format("conn=[%s], url=[%s], connType=[%s], bindDN=[%s]",
                     connection == null ? "null" : connection.getConnectionID(),
                     serverPool.getRawUrls(),
                     serverPool.getConnectionType().name(),
                     bindDN));
-            
+
             if (connection != null) {
                 UBIDLogger.beforeOp(LdapOp.CLOSE_CONN, connection);
                 connection.close();
             }
         }
-        
+
     }
 
     static void externalLdapAuthenticate(String[] urls, boolean wantStartTLS,
@@ -710,10 +714,10 @@ public class UBIDLdapContext extends ZLdapContext {
                 null, bindDN, password, null, note);
         ldapAuthenticate(config, bindDN, password, LdapUsage.LDAP_AUTH_EXTERNAL);
     }
-    
-    static void zimbraLdapAuthenticate(String bindDN, String password) 
+
+    static void zimbraLdapAuthenticate(String bindDN, String password)
     throws ServiceException {
-        ldapAuthenticate(replicaConfig, bindDN, password, LdapUsage.LDAP_AUTH_ZIMBRA); 
+        ldapAuthenticate(replicaConfig, bindDN, password, LdapUsage.LDAP_AUTH_ZIMBRA);
     }
 
 }
