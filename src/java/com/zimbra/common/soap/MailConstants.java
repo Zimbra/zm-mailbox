@@ -1098,7 +1098,6 @@ public final class MailConstants {
     public static final String A_DS_DEFAULT_SIGNATURE = "defaultSignature";
     public static final String A_DS_FORWARD_REPLY_SIGNATURE = "forwardReplySignature";
     public static final String A_DS_FROM_DISPLAY = "fromDisplay";
-    public static final String A_DS_FROM_ADDRESS = "fromAddress";
     public static final String A_DS_REPLYTO_ADDRESS = "replyToAddress";
     public static final String A_DS_REPLYTO_DISPLAY = "replyToDisplay";
     public static final String A_DS_IMPORT_CLASS = "importClass";
