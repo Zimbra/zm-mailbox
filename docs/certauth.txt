@@ -374,6 +374,11 @@ zmmailboxdctl restart
 ==============
 III. Testing
 ==============
+
+Note that by default OCSP based certificate revocation checking is mandated for client SSL auth (see OCSP Suppport
+section below). This can be disabled by setting zimbraMailSSLClientCertOCSPEnabled provisioning attribute value to
+FALSE.
+
 SSL mutual authentication is supported for Zimbra WEB Client(ZWC) and admin console.
 You can use either one of the following two ways for testing.
 
