@@ -7903,4 +7903,14 @@ TODO: delete them permanently from here
   <desc>Whether or not Jetty thread monitor is enabled.  Defaults to FALSE</desc>
 </attr>
 
+<attr id="1584" name="zimbraDNSUseTCP" type="enum" value="yes,no" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
+  <globalConfigValue>yes</globalConfigValue>
+  <desc>For zimbra dnscache, whether or not to use TCP. Defaults to yes</desc>
+</attr>
+
+<attr id="1585" name="zimbraDNSUseUDP" type="enum" value="yes,no" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
+  <globalConfigValue>yes</globalConfigValue>
+  <desc>For zimbra dnscache, whether or not to use UDP. Defaults to yes</desc>
+</attr>
+
 </attrs>

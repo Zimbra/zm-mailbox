@@ -393,4 +393,6 @@ SECTION dnscache
 	REWRITE conf/unbound.conf.in conf/unbound.conf
 	VAR zimbraDNSMasterIP
 	VAR zimbraIPMode
+	VAR zimbraDNSUseTCP
+	VAR zimbraDNSUseUDP
 	RESTART dnscache

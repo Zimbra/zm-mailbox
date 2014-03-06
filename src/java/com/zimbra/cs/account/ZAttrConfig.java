@@ -9629,6 +9629,268 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * For zimbra dnscache, whether or not to use TCP. Defaults to yes
+     *
+     * <p>Valid values: [yes, no]
+     *
+     * @return zimbraDNSUseTCP, or ZAttrProvisioning.DNSUseTCP.yes if unset and/or has invalid value
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1584)
+    public ZAttrProvisioning.DNSUseTCP getDNSUseTCP() {
+        try { String v = getAttr(Provisioning.A_zimbraDNSUseTCP); return v == null ? ZAttrProvisioning.DNSUseTCP.yes : ZAttrProvisioning.DNSUseTCP.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.DNSUseTCP.yes; }
+    }
+
+    /**
+     * For zimbra dnscache, whether or not to use TCP. Defaults to yes
+     *
+     * <p>Valid values: [yes, no]
+     *
+     * @return zimbraDNSUseTCP, or "yes" if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1584)
+    public String getDNSUseTCPAsString() {
+        return getAttr(Provisioning.A_zimbraDNSUseTCP, "yes");
+    }
+
+    /**
+     * For zimbra dnscache, whether or not to use TCP. Defaults to yes
+     *
+     * <p>Valid values: [yes, no]
+     *
+     * @param zimbraDNSUseTCP new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1584)
+    public void setDNSUseTCP(ZAttrProvisioning.DNSUseTCP zimbraDNSUseTCP) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDNSUseTCP, zimbraDNSUseTCP.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * For zimbra dnscache, whether or not to use TCP. Defaults to yes
+     *
+     * <p>Valid values: [yes, no]
+     *
+     * @param zimbraDNSUseTCP new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1584)
+    public Map<String,Object> setDNSUseTCP(ZAttrProvisioning.DNSUseTCP zimbraDNSUseTCP, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDNSUseTCP, zimbraDNSUseTCP.toString());
+        return attrs;
+    }
+
+    /**
+     * For zimbra dnscache, whether or not to use TCP. Defaults to yes
+     *
+     * <p>Valid values: [yes, no]
+     *
+     * @param zimbraDNSUseTCP new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1584)
+    public void setDNSUseTCPAsString(String zimbraDNSUseTCP) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDNSUseTCP, zimbraDNSUseTCP);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * For zimbra dnscache, whether or not to use TCP. Defaults to yes
+     *
+     * <p>Valid values: [yes, no]
+     *
+     * @param zimbraDNSUseTCP new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1584)
+    public Map<String,Object> setDNSUseTCPAsString(String zimbraDNSUseTCP, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDNSUseTCP, zimbraDNSUseTCP);
+        return attrs;
+    }
+
+    /**
+     * For zimbra dnscache, whether or not to use TCP. Defaults to yes
+     *
+     * <p>Valid values: [yes, no]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1584)
+    public void unsetDNSUseTCP() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDNSUseTCP, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * For zimbra dnscache, whether or not to use TCP. Defaults to yes
+     *
+     * <p>Valid values: [yes, no]
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1584)
+    public Map<String,Object> unsetDNSUseTCP(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDNSUseTCP, "");
+        return attrs;
+    }
+
+    /**
+     * For zimbra dnscache, whether or not to use UDP. Defaults to yes
+     *
+     * <p>Valid values: [yes, no]
+     *
+     * @return zimbraDNSUseUDP, or ZAttrProvisioning.DNSUseUDP.yes if unset and/or has invalid value
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1585)
+    public ZAttrProvisioning.DNSUseUDP getDNSUseUDP() {
+        try { String v = getAttr(Provisioning.A_zimbraDNSUseUDP); return v == null ? ZAttrProvisioning.DNSUseUDP.yes : ZAttrProvisioning.DNSUseUDP.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.DNSUseUDP.yes; }
+    }
+
+    /**
+     * For zimbra dnscache, whether or not to use UDP. Defaults to yes
+     *
+     * <p>Valid values: [yes, no]
+     *
+     * @return zimbraDNSUseUDP, or "yes" if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1585)
+    public String getDNSUseUDPAsString() {
+        return getAttr(Provisioning.A_zimbraDNSUseUDP, "yes");
+    }
+
+    /**
+     * For zimbra dnscache, whether or not to use UDP. Defaults to yes
+     *
+     * <p>Valid values: [yes, no]
+     *
+     * @param zimbraDNSUseUDP new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1585)
+    public void setDNSUseUDP(ZAttrProvisioning.DNSUseUDP zimbraDNSUseUDP) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDNSUseUDP, zimbraDNSUseUDP.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * For zimbra dnscache, whether or not to use UDP. Defaults to yes
+     *
+     * <p>Valid values: [yes, no]
+     *
+     * @param zimbraDNSUseUDP new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1585)
+    public Map<String,Object> setDNSUseUDP(ZAttrProvisioning.DNSUseUDP zimbraDNSUseUDP, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDNSUseUDP, zimbraDNSUseUDP.toString());
+        return attrs;
+    }
+
+    /**
+     * For zimbra dnscache, whether or not to use UDP. Defaults to yes
+     *
+     * <p>Valid values: [yes, no]
+     *
+     * @param zimbraDNSUseUDP new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1585)
+    public void setDNSUseUDPAsString(String zimbraDNSUseUDP) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDNSUseUDP, zimbraDNSUseUDP);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * For zimbra dnscache, whether or not to use UDP. Defaults to yes
+     *
+     * <p>Valid values: [yes, no]
+     *
+     * @param zimbraDNSUseUDP new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1585)
+    public Map<String,Object> setDNSUseUDPAsString(String zimbraDNSUseUDP, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDNSUseUDP, zimbraDNSUseUDP);
+        return attrs;
+    }
+
+    /**
+     * For zimbra dnscache, whether or not to use UDP. Defaults to yes
+     *
+     * <p>Valid values: [yes, no]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1585)
+    public void unsetDNSUseUDP() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDNSUseUDP, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * For zimbra dnscache, whether or not to use UDP. Defaults to yes
+     *
+     * <p>Valid values: [yes, no]
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1585)
+    public Map<String,Object> unsetDNSUseUDP(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDNSUseUDP, "");
+        return attrs;
+    }
+
+    /**
      * Connect timeout in seconds for the data source
      *
      * @return zimbraDataSourceConnectTimeout, or 30 if unset
