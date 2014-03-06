@@ -298,6 +298,38 @@ public class ZAttrProvisioning {
         public boolean isREJECT() { return this == REJECT;}
     }
 
+    public static enum DNSUseTCP {
+        yes("yes"),
+        no("no");
+        private String mValue;
+        private DNSUseTCP(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static DNSUseTCP fromString(String s) throws ServiceException {
+            for (DNSUseTCP value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isYes() { return this == yes;}
+        public boolean isNo() { return this == no;}
+    }
+
+    public static enum DNSUseUDP {
+        yes("yes"),
+        no("no");
+        private String mValue;
+        private DNSUseUDP(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static DNSUseUDP fromString(String s) throws ServiceException {
+            for (DNSUseUDP value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isYes() { return this == yes;}
+        public boolean isNo() { return this == no;}
+    }
+
     public static enum DomainAggregateQuotaPolicy {
         BLOCKSEND("BLOCKSEND"),
         BLOCKSENDRECEIVE("BLOCKSENDRECEIVE"),
@@ -4305,6 +4337,22 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1569)
     public static final String A_zimbraDNSMasterIP = "zimbraDNSMasterIP";
+
+    /**
+     * For zimbra dnscache, whether or not to use TCP. Defaults to yes
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1584)
+    public static final String A_zimbraDNSUseTCP = "zimbraDNSUseTCP";
+
+    /**
+     * For zimbra dnscache, whether or not to use UDP. Defaults to yes
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1585)
+    public static final String A_zimbraDNSUseUDP = "zimbraDNSUseUDP";
 
     /**
      * maximum amount of mail quota a domain admin can set on a user
