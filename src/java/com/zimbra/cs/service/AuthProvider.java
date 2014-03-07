@@ -469,6 +469,11 @@ public abstract class AuthProvider {
                 if (at == null) {
                     throw AuthProviderException.FAILURE("auth provider " + ap.getName() + " returned null");
                 } else {
+        			try {
+						at.register();
+					} catch (AuthTokenException e) {
+						throw AuthProviderException.FAILURE("failed to register auth token");
+					}
                     return at;
                 }
             } catch (AuthProviderException e) {
@@ -497,6 +502,11 @@ public abstract class AuthProvider {
                 if (at == null) {
                     throw AuthProviderException.FAILURE("auth provider " + ap.getName() + " returned null");
                 } else {
+                	try {
+						at.register();
+					} catch (AuthTokenException e) {
+						throw AuthProviderException.FAILURE("failed to register auth token");
+					}
                     return at;
                 }
             } catch (AuthProviderException e) {
@@ -525,6 +535,11 @@ public abstract class AuthProvider {
                 if (at == null) {
                     throw AuthProviderException.FAILURE("auth provider " + ap.getName() + " returned null");
                 } else {
+                	try {
+						at.register();
+					} catch (AuthTokenException e) {
+						throw AuthProviderException.FAILURE("failed to register auth token");
+					}
                     return at;
                 }
             } catch (AuthProviderException e) {
@@ -548,6 +563,11 @@ public abstract class AuthProvider {
                 if (at == null) {
                     throw AuthProviderException.FAILURE("auth provider " + ap.getName() + " returned null");
                 } else {
+                	try {
+						at.register();
+					} catch (AuthTokenException e) {
+						throw AuthProviderException.FAILURE("failed to register auth token");
+					}
                     return at;
                 }
             } catch (AuthProviderException e) {
@@ -606,6 +626,11 @@ public abstract class AuthProvider {
         }
         
         if (at.isExpired()) {
+        	try {
+				at.deRegister();
+			} catch (AuthTokenException e) {
+				ZimbraLog.account.error(e);
+			}
             throw ServiceException.AUTH_EXPIRED();
         }
         

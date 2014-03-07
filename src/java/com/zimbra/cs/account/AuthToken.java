@@ -68,6 +68,12 @@ public abstract class AuthToken {
         return -1;
     }
 
+    public abstract void register() throws AuthTokenException;
+    
+    public abstract void deRegister() throws AuthTokenException;
+    
+    public abstract boolean isRegistered();
+    
     public abstract boolean isExpired();
 
     public abstract boolean isAdmin();

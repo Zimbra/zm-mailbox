@@ -7906,11 +7906,51 @@ TODO: delete them permanently from here
 <attr id="1584" name="zimbraDNSUseTCP" type="enum" value="yes,no" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
   <globalConfigValue>yes</globalConfigValue>
   <desc>For zimbra dnscache, whether or not to use TCP. Defaults to yes</desc>
+</attr>  
+  
+<attr id="1585" name="zimbraAuthTokens" type="string" cardinality="multi" optionalIn="account" since="8.5.0">
+  <desc>list of currently active auth tokens</desc>
 </attr>
 
-<attr id="1585" name="zimbraDNSUseUDP" type="enum" value="yes,no" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
+<attr id="1586" name="zimbraDNSUseUDP" type="enum" value="yes,no" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
   <globalConfigValue>yes</globalConfigValue>
   <desc>For zimbra dnscache, whether or not to use UDP. Defaults to yes</desc>
 </attr>
 
+<attr id="1587" name="zimbraDefaultAnalyzerStopWords" type="string" cardinality="multi" optionalIn="globalConfig" since="8.5.0">
+  <desc>stop words for lucene text analyzer. This setting takes effect only for default analyzer. This setting affects only accounts that do not have custom text analyzers. See zimbraTextAnalyzer for information on custom text analyzers.</desc>
+  <globalConfigValue>a</globalConfigValue>
+  <globalConfigValue>an</globalConfigValue>
+  <globalConfigValue>and</globalConfigValue>
+  <globalConfigValue>are</globalConfigValue>
+  <globalConfigValue>as</globalConfigValue>
+  <globalConfigValue>at</globalConfigValue>
+  <globalConfigValue>be</globalConfigValue>
+  <globalConfigValue>but</globalConfigValue>
+  <globalConfigValue>by</globalConfigValue>
+  <globalConfigValue>for</globalConfigValue>
+  <globalConfigValue>if</globalConfigValue>
+  <globalConfigValue>in</globalConfigValue>
+  <globalConfigValue>into</globalConfigValue>
+  <globalConfigValue>is</globalConfigValue>
+  <globalConfigValue>it</globalConfigValue>
+  <globalConfigValue>no</globalConfigValue>
+  <globalConfigValue>not</globalConfigValue>
+  <globalConfigValue>of</globalConfigValue>
+  <globalConfigValue>on</globalConfigValue>
+  <globalConfigValue>or</globalConfigValue>
+  <globalConfigValue>such</globalConfigValue>
+  <globalConfigValue>that</globalConfigValue>
+  <globalConfigValue>the</globalConfigValue>
+  <globalConfigValue>their</globalConfigValue>
+  <globalConfigValue>then</globalConfigValue>
+  <globalConfigValue>there</globalConfigValue>
+  <globalConfigValue>these</globalConfigValue>
+  <globalConfigValue>they</globalConfigValue>
+  <globalConfigValue>this</globalConfigValue>
+  <globalConfigValue>to</globalConfigValue>
+  <globalConfigValue>was</globalConfigValue>
+  <globalConfigValue>will</globalConfigValue>
+  <globalConfigValue>with</globalConfigValue>
+</attr>
 </attrs>

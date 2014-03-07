@@ -409,6 +409,23 @@ public class ACLTestUtil {
         public String getAccessKey() {
             return mAccessKey;
         }
+
+		@Override
+		public void register() {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void deRegister() {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public boolean isRegistered() {
+			return true;
+		}
     }
     
     static class TestViaGrant extends ViaGrant {

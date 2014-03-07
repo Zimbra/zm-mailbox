@@ -4224,6 +4224,140 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * list of currently active auth tokens
+     *
+     * @return zimbraAuthTokens, or empty array if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1585)
+    public String[] getAuthTokens() {
+        return getMultiAttr(Provisioning.A_zimbraAuthTokens);
+    }
+
+    /**
+     * list of currently active auth tokens
+     *
+     * @param zimbraAuthTokens new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1585)
+    public void setAuthTokens(String[] zimbraAuthTokens) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAuthTokens, zimbraAuthTokens);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * list of currently active auth tokens
+     *
+     * @param zimbraAuthTokens new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1585)
+    public Map<String,Object> setAuthTokens(String[] zimbraAuthTokens, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAuthTokens, zimbraAuthTokens);
+        return attrs;
+    }
+
+    /**
+     * list of currently active auth tokens
+     *
+     * @param zimbraAuthTokens new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1585)
+    public void addAuthTokens(String zimbraAuthTokens) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraAuthTokens, zimbraAuthTokens);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * list of currently active auth tokens
+     *
+     * @param zimbraAuthTokens new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1585)
+    public Map<String,Object> addAuthTokens(String zimbraAuthTokens, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraAuthTokens, zimbraAuthTokens);
+        return attrs;
+    }
+
+    /**
+     * list of currently active auth tokens
+     *
+     * @param zimbraAuthTokens existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1585)
+    public void removeAuthTokens(String zimbraAuthTokens) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraAuthTokens, zimbraAuthTokens);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * list of currently active auth tokens
+     *
+     * @param zimbraAuthTokens existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1585)
+    public Map<String,Object> removeAuthTokens(String zimbraAuthTokens, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraAuthTokens, zimbraAuthTokens);
+        return attrs;
+    }
+
+    /**
+     * list of currently active auth tokens
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1585)
+    public void unsetAuthTokens() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAuthTokens, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * list of currently active auth tokens
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1585)
+    public Map<String,Object> unsetAuthTokens(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAuthTokens, "");
+        return attrs;
+    }
+
+    /**
      * Locales available for this account
      *
      * @return zimbraAvailableLocale, or empty array if unset

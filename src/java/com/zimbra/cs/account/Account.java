@@ -27,6 +27,7 @@ import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.account.names.NameUtil;
 
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -498,6 +499,17 @@ public class Account extends ZAttrAccount implements GroupedEntry, AliasedEntry 
     public static String encrypytUCPassword(String acctId, String plainPassword)
     throws ServiceException {
         return DataSource.encryptData(acctId, plainPassword);
+    }
+    
+    public void cleanExpiredTokens() throws ServiceException {
+    	String[] tokens = getAuthTokens();
+    	for(String tk : tokens) {
+    		String szExpire = tk.substring(tk.indexOf("|")+1);
+    		Long expires = Long.parseLong(szExpire);
+    		if(System.currentTimeMillis() > expires) {
+    			removeAuthTokens(tk);
+    		}
+    	}
     }
 }
 

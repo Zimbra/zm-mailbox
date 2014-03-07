@@ -504,11 +504,13 @@ See also //depot/zimbra/main/ThirdParty/nginx/docs/HTTP for more details on the 
 
 ---------------------------
 
-<EndSessionRequest xmlns="urn:zimbraAccount"/>
+<EndSessionRequest xmlns="urn:zimbraAccount" [logoff="1"]/>
 
 Ends the current session, removing it from all caches.  Called when
 the browser app (or other session-using app) shuts down.  Has no
 effect if called in a <nosession> context.
+
+Setting logoff to "1" will prevent the cookie from being re-used.
 
 ---------
  <GetPrefsRequest>
@@ -1744,7 +1746,7 @@ message-part result:
 -----------
 
 <SearchConvRequest cid="conversation-id" [limit="..."] [offset="..."] [sortBy="{sort-by}"] [types="{types}"] [nest="0|1"]
-    [fetch="0|1|u|u1|hits|all|!|hits!|u!|u1!|{comma-separated item-ids}”] [max="{max-inlined-length}"] [html="1"] [read="1"] [neuter="0"] [needExp="1|0"]>
+    [fetch="0|1|u|u1|hits|all|!|hits!|u!|u1!|{comma-separated item-ids}] [max="{max-inlined-length}"] [html="1"] [read="1"] [neuter="0"] [needExp="1|0"]>
   *(<header n="{header-name}/>)
   <query>{query-string}</query>
 </SearchConvRequest>

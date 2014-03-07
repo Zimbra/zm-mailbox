@@ -244,7 +244,7 @@ public class ZimbraServlet extends HttpServlet {
                 return null;
             }
 
-            if (authToken.isExpired()) {
+            if (authToken.isExpired() || !authToken.isRegistered()) {
                 if (!doNotSendHttpError)
                     resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, "authtoken expired");
                 return null;
@@ -265,6 +265,9 @@ public class ZimbraServlet extends HttpServlet {
                 return null;
 
             if (authToken.isExpired())
+                return null;
+            
+            if (!authToken.isRegistered())
                 return null;
 
             return authToken;
@@ -309,9 +312,9 @@ public class ZimbraServlet extends HttpServlet {
         }
         HttpState state = new HttpState();
         String hostname = method.getURI().getHost();
-        if (authToken != null)
+        if (authToken != null) {
             authToken.encode(state, false, hostname);
-
+        }
         try {
             proxyServletRequest(req, resp, method, state);
         } finally {

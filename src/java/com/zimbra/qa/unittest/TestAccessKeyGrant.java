@@ -255,6 +255,23 @@ public class TestAccessKeyGrant extends TestCase {
             return false;
         }
 
+		@Override
+		public void register() throws AuthTokenException {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void deRegister() throws AuthTokenException {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public boolean isRegistered()  {
+			return true;
+		}
+
         @Override
         public boolean isZimbraUser() {
             // TODO Auto-generated method stub

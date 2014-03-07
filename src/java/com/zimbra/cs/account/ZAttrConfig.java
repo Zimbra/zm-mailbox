@@ -9768,7 +9768,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 8.5.0
      */
-    @ZAttr(id=1585)
+    @ZAttr(id=1586)
     public ZAttrProvisioning.DNSUseUDP getDNSUseUDP() {
         try { String v = getAttr(Provisioning.A_zimbraDNSUseUDP); return v == null ? ZAttrProvisioning.DNSUseUDP.yes : ZAttrProvisioning.DNSUseUDP.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.DNSUseUDP.yes; }
     }
@@ -9782,7 +9782,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 8.5.0
      */
-    @ZAttr(id=1585)
+    @ZAttr(id=1586)
     public String getDNSUseUDPAsString() {
         return getAttr(Provisioning.A_zimbraDNSUseUDP, "yes");
     }
@@ -9797,7 +9797,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 8.5.0
      */
-    @ZAttr(id=1585)
+    @ZAttr(id=1586)
     public void setDNSUseUDP(ZAttrProvisioning.DNSUseUDP zimbraDNSUseUDP) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraDNSUseUDP, zimbraDNSUseUDP.toString());
@@ -9815,7 +9815,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 8.5.0
      */
-    @ZAttr(id=1585)
+    @ZAttr(id=1586)
     public Map<String,Object> setDNSUseUDP(ZAttrProvisioning.DNSUseUDP zimbraDNSUseUDP, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraDNSUseUDP, zimbraDNSUseUDP.toString());
@@ -9832,7 +9832,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 8.5.0
      */
-    @ZAttr(id=1585)
+    @ZAttr(id=1586)
     public void setDNSUseUDPAsString(String zimbraDNSUseUDP) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraDNSUseUDP, zimbraDNSUseUDP);
@@ -9850,7 +9850,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 8.5.0
      */
-    @ZAttr(id=1585)
+    @ZAttr(id=1586)
     public Map<String,Object> setDNSUseUDPAsString(String zimbraDNSUseUDP, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraDNSUseUDP, zimbraDNSUseUDP);
@@ -9866,7 +9866,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 8.5.0
      */
-    @ZAttr(id=1585)
+    @ZAttr(id=1586)
     public void unsetDNSUseUDP() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraDNSUseUDP, "");
@@ -9883,7 +9883,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 8.5.0
      */
-    @ZAttr(id=1585)
+    @ZAttr(id=1586)
     public Map<String,Object> unsetDNSUseUDP(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraDNSUseUDP, "");
@@ -10280,6 +10280,167 @@ public abstract class ZAttrConfig extends Entry {
     public Map<String,Object> unsetDatabaseSlowSqlThreshold(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraDatabaseSlowSqlThreshold, "");
+        return attrs;
+    }
+
+    /**
+     * stop words for lucene text analyzer. This setting takes effect only
+     * for default analyzer. This setting affects only accounts that do not
+     * have custom text analyzers. See zimbraTextAnalyzer for information on
+     * custom text analyzers.
+     *
+     * @return zimbraDefaultAnalyzerStopWords, or empty array if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1587)
+    public String[] getDefaultAnalyzerStopWords() {
+        return getMultiAttr(Provisioning.A_zimbraDefaultAnalyzerStopWords);
+    }
+
+    /**
+     * stop words for lucene text analyzer. This setting takes effect only
+     * for default analyzer. This setting affects only accounts that do not
+     * have custom text analyzers. See zimbraTextAnalyzer for information on
+     * custom text analyzers.
+     *
+     * @param zimbraDefaultAnalyzerStopWords new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1587)
+    public void setDefaultAnalyzerStopWords(String[] zimbraDefaultAnalyzerStopWords) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDefaultAnalyzerStopWords, zimbraDefaultAnalyzerStopWords);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * stop words for lucene text analyzer. This setting takes effect only
+     * for default analyzer. This setting affects only accounts that do not
+     * have custom text analyzers. See zimbraTextAnalyzer for information on
+     * custom text analyzers.
+     *
+     * @param zimbraDefaultAnalyzerStopWords new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1587)
+    public Map<String,Object> setDefaultAnalyzerStopWords(String[] zimbraDefaultAnalyzerStopWords, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDefaultAnalyzerStopWords, zimbraDefaultAnalyzerStopWords);
+        return attrs;
+    }
+
+    /**
+     * stop words for lucene text analyzer. This setting takes effect only
+     * for default analyzer. This setting affects only accounts that do not
+     * have custom text analyzers. See zimbraTextAnalyzer for information on
+     * custom text analyzers.
+     *
+     * @param zimbraDefaultAnalyzerStopWords new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1587)
+    public void addDefaultAnalyzerStopWords(String zimbraDefaultAnalyzerStopWords) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraDefaultAnalyzerStopWords, zimbraDefaultAnalyzerStopWords);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * stop words for lucene text analyzer. This setting takes effect only
+     * for default analyzer. This setting affects only accounts that do not
+     * have custom text analyzers. See zimbraTextAnalyzer for information on
+     * custom text analyzers.
+     *
+     * @param zimbraDefaultAnalyzerStopWords new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1587)
+    public Map<String,Object> addDefaultAnalyzerStopWords(String zimbraDefaultAnalyzerStopWords, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraDefaultAnalyzerStopWords, zimbraDefaultAnalyzerStopWords);
+        return attrs;
+    }
+
+    /**
+     * stop words for lucene text analyzer. This setting takes effect only
+     * for default analyzer. This setting affects only accounts that do not
+     * have custom text analyzers. See zimbraTextAnalyzer for information on
+     * custom text analyzers.
+     *
+     * @param zimbraDefaultAnalyzerStopWords existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1587)
+    public void removeDefaultAnalyzerStopWords(String zimbraDefaultAnalyzerStopWords) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraDefaultAnalyzerStopWords, zimbraDefaultAnalyzerStopWords);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * stop words for lucene text analyzer. This setting takes effect only
+     * for default analyzer. This setting affects only accounts that do not
+     * have custom text analyzers. See zimbraTextAnalyzer for information on
+     * custom text analyzers.
+     *
+     * @param zimbraDefaultAnalyzerStopWords existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1587)
+    public Map<String,Object> removeDefaultAnalyzerStopWords(String zimbraDefaultAnalyzerStopWords, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraDefaultAnalyzerStopWords, zimbraDefaultAnalyzerStopWords);
+        return attrs;
+    }
+
+    /**
+     * stop words for lucene text analyzer. This setting takes effect only
+     * for default analyzer. This setting affects only accounts that do not
+     * have custom text analyzers. See zimbraTextAnalyzer for information on
+     * custom text analyzers.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1587)
+    public void unsetDefaultAnalyzerStopWords() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDefaultAnalyzerStopWords, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * stop words for lucene text analyzer. This setting takes effect only
+     * for default analyzer. This setting affects only accounts that do not
+     * have custom text analyzers. See zimbraTextAnalyzer for information on
+     * custom text analyzers.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1587)
+    public Map<String,Object> unsetDefaultAnalyzerStopWords(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDefaultAnalyzerStopWords, "");
         return attrs;
     }
 

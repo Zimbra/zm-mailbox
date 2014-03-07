@@ -6274,7 +6274,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.5.0
      */
-    @ZAttr(id=1585)
+    @ZAttr(id=1586)
     public ZAttrProvisioning.DNSUseUDP getDNSUseUDP() {
         try { String v = getAttr(Provisioning.A_zimbraDNSUseUDP); return v == null ? ZAttrProvisioning.DNSUseUDP.yes : ZAttrProvisioning.DNSUseUDP.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.DNSUseUDP.yes; }
     }
@@ -6288,7 +6288,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.5.0
      */
-    @ZAttr(id=1585)
+    @ZAttr(id=1586)
     public String getDNSUseUDPAsString() {
         return getAttr(Provisioning.A_zimbraDNSUseUDP, "yes");
     }
@@ -6303,7 +6303,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.5.0
      */
-    @ZAttr(id=1585)
+    @ZAttr(id=1586)
     public void setDNSUseUDP(ZAttrProvisioning.DNSUseUDP zimbraDNSUseUDP) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraDNSUseUDP, zimbraDNSUseUDP.toString());
@@ -6321,7 +6321,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.5.0
      */
-    @ZAttr(id=1585)
+    @ZAttr(id=1586)
     public Map<String,Object> setDNSUseUDP(ZAttrProvisioning.DNSUseUDP zimbraDNSUseUDP, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraDNSUseUDP, zimbraDNSUseUDP.toString());
@@ -6338,7 +6338,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.5.0
      */
-    @ZAttr(id=1585)
+    @ZAttr(id=1586)
     public void setDNSUseUDPAsString(String zimbraDNSUseUDP) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraDNSUseUDP, zimbraDNSUseUDP);
@@ -6356,7 +6356,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.5.0
      */
-    @ZAttr(id=1585)
+    @ZAttr(id=1586)
     public Map<String,Object> setDNSUseUDPAsString(String zimbraDNSUseUDP, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraDNSUseUDP, zimbraDNSUseUDP);
@@ -6372,7 +6372,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.5.0
      */
-    @ZAttr(id=1585)
+    @ZAttr(id=1586)
     public void unsetDNSUseUDP() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraDNSUseUDP, "");
@@ -6389,7 +6389,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.5.0
      */
-    @ZAttr(id=1585)
+    @ZAttr(id=1586)
     public Map<String,Object> unsetDNSUseUDP(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraDNSUseUDP, "");
