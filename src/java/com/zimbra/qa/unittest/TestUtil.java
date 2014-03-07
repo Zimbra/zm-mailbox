@@ -705,7 +705,7 @@ extends Assert {
     throws ServiceException {
         return Provisioning.getInstance().getConfig().getAttr(attrName, "");
     }
-
+    
     public static void setConfigAttr(String attrName, String attrValue)
     throws ServiceException {
         Provisioning prov = Provisioning.getInstance();

@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2010, 2011, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -16,6 +16,7 @@ package com.zimbra.cs.index.analysis;
 
 import java.io.IOException;
 import java.io.Reader;
+import java.util.Set;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.CharReader;
@@ -28,6 +29,9 @@ import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.analysis.tokenattributes.TypeAttribute;
 
 import com.google.common.base.CharMatcher;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.index.LuceneIndex;
 
 /**
@@ -70,8 +74,14 @@ public final class UniversalAnalyzer extends Analyzer {
 
     private TokenStream createTokenStream(Tokenizer tokenizer) {
         TokenStream result = new UniversalTokenFilter(tokenizer);
+        Set stopWords = StopAnalyzer.ENGLISH_STOP_WORDS_SET;
+        try {
+        	stopWords = Provisioning.getInstance().getConfig().getMultiAttrSet(Provisioning.A_zimbraDefaultAnalyzerStopWords);
+        } catch (ServiceException e) {
+        	ZimbraLog.index.error("Failed to retrieve stop words from LDAP", e);
+        }
         // disable position increment for backward compatibility
-        result = new StopFilter(LuceneIndex.VERSION, result, StopAnalyzer.ENGLISH_STOP_WORDS_SET);
+        result = new StopFilter(LuceneIndex.VERSION, result, stopWords);
         return result;
     }
 
