@@ -120,6 +120,7 @@ import com.zimbra.soap.account.message.AuthRequest;
 import com.zimbra.soap.account.message.AuthResponse;
 import com.zimbra.soap.account.message.ChangePasswordRequest;
 import com.zimbra.soap.account.message.ChangePasswordResponse;
+import com.zimbra.soap.account.message.EndSessionRequest;
 import com.zimbra.soap.account.message.GetIdentitiesRequest;
 import com.zimbra.soap.account.message.GetIdentitiesResponse;
 import com.zimbra.soap.account.message.GetInfoRequest;
@@ -5404,6 +5405,15 @@ public class ZMailbox implements ToZJSONObject {
         return new ZSearchContext(new ZSearchParams(query), this);
     }
 
+    public void logout () throws ZClientException {
+        EndSessionRequest logout = new EndSessionRequest();
+        logout.setLogOff(true);
+        try {
+			invokeJaxb(logout);
+		} catch (ServiceException e) {
+			throw ZClientException.CLIENT_ERROR("Failed to log out", e);
+		}	
+    }
     private static final int ADMIN_PORT = LC.zimbra_admin_service_port.intValue();
 
     public static String resolveUrl(String url, boolean isAdmin) throws ZClientException {
