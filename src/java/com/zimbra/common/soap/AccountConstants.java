@@ -427,4 +427,7 @@ public class AccountConstants {
     // upload limits
     public static final String A_ATTACHMENT_SIZE_LIMIT = "attSizeLimit";
     public static final String A_DOCUMENT_SIZE_LIMIT = "docSizeLimit";
+    
+    //auth
+    public static final String A_LOG_OFF = "logoff";
 }

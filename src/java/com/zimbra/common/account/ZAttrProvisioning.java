@@ -2694,6 +2694,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraAuthTokenLifetime = "zimbraAuthTokenLifetime";
 
     /**
+     * list of currently active auth tokens
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1585)
+    public static final String A_zimbraAuthTokens = "zimbraAuthTokens";
+
+    /**
      * if set, this value gets stored in the auth token and compared on every
      * request. Changing it will invalidate all outstanding auth tokens. It
      * also gets changed when an account password is changed.
@@ -4200,6 +4208,17 @@ public class ZAttrProvisioning {
     public static final String A_zimbraDebugInfo = "zimbraDebugInfo";
 
     /**
+     * stop words for lucene text analyzer. This setting takes effect only
+     * for default analyzer. This setting affects only accounts that do not
+     * have custom text analyzers. See zimbraTextAnalyzer for information on
+     * custom text analyzers.
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1587)
+    public static final String A_zimbraDefaultAnalyzerStopWords = "zimbraDefaultAnalyzerStopWords";
+
+    /**
      * name of the default domain for accounts when authenticating without a
      * domain
      */
@@ -4351,7 +4370,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.5.0
      */
-    @ZAttr(id=1585)
+    @ZAttr(id=1586)
     public static final String A_zimbraDNSUseUDP = "zimbraDNSUseUDP";
 
     /**
