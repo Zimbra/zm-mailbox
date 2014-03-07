@@ -15,8 +15,11 @@
 
 package com.zimbra.soap.account.message;
 
+import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
+
 import com.zimbra.common.soap.AccountConstants;
+import com.zimbra.soap.type.ZmBoolean;
 
 /**
  * @zm-api-command-auth-required true
@@ -27,4 +30,13 @@ import com.zimbra.common.soap.AccountConstants;
 
 @XmlRootElement(name=AccountConstants.E_END_SESSION_REQUEST)
 public class EndSessionRequest {
+    /**
+     * @zm-api-field-tag need-can-expand
+     * @zm-api-field-description flag whether the <b>{exp}</b> flag is needed in the response for group entries.<br />
+     *     default is 0 (false)
+     */
+    @XmlAttribute(name=AccountConstants.A_LOG_OFF /* logoff */, required=false)
+    private ZmBoolean logoff;
+    
+    public void setLogOff (boolean logoff) {this.logoff = ZmBoolean.fromBool(logoff);} 
 }
