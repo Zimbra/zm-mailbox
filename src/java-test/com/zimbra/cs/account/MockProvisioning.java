@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -78,6 +78,11 @@ public final class MockProvisioning extends Provisioning {
         localhost = new Server("localhost", "localhost", attrs, Collections.<String, Object>emptyMap(), this);
         try {
             config.setDefaultDomainName("testdomain.biz");
+			config.setDefaultAnalyzerStopWords(new String[] { "a", "an", "and",
+					"are", "as", "at", "be", "but", "by", "for", "if", "in",
+					"into", "is", "it", "no", "not", "of", "on", "or", "such",
+					"that", "the", "their", "then", "there", "these", "they",
+					"this", "to", "was", "will", "with" });
         } catch (ServiceException e) {
             ZimbraLog.test.warn("Could not set default domain name?", e);
         }
