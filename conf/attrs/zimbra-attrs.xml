@@ -7215,4 +7215,10 @@ TODO: delete them permanently from here
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>Whether to force devices using Active Sync 2.5</desc>
 </attr>
+
+<attr id="1588" name="zimbraMtaSmtpdClientPortLogging" type="enum" value="yes,no" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.0.8">
+  <globalConfigValue>no</globalConfigValue>
+  <desc>Value for postconf smtpd_client_port_logging. Defaults to no</desc>
+</attr>
+
 </attrs>
