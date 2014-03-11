@@ -5,7 +5,7 @@ accounts only. You should be able to grant access to a whole "group" of users.
 
 Instead of adding a new named entity to the system (i.e., "groups"), we decided
 to leverage the existing distribution list (DL) infrastructure and enable DLs
-to be used as groups. We use the term group and DL interchangably from this point.
+to be used as groups. We use the term group and DL interchangeably from this point.
 
 This has a number of benefits:
 
@@ -34,7 +34,7 @@ GROUPS OF GROUPS
 DLs can contain other DLs, and thus groups can contain other groups. If a user
 is in DL A, and DL A is also in DL B, then the user will be in both groups. For
 example, lets consider the case where all@test.com and engineering@test.com are both
-DLs that are groups, and engineering is a mmeber of "all".
+DLs that are groups, and engineering is a member of "all".
 
 
 prov> cd test.com 
@@ -84,14 +84,14 @@ CALCULATING A USER'S GROUP MEMBERSHIP LIST
 ==========================================
 When calculating all the groups a user belongs to, we don't just stop at all the
 Dls that a user belongs to. If we did, then user1 wouldn't be a member of the all@test.com group,
-even thogh logically they should be.
+even though logically they should be.
 
 In order to calculate all groups a user belongs to, we need to not only include all
 groups the user directly belongs, we also need to include all groups listed
 that those group's belong to, and so on.
 
 This algorithm is actually fairly trivial to implement, and is described (implemented 
-slighly differently) here:
+slightly differently) here:
 
 http://middleware.internet2.edu/dir/groups/rpr-nmi-edit-mace_dir-groups_best_practices-1.0.html
 
@@ -112,7 +112,7 @@ Step 3: while group in  "groupsToCheck":
 groups: {}
 groupsToCheck: {ae18f02a-efd0-4066-b8f3-f14b8629a6b6}
 
-After checking the group, we'd see that it is a meber of a group, and we'd then have:
+After checking the group, we'd see that it is a member of a group, and we'd then have:
 
 groups: {ae18f02a-efd0-4066-b8f3-f14b8629a6b6}
 groupsToCheck: {711ccbd1-86c9-494a-b561-dca40a864b1b}

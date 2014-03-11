@@ -30,7 +30,7 @@ For example:
  </AuthRequest>
 
 The current AuthRequest SOAP command is going to be used for custom auth.
-When an AuthRequest comes in, system will check the designated auth mechanhism 
+When an AuthRequest comes in, system will check the designated auth mechanism 
 for the domain.  If it is set to custom auth, system will invoke the registered 
 custom auth handler to authenticate the user.
 
@@ -48,7 +48,7 @@ Preparing a domain for custom auth
 ==================================
 Domain is the scope for authentication mechanisms.  To enable a domain for custom 
 auth, set the domain attribute zimbraAuthMech to:
-	custom:{registered-custom-auth-hanlder-name} [arg1 arg2 ...]
+	custom:{registered-custom-auth-handler-name} [arg1 arg2 ...]
 
 For example:
 zmprov modifyDomain {domain|id} zimbraAuthMech custom:sample http://foo.com:123 "  bar abc"
@@ -107,7 +107,7 @@ public class SampleExtensionCustomAuth implements ZimbraExtension {
 Handling authenticating requests in extension
 =============================================
 When an AuthRequest come in, if the domain is specified to use custom auth
-(by settting the zimbraAuthMech domain attribute to custom:{...}), the 
+(by setting the zimbraAuthMech domain attribute to custom:{...}), the 
 authenticating framework will invoke the authenticate method on the ZimbraCustomAuth 
 instance passed as the handler parameter to ZimbraCustomAuth.register().
 
@@ -121,7 +121,7 @@ the internet using whatever protocol of choice.
  
 It is very important to note that the same instance(the instance passed in to the
 register() method) of ZimbraCustomAuth object is invoked for all auth requests that
-need to go through this custom auth handler.  It is the implementor's resposibility 
+need to go through this custom auth handler.  It is the implementor's responsibility 
 to ensure thread safety during the life span of ZimbraCustomAuth.authenticate().
  
 The authenticate method should do one of the following to indicate to the framework 
@@ -131,7 +131,7 @@ the result of the auth.
      If the method returns, it indicates the authentication has succeeded.
      
 - auth failed: throw Exception
-     If an Exception is thrown, it indicates the authtication has failed.
+     If an Exception is thrown, it indicates the authentication has failed.
      (1) if the Exception is an instance of com.zimbra.common.service.ServiceException, 
          the same exception instance will be re-thrown by the framework to the SOAP 
          AuthRequest.
@@ -140,7 +140,7 @@ the result of the auth.
      	 exception to the SOAP AuthRequest.
      
  
-The ZimbraCustomAuth class and relavent methods for implementors:
+The ZimbraCustomAuth class and relevant methods for implementors:
 -----------------------------------------------------------------
 
 public abstract class ZimbraCustomAuth {

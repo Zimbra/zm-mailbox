@@ -16,7 +16,7 @@ CALENDAR Server-Side TODO list
 
 -- integrate with Indexing/Search
 
--- testing.  We need to come up with a more or less comprehensive set of tests.  There are a LOT of cases: self-created meeting, externally-created-meeting, accept, deny, add invitess, remove invitees, reply to meeting request forwarded from someone else, etc etc......maybe that's a good thing for me to be doing: I'll sit down and try to come up with a comprehensive list of test scenareos.
+-- testing.  We need to come up with a more or less comprehensive set of tests.  There are a LOT of cases: self-created meeting, externally-created-meeting, accept, deny, add invitees, remove invitees, reply to meeting request forwarded from someone else, etc etc......maybe that's a good thing for me to be doing: I'll sit down and try to come up with a comprehensive list of test scenarios.
 
 -- outlook integration testing (basic outlook func works, but not tested at all)
  
@@ -29,7 +29,7 @@ CALENDAR Server-Side TODO list
  
 Stuff to make us more-or-less compliant with RFC's (2445, 2446, 2447):
 ----------------------------------------------------------------------
--- Method:COUNTER/DECLINECOUNTER (RFC2446: 4.2.4) -- for Propse New Time
+-- Method:COUNTER/DECLINECOUNTER (RFC2446: 4.2.4) -- for Propose New Time
 
 -- Method:ADD
  
