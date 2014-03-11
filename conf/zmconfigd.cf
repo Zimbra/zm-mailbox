@@ -152,6 +152,7 @@ SECTION mta DEPENDS amavis
 	POSTCONF sendmail_path				VAR zimbraMtaSendmailPath
 	POSTCONF smtpd_banner				VAR zimbraMtaSmtpdBanner
 	POSTCONF smtpd_client_restrictions		VAR zimbraMtaSmtpdClientRestrictions
+	POSTCONF smtpd_client_port_logging		VAR zimbraMtaSmtpdClientPortLogging
 	POSTCONF smtpd_data_restrictions		VAR zimbraMtaSmtpdDataRestrictions
 	POSTCONF smtpd_helo_required			VAR zimbraMtaSmtpdHeloRequired
 	POSTCONF smtpd_proxy_timeout			VAR zimbraMtaSmtpdProxyTimeout
