@@ -840,6 +840,22 @@ public class ZAttrProvisioning {
         public boolean isNo() { return this == no;}
     }
 
+    public static enum MtaSmtpdClientPortLogging {
+        yes("yes"),
+        no("no");
+        private String mValue;
+        private MtaSmtpdClientPortLogging(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static MtaSmtpdClientPortLogging fromString(String s) throws ServiceException {
+            for (MtaSmtpdClientPortLogging value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isYes() { return this == yes;}
+        public boolean isNo() { return this == no;}
+    }
+
     public static enum MtaSmtpdHeloRequired {
         yes("yes"),
         no("no");
@@ -8786,6 +8802,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1532)
     public static final String A_zimbraMtaSmtpdBanner = "zimbraMtaSmtpdBanner";
+
+    /**
+     * Value for postconf smtpd_client_port_logging. Defaults to no
+     *
+     * @since ZCS 8.0.8
+     */
+    @ZAttr(id=1588)
+    public static final String A_zimbraMtaSmtpdClientPortLogging = "zimbraMtaSmtpdClientPortLogging";
 
     /**
      * Value for postconf smtpd_client_restrictions
