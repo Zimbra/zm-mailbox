@@ -62,7 +62,7 @@ Some issues to consider as a result of such splitting your domain:
      all other accounts on the domain to the master MTA.
 
    - Note that because of the above master/slave mail routing
-     requirement, you will have to perform some type of provisioniong
+     requirement, you will have to perform some type of provisioning
      step on both the slave and the master for an account that lives
      on the slave system.
 

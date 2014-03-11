@@ -42,7 +42,7 @@ in the auto-accept reply:
 Message Files
 -------------
 
-All message files are stored under /opt/zimbra/conf/msgs directory.  The deafult
+All message files are stored under /opt/zimbra/conf/msgs directory.  The default
 message file is called "ZsMsg.properties".  This name was chosen to be
 consistent with the convention used in web client code.  "Z" is for Zimbra and
 "s" is for server.  To add localize for a particular locale, you can add a file

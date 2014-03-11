@@ -1,4 +1,4 @@
-This document will descibe the login flow of the new unified login page (JSP, no-ajax).
+This document will describe the login flow of the new unified login page (JSP, no-ajax).
 
 IF (no authtoken) {
 
@@ -34,7 +34,7 @@ IF (no authtoken) {
 
   2c. if we get back auth expired and/or can't parse auth token, GOTO 1a.
 
-      BONUS: if token is expired but account is valid, do account lookup and redirect to corect
+      BONUS: if token is expired but account is valid, do account lookup and redirect to correct
              server if need be.
 
   2d. if <refer> is set in AuthResponse, WRONG SERVER,
@@ -72,7 +72,7 @@ we are on CORRECT SERVER
 
 ----------------------------------------------------------------------------------
 
-login-specifc query/form params (all others ignored and passed to app):
+login-specific query/form params (all others ignored and passed to app):
 
 
 zauthtoken      - authtoken passed in via URL

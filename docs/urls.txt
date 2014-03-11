@@ -10,7 +10,7 @@ Calendar   http://{server}/home/{username}/{calendar-folder}
 
 ------------------------------------------------------------
 
-Spits out a "text/calendar" file, consististing of appointments in the calendar.
+Spits out a "text/calendar" file, consisting of appointments in the calendar.
 
 to test (on a system with curl installed):
 

@@ -35,7 +35,7 @@ I. SPNEGO SSO
        their browsers properly.  Improperly configured browser will behave differently depending 
        on the browser.  The fix is to properly configure the browser.
        
-       This is also required for users loggon to the local domain and not intend to
+       This is also required for users logon to the local domain and not intend to
        use SPNEGO SSO.
        
        This is because of the way SPNEGO challenge sequence works.  

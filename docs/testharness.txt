@@ -70,7 +70,7 @@ General format is:
     -->
        
 	<t:select path="..."  [attr="..."] [match="..."] [set="..."] >
-	   <!-- additional selects can be nested, their pathes are relative to
+	   <!-- additional selects can be nested, their paths are relative to
 	        the outer select's element -->
 	<t:select/>
   </t:response>

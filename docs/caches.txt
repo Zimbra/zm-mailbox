@@ -14,7 +14,7 @@ requires the index's word dictionary to be loaded from disk.  An open
 Reader requires a significant amount of server memory when open, so
 increasing the cache parameters will cause the server to use more
 memory.
-   Setting LC.zimbra_index_reader_lru_size to "0" disbles this cache.
+   Setting LC.zimbra_index_reader_lru_size to "0" disables this cache.
 Disabling the cache will cause a significant performance impact when
 searching large indexes.
            

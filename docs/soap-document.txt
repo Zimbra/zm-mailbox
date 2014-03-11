@@ -16,7 +16,7 @@
 // Zimbra Documents are server side file storage.  It is possible to
 // set up a sync client between Zimbra and another type of file storage
 // mechanism, such as cloud or files on a disk.  The sync client should
-// use the sync protocol desribed in sync.txt.  For Document sync, the 
+// use the sync protocol described in sync.txt.  For Document sync, the 
 // following approach can be made.
 //
 // - the Documents are stored in Folders with view set to document.

@@ -1,13 +1,13 @@
 
 
 ------------------------------------------------------------
-Catagories
+Categories
 ------------------------------------------------------------
-We are switching the log4j catagory naming convention from a strict physical 
-classname-based naming convention to a combo. Subsytems will be grouped
+We are switching the log4j category naming convention from a strict physical 
+classname-based naming convention to a combo. Subsystems will be grouped
 and named logically, all under the "zimbra" name. 
 
-For example, the following catagories will be pre-defined:
+For example, the following categories will be pre-defined:
 
 zimbra.misc
 zimbra.pop
@@ -31,8 +31,8 @@ enable if they are trying to debug. E.G. Might trace the individual
 steps in an operation ("creating DB entry...creating LDAP entry....
 creating Index") in a way that helps the operator diagnose a problem.
 
-You should use the most-specific catagory available. If none apply (and
-you aren't creating a major new subsytem), then use the "zimbra.misc" catagory.
+You should use the most-specific category available. If none apply (and
+you aren't creating a major new subsystem), then use the "zimbra.misc" category.
 
 We should continue to use the classname itself when we want to enable
 fine-grained debugging/tracing of a subsystem/class.
@@ -40,7 +40,7 @@ fine-grained debugging/tracing of a subsystem/class.
 ------------------------------------------------------------
 Defaults
 ------------------------------------------------------------
-By default, eveything under "zimbra.*" will be configured to log at the 
+By default, everything under "zimbra.*" will be configured to log at the 
 following levels:
 
 INFO/WARN/ERROR/FATAL
@@ -76,14 +76,14 @@ INFO    The INFO level designates informational messages that highlight the
         server start-up, mailbox creation/deletion, account creation. You
         would generally not want to log something at info if it happens on
         every single request. If we need that type of logging (i.e., each
-        operation for auditing), then we should create a catagory, like 
+        operation for auditing), then we should create a category, like 
         "zimbra.mailbox.op", and have logging for it set to OFF by default.
 
 DEBUG   Events that would generally be useful to help a customer and/or 
         support debug problems at a customer site. For example, logging
         all parameters in a command, logging each request, etc. To enable
         even more fine-grained logging, we should use the classname itself
-        as the catagory, and enable debugging on the class.
+        as the category, and enable debugging on the class.
 
 
 ------------------------------------------------------------
@@ -100,23 +100,23 @@ public class ZimbraLog {
   // etc
 }
 
-So, to log an error in your code under the zimbra.mailbox catagory, you'd
+So, to log an error in your code under the zimbra.mailbox category, you'd
 use:
 
 ZimbraLog.mailbox.error("...");
 
 If you are doing debug logging and/or or it is very expensive to compute your
 log string, then you will generally want to make sure that level is enabled
-before constucting the string:
+before constructing the string:
 
 if (ZimbraLog.index.isDebugEnabled())
   ZimbraLog.index.debug(foo+" "+bar);
 
-If you are logging something to the zimbra.* catagories at 
+If you are logging something to the zimbra.* categories at 
 INFO/WARN/ERROR/CRITICAL you probably don't need to check.
 
 If there are cases where you want extra levels of debugging/information,
-then you can use the classname-based catagory naming. 
+then you can use the classname-based category naming. 
 
 For example:
 
@@ -141,7 +141,7 @@ for another purpose, and there are a billion Log classes already.
 ------------------------------------------------------------
 Nested Diagnostic Context
 ------------------------------------------------------------
-The logging format has been modifed to include [%x] in the output, which 
+The logging format has been modified to include [%x] in the output, which 
 instructs log4j to log the NDC. If one is not set, then [] is output.
 
 From the log4j NDC javadoc:

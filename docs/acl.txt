@@ -30,7 +30,7 @@ along these lines:
 
         read       - search, view overviews and items
         write      - edit drafts/contacts/notes, set flags
-        action     - workflow actions, like accepting appoitnments
+        action     - workflow actions, like accepting appointments
         insert     - copy/add to directory, create subfolders
         delete     - delete items and subfolders, set \Deleted flag?
         administer - delegate admin and change permissions
@@ -96,7 +96,7 @@ probably the behavior that the user would expect.
 The set of rights that apply to a given folder is derived by starting at
 that folder and going up the folder hierarchy.  If we hit a folder that
 has a set of rights explicitly set on it, we stop and use those.  If we
-hit a folder that doesn't inherit priviliges from its parent, we stop and
+hit a folder that doesn't inherit privileges from its parent, we stop and
 treat it as if no rights are granted on the target folder.  In other
 words, take the *first* (and only the first) of the following that exists,
 stopping at "do not inherit" folders:

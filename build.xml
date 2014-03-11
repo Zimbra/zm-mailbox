@@ -605,8 +605,8 @@
             user on the server.
             Note: such server and user is not needed if the test client box can
                   DNS resolve the home server of the user.
-                  But in dev env the server name is usually not a resolvble real
-                  hostanme, but a simple name like myserver.local, which cannot
+                  But in dev env the server name is usually not a resolvable real
+                  hostname, but a simple name like myserver.local, which cannot
                   be resolved from the test client. (Windows 7 VM on jj-esx.spnego.local)
         -->
 
@@ -2489,7 +2489,7 @@
      To run a particular test:
      ant -Dtest={java class name} prov-test-inmem
   -->  
-  <target name="prov-test-inmem" description="Run Provisioning tests with in memory LDAP server fpr LDAP tests">
+  <target name="prov-test-inmem" description="Run Provisioning tests with in memory LDAP server for LDAP tests">
       <property name="inmem" value="true"/>
       
       <!-- run tests -->
