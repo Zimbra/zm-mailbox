@@ -7798,7 +7798,7 @@ public class ZAttrProvisioning {
     /**
      * Whether to force devices using Active Sync 2.5
      *
-     * @since ZCS 8.5.0
+     * @since ZCS 8.0.7
      */
     @ZAttr(id=1573)
     public static final String A_zimbraMobileForceProtocol25 = "zimbraMobileForceProtocol25";
@@ -7806,7 +7806,7 @@ public class ZAttrProvisioning {
     /**
      * Whether to force Samsung devices using Active Sync 2.5
      *
-     * @since ZCS 8.5.0
+     * @since ZCS 8.0.7
      */
     @ZAttr(id=1572)
     public static final String A_zimbraMobileForceSamsungProtocol25 = "zimbraMobileForceSamsungProtocol25";
