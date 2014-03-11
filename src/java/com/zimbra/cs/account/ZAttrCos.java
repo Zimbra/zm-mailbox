@@ -17644,7 +17644,7 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @return zimbraMobileForceProtocol25, or false if unset
      *
-     * @since ZCS 8.5.0
+     * @since ZCS 8.0.7
      */
     @ZAttr(id=1573)
     public boolean isMobileForceProtocol25() {
@@ -17657,7 +17657,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * @param zimbraMobileForceProtocol25 new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.5.0
+     * @since ZCS 8.0.7
      */
     @ZAttr(id=1573)
     public void setMobileForceProtocol25(boolean zimbraMobileForceProtocol25) throws com.zimbra.common.service.ServiceException {
@@ -17673,7 +17673,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.5.0
+     * @since ZCS 8.0.7
      */
     @ZAttr(id=1573)
     public Map<String,Object> setMobileForceProtocol25(boolean zimbraMobileForceProtocol25, Map<String,Object> attrs) {
@@ -17687,7 +17687,7 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.5.0
+     * @since ZCS 8.0.7
      */
     @ZAttr(id=1573)
     public void unsetMobileForceProtocol25() throws com.zimbra.common.service.ServiceException {
@@ -17702,7 +17702,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.5.0
+     * @since ZCS 8.0.7
      */
     @ZAttr(id=1573)
     public Map<String,Object> unsetMobileForceProtocol25(Map<String,Object> attrs) {
@@ -17716,7 +17716,7 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @return zimbraMobileForceSamsungProtocol25, or true if unset
      *
-     * @since ZCS 8.5.0
+     * @since ZCS 8.0.7
      */
     @ZAttr(id=1572)
     public boolean isMobileForceSamsungProtocol25() {
@@ -17729,7 +17729,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * @param zimbraMobileForceSamsungProtocol25 new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.5.0
+     * @since ZCS 8.0.7
      */
     @ZAttr(id=1572)
     public void setMobileForceSamsungProtocol25(boolean zimbraMobileForceSamsungProtocol25) throws com.zimbra.common.service.ServiceException {
@@ -17745,7 +17745,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.5.0
+     * @since ZCS 8.0.7
      */
     @ZAttr(id=1572)
     public Map<String,Object> setMobileForceSamsungProtocol25(boolean zimbraMobileForceSamsungProtocol25, Map<String,Object> attrs) {
@@ -17759,7 +17759,7 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.5.0
+     * @since ZCS 8.0.7
      */
     @ZAttr(id=1572)
     public void unsetMobileForceSamsungProtocol25() throws com.zimbra.common.service.ServiceException {
@@ -17774,7 +17774,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.5.0
+     * @since ZCS 8.0.7
      */
     @ZAttr(id=1572)
     public Map<String,Object> unsetMobileForceSamsungProtocol25(Map<String,Object> attrs) {
