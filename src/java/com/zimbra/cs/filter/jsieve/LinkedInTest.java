@@ -39,7 +39,7 @@ import com.zimbra.cs.mime.ParsedAddress;
  * @author ysasaki
  */
 public final class LinkedInTest extends AbstractTest {
-    private static final Set<String> ADDRESSES = ImmutableSet.of("connections@linkedin.com", "member@linkedin.com");
+    private static final Set<String> ADDRESSES = ImmutableSet.of("connections@linkedin.com", "member@linkedin.com", "hit-reply@linkedin.com");
 
     @Override
     protected boolean executeBasic(MailAdapter mail, Arguments args, SieveContext ctx) throws SieveException {
