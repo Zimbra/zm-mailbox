@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -189,7 +189,7 @@ public final class MailboxIndex {
     public ZimbraQueryResults search(OperationContext octxt, SearchParams params) throws ServiceException {
     	return search(SoapProtocol.Soap12, octxt, params);
     }
-    
+
     public ZimbraQueryResults search(OperationContext octxt, String queryString, Set<MailItem.Type> types,
             SortBy sortBy, int chunkSize) throws ServiceException {
         return search(octxt, queryString, types, sortBy, chunkSize, false);
@@ -1040,8 +1040,15 @@ public final class MailboxIndex {
                 ListIterator<DbSearch.Result> itr = result.listIterator();
                 while (itr.hasNext()) {
                     DbSearch.Result sr = itr.next();
-                    MailItem item = mailbox.getItem(sr.getItemData());
-                    itr.set(new ItemSearchResult(item, sr.getSortValue()));
+                    try {
+                        MailItem item = mailbox.getItem(sr.getItemData());
+                        itr.set(new ItemSearchResult(item, sr.getSortValue()));
+                    } catch (ServiceException se) {
+                        ZimbraLog.index.info(String.format(
+                            "Problem constructing Result for folder=%s item=%s from UnderlyingData - dropping item",
+                                    sr.getItemData().folderId, sr.getItemData().id, sr.getId()), se);
+                        itr.remove();
+                    }
                 }
             }
             success = true;
