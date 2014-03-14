@@ -58,6 +58,7 @@ public class DoSFilter extends org.eclipse.jetty.servlets.DoSFilter {
         // add loopback addresses
         addWhitelistAddress("127.0.0.1");
         addWhitelistAddress("::1");
+        addWhitelistAddress("0:0:0:0:0:0:0:1");
         ZimbraLog.misc.info("DoSFilter: Configured whitelist IPs = " + getWhitelist());
     }
 
