@@ -795,6 +795,7 @@ import and export of addressbook.
   {type} = type of addresses to auto-complete on
            "account" for regular user accounts, aliases and distribution lists
            "resource" for calendar resources
+           "group" for contact groups
            "all" for combination of both types
            if omitted, defaults to "accounts"
 
@@ -816,7 +817,7 @@ import and export of addressbook.
 
 ----------------------------
 
-<AutoCompleteRequest [folders="{folders}"] [includeGal="0|1"] [needExp="1|0"]>
+<AutoCompleteRequest [folders="{folders}"] [includeGal="0|1"] [needExp="1|0"] [t="{type}"]>
   <name>...</name>
 </AutoCompleteRequest>
 
@@ -825,6 +826,13 @@ import and export of addressbook.
 </AutoCompleteResponse>
 
   {folders} - comma separates list of folder IDs.
+
+  {type} = type of addresses to auto-complete on
+           "account" for regular user accounts, aliases and distribution lists
+           "resource" for calendar resources
+           "group" for contact groups
+           "all" for combination of both types
+           if omitted, defaults to "accounts"
 
   - the number of entries in the response is limited by Account/COS attribute
     zimbraContactAutoCompleteMaxResults with default value of 20.
