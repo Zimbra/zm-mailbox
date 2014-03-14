@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
@@ -148,7 +149,7 @@ public class ZimbraPerf {
 
     @Description("LDAP server cache hit rate")
     public static final String RTS_SERVER_CACHE_HIT_RATE = "server_cache_hit_rate";
-    
+
     @Description("LDAP UC service cache size")
     public static final String RTS_UCSERVICE_CACHE_SIZE = "ucservice_cache_size";
 
@@ -206,6 +207,7 @@ public class ZimbraPerf {
     public static final ActivityTracker POP_TRACKER = new ActivityTracker("pop3.csv");
     public static final ActivityTracker LDAP_TRACKER = new ActivityTracker("ldap.csv");
     public static final ActivityTracker SYNC_TRACKER = new ActivityTracker("sync.csv");
+    public static final ActivityTracker SQL_TRACKER  = new ActivityTracker("sql.csv");
 
     private static int mailboxCacheSize;
     private static long mailboxCacheSizeTimestamp = 0;
@@ -431,14 +433,14 @@ public class ZimbraPerf {
      * The number of statements that were prepared, as reported by
      * {@link DbPool.DbConnection#prepareStatement}.
      */
-    private static volatile int sPrepareCount = 0;
+    private static AtomicInteger sPrepareCount = new AtomicInteger(0);
 
     public static int getPrepareCount() {
-        return sPrepareCount;
+        return sPrepareCount.get();
     }
 
     public static void incrementPrepareCount() {
-        sPrepareCount++;
+        sPrepareCount.getAndIncrement();
     }
 
     /**
@@ -469,6 +471,7 @@ public class ZimbraPerf {
         StatsDumper.schedule(POP_TRACKER, CSV_DUMP_FREQUENCY);
         StatsDumper.schedule(LDAP_TRACKER, CSV_DUMP_FREQUENCY);
         StatsDumper.schedule(SYNC_TRACKER, CSV_DUMP_FREQUENCY);
+        StatsDumper.schedule(SQL_TRACKER, CSV_DUMP_FREQUENCY);
 
         ThreadStats threadStats = new ThreadStats("threads.csv");
         StatsDumper.schedule(threadStats, CSV_DUMP_FREQUENCY);
@@ -509,10 +512,12 @@ public class ZimbraPerf {
     private static final class MailboxdStats
     implements StatsDumperDataSource
     {
+        @Override
         public String getFilename() {
             return "mailboxd.csv";
         }
 
+        @Override
         public String getHeader() {
             List<String> columns = new ArrayList<String>();
             for (Accumulator a : sAccumulators) {
@@ -523,6 +528,7 @@ public class ZimbraPerf {
             return StringUtil.join(",", columns);
         }
 
+        @Override
         public Collection<String> getDataLines() {
             List<Object> data = new ArrayList<Object>();
             for (Accumulator a : sAccumulators) {
@@ -550,6 +556,7 @@ public class ZimbraPerf {
             return retVal;
         }
 
+        @Override
         public boolean hasTimestampColumn() {
             return true;
         }
