@@ -298,7 +298,9 @@ public class Search extends MailDocumentHandler  {
                     Map.Entry<String, List<Integer>> acctEntry = acctIter.next();
                     String acctId = acctEntry.getKey();
                     List<Integer> folderIds = acctEntry.getValue();
-                    ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
+                    // Setup ItemIdFormatter appropriate for this folder which might not be in the authed account
+                    // but also take note of presense of <noqualify/> in SOAP context
+                    ItemIdFormatter ifmt = new ItemIdFormatter(authAcct.getId(), acctId, zsc.wantsUnqualifiedIds());
                     // for each folder
                     for (Iterator<Integer> iterFolderId = folderIds.iterator(); iterFolderId.hasNext(); ) {
                         int folderId = iterFolderId.next();
