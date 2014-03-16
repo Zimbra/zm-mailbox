@@ -17,12 +17,6 @@ import org.junit.Test;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.Element.JSONElement;
-import com.zimbra.common.soap.Element.XMLElement;
-import com.zimbra.common.soap.SoapHttpTransport;
-import com.zimbra.common.soap.SoapProtocol;
-import com.zimbra.common.soap.SoapUtil;
 import com.zimbra.common.util.ZimbraHttpConnectionManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
@@ -308,7 +302,7 @@ public class TestCookieReuse extends TestCase {
      * version of SOAP transport that uses HTTP cookies instead of SOAP message header for transporting Auth Token
      * @author gsolovyev
      */
-    private class HttpCookieSoapTransport extends SoapHttpTransport {
+   /* private class HttpCookieSoapTransport extends SoapHttpTransport {
 
 		public HttpCookieSoapTransport(String uri) {
 			super(uri);
@@ -351,5 +345,5 @@ public class TestCookieReuse extends TestCase {
 		        Element envelope = proto.soapEnvelope(document, context);
 		        return envelope;
 		    }
-    }
+    }*/
 }
