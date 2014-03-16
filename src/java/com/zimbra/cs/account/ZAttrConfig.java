@@ -20173,6 +20173,78 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * version of lowest supported authentication protocol
+     *
+     * @return zimbraLowestSupportedAuthVersion, or 2 if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1589)
+    public int getLowestSupportedAuthVersion() {
+        return getIntAttr(Provisioning.A_zimbraLowestSupportedAuthVersion, 2);
+    }
+
+    /**
+     * version of lowest supported authentication protocol
+     *
+     * @param zimbraLowestSupportedAuthVersion new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1589)
+    public void setLowestSupportedAuthVersion(int zimbraLowestSupportedAuthVersion) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLowestSupportedAuthVersion, Integer.toString(zimbraLowestSupportedAuthVersion));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * version of lowest supported authentication protocol
+     *
+     * @param zimbraLowestSupportedAuthVersion new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1589)
+    public Map<String,Object> setLowestSupportedAuthVersion(int zimbraLowestSupportedAuthVersion, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLowestSupportedAuthVersion, Integer.toString(zimbraLowestSupportedAuthVersion));
+        return attrs;
+    }
+
+    /**
+     * version of lowest supported authentication protocol
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1589)
+    public void unsetLowestSupportedAuthVersion() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLowestSupportedAuthVersion, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * version of lowest supported authentication protocol
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1589)
+    public Map<String,Object> unsetLowestSupportedAuthVersion(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLowestSupportedAuthVersion, "");
+        return attrs;
+    }
+
+    /**
      * optional regex used by web client to validate email address
      *
      * @return zimbraMailAddressValidationRegex, or empty array if unset

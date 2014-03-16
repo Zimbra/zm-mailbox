@@ -7959,4 +7959,8 @@ TODO: delete them permanently from here
   <desc>Value for postconf smtpd_client_port_logging. Defaults to no</desc>
 </attr>
 
+<attr id="1589" name="zimbraLowestSupportedAuthVersion" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
+  <globalConfigValue>2</globalConfigValue>
+  <desc>version of lowest supported authentication protocol</desc>
+</attr>
 </attrs>
