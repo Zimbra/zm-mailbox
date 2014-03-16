@@ -6870,6 +6870,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraLogToSyslog = "zimbraLogToSyslog";
 
     /**
+     * version of lowest supported authentication protocol
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1589)
+    public static final String A_zimbraLowestSupportedAuthVersion = "zimbraLowestSupportedAuthVersion";
+
+    /**
      * RFC822 email address of this recipient for accepting mail
      */
     @ZAttr(id=3)
