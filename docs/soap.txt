@@ -796,8 +796,8 @@ import and export of addressbook.
            "account" for regular user accounts, aliases and distribution lists
            "resource" for calendar resources
            "group" for contact groups
-           "all" for combination of both types
-           if omitted, defaults to "accounts"
+           "all" for combination of all types
+           if omitted, defaults to "account"
 
   {more-flag} = 1 if the results were truncated.
 
@@ -831,8 +831,8 @@ import and export of addressbook.
            "account" for regular user accounts, aliases and distribution lists
            "resource" for calendar resources
            "group" for contact groups
-           "all" for combination of both types
-           if omitted, defaults to "accounts"
+           "all" for combination of all types
+           if omitted, defaults to "account"
 
   - the number of entries in the response is limited by Account/COS attribute
     zimbraContactAutoCompleteMaxResults with default value of 20.
