@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -15,12 +15,12 @@
 
 package com.zimbra.soap.mail.message;
 
-import com.google.common.base.Objects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.google.common.base.Objects;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.type.GalSearchType;
 import com.zimbra.soap.type.ZmBoolean;
@@ -43,7 +43,14 @@ public class AutoCompleteRequest {
 
     /**
      * @zm-api-field-tag gal-search-type
-     * @zm-api-field-description GAL Search type - default value is <b>"account"</b>
+     * @zm-api-field-description type of addresses to auto-complete on
+     * <ul>
+     * <li>     "account" for regular user accounts, aliases and distribution lists
+     * <li>     "resource" for calendar resources
+     * <li>     "group" for groups
+     * <li>     "all" for combination of all types
+     * </ul>
+     * if omitted, defaults to "account"
      */
     @XmlAttribute(name=MailConstants.A_TYPE /* t */, required=false)
     private GalSearchType type;
