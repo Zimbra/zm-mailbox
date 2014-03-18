@@ -7963,4 +7963,13 @@ TODO: delete them permanently from here
   <globalConfigValue>2</globalConfigValue>
   <desc>version of lowest supported authentication protocol</desc>
 </attr>
+
+<attr id="1590" name="zimbraMtaSmtpdSenderRestrictions" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
+  <desc>Value for postconf smtpd_sender_restrictions</desc>
+</attr>
+
+<attr id="1591" name="zimbraMtaSmtpdSenderLoginMaps" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
+  <desc>Value for postconf smtpd_sender_login_maps</desc>
+</attr>
+
 </attrs>
