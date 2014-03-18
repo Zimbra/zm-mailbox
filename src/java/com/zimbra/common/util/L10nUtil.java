@@ -143,6 +143,7 @@ public class L10nUtil {
         shareNotifBodyGranteeRoleManager,
         shareNotifBodyGranteeRoleAdmin,
         shareNotifBodyGranteeRoleNone,
+        shareNotifBodyGranteeRoleCustom,
 
         shareNotifBodyFolderDesc,
         shareNotifBodyExternalShareText,
