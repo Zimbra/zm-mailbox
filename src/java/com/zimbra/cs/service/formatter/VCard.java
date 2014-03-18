@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2006, 2007, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -34,22 +34,22 @@ import org.apache.commons.codec.net.QuotedPrintableCodec;
 import org.json.JSONException;
 
 import com.google.common.base.Strings;
+import com.zimbra.common.mailbox.ContactConstants;
+import com.zimbra.common.mime.MimeConstants;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.DateUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.Contact.Attachment;
 import com.zimbra.cs.mailbox.Contact.DerefGroupMembersOption;
 import com.zimbra.cs.mime.ParsedContact;
 import com.zimbra.cs.util.Zimbra;
-import com.zimbra.common.mailbox.ContactConstants;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.DateUtil;
-import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.common.mime.MimeConstants;
 
 public class VCard {
 
     public String uid;
     public String fn;
-    private String formatted;
+    private final String formatted;
     public Map<String, String> fields;
     public List<Attachment> attachments;
 
@@ -105,7 +105,7 @@ public class VCard {
     private static class VCardProperty {
         private String group;
         private String name;
-        private Set<String> params = new HashSet<String>();
+        private final Set<String> params = new HashSet<String>();
         private String charset;
         private Encoding encoding = Encoding.NONE;
         private String value;
@@ -186,7 +186,7 @@ public class VCard {
         String getGroup() {
             return group;
         }
-        
+
         String getValue() {
             // if it's a 2.1 vCard, decode the property value if necessary
             try {
@@ -222,7 +222,7 @@ public class VCard {
 
         VCardProperty vcprop = new VCardProperty();
         int depth = 0;
-        int cardstart = 0; 
+        int cardstart = 0;
         String uid = null;
         for (int start, pos = 0, limit = vcard.length(); pos < limit;) {
             // unfold the next line in the vcard
@@ -307,7 +307,7 @@ public class VCard {
                         }
                         fields.put(ContactConstants.A_vCardXProps, Contact.encodeXProps(newMap));
                     }
-                    
+
                     // finished a vCard; add to list if non-empty
                     if (!fields.isEmpty()) {
                         Contact.normalizeFileAs(fields);
@@ -582,7 +582,7 @@ public class VCard {
     public static VCard formatContact(Contact con) {
         return formatContact(con, null, false);
     }
-    
+
     public static VCard formatContact(Contact con, Collection<String> vcattrs, boolean includeXProps) {
         return formatContact(con, vcattrs, includeXProps, true);
     }
@@ -618,12 +618,19 @@ public class VCard {
         }
 
         if (vcattrs == null || vcattrs.contains("N")) {
-            String n = vcfEncode(fields.get(ContactConstants.A_lastName)) + ';' +
-            vcfEncode(fields.get(ContactConstants.A_firstName)) + ';' +
-            vcfEncode(fields.get(ContactConstants.A_middleName)) + ';' +
-            vcfEncode(fields.get(ContactConstants.A_namePrefix)) + ';' +
-            vcfEncode(fields.get(ContactConstants.A_nameSuffix));
+            StringBuilder nSb = new StringBuilder();
+            nSb.append(vcfEncode(fields.get(ContactConstants.A_lastName))).append(';')
+                .append(vcfEncode(fields.get(ContactConstants.A_firstName))).append(';')
+                .append(vcfEncode(fields.get(ContactConstants.A_middleName))).append(';')
+                .append(vcfEncode(fields.get(ContactConstants.A_namePrefix))).append(';')
+                .append(vcfEncode(fields.get(ContactConstants.A_nameSuffix)));
+            String n = nSb.toString();
             // N is mandatory according to  RFC 2426 Section 1, so include it even if all components are empty
+            // In fact, clients like Mac OS X Mavericks Contacts will just have blank names if it is blank,
+            // so, try to avoid that.
+            if (";;;;".equals(n)) {
+                n = vcfEncode(fn) + ";;;;";
+            }
             sb.append("N:").append(n).append("\r\n");
         }
 
@@ -664,7 +671,7 @@ public class VCard {
             encodePhone(sb, "work,fax", ContactConstants.A_workFax, 2, fields);
             encodePhone(sb, "work,voice", ContactConstants.A_workPhone, 2, fields);
         }
-        
+
         if (vcattrs == null || vcattrs.contains("EMAIL")) {
             encodeField(sb, "EMAIL;TYPE=internet", ContactConstants.A_email, false, 2, fields);
             encodeField(sb, "EMAIL;TYPE=internet", "workEmail", true, 1, fields);
@@ -721,7 +728,7 @@ public class VCard {
                 }
             }
         }
-        
+
         if (vcattrs == null || vcattrs.contains("KEY")) {
             String smimeCert = fields.get(ContactConstants.A_userSMIMECertificate);
             if (smimeCert == null) {
@@ -785,14 +792,14 @@ public class VCard {
             return uid;
         return con.getMailbox().getAccountId() + ":" + con.getId();
     }
-    
+
     public static String getUrl(Contact con) {
         String url = con.get(ContactConstants.A_vCardURL);
         if (url != null)
             return url.replaceAll("/", "//");
         return getUid(con).replaceAll("/", "//");
     }
-    
+
     private static void encodeField(StringBuilder sb, String name, String value) {
         if (sb == null || name == null || value == null)
             return;
@@ -800,10 +807,10 @@ public class VCard {
     }
 
     private static void encodeField(StringBuilder sb, String name, String firstKey, boolean skipFirstKey, int firstSuffix, Map<String, String> fields) {
-        
+
         if (sb == null || name == null)
             return;
-        
+
         String value;
         if (!skipFirstKey) {
             value= fields.get(firstKey);
@@ -856,11 +863,11 @@ public class VCard {
             }
         }
     }
-    
+
     private static void encodePhone(StringBuilder sb, String type, String firstKey, int firstSuffix, Map<String, String> fields) {
         if (sb == null || type == null)
             return;
-        
+
         String phone = fields.get(firstKey);
         if (phone == null)
             return;
