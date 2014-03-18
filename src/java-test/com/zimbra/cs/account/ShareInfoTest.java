@@ -62,7 +62,7 @@ public class ShareInfoTest {
          MailboxManager.setInstance(new DirectInsertionMailboxManager());
     }
 
-    @Test
+
     public void testGenNotifyBody() {
 
         Locale locale = new Locale("en", "US");
@@ -99,7 +99,7 @@ public class ShareInfoTest {
     }
 
 
-    @Test
+
     public void testGenNotifyBodyForCustom() {
 
         Locale locale = new Locale("en", "US");
