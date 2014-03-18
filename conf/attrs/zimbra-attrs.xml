@@ -7961,6 +7961,7 @@ TODO: delete them permanently from here
 
 <attr id="1589" name="zimbraLowestSupportedAuthVersion" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
   <globalConfigValue>2</globalConfigValue>
+  <globalConfigValueUpgrade>1</globalConfigValueUpgrade>
   <desc>version of lowest supported authentication protocol</desc>
 </attr>
 
