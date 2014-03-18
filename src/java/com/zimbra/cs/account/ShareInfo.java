@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -41,6 +41,7 @@ import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMultipart;
 
 import org.apache.commons.codec.binary.Hex;
+import org.hsqldb.lib.StringUtil;
 
 import com.google.common.base.Strings;
 import com.sun.mail.smtp.SMTPMessage;
@@ -562,6 +563,7 @@ public class ShareInfo {
                                                   ACL.RIGHT_INSERT |
                                                   ACL.RIGHT_DELETE |
                                                   ACL.RIGHT_ACTION;
+
         private static final String HTML_LINE_BREAK = "<br>";
         private static final String NEWLINE = "\n";
 
@@ -756,15 +758,18 @@ public class ShareInfo {
         }
 
         private static String getRoleFromRights(ShareInfoData sid, Locale locale) {
-            switch (sid.getRightsCode()) {
-                case ROLE_VIEW:
-                    return L10nUtil.getMessage(MsgKey.shareNotifBodyGranteeRoleViewer, locale);
-                case ROLE_ADMIN:
-                    return L10nUtil.getMessage(MsgKey.shareNotifBodyGranteeRoleAdmin, locale);
-                case ROLE_MANAGER:
-                    return L10nUtil.getMessage(MsgKey.shareNotifBodyGranteeRoleManager, locale);
-                default:
-                    return L10nUtil.getMessage(MsgKey.shareNotifBodyGranteeRoleNone, locale);
+            String rights = sid.getRights();
+            rights = rights.replace(ACL.rightsToString(ACL.RIGHT_PRIVATE), "");
+            if (rights.equals(ACL.rightsToString(ROLE_ADMIN))) {
+                return L10nUtil.getMessage(MsgKey.shareNotifBodyGranteeRoleAdmin, locale);
+            }  else if (rights.equals(ACL.rightsToString(ROLE_MANAGER))) {
+                 return L10nUtil.getMessage(MsgKey.shareNotifBodyGranteeRoleManager, locale);
+            }  else if (rights.equals(ACL.rightsToString(ROLE_VIEW))) {
+                return L10nUtil.getMessage(MsgKey.shareNotifBodyGranteeRoleViewer, locale);
+            } else if (StringUtil.isEmpty(sid.getRights())){
+                return L10nUtil.getMessage(MsgKey.shareNotifBodyGranteeRoleNone, locale);
+            } else {
+                return L10nUtil.getMessage(MsgKey.shareNotifBodyGranteeRoleCustom, locale);
             }
         }
 
