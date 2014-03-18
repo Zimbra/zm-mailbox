@@ -138,6 +138,10 @@ ${DOMAIN_ATTRS}
         <r n="deleteAlias"/>
         <r n="getDomain"/>
         <r n="listDomain"/>
+        <r n="listAccount"/>
+        <r n="listAlias"/>
+        <r n="listCalendarResource"/>
+        <r n="listDistributionList"/>        
         <r n="setDomainAdminDomainAttrs"/>
       </rights>
     </right>

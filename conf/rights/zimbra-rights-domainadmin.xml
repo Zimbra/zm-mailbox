@@ -154,9 +154,13 @@
     <a n="zimbraMaxMailItemsPerPage"/>
     <a n="zimbraMaxVoiceItemsPerPage"/>
     <a n="zimbraMobileAttachSkippedItemEnabled"/>
+    <a n="zimbraMobileForceProtocol25"/>
+    <a n="zimbraMobileForceSamsungProtocol25"/>
     <a n="zimbraMobileItemsToTrackPerFolderMaxSize"/>
     <a n="zimbraMobileMetadataMaxSizeEnabled"/>
     <a n="zimbraMobileNotificationEnabled"/>
+    <a n="zimbraMobileOutlookSyncEnabled"/>
+    <a n="zimbraMobileShareContactEnabled"/>
     <a n="zimbraMobileSyncKeyFormatConvertedFolders"/>
     <a n="zimbraNewMailNotificationBody"/>
     <a n="zimbraNewMailNotificationFrom"/>
@@ -481,6 +485,7 @@
     <a n="zimbraPrefSpellIgnoreWord"/>
     <a n="zimbraPrefTimeZoneId"/>
     <a n="zimbraPublicSharingEnabled"/>
+    <a n="zimbraReverseProxyExternalRouteIncludeOriginalAuthusername"/>
     <a n="zimbraReverseProxyUseExternalRoute"/>
     <a n="zimbraReverseProxyUseExternalRouteIfAccountNotExist"/>
     <a n="zimbraSkinBackgroundColor"/>
@@ -580,7 +585,10 @@
       <rights>
         <r n="accessGAL"/>
         <r n="checkDomainMXRecord"/>
-        <r n="countAccount"/>
+        <r n="countAccount" />
+        <r n="countAlias" />
+        <r n="countCalendarResource" />
+        <r n="countDistributionList" />
         <r n="createAccount"/>
         <r n="createAlias"/>
         <r n="createCalendarResource"/>
@@ -588,6 +596,10 @@
         <r n="deleteAlias"/>
         <r n="getDomain"/>
         <r n="listDomain"/>
+        <r n="listAccount"/>
+        <r n="listAlias"/>
+        <r n="listCalendarResource"/>
+        <r n="listDistributionList"/>        
         <r n="setDomainAdminDomainAttrs"/>
       </rights>
     </right>

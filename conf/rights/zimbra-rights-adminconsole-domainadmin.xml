@@ -788,7 +788,10 @@
     <r n="domainAdminConsoleSavedSearchRights"/>
     <!-- needed to check for create*Rights on the domain -->
     <r n="listDomain"/>
-    <!-- <r n="domainAdminDomainRights"/> -->
+    <r n="countAccount" />
+    <r n="countAlias" />
+    <r n="countCalendarResource" />
+    <r n="countDistributionList" />
   </rights>
 </right>
 
