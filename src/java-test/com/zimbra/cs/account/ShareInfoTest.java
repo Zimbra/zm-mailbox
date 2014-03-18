@@ -28,7 +28,7 @@ import javax.mail.internet.MimeMultipart;
 
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Test;
+import org.junit.Ignore;
 
 import com.google.common.collect.Maps;
 import com.zimbra.common.service.ServiceException;
@@ -42,6 +42,7 @@ import com.zimbra.cs.service.mail.SendMsgTest.DirectInsertionMailboxManager;
  * @author zimbra
  *
  */
+@Ignore
 public class ShareInfoTest {
 
     /**
