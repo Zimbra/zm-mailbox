@@ -38,6 +38,7 @@ import org.dom4j.io.OutputFormat;
 import org.dom4j.io.XMLWriter;
 
 import com.zimbra.common.account.Key;
+import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.HttpUtil;
@@ -99,6 +100,9 @@ public abstract class DavResource {
         mDavCompliance.add(Compliance.addressbook);
         mDavCompliance.add(Compliance.extended_mkcol);
         if (isSchedulingEnabled()) {
+            if (isCalendarAutoSchedulingEnabled()) {
+                mDavCompliance.add(Compliance.calendar_auto_schedule);
+            }
             mDavCompliance.add(Compliance.calendar_schedule);
         }
 
@@ -363,6 +367,12 @@ public abstract class DavResource {
         } catch (ServiceException se) {
             return false;
         }
+    }
+
+    public static boolean isCalendarAutoSchedulingEnabled() {
+        /** TODO: Replace with a Config key when caldav-auto-schedule fully working in a way similar to how
+                        Provisioning.A_zimbraCalendarCalDavDisableScheduling is treated */
+        return DebugConfig.enableExperimentalCaldavAutoSchedule;
     }
 
 }

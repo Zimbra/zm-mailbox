@@ -25,7 +25,7 @@ public class DavProtocol {
     public enum Compliance {
         one, two, three,
         update, bind, access_control,
-        calendar_access, calendar_schedule,
+        calendar_access, calendar_auto_schedule, calendar_schedule,
         version_control,
         addressbook, extended_mkcol,
         // Apple extensions
@@ -64,6 +64,9 @@ public class DavProtocol {
         sComplianceStrMap.put(Compliance.bind, "bind");
         sComplianceStrMap.put(Compliance.access_control, "access-control");
         sComplianceStrMap.put(Compliance.calendar_access, "calendar-access");
+        // RFC6638 Scheduling Extensions to CalDAV
+        sComplianceStrMap.put(Compliance.calendar_auto_schedule, "calendar-auto-schedule");
+        // draft-desruisseaux-caldav-sched-03 (legacy scheduling)
         sComplianceStrMap.put(Compliance.calendar_schedule, "calendar-schedule");
         sComplianceStrMap.put(Compliance.version_control, "version-control");
         sComplianceStrMap.put(Compliance.calendar_proxy, "calendar-proxy");
