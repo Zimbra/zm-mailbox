@@ -20,6 +20,8 @@ import static org.junit.Assert.fail;
 
 import java.io.IOException;
 import java.util.Locale;
+import java.util.Map;
+import java.util.UUID;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMultipart;
@@ -28,9 +30,13 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.google.common.collect.Maps;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.MailboxTestUtil;
+import com.zimbra.cs.service.mail.SendMsgTest.DirectInsertionMailboxManager;
 
 /**
  * @author zimbra
@@ -43,6 +49,17 @@ public class ShareInfoTest {
      */
     @Before
     public void setUp() throws Exception {
+         MailboxTestUtil.initServer();
+         Provisioning prov = Provisioning.getInstance();
+
+         prov.createAccount("test@zimbra.com", "secret", Maps.<String, Object>newHashMap());
+
+         Map<String, Object> attrs = Maps.newHashMap();
+         attrs.put(Provisioning.A_zimbraId, UUID.randomUUID().toString());
+         prov.createAccount("rcpt@zimbra.com", "secret", attrs);
+
+         // this MailboxManager does everything except use SMTP to deliver mail
+         MailboxManager.setInstance(new DirectInsertionMailboxManager());
     }
 
     @Test
@@ -63,7 +80,7 @@ public class ShareInfoTest {
         sid.setItemId(257);
 
         sid.setOwnerAcctId("bbf152ca-e7cd-477e-9f72-70fef715c5f9");
-        sid.setOwnerAcctEmail("user2@rdesai.local");
+        sid.setOwnerAcctEmail("test@zimbra.com");
         sid.setOwnerAcctDisplayName("Demo User Two");
 
         try {
@@ -100,7 +117,7 @@ public class ShareInfoTest {
         sid.setItemId(257);
 
         sid.setOwnerAcctId("bbf152ca-e7cd-477e-9f72-70fef715c5f9");
-        sid.setOwnerAcctEmail("user2@rdesai.local");
+        sid.setOwnerAcctEmail("test@zimbra.com");
         sid.setOwnerAcctDisplayName("Demo User Two");
 
         try {
