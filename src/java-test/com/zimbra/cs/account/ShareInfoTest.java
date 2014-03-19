@@ -29,6 +29,7 @@ import javax.mail.internet.MimeMultipart;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Ignore;
+import org.junit.Test;
 
 import com.google.common.collect.Maps;
 import com.zimbra.common.service.ServiceException;
@@ -63,7 +64,7 @@ public class ShareInfoTest {
          MailboxManager.setInstance(new DirectInsertionMailboxManager());
     }
 
-
+    @Test
     public void testGenNotifyBody() {
 
         Locale locale = new Locale("en", "US");
@@ -100,7 +101,7 @@ public class ShareInfoTest {
     }
 
 
-
+    @Test
     public void testGenNotifyBodyForCustom() {
 
         Locale locale = new Locale("en", "US");
