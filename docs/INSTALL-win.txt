@@ -87,20 +87,66 @@ Net-DNS
 (The below steps can be ignored)
 
 NOTE:
-10. If you are in vmware.com domain you need to configure the HTTP proxy for the PPM. 
-Follow the instructions from:
-http://docs.activestate.com/activeperl/5.10/faq/ActivePerl-faq2.html#ppm_and_proxies
-
-Follow the instructions from the below URL to install additional perl packages:
-http://docs.activestate.com/activeperl/5.10/faq/ActivePerl-faq2.html#install_package
-
-set the ZIMBRA_HOSTNAME environment variable to be the name of your computer. run ZimbraServer\src\perl\zMTAHack.pl
-
-11. See jetty.txt for details on how to start/stop jetty server and how to debug zimbra server.
-
+10. See jetty.txt for details on how to start/stop jetty server and how to debug zimbra server.
 
 Troubleshooting:
-1. Jetty service fails to start/stop throwing some exception:
+  *******************  Jetty Server crashes frequently **********************
+A) In case the Jetty server crashes frequently, follow the below steps :-
+Change the environment variable's JAVA_HOME path value to UNIX path:
+C:/opt/zimbra/java
+
+Add the following environment variables:
+
+JETTY_BASE => c:/opt/zimbra/jetty
+JETTY_PID => C:/opt/zimbra/log/jetty.pid
+
+In the directory C:\opt\zimbra\jetty\etc replace the contents of the "jettyrc" file with the following, ensure the paths in JAVA_OPTIONS are correct :
+
+JAVA_OPTIONS="-Xmx1024m -XX:MaxPermSize=256m -DSTART=${JETTY_HOME}/etc/start.config -DSTOP.PORT=7867 -DSTOP.KEY=stop -Dzimbra.config=C:/opt/zimbra/conf/localconfig.xml -Djava.library.path=C:/opt/zimbra/lib -Djava.endorsed.dirs=${JETTY_HOME}/common/endorsed"
+JETTY_CONSOLE=C:/opt/zimbra/log/jetty.out
+JETTY_RUN=C:/opt/zimbra/log
+JETTY_ARGS=" --module=zimbra,server,servlet,servlets,jsp,jmx,resources,websocket,ext,plus,rewrite,monitor,continuation,webapp jetty.home=${JETTY_HOME} jetty.base=${JETTY_BASE}"
+CONFIGS="etc/jetty.xml"
+
+
+In the command line browse to the main/ZimbraServer directory and run the following command to make the unix property true 
+ ant -v start-jetty-unix -Dis-unix=true
+
+ Run the server using:
+ C:/opt/zimbra/bin/jetty start
+
+
+In case the server crashes, delete the jetty.pid file in the c:/opt/zimbra/log, before attempting restart. 
+
+For stopping the server use :-
+Run the server using:
+ C:/opt/zimbra/bin/jetty stop .
+ 
+ Note : For running commands like ant dev-sync, jetty start, jetty stop, it's better to use cygwin .
+
+
+/* Not needed -- can be ignored 
+ Jetty service fails to start/stop throwing some exception:
 When the system crashes or force powered off the ldap gets uncomfortable and locks its primary db as well as the log files. 
 Solution: 
 You can stop the ldap service. Then get into \opt\zimbra\openldap\var\openldap-data and remove __*db.* and restart as usual.
+*/
+
+*****************  Setting up of Review Board set up on Windows . This is only necessary for remote employees ***********************
+
+Follow the following steps to get the review board working:
+
+1. Create a .reviewboardrc file in your user Application Data folder, (you might have to create this using command line as windows doesn't allow a file with just an extension)
+ -> $USERPROFILE\Local Settings\Application Data or  $USERPROFILE\AppData\Roaming
+
+2. Add the following entries to the .reviewboardrc file
+
+REVIEWBOARD_URL="https://localhost:8443"
+REPOSITORY="zcs_p4"
+REPOSITORY_TYPE="perforce"
+USERNAME="your username here"
+PASSWORD="your password here"
+
+
+Use the following command to post the review request:
+rbt post --target-people achhatre -p 503915 -d 
