@@ -1539,6 +1539,55 @@
         <antcall target="generate-zmprov-commands"/>
     </target>
 
+    <macrodef name="generate-test-user-commands">
+        <attribute name="from" />
+        <attribute name="to" />
+        <attribute name="file" />
+
+        <sequential>
+            <script language="javascript"><![CDATA[
+            importClass(java.nio.charset.StandardCharsets);
+            importClass(java.nio.file.Files);
+            importClass(java.nio.file.Paths);
+            importClass(java.nio.file.StandardOpenOption);
+
+            var jInteger = java.lang.Integer;
+            var jString = java.lang.String;
+
+            var writer =
+                Files.newBufferedWriter(Paths.get("@{file}"),
+                                        StandardCharsets.UTF_8,
+                                        StandardOpenOption.CREATE,
+                                        StandardOpenOption.APPEND);
+
+            // create 500 test accounts
+            for (var i = @{from}; i <= @{to}; i++) {
+                i = jInteger(i);
+
+                writer.write("createAccount ");
+                writer.write(jString.format("test%03d@@example.com ", i));
+                writer.write("test123 displayName 'Test User " + i + "'");
+                writer.write('\n');
+
+                if (i % 100 === 1) {
+                    writer.write("grantRight ");
+                    writer.write(jString.format("account test%03d@@example.com ", i));
+                    writer.write("usr admin@@example.com -renameAccount");
+                    writer.write('\n');
+                } else if (i % 100 === 2) {
+                    writer.write("grantRight ");
+                    writer.write(jString.format("account test%03d@@example.com ", i));
+                    writer.write("usr admin@@example.com -setAccountPassword");
+                    writer.write('\n');
+                }
+            }
+
+            writer.close();
+            ]]>
+            </script>
+        </sequential>
+    </macrodef>
+
     <target name="generate-zmprov-commands">
         <!--
            params/properties:
@@ -1750,7 +1799,29 @@
             cdl qa-team@example.com
             cdl server-team@example.com
             grr domain example.com dom ${defaultdomain.name} viewDistList
+            ca admin@example.com test123 \
+            zimbraMailHost ${zimbra.server.hostname} \
+            cn 'Test Domain Administrator' displayName 'Test Domain Administrator' \
+            zimbraIsDelegatedAdminAccount TRUE \
+            zimbraAdminConsoleUIComponents accountListView
+            grr domain example.com usr admin@example.com domainAdminConsoleRights
+            grr global usr admin@example.com domainAdminZimletRights
+
          </echo>
+
+         <generate-test-user-commands from="1" to="10"
+                                      file="${build.zmprov}" />
+    </target>
+
+    <target name="inject-many-users" description="inject loads of test
+                                                  accounts">
+        <delete file="${build.zmprov}"/>
+        <generate-test-user-commands from="11" to="500"
+                                     file="${build.zmprov}" />
+
+        <antcall target="zmprov">
+            <param name="args" value="-f ${build.zmprov}"/>
+        </antcall>
     </target>
 
     <target name="family-delete" depends="compile">
