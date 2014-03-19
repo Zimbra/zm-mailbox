@@ -127,23 +127,3 @@ When the system crashes or force powered off the ldap gets uncomfortable and loc
 Solution: 
 You can stop the ldap service. Then get into \opt\zimbra\openldap\var\openldap-data and remove __*db.* and restart as usual.
 */
-
-*****************  Setting up of Review Board set up on Windows . This is only
-necessary for remote employees, using ssh tunnel ***********************
-
-Follow the following steps to get the review board working:
-
-1. Create a .reviewboardrc file in your user Application Data folder, (you might have to create this using command line as windows doesn't allow a file with just an extension)
- -> $USERPROFILE\Local Settings\Application Data or  $USERPROFILE\AppData\Roaming
-
-2. Add the following entries to the .reviewboardrc file
-
-REVIEWBOARD_URL="https://localhost:8443"
-REPOSITORY="zcs_p4"
-REPOSITORY_TYPE="perforce"
-USERNAME="your username here"
-PASSWORD="your password here"
-
-
-Use the following command to post the review request:
-rbt post --target-people kumars -p 503915 -d 
