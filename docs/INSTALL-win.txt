@@ -2,8 +2,11 @@ Steps:
 This install doc is aimed at developers internal to Zimbra. You'll see paths to internal shares and the like. It's also useful to setting up a development build with SVN, but that's not the main focus. See the INSTALL-SVN*.txt docs for that.
 Ref: https://wiki.eng.vmware.com/Zimbra/devEnvironment/windows
 
-1. Install Perforce (P4) (www.perforce.com)
-Configure server port to "localhost:1066".
+1. Install Perforce (P4) (www.perforce.com) 
+Configure server port to "p4proxy.eng.zimbra.com:1066" or
+"localhost:1066", depending whether you are in office or remote location and have set up an SSH tunnel .
+If they are remote, and have set up an SSH tunnel, then it is localhost:1066
+
 Make sure to check out the repository code in "C" drive .
 (PS: After successfully installing Perforce, create a new workspace which would help you to track the checked out code from "eric" server. )
 
@@ -11,16 +14,11 @@ Make sure to check out the repository code in "C" drive .
 "kumars_desktop_windows" is my workspace name. Make sure to replace "kumars_desktop_windows" with your workspace name .
 
 //depot/zimbra/main/... //kumars_desktop_windows/main/...
--//depot/zimbra/main/ZimbraPS/... //kumars_desktop_windows/main/ZimbraPS/...
--//depot/zimbra/main/ZimbraCustomerServices/... //kumars_desktop_windows/main/ZimbraCustomerServices/...
 -//depot/zimbra/main/ThirdParty/... //kumars_desktop_windows/main/ThirdParty/...
 -//depot/zimbra/main/ThirdPartyBuilds/... //kumars_desktop_windows/main/ThirdPartyBuilds/...
 -//depot/zimbra/main/ZimbraAppliance/... //kumars_desktop_windows/main/ZimbraAppliance/...
 -//depot/zimbra/main/ZimbraDocs/... //kumars_desktop_windows/main/ZimbraDocs/...
 -//depot/zimbra/main/Prototypes/... //kumars_desktop_windows/main/Prototypes/...
--//depot/zimbra/main/Support/... //kumars_desktop_windows/main/Support/...
--//depot/zimbra/main/Gallery/... //kumars_desktop_windows/main/Gallery/...
--//depot/zimbra/main/ZimbraSupportPortal/... //kumars_desktop_windows/main/ZimbraSupportPortal/...
 -//depot/zimbra/main/ZimbraPerf/data/... //kumars_desktop_windows/main/ZimbraPerf/data/...
 -//depot/zimbra/main/ZimbraNetwork/ZimbraImportWizard/... //kumars_desktop_windows/main/ZimbraNetwork/ZimbraImportWizard/...
 -//depot/zimbra/main/ZimbraServer/src/windows/... //kumars_desktop_windows/main/ZimbraServer/src/windows/...
@@ -84,13 +82,11 @@ Net-LMTP
 SMTP-Server 
 Net-DNS
 
-(The below steps can be ignored)
-
 NOTE:
 10. See jetty.txt for details on how to start/stop jetty server and how to debug zimbra server.
 
 Troubleshooting:
-  *******************  Jetty Server crashes frequently **********************
+ *******************  Jetty Server crashes frequently **********************
 A) In case the Jetty server crashes frequently, follow the below steps :-
 Change the environment variable's JAVA_HOME path value to UNIX path:
 C:/opt/zimbra/java
@@ -132,7 +128,8 @@ Solution:
 You can stop the ldap service. Then get into \opt\zimbra\openldap\var\openldap-data and remove __*db.* and restart as usual.
 */
 
-*****************  Setting up of Review Board set up on Windows . This is only necessary for remote employees ***********************
+*****************  Setting up of Review Board set up on Windows . This is only
+necessary for remote employees, using ssh tunnel ***********************
 
 Follow the following steps to get the review board working:
 
@@ -149,4 +146,4 @@ PASSWORD="your password here"
 
 
 Use the following command to post the review request:
-rbt post --target-people achhatre -p 503915 -d 
+rbt post --target-people kumars -p 503915 -d 
