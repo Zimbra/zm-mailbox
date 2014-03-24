@@ -1835,7 +1835,7 @@ public class Mailbox {
 
     /**
      * Delete all of the metadata of a device by given device id. In ActiveSync, section is composed of deviceId<:CollectionClass>
-     * 
+     *
      * @param octxt The context for this request
      * @param sectionPart The config section part
      * @throws ServiceException
@@ -3680,6 +3680,18 @@ public class Mailbox {
         return getModifiedItems(octxt, lastSync, type, null);
     }
 
+    /**
+     * Returns all of the modified items since a given change number, newly added or modified
+     * items within given folderIds will be returned as the First field of Pair.
+     * Be noted that deleted items within folderIds as well as items that have been altered outside of given folderIds
+     * will be returned as "deleted" (second part of Pair) in order to handle item moves
+     * @param octxt     The context for this request.
+     * @param lastSync  We return items with change ID larger than this value.
+     * @param type      The type of MailItems to return.
+     * @param folderIds folders from which add/change items are returned
+     * @return
+     * @throws ServiceException
+     */
     public Pair<List<Integer>, TypedIdList> getModifiedItems(OperationContext octxt, int lastSync, MailItem.Type type,
                     Set<Integer> folderIds) throws ServiceException {
         lock.lock(false);
@@ -8945,7 +8957,7 @@ public class Mailbox {
         assert !Thread.holdsLock(this) : "Use MailboxLock";
         if (lock.isUnlocked()) {
             ZimbraLog.mailbox.warn("transaction canceled because of lock failure");
-            assert (false);
+            assert(!success);
             return;
         }
         PendingDelete deletes = null; // blob and index to delete
