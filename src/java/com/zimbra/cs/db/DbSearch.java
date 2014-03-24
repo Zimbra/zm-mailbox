@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -39,11 +39,11 @@ import com.zimbra.cs.imap.ImapMessage;
 import com.zimbra.cs.index.DbSearchConstraints;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.mailbox.Flag;
+import com.zimbra.cs.mailbox.Flag.FlagInfo;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Tag;
-import com.zimbra.cs.mailbox.Flag.FlagInfo;
 
 /**
  * Search related DAO.
@@ -176,6 +176,10 @@ public final class DbSearch {
     }
 
     public int countResults(DbConnection conn, DbSearchConstraints node) throws ServiceException {
+        return countResults(conn, node, false);
+    }
+
+    public int countResults(DbConnection conn, DbSearchConstraints node, boolean ignoreNoRecipients) throws ServiceException {
         sql.append("SELECT COUNT(*) FROM ").append(DbMailItem.getMailItemTableName(mailbox, "mi", dumpster));
         sql.append(" WHERE ");
         if (!DebugConfig.disableMailboxGroups) {
@@ -183,7 +187,9 @@ public final class DbSearch {
             params.add(mailbox.getId());
         }
         encodeConstraint(node, null, false, false);
-
+        if (ignoreNoRecipients) {
+            sql.append(" AND mi.recipients IS NOT NULL");
+        }
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
@@ -237,6 +243,11 @@ public final class DbSearch {
 
     private void encodeSelect(SortBy sort, FetchMode fetch, boolean joinAppt, boolean joinTaggedItem,
             DbSearchConstraints node, boolean validLIMIT) {
+        encodeSelect(sort, fetch, joinAppt, joinTaggedItem, node, validLIMIT, false);
+    }
+
+    private void encodeSelect(SortBy sort, FetchMode fetch, boolean joinAppt, boolean joinTaggedItem,
+            DbSearchConstraints node, boolean validLIMIT, boolean maybeExcludeHasRecipients) {
         // If you change the first for parameters, you must change the COLUMN_* constants.
         sql.append("SELECT ");
         switch (fetch) {
@@ -274,8 +285,10 @@ public final class DbSearch {
             params.add(mailbox.getId());
         }
         //Bug: 74521
-        //for rcptAsc order make sure that the RECIPIENTS col is NOT null
-        if (sort != null && sort.equals(SortBy.RCPT_ASC)) {
+        //for rcptAsc order make sure that the RECIPIENTS col is NOT null.
+        //Bug: 82703
+        //also doing this for sort=rcptDesc
+        if (sort != null && (sort.equals(SortBy.RCPT_ASC) || sort.equals(SortBy.RCPT_DESC)) && maybeExcludeHasRecipients) {
             sql.append("(mi.recipients is NOT NULL) AND ");
         }
         if (joinAppt) {
@@ -283,6 +296,25 @@ public final class DbSearch {
                 sql.append("mi.mailbox_id = ap.mailbox_id AND ");
             }
             sql.append("mi.id = ap.item_id AND ");
+        }
+    }
+
+    private static boolean searchingInDrafts(DbSearchConstraints node) {
+        if (node instanceof DbSearchConstraints.Leaf) {
+            for (Folder folder: ((DbSearchConstraints.Leaf) node).folders) {
+                if(folder.getId() == Mailbox.ID_FOLDER_DRAFTS) {
+                    return true;
+                }
+            }
+            return false;
+        } else {
+            boolean success = false;
+            for (DbSearchConstraints child: node.getChildren()) {
+                if(searchingInDrafts(child)) {
+                    success = true;
+                }
+            }
+            return success;
         }
     }
 
@@ -324,7 +356,7 @@ public final class DbSearch {
                 params.add(type.toByte());
             }
         }
-
+        encodeNoRecipients(constraint.excludeHasRecipients);
         encodeType(constraint.excludeTypes, false);
         encode("mi.type", inCalTable, calTypes);
         encodeTag(constraint.tags, true, joinTaggedItem);
@@ -400,6 +432,7 @@ public final class DbSearch {
         sql.append(')');
     }
 
+
     /**
      * @return TRUE if some part of this query has a non-appointment select (ie 'type not in (11,15)' non-null
      */
@@ -459,9 +492,14 @@ public final class DbSearch {
 
     public List<Result> search(DbConnection conn, DbSearchConstraints node, SortBy sort, int offset, int limit,
             FetchMode fetch) throws ServiceException {
+        return search(conn, node, sort, offset, limit, fetch, true);
+    }
+
+    private List<Result> search(DbConnection conn, DbSearchConstraints node, SortBy sort, int offset, int limit,
+            FetchMode fetch, boolean searchDraftsSeparately) throws ServiceException {
         if (!Db.supports(Db.Capability.AVOID_OR_IN_WHERE_CLAUSE) || !(node instanceof DbSearchConstraints.Union)) {
             try {
-                return searchInternal(conn, node, sort, offset, limit, fetch);
+                return searchInternal(conn, node, sort, offset, limit, fetch, searchDraftsSeparately);
             } catch (SQLException e) {
                 if (Db.errorMatches(e, Db.Error.TOO_MANY_SQL_PARAMS)) {
                     ZimbraLog.sqltrace.debug("Too many SQL params: %s", node, e); // fall back to splitting OR clauses
@@ -536,7 +574,33 @@ public final class DbSearch {
     }
 
     private List<Result> searchInternal(DbConnection conn, DbSearchConstraints node, SortBy sort, int offset, int limit,
-            FetchMode fetch) throws SQLException, ServiceException {
+            FetchMode fetch, boolean searchDraftsSeparately) throws SQLException, ServiceException {
+        //check if we need to run this as two queries: one with "mi.recipients is not NULL" and one in drafts with "mi.recipients is NULL"
+        if (searchingInDrafts(node) && searchDraftsSeparately && sort != null && (sort.equals(SortBy.RCPT_ASC) || sort.equals(SortBy.RCPT_DESC))) {
+            DbSearchConstraints.Leaf draftsConstraint = findDraftsConstraint(node).clone(); //clone the existing node containing the Drafts constraint
+            for (Folder folder: draftsConstraint.folders) {
+                if (folder.getId() == Mailbox.ID_FOLDER_DRAFTS) {
+                    draftsConstraint.folders.clear();
+                    draftsConstraint.folders.add(folder); //constrain the node to only drafts
+                    break;
+                }
+            }
+            draftsConstraint.excludeHasRecipients = true;
+            DbSearchConstraints node1;
+            DbSearchConstraints node2;
+            if (sort.equals(SortBy.RCPT_ASC)) {
+                node1 = node;
+                node2 = draftsConstraint;
+            } else {
+                node1 = draftsConstraint;
+                node2 = node;
+            }
+
+            List<Result> result = searchTwoConstraints(conn, node1, node2, sort, offset, limit, fetch);
+            return result;
+
+        }
+
         boolean hasValidLIMIT = offset >= 0 && limit >= 0;
         boolean hasMailItemOnlyConstraints = true;
         boolean hasAppointmentTableConstraints = hasAppointmentTableConstraints(node);
@@ -576,9 +640,13 @@ public final class DbSearch {
             if (requiresUnion) {
                 sql.append('(');
             }
+            boolean maybeExcludeNoRecipients = true;
+            if (node.toLeaf() != null) {
+                maybeExcludeNoRecipients = !node.toLeaf().excludeHasRecipients;
+            }
 
             // SELECT mi.id,... FROM mail_item AS mi [FORCE INDEX (...)] WHERE mi.mailboxid = ? AND
-            encodeSelect(sort, fetch, false, joinTaggedItem, node, hasValidLIMIT);
+            encodeSelect(sort, fetch, false, joinTaggedItem, node, hasValidLIMIT, maybeExcludeNoRecipients);
 
             /*
              *( SUB-NODE AND/OR (SUB-NODE...) ) AND/OR ( SUB-NODE ) AND
@@ -677,13 +745,78 @@ public final class DbSearch {
                         assert false : fetch;
                 }
             }
-
             return result;
         } finally {
             conn.closeQuietly(rs);
             conn.closeQuietly(stmt);
         }
     }
+
+    /** This method can be used to search two constraint trees as if it were one.
+     *
+     * @param conn
+     * @param node1
+     * @param node2
+     * @param sort
+     * @param offset
+     * @param limit
+     * @param fetch
+     * @return
+     * @throws SQLException
+     * @throws ServiceException
+     */
+    private List<Result> searchTwoConstraints(DbConnection conn, DbSearchConstraints node1, DbSearchConstraints node2, SortBy sort, int offset, int limit,
+            FetchMode fetch) throws SQLException, ServiceException {
+        //                 node1 results                     node2 results
+        // |---------------------------------------|--------------------------------------|
+        List<Result> result1 = new DbSearch(mailbox, dumpster).search(conn, node1, sort, offset, limit, fetch, false);
+        if (result1.size() == 0) {
+            //                                              |--- somewhere here----|
+            // |---------------------------------------|--------------------------------------|
+            // If there are no results in the first search, we need to run the second search with some possibly non-zero offset.
+            // To find this offset, we need to find out how many total results there were in the first query and subtract that from the given offset.
+            // To accurately calculate the number of results, we need to know whether to exclude mi.recipients=null or not,
+            // which happens when node1 is NOT our custom draft constraint that has excludeHasRecipients=true.
+            boolean ignoreNoRecipients = true;
+            if (node1.toLeaf() != null) {
+                ignoreNoRecipients = !node1.toLeaf().excludeHasRecipients;
+            }
+            int offset2 = offset - new DbSearch(mailbox, dumpster).countResults(conn, node1, ignoreNoRecipients);
+            int limit2 = limit;
+            List<Result> result2 = new DbSearch(mailbox, dumpster).search(conn, node2, sort, offset2, limit2, fetch, false);
+            result1.addAll(result2);
+        }
+        else if (result1.size() < limit) {
+            //                      |------ somewhere here------|
+            // |---------------------------------------|--------------------------------------|
+            // If the size of the result set is less than the given limit but is nonzero, then we are "straddling" the two operations.
+            // This means we need to run the second query with offset=0, and limit={remainder from 1st query}
+            int offset2 = 0;
+            int limit2 = limit - result1.size();
+            List<Result> result2 = new DbSearch(mailbox, dumpster).search(conn, node2, sort, offset2, limit2, fetch, false);
+            result1.addAll(result2);
+            }
+        return result1;
+        }
+
+
+    private static DbSearchConstraints.Leaf findDraftsConstraint(DbSearchConstraints node) {
+            if (node instanceof DbSearchConstraints.Leaf) {
+                for (Folder folder: ((DbSearchConstraints.Leaf) node).folders) {
+                    if(folder.getId() == Mailbox.ID_FOLDER_DRAFTS) {
+                        return node.toLeaf();
+                    }
+                }
+            } else {
+                for (DbSearchConstraints child: node.getChildren()) {
+                    DbSearchConstraints.Leaf drafts = findDraftsConstraint(child);
+                    if(drafts != null) {
+                        return drafts;
+                    }
+                }
+            }
+            return null;
+        }
 
     private static Object getSortKey(ResultSet rs, SortBy sort) throws SQLException {
         switch (sort.getKey()) {
@@ -746,6 +879,12 @@ public final class DbSearch {
         sql.append(" AND ").append(DbUtil.whereIn(column, bool, array.length));
         for (byte b : array) {
             params.add(b);
+        }
+    }
+
+    private void encodeNoRecipients(boolean excludeHasRecipients) {
+        if (excludeHasRecipients) {
+            sql.append(" AND mi.recipients is NULL");
         }
     }
 
@@ -1035,7 +1174,7 @@ public final class DbSearch {
     }
 
     private static final class ImapResult extends IdResult {
-        private ImapMessage i4msg;
+        private final ImapMessage i4msg;
 
         ImapResult(ResultSet rs, Object sortkey) throws SQLException {
             super(rs, sortkey);
