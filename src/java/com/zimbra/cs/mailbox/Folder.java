@@ -1170,10 +1170,10 @@ public class Folder extends MailItem {
         ZimbraLog.mailop.info("moving %s to %s", getMailopContext(this), getMailopContext(target));
 
         // and update the folder's data (in memory and DB)
+        DbMailItem.setFolder(this, target);
         mData.folderId = target.getId();
         mData.parentId = target.getId();
         metadataChanged();
-        DbMailItem.setFolder(this, target);
 
         if (rights != null) {
             queueForAclPush();

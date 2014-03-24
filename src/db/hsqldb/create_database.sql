@@ -23,6 +23,7 @@ CREATE TABLE *{DATABASE_NAME}.mail_item (
    type          TINYINT NOT NULL,
    parent_id     INTEGER,
    folder_id     INTEGER,
+   prev_folders  VARCHAR(255),               -- e.g. "101:2;110:5", before mod_metadata 101, this item was in folder 2, before 110, it was in 5
    index_id      INTEGER,
    imap_id       INTEGER,
    date          INTEGER NOT NULL,
@@ -56,6 +57,7 @@ CREATE TABLE *{DATABASE_NAME}.mail_item_dumpster (
    type          TINYINT NOT NULL,
    parent_id     INTEGER,
    folder_id     INTEGER,
+   prev_folders  VARCHAR(255),               -- e.g. "101:2;110:5", before mod_metadata 101, this item was in folder 2, before 110, it was in 5
    index_id      INTEGER,
    imap_id       INTEGER,
    date          INTEGER NOT NULL,

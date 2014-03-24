@@ -21,6 +21,7 @@ CREATE TABLE IF NOT EXISTS ${DATABASE_NAME}.mail_item (
    type          TINYINT NOT NULL,           -- 1 = folder, 5 = message, etc.
    parent_id     INTEGER UNSIGNED,
    folder_id     INTEGER UNSIGNED,
+   prev_folders  TEXT,                       -- e.g. "101:2;110:5", before mod_metadata 101, this item was in folder 2, before 110, it was in 5
    index_id      INTEGER UNSIGNED,
    imap_id       INTEGER UNSIGNED,
    date          INTEGER UNSIGNED NOT NULL,  -- stored as a UNIX-style timestamp
@@ -63,6 +64,7 @@ CREATE TABLE IF NOT EXISTS ${DATABASE_NAME}.mail_item_dumpster (
    type          TINYINT NOT NULL,           -- 1 = folder, 5 = message, etc.
    parent_id     INTEGER UNSIGNED,
    folder_id     INTEGER UNSIGNED,
+   prev_folders  TEXT,                       -- e.g. "101:2;110:5", before mod_metadata 101, this item was in folder 2, before 110, it was in 5
    index_id      INTEGER UNSIGNED,
    imap_id       INTEGER UNSIGNED,
    date          INTEGER UNSIGNED NOT NULL,  -- stored as a UNIX-style timestamp

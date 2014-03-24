@@ -7973,4 +7973,9 @@ TODO: delete them permanently from here
   <desc>Value for postconf smtpd_sender_login_maps</desc>
 </attr>
 
+<attr id="1592" name="zimbraPrevFoldersToTrackMax" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
+  <globalConfigValue>10</globalConfigValue>
+  <desc>Max number of previous residing folders server tracks for a mail item</desc>
+</attr>
+
 </attrs>

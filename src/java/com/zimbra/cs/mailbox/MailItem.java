@@ -252,6 +252,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         public byte type;
         public int parentId = -1;
         public int folderId = -1;
+        private String prevFolders; /* semicolon separated modseq to prev_folderId mappings */
         public int indexId  = IndexStatus.NO.id();
         public int imapId   = -1;
         public String locator;
@@ -275,6 +276,15 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
 
         public UnderlyingData setSubject(String value) {
             this.subject = DbMailItem.normalize(value, DbMailItem.MAX_SUBJECT_LENGTH);
+            return this;
+        }
+
+        public String getPrevFolders() {
+            return prevFolders;
+        }
+
+        public UnderlyingData setPrevFolders(String value) {
+            this.prevFolders = value;
             return this;
         }
 
@@ -385,6 +395,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         private static final String FN_TYPE         = "tp";
         private static final String FN_PARENT_ID    = "pid";
         private static final String FN_FOLDER_ID    = "fid";
+        private static final String FN_PREV_FOLDER  = "pfid";
         private static final String FN_INDEX_ID     = "idx";
         private static final String FN_IMAP_ID      = "imap";
         private static final String FN_LOCATOR      = "loc";
@@ -407,6 +418,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
             meta.put(FN_TYPE, type);
             meta.put(FN_PARENT_ID, parentId);
             meta.put(FN_FOLDER_ID, folderId);
+            meta.put(FN_PREV_FOLDER, prevFolders);
             meta.put(FN_INDEX_ID, indexId);
             meta.put(FN_IMAP_ID, imapId);
             meta.put(FN_LOCATOR, locator);
@@ -430,6 +442,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
             this.type = (byte) meta.getLong(FN_TYPE, 0);
             this.parentId = (int) meta.getLong(FN_PARENT_ID, -1);
             this.folderId = (int) meta.getLong(FN_FOLDER_ID, -1);
+            this.prevFolders = meta.get(FN_PREV_FOLDER, null);
             this.indexId = meta.getInt(FN_INDEX_ID, IndexStatus.NO.id());
             this.imapId = (int) meta.getLong(FN_IMAP_ID, -1);
             this.locator = meta.get(FN_LOCATOR, null);
@@ -810,6 +823,36 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
      *  must have a non-<tt>null</tt> folder. */
     public int getFolderId() {
         return mData.folderId;
+    }
+
+    /** Return (modseq->previous folder id) pair separated by semocolon
+     */
+    public String getPrevFolders() {
+        return mData.prevFolders;
+    }
+
+    /**Returns the ID of the {@link Folder} the item lived in at given mod sequence.
+     */
+    public int getPrevFolderAtModseq(int modseq) {
+        if (StringUtil.isNullOrEmpty(mData.prevFolders)) {
+            return -1;
+        }
+        String[] modseq2FolderId = mData.prevFolders.split(";"); //modseq from low to high
+        if (modseq2FolderId.length > 0) {
+            int index = 0;
+            try {
+                while (index < modseq2FolderId.length
+                        && index < this.getAccount().getServer().getPrevFoldersToTrackMax()) {
+                    String md2id = modseq2FolderId[index++];
+                    String[] pair = md2id.split(":");
+                    int md = Integer.parseInt(pair[0]);
+                    if (modseq < md) {
+                        return Integer.parseInt(pair[1]);
+                    }
+                }
+            } catch (Exception e) {}   
+        }
+        return -1;
     }
 
     public String getFolderUuid() throws ServiceException {

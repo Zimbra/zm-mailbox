@@ -256,10 +256,10 @@ public class DbMailItem {
             String mailbox_id = DebugConfig.disableMailboxGroups ? "" : "mailbox_id, ";
             stmt = conn.prepareStatement("INSERT INTO " + destTable +
                         "(" + mailbox_id +
-                        " id, type, parent_id, folder_id, index_id, imap_id, date, size, locator, blob_digest," +
+                        " id, type, parent_id, folder_id, prev_folders, index_id, imap_id, date, size, locator, blob_digest," +
                         " unread, flags, tag_names, sender, subject, name, metadata, mod_metadata, change_date, mod_content, uuid) " +
                         "SELECT " + MAILBOX_ID_VALUE +
-                        " ?, type, ?, ?, ?, ?, date, size, ?, blob_digest, unread," +
+                        " ?, type, ?, ?, ?, ?, ?, date, size, ?, blob_digest, unread," +
                         " flags, tag_names, sender, subject, name, ?, ?, ?, ?, ? FROM " + srcTable +
                         " WHERE " + IN_THIS_MAILBOX_AND + "id = ?");
             int pos = 1;
@@ -271,6 +271,7 @@ public class DbMailItem {
                 stmt.setInt(pos++, parentId);                  //   or, PARENT_ID specified by caller
             }
             stmt.setInt(pos++, folder.getId());                // FOLDER_ID
+            stmt.setString(pos++, item.getPrevFolders());
             if (indexId == MailItem.IndexStatus.NO.id()) {
                 stmt.setNull(pos++, Types.INTEGER);
             } else {
@@ -409,15 +410,16 @@ public class DbMailItem {
             }
             stmt = conn.prepareStatement("INSERT INTO " + table +
                         "(" + mailbox_id +
-                        " id, type, parent_id, folder_id, index_id, imap_id, date, size, locator, blob_digest," +
+                        " id, type, parent_id, folder_id, prev_folders, index_id, imap_id, date, size, locator, blob_digest," +
                         " unread, flags, tag_names, sender, subject, name, metadata, mod_metadata, change_date, mod_content) " +
                         "SELECT " + mailbox_id +
-                        " ?, type, parent_id, ?, ?, ?, date, size, ?, blob_digest," +
+                        " ?, type, parent_id, ?, ?, ?, ?, date, size, ?, blob_digest," +
                         " unread, " + flags + ", tag_names, sender, subject, name, metadata, ?, ?, ? FROM " + table +
                         " WHERE " + IN_THIS_MAILBOX_AND + "id = ?");
             int pos = 1;
             stmt.setInt(pos++, data.id);                       // ID
             stmt.setInt(pos++, data.folderId);                 // FOLDER_ID
+            stmt.setString(pos++, data.getPrevFolders());
             if (data.indexId == MailItem.IndexStatus.NO.id()) {
                 stmt.setNull(pos++, Types.INTEGER);
             } else {
@@ -564,21 +566,42 @@ public class DbMailItem {
             boolean hasIndexId = false;
             if (item instanceof Folder) {
                 stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(item) +
-                            " SET parent_id = ?, folder_id = ?, mod_metadata = ?, change_date = ?" +
+                            " SET parent_id = ?, folder_id = ?, prev_folders = ?, mod_metadata = ?, change_date = ?" +
                             " WHERE " + IN_THIS_MAILBOX_AND + "id = ?");
                 stmt.setInt(pos++, folder.getId());
             } else if (item instanceof Conversation && !(item instanceof VirtualConversation)) {
                 stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(item) +
-                            " SET folder_id = ?, mod_metadata = ?, change_date = ?" + imapRenumber +
+                            " SET folder_id = ?, prev_folders = ?, mod_metadata = ?, change_date = ?" + imapRenumber +
                             " WHERE " + IN_THIS_MAILBOX_AND + "parent_id = ?");
             } else {
                 // set the indexId, in case it changed (moving items out of junk can trigger an index ID change)
                 hasIndexId = true;
                 stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(item) +
-                            " SET folder_id = ?, index_id = ?, mod_metadata = ?, change_date = ? " + imapRenumber +
+                            " SET folder_id = ?, prev_folders = ?, index_id = ?, mod_metadata = ?, change_date = ? " + imapRenumber +
                             " WHERE " + IN_THIS_MAILBOX_AND + "id = ?");
             }
             stmt.setInt(pos++, folder.getId());
+            int modseq = mbox.getOperationChangeID();
+            //prev folders ordered by modseq ascending, e.g. 100:2;200:101;300:5
+            //only store the latest zimbraPrevFoldersToTrackMax folders
+            String prevFolders = item.getPrevFolders();
+            if (!StringUtil.isNullOrEmpty(prevFolders)) {
+                String[] modseq2FolderId = prevFolders.split(";");
+                int maxCount = mbox.getAccount().getServer().getPrevFoldersToTrackMax();
+                if (modseq2FolderId.length < maxCount) {
+                    prevFolders += ";" + modseq + ":" + item.getFolderId();
+                } else {
+                    //reached max, get rid of the oldest one
+                    String[] tmp = new String[maxCount];
+                    System.arraycopy(modseq2FolderId, 1, tmp, 0, maxCount-1);
+                    tmp[maxCount-1] = modseq + ":" + item.getFolderId();
+                    prevFolders = StringUtil.join(";", tmp);
+                }
+            } else {
+                prevFolders = modseq + ":" + item.getFolderId();
+            }
+            stmt.setString(pos++, prevFolders);
+            item.getUnderlyingData().setPrevFolders(prevFolders);
             if (hasIndexId) {
                 if (item.getIndexStatus() == MailItem.IndexStatus.NO) {
                     stmt.setNull(pos++, Types.INTEGER);
@@ -586,7 +609,7 @@ public class DbMailItem {
                     stmt.setInt(pos++, item.getIndexId());
                 }
             }
-            stmt.setInt(pos++, mbox.getOperationChangeID());
+            stmt.setInt(pos++, modseq);
             stmt.setInt(pos++, mbox.getOperationTimestamp());
             pos = setMailboxId(stmt, mbox, pos);
             stmt.setInt(pos++, item instanceof VirtualConversation ? ((VirtualConversation) item).getMessageId() : item.getId());
@@ -637,11 +660,36 @@ public class DbMailItem {
             for (int i = 0; i < msgs.size(); i += Db.getINClauseBatchSize()) {
                 int count = Math.min(Db.getINClauseBatchSize(), msgs.size() - i);
                 stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(folder) +
-                            " SET folder_id = ?, mod_metadata = ?, change_date = ?" + imapRenumber +
+                            " SET folder_id = ?, prev_folders=?, mod_metadata = ?, change_date = ?" + imapRenumber +
                             " WHERE " + IN_THIS_MAILBOX_AND + DbUtil.whereIn("id", count));
                 int pos = 1;
                 stmt.setInt(pos++, folder.getId());
-                stmt.setInt(pos++, mbox.getOperationChangeID());
+                int modseq = mbox.getOperationChangeID();
+                //prev folders ordered by modseq ascending, e.g. 100:2;200:101;300:5
+                if (msgs.get(i).getFolderId() != folder.getId()) {
+                    UnderlyingData ud = msgs.get(i).getUnderlyingData();
+                    String prevFolders = ud.getPrevFolders();
+                    if (!StringUtil.isNullOrEmpty(prevFolders)) {
+                        String[] modseq2FolderId = prevFolders.split(";");
+                        int maxCount = mbox.getAccount().getServer().getPrevFoldersToTrackMax();
+                        if (modseq2FolderId.length < maxCount) {
+                            prevFolders += ";" + modseq + ":" + ud.folderId;
+                        } else {
+                            //reached max, get rid of the oldest one
+                            String[] tmp = new String[maxCount];
+                            System.arraycopy(modseq2FolderId, 1, tmp, 0, maxCount-1);
+                            tmp[maxCount-1] = modseq + ":" + ud.folderId;
+                            prevFolders = StringUtil.join(";", tmp);
+                        }
+                    } else {
+                        prevFolders = modseq + ":" + ud.folderId;
+                    }
+                    stmt.setString(pos++, prevFolders);
+                    ud.setPrevFolders(prevFolders);
+                } else {
+                    stmt.setString(pos++, msgs.get(i).getUnderlyingData().getPrevFolders());
+                }
+                stmt.setInt(pos++, modseq);
                 stmt.setInt(pos++, mbox.getOperationTimestamp());
                 pos = setMailboxId(stmt, mbox, pos);
                 for (int index = i; index < i + count; index++) {
@@ -1626,11 +1674,11 @@ public class DbMailItem {
     // parent_id = null, change_date = ? (to be set to deletion time)
     private static String MAIL_ITEM_DUMPSTER_COPY_SRC_FIELDS =
         (DebugConfig.disableMailboxGroups ? "" : "mailbox_id, ") +
-        "id, type, parent_id, folder_id, index_id, imap_id, date, size, locator, blob_digest, " +
+        "id, type, parent_id, folder_id, prev_folders, index_id, imap_id, date, size, locator, blob_digest, " +
         "unread, flags, tag_names, sender, recipients, subject, name, metadata, mod_metadata, ?, mod_content, uuid";
     private static String MAIL_ITEM_DUMPSTER_COPY_DEST_FIELDS =
         (DebugConfig.disableMailboxGroups ? "" : "mailbox_id, ") +
-        "id, type, parent_id, folder_id, index_id, imap_id, date, size, locator, blob_digest, " +
+        "id, type, parent_id, folder_id, prev_folders, index_id, imap_id, date, size, locator, blob_digest, " +
         "unread, flags, tag_names, sender, recipients, subject, name, metadata, mod_metadata, change_date, mod_content, uuid";
 
     /**
@@ -3540,26 +3588,27 @@ public class DbMailItem {
     public static final int CI_TYPE        = 2;
     public static final int CI_PARENT_ID   = 3;
     public static final int CI_FOLDER_ID   = 4;
-    public static final int CI_INDEX_ID    = 5;
-    public static final int CI_IMAP_ID     = 6;
-    public static final int CI_DATE        = 7;
-    public static final int CI_SIZE        = 8;
-    public static final int CI_LOCATOR     = 9;
-    public static final int CI_BLOB_DIGEST = 10;
-    public static final int CI_UNREAD      = 11;
-    public static final int CI_FLAGS       = 12;
-    public static final int CI_TAGS        = 13;
-    public static final int CI_SUBJECT     = 14;
-    public static final int CI_NAME        = 15;
-    public static final int CI_METADATA    = 16;
-    public static final int CI_MODIFIED    = 17;
-    public static final int CI_MODIFY_DATE = 18;
-    public static final int CI_SAVED       = 19;
-    public static final int CI_UUID        = 20;
+    public static final int CI_PREV_FOLDERS= 5;
+    public static final int CI_INDEX_ID    = 6;
+    public static final int CI_IMAP_ID     = 7;
+    public static final int CI_DATE        = 8;
+    public static final int CI_SIZE        = 9;
+    public static final int CI_LOCATOR     = 10;
+    public static final int CI_BLOB_DIGEST = 11;
+    public static final int CI_UNREAD      = 12;
+    public static final int CI_FLAGS       = 13;
+    public static final int CI_TAGS        = 14;
+    public static final int CI_SUBJECT     = 15;
+    public static final int CI_NAME        = 16;
+    public static final int CI_METADATA    = 17;
+    public static final int CI_MODIFIED    = 18;
+    public static final int CI_MODIFY_DATE = 19;
+    public static final int CI_SAVED       = 20;
+    public static final int CI_UUID        = 21;
 
-    static final String DB_FIELDS = "mi.id, mi.type, mi.parent_id, mi.folder_id, mi.index_id, mi.imap_id, mi.date, " +
-        "mi.size, mi.locator, mi.blob_digest, mi.unread, mi.flags, mi.tag_names, mi.subject, mi.name, " +
-        "mi.metadata, mi.mod_metadata, mi.change_date, mi.mod_content, mi.uuid";
+    static final String DB_FIELDS = "mi.id, mi.type, mi.parent_id, mi.folder_id, mi.prev_folders, mi.index_id," +
+        "mi.imap_id, mi.date, mi.size, mi.locator, mi.blob_digest, mi.unread, mi.flags, mi.tag_names, mi.subject," +
+        "mi.name, mi.metadata, mi.mod_metadata, mi.change_date, mi.mod_content, mi.uuid";
 
     static UnderlyingData constructItem(ResultSet rs) throws SQLException, ServiceException {
         return constructItem(rs, 0, false);
@@ -3579,6 +3628,7 @@ public class DbMailItem {
         data.type = rs.getByte(CI_TYPE + offset);
         data.parentId = rs.getInt(CI_PARENT_ID + offset);
         data.folderId = rs.getInt(CI_FOLDER_ID + offset);
+        data.setPrevFolders(rs.getString(CI_PREV_FOLDERS + offset));
         data.indexId = rs.getInt(CI_INDEX_ID + offset);
         if (rs.wasNull()) {
             data.indexId = MailItem.IndexStatus.NO.id();
@@ -4379,6 +4429,9 @@ public class DbMailItem {
             }
             if (data.folderId != dbdata.folderId) {
                 failures += " FOLDER_ID";
+            }
+            if (StringUtil.equal(data.getPrevFolders(), dbdata.getPrevFolders())) {
+                failures += " PREV_FOLDERS";
             }
             if (data.indexId != dbdata.indexId) {
                 failures += " INDEX_ID";

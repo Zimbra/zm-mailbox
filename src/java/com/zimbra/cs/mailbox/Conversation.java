@@ -574,7 +574,6 @@ public class Conversation extends MailItem {
             target.updateSize(1, isDeleted ? 1 : 0, msg.getTotalSize());
 
             moved.add(msg);
-            msg.folderChanged(target, 0);
         }
 
         // mark unread messages moved from Mailbox to Trash/Spam as read in the DB
@@ -599,6 +598,9 @@ public class Conversation extends MailItem {
                     getMailopContext(this), getMailopContext(target), ids);
             }
             DbMailItem.setFolder(moved, target);
+            for (Message msg : moved) {
+                msg.folderChanged(target, 0);
+            }
 
             if (!indexUpdated.isEmpty()) {
                 for (MailItem msg : indexUpdated) {
