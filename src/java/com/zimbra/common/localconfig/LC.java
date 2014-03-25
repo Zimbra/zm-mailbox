@@ -360,7 +360,7 @@ public final class LC {
     public static final KnownKey ldap_connect_timeout = KnownKey.newKey(30000);
 
     @Supported
-    public static final KnownKey ldap_read_timeout = KnownKey.newKey(30000);
+    public static final KnownKey ldap_read_timeout = KnownKey.newKey(300000);
 
     @Supported
     public static final KnownKey ldap_deref_aliases = KnownKey.newKey("always");
@@ -416,7 +416,7 @@ public final class LC {
     public static final KnownKey ldap_common_require_tls = KnownKey.newKey(0);
     public static final KnownKey ldap_common_threads = KnownKey.newKey(8);
     public static final KnownKey ldap_common_toolthreads = KnownKey.newKey(2);
-    public static final KnownKey ldap_common_writetimeout = KnownKey.newKey(0);
+    public static final KnownKey ldap_common_writetimeout = KnownKey.newKey(360);
     public static final KnownKey ldap_db_maxsize = KnownKey.newKey(85899345920L);
     public static final KnownKey ldap_accesslog_maxsize = KnownKey.newKey(85899345920L);
     public static final KnownKey ldap_overlay_syncprov_checkpoint = KnownKey.newKey("20 10");
