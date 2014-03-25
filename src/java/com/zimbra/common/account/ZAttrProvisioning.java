@@ -11324,6 +11324,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefZimletTreeOpen = "zimbraPrefZimletTreeOpen";
 
     /**
+     * Max number of previous residing folders server tracks for a mail item
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1592)
+    public static final String A_zimbraPrevFoldersToTrackMax = "zimbraPrevFoldersToTrackMax";
+
+    /**
      * whether this instance of Zimbra is running ZCS or some other
      * derivative product
      *
