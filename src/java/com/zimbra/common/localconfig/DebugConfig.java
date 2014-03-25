@@ -194,6 +194,33 @@ public final class DebugConfig {
     public static boolean useInMemoryLdapServer =
         value("debug_use_in_memory_ldap_server", false);
 
+    public static final String defangStyleUnwantedFunc = value(
+            "defang_style_unwanted_func",
+            "[\\S&&[^:]]+(?<!(rgb|and|not|media|,))\\s*\\(.*\\)");
+    public static final String defangValidExtUrl = value(
+            "defang_valid_ext_url",
+            "^(https?://[\\w-].*|mailto:.*|notes:.*|smb:.*|ftp:.*|gopher:.*|news:.*|tel:.*|callto:.*|webcal:.*|feed:.*:|file:.*|#.+)");
+    public static final String defangValidImgFile = value(
+            "defang_valid_img_file", "\\.(jpg|jpeg|png|gif)((\\?)?)");
+    public static final String defangValidIntImg = value(
+            "defang_valid_int_img", "^data:image/|^cid:");
+
+    public static final String defangValidConvertdFile = value(
+            "defang_valid_convertd_file",
+            "^index\\..*\\..*\\.(jpg|jpeg|png|gif)$");
+    public static final String defangComment = value("defang_comment",
+            "/\\*.*?\\*/");
+    public static final String defangAvJsEntity = value("defang_av_js_entity",
+            "&\\{[^}]*\\}");
+    public static final String defangAvScriptTag = value("defang_av_script_tag",
+            "</?script/?>");
+    public static final String defangAvJavascript = value("defang_av_javascript",
+            "^\\s*javascript:");
+    public static final String defangStyleUnwantedImport = value(
+            "defang_style_unwanted_import",
+            "@import(\\s)*((\'|\")?(\\s)*(http://|https://)?([^\\s;]*)(\\s)*(\'|\")?(\\s)*;?)");
+
+
     public static final boolean disableShareExpirationListener =
             value("debug_disable_share_expiration_listener", false);
 
@@ -215,6 +242,15 @@ public final class DebugConfig {
         String value = LC.get(key);
         try {
             return value.isEmpty() ? defaultValue : Integer.parseInt(value);
+        } catch (Exception e) {
+            return defaultValue;
+        }
+    }
+
+    private static String value(String key, String defaultValue) {
+        String value = LC.get(key);
+        try {
+            return value.isEmpty() ? defaultValue : value;
         } catch (Exception e) {
             return defaultValue;
         }

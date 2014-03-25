@@ -1214,19 +1214,7 @@ public final class LC {
 
     public static final KnownKey conversation_ignore_maillist_prefix = KnownKey.newKey(true);
 
-    //Defanger
-    public static final KnownKey defang_style_unwanted_func =
-        KnownKey.newKey("[\\S&&[^:]]+(?<!(rgb|and|not|media|,))\\s*\\(.*\\)");
-    public static final KnownKey defang_valid_ext_url =
-        KnownKey.newKey("^(https?://[\\w-].*|mailto:.*|notes:.*|smb:.*|ftp:.*|gopher:.*|news:.*|tel:.*|callto:.*|webcal:.*|feed:.*:|file:.*|#.+)");
-    public static final KnownKey defang_valid_img_file = KnownKey.newKey("\\.(jpg|jpeg|png|gif)((\\?)?)");
-    public static final KnownKey defang_valid_int_img = KnownKey.newKey("^data:image/|^cid:");
 
-    public static final KnownKey defang_valid_convertd_file = KnownKey.newKey("^index\\..*\\..*\\.(jpg|jpeg|png|gif)$");
-    public static final KnownKey defang_comment = KnownKey.newKey("/\\*.*?\\*/");
-    public static final KnownKey defang_av_js_entity = KnownKey.newKey("&\\{[^}]*\\}");
-    public static final KnownKey defang_av_script_tag = KnownKey.newKey("</?script/?>");
-    public static final KnownKey defang_av_javascript = KnownKey.newKey("^\\s*javascript:");
 
     //EWS web service
     public static final KnownKey ews_service_wsdl_location =
