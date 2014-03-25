@@ -27817,6 +27817,78 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Max number of previous residing folders server tracks for a mail item
+     *
+     * @return zimbraPrevFoldersToTrackMax, or 10 if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1592)
+    public int getPrevFoldersToTrackMax() {
+        return getIntAttr(Provisioning.A_zimbraPrevFoldersToTrackMax, 10);
+    }
+
+    /**
+     * Max number of previous residing folders server tracks for a mail item
+     *
+     * @param zimbraPrevFoldersToTrackMax new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1592)
+    public void setPrevFoldersToTrackMax(int zimbraPrevFoldersToTrackMax) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrevFoldersToTrackMax, Integer.toString(zimbraPrevFoldersToTrackMax));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Max number of previous residing folders server tracks for a mail item
+     *
+     * @param zimbraPrevFoldersToTrackMax new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1592)
+    public Map<String,Object> setPrevFoldersToTrackMax(int zimbraPrevFoldersToTrackMax, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrevFoldersToTrackMax, Integer.toString(zimbraPrevFoldersToTrackMax));
+        return attrs;
+    }
+
+    /**
+     * Max number of previous residing folders server tracks for a mail item
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1592)
+    public void unsetPrevFoldersToTrackMax() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrevFoldersToTrackMax, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Max number of previous residing folders server tracks for a mail item
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1592)
+    public Map<String,Object> unsetPrevFoldersToTrackMax(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrevFoldersToTrackMax, "");
+        return attrs;
+    }
+
+    /**
      * redolog rollover destination
      *
      * @return zimbraRedoLogArchiveDir, or "redolog/archive" if unset
