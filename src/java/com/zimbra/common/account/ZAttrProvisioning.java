@@ -6268,6 +6268,16 @@ public class ZAttrProvisioning {
     public static final String A_zimbraHttpConnectorMaxIdleTimeMillis = "zimbraHttpConnectorMaxIdleTimeMillis";
 
     /**
+     * Rules for governing the even allocation of threads to various web
+     * contexts for the current thread pool. Sample value:
+     * /zimbra:min=10;max=40% or /zimbraAdmin:min=5
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1593)
+    public static final String A_zimbraHttpContextPathBasedThreadPoolBalancingFilterRules = "zimbraHttpContextPathBasedThreadPoolBalancingFilterRules";
+
+    /**
      * Whether to enable http debug handler on a server
      *
      * @since ZCS 6.0.0_GA
