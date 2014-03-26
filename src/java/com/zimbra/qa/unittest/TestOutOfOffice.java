@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2009, 2010, 2011, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -19,6 +19,9 @@ import java.util.Date;
 
 import junit.framework.TestCase;
 
+import com.zimbra.client.ZEmailAddress;
+import com.zimbra.client.ZMailbox;
+import com.zimbra.client.ZMessage;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -27,9 +30,6 @@ import com.zimbra.cs.db.DbOutOfOffice;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.client.ZEmailAddress;
-import com.zimbra.client.ZMailbox;
-import com.zimbra.client.ZMessage;
 
 /**
  * Tests out-of-office notification.  All tests must be run inside the server, because
@@ -56,6 +56,7 @@ extends TestCase {
     private static String RECIPIENT1_ADDRESS = "TestOutOfOffice1@example.zimbra.com";
     private static String RECIPIENT2_ADDRESS = "TestOutOfOffice2@example.zimbra.com";
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
 
@@ -78,7 +79,7 @@ extends TestCase {
 }
 
     public void testRowExists() throws Exception {
-        long fiveDaysAgo = System.currentTimeMillis() - (1000 * 60 * 60 * 24 * 5);
+        long fiveDaysAgo = System.currentTimeMillis() - (1000 * 60 * 60 * 24 * 5) - 100000;
 
         DbOutOfOffice.setSentTime(mConn, mMbox, RECIPIENT1_ADDRESS, fiveDaysAgo);
         mConn.commit();
@@ -95,9 +96,10 @@ extends TestCase {
         assertFalse("100 days", DbOutOfOffice.alreadySent(mConn, mMbox, RECIPIENT1_ADDRESS, 100 * Constants.MILLIS_PER_DAY));
     }
 
+
     public void testPrune() throws Exception {
-        long fiveDaysAgo = System.currentTimeMillis() - (1000 * 60 * 60 * 24 * 5);
-        long sixDaysAgo = System.currentTimeMillis() - (1000 * 60 * 60 * 24 * 6);
+        long fiveDaysAgo = System.currentTimeMillis() - (1000 * 60 * 60 * 24 * 5) - 100000;
+        long sixDaysAgo = System.currentTimeMillis() - (1000 * 60 * 60 * 24 * 6) - 100000;
 
         DbOutOfOffice.setSentTime(mConn, mMbox, RECIPIENT1_ADDRESS, fiveDaysAgo);
         DbOutOfOffice.setSentTime(mConn, mMbox, RECIPIENT2_ADDRESS, sixDaysAgo);
@@ -196,6 +198,7 @@ extends TestCase {
         return null;
     }
 
+    @Override
     public void tearDown()
     throws Exception {
         cleanUp();
