@@ -16066,6 +16066,158 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * Rules for governing the even allocation of threads to various web
+     * contexts for the current thread pool. Sample value:
+     * /zimbra:min=10;max=40% or /zimbraAdmin:min=5
+     *
+     * @return zimbraHttpContextPathBasedThreadPoolBalancingFilterRules, or empty array if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1593)
+    public String[] getHttpContextPathBasedThreadPoolBalancingFilterRules() {
+        String[] value = getMultiAttr(Provisioning.A_zimbraHttpContextPathBasedThreadPoolBalancingFilterRules); return value.length > 0 ? value : new String[] {"/service:min=10;max=10%","/soap:min=10;max=40%","/zimbra:min=10;max=40%","/zimbraAdmin:min=10;max=5%"};
+    }
+
+    /**
+     * Rules for governing the even allocation of threads to various web
+     * contexts for the current thread pool. Sample value:
+     * /zimbra:min=10;max=40% or /zimbraAdmin:min=5
+     *
+     * @param zimbraHttpContextPathBasedThreadPoolBalancingFilterRules new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1593)
+    public void setHttpContextPathBasedThreadPoolBalancingFilterRules(String[] zimbraHttpContextPathBasedThreadPoolBalancingFilterRules) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraHttpContextPathBasedThreadPoolBalancingFilterRules, zimbraHttpContextPathBasedThreadPoolBalancingFilterRules);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Rules for governing the even allocation of threads to various web
+     * contexts for the current thread pool. Sample value:
+     * /zimbra:min=10;max=40% or /zimbraAdmin:min=5
+     *
+     * @param zimbraHttpContextPathBasedThreadPoolBalancingFilterRules new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1593)
+    public Map<String,Object> setHttpContextPathBasedThreadPoolBalancingFilterRules(String[] zimbraHttpContextPathBasedThreadPoolBalancingFilterRules, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraHttpContextPathBasedThreadPoolBalancingFilterRules, zimbraHttpContextPathBasedThreadPoolBalancingFilterRules);
+        return attrs;
+    }
+
+    /**
+     * Rules for governing the even allocation of threads to various web
+     * contexts for the current thread pool. Sample value:
+     * /zimbra:min=10;max=40% or /zimbraAdmin:min=5
+     *
+     * @param zimbraHttpContextPathBasedThreadPoolBalancingFilterRules new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1593)
+    public void addHttpContextPathBasedThreadPoolBalancingFilterRules(String zimbraHttpContextPathBasedThreadPoolBalancingFilterRules) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraHttpContextPathBasedThreadPoolBalancingFilterRules, zimbraHttpContextPathBasedThreadPoolBalancingFilterRules);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Rules for governing the even allocation of threads to various web
+     * contexts for the current thread pool. Sample value:
+     * /zimbra:min=10;max=40% or /zimbraAdmin:min=5
+     *
+     * @param zimbraHttpContextPathBasedThreadPoolBalancingFilterRules new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1593)
+    public Map<String,Object> addHttpContextPathBasedThreadPoolBalancingFilterRules(String zimbraHttpContextPathBasedThreadPoolBalancingFilterRules, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraHttpContextPathBasedThreadPoolBalancingFilterRules, zimbraHttpContextPathBasedThreadPoolBalancingFilterRules);
+        return attrs;
+    }
+
+    /**
+     * Rules for governing the even allocation of threads to various web
+     * contexts for the current thread pool. Sample value:
+     * /zimbra:min=10;max=40% or /zimbraAdmin:min=5
+     *
+     * @param zimbraHttpContextPathBasedThreadPoolBalancingFilterRules existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1593)
+    public void removeHttpContextPathBasedThreadPoolBalancingFilterRules(String zimbraHttpContextPathBasedThreadPoolBalancingFilterRules) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraHttpContextPathBasedThreadPoolBalancingFilterRules, zimbraHttpContextPathBasedThreadPoolBalancingFilterRules);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Rules for governing the even allocation of threads to various web
+     * contexts for the current thread pool. Sample value:
+     * /zimbra:min=10;max=40% or /zimbraAdmin:min=5
+     *
+     * @param zimbraHttpContextPathBasedThreadPoolBalancingFilterRules existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1593)
+    public Map<String,Object> removeHttpContextPathBasedThreadPoolBalancingFilterRules(String zimbraHttpContextPathBasedThreadPoolBalancingFilterRules, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraHttpContextPathBasedThreadPoolBalancingFilterRules, zimbraHttpContextPathBasedThreadPoolBalancingFilterRules);
+        return attrs;
+    }
+
+    /**
+     * Rules for governing the even allocation of threads to various web
+     * contexts for the current thread pool. Sample value:
+     * /zimbra:min=10;max=40% or /zimbraAdmin:min=5
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1593)
+    public void unsetHttpContextPathBasedThreadPoolBalancingFilterRules() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraHttpContextPathBasedThreadPoolBalancingFilterRules, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Rules for governing the even allocation of threads to various web
+     * contexts for the current thread pool. Sample value:
+     * /zimbra:min=10;max=40% or /zimbraAdmin:min=5
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1593)
+    public Map<String,Object> unsetHttpContextPathBasedThreadPoolBalancingFilterRules(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraHttpContextPathBasedThreadPoolBalancingFilterRules, "");
+        return attrs;
+    }
+
+    /**
      * Whether to enable http debug handler on a server
      *
      * @return zimbraHttpDebugHandlerEnabled, or true if unset

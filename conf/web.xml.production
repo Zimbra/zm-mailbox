@@ -66,6 +66,27 @@
   </filter-mapping>
   
   <filter>
+    <filter-name>ContextPathBasedThreadPoolBalancerFilter</filter-name>
+    <filter-class>com.zimbra.cs.servlet.ContextPathBasedThreadPoolBalancerFilter</filter-class>
+    <async-supported>true</async-supported>
+    
+    <init-param>
+     <param-name>suspendMs</param-name>
+     <param-value>1000</param-value>
+    </init-param>
+    
+    <init-param>
+     <param-name>Rules</param-name>
+     <param-value>%%list zimbraHttpContextPathBasedThreadPoolBalancingFilterRules ", "%%</param-value>
+    </init-param>
+  </filter>
+
+  <filter-mapping>
+    <filter-name>ContextPathBasedThreadPoolBalancerFilter</filter-name>
+    <url-pattern>/*</url-pattern>
+  </filter-mapping>
+
+  <filter>
     <filter-name>ETagHeaderFilter</filter-name>
     <filter-class>com.zimbra.cs.servlet.ETagHeaderFilter</filter-class>
     <async-supported>true</async-supported>
