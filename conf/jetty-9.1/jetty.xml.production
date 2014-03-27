@@ -175,6 +175,8 @@
 		<Set name="KeyStorePath"><SystemProperty name="jetty.home" default="." />/etc/keystore</Set>
 		<Set name="KeyStorePassword">@@mailboxd_keystore_password@@</Set>
 		<Set name="KeyManagerPassword">@@mailboxd_keystore_password@@</Set>
+		<Set name="TrustStorePath">@@client_ssl_truststore@@</Set>
+		<Set name="TrustStorePassword">@@client_ssl_truststore_password@@</Set>
 		<Set name="EndpointIdentificationAlgorithm"></Set>
 		<Set name="ExcludeCipherSuites">
 			<Array type="java.lang.String">
