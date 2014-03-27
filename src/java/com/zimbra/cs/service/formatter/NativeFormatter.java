@@ -54,6 +54,7 @@ import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.convert.ConversionUnsupportedException;
 import com.zimbra.cs.extension.ExtensionUtil;
 import com.zimbra.cs.html.BrowserDefang;
 import com.zimbra.cs.html.DefangFactory;
@@ -356,9 +357,19 @@ public final class NativeFormatter extends Formatter {
 
         doc = (version > 0 ? (Document)doc.getMailbox().getItemRevision(context.opContext, doc.getId(), doc.getType(), version) : doc);
         InputStream is = doc.getContentStream();
-        // If the view is html and the convertd extension is deployed
-        if (HTML_VIEW.equals(context.getView()) && ExtensionUtil.getExtension("convertd") != null && !(contentType != null && contentType.startsWith(MimeConstants.CT_TEXT_HTML))) {
-            handleConversion(context, is, doc.getName(), doc.getContentType(), doc.getDigest(), doc.getSize());
+        if (HTML_VIEW.equals(context.getView()) && !(contentType != null && contentType.startsWith(MimeConstants.CT_TEXT_HTML))) {
+            if (ExtensionUtil.getExtension("convertd") != null) {
+                // If the requested view is html, but the requested content is not, use convertd extension when deployed
+                handleConversion(context, is, doc.getName(), doc.getContentType(), doc.getDigest(), doc.getSize());
+            } else {
+                // If the requested view is html, but the content is not, respond with a conversion error, so that
+                // either an error page, or page invoking an error callback handler can be shown
+                try {
+                    updateClient(context, new ConversionUnsupportedException(String.format("Native format cannot be displayed inline: %s", contentType)));
+                } catch (UserServletException e) {
+                    throw new ServletException(e.getLocalizedMessage(), e);
+                }
+            }
         } else {
             String defaultCharset = context.targetAccount.getAttr(Provisioning.A_zimbraPrefMailDefaultCharset, null);
             boolean neuter = doc.getAccount().getBooleanAttr(Provisioning.A_zimbraNotebookSanitizeHtml, true);
