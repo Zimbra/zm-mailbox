@@ -2079,6 +2079,7 @@ public class ProxyConfGen
         mConfVars.put("web.admin.upstream.adminclient.:servers", new WebAdminUpstreamAdminClientServersVar());
         mConfVars.put("web.upstream.noop.timeout", new TimeoutVar("web.upstream.noop.timeout", "zimbra_noop_max_timeout", 1200, ProxyConfOverride.LOCALCONFIG, 20, "the response timeout for NoOpRequest"));
         mConfVars.put("web.upstream.waitset.timeout", new TimeoutVar("web.upstream.waitset.timeout", "zimbra_waitset_max_request_timeout", 1200, ProxyConfOverride.LOCALCONFIG, 20, "the response timeout for WaitSetRequest"));
+	mConfVars.put("main.accept_mutex", new ProxyConfVar("main.accept_mutex", "zimbraReverseProxyAcceptMutex", "on", ProxyConfValueType.STRING, ProxyConfOverride.SERVER,"accept_mutex flag for NGINX - can be on|off - on indicates regular distribution, off gets better distribution of client connections between workers"));
     }
 
     /* update the default variable map from the active configuration */

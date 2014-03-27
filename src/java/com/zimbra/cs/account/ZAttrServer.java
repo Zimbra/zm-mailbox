@@ -7501,9 +7501,9 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Rules for governing the even allocation of threads to various web
-     * contexts for the current thread pool. Sample value:
-     * /zimbra:min=10;max=40% or /zimbraAdmin:min=5
+     * Rules for governing the allocation of threads to various web contexts
+     * for the current thread pool. Sample value: /zimbra:min=10;max=40% or
+     * /zimbraAdmin:min=5
      *
      * @return zimbraHttpContextPathBasedThreadPoolBalancingFilterRules, or empty array if unset
      *
@@ -7515,9 +7515,9 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Rules for governing the even allocation of threads to various web
-     * contexts for the current thread pool. Sample value:
-     * /zimbra:min=10;max=40% or /zimbraAdmin:min=5
+     * Rules for governing the allocation of threads to various web contexts
+     * for the current thread pool. Sample value: /zimbra:min=10;max=40% or
+     * /zimbraAdmin:min=5
      *
      * @param zimbraHttpContextPathBasedThreadPoolBalancingFilterRules new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -7532,9 +7532,9 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Rules for governing the even allocation of threads to various web
-     * contexts for the current thread pool. Sample value:
-     * /zimbra:min=10;max=40% or /zimbraAdmin:min=5
+     * Rules for governing the allocation of threads to various web contexts
+     * for the current thread pool. Sample value: /zimbra:min=10;max=40% or
+     * /zimbraAdmin:min=5
      *
      * @param zimbraHttpContextPathBasedThreadPoolBalancingFilterRules new value
      * @param attrs existing map to populate, or null to create a new map
@@ -7550,9 +7550,9 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Rules for governing the even allocation of threads to various web
-     * contexts for the current thread pool. Sample value:
-     * /zimbra:min=10;max=40% or /zimbraAdmin:min=5
+     * Rules for governing the allocation of threads to various web contexts
+     * for the current thread pool. Sample value: /zimbra:min=10;max=40% or
+     * /zimbraAdmin:min=5
      *
      * @param zimbraHttpContextPathBasedThreadPoolBalancingFilterRules new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -7567,9 +7567,9 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Rules for governing the even allocation of threads to various web
-     * contexts for the current thread pool. Sample value:
-     * /zimbra:min=10;max=40% or /zimbraAdmin:min=5
+     * Rules for governing the allocation of threads to various web contexts
+     * for the current thread pool. Sample value: /zimbra:min=10;max=40% or
+     * /zimbraAdmin:min=5
      *
      * @param zimbraHttpContextPathBasedThreadPoolBalancingFilterRules new to add to existing values
      * @param attrs existing map to populate, or null to create a new map
@@ -7585,9 +7585,9 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Rules for governing the even allocation of threads to various web
-     * contexts for the current thread pool. Sample value:
-     * /zimbra:min=10;max=40% or /zimbraAdmin:min=5
+     * Rules for governing the allocation of threads to various web contexts
+     * for the current thread pool. Sample value: /zimbra:min=10;max=40% or
+     * /zimbraAdmin:min=5
      *
      * @param zimbraHttpContextPathBasedThreadPoolBalancingFilterRules existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -7602,9 +7602,9 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Rules for governing the even allocation of threads to various web
-     * contexts for the current thread pool. Sample value:
-     * /zimbra:min=10;max=40% or /zimbraAdmin:min=5
+     * Rules for governing the allocation of threads to various web contexts
+     * for the current thread pool. Sample value: /zimbra:min=10;max=40% or
+     * /zimbraAdmin:min=5
      *
      * @param zimbraHttpContextPathBasedThreadPoolBalancingFilterRules existing value to remove
      * @param attrs existing map to populate, or null to create a new map
@@ -7620,9 +7620,9 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Rules for governing the even allocation of threads to various web
-     * contexts for the current thread pool. Sample value:
-     * /zimbra:min=10;max=40% or /zimbraAdmin:min=5
+     * Rules for governing the allocation of threads to various web contexts
+     * for the current thread pool. Sample value: /zimbra:min=10;max=40% or
+     * /zimbraAdmin:min=5
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -7636,9 +7636,9 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Rules for governing the even allocation of threads to various web
-     * contexts for the current thread pool. Sample value:
-     * /zimbra:min=10;max=40% or /zimbraAdmin:min=5
+     * Rules for governing the allocation of threads to various web contexts
+     * for the current thread pool. Sample value: /zimbra:min=10;max=40% or
+     * /zimbraAdmin:min=5
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -29014,6 +29014,161 @@ public abstract class ZAttrServer extends NamedEntry {
     public Map<String,Object> unsetRemoteManagementUser(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraRemoteManagementUser, "");
+        return attrs;
+    }
+
+    /**
+     * on - accept_mutex flag &#039;on&#039; for the reverse proxy. This is
+     * default. off - accept_mutex flag &#039;off&#039; for the reverse
+     * proxy. Turning it off will get much better distribution of client
+     * connections between workers.
+     *
+     * <p>Valid values: [off, on]
+     *
+     * @return zimbraReverseProxyAcceptMutex, or ZAttrProvisioning.ReverseProxyAcceptMutex.on if unset and/or has invalid value
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1594)
+    public ZAttrProvisioning.ReverseProxyAcceptMutex getReverseProxyAcceptMutex() {
+        try { String v = getAttr(Provisioning.A_zimbraReverseProxyAcceptMutex); return v == null ? ZAttrProvisioning.ReverseProxyAcceptMutex.on : ZAttrProvisioning.ReverseProxyAcceptMutex.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.ReverseProxyAcceptMutex.on; }
+    }
+
+    /**
+     * on - accept_mutex flag &#039;on&#039; for the reverse proxy. This is
+     * default. off - accept_mutex flag &#039;off&#039; for the reverse
+     * proxy. Turning it off will get much better distribution of client
+     * connections between workers.
+     *
+     * <p>Valid values: [off, on]
+     *
+     * @return zimbraReverseProxyAcceptMutex, or "on" if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1594)
+    public String getReverseProxyAcceptMutexAsString() {
+        return getAttr(Provisioning.A_zimbraReverseProxyAcceptMutex, "on");
+    }
+
+    /**
+     * on - accept_mutex flag &#039;on&#039; for the reverse proxy. This is
+     * default. off - accept_mutex flag &#039;off&#039; for the reverse
+     * proxy. Turning it off will get much better distribution of client
+     * connections between workers.
+     *
+     * <p>Valid values: [off, on]
+     *
+     * @param zimbraReverseProxyAcceptMutex new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1594)
+    public void setReverseProxyAcceptMutex(ZAttrProvisioning.ReverseProxyAcceptMutex zimbraReverseProxyAcceptMutex) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyAcceptMutex, zimbraReverseProxyAcceptMutex.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * on - accept_mutex flag &#039;on&#039; for the reverse proxy. This is
+     * default. off - accept_mutex flag &#039;off&#039; for the reverse
+     * proxy. Turning it off will get much better distribution of client
+     * connections between workers.
+     *
+     * <p>Valid values: [off, on]
+     *
+     * @param zimbraReverseProxyAcceptMutex new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1594)
+    public Map<String,Object> setReverseProxyAcceptMutex(ZAttrProvisioning.ReverseProxyAcceptMutex zimbraReverseProxyAcceptMutex, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyAcceptMutex, zimbraReverseProxyAcceptMutex.toString());
+        return attrs;
+    }
+
+    /**
+     * on - accept_mutex flag &#039;on&#039; for the reverse proxy. This is
+     * default. off - accept_mutex flag &#039;off&#039; for the reverse
+     * proxy. Turning it off will get much better distribution of client
+     * connections between workers.
+     *
+     * <p>Valid values: [off, on]
+     *
+     * @param zimbraReverseProxyAcceptMutex new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1594)
+    public void setReverseProxyAcceptMutexAsString(String zimbraReverseProxyAcceptMutex) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyAcceptMutex, zimbraReverseProxyAcceptMutex);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * on - accept_mutex flag &#039;on&#039; for the reverse proxy. This is
+     * default. off - accept_mutex flag &#039;off&#039; for the reverse
+     * proxy. Turning it off will get much better distribution of client
+     * connections between workers.
+     *
+     * <p>Valid values: [off, on]
+     *
+     * @param zimbraReverseProxyAcceptMutex new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1594)
+    public Map<String,Object> setReverseProxyAcceptMutexAsString(String zimbraReverseProxyAcceptMutex, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyAcceptMutex, zimbraReverseProxyAcceptMutex);
+        return attrs;
+    }
+
+    /**
+     * on - accept_mutex flag &#039;on&#039; for the reverse proxy. This is
+     * default. off - accept_mutex flag &#039;off&#039; for the reverse
+     * proxy. Turning it off will get much better distribution of client
+     * connections between workers.
+     *
+     * <p>Valid values: [off, on]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1594)
+    public void unsetReverseProxyAcceptMutex() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyAcceptMutex, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * on - accept_mutex flag &#039;on&#039; for the reverse proxy. This is
+     * default. off - accept_mutex flag &#039;off&#039; for the reverse
+     * proxy. Turning it off will get much better distribution of client
+     * connections between workers.
+     *
+     * <p>Valid values: [off, on]
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1594)
+    public Map<String,Object> unsetReverseProxyAcceptMutex(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyAcceptMutex, "");
         return attrs;
     }
 

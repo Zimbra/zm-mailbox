@@ -328,6 +328,7 @@ SECTION proxy
 	VAR zimbraReverseProxyUserThrottleMsg
 	VAR zimbraReverseProxyWorkerConnections
 	VAR zimbraReverseProxyWorkerProcesses
+	VAR zimbraReverseProxyAcceptMutex
 	PROXYGEN
 	RESTART proxy
 
