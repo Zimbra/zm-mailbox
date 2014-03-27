@@ -1652,6 +1652,22 @@ public class ZAttrProvisioning {
         public boolean isZCS() { return this == ZCS;}
     }
 
+    public static enum ReverseProxyAcceptMutex {
+        off("off"),
+        on("on");
+        private String mValue;
+        private ReverseProxyAcceptMutex(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static ReverseProxyAcceptMutex fromString(String s) throws ServiceException {
+            for (ReverseProxyAcceptMutex value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isOff() { return this == off;}
+        public boolean isOn() { return this == on;}
+    }
+
     public static enum ReverseProxyClientCertMode {
         optional("optional"),
         off("off"),
@@ -6268,9 +6284,9 @@ public class ZAttrProvisioning {
     public static final String A_zimbraHttpConnectorMaxIdleTimeMillis = "zimbraHttpConnectorMaxIdleTimeMillis";
 
     /**
-     * Rules for governing the even allocation of threads to various web
-     * contexts for the current thread pool. Sample value:
-     * /zimbra:min=10;max=40% or /zimbraAdmin:min=5
+     * Rules for governing the allocation of threads to various web contexts
+     * for the current thread pool. Sample value: /zimbra:min=10;max=40% or
+     * /zimbraAdmin:min=5
      *
      * @since ZCS 8.5.0
      */
@@ -11538,6 +11554,17 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1074)
     public static final String A_zimbraResponseHeader = "zimbraResponseHeader";
+
+    /**
+     * on - accept_mutex flag &#039;on&#039; for the reverse proxy. This is
+     * default. off - accept_mutex flag &#039;off&#039; for the reverse
+     * proxy. Turning it off will get much better distribution of client
+     * connections between workers.
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1594)
+    public static final String A_zimbraReverseProxyAcceptMutex = "zimbraReverseProxyAcceptMutex";
 
     /**
      * indicate whether to turn on admin console proxy
