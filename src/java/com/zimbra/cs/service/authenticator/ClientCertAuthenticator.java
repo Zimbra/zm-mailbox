@@ -204,7 +204,8 @@ public class ClientCertAuthenticator extends SSOAuthenticator {
             try {
                 cert.checkValidity();
 
-                if( IsAIAInfoPresent(cert) ) {
+                boolean revocationCheckEnabled = Provisioning.getInstance().getLocalServer().isMailSSLClientCertOCSPEnabled();
+                if(revocationCheckEnabled) {
                     ZimbraLog.account.debug(LOG_PREFIX +  "found AuthorityInfoAccess extension in client certificate");
                     List<X509Certificate> certificates = new ArrayList<X509Certificate>();
                     certificates.add(cert);
@@ -213,8 +214,8 @@ public class ClientCertAuthenticator extends SSOAuthenticator {
                     CertPath              cp = cf.generateCertPath(certificates);
 
                     KeyStore ks = KeyStore.getInstance("JKS");
-                    char[] pass = LC.mailboxd_keystore_password.value().toCharArray();
-                    fis = new FileInputStream(LC.mailboxd_keystore.value());
+                    char[] pass = LC.client_ssl_truststore_password.value().toCharArray();
+                    fis = new FileInputStream(LC.client_ssl_truststore.value());
                     ks.load(fis, pass);
 
                     Set<TrustAnchor> trustedCertsSet = new HashSet<TrustAnchor>();
@@ -232,13 +233,7 @@ public class ClientCertAuthenticator extends SSOAuthenticator {
                     // init PKIX parameters
                     PKIXParameters params = new PKIXParameters(trustedCertsSet);
 
-                    // Activate certificate revocation checking if required
-                    params.setRevocationEnabled(Provisioning.getInstance().getLocalServer().isMailSSLClientCertOCSPEnabled());
-
-                    // Ensure that the ocsp.responderURL property is not set.
-                    if (Security.getProperty("ocsp.responderURL") != null) {
-                        throw AuthFailedServiceException.AUTH_FAILED(getSubjectDNForLogging(cert), "ocsp.responderURL property should not be set");
-                    }
+                    params.setRevocationEnabled(revocationCheckEnabled);
 
                     // perform validation
                     CertPathValidator cpv = CertPathValidator.getInstance("PKIX");
