@@ -77,7 +77,7 @@
     
     <init-param>
      <param-name>Rules</param-name>
-     <param-value>%%list zimbraHttpContextPathBasedThreadPoolBalancingFilterRules ", "%%</param-value>
+     <param-value>%%list VAR:zimbraHttpContextPathBasedThreadPoolBalancingFilterRules , %%</param-value>
     </init-param>
   </filter>
 
