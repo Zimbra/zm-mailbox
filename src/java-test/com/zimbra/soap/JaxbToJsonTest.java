@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -25,15 +25,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import javax.xml.bind.annotation.XmlAnyAttribute;
+import javax.xml.bind.annotation.XmlAnyElement;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementRef;
+import javax.xml.bind.annotation.XmlElements;
+import javax.xml.bind.annotation.XmlMixed;
 import javax.xml.parsers.DocumentBuilder;
 
 import junit.framework.Assert;
 
 import org.apache.log4j.BasicConfigurator;
-import org.apache.log4j.Logger;
 import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
 import org.codehaus.jackson.map.AnnotationIntrospector;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.SerializationConfig;
@@ -47,17 +51,24 @@ import org.junit.rules.TestName;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.zimbra.soap.JaxbUtil;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AccountConstants;
+import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.Element.JSONElement;
+import com.zimbra.common.soap.Element.XMLElement;
+import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.soap.XMbxSearchConstants;
 import com.zimbra.soap.account.message.CreateDistributionListResponse;
+import com.zimbra.soap.account.message.GetDistributionListMembersResponse;
 import com.zimbra.soap.account.message.GetDistributionListResponse;
+import com.zimbra.soap.account.type.Attr;
+import com.zimbra.soap.account.type.DLInfo;
+import com.zimbra.soap.account.type.DistributionListGranteeInfo;
+import com.zimbra.soap.account.type.DistributionListInfo;
 import com.zimbra.soap.admin.message.AuthResponse;
 import com.zimbra.soap.admin.message.CreateXMbxSearchRequest;
 import com.zimbra.soap.admin.message.VerifyIndexResponse;
-import com.zimbra.soap.account.message.GetDistributionListMembersResponse;
-import com.zimbra.soap.account.type.Attr;
-import com.zimbra.soap.account.type.DistributionListGranteeInfo;
-import com.zimbra.soap.account.type.DistributionListInfo;
-import com.zimbra.soap.account.type.DLInfo;
 import com.zimbra.soap.jaxb.AnyAttrTester;
 import com.zimbra.soap.jaxb.AnyTester;
 import com.zimbra.soap.jaxb.ElementRefTester;
@@ -79,6 +90,7 @@ import com.zimbra.soap.jaxb.ViewEnum;
 import com.zimbra.soap.jaxb.WrappedEnumElemList;
 import com.zimbra.soap.jaxb.WrappedKeyValuePairsTester;
 import com.zimbra.soap.jaxb.WrappedRequired;
+import com.zimbra.soap.jaxb.WrapperAbsentIfEmpty;
 import com.zimbra.soap.jaxb.XmlElemJsonAttr;
 import com.zimbra.soap.json.JacksonUtil;
 import com.zimbra.soap.json.jackson.annotate.ZimbraJsonAttribute;
@@ -96,14 +108,6 @@ import com.zimbra.soap.mail.type.FilterTests;
 import com.zimbra.soap.mail.type.InstanceDataInfo;
 import com.zimbra.soap.type.GranteeType;
 import com.zimbra.soap.type.KeyValuePair;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.AccountConstants;
-import com.zimbra.common.soap.AdminConstants;
-import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.Element.JSONElement;
-import com.zimbra.common.soap.Element.XMLElement;
-import com.zimbra.common.soap.MailConstants;
-import com.zimbra.common.soap.XMbxSearchConstants;
 
 public class JaxbToJsonTest {
     @Rule public TestName testName = new TestName();
@@ -147,7 +151,7 @@ public class JaxbToJsonTest {
      * the element referenced MailConstants.E_FRAG is treated in XML as an element with content but no attributes.
      * However in JSON, it is just treated like an ordinary attribute.
      * So, in JSON we DO want:
-     *    "fr": "Here is some wonderful text and some more", 
+     *    "fr": "Here is some wonderful text and some more",
      * We do NOT want it to be treated as if it was an element which would look like:
      *    "fr": [{
      *           "_content": "Here is some wonderful text and some more"
@@ -256,11 +260,11 @@ public class JaxbToJsonTest {
         String json = JacksonUtil.jaxbToJsonString(mapper, obj);
         StringBuilder fullTag = new StringBuilder("JacksonPlay ")
             .append(obj.getClass().getName()).append(" ").append(tag).append(" ");
-        logInfo(fullTag.toString() + 
+        logInfo(fullTag.toString() +
                 "JAXB --> Jackson --> String\n" + json);
         try {
             Element jsonElemFromJackson = JacksonUtil.jacksonJsonToElement(json, obj);
-            logInfo(fullTag.toString() + 
+            logInfo(fullTag.toString() +
                     "JAXB --> Jackson --> String ---> Element ---> prettyPrint\n" +
                     jsonElemFromJackson.prettyPrint());
         } catch (ServiceException e) {
@@ -269,7 +273,7 @@ public class JaxbToJsonTest {
         }
         try {
             Element jsonE = JaxbUtil.jaxbToElement(obj, JSONElement.mFactory);
-            logInfo(fullTag.toString() + 
+            logInfo(fullTag.toString() +
                     "JAXB --> jaxbToElement --> Element ---> prettyPrint\n" +
                     jsonE.prettyPrint());
         } catch (ServiceException e) {
@@ -688,7 +692,7 @@ Extract from mailbox.log for creation of this DL by ZWC - demonstrating the diff
     /**
      * CreateXMbxSearchRequest currently extends AdminKeyValuePairs which uses the {@link ZimbraKeyValuePairs}
      * annotation.
-     * 
+     *
      * Want JSON for KeyValuePairs to look something like :
      *   "_attrs": {
      *     "query": "Kitchen",
@@ -698,7 +702,7 @@ Extract from mailbox.log for creation of this DL by ZWC - demonstrating the diff
     @Test
     public void keyValuePairMbxSearch() throws Exception {
         final String notifMsg = "Search task %taskId% completed with status %status%. \nImported: %numMsgs% messages. \nSearch query used: %query%.";
-        
+
         Element legacyElem = JSONElement.mFactory.createElement(XMbxSearchConstants.CREATE_XMBX_SEARCH_REQUEST);
         legacyElem.addKeyValuePair("query", "Kitchen");
         legacyElem.addKeyValuePair("accounts", "*");
@@ -736,7 +740,7 @@ Extract from mailbox.log for creation of this DL by ZWC - demonstrating the diff
     private void encodeAttrs(Element e, Map<String,Object> attrs, String key) {
         for (Iterator<Entry<String, Object>> iter = attrs.entrySet().iterator(); iter.hasNext(); ) {
             Map.Entry<String,?> entry = iter.next();
-            String name = (String) entry.getKey();
+            String name = entry.getKey();
             Object value = entry.getValue();
 
             if (value instanceof String[]) {
@@ -874,7 +878,7 @@ Extract from mailbox.log for creation of this DL by ZWC - demonstrating the diff
     }
 
     /*
-     * 
+     *
 <GetFilterRulesResponse xmlns="urn:zimbraMail">
   <filterRules>
     <filterRule name="filter1.1318830338466.3" active="0">
@@ -914,7 +918,7 @@ header="X-Spam-Score"/>
     }
 
     /**
-     * 
+     *
     {
         "filterRules": [{
             "filterRule": [{
@@ -1055,7 +1059,7 @@ header="X-Spam-Score"/>
         inviteTest.addMethod("REPLY");
         inviteTest.addMethod("CANCEL");
         tests.addTest(inviteTest);
-        Element jsonJaxbElem = JacksonUtil.jaxbToJSONElement(tests, 
+        Element jsonJaxbElem = JacksonUtil.jaxbToJSONElement(tests,
                 QName.get(MailConstants.E_FILTER_TESTS, MailConstants.NAMESPACE));
         logInfo("filterTests JSONElement from JAXB ---> prettyPrint\n%1$s", jsonJaxbElem.prettyPrint());
         FilterTests roundtripped = JaxbUtil.elementToJaxb(jsonJaxbElem, FilterTests.class);
@@ -1487,6 +1491,45 @@ header="X-Spam-Score"/>
     }
 
     /**
+     * How to achieve a wrapped list where no element for the wrapper will appear in the XML if the list is empty.
+     */
+    @Test
+    public void wrapperAbsentIfEmpty() throws Exception {
+        WrapperAbsentIfEmpty jaxb = new  WrapperAbsentIfEmpty();
+        Element jsonJaxbElem = JacksonUtil.jaxbToJSONElement(jaxb);
+        WrapperAbsentIfEmpty roundtripped = JaxbUtil.elementToJaxb(jsonJaxbElem, WrapperAbsentIfEmpty.class);
+        logInfo("JSONElement from JAXB (empty numbers)--> prettyPrint\n%1$s", jsonJaxbElem.prettyPrint());
+        Assert.assertNull("original getNumbers (empty list)", jaxb.getNumbers());
+        Assert.assertNull("JSON roundtripped getNumbers (empty list)", roundtripped.getNumbers());
+        Assert.assertEquals("JSON for empty Numbers", "{\n  \"_jsns\": \"urn:zimbraTest\"\n}", jsonJaxbElem.prettyPrint());
+        Element xmlElem = JaxbUtil.jaxbToElement(jaxb, Element.XMLElement.mFactory, true, false);
+        logInfo("XmlElement from JAXB (empty numbers) ---> prettyPrint\n%1$s", xmlElem.prettyPrint());
+        WrapperAbsentIfEmpty roundtrippedX = JaxbUtil.elementToJaxb(xmlElem, WrapperAbsentIfEmpty.class);
+        Assert.assertNull("XML roundtripped getNumbers (empty list)", roundtrippedX.getNumbers());
+        Assert.assertEquals("XML for empty Numbers",
+                "<wrapper-absent-if-empty xmlns=\"urn:zimbraTest\"/>", xmlElem.prettyPrint());
+        jaxb.addNumber(314159);
+        jaxb.addNumber(42);
+        jsonJaxbElem = JacksonUtil.jaxbToJSONElement(jaxb);
+        roundtripped = JaxbUtil.elementToJaxb(jsonJaxbElem, WrapperAbsentIfEmpty.class);
+        logInfo("JSONElement from JAXB (empty numbers)--> prettyPrint\n%1$s", jsonJaxbElem.prettyPrint());
+        Assert.assertEquals("original size of Numbers (2 numbers)", 2, jaxb.getNumbers().size());
+        Assert.assertEquals("JSON roundtripped size of Numbers (2 numbers)", 2, roundtripped.getNumbers().size());
+        xmlElem = JaxbUtil.jaxbToElement(jaxb, Element.XMLElement.mFactory, true, false);
+        logInfo("XmlElement from JAXB (empty numbers) ---> prettyPrint\n%1$s", xmlElem.prettyPrint());
+        roundtrippedX = JaxbUtil.elementToJaxb(xmlElem, WrapperAbsentIfEmpty.class);
+        Assert.assertEquals("XML roundtripped size of Numbers (2 numbers)", 2, roundtrippedX.getNumbers().size());
+        Assert.assertEquals("XML when have 2 numbers",
+                String.format("%s\n  %s\n    %s\n    %s\n  %s\n%s",
+                        "<wrapper-absent-if-empty xmlns=\"urn:zimbraTest\">",
+                        "<numbers>",
+                        "<number>314159</number>",
+                        "<number>42</number>",
+                        "</numbers>",
+                        "</wrapper-absent-if-empty>"), xmlElem.prettyPrint());
+    }
+
+    /**
      * XmlElementRef handling.  Note that slightly counter-intuitively, any name specified is ignored (unless
      * type=JAXBElement.class)
      * <pre>
@@ -1717,7 +1760,7 @@ header="X-Spam-Score"/>
         AnyTester roundtrippedX = JaxbUtil.elementToJaxb(xmlElem, AnyTester.class);
         Assert.assertEquals("roundtrippedX given", given, roundtrippedX.getGiven());
         Assert.assertEquals("roundtrippedX num elems", 2, roundtrippedX.getElems().size());
-        org.w3c.dom.Element w3ce = (org.w3c.dom.Element) roundtrippedX.getElems().get(0);
+        org.w3c.dom.Element w3ce = roundtrippedX.getElems().get(0);
         Assert.assertEquals("roundtrippedX elem name", "alien", w3ce.getLocalName());
         logInfo("STRING from JAXB ---> prettyPrint\n%1$s", getZimbraJsonJaxbString(jaxb));
         Element jsonJaxbElem = JacksonUtil.jaxbToJSONElement(jaxb);
@@ -1725,7 +1768,7 @@ header="X-Spam-Score"/>
         AnyTester roundtripped = JaxbUtil.elementToJaxb(jsonJaxbElem, AnyTester.class);
         Assert.assertEquals("roundtripped given", given, roundtripped.getGiven());
         Assert.assertEquals("roundtripped num elems", 2, roundtripped.getElems().size());
-        org.w3c.dom.Element rtElem = (org.w3c.dom.Element) roundtripped.getElems().get(0);
+        org.w3c.dom.Element rtElem = roundtripped.getElems().get(0);
         Assert.assertEquals("roundtripped elem name", "alien", rtElem.getTagName());
         Assert.assertEquals("roundtripped elem namespace", "urn:foreign", rtElem.getNamespaceURI());
     }

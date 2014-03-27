@@ -207,6 +207,28 @@ FAQ
         setup not to tie @XmlAttribute to a namespace when processing the JAXB.  However, the issue was raised
         that this is confusing as it isn't clear why this works but objects containing elements don't.
         So, although this results in simpler code it is a deprecated practise.
+
+4. I have wrapped lists which when they have 2 entries end up with an example structure like:
+        <ExampleResponse>
+            <numbers>
+                <number>4</number>
+                <number>3</number>
+            </numbers>
+        </ExampleResponse>
+   If I have no numbers, I get:
+        <ExampleResponse>
+            <numbers/>
+        </ExampleResponse>
+   but I would like:
+        <ExampleResponse>
+        </ExampleResponse>
+   how do I achieve that?
+
+   Answer - see the WrapperAbsentIfEmpty class and its usage from JaxbToJsonTest.  Note that
+   @XmlElementWrapper / @XmlElement are on the getter rather than the field (which should have the @XmlTransient
+   annotation).  JAXB then lets the getter and setter methods control the mapping with XML.  If the return from
+   a getter is null, no XML wrapper element will be output, but if the return is an empty list, the wrapper
+   element will be present.
 </pre>
 </body>
 </html>
