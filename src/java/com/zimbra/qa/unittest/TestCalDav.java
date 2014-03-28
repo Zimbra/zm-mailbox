@@ -17,6 +17,7 @@ package com.zimbra.qa.unittest;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
+import java.io.UnsupportedEncodingException;
 import java.util.GregorianCalendar;
 
 import javax.xml.bind.DatatypeConverter;
@@ -30,10 +31,15 @@ import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.methods.ByteArrayRequestEntity;
+import org.apache.commons.httpclient.methods.EntityEnclosingMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
 
 import com.google.common.base.Strings;
 import com.google.common.io.Closeables;
+import com.zimbra.client.ZFolder;
+import com.zimbra.client.ZFolder.View;
+import com.zimbra.client.ZMailbox;
+import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.calendar.ICalTimeZone;
 import com.zimbra.common.calendar.ParsedDateTime;
 import com.zimbra.common.calendar.WellKnownTimeZones;
@@ -52,6 +58,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.dav.resource.UrlNamespace;
+import com.zimbra.cs.dav.service.DavServlet;
 
 public class TestCalDav extends TestCase {
 
@@ -60,6 +67,16 @@ public class TestCalDav extends TestCase {
     private static String DAV1 = "dav1";
     private static String DAV2 = "dav2";
     private static String DAV3 = "dav3";
+
+    public static class MkColMethod extends EntityEnclosingMethod {
+        @Override
+        public String getName() {
+            return "MKCOL";
+        }
+        public  MkColMethod(String uri) {
+            super(uri);
+        }
+    }
 
     public static ParsedDateTime parsedDateTime(int year, int month, int day, int hour, int min,
             ICalTimeZone icalTimeZone) {
@@ -157,9 +174,7 @@ public class TestCalDav extends TestCase {
         String url = getSchedulingOutboxUrl(dav1, dav1);
         HttpClient client = new HttpClient();
         PostMethod method = new PostMethod(url);
-        String basicAuthEncoding = DatatypeConverter.printBase64Binary(
-                String.format("%s:%s", dav1.getName(), "test123").getBytes("UTF-8"));
-        method.addRequestHeader("Authorization", "Basic " + basicAuthEncoding);
+        addBasicAuthHeaderForUser(method, dav1);
         method.addRequestHeader("Content-Type", "text/calendar");
         method.addRequestHeader("Originator", "mailto:" + dav1.getName());
         method.addRequestHeader("Recipient", "mailto:" + dav2.getName());
@@ -178,9 +193,7 @@ public class TestCalDav extends TestCase {
         String url = getSchedulingOutboxUrl(dav2, dav2);
         HttpClient client = new HttpClient();
         PostMethod method = new PostMethod(url);
-        String basicAuthEncoding = DatatypeConverter.printBase64Binary(
-                String.format("%s:%s", dav2.getName(), "test123").getBytes("UTF-8"));
-        method.addRequestHeader("Authorization", "Basic " + basicAuthEncoding);
+        addBasicAuthHeaderForUser(method, dav2);
         method.addRequestHeader("Content-Type", "text/calendar");
         method.addRequestHeader("Originator", "mailto:" + dav2.getName());
         method.addRequestHeader("Recipient", "mailto:" + dav3.getName());
@@ -191,12 +204,68 @@ public class TestCalDav extends TestCase {
         executeHttpMethod(client, method, HttpStatus.SC_BAD_REQUEST);
     }
 
-    public String getSchedulingOutboxUrl(Account auth, Account target) throws ServiceException {
+    public static void addBasicAuthHeaderForUser(HttpMethod method, Account acct) throws UnsupportedEncodingException {
+        String basicAuthEncoding = DatatypeConverter.printBase64Binary(
+                String.format("%s:%s", acct.getName(), "test123").getBytes("UTF-8"));
+        method.addRequestHeader("Authorization", "Basic " + basicAuthEncoding);
+    }
+
+    public static StringBuilder getLocalServerRoot() throws ServiceException {
         Server localServer = Provisioning.getInstance().getLocalServer();
         StringBuilder sb = new StringBuilder();
         sb.append("http://localhost:").append(localServer.getIntAttr(Provisioning.A_zimbraMailPort, 0));
+        return sb;
+    }
+
+    public static String getSchedulingOutboxUrl(Account auth, Account target) throws ServiceException {
+        StringBuilder sb = getLocalServerRoot();
         sb.append(UrlNamespace.getSchedulingOutboxUrl(auth.getName(), target.getName()));
         return sb.toString();
+    }
+
+    public void testSimpleMkcol() throws Exception {
+        Account dav1 = TestUtil.createAccount(DAV1);
+        StringBuilder url = getLocalServerRoot();
+        url.append(DavServlet.DAV_PATH).append("/").append(dav1.getName()).append("/simpleMkcol/");
+        MkColMethod method = new MkColMethod(url.toString());
+        addBasicAuthHeaderForUser(method, dav1);
+        HttpClient client = new HttpClient();
+        executeHttpMethod(client, method, HttpStatus.SC_CREATED);
+    }
+
+    public void testMkcol4addressBook() throws Exception {
+        String xml = "<D:mkcol xmlns:D=\"DAV:\" xmlns:C=\"urn:ietf:params:xml:ns:carddav\">" +
+                "     <D:set>" +
+                "       <D:prop>" +
+                "         <D:resourcetype>" +
+                "           <D:collection/>" +
+                "           <C:addressbook/>" +
+                "         </D:resourcetype>" +
+                "         <D:displayname>OtherContacts</D:displayname>" +
+                "         <C:addressbook-description xml:lang=\"en\">Extra Contacts</C:addressbook-description>" +
+                "       </D:prop>" +
+                "     </D:set>" +
+                "</D:mkcol>";
+        Account dav1 = TestUtil.createAccount(DAV1);
+        StringBuilder url = getLocalServerRoot();
+        url.append(DavServlet.DAV_PATH).append("/").append(dav1.getName()).append("/OtherContacts/");
+        MkColMethod method = new MkColMethod(url.toString());
+        addBasicAuthHeaderForUser(method, dav1);
+        HttpClient client = new HttpClient();
+        method.addRequestHeader("Content-Type", MimeConstants.CT_TEXT_XML);
+        method.setRequestEntity(new ByteArrayRequestEntity(xml.getBytes(), MimeConstants.CT_TEXT_XML));
+        executeHttpMethod(client, method, HttpStatus.SC_MULTI_STATUS);
+
+        ZMailbox.Options options = new ZMailbox.Options();
+        options.setAccount(dav1.getName());
+        options.setAccountBy(AccountBy.name);
+        options.setPassword(TestUtil.DEFAULT_PASSWORD);
+        options.setUri(TestUtil.getSoapUrl());
+        options.setNoSession(true);
+        ZMailbox mbox = ZMailbox.getMailbox(options);
+        ZFolder folder = mbox.getFolderByPath("/OtherContacts");
+        assertEquals("OtherContacts", folder.getName());
+        assertEquals("OtherContacts default view", View.contact, folder.getDefaultView());
     }
 
     @Override

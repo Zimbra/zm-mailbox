@@ -149,6 +149,7 @@ public class DavElements {
     public static final String P_MOUNTPOINT = "mountpoint";
     public static final String P_MOUNTPOINT_TARGET_PRIVILEGE_SET = "mountpoint-target-privilege-set";
     public static final String P_MOUNTPOINT_TARGET_URL = "mountpoint-target-URL";
+    public static final String P_MKCOL = "mkcol";
     public static final String P_MKADDRESSBOOK = "mkaddressbook";
     public static final String P_MKCALENDAR = "mkcalendar";
     public static final String P_MULTISTATUS = "multistatus";
