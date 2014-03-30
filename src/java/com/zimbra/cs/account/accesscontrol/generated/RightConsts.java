@@ -24,8 +24,6 @@ package com.zimbra.cs.account.accesscontrol.generated;
 public class RightConsts {
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 dywang 20120522-1930 */
-
 
     /*
     ============
@@ -557,6 +555,11 @@ public class RightConsts {
     public static final String RT_adminConsoleSoftwareUpdatesRights = "adminConsoleSoftwareUpdatesRights";
 
     /**
+     * Admin Console Sub Domain Rights
+     */
+    public static final String RT_adminConsoleSubDomainRights = "adminConsoleSubDomainRights";
+
+    /**
      * Rights for viewing Voice/Chat services through Admin Console
      */
     public static final String RT_adminConsoleUCServiceRights = "adminConsoleUCServiceRights";
@@ -711,6 +714,36 @@ public class RightConsts {
      * count accounts in a domain
      */
     public static final String RT_countAccount = "countAccount";
+
+    /**
+     * count aliases in a domain
+     */
+    public static final String RT_countAlias = "countAlias";
+
+    /**
+     * count resources in a domain
+     */
+    public static final String RT_countCalendarResource = "countCalendarResource";
+
+    /**
+     * get a count of COS objects
+     */
+    public static final String RT_countCos = "countCos";
+
+    /**
+     * count DLs in a domain
+     */
+    public static final String RT_countDistributionList = "countDistributionList";
+
+    /**
+     * get a count of domain objects
+     */
+    public static final String RT_countDomain = "countDomain";
+
+    /**
+     * get a count of server objects
+     */
+    public static final String RT_countServer = "countServer";
 
     /**
      * create account in the domain

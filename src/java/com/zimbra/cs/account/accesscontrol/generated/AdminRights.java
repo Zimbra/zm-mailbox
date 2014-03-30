@@ -30,8 +30,6 @@ public class AdminRights {
     
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 dywang 20120522-1930 */
-
 
     public static AdminRight R_accessGAL;
     public static AdminRight R_addAccountAlias;
@@ -124,6 +122,7 @@ public class AdminRights {
     public static AdminRight R_adminConsoleServerStatusRights;
     public static AdminRight R_adminConsoleServerVolumesTabRights;
     public static AdminRight R_adminConsoleSoftwareUpdatesRights;
+    public static AdminRight R_adminConsoleSubDomainRights;
     public static AdminRight R_adminConsoleUCServiceRights;
     public static AdminRight R_adminConsoleZimletACLTabRights;
     public static AdminRight R_adminConsoleZimletRights;
@@ -155,6 +154,12 @@ public class AdminRights {
     public static AdminRight R_configureQuota;
     public static AdminRight R_configureWikiAccount;
     public static AdminRight R_countAccount;
+    public static AdminRight R_countAlias;
+    public static AdminRight R_countCalendarResource;
+    public static AdminRight R_countCos;
+    public static AdminRight R_countDistributionList;
+    public static AdminRight R_countDomain;
+    public static AdminRight R_countServer;
     public static AdminRight R_createAccount;
     public static AdminRight R_createAlias;
     public static AdminRight R_createCalendarResource;
@@ -549,6 +554,7 @@ public class AdminRights {
         R_adminConsoleServerStatusRights       = rm.getAdminRight(Right.RT_adminConsoleServerStatusRights);
         R_adminConsoleServerVolumesTabRights   = rm.getAdminRight(Right.RT_adminConsoleServerVolumesTabRights);
         R_adminConsoleSoftwareUpdatesRights    = rm.getAdminRight(Right.RT_adminConsoleSoftwareUpdatesRights);
+        R_adminConsoleSubDomainRights          = rm.getAdminRight(Right.RT_adminConsoleSubDomainRights);
         R_adminConsoleUCServiceRights          = rm.getAdminRight(Right.RT_adminConsoleUCServiceRights);
         R_adminConsoleZimletACLTabRights       = rm.getAdminRight(Right.RT_adminConsoleZimletACLTabRights);
         R_adminConsoleZimletRights             = rm.getAdminRight(Right.RT_adminConsoleZimletRights);
@@ -580,6 +586,12 @@ public class AdminRights {
         R_configureQuota                       = rm.getAdminRight(Right.RT_configureQuota);
         R_configureWikiAccount                 = rm.getAdminRight(Right.RT_configureWikiAccount);
         R_countAccount                         = rm.getAdminRight(Right.RT_countAccount);
+        R_countAlias                           = rm.getAdminRight(Right.RT_countAlias);
+        R_countCalendarResource                = rm.getAdminRight(Right.RT_countCalendarResource);
+        R_countCos                             = rm.getAdminRight(Right.RT_countCos);
+        R_countDistributionList                = rm.getAdminRight(Right.RT_countDistributionList);
+        R_countDomain                          = rm.getAdminRight(Right.RT_countDomain);
+        R_countServer                          = rm.getAdminRight(Right.RT_countServer);
         R_createAccount                        = rm.getAdminRight(Right.RT_createAccount);
         R_createAlias                          = rm.getAdminRight(Right.RT_createAlias);
         R_createCalendarResource               = rm.getAdminRight(Right.RT_createCalendarResource);

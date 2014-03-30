@@ -30,8 +30,6 @@ public class UserRights {
     
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 dywang 20120522-1930 */
-
 
     public static UserRight R_createDistList;
     public static UserRight R_invite;
