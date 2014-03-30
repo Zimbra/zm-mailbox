@@ -573,6 +573,9 @@
         <r n="accessGAL"/>
         <r n="checkDomainMXRecord"/>
         <r n="countAccount"/>
+        <r n="countAlias" />
+    	<r n="countCalendarResource" />
+    	<r n="countDistributionList" />
         <r n="createAccount"/>
         <r n="createAlias"/>
         <r n="createCalendarResource"/>
@@ -581,6 +584,10 @@
         <r n="getDomain"/>
         <r n="listDomain"/>
         <r n="setDomainAdminDomainAttrs"/>
+        <r n="listAccount"/>
+        <r n="listAlias"/>
+        <r n="listCalendarResource"/>
+        <r n="listDistributionList"/>      
       </rights>
     </right>
     <right name="domainAdminServerRights" type="combo">

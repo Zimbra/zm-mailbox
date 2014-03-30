@@ -398,6 +398,18 @@
   <desc>count accounts in a domain</desc>
 </right>
 
+<right name="countAlias" type="preset" targetType="domain">
+  <desc>count aliases in a domain</desc>
+</right>
+
+<right name="countDistributionList" type="preset" targetType="domain">
+  <desc>count DLs in a domain</desc>
+</right>
+
+<right name="countCalendarResource" type="preset" targetType="domain">
+  <desc>count resources in a domain</desc>
+</right>
+
 <right name="getDomainQuotaUsage" type="preset" targetType="domain">
   <desc>get domain quota usage</desc>
 </right>
@@ -689,6 +701,17 @@
                     global grant rights
 ========================================================
 -->
+<right name="countServer" type="preset" targetType="global">
+  <desc>get a count of server objects</desc>
+</right>
+
+<right name="countDomain" type="preset" targetType="global">
+  <desc>get a count of domain objects</desc>
+</right>
+
+<right name="countCos" type="preset" targetType="global">
+  <desc>get a count of COS objects</desc>
+</right>
 
 <right name="createCos" type="preset" targetType="global">
   <desc>create cos</desc>
