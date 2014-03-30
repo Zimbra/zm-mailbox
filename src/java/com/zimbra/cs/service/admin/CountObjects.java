@@ -14,6 +14,7 @@
  */
 package com.zimbra.cs.service.admin;
 
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -35,20 +36,23 @@ import com.zimbra.soap.admin.type.CountObjectsType;
 public class CountObjects extends AdminDocumentHandler {
 
     @Override
-	public Element handle(Element request, Map<String, Object> context)
-    throws ServiceException {
+    public Element handle(Element request, Map<String, Object> context)
+            throws ServiceException {
 
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
-
-        CountObjectsTypeWrapper typeWrapper = CountObjectsTypeWrapper.valueOf(
-                request.getAttribute(AdminConstants.A_TYPE));
+        String type = request.getAttribute(AdminConstants.A_TYPE);
+        CountObjectsTypeWrapper typeWrapper = CountObjectsTypeWrapper
+                .valueOf(type);
 
         UCService ucService = null;
-        Element eUCService = request.getOptionalElement(AdminConstants.E_UC_SERVICE);
+        Element eUCService = request
+                .getOptionalElement(AdminConstants.E_UC_SERVICE);
         if (eUCService != null) {
             if (!typeWrapper.allowsUCService()) {
-                throw ServiceException.INVALID_REQUEST("UCService cannot be specified for type: " + typeWrapper.name(), null);
+                throw ServiceException.INVALID_REQUEST(
+                        "UCService cannot be specified for type: "
+                                + typeWrapper.name(), null);
             }
 
             String key = eUCService.getAttribute(AdminConstants.A_BY);
@@ -60,31 +64,57 @@ public class CountObjects extends AdminDocumentHandler {
             }
         }
 
-        List<Pair<String,String>> domainList = new LinkedList<Pair<String,String>>();
+        List<Pair<String, String>> domainList = new LinkedList<Pair<String, String>>();
         for (Element elem : request.listElements(AdminConstants.E_DOMAIN)) {
-        	domainList.add(new Pair<String,String>(elem.getAttribute(AdminConstants.A_BY),elem.getText()));
+            domainList.add(new Pair<String, String>(elem
+                    .getAttribute(AdminConstants.A_BY), elem.getText()));
         }
         long count = 0;
-        if (!domainList.isEmpty()) {
-        	for(Pair<String,String> domainDef : domainList) {
-	            if (!typeWrapper.allowsDomain()) {
-	                throw ServiceException.INVALID_REQUEST("domain cannot be specified for type: " + typeWrapper.name(), null);
-	            }
+        if (domainList.isEmpty() && !zsc.getAuthToken().isAdmin()
+                && typeWrapper.allowsDomain()
+                && !typeWrapper.equals(CountObjectsTypeWrapper.domain)) {
+            // if a delegated admin is trying to count objects that exist within
+            // a domain, count only within this admin's domains
+            List<Domain> domains = prov.getAllDomains();
+            AdminAccessControl aac = AdminAccessControl
+                    .getAdminAccessControl(zsc);
+            for (Iterator<Domain> it = domains.iterator(); it.hasNext();) {
+                Domain domain = it.next();
+                if (aac.hasRight(domain, typeWrapper.getRight())) {
+                    count += prov.countObjects(typeWrapper.getType(), domain,
+                            ucService);
+                }
+            }
+        } else if (!domainList.isEmpty() && typeWrapper.allowsDomain()) {
+            // count objects within specified domains
+            for (Pair<String, String> domainDef : domainList) {
+                if (!typeWrapper.allowsDomain()) {
+                    throw ServiceException.INVALID_REQUEST(
+                            "domain cannot be specified for type: "
+                                    + typeWrapper.name(), null);
+                }
 
-	            Domain domain = prov.get(Key.DomainBy.fromString(domainDef.getFirst()), domainDef.getSecond());
-	            if (domain == null) {
-	                throw AccountServiceException.NO_SUCH_DOMAIN(domainDef.getSecond());
-	            }
-	            checkDomainRight(zsc, domain, typeWrapper.getRight());
-	            count += prov.countObjects(typeWrapper.getType(), domain, ucService);
-        	}
+                Domain domain = prov.get(
+                        Key.DomainBy.fromString(domainDef.getFirst()),
+                        domainDef.getSecond());
+                if (domain == null) {
+                    throw AccountServiceException.NO_SUCH_DOMAIN(domainDef
+                            .getSecond());
+                }
+                checkDomainRight(zsc, domain, typeWrapper.getRight());
+                count += prov.countObjects(typeWrapper.getType(), domain,
+                        ucService);
+            }
         } else {
-        	this.checkRight(zsc, context, null, typeWrapper.getRight());
-        	count += prov.countObjects(typeWrapper.getType(), null, ucService);
+            // count objects globally
+            this.checkRight(zsc, context, null, typeWrapper.getRight());
+            count += prov.countObjects(typeWrapper.getType(), null, ucService);
         }
 
-        Element response = zsc.createElement(AdminConstants.COUNT_OBJECTS_RESPONSE);
+        Element response = zsc
+                .createElement(AdminConstants.COUNT_OBJECTS_RESPONSE);
         response.addAttribute(AdminConstants.A_NUM, count);
+        response.addAttribute(AdminConstants.A_TYPE, type);
         return response;
     }
 
@@ -100,46 +130,48 @@ public class CountObjects extends AdminDocumentHandler {
     }
 
     private enum CountObjectsTypeWrapper {
-        userAccount(CountObjectsType.userAccount, Admin.R_countAccount),
-        account(CountObjectsType.account,Admin.R_countAccount),
-        alias(CountObjectsType.alias, Admin.R_countAlias),
-        dl(CountObjectsType.dl, Admin.R_countDistributionList),
-        domain(CountObjectsType.domain, Admin.R_countDomain),
-        cos(CountObjectsType.cos, Admin.R_countCos),
-        server(CountObjectsType.server, Admin.R_countServer),
-        calresource(CountObjectsType.calresource, Admin.R_countCalendarResource),
+        userAccount(CountObjectsType.userAccount, Admin.R_countAccount), account(
+                CountObjectsType.account, Admin.R_countAccount), alias(
+                CountObjectsType.alias, Admin.R_countAlias), dl(
+                CountObjectsType.dl, Admin.R_countDistributionList), domain(
+                CountObjectsType.domain, Admin.R_countDomain), cos(
+                CountObjectsType.cos, Admin.R_countCos), server(
+                CountObjectsType.server, Admin.R_countServer), calresource(
+                CountObjectsType.calresource, Admin.R_countCalendarResource),
 
         // UC service objects
-        accountOnUCService(CountObjectsType.accountOnUCService, Admin.R_countAccount),
-        cosOnUCService(CountObjectsType.cosOnUCService, Admin.R_countCos),
-        domainOnUCService(CountObjectsType.domainOnUCService, Admin.R_countDomain),
+        accountOnUCService(CountObjectsType.accountOnUCService,
+                Admin.R_countAccount), cosOnUCService(
+                CountObjectsType.cosOnUCService, Admin.R_countCos), domainOnUCService(
+                CountObjectsType.domainOnUCService, Admin.R_countDomain),
 
         // for license counting
-        internalUserAccount(CountObjectsType.internalUserAccount, Admin.R_countAccount),
-        internalArchivingAccount(CountObjectsType.internalArchivingAccount, Admin.R_countAccount);
+        internalUserAccount(CountObjectsType.internalUserAccount,
+                Admin.R_countAccount), internalArchivingAccount(
+                CountObjectsType.internalArchivingAccount, Admin.R_countAccount);
 
-    	private CountObjectsType type;
-    	private AdminRight right;
+        private CountObjectsType type;
+        private AdminRight right;
 
-    	public CountObjectsType getType () {
-    		return type;
-    	}
+        public CountObjectsType getType() {
+            return type;
+        }
 
-    	public AdminRight getRight() {
-    		return right;
-    	}
+        public AdminRight getRight() {
+            return right;
+        }
 
-    	public boolean allowsDomain () {
-    		return type.allowsDomain();
-    	}
+        public boolean allowsDomain() {
+            return type.allowsDomain();
+        }
 
-    	public boolean allowsUCService() {
+        public boolean allowsUCService() {
             return type.allowsUCService();
         }
 
-    	CountObjectsTypeWrapper(CountObjectsType type, AdminRight right) {
-    		this.type = type;
+        CountObjectsTypeWrapper(CountObjectsType type, AdminRight right) {
+            this.type = type;
             this.right = right;
-    	}
+        }
     }
 }
