@@ -18,6 +18,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -42,6 +43,7 @@ import com.zimbra.common.zmime.ZMimeMessage;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.util.SpamHandler;
@@ -98,6 +100,11 @@ public class TestSpam extends TestCase {
 
     public void testSpamHandler()
     throws Exception {
+        //check if AS is installed
+        List<String> zimbraServiceInstalled = Arrays.asList(Provisioning.getInstance().getLocalServer().getServiceInstalled());
+        if(zimbraServiceInstalled == null || zimbraServiceInstalled.isEmpty() || !zimbraServiceInstalled.contains("antispam")) {
+            return;
+        }
         Config config = Provisioning.getInstance().getConfig();
         config.setSpamIsSpamAccount(TestUtil.getAddress(SPAM_NAME));
         config.setSpamIsNotSpamAccount(TestUtil.getAddress(HAM_NAME));
