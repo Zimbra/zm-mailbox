@@ -2328,7 +2328,7 @@ e.g.
                        cosOnUCService |
                        domainOnUCService
 
-<CountObjectsResponse num="{result}">
+<CountObjectsResponse num="{result}" type="{count-objects-type}">
 </CountObjectsResponse>
 
 Note: For account/alias/dl, if a <domain> is specified, only entries on the 

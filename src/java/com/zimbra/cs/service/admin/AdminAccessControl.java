@@ -99,7 +99,9 @@ public abstract class AdminAccessControl {
         return newAdminAccessControl(zsc, authToken, authedAcct);
     }
 
-    /**
+    public abstract boolean hasRight(Entry target, Object needed) throws ServiceException;
+
+	/**
      * instantiate an AdminAccessControl
      *
      * for non-SOAP callsites
@@ -415,6 +417,11 @@ public abstract class AdminAccessControl {
         }
 
         @Override
+        public boolean hasRight(Entry target, Object needed) throws ServiceException {
+            return false;
+        }
+
+        @Override
         public void checkRight(Entry target, Object needed) throws ServiceException {
             // do nothing
         }
@@ -624,6 +631,12 @@ public abstract class AdminAccessControl {
         }
 
         @Override
+        public boolean hasRight(Entry target, Object needed)
+                throws ServiceException {
+            return doCheckRight();
+        }
+
+        @Override
         public void checkRight(Entry target, Object needed) throws ServiceException {
             throwIfNotAllowed();
         }
@@ -794,7 +807,15 @@ public abstract class AdminAccessControl {
             }
             if (!doCheckRight(target, needed)) {
                 throw ServiceException.PERM_DENIED(printNeededRight(target, needed));
+            }
         }
+
+        @Override
+        public boolean hasRight(Entry target, Object needed) throws ServiceException {
+            if (target == null) {
+                target = Provisioning.getInstance().getGlobalGrant();
+            }
+            return doCheckRight(target, needed);
         }
 
         @Override
