@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.zimbra.common.util.StringUtil;
 import org.json.JSONException;
 
 import com.zimbra.client.event.ZModifyContactEvent;
@@ -239,8 +240,23 @@ public class ZContact implements ZItem, ToZJSONObject {
 
     public boolean getIsGroup() { return isGroup(); }
 
+    @Deprecated
     public List<ZEmailAddress> getGroupMembers() throws ServiceException {
         return ZEmailAddress.parseAddresses(getAttrs().get("dlist"), ZEmailAddress.EMAIL_TYPE_TO);
+    }
+
+    /**
+     * @return first email from email/2/3 that is set, or an empty string
+     */
+    public String getDisplayEmail() {
+        if (!StringUtil.isNullOrEmpty(getAttrs().get("email")))
+            return getAttrs().get("email");
+        else if (!StringUtil.isNullOrEmpty(getAttrs().get("email2")))
+            return getAttrs().get("email2");
+        else if (!StringUtil.isNullOrEmpty(getAttrs().get("email3")))
+            return getAttrs().get("email3");
+        else
+            return "";
     }
 
     @Override
