@@ -31,6 +31,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.easymock.EasyMock;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.zimbra.common.jetty.JettyMonitor;
@@ -124,6 +125,7 @@ public class ContextPathBasedThreadPoolBalancerFilterTest {
     }
 
 
+    @Ignore("Does not run reliably due to non-deterministic Jetty thead pool internals")
     @Test
     public void nosuspend() throws Exception {
         final String rules = "/app1:min=1";
@@ -193,6 +195,7 @@ public class ContextPathBasedThreadPoolBalancerFilterTest {
         EasyMock.verify(req2, res2);
     }
 
+    @Ignore("Does not run reliably due to non-deterministic Jetty thead pool internals")
     @Test
     public void suspendToEnforceMin() throws Exception {
         final String rules = "/app1:min=1";
