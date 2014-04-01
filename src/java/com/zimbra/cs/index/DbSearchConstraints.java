@@ -19,6 +19,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -33,6 +34,7 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.Sets;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ListUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
@@ -103,6 +105,16 @@ public interface DbSearchConstraints extends Cloneable {
     void setTypes(Set<MailItem.Type> types);
 
     /**
+     * Optimize the constraint. For now, this factors out common constraints from OR'd leaf nodes
+     */
+    DbSearchConstraints optimize();
+
+    /**
+     * Returns a boolean signifying whether this node will actually result in a nonempty SQL clause.
+     * This can happen after optimize()
+     */
+    boolean isEmpty();
+    /**
      * Clone is critical for things to work correctly (exploding constraints into multiple trees if the query goes to
      * many target servers).
      */
@@ -125,6 +137,37 @@ public interface DbSearchConstraints extends Cloneable {
     Leaf toLeaf();
 
     public static final class Leaf implements DbSearchConstraints, Cloneable {
+
+        @Override
+        public boolean isEmpty() {
+            //Check all the attributes that get encoded to SQL.
+            //Remote constraints do not appear here
+            if (tags.isEmpty() &&
+            excludeTags.isEmpty() &&
+            folders.isEmpty() &&
+            excludeFolders.isEmpty() &&
+            types.isEmpty() &&
+            //a leaf can only be empty if types have been factored out to another branch
+            typesFactoredOut &&
+            convId == 0 &&
+            prohibitedConvIds.isEmpty() &&
+            itemIds.isEmpty() &&
+            prohibitedItemIds.isEmpty() &&
+            hasIndexId == null &&
+            excludeHasRecipients == false &&
+            ranges.isEmpty() &&
+            cursorRange == null) {
+                return true;
+            } else {
+                return false;
+            }
+
+
+        }
+        @Override
+        public DbSearchConstraints.Leaf optimize() {
+            return this;
+        }
 
         @Override
         public List<DbSearchConstraints> getChildren() {
@@ -210,6 +253,8 @@ public interface DbSearchConstraints extends Cloneable {
                 }
         );
         public CursorRange cursorRange; // optional
+
+        public boolean typesFactoredOut = false;
         public boolean excludeHasRecipients = false;
 
         private Set<MailItem.Type> calcTypes() {
@@ -886,8 +931,27 @@ public interface DbSearchConstraints extends Cloneable {
         }
     }
 
+
     static final class Intersection implements DbSearchConstraints {
         private List<DbSearchConstraints> children = new ArrayList<DbSearchConstraints>();
+
+        @Override
+        public boolean isEmpty() {
+            for (DbSearchConstraints child: getChildren()) {
+                if (!child.isEmpty()) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        @Override
+        public DbSearchConstraints.Intersection optimize() {
+            for (int i = 0; i < children.size(); i++) {
+                children.set(i, children.get(i).optimize());
+            }
+            return this;
+        }
 
         @Override
         public List<DbSearchConstraints> getChildren() {
@@ -1026,6 +1090,127 @@ public interface DbSearchConstraints extends Cloneable {
 
     static final class Union implements DbSearchConstraints {
         private List<DbSearchConstraints> children = new ArrayList<DbSearchConstraints>();
+
+        @Override
+        public boolean isEmpty() {
+            for (DbSearchConstraints child: getChildren()) {
+                if (!child.isEmpty()) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        /** Bug: 79244
+         * This method iterates over the children of an OR node and combines leaves that have only folder constraints
+         * into a single node. This improves the resulting SQL from (folder_id = ?) OR (folder_id = ?) OR ...
+         * to (folder_id IN (?, ?, ?...), which is more efficient when there are many folder constraints.
+         * @return
+         */
+        private DbSearchConstraints combineFolderConstraints() {
+            List<DbSearchConstraints.Leaf> onlyFolderConstraints = new ArrayList<DbSearchConstraints.Leaf>();
+            List<DbSearchConstraints.Leaf> otherConstraints      = new ArrayList<DbSearchConstraints.Leaf>();
+            for (DbSearchConstraints child: getChildren()) {
+                //check that we are dealing with a node that has only leaf children
+                if( !(child instanceof DbSearchConstraints.Leaf)) {
+                    return this;
+                }
+                // if the leaf has ONLY a folder constraint,
+                // add it to the array
+                DbSearchConstraints.Leaf leaf = child.toLeaf();
+                if (!leaf.folders.isEmpty() &&
+                leaf.excludeFolders.isEmpty() &&
+                leaf.tags.isEmpty() &&
+                leaf.excludeTags.isEmpty() &&
+                leaf.types.isEmpty() &&
+                leaf.typesFactoredOut &&
+                leaf.convId == 0 &&
+                leaf.prohibitedConvIds.isEmpty() &&
+                leaf.itemIds.isEmpty() &&
+                leaf.prohibitedItemIds.isEmpty() &&
+                leaf.hasIndexId == null &&
+                leaf.excludeHasRecipients == false &&
+                leaf.ranges.isEmpty() &&
+                leaf.cursorRange == null) {
+                    onlyFolderConstraints.add(leaf);
+                } else {
+                    otherConstraints.add(leaf);
+                }
+            }
+            //create a new leaf consolidating all the folder constraints
+            DbSearchConstraints.Leaf folderLeaf = new DbSearchConstraints.Leaf();
+            folderLeaf.typesFactoredOut = true;
+            for (DbSearchConstraints.Leaf leaf: onlyFolderConstraints) {
+                folderLeaf.folders.addAll(leaf.folders);
+            }
+            // if we consolidated ALL the child nodes, then we return the new leaf.
+            // otherwise, we have to OR it with what's left over
+            if (onlyFolderConstraints.size() == children.size()) {
+                return folderLeaf;
+            } else {
+                DbSearchConstraints.Union newOr = new DbSearchConstraints.Union();
+                newOr.children.add(folderLeaf);
+                for (DbSearchConstraints.Leaf otherLeaf: otherConstraints) {
+                    newOr.children.add(otherLeaf);
+                }
+                return newOr;
+            }
+        }
+
+        @Override
+        public DbSearchConstraints optimize() {
+            //Populate a map of type constraints mapped to an array of direct child nodes they appear in
+            //If the child is not a leaf, recursively optimize it
+            HashMap<Set<MailItem.Type>, ArrayList<DbSearchConstraints.Leaf>> byValue =
+                    new HashMap<Set<MailItem.Type>, ArrayList<DbSearchConstraints.Leaf>>();
+            for (int i = 0; i < children.size(); i++ ) {
+                DbSearchConstraints child = children.get(i);
+                if (child instanceof DbSearchConstraints.Leaf) {
+                    DbSearchConstraints.Leaf leaf = child.toLeaf();
+                    Set<MailItem.Type> types = leaf.types;
+                    if (!ListUtil.isEmpty(types)) {
+                        if (!byValue.containsKey(types)) {
+                            ArrayList<DbSearchConstraints.Leaf> newArray = new ArrayList<DbSearchConstraints.Leaf>();
+                            byValue.put(types,newArray);
+                        }
+                        byValue.get(types).add(leaf);
+                        }
+                    } else {
+                        children.set(i,child.optimize());
+                    }
+                }
+            //If there are types that appear in more than two leaves on the same level,
+            //factor them out into their own node with an AND
+            DbSearchConstraints.Intersection newAnd = new DbSearchConstraints.Intersection();
+            boolean optimized = false;
+            for (Set<MailItem.Type> types: byValue.keySet()) {
+                ArrayList<DbSearchConstraints.Leaf> nodes = byValue.get(types);
+                if (nodes.size() > 2) {
+                    optimized = true;
+                    DbSearchConstraints.Union newOr = new DbSearchConstraints.Union();
+                    for (DbSearchConstraints.Leaf leaf: nodes) {
+                        DbSearchConstraints.Leaf cloned = leaf.clone();
+                        cloned.types.clear();
+                        cloned.typesFactoredOut = true;
+                        newOr.children.add(cloned);
+                        children.remove(leaf);
+                    }
+                    newAnd.children.add(newOr.combineFolderConstraints());
+
+                    DbSearchConstraints.Leaf factoredLeaf = new DbSearchConstraints.Leaf();
+                    factoredLeaf.setTypes(types);
+                    newAnd.children.add(0, factoredLeaf); //need to add on the left so that types get encoded first
+                }
+                children.add(newAnd);
+            }
+            if (!optimized) {
+                return this;
+            } else if (children.size() == 1) {
+                return children.get(0);
+            } else {
+                return this;
+            }
+        }
 
         @Override
         public List<DbSearchConstraints> getChildren() {
