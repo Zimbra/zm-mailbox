@@ -250,3 +250,16 @@ to limit this list to only the users who are actually sharing items with
 the user, we could publish every user's complete set of grantees to LDAP
 with no reference to the shared objects; this would reintroduce the LDAP
 write throughput issue, however.
+
+RESOLVING ADMIN RIGHTS
+======================
+Admin users may have multiple grants on multiple targets making it hard to understand the resulting permissions. 
+To an administrator who is configuring permissions for delegated admin users it is not always obvious whether a 
+particular delegated admin user has a right to perform a  specific ation on a specific target. This is how the 
+logic of checking permissions works on the server:
+
+Step 1 ($currentTarget). Is there a negative grant on $currentTarget
+                               /               \
+                           Yes=deny           No = Step 2 ($currentTarget). Is there a positive grant on $currentTarget?
+                                                               /            \
+                                                          Yes = allow      No = Step1($currentTarget.parent)
