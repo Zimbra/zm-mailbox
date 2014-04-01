@@ -12097,6 +12097,16 @@ public class ZAttrProvisioning {
     public static final String A_zimbraReverseProxyUpstreamConnectTimeout = "zimbraReverseProxyUpstreamConnectTimeout";
 
     /**
+     * The servers to be included in the &quot;ews&quot; block in the nginx
+     * web proxy config file. The servers configured here will only affect
+     * the proxy of pre-login requests.
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1595)
+    public static final String A_zimbraReverseProxyUpstreamEwsServers = "zimbraReverseProxyUpstreamEwsServers";
+
+    /**
      * The read timeout for long polling support by proxy, e.g. ActiveSync
      * for mobile devices. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
