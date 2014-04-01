@@ -13563,6 +13563,88 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Maximum total size of a mail message that can be synced to device
+     * without truncation. It cannot be larger than zimbraMTAMaxMessageSize.
+     * 0 means zimbraMTAMaxMessageSize or INTEGER_MAX, whichever is smaller
+     *
+     * @return zimbraMobileMaxMessageSize, or 10240000 if unset
+     *
+     * @since ZCS 8.0.8
+     */
+    @ZAttr(id=1596)
+    public int getMobileMaxMessageSize() {
+        return getIntAttr(Provisioning.A_zimbraMobileMaxMessageSize, 10240000);
+    }
+
+    /**
+     * Maximum total size of a mail message that can be synced to device
+     * without truncation. It cannot be larger than zimbraMTAMaxMessageSize.
+     * 0 means zimbraMTAMaxMessageSize or INTEGER_MAX, whichever is smaller
+     *
+     * @param zimbraMobileMaxMessageSize new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.8
+     */
+    @ZAttr(id=1596)
+    public void setMobileMaxMessageSize(int zimbraMobileMaxMessageSize) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileMaxMessageSize, Integer.toString(zimbraMobileMaxMessageSize));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum total size of a mail message that can be synced to device
+     * without truncation. It cannot be larger than zimbraMTAMaxMessageSize.
+     * 0 means zimbraMTAMaxMessageSize or INTEGER_MAX, whichever is smaller
+     *
+     * @param zimbraMobileMaxMessageSize new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.8
+     */
+    @ZAttr(id=1596)
+    public Map<String,Object> setMobileMaxMessageSize(int zimbraMobileMaxMessageSize, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileMaxMessageSize, Integer.toString(zimbraMobileMaxMessageSize));
+        return attrs;
+    }
+
+    /**
+     * Maximum total size of a mail message that can be synced to device
+     * without truncation. It cannot be larger than zimbraMTAMaxMessageSize.
+     * 0 means zimbraMTAMaxMessageSize or INTEGER_MAX, whichever is smaller
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.8
+     */
+    @ZAttr(id=1596)
+    public void unsetMobileMaxMessageSize() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileMaxMessageSize, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum total size of a mail message that can be synced to device
+     * without truncation. It cannot be larger than zimbraMTAMaxMessageSize.
+     * 0 means zimbraMTAMaxMessageSize or INTEGER_MAX, whichever is smaller
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.8
+     */
+    @ZAttr(id=1596)
+    public Map<String,Object> unsetMobileMaxMessageSize(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileMaxMessageSize, "");
+        return attrs;
+    }
+
+    /**
      * mta anti spam lock method.
      *
      * @return zimbraMtaAntiSpamLockMethod, or "flock" if unset
