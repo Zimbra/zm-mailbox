@@ -7857,6 +7857,16 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMobileItemsToTrackPerFolderMaxSize = "zimbraMobileItemsToTrackPerFolderMaxSize";
 
     /**
+     * Maximum total size of a mail message that can be synced to device
+     * without truncation. It cannot be larger than zimbraMTAMaxMessageSize.
+     * 0 means zimbraMTAMaxMessageSize or INTEGER_MAX, whichever is smaller
+     *
+     * @since ZCS 8.0.8
+     */
+    @ZAttr(id=1596)
+    public static final String A_zimbraMobileMaxMessageSize = "zimbraMobileMaxMessageSize";
+
+    /**
      * whether or not to enable truncating on client metadata size, if
      * enabled server will only track recent items on client device instead
      * of all
