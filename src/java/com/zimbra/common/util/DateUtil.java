@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -33,6 +33,7 @@ import com.zimbra.common.service.ServiceException;
 public final class DateUtil {
 
     public static final String ZIMBRA_LDAP_GENERALIZED_TIME_FORMAT = "yyyyMMddHHmmss'Z'";
+    public static final String ZIMBRA_LDAP_GENERALIZED_TIME_FORMAT_WITH_MS = "yyyyMMddHHmmss.SSS'Z'";
 
     private DateUtil() {
     }
@@ -42,6 +43,17 @@ public final class DateUtil {
      */
     public static String toGeneralizedTime(Date date) {
         SimpleDateFormat fmt = new SimpleDateFormat(ZIMBRA_LDAP_GENERALIZED_TIME_FORMAT);
+        TimeZone tz = fmt.getCalendar().getTimeZone();
+        Date gmtDate;
+        if (tz.inDaylightTime(date))
+            gmtDate = new Date(date.getTime() - (tz.getRawOffset() + tz.getDSTSavings()));
+        else
+            gmtDate = new Date(date.getTime() - tz.getRawOffset());
+        return fmt.format(gmtDate);
+    }
+
+    public static String toGeneralizedTimeWithMs(Date date) {
+        SimpleDateFormat fmt = new SimpleDateFormat(ZIMBRA_LDAP_GENERALIZED_TIME_FORMAT_WITH_MS);
         TimeZone tz = fmt.getCalendar().getTimeZone();
         Date gmtDate;
         if (tz.inDaylightTime(date))
@@ -597,7 +609,7 @@ public final class DateUtil {
         DateFormat formatter = new SimpleDateFormat("MM/dd/yyyy");
         Date formatDate;
         try {
-            formatDate = (Date)formatter.parse(date);
+            formatDate = formatter.parse(date);
             return formatDate.getTime()/Constants.MILLIS_PER_SECOND;
         } catch (ParseException e) {
             return -1;
