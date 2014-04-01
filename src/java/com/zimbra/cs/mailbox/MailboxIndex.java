@@ -38,6 +38,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Objects;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Multimaps;
 import com.google.common.collect.SetMultimap;
 import com.google.common.io.Closeables;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -103,7 +104,7 @@ public final class MailboxIndex {
     private volatile ReIndexTask reIndex;
     // current compact-indexing operation for this mailbox, or NULL if a compact-index is not in progress.
     private volatile CompactIndexTask compactIndex;
-    private SetMultimap<MailItem.Type, Integer> deferredIds; // guarded by IndexHelper
+    private volatile SetMultimap<MailItem.Type, Integer> deferredIds; // guarded by IndexHelper
 
     MailboxIndex(Mailbox mbox) {
         mailbox = mbox;
@@ -1154,16 +1155,16 @@ public final class MailboxIndex {
      * @param types item types, empty set means all types
      * @return index deferred count
      */
-    private synchronized int getDeferredCount(Set<MailItem.Type> types) {
+    private int getDeferredCount(Set<MailItem.Type> types) {
         SetMultimap<MailItem.Type, Integer> ids;
         try {
-            ids = getDeferredIds();
+            ids = Multimaps.synchronizedSetMultimap(getDeferredIds());
         } catch (ServiceException e) {
             ZimbraLog.index.error("Failed to query deferred IDs", e);
             return 0;
         }
 
-        if (ids.isEmpty()) {
+        if (ids == null || ids.isEmpty()) {
             return 0;
         } else if (types.isEmpty()) {
             return ids.size();
@@ -1176,7 +1177,7 @@ public final class MailboxIndex {
         }
     }
 
-    private synchronized SetMultimap<MailItem.Type, Integer> getDeferredIds() throws ServiceException {
+    private SetMultimap<MailItem.Type, Integer> getDeferredIds() throws ServiceException {
         if (deferredIds == null) {
             DbConnection conn = DbPool.getConnection(mailbox);
             try {
@@ -1190,7 +1191,7 @@ public final class MailboxIndex {
 
     private synchronized Collection<Integer> getDeferredIds(Set<MailItem.Type> types) throws ServiceException {
         SetMultimap<MailItem.Type, Integer> ids = getDeferredIds();
-        if (ids.isEmpty()) {
+        if (ids == null || ids.isEmpty()) {
             return Collections.emptyList();
         } else if (types.isEmpty()) {
             return ImmutableSet.copyOf(ids.values());
