@@ -340,10 +340,11 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
     //Any token that is passed to a web client has to be registered in LDAP
     @Override
     public void register() throws AuthTokenException {
-    	Account acct;
 		try {
-			acct = Provisioning.getInstance().getAccountById(accountId);
-			acct.addAuthTokens(String.format("%d|%d", tokenID,this.expires));
+		    Account acct = Provisioning.getInstance().getAccountById(accountId);
+		    if(acct != null) {
+		        acct.addAuthTokens(String.format("%d|%d", tokenID,this.expires));
+		    }
 		} catch (ServiceException e) {
 			throw new AuthTokenException("unable to register auth token", e);
 		}
@@ -353,10 +354,11 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
     //remove the token from LDAP (token will be invalid for cookie-based auth after that
     @Override
     public void deRegister() throws AuthTokenException {
-    	Account acct;
 		try {
-			acct = Provisioning.getInstance().getAccountById(accountId);
-			acct.removeAuthTokens(String.format("%d|%d", tokenID,this.expires));
+		    Account acct = Provisioning.getInstance().getAccountById(accountId);
+		    if(acct != null) {
+		        acct.removeAuthTokens(String.format("%d|%d", tokenID,this.expires));
+		    }
 		} catch (ServiceException e) {
 			throw new AuthTokenException("unable to de-register auth token", e);
 		}
@@ -453,14 +455,16 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
 				return true;
 			}
 			Account acct = prov.getAccountById(accountId);
-			//a token may have been registered or de-registered from another server or another web app after this account was added to this app's cache
-			prov.reload(acct);
-	    	String []  tokens = acct.getAuthTokens();
-	    	for(String tk : tokens) {
-	    		if(tk.startsWith(tokenID.toString())) {
-	    			return true;
-	    		}
-	    	}
+			if(acct != null) {
+    			//a token may have been registered or de-registered from another server or another web app after this account was added to this app's cache
+    			prov.reload(acct);
+    	    	String []  tokens = acct.getAuthTokens();
+    	    	for(String tk : tokens) {
+    	    		if(tk.startsWith(tokenID.toString())) {
+    	    			return true;
+    	    		}
+    	    	}
+			}
 		} catch (ServiceException e) {
 			LOG.fatal("Unable to verify auth token registration in LDAP", e);
 		}
