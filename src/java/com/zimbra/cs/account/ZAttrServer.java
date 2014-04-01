@@ -32163,6 +32163,158 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * The servers to be included in the &quot;ews&quot; block in the nginx
+     * web proxy config file. The servers configured here will only affect
+     * the proxy of pre-login requests.
+     *
+     * @return zimbraReverseProxyUpstreamEwsServers, or empty array if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1595)
+    public String[] getReverseProxyUpstreamEwsServers() {
+        return getMultiAttr(Provisioning.A_zimbraReverseProxyUpstreamEwsServers);
+    }
+
+    /**
+     * The servers to be included in the &quot;ews&quot; block in the nginx
+     * web proxy config file. The servers configured here will only affect
+     * the proxy of pre-login requests.
+     *
+     * @param zimbraReverseProxyUpstreamEwsServers new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1595)
+    public void setReverseProxyUpstreamEwsServers(String[] zimbraReverseProxyUpstreamEwsServers) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyUpstreamEwsServers, zimbraReverseProxyUpstreamEwsServers);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The servers to be included in the &quot;ews&quot; block in the nginx
+     * web proxy config file. The servers configured here will only affect
+     * the proxy of pre-login requests.
+     *
+     * @param zimbraReverseProxyUpstreamEwsServers new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1595)
+    public Map<String,Object> setReverseProxyUpstreamEwsServers(String[] zimbraReverseProxyUpstreamEwsServers, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyUpstreamEwsServers, zimbraReverseProxyUpstreamEwsServers);
+        return attrs;
+    }
+
+    /**
+     * The servers to be included in the &quot;ews&quot; block in the nginx
+     * web proxy config file. The servers configured here will only affect
+     * the proxy of pre-login requests.
+     *
+     * @param zimbraReverseProxyUpstreamEwsServers new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1595)
+    public void addReverseProxyUpstreamEwsServers(String zimbraReverseProxyUpstreamEwsServers) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraReverseProxyUpstreamEwsServers, zimbraReverseProxyUpstreamEwsServers);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The servers to be included in the &quot;ews&quot; block in the nginx
+     * web proxy config file. The servers configured here will only affect
+     * the proxy of pre-login requests.
+     *
+     * @param zimbraReverseProxyUpstreamEwsServers new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1595)
+    public Map<String,Object> addReverseProxyUpstreamEwsServers(String zimbraReverseProxyUpstreamEwsServers, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraReverseProxyUpstreamEwsServers, zimbraReverseProxyUpstreamEwsServers);
+        return attrs;
+    }
+
+    /**
+     * The servers to be included in the &quot;ews&quot; block in the nginx
+     * web proxy config file. The servers configured here will only affect
+     * the proxy of pre-login requests.
+     *
+     * @param zimbraReverseProxyUpstreamEwsServers existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1595)
+    public void removeReverseProxyUpstreamEwsServers(String zimbraReverseProxyUpstreamEwsServers) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraReverseProxyUpstreamEwsServers, zimbraReverseProxyUpstreamEwsServers);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The servers to be included in the &quot;ews&quot; block in the nginx
+     * web proxy config file. The servers configured here will only affect
+     * the proxy of pre-login requests.
+     *
+     * @param zimbraReverseProxyUpstreamEwsServers existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1595)
+    public Map<String,Object> removeReverseProxyUpstreamEwsServers(String zimbraReverseProxyUpstreamEwsServers, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraReverseProxyUpstreamEwsServers, zimbraReverseProxyUpstreamEwsServers);
+        return attrs;
+    }
+
+    /**
+     * The servers to be included in the &quot;ews&quot; block in the nginx
+     * web proxy config file. The servers configured here will only affect
+     * the proxy of pre-login requests.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1595)
+    public void unsetReverseProxyUpstreamEwsServers() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyUpstreamEwsServers, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The servers to be included in the &quot;ews&quot; block in the nginx
+     * web proxy config file. The servers configured here will only affect
+     * the proxy of pre-login requests.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1595)
+    public Map<String,Object> unsetReverseProxyUpstreamEwsServers(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyUpstreamEwsServers, "");
+        return attrs;
+    }
+
+    /**
      * The read timeout for long polling support by proxy, e.g. ActiveSync
      * for mobile devices. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -

@@ -7993,4 +7993,8 @@ TODO: delete them permanently from here
   </desc>   
 </attr>
 
+<attr id="1595" name="zimbraReverseProxyUpstreamEwsServers" type="string" cardinality="multi" optionalIn="server,globalConfig" flags="serverInherited" since="8.5.0">
+  <desc>The servers to be included in the "ews" block in the nginx web proxy config file.
+  The servers configured here will only affect the proxy of pre-login requests.</desc>
+</attr>
 </attrs>
