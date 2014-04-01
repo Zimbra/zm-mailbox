@@ -857,7 +857,7 @@ public final class DbSearch {
 
     private boolean encode(String column, boolean bool, Object o, boolean and) {
         if (and) {sql.append(" AND "); }
-        sql.append(" AND ").append(column).append(bool ? " = ?" : " != ?");
+        sql.append(column).append(bool ? " = ?" : " != ?");
         params.add(o);
         return true;
     }
