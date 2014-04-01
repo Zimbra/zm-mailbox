@@ -115,7 +115,7 @@ public class ZimbraSuite extends TestSuite
         sClasses.add(TestCookieReuse.class);
         sClasses.add(TestCountObjects.class);
         sClasses.add(TestDomain.class);
-        sClasses.add(TestDLMembership.class);
+        //sClasses.add(TestDLMembership.class);
     }
 
     /**
