@@ -30,12 +30,14 @@ public final class MemcachedKeyPrefix {
     public static final String EFFECTIVE_FOLDER_ACL = "zmEffFolderACL" + DELIMITER;
 
     public static final String MBOX_FOLDERS_TAGS    = "zmFldrsTags" + DELIMITER;
-    
-    public static final String MBOX_MAILITEM       = "zmMailItem" + DELIMITER;
 
-    public static final String IMAP = "zmImap" + DELIMITER;
-    
-    public static final String WATCHED_ITEMS = "zmWatch" + DELIMITER;
+    public static final String MBOX_MAILITEM        = "zmMailItem" + DELIMITER;
+
+    public static final String IMAP                 = "zmImap" + DELIMITER;
+
+    public static final String WATCHED_ITEMS        = "zmWatch" + DELIMITER;
+
+    public static final String SYNC_STATE           = "zmSync" + DELIMITER;
 
     private MemcachedKeyPrefix() {
     }

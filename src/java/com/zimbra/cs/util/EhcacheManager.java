@@ -16,15 +16,14 @@ package com.zimbra.cs.util;
 
 import java.io.File;
 
-import com.zimbra.common.localconfig.LC;
-import com.zimbra.common.util.Constants;
-import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.memcached.MemcachedConnector;
-
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.config.CacheConfiguration;
 import net.sf.ehcache.config.Configuration;
 import net.sf.ehcache.config.DiskStoreConfiguration;
+
+import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.memcached.MemcachedConnector;
 
 /**
  * Ehcache configurator.
@@ -41,6 +40,7 @@ public final class EhcacheManager {
 
     public static final String IMAP_ACTIVE_SESSION_CACHE = "imap-active-session-cache";
     public static final String IMAP_INACTIVE_SESSION_CACHE = "imap-inactive-session-cache";
+    public static final String SYNC_STATE_ITEM_CACHE = "sync-state-item-cache";
 
     private EhcacheManager() {
         Configuration conf = new Configuration();
@@ -52,6 +52,7 @@ public final class EhcacheManager {
             ZimbraLog.imap.info("Using Memcached for inactive session cache");
         } else {
             conf.addCache(createImapInactiveSessionCache());
+            conf.addCache(createSyncStateItemCache());
         }
         conf.setUpdateCheck(false);
         CacheManager.create(conf);
@@ -81,6 +82,17 @@ public final class EhcacheManager {
         conf.setDiskPersistent(true);
         conf.setMaxElementsInMemory(1); // virtually disk cache only
         conf.setMaxElementsOnDisk(LC.imap_inactive_session_cache_size.intValue());
+        return conf;
+    }
+
+    private CacheConfiguration createSyncStateItemCache() {
+        CacheConfiguration conf = new CacheConfiguration();
+        conf.setName(SYNC_STATE_ITEM_CACHE);
+        conf.setOverflowToDisk(true);
+        conf.setDiskPersistent(true);
+        conf.setMaxEntriesLocalHeap(1); // virtually disk cache only
+        conf.setMaxElementsOnDisk(LC.zimbra_activesync_metadata_cache_max_size.intValue());
+        conf.setTimeToLiveSeconds(LC.zimbra_activesync_metadata_cache_expiration.intValue());
         return conf;
     }
 
