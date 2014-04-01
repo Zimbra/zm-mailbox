@@ -78,6 +78,7 @@ import com.zimbra.client.ZSearchParams;
 import com.zimbra.client.ZTag;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.Key.DistributionListBy;
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.lmtp.LmtpClient;
 import com.zimbra.common.localconfig.LC;
@@ -98,6 +99,7 @@ import com.zimbra.common.zmime.ZMimeMessage;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.DataSource;
+import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
@@ -636,6 +638,35 @@ extends Assert {
     }
 
     /**
+     * Creates a DL with a given address
+     */
+    public static DistributionList createDistributionList(String dlName)
+    throws ServiceException {
+        Provisioning prov = Provisioning.getInstance();
+        String address = getAddress(dlName);
+        Map<String, Object> attrs = new HashMap<String, Object>();
+        return prov.createDistributionList(address, attrs);
+    }
+
+    /**
+     * Deletes the specified DL.
+     */
+    public static void deleteDistributionList(String listName)
+    throws ServiceException {
+        Provisioning prov = Provisioning.getInstance();
+
+        // If this code is running on the server, call SoapProvisioning explicitly
+        // so that both the account and mailbox are deleted.
+        if (!(prov instanceof SoapProvisioning)) {
+            prov = newSoapProvisioning();
+        }
+        DistributionList dl = prov.get(DistributionListBy.name, getAddress(listName));
+        if (dl != null) {
+            prov.deleteDistributionList(dl.getId());
+        }
+    }
+
+    /**
      * Deletes the account for the given username.
      */
     public static void deleteAccount(String username)
@@ -705,7 +736,7 @@ extends Assert {
     throws ServiceException {
         return Provisioning.getInstance().getConfig().getAttr(attrName, "");
     }
-    
+
     public static void setConfigAttr(String attrName, String attrValue)
     throws ServiceException {
         Provisioning prov = Provisioning.getInstance();

@@ -1417,6 +1417,7 @@ being a no-op because all <dlm> addrs are already members.
 <RemoveDistributionListMemberRequest>
   <id>{value-of-zimbraId}</id>
   <dlm>{member}</dlm>+
+  [<account>{name|id}</account>+]
 </RemoveDistributionListMemberRequest>
 
 <RemoveDistributionListMemberResponse>
@@ -1426,6 +1427,10 @@ Access: domain admin sufficient
 
 Unlike add, remove of a non-existent member causes an exception and no
 modification to the list.
+
+when "account" element is used all aliases as well as main email address of the account will be removed from the DL. 
+Unlike when using "dlm" element, if none of the email addresses that belong to an account referenced in "account" element are 
+members of the DL, no exception is thrown.
 
 -----------------------------
 
