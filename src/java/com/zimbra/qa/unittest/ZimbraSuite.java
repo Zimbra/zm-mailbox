@@ -112,6 +112,7 @@ public class ZimbraSuite extends TestSuite
         sClasses.add(TestBlobDeduper.class);
         sClasses.add(TestDistListACL.class);
         sClasses.add(TestCountObjects.class);
+        sClasses.add(TestDomain.class);
     }
 
     /**
