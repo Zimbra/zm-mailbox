@@ -398,4 +398,5 @@ SECTION dnscache
 	VAR zimbraIPMode
 	VAR zimbraDNSUseTCP
 	VAR zimbraDNSUseUDP
+	VAR zimbraDNSTCPUpstream
 	RESTART dnscache
