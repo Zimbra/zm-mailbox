@@ -9629,6 +9629,145 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * For zimbra dnscache, whether or not to only use TCP when talking to
+     * the upstream Master DNS servers. Defaults to no
+     *
+     * <p>Valid values: [yes, no]
+     *
+     * @return zimbraDNSTCPUpstream, or ZAttrProvisioning.DNSTCPUpstream.no if unset and/or has invalid value
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1597)
+    public ZAttrProvisioning.DNSTCPUpstream getDNSTCPUpstream() {
+        try { String v = getAttr(Provisioning.A_zimbraDNSTCPUpstream); return v == null ? ZAttrProvisioning.DNSTCPUpstream.no : ZAttrProvisioning.DNSTCPUpstream.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.DNSTCPUpstream.no; }
+    }
+
+    /**
+     * For zimbra dnscache, whether or not to only use TCP when talking to
+     * the upstream Master DNS servers. Defaults to no
+     *
+     * <p>Valid values: [yes, no]
+     *
+     * @return zimbraDNSTCPUpstream, or "no" if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1597)
+    public String getDNSTCPUpstreamAsString() {
+        return getAttr(Provisioning.A_zimbraDNSTCPUpstream, "no");
+    }
+
+    /**
+     * For zimbra dnscache, whether or not to only use TCP when talking to
+     * the upstream Master DNS servers. Defaults to no
+     *
+     * <p>Valid values: [yes, no]
+     *
+     * @param zimbraDNSTCPUpstream new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1597)
+    public void setDNSTCPUpstream(ZAttrProvisioning.DNSTCPUpstream zimbraDNSTCPUpstream) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDNSTCPUpstream, zimbraDNSTCPUpstream.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * For zimbra dnscache, whether or not to only use TCP when talking to
+     * the upstream Master DNS servers. Defaults to no
+     *
+     * <p>Valid values: [yes, no]
+     *
+     * @param zimbraDNSTCPUpstream new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1597)
+    public Map<String,Object> setDNSTCPUpstream(ZAttrProvisioning.DNSTCPUpstream zimbraDNSTCPUpstream, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDNSTCPUpstream, zimbraDNSTCPUpstream.toString());
+        return attrs;
+    }
+
+    /**
+     * For zimbra dnscache, whether or not to only use TCP when talking to
+     * the upstream Master DNS servers. Defaults to no
+     *
+     * <p>Valid values: [yes, no]
+     *
+     * @param zimbraDNSTCPUpstream new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1597)
+    public void setDNSTCPUpstreamAsString(String zimbraDNSTCPUpstream) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDNSTCPUpstream, zimbraDNSTCPUpstream);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * For zimbra dnscache, whether or not to only use TCP when talking to
+     * the upstream Master DNS servers. Defaults to no
+     *
+     * <p>Valid values: [yes, no]
+     *
+     * @param zimbraDNSTCPUpstream new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1597)
+    public Map<String,Object> setDNSTCPUpstreamAsString(String zimbraDNSTCPUpstream, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDNSTCPUpstream, zimbraDNSTCPUpstream);
+        return attrs;
+    }
+
+    /**
+     * For zimbra dnscache, whether or not to only use TCP when talking to
+     * the upstream Master DNS servers. Defaults to no
+     *
+     * <p>Valid values: [yes, no]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1597)
+    public void unsetDNSTCPUpstream() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDNSTCPUpstream, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * For zimbra dnscache, whether or not to only use TCP when talking to
+     * the upstream Master DNS servers. Defaults to no
+     *
+     * <p>Valid values: [yes, no]
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1597)
+    public Map<String,Object> unsetDNSTCPUpstream(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDNSTCPUpstream, "");
+        return attrs;
+    }
+
+    /**
      * For zimbra dnscache, whether or not to use TCP. Defaults to yes
      *
      * <p>Valid values: [yes, no]

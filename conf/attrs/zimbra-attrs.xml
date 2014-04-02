@@ -8002,4 +8002,10 @@ TODO: delete them permanently from here
   <globalConfigValue>10240000</globalConfigValue>
   <desc>Maximum total size of a mail message that can be synced to device without truncation. It cannot be larger than zimbraMTAMaxMessageSize. 0 means zimbraMTAMaxMessageSize or INTEGER_MAX, whichever is smaller</desc>
 </attr>
+
+<attr id="1597" name="zimbraDNSTCPUpstream" type="enum" value="yes,no" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
+  <globalConfigValue>no</globalConfigValue>
+  <desc>For zimbra dnscache, whether or not to only use TCP when talking to the upstream Master DNS servers. Defaults to no</desc>
+</attr>
+
 </attrs>
