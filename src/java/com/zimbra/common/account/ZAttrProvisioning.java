@@ -298,6 +298,22 @@ public class ZAttrProvisioning {
         public boolean isREJECT() { return this == REJECT;}
     }
 
+    public static enum DNSTCPUpstream {
+        yes("yes"),
+        no("no");
+        private String mValue;
+        private DNSTCPUpstream(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static DNSTCPUpstream fromString(String s) throws ServiceException {
+            for (DNSTCPUpstream value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isYes() { return this == yes;}
+        public boolean isNo() { return this == no;}
+    }
+
     public static enum DNSUseTCP {
         yes("yes"),
         no("no");
@@ -4388,6 +4404,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1569)
     public static final String A_zimbraDNSMasterIP = "zimbraDNSMasterIP";
+
+    /**
+     * For zimbra dnscache, whether or not to only use TCP when talking to
+     * the upstream Master DNS servers. Defaults to no
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1597)
+    public static final String A_zimbraDNSTCPUpstream = "zimbraDNSTCPUpstream";
 
     /**
      * For zimbra dnscache, whether or not to use TCP. Defaults to yes
