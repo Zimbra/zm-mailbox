@@ -139,6 +139,21 @@ public abstract class ChangePasswordListener {
         if (ctxts.mExternalListener != null)
             ctxts.mExternalListener.postModify(acct, newPassword, ctxts.mExternalCtxt);
     }
+
+    public static void invokeOnException(Account acct, String newPassword,
+            ChangePasswordListenerContext ctxts, ServiceException exceptionThrown) {
+
+        // invoke internal listeners
+        for (Map.Entry<InternalChangePasswordListenerId, ChangePasswordListener> listener : mInternalListeners.entrySet()) {
+            InternalChangePasswordListenerId listenerEnum = listener.getKey();
+            ChangePasswordListener listenerInstance = listener.getValue();
+            Map<String, Object> context = ctxts.mInternalCtxts.get(listenerEnum);
+            listenerInstance.onException(acct, newPassword, context, exceptionThrown);
+        }
+
+        if (ctxts.mExternalListener != null)
+            ctxts.mExternalListener.onException(acct, newPassword, ctxts.mExternalCtxt, exceptionThrown);
+    }
     
     /**
      * Called before password(userPassword) and applicable(e.g. zimbraPasswordHistory, zimbraPasswordModifiedTime) 
@@ -164,7 +179,20 @@ public abstract class ChangePasswordListener {
      * @param context place to stash data between invocations of pre/postModify
      */
     public abstract void postModify(Account acct, String newPassword, Map context);
-            
+
+    /**
+     * called when modifyAttrs() throws ServiceException.
+     * After onException() get executed for all internal listeners, onException() for external listener is called.
+     * should not throw any exceptions for preventing to skip onException() for external listener.
+     * The exception instance which modifyAttrs() originally throws is rethrown after onException() gets executed.
+     *
+     * @param USER_ACCOUNT account object being modified
+     * @param newPassword Clear-text new password
+     * @param context place to stash data between invocations of pre/postModify
+     * @param ServiceException original exception thrown by modifyAttrs
+     */
+    public void onException(Account acct, String newPassword, Map context, ServiceException exceptionThrown) {}
+
     static class DummyChangePasswordListener extends ChangePasswordListener {
             
         public void preModify(Account acct, String newPassword, Map context, Map<String, Object> attrsToModify) throws ServiceException {

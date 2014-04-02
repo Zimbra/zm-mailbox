@@ -5587,8 +5587,13 @@ public class LdapProvisioning extends LdapProv {
         ChangePasswordListener.ChangePasswordListenerContext ctxts = new ChangePasswordListener.ChangePasswordListenerContext();
         ChangePasswordListener.invokePreModify(acct, newPassword, ctxts, attrs);
 
-        // modify the password
-        modifyAttrs(acct, attrs);
+        try{
+            // modify the password
+            modifyAttrs(acct, attrs);
+        } catch(ServiceException se){
+            ChangePasswordListener.invokeOnException(acct, newPassword, ctxts, se);
+            throw se;
+        }
 
         ChangePasswordListener.invokePostModify(acct, newPassword, ctxts);
     }
