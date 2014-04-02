@@ -3680,6 +3680,11 @@ public class Mailbox {
         return getModifiedItems(octxt, lastSync, type, null);
     }
 
+    public Pair<List<Integer>, TypedIdList> getModifiedItems(OperationContext octxt, int lastSync, MailItem.Type type,
+                    Set<Integer> folderIds) throws ServiceException {
+        return getModifiedItems(octxt, lastSync, 0, type, folderIds);
+    }
+
     /**
      * Returns all of the modified items since a given change number, newly added or modified
      * items within given folderIds will be returned as the First field of Pair.
@@ -3687,13 +3692,14 @@ public class Mailbox {
      * will be returned as "deleted" (second part of Pair) in order to handle item moves
      * @param octxt     The context for this request.
      * @param lastSync  We return items with change ID larger than this value.
+     * @param sinceDate We return items with date larger than this value.
      * @param type      The type of MailItems to return.
      * @param folderIds folders from which add/change items are returned
      * @return
      * @throws ServiceException
      */
-    public Pair<List<Integer>, TypedIdList> getModifiedItems(OperationContext octxt, int lastSync, MailItem.Type type,
-                    Set<Integer> folderIds) throws ServiceException {
+    public Pair<List<Integer>, TypedIdList> getModifiedItems(OperationContext octxt, int lastSync, int sinceDate,
+            MailItem.Type type, Set<Integer> folderIds) throws ServiceException {
         lock.lock(false);
         try {
             if (lastSync >= getLastChangeID()) {
@@ -3710,7 +3716,7 @@ public class Mailbox {
                     folderIds = SetUtil.intersect(folderIds, visible);
                 }
                 Pair<List<Integer>, TypedIdList> dataList = DbMailItem
-                                .getModifiedItems(this, type, lastSync, folderIds);
+                                .getModifiedItems(this, type, lastSync, sinceDate, folderIds);
                 if (dataList == null) {
                     return null;
                 }

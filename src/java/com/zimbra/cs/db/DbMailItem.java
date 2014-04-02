@@ -2594,7 +2594,8 @@ public class DbMailItem {
         }
     }
 
-    public static Pair<List<Integer>,TypedIdList> getModifiedItems(Mailbox mbox, MailItem.Type type, long lastSync, Set<Integer> visible)
+    public static Pair<List<Integer>,TypedIdList> getModifiedItems(Mailbox mbox, MailItem.Type type, long lastSync,
+            int sinceDate, Set<Integer> visible)
     throws ServiceException {
         if (Mailbox.isCachedType(type)) {
             throw ServiceException.INVALID_REQUEST("folders and tags must be retrieved from cache", null);
@@ -2607,9 +2608,10 @@ public class DbMailItem {
         ResultSet rs = null;
         try {
             String typeConstraint = type == MailItem.Type.UNKNOWN ? "type NOT IN " + NON_SYNCABLE_TYPES : typeIn(type);
+            String dateConstraint = sinceDate > 0 ? "date > ? AND " : "";
             stmt = conn.prepareStatement("SELECT id, type, folder_id, uuid" +
                         " FROM " + getMailItemTableName(mbox) +
-                        " WHERE " + IN_THIS_MAILBOX_AND + "mod_metadata > ? AND " + typeConstraint +
+                        " WHERE " + IN_THIS_MAILBOX_AND + "mod_metadata > ? AND " + dateConstraint + typeConstraint +
                         " ORDER BY mod_metadata, id");
             if (type == MailItem.Type.MESSAGE) {
                 Db.getInstance().enableStreaming(stmt);
@@ -2617,6 +2619,9 @@ public class DbMailItem {
             int pos = 1;
             pos = setMailboxId(stmt, mbox, pos);
             stmt.setLong(pos++, lastSync);
+            if (sinceDate > 0) {
+                stmt.setInt(pos++, sinceDate);
+            }
             rs = stmt.executeQuery();
 
             while (rs.next()) {
