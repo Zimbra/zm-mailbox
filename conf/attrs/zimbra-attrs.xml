@@ -6873,7 +6873,7 @@ TODO: delete them permanently from here
 </attr>
 
 <attr id="1379" name="zimbraReverseProxyAvailableLookupTargets" type="string" cardinality="multi" optionalIn="server,globalConfig" flags="serverInherited" since="8.0.0">
-  <desc>The servers to be included in the proxy lookup hanlders list. Proxy will only use the servers specified here to do the lookup. Leaving empty means using all the servers whose zimbraReverseProxyLookupTarget is TRUE.</desc>
+  <desc>The servers to be included in the proxy lookup handlers list. Proxy will only use the servers specified here to do the lookup. Leaving empty means using all the servers whose zimbraReverseProxyLookupTarget is TRUE.</desc>
 </attr>
 
 <attr id="1380" name="zimbraMailLocalBind" type="boolean" cardinality="single" immutable="1" optionalIn="server" requiresRestart="mailbox" since="8.0.0">
