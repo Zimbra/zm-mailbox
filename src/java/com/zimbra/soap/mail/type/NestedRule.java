@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011, 2012, 2013 Zimbra Software, LLC.
+ * Copyright (C) 2014 Zimbra Software, LLC.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
@@ -39,22 +39,8 @@ import com.zimbra.soap.json.jackson.annotate.ZimbraJsonArrayForWrapper;
 // JsonPropertyOrder added to make sure JaxbToJsonTest.bug65572_BooleanAndXmlElements passes
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = {"tests", "actions","child"})
-@JsonPropertyOrder({ "name", "active", "tests", "actions","child" })
-public final class FilterRule {
-
-    /**
-     * @zm-api-field-tag rule-name
-     * @zm-api-field-description Rule name
-     */
-    @XmlAttribute(name=MailConstants.A_NAME /* name */, required=true)
-    private final String name;
-
-    /**
-     * @zm-api-field-tag active-flag
-     * @zm-api-field-description Active flag.  Set by default.
-     */
-    @XmlAttribute(name=MailConstants.A_ACTIVE /* active */, required=true)
-    private final ZmBoolean active;
+@JsonPropertyOrder({ "tests", "actions","child"})
+public final class NestedRule {
 
     /**
      * @zm-api-field-description Filter tests
@@ -83,7 +69,7 @@ public final class FilterRule {
     
     // For Nested Rule
     /**
-     * @zm-api-field-description Nested Rule
+     * @zm-api-field-description NestedRule child
      */
     @XmlElement(name=MailConstants.E_NESTED_RULE /* nestedRule */)
     private NestedRule child;
@@ -92,25 +78,13 @@ public final class FilterRule {
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
-    private FilterRule() {
-        this(null, false);
+    private NestedRule() {
+        this(null);
     }
-
-    public FilterRule(String name, boolean active) {
-        this.name = name;
-        this.active = ZmBoolean.fromBool(active);
-        this.actions = null;
-    }
-
-    public FilterRule(String name, FilterTests tests, boolean active) {
-        this.name = name;
+    
+    public NestedRule(FilterTests tests) {
         this.tests = tests;
-        this.active = ZmBoolean.fromBool(active);
         this.actions = null;
-    }
-
-    public static FilterRule createForNameFilterTestsAndActiveSetting(String name, FilterTests tests, boolean active) {
-        return new FilterRule(name, tests, active);
     }
 
     public void setFilterTests(FilterTests value) {
@@ -130,20 +104,12 @@ public final class FilterRule {
         }
     }
 
-    public FilterRule addFilterAction(FilterAction action) {
+    public NestedRule addFilterAction(FilterAction action) {
         if(actions == null){
-           actions=Lists.newArrayList();
+            actions=Lists.newArrayList();
         }
         actions.add(action);
         return this;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public boolean isActive() {
-        return ZmBoolean.toBool(active);
     }
 
     public FilterTests getFilterTests() {
@@ -161,7 +127,7 @@ public final class FilterRule {
     public int getActionCount() {
         if(actions == null){
             return 0;
-        }        
+        }
         return actions.size();
     }
     
@@ -178,8 +144,6 @@ public final class FilterRule {
     @Override
     public String toString() {
         return Objects.toStringHelper(this)
-            .add("name", name)
-            .add("active", active)
             .add("tests", tests)
             .add("actions", actions)
             .add("child", child)
