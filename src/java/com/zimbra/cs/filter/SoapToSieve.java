@@ -30,6 +30,7 @@ import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.soap.mail.type.FilterAction;
 import com.zimbra.soap.mail.type.FilterRule;
+import com.zimbra.soap.mail.type.NestedRule;
 import com.zimbra.soap.mail.type.FilterTest;
 import com.zimbra.soap.mail.type.FilterTests;
 
@@ -84,11 +85,27 @@ public final class SoapToSieve {
         Joiner.on(",\n  ").appendTo(buffer, index2test.values());
         buffer.append(") {\n");
 
+        // Handle nested rule
+        NestedRule child = rule.getChild();
+        if(child!=null){
+            // first nested block's indent is "    "
+            String nestedRuleBlock = handleNest("    ", child);
+            buffer.append(nestedRuleBlock);
+        }
+
         // Handle actions
         Map<Integer, String> index2action = new TreeMap<Integer, String>(); // sort by index
         List<FilterAction> filterActions = rule.getFilterActions();
-        if (filterActions.isEmpty()) {
-            throw ServiceException.INVALID_REQUEST("Missing action", null);
+        if ( filterActions == null) {   // if there is no action in this rule, filterActions is supposed to be null.
+            if (child == null) {
+                // If there is no more nested rule, there should be at least one action.
+                throw ServiceException.INVALID_REQUEST("Missing action", null);
+            } else {
+                // If there is no action in this rule and there have been no exception thrown so far,
+                // then there should be one in nested rules. So just close "if" block here.
+                buffer.append("}\n");
+                return;
+            }
         }
         for (FilterAction action : filterActions) {
             String result = handleAction(action);
@@ -101,6 +118,72 @@ public final class SoapToSieve {
         }
         buffer.append("}\n");
     }
+
+    // Constructing nested rule block with base indents which is for entire block.
+    private String handleNest(String baseIndents, NestedRule currentNestedRule) throws ServiceException {
+
+        StringBuilder nestedIfBlock = new StringBuilder();
+        nestedIfBlock.append(baseIndents);
+
+        Sieve.Condition childCondition =
+                Sieve.Condition.fromString(currentNestedRule.getFilterTests().getCondition());
+        if (childCondition == null) {
+            childCondition = Sieve.Condition.allof;
+        }
+
+        // assuming no disabled_if for child tests so far
+        nestedIfBlock.append("if ");
+        nestedIfBlock.append(childCondition).append(" (");
+
+        // Handle tests
+        Map<Integer, String> index2childTest = new TreeMap<Integer, String>(); // sort by index
+        for (FilterTest childTest : currentNestedRule.getFilterTests().getTests()) {
+            String childResult = handleTest(childTest);
+            if (childResult != null) {
+                FilterUtil.addToMap(index2childTest, childTest.getIndex(), childResult);
+            }
+        }
+        Joiner.on(",\n  "+baseIndents).appendTo(nestedIfBlock, index2childTest.values());
+        nestedIfBlock.append(") {\n");
+
+        // Handle nest
+        if(currentNestedRule.getChild() != null){
+            nestedIfBlock.append(handleNest(baseIndents + "    ", currentNestedRule.getChild()));
+        }
+
+        // Handle actions
+        Map<Integer, String> index2childAction = new TreeMap<Integer, String>(); // sort by index
+        List<FilterAction> childActions = currentNestedRule.getFilterActions();
+        if (childActions == null) { // if there is no action in this rule, childActions is supposed to be null.
+            if (currentNestedRule.getChild() == null) {
+                // If there is no more nested rule, there should be at least one action.
+                throw ServiceException.INVALID_REQUEST("Missing action", null);
+            } else {
+                // If there is no action in this rule and there have been no exception thrown,
+                // then there should be one in nested rules. So just close "if" block here.
+                nestedIfBlock.append(baseIndents);
+                nestedIfBlock.append("}\n");
+
+                return nestedIfBlock.toString();
+            }
+        }
+        for (FilterAction childAction : childActions) {
+            String childResult = handleAction(childAction);
+            if (childResult != null) {
+                FilterUtil.addToMap(index2childAction, childAction.getIndex(), childResult);
+            }
+        }
+        for (String childAction : index2childAction.values()) {
+            nestedIfBlock.append(baseIndents);
+            nestedIfBlock.append("    ").append(childAction).append(";\n");
+        }
+
+        nestedIfBlock.append(baseIndents);
+        nestedIfBlock.append("}\n");
+
+        return nestedIfBlock.toString();
+    }
+
 
     private String handleTest(FilterTest test) throws ServiceException {
         String snippet = null;

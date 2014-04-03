@@ -49,6 +49,10 @@ public abstract class SieveVisitor {
     }
 
     @SuppressWarnings("unused")
+    protected void visitIfControl(Node node, VisitPhase phase, RuleProperties props) throws ServiceException {
+    }
+
+    @SuppressWarnings("unused")
     protected void visitTest(Node node, VisitPhase phase, RuleProperties props) throws ServiceException {
     }
 
@@ -231,12 +235,14 @@ public abstract class SieveVisitor {
             Node node = parent.jjtGetChild(i);
 
             if (isRuleNode(node)) {
-                // New rule tree.
+                // New rule tree or Nested if. New RuleProperties is created for each nested if
                 RuleProperties newProps = new RuleProperties();
                 if ("disabled_if".equalsIgnoreCase(getNodeName(node))) {
                     newProps.isEnabled = false;
                 }
+                visitIfControl(node,VisitPhase.begin,newProps);
                 accept(node, newProps);
+                visitIfControl(node,VisitPhase.end,newProps);
             } else if (node instanceof ASTtest) {
                 acceptTest(node, props);
             } else if (node instanceof ASTcommand) {
