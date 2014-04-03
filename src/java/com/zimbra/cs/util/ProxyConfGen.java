@@ -1344,6 +1344,31 @@ class WebProxyUpstreamClientTargetVar extends ProxyConfVar {
 }
 
 /**
+ * 
+ * @author zimbra
+ *
+ */
+class EwsEnablerVar extends WebEnablerVar {
+
+    public EwsEnablerVar() {
+        super("web.ews.upstream.disable", "#",
+                "Indicates whether EWS upstream servers blob in nginx.conf.web should be populated " +
+                "(false unless zimbraReverseProxyUpstreamEwsServers is populated)");
+    }
+
+    
+    @Override
+    public String format(Object o)  {
+    	String[] upstreams = serverSource.getMultiAttr(Provisioning.A_zimbraReverseProxyUpstreamEwsServers);
+        if (upstreams.length  == 0) {
+            return "#";
+        } else {
+            return "";
+        }
+    }
+}
+
+/**
  * A simple class of Triple<VirtualHostName, VirtualIPAddress, DomainName>. Uses
  * this only for convenient and HashMap can't guarantee order
  * @author jiankuan
@@ -2129,7 +2154,8 @@ public class ProxyConfGen
         mConfVars.put("web.upstream.noop.timeout", new TimeoutVar("web.upstream.noop.timeout", "zimbra_noop_max_timeout", 1200, ProxyConfOverride.LOCALCONFIG, 20, "the response timeout for NoOpRequest"));
         mConfVars.put("web.upstream.waitset.timeout", new TimeoutVar("web.upstream.waitset.timeout", "zimbra_waitset_max_request_timeout", 1200, ProxyConfOverride.LOCALCONFIG, 20, "the response timeout for WaitSetRequest"));
 	    mConfVars.put("main.accept_mutex", new ProxyConfVar("main.accept_mutex", "zimbraReverseProxyAcceptMutex", "on", ProxyConfValueType.STRING, ProxyConfOverride.SERVER,"accept_mutex flag for NGINX - can be on|off - on indicates regular distribution, off gets better distribution of client connections between workers"));
-        mConfVars.put("web.upstream.ewsserver.:servers", new WebEwsUpstreamServersVar());
+	    mConfVars.put("web.ews.upstream.disable", new EwsEnablerVar());
+	    mConfVars.put("web.upstream.ewsserver.:servers", new WebEwsUpstreamServersVar());
         mConfVars.put("web.ews.upstream.name", new ProxyConfVar("web.ews.upstream.name", null, ZIMBRA_EWS_UPSTREAM_NAME, ProxyConfValueType.STRING, ProxyConfOverride.CONFIG, "Symbolic name for ews upstream server cluster"));
     }
 
