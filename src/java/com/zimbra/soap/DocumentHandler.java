@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -455,7 +455,19 @@ public abstract class DocumentHandler {
         // if the "target account" is remote and the command is non-admin, proxy.
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         String acctId = zsc.getRequestedAccountId();
-        if (acctId != null && zsc.getProxyTarget() == null && !isAdminCommand() && !Provisioning.onLocalServer(getRequestedAccount(zsc))) {
+        Provisioning.Reasons reasons = new Provisioning.Reasons();
+        if (acctId != null && zsc.getProxyTarget() == null && !isAdminCommand() &&
+                !Provisioning.onLocalServer(getRequestedAccount(zsc), reasons)) {
+            if (zsc.getHopCount() > 2 || (ZimbraLog.soap.isDebugEnabled())) {
+                Account authAcct = getAuthenticatedAccount(zsc);
+                if (authAcct == null) {
+                    ZimbraLog.soap.info("Proxying request: requestedAccountId=%s authAcct <null> reasons:%s",
+                            acctId, reasons.getReason());
+                } else {
+                    ZimbraLog.soap.info("Proxying request: requestedAccountId=%s authAcct name=%s id=%s reasons:%s",
+                            acctId, authAcct.getName(), authAcct.getId(), reasons.getReason());
+                }
+            }
             return proxyRequest(request, context, acctId);
         }
 

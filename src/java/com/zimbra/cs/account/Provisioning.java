@@ -1348,22 +1348,53 @@ public abstract class Provisioning extends ZAttrProvisioning {
 
     public abstract Server getLocalServer() throws ServiceException;
 
+    public static final class Reasons {
+        StringBuilder sb = new StringBuilder();
+        public void addReason(String reason) {
+            if (0 < sb.length()) {
+                sb.append('\n');
+            }
+            sb.append(reason);
+        }
+        public String getReason() {
+            return sb.toString();
+        }
+    }
+
     public static boolean onLocalServer(Account account) throws ServiceException {
+        return onLocalServer(account, null);
+    }
+
+    public static boolean onLocalServer(Account account, Reasons reasons) throws ServiceException {
         String target    = account.getAttr(Provisioning.A_zimbraMailHost);
         String localhost = getInstance().getLocalServer().getAttr(Provisioning.A_zimbraServiceHostname);
         boolean isLocal = (target != null && target.equalsIgnoreCase(localhost));
-        return (isLocal || isAlwaysOn(account));
+        boolean onLocalSvr =  (isLocal || isAlwaysOn(account));
+        if (!onLocalSvr && reasons != null) {
+            reasons.addReason(String.format("onLocalSvr=%b isLocal=%b target=%s localhost=%s account=%s",
+                    onLocalSvr, isLocal, target, localhost, account.getName()));
+        }
+        return onLocalSvr;
     }
 
     private static boolean isAlwaysOn(Account account) throws ServiceException {
+        return isAlwaysOn(account, null);
+    }
+
+    private static boolean isAlwaysOn(Account account, Reasons reasons) throws ServiceException {
         String localServerClusterId = Zimbra.getAlwaysOnClusterId();
         Server server = Provisioning.getInstance().getServer(account);
-        if (server == null) {
-            return false;
+        String accountHostingServerClusterId = null;
+        if (server != null) {
+            accountHostingServerClusterId = server.getAlwaysOnClusterId();
         }
-        String accountHostingServerClusterId = server.getAlwaysOnClusterId();
-        return localServerClusterId != null && accountHostingServerClusterId != null &&
-                localServerClusterId.equals(accountHostingServerClusterId);
+        boolean isAlwaysOn = (server != null) && localServerClusterId != null &&
+                accountHostingServerClusterId != null && localServerClusterId.equals(accountHostingServerClusterId);
+        if (!isAlwaysOn && reasons != null) {
+            reasons.addReason(String.format("isAlwaysOn=%b server=%s localServerClusterId=%s account=%s",
+                    isAlwaysOn, server, localServerClusterId, account.getName()));
+        }
+        return isAlwaysOn;
     }
 
     public static boolean onLocalServer(Group group) throws ServiceException {
