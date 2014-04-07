@@ -90,8 +90,8 @@ public final class EhcacheManager {
         conf.setName(SYNC_STATE_ITEM_CACHE);
         conf.setOverflowToDisk(true);
         conf.setDiskPersistent(true);
-        conf.setMaxEntriesLocalHeap(1); // virtually disk cache only
-        conf.setMaxElementsOnDisk(LC.zimbra_activesync_metadata_cache_max_size.intValue());
+        conf.setMaxBytesLocalHeap(LC.zimbra_activesync_syncstate_item_cache_heap_size.value());
+        conf.setMaxElementsOnDisk(0); //infinite
         conf.setTimeToLiveSeconds(LC.zimbra_activesync_metadata_cache_expiration.intValue());
         return conf;
     }
