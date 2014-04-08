@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -31,6 +31,7 @@ import javax.mail.internet.MimePart;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Pair;
+import com.zimbra.common.util.StartOutOfBoundsException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.MailItem;
@@ -205,6 +206,11 @@ class ImapPartSpecifier {
                     start = 0;
                 }
                 is = ByteUtil.SegmentInputStream.create(is, start, start + realLength);
+            } catch (StartOutOfBoundsException e) {
+                //return empty string {0} when start is out of range
+                ZimbraLog.imap.warn("IMAP part requested start out of range", e);
+                is = new ByteArrayInputStream(new byte[0]);
+                statedLength = realLength = 0;
             } catch (IOException ioe) {
                 ByteUtil.closeStream(is);
                 throw ioe;

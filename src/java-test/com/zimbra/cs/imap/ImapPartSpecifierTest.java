@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -26,21 +26,34 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.zmime.ZMimeMessage;
+import com.zimbra.cs.imap.ImapPartSpecifier.BinaryDecodingException;
 import com.zimbra.cs.util.JMSession;
 
 public class ImapPartSpecifierTest {
 
     private void checkBody(MimeMessage mm, String part, String modifier, String startsWith, String endsWith)
     throws IOException, ImapPartSpecifier.BinaryDecodingException, ServiceException {
-        ImapPartSpecifier pspec = new ImapPartSpecifier("BODY", part, modifier);
+        checkPartial(mm, part, modifier, -1, -1, startsWith, endsWith);
+    }
+
+    private void checkPartial(MimeMessage mm, String part, String modifier, int start, int count, String startsWith, String endsWith) throws IOException, BinaryDecodingException, ServiceException {
+        ImapPartSpecifier pspec = new ImapPartSpecifier("BODY", part, modifier, start, count);
         Pair<Long, InputStream> content = pspec.getContent(mm);
         if (startsWith == null) {
             Assert.assertNull(pspec.getSectionSpec() + " is null", content);
         } else {
             Assert.assertNotNull(pspec.getSectionSpec() + " is not null", content.getSecond());
             String data = new String(ByteUtil.getContent(content.getSecond(), content.getFirst().intValue())).trim();
-            Assert.assertTrue(pspec.getSectionSpec() + " start matches", data.startsWith(startsWith));
-            Assert.assertTrue(pspec.getSectionSpec() + " end matches", data.endsWith(endsWith));
+            if (startsWith.length() > 0) {
+                Assert.assertTrue(pspec.getSectionSpec() + " start matches", data.startsWith(startsWith));
+            } else {
+                Assert.assertTrue(pspec.getSectionSpec() + " start empty", data.length() == 0);
+            }
+            if (endsWith.length() > 0) {
+                Assert.assertTrue(pspec.getSectionSpec() + " end matches", data.endsWith(endsWith));
+            } else {
+                Assert.assertTrue(pspec.getSectionSpec() + " end empty", data.length() == 0);
+            }
         }
     }
 
@@ -58,6 +71,10 @@ public class ImapPartSpecifierTest {
         checkBody(mm, "1", "TEXT", "On Fri, 27 Feb 2004, Jim Fox wrote:", "http://mailman.u.washington.edu/mailman/listinfo/pubcookie-dev");
         checkBody(mm, "1.1", "MIME", "Return-Path: <pubcookie-dev-bounces@mailman.u.washington.edu>", "X-Evolution: 00000001-0110");
 
+        checkPartial(mm, "", "", 0, 100000, "Return-Path: <pubcookie-dev-bounces@mailman.u.washington.edu>", "http://mailman.u.washington.edu/mailman/listinfo/pubcookie-dev");
+        checkPartial(mm, "", "", 0, 10, "Return-Pat", "Pat");
+        checkPartial(mm, "", "", 1, 10, "eturn-Path", "Path");
+        checkPartial(mm, "", "", 100000, 10, "", "");
 
         is = getClass().getResourceAsStream("calendar-bounce");
         mm = new ZMimeMessage(JMSession.getSession(), is);
@@ -77,5 +94,6 @@ public class ImapPartSpecifierTest {
         checkBody(mm, "3.2", "MIME", "Content-Type: text/html; charset=utf-8", "Content-Transfer-Encoding: 7bit");
         checkBody(mm, "3.3", "", "BEGIN:VCALENDAR", "END:VCALENDAR");
         checkBody(mm, "3.3", "MIME", "Content-Type: text/calendar; name=meeting.ics; method=REQUEST; charset=utf-8", "Content-Transfer-Encoding: 7bit");
+
     }
 }
