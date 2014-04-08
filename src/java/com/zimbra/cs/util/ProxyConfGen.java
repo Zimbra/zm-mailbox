@@ -616,7 +616,7 @@ class WebSSLUpstreamClientServersVar extends ProxyConfVar {
 class WebAdminUpstreamAdminClientServersVar extends ProxyConfVar {
 
     public WebAdminUpstreamAdminClientServersVar() {
-        super("web.ssl.upstream.adminclient.:servers", null, null, ProxyConfValueType.CUSTOM,
+        super("web.admin.upstream.:servers", null, null, ProxyConfValueType.CUSTOM,
                 ProxyConfOverride.CUSTOM,
                 "List of upstream HTTPS Admin client servers used by Web Proxy");
     }
@@ -860,31 +860,84 @@ abstract class ServersVar extends ProxyConfVar {
 
 class WebUpstreamServersVar extends ServersVar {
 
-    public WebUpstreamServersVar() {
-        super("web.upstream.:servers", Provisioning.A_zimbraReverseProxyHttpPortAttribute,
-                "List of upstream HTTP servers used by Web Proxy (i.e. servers " +
-                "for which zimbraReverseProxyLookupTarget is true, and whose " +
-                "mail mode is http|mixed|both)");
+	public WebUpstreamServersVar() {
+		super("web.upstream.:servers", Provisioning.A_zimbraReverseProxyHttpPortAttribute,
+    			"List of upstream HTTP servers used by Web Proxy (i.e. servers " +
+    			"for which zimbraReverseProxyLookupTarget is true, and whose " +
+    			"mail mode is http|mixed|both)");
+    }
+    
+    @Override
+    public void update() throws ServiceException {
+    	ArrayList<String> directives = new ArrayList<String>();
+    	String portName = configSource.getAttr(Provisioning.A_zimbraReverseProxyHttpPortAttribute, "");
+    	
+    	List<Server> servers = mProv.getAllServers(Provisioning.SERVICE_MAILBOX);
+    	for (Server server : servers) {
+    		String serverName = server.getAttr(
+    				Provisioning.A_zimbraServiceHostname, "");
+    
+    		if (isValidUpstream(server, serverName)) {
+    			directives.add(generateServerDirective(server, serverName, portName));
+    			mLog.info("Added server to HTTP mailstore upstream: " + serverName);
+    		}
+    	}
+    	mValue = directives;
     }
 }
 
 class WebSSLUpstreamServersVar extends ServersVar {
 
     public WebSSLUpstreamServersVar() {
-        super("web.ssl.upstream.:servers", Provisioning.A_zimbraReverseProxyHttpSSLPortAttribute,
-                "List of upstream HTTPS servers used by Web Proxy (i.e. servers " +
-                "for which zimbraReverseProxyLookupTarget is true, and whose " +
-                "mail mode is https|mixed|both)");
+    	super("web.ssl.upstream.:servers", Provisioning.A_zimbraReverseProxyHttpSSLPortAttribute,
+    			"List of upstream HTTPS servers used by Web Proxy (i.e. servers " +
+    			"for which zimbraReverseProxyLookupTarget is true, and whose " +
+    			"mail mode is https|mixed|both)");
+    }
+    
+    @Override
+    public void update() throws ServiceException {
+    	ArrayList<String> directives = new ArrayList<String>();
+    	String portName = configSource.getAttr(Provisioning.A_zimbraReverseProxyHttpSSLPortAttribute, "");
+    	
+    	List<Server> servers = mProv.getAllServers(Provisioning.SERVICE_MAILBOX);
+    	for (Server server : servers) {
+    		String serverName = server.getAttr(
+    				Provisioning.A_zimbraServiceHostname, "");
+    		
+    		if (isValidUpstream(server, serverName)) {
+    			directives.add(generateServerDirective(server, serverName, portName));
+    			mLog.info("Added server to HTTPS mailstore upstream: " + serverName);
+    		}
+    	}
+    	mValue = directives;
     }
 }
 
 class WebAdminUpstreamServersVar extends ServersVar {
-
-    public WebAdminUpstreamServersVar() {
-        super("web.admin.upstream.:servers", Provisioning.A_zimbraReverseProxyAdminPortAttribute,
-                "List of upstream admin console servers used by Web Proxy (i.e. servers " +
-                "for which zimbraReverseProxyLookupTarget is true");
-    }
+	public WebAdminUpstreamServersVar() {
+		super("web.admin.upstream.:servers", Provisioning.A_zimbraReverseProxyAdminPortAttribute,
+				"List of upstream admin console servers used by Web Proxy (i.e. servers " +
+				"for which zimbraReverseProxyLookupTarget is true");
+	}
+	
+	 @Override
+	 public void update() throws ServiceException {
+		 ArrayList<String> directives = new ArrayList<String>();
+		 String portName = configSource.getAttr(Provisioning.A_zimbraReverseProxyAdminPortAttribute, "");
+		 
+		 List<Server> servers = mProv.getAllServers(Provisioning.SERVICE_MAILBOX);
+		 for (Server server : servers) {
+			 String serverName = server.getAttr(
+					 Provisioning.A_zimbraServiceHostname, "");
+			 
+			 if (isValidUpstream(server, serverName)) {
+				 directives.add(generateServerDirective(server, serverName, portName));
+				 mLog.info("Added server to HTTPS Admin mailstore upstream: " + serverName);
+			 }
+		 }
+		 mValue = directives;
+	 }
 }
 
 class WebEwsUpstreamServersVar extends ServersVar {
@@ -899,7 +952,6 @@ class WebEwsUpstreamServersVar extends ServersVar {
     public void update() throws ServiceException {
         ArrayList<String> directives = new ArrayList<String>();
 
-
         String[] upstreams = serverSource.getMultiAttr(Provisioning.A_zimbraReverseProxyUpstreamEwsServers);
         if (upstreams.length > 0) {
             for (String serverName: upstreams) {
@@ -907,7 +959,7 @@ class WebEwsUpstreamServersVar extends ServersVar {
                 if (isValidUpstream(server, serverName)) {
                     int port = server.getMailPort();
                     directives.add(generateEwsServerDirective(server, serverName, port));
-                    mLog.info("Added server to HTTP upstream: " + serverName);
+                    mLog.info("Added EWS server to HTTP upstream: " + serverName);
                 }
             }
         }
