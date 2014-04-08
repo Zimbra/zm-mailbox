@@ -603,7 +603,11 @@ public final class LC {
             " -XX:+PrintGCDetails" +
             " -XX:+PrintGCDateStamps" +
             " -XX:+PrintGCApplicationStoppedTime" +
-            " -XX:-OmitStackTraceInFastThrow");
+            " -XX:-OmitStackTraceInFastThrow" +
+            " -Xloggc:/opt/zimbra/log/gc.log" +
+            " -XX:-UseGCLogFileRotation" +
+            " -XX:NumberOfGClogFiles=20" +
+            " -XX:GCLogFileSize=4096K");
     @Supported
     public static final KnownKey mailboxd_pidfile = KnownKey.newKey("${zimbra_log_directory}/mailboxd.pid");
 
