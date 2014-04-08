@@ -34,23 +34,34 @@ public class WebSplitUtil {
             Context initCtx = new InitialContext();
             Context envCtx = (Context) initCtx.lookup("java:comp/env");
             servicesEnabled = Arrays.asList(((String)envCtx.lookup("zimbraServicesEnabled")).split(","));
+            if (servicesEnabled != null) {
+            	ZimbraLog.misc.debug("got services enabled %d", servicesEnabled.size());
+		for (String service: servicesEnabled) {
+			ZimbraLog.misc.debug("service=%s", service);
+		}
+             }
         } catch (NamingException e) {
             servicesEnabled = null;
+            ZimbraLog.misc.debug("Naming exception while getting servicesEnabled",e);
         }
     }
 
     public static boolean isZimbraServiceSplitEnabled() {
         if (!((servicesEnabled == null || servicesEnabled.isEmpty()) || allServicesEnabled()) && servicesEnabled.contains(webServiceApp)) {
+        	ZimbraLog.misc.debug("service split enabled = true");
             return true;
         } else {
+        	ZimbraLog.misc.debug("service split enabled = false");
             return false;
         }
     }
 
     public static boolean isZimbraWebClientSplitEnabled() {
         if (!((servicesEnabled == null || servicesEnabled.isEmpty()) || allServicesEnabled()) && servicesEnabled.contains(webClientApp)) {
+        	ZimbraLog.misc.debug("webclient split enabled = true");
             return true;
         } else {
+        	ZimbraLog.misc.debug("webclient split enabled = false");
             return false;
         }
     }
@@ -61,10 +72,12 @@ public class WebSplitUtil {
     }
 
     private static boolean allServicesEnabled() {
-        if (!(servicesEnabled.contains(webClientApp) && servicesEnabled.contains(webServiceApp) &&
-                servicesEnabled.contains(adminClientApp) && servicesEnabled.contains(zimlets))) {
+        if (servicesEnabled.contains(webClientApp) && servicesEnabled.contains(webServiceApp) &&
+                servicesEnabled.contains(adminClientApp) && servicesEnabled.contains(zimlets)) {
+        	ZimbraLog.misc.debug("all services enabled = true");
             return true;
         }
+        ZimbraLog.misc.debug("all services enabled = false");
         return false;
     }
 }

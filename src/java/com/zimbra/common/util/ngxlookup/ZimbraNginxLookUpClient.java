@@ -204,6 +204,10 @@ public class ZimbraNginxLookUpClient {
             for (String server : servers) {
                 if (server.length() == 0)
                     continue;
+                // In case of nginx lookup handlers, there might be additional '/service/extension/nginx-lookup' at the end.
+                // Remove it as the parser expects a server value with hostname:port or just hostname
+                if (defaultPort == DEFAULT_NGINX_HANDLER_PORT)
+                	server = server.replace(urlExtension, "");
                 String[] parts = server.split(":");
                 if (parts != null) {
                     String host;
