@@ -70,11 +70,20 @@ public final class RuleManagerWithCustomActionFilterTest {
                 0, account.getName(), new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
         Assert.assertEquals(0, ids.size());
 
+        // register custom action extensions
+        ExtensionTestUtil.registerExtension("com.zimbra.extensions.DummyCustomDiscard");
+        ExtensionTestUtil.registerExtension("com.zimbra.extensions.DummyCustomTag");
+        ExtensionUtil.initAll();
+
 
     }
 
     @AfterClass
     public static void cleanUp() throws Exception{
+
+        // set original ones
+        JsieveConfigMapHandler.registerCommand("discard", "com.zimbra.cs.filter.jsieve.Discard");
+        JsieveConfigMapHandler.registerCommand("tag", "com.zimbra.cs.filter.jsieve.Tag");
 
         // set original sieve factory back
         Method method = RuleManager.class.getDeclaredMethod("createSieveFactory");
@@ -86,8 +95,8 @@ public final class RuleManagerWithCustomActionFilterTest {
         field.set(RuleManager.class, original_sf);
 
         // inactivate custom action extension for just in case
-        ZimbraExtension discard_ext = ExtensionUtil.getExtension("discard");
-        discard_ext.destroy();
+        //ZimbraExtension discard_ext = ExtensionUtil.getExtension("discard");
+        //discard_ext.destroy();
 
     }
 
@@ -100,8 +109,11 @@ public final class RuleManagerWithCustomActionFilterTest {
     public void tagAndCustomDiscard() throws Exception {
 
         // register custom action extension
-        ExtensionTestUtil.registerExtension("com.zimbra.extensions.DummyCustomDiscard");
-        ExtensionUtil.initAll();
+        //ExtensionTestUtil.registerExtension("com.zimbra.extensions.DummyCustomDiscard");
+        //ExtensionUtil.initAll();
+
+        JsieveConfigMapHandler.registerCommand("discard", "com.zimbra.extensions.DummyCustomDiscard");
+        JsieveConfigMapHandler.registerCommand("tag", "com.zimbra.cs.filter.jsieve.Tag");
 
         // recreate sieve factory
         Method method = RuleManager.class.getDeclaredMethod("createSieveFactory");
@@ -137,9 +149,12 @@ public final class RuleManagerWithCustomActionFilterTest {
     public void customDicardAndCustomTag() throws Exception {
 
         // register custom action extensions
-        ExtensionTestUtil.registerExtension("com.zimbra.extensions.DummyCustomDiscard");
-        ExtensionTestUtil.registerExtension("com.zimbra.extensions.DummyCustomTag");
-        ExtensionUtil.initAll();
+        //ExtensionTestUtil.registerExtension("com.zimbra.extensions.DummyCustomDiscard");
+        //ExtensionTestUtil.registerExtension("com.zimbra.extensions.DummyCustomTag");
+        //ExtensionUtil.initAll();
+
+        JsieveConfigMapHandler.registerCommand("discard", "com.zimbra.extensions.DummyCustomDiscard");
+        JsieveConfigMapHandler.registerCommand("tag", "com.zimbra.extensions.DummyCustomTag");
 
         // recreate sieve factory
         Method method = RuleManager.class.getDeclaredMethod("createSieveFactory");
@@ -174,8 +189,8 @@ public final class RuleManagerWithCustomActionFilterTest {
 
         // inactivate custom tag action extension for just in case this test would be executed
         // before tagAndCustomDiscard test above
-        ZimbraExtension tag_ext2 = ExtensionUtil.getExtension("tag");
-        tag_ext2.destroy();
+        //ZimbraExtension tag_ext2 = ExtensionUtil.getExtension("tag");
+        //tag_ext2.destroy();
 
     }
 

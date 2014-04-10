@@ -45,11 +45,11 @@ public class DummyCustomTag extends AbstractActionCommand implements ZimbraExten
     }
 
     public void init() {
-        if(!inactivated){
+        //if(!inactivated){
             ZimbraLog.extensions.info("init()");
-            JsieveConfigMapHandler.registerCommand("tag", this.getClass().getName());
+            //JsieveConfigMapHandler.registerCommand("tag", this.getClass().getName());
             initialized = true;
-        }
+        //}
     }
 
     public void destroy() {

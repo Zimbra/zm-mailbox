@@ -40,11 +40,11 @@ public class DummyCustomDiscard extends AbstractActionCommand implements ZimbraE
     }
 
     public void init() {
-        if(!inactivated){
+        //if(!inactivated){
             ZimbraLog.extensions.info("init()");
-            JsieveConfigMapHandler.registerCommand("discard", this.getClass().getName());
+            //JsieveConfigMapHandler.registerCommand("discard", this.getClass().getName());
             initialized = true;
-        }
+        //}
     }
 
     public void destroy() {
