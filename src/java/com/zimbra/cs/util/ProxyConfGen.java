@@ -942,48 +942,53 @@ class WebAdminUpstreamServersVar extends ServersVar {
 
 class WebEwsUpstreamServersVar extends ServersVar {
 
-    public WebEwsUpstreamServersVar() {
-        super("web.upstream.ewsserver.:servers", Provisioning.A_zimbraReverseProxyUpstreamEwsServers,
-                "List of upstream EWS servers used by Web Proxy (i.e. servers " +
-                "for which zimbraReverseProxyLookupTarget is true");
+	public WebEwsUpstreamServersVar() {
+		super("web.upstream.ewsserver.:servers", Provisioning.A_zimbraReverseProxyUpstreamEwsServers,
+				"List of upstream EWS servers used by Web Proxy");
+	}
+
+    @Override
+    public void update() throws ServiceException {
+        ArrayList<String> directives = new ArrayList<String>();
+        String portName = configSource.getAttr(Provisioning.A_zimbraReverseProxyHttpPortAttribute, "");
+        String[] upstreams = serverSource.getMultiAttr(Provisioning.A_zimbraReverseProxyUpstreamEwsServers);
+        
+        if (upstreams.length > 0) {
+            for (String serverName: upstreams) {
+                Server server = mProv.getServerByName(serverName);
+                if (isValidUpstream(server, serverName)) {
+                    directives.add(generateServerDirective(server, serverName, portName));
+                    mLog.info("Added EWS server to HTTP upstream: " + serverName);
+                }
+            }
+        }
+        mValue = directives;
+    }
+}
+
+class WebEwsSSLUpstreamServersVar extends ServersVar {
+
+    public WebEwsSSLUpstreamServersVar() {
+    	super("web.ssl.upstream.ewsserver.:servers",Provisioning.A_zimbraReverseProxyUpstreamEwsServers,
+				"List of upstream EWS servers used by Web Proxy");
     }
 
     @Override
     public void update() throws ServiceException {
         ArrayList<String> directives = new ArrayList<String>();
-
+        String portName = configSource.getAttr(Provisioning.A_zimbraReverseProxyHttpSSLPortAttribute, "");
         String[] upstreams = serverSource.getMultiAttr(Provisioning.A_zimbraReverseProxyUpstreamEwsServers);
+        
         if (upstreams.length > 0) {
             for (String serverName: upstreams) {
                 Server server = mProv.getServerByName(serverName);
                 if (isValidUpstream(server, serverName)) {
-                    int port = server.getMailPort();
-                    directives.add(generateEwsServerDirective(server, serverName, port));
-                    mLog.info("Added EWS server to HTTP upstream: " + serverName);
+                    directives.add(generateServerDirective(server, serverName, portName));
+                    mLog.info("Added EWS server to HTTPS upstream: " + serverName);
                 }
             }
         }
-
         mValue = directives;
-    }
-
-    /**
-     * @param server
-     * @param serverName
-     * @param serverPort
-     * @return
-     */
-    private String generateEwsServerDirective(Server server, String serverName, int serverPort) {
-            int timeout = server.getIntAttr(
-                    Provisioning.A_zimbraMailProxyReconnectTimeout, 60);
-            int maxFails = server.getIntAttr("zimbraMailProxyMaxFails", 1);
-            if (maxFails != 1) {
-                return String.format("%s:%d fail_timeout=%ds max_fails=%d", serverName, serverPort,
-                        timeout, maxFails);
-            } else  {
-                return String.format("%s:%d fail_timeout=%ds", serverName, serverPort,
-                        timeout);
-            }
     }
 }
 
@@ -1497,8 +1502,9 @@ public class ProxyConfGen
     static final String ZIMBRA_SSL_UPSTREAM_NAME = "zimbra_ssl";
     static final String ZIMBRA_SSL_UPSTREAM_WEBCLIENT_NAME = "zimbra_ssl_webclient";
     static final String ZIMBRA_ADMIN_CONSOLE_UPSTREAM_NAME = "zimbra_admin";
-    static final String ZIMBRA_EWS_UPSTREAM_NAME = "zimbra_ews";
     static final String ZIMBRA_ADMIN_CONSOLE_CLIENT_UPSTREAM_NAME = "zimbra_adminclient";
+    static final String ZIMBRA_UPSTREAM_EWS_NAME = "zimbra_ews";
+    static final String ZIMBRA_SSL_UPSTREAM_EWS_NAME = "zimbra_ews_ssl";
 
     /** the pattern for custom header cmd, such as "!{explode domain} */
     private static Pattern cmdPattern = Pattern.compile("(.*)\\!\\{([^\\}]+)\\}(.*)", Pattern.DOTALL);
@@ -2208,7 +2214,9 @@ public class ProxyConfGen
 	    mConfVars.put("main.accept_mutex", new ProxyConfVar("main.accept_mutex", "zimbraReverseProxyAcceptMutex", "on", ProxyConfValueType.STRING, ProxyConfOverride.SERVER,"accept_mutex flag for NGINX - can be on|off - on indicates regular distribution, off gets better distribution of client connections between workers"));
 	    mConfVars.put("web.ews.upstream.disable", new EwsEnablerVar());
 	    mConfVars.put("web.upstream.ewsserver.:servers", new WebEwsUpstreamServersVar());
-        mConfVars.put("web.ews.upstream.name", new ProxyConfVar("web.ews.upstream.name", null, ZIMBRA_EWS_UPSTREAM_NAME, ProxyConfValueType.STRING, ProxyConfOverride.CONFIG, "Symbolic name for ews upstream server cluster"));
+	    mConfVars.put("web.ssl.upstream.ewsserver.:servers", new WebEwsSSLUpstreamServersVar());      
+	    mConfVars.put("web.ews.upstream.name", new ProxyConfVar("web.ews.upstream.name", null, ZIMBRA_UPSTREAM_EWS_NAME, ProxyConfValueType.STRING, ProxyConfOverride.CONFIG, "Symbolic name for ews upstream server cluster"));
+	    mConfVars.put("web.ssl.ews.upstream.name", new ProxyConfVar("web.ssl.ews.upstream.name", null, ZIMBRA_SSL_UPSTREAM_EWS_NAME, ProxyConfValueType.STRING, ProxyConfOverride.CONFIG, "Symbolic name for https ews upstream server cluster"));  
     }
 
     /* update the default variable map from the active configuration */
