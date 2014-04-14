@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -16,16 +16,16 @@ package com.zimbra.cs.imap;
 
 import java.io.IOException;
 
-import com.google.common.base.Charsets;
-import com.google.common.base.Preconditions;
-import com.google.common.primitives.Ints;
-
 import org.apache.mina.core.buffer.IoBuffer;
 import org.apache.mina.core.session.IoSession;
 import org.apache.mina.filter.codec.CumulativeProtocolDecoder;
 import org.apache.mina.filter.codec.ProtocolDecoderException;
 import org.apache.mina.filter.codec.ProtocolDecoderOutput;
 import org.apache.mina.filter.codec.RecoverableProtocolDecoderException;
+
+import com.google.common.base.Charsets;
+import com.google.common.base.Preconditions;
+import com.google.common.primitives.Ints;
 
 /**
  * Protocol Decoder for IMAP. This decodes a text line terminated by LF or CRLF into a string, and an IMAP literal into
@@ -146,6 +146,7 @@ final class NioImapDecoder extends CumulativeProtocolDecoder {
                                     throw new TooBigLiteralException(line);
                                 } else { // non-blocking, swallow the entire literal
                                     ctx.literal = li.count;
+                                    ctx.request = line;
                                     ctx.overflow = true;
                                     return true;
                                 }

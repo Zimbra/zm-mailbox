@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2008, 2009, 2010, 2011, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -228,12 +228,12 @@ public abstract class NioServer implements Server {
         if (sc.isSslEnabled()) {
             fc.addFirst("ssl", newSSLFilter());
         }
+        fc.addLast("logger", new NioLoggingFilter(this, false));
         fc.addLast("codec", new ProtocolCodecFilter(getProtocolCodecFactory()));
         fc.addLast("executer", executorFilter);
         for (IoFilter filter : FILTERS.get(getClass())) { // insert custom filters
             fc.addLast(filter.getClass().getName(), filter);
         }
-        fc.addLast("logger", new NioLoggingFilter(this, false));
         acceptor.getSessionConfig().setBothIdleTime(sc.getMaxIdleTime());
         acceptor.getSessionConfig().setWriteTimeout(sc.getWriteTimeout());
         acceptor.setHandler(new NioHandlerDispatcher(this));
