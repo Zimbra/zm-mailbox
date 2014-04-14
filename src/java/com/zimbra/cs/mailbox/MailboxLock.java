@@ -99,11 +99,11 @@ public final class MailboxLock {
         lock(true);
     }
 
-    private boolean tryLock(boolean write) {
+    private boolean tryLock(boolean write) throws InterruptedException {
         if (write) {
-            return zLock.writeLock().tryLock();
+            return zLock.writeLock().tryLock(0, TimeUnit.SECONDS);
         } else {
-            return zLock.readLock().tryLock();
+            return zLock.readLock().tryLock(0, TimeUnit.SECONDS);
         }
     }
 
@@ -184,32 +184,29 @@ public final class MailboxLock {
                 // noise in the logs.
                 throw new LockFailedException("too many waiters: " + queueLength);
             }
-            try {
-                // Wait for the lock up to the timeout.
-                if (tryLockWithTimeout(write)) {
-                    if (mbox.requiresWriteLock() && !isWriteLockedByCurrentThread()) {
-                        //writer finished a purge while we waited
-                        promote();
-                        return;
-                    }
-                    lockStack.push(write);
-                    try {
-                        acquireDistributedLock(write);
-                    } catch (ServiceException e) {
-                        release();
-                        LockFailedException lfe = new LockFailedException("lockdb");
-                        lfe.logStackTrace();
-                        throw lfe;
-                    }
+            // Wait for the lock up to the timeout.
+            if (tryLockWithTimeout(write)) {
+                if (mbox.requiresWriteLock() && !isWriteLockedByCurrentThread()) {
+                    //writer finished a purge while we waited
+                    promote();
                     return;
                 }
-
-                LockFailedException e = new LockFailedException("timeout");
-                e.logStackTrace();
-                throw e;
-            } catch (InterruptedException e) {
-                throw new LockFailedException("interrupted", e);
+                lockStack.push(write);
+                try {
+                    acquireDistributedLock(write);
+                } catch (ServiceException e) {
+                    release();
+                    LockFailedException lfe = new LockFailedException("lockdb");
+                    lfe.logStackTrace();
+                    throw lfe;
+                }
+                return;
             }
+            LockFailedException e = new LockFailedException("timeout");
+            e.logStackTrace();
+            throw e;
+        } catch (InterruptedException e) {
+            throw new LockFailedException("interrupted", e);
         } finally {
             assert(!isUnlocked() || debugReleaseReadLock());
         }
@@ -262,8 +259,12 @@ public final class MailboxLock {
         void printStackTrace(StringBuilder out) {
             Thread owner = getOwner();
             if (owner != null) {
-                out.append("Lock Owner - ");
+                out.append("Write Lock Owner - ");
                 printStackTrace(owner, out);
+            }
+            int readCount = getReadLockCount();
+            if (readCount > 0) {
+                out.append("Reader Count - " + readCount);
             }
             for (Thread waiter : getQueuedThreads()) {
                 out.append("Lock Waiter - ");
