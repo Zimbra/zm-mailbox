@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -22,6 +22,7 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 
 import com.google.common.base.Strings;
+import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.BEncoding;
@@ -134,8 +135,25 @@ public final class Metadata {
             return;
         }
         try {
-            map = BEncoding.decode(encoded);
-            return;
+            try {
+                map = (Map) BEncoding.decode(encoded);
+                return;
+            } catch (BEncodingException be) {
+                // Bug 87718 in some instances, it appears that an encoded string is getting corrupted by being
+                // treated at some point as if the bytes were ISO-8859-1 instead of UTF-8.  Try again with this reversed.
+                // If this works, the internal lengths will have gotten corrected, so there is a fair chance this has
+                // correctly identified what happened.
+                if (be.getCause() != null && be.getCause() instanceof NumberFormatException) {
+                    try {
+                        String fixedUpEncoded = new String(
+                                encoded.getBytes(MimeConstants.P_CHARSET_LATIN1), MimeConstants.P_CHARSET_UTF8);
+                        map = (Map) BEncoding.decode(fixedUpEncoded);
+                        return;
+                    } catch (Exception e) {
+                    }
+                }
+                throw be;
+            }
         } catch (BEncodingException e) {
             try {
                 map = BlobMetaData.decodeRecursive(encoded);

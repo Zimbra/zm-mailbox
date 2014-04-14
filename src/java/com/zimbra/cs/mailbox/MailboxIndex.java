@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -52,9 +52,9 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbPool;
+import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.db.DbSearch;
 import com.zimbra.cs.db.DbTag;
-import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.index.BrowseTerm;
 import com.zimbra.cs.index.DbSearchConstraints;
 import com.zimbra.cs.index.IndexDocument;
@@ -100,7 +100,7 @@ public final class MailboxIndex {
 
     private volatile long lastFailedTime = -1;
     // Only one thread may run index at a time.
-    private Semaphore indexLock = new Semaphore(1);
+    private final Semaphore indexLock = new Semaphore(1);
     private final Mailbox mailbox;
     private final Analyzer analyzer;
     private IndexStore indexStore;
@@ -971,8 +971,8 @@ public final class MailboxIndex {
     }
 
     public static final class IndexStats {
-        private int maxDocs;
-        private int numDeletedDocs;
+        private final int maxDocs;
+        private final int numDeletedDocs;
 
         public IndexStats(int maxDocs, int numDeletedDocs) {
             super();
@@ -1053,8 +1053,15 @@ public final class MailboxIndex {
                 ListIterator<DbSearch.Result> itr = result.listIterator();
                 while (itr.hasNext()) {
                     DbSearch.Result sr = itr.next();
-                    MailItem item = mailbox.getItem(sr.getItemData());
-                    itr.set(new ItemSearchResult(item, sr.getSortValue()));
+                    try {
+                        MailItem item = mailbox.getItem(sr.getItemData());
+                        itr.set(new ItemSearchResult(item, sr.getSortValue()));
+                    } catch (ServiceException se) {
+                        ZimbraLog.index.info(String.format(
+                            "Problem constructing Result for folder=%s item=%s from UnderlyingData - dropping item",
+                                    sr.getItemData().folderId, sr.getItemData().id, sr.getId()), se);
+                        itr.remove();
+                    }
                 }
             }
             success = true;
