@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2008, 2009, 2010, 2011, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -171,12 +171,12 @@ public class Util {
             return meta;
 
         meta.put(FN_STANDARD_OFFSET, tz.getStandardOffset());
-        meta.put(FN_DAYTOSTD_DTSTART, tz.getStandardDtStart()); 
+        meta.put(FN_DAYTOSTD_DTSTART, tz.getStandardDtStart());
         meta.put(FN_DAYTOSTD_RULE, tz.getStandardRule());
         meta.put(FN_STANDARD_TZNAME, tz.getStandardTzname());
 
         meta.put(FN_DAYLIGHT_OFFSET, tz.getDaylightOffset());
-        meta.put(FN_STDTODAY_DTSTART, tz.getDaylightDtStart());  
+        meta.put(FN_STDTODAY_DTSTART, tz.getDaylightDtStart());
         meta.put(FN_STDTODAY_RULE, tz.getDaylightRule());
         meta.put(FN_DAYLIGHT_TZNAME, tz.getDaylightTzname());
         return meta;
@@ -202,7 +202,7 @@ public class Util {
         ICalTimeZone tz = ICalTimeZone.lookupByRule(newTz, false);
         return tz;
     }
-    
+
     private static ICalTimeZone newICalTimeZone(String tzId, Metadata meta) throws ServiceException {
         int standardOffset = (int) meta.getLong(FN_STANDARD_OFFSET, 0);
         String dayToStdDtStart = meta.get(FN_DAYTOSTD_DTSTART, null);
@@ -213,7 +213,7 @@ public class Util {
         String stdToDayDtStart = meta.get(FN_STDTODAY_DTSTART, ICalTimeZone.DEFAULT_DTSTART);
         String stdToDayRule = meta.get(FN_STDTODAY_RULE, null);
         String daylightTzname = meta.get(FN_DAYLIGHT_TZNAME, null);
-        
+
         ICalTimeZone tz = new ICalTimeZone(tzId, standardOffset, dayToStdDtStart, dayToStdRule, standardTzname,
             daylightOffset, stdToDayDtStart, stdToDayRule, daylightTzname);
         tz.initFromICalData(true);
@@ -324,15 +324,15 @@ public class Util {
         }
         return meta;
     }
-    
+
     public static Attach decodeAttachFromMetadata(Metadata meta) {
         String uri = meta.get(FN_URI, null);
+        String ct = meta.get(FN_CONTENT_TYPE, null);
         if (uri != null) {
-            String ct = meta.get(FN_CONTENT_TYPE, null);
-            return new Attach(uri, ct);
+            return Attach.fromUriAndContentType(uri, ct);
         } else {
             String binary = meta.get(FN_BINARY, null);
-            return new Attach(binary);
+            return Attach.fromEncodedAndContentType(binary, ct);
         }
     }
 

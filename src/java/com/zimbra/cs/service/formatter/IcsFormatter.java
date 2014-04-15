@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -36,13 +36,13 @@ import com.zimbra.common.util.FileBufferedWriter;
 import com.zimbra.common.util.HttpUtil;
 import com.zimbra.common.util.HttpUtil.Browser;
 import com.zimbra.cs.mailbox.CalendarItem;
+import com.zimbra.cs.mailbox.CalendarItem.Instance;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.OperationContext;
-import com.zimbra.cs.mailbox.CalendarItem.Instance;
 import com.zimbra.cs.mailbox.calendar.IcsImportParseHandler;
-import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.IcsImportParseHandler.ImportInviteVisitor;
+import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.UserServletContext;
 import com.zimbra.cs.service.UserServletException;
@@ -139,8 +139,9 @@ public class IcsFormatter extends Formatter {
             if (htmlFormat)
                 fileBufferedWriter.write("<html><body><pre>");
             context.targetMailbox.writeICalendarForCalendarItems(
-                    fileBufferedWriter, octxt, calItems, (context.target != null && context.target instanceof Folder) ? (Folder)context.target : null,
-                    useOutlookCompatMode, true, needAppleICalHacks, true, htmlFormat);
+                    fileBufferedWriter, octxt, calItems,
+                    (context.target != null && context.target instanceof Folder) ? (Folder)context.target : null,
+                    useOutlookCompatMode, true, needAppleICalHacks, true, htmlFormat, includeInlineAttaches(context));
             if (htmlFormat)
                 fileBufferedWriter.write("</pre></body></html>");
         } finally {
@@ -148,6 +149,17 @@ public class IcsFormatter extends Formatter {
         }
     }
 
+    /**
+     * At some point in the future, this may become a multi-value - "none", "inline", "uri"
+     * @return true if attachments should be returned inline in the iCalendar (defaults to false)
+     */
+    protected boolean includeInlineAttaches(UserServletContext context) {
+        String inlineAttaches = context.req.getParameter("icalAttach");
+        if (inlineAttaches == null) {
+            return false;
+        }
+        return inlineAttaches.equals("inline");
+    }
 
     @Override
     public boolean supportsSave() {

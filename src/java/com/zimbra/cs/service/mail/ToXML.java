@@ -2446,7 +2446,7 @@ public final class ToXML {
             }
         }
 
-        Element el = parent.addElement(MailConstants.E_MIMEPART);
+        Element el = parent.addNonUniqueElement(MailConstants.E_MIMEPART);
         MimePart mp = mpi.getMimePart();
 
         String part = mpi.getPartName();
@@ -2456,7 +2456,7 @@ public final class ToXML {
         String fname = Mime.getFilename(mp);
         if (MimeConstants.CT_XML_ZIMBRA_SHARE.equals(ctype)) {
             // the <shr> share info goes underneath the top-level <m>
-            Element shr = root.addElement(MailConstants.E_SHARE_NOTIFICATION);
+            Element shr = root.addNonUniqueElement(MailConstants.E_SHARE_NOTIFICATION);
             try {
                 addContent(shr, mpi, maxSize, defaultCharset);
             } catch (IOException e) {
@@ -2472,7 +2472,7 @@ public final class ToXML {
             }
         } else if (MimeConstants.CT_XML_ZIMBRA_DL_SUBSCRIPTION.equals(ctype)) {
             // the <dlSubs> dl subscription info goes underneath the top-level <m>
-            Element dlSubs = root.addElement(MailConstants.E_DL_SUBSCRIPTION_NOTIFICATION);
+            Element dlSubs = root.addNonUniqueElement(MailConstants.E_DL_SUBSCRIPTION_NOTIFICATION);
             try {
                 addContent(dlSubs, mpi, maxSize, defaultCharset);
             } catch (IOException e) {

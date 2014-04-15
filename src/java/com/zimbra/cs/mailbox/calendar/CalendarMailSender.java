@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -46,11 +46,13 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
+import javax.mail.util.ByteArrayDataSource;
 
 import com.google.common.io.Closeables;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.SignatureUtil;
+import com.zimbra.common.calendar.Attach;
 import com.zimbra.common.calendar.ICalTimeZone;
 import com.zimbra.common.calendar.ParsedDateTime;
 import com.zimbra.common.calendar.TimeZoneMap;
@@ -59,12 +61,13 @@ import com.zimbra.common.calendar.ZCalendar.ICalTok;
 import com.zimbra.common.calendar.ZCalendar.ZComponent;
 import com.zimbra.common.calendar.ZCalendar.ZProperty;
 import com.zimbra.common.calendar.ZCalendar.ZVCalendar;
+import com.zimbra.common.mime.ContentDisposition;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.L10nUtil;
-import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.L10nUtil.MsgKey;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.zmime.ZMimeBodyPart;
 import com.zimbra.common.zmime.ZMimeMessage;
@@ -455,7 +458,8 @@ public class CalendarMailSender {
         String descHtml = inv.getDescriptionHtml();
         String uid = inv.getUid();
         ZVCalendar cal = inv.newToICalendar(true);
-        return createCalendarMessage(null, null, null, null, subject, desc, descHtml, uid, cal);
+        return createCalendarMessage(null, null, null, null, subject, desc, descHtml, uid, cal,
+                inv.getIcalendarAttaches(), true);
     }
 
     public static MimeMessage createCalendarMessage(
@@ -471,13 +475,53 @@ public class CalendarMailSender {
             String subject, String desc, String descHtml,
             String uid, ZCalendar.ZVCalendar cal, boolean replyToSender)
     throws ServiceException {
+        return createCalendarMessage(account, fromAddr, senderAddr, toAddrs, subject, desc, descHtml, uid, cal,
+                (List <Attach>)null, replyToSender);
+    }
+
+    public static MimeMessage createCalendarMessage(
+            Account account, Address fromAddr, Address senderAddr, List<Address> toAddrs,
+            String subject, String desc, String descHtml,
+            String uid, ZCalendar.ZVCalendar cal, List <Attach> attaches, boolean replyToSender)
+    throws ServiceException {
         if (desc == null)
             desc = "";
         try {
             MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSmtpSession(account));
+            MimeMultipart mpAlternatives = new ZMimeMultipart("alternative");
 
-            MimeMultipart mmp = new ZMimeMultipart("alternative");
-            mm.setContent(mmp);
+            if (attaches != null && !attaches.isEmpty()) {
+                MimeMultipart mpMixed = new ZMimeMultipart("mixed");
+                mm.setContent(mpMixed);
+                MimeBodyPart mbpWrapper = new ZMimeBodyPart();
+                mbpWrapper.setContent(mpAlternatives);
+                mpMixed.addBodyPart(mbpWrapper);
+                for (Attach attach : attaches) {
+                    byte[] rawData = attach.getDecodedData();
+                    if (rawData == null) {
+                        continue;
+                    }
+                    ContentDisposition cdisp = new ContentDisposition(Part.ATTACHMENT, true /* use2231 */);
+                    String ctypeAsString = attach.getContentType();
+                    if (ctypeAsString == null) {
+                        ctypeAsString = MimeConstants.CT_APPLICATION_OCTET_STREAM;
+                    }
+                    ContentType ctype = new ContentType(ctypeAsString);
+                    if (attach.getFileName() != null) {
+                        ctype.setParameter("name", attach.getFileName());
+                        cdisp.setParameter("filename", attach.getFileName());
+                    }
+                    MimeBodyPart mbp2 = new ZMimeBodyPart();
+                    ByteArrayDataSource bads = new ByteArrayDataSource(rawData, ctypeAsString);
+                    mbp2.setDataHandler(new DataHandler(bads));
+                    mbp2.setHeader("Content-Type", ctype.toString());
+                    mbp2.setHeader("Content-Disposition", cdisp.toString());
+                    mbp2.setHeader("Content-Transfer-Encoding", "base64");
+                    mpMixed.addBodyPart(mbp2);
+                }
+            } else {
+                mm.setContent(mpAlternatives);
+            }
 
             // Add the text as DESCRIPTION property in the iCalendar part.
             // MS Entourage for Mac wants this.  It ignores text/plain and
@@ -488,7 +532,7 @@ public class CalendarMailSender {
             // TEXT part (add me first!)
             MimeBodyPart textPart = new ZMimeBodyPart();
             textPart.setText(desc, MimeConstants.P_CHARSET_UTF8);
-            mmp.addBodyPart(textPart);
+            mpAlternatives.addBodyPart(textPart);
 
             // HTML part is needed to keep Outlook happy as it doesn't know
             // how to deal with a message with only text/plain but no HTML.
@@ -501,12 +545,12 @@ public class CalendarMailSender {
             } else {
                 htmlPart.setDataHandler(new DataHandler(new HtmlPartDataSource(desc)));
             }
-            mmp.addBodyPart(htmlPart);
+            mpAlternatives.addBodyPart(htmlPart);
 
             // ///////
             // CALENDAR part
             MimeBodyPart icalPart = makeICalIntoMimePart(cal);
-            mmp.addBodyPart(icalPart);
+            mpAlternatives.addBodyPart(icalPart);
 
             // ///////
             // MESSAGE HEADERS
@@ -529,11 +573,9 @@ public class CalendarMailSender {
             }
             mm.setSentDate(new Date());
             mm.saveChanges();
-
             return mm;
         } catch (MessagingException e) {
-            throw ServiceException.FAILURE(
-                    "Messaging Exception while building MimeMessage from invite", e);
+            throw ServiceException.FAILURE("Messaging Exception while building MimeMessage from invite", e);
         }
     }
 
@@ -1114,14 +1156,14 @@ public class CalendarMailSender {
         String postmaster = senderAcct.getAttr(Provisioning.A_zimbraNewMailNotificationFrom);
         Map<String, String> vars = new HashMap<String, String>();
         vars.put("RECIPIENT_DOMAIN", senderAcct.getDomainName());
-        postmaster = StringUtil.fillTemplate(postmaster, vars);        
+        postmaster = StringUtil.fillTemplate(postmaster, vars);
         mm.setSender(new JavaMailInternetAddress(postmaster));
         mm.setFrom(new JavaMailInternetAddress(senderAcct.getName()));
         mm.setRecipient(RecipientType.TO, new JavaMailInternetAddress(to));
-        
+
         MimeMultipart mmp = new ZMimeMultipart("alternative");
         mm.setContent(mmp);
-        
+
         String sender = senderAcct.getCn() + " <" +senderAcct.getName() + ">";
         String time = FriendlyCalendaringDescription.getTimeDisplayString(inv.getStartTime(), inv.getEndTime(),
                 inv.isRecurrence(), inv.isAllDayEvent(), lc, toAcct);
@@ -1157,7 +1199,7 @@ public class CalendarMailSender {
         mm.saveChanges();
         return mm;
     }
-    
+
     public static void sendResourceAutoReply(final OperationContext octxt, final Mailbox mbox,
                                              final boolean saveToSent, Verb verb, boolean partialAccept,
                                              String additionalMsgBody, CalendarItem calItem,

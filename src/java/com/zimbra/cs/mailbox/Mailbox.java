@@ -4532,7 +4532,17 @@ public class Mailbox {
 
     public void writeICalendarForCalendarItems(Writer writer, OperationContext octxt, Collection<CalendarItem> calItems,
             Folder f, boolean useOutlookCompatMode, boolean ignoreErrors, boolean needAppleICalHacks,
-            boolean trimCalItemsList, boolean escapeHtmlTags) throws ServiceException {
+            boolean trimCalItemsList, boolean escapeHtmlTags)
+    throws ServiceException {
+        writeICalendarForCalendarItems(writer, octxt, calItems,
+            f, useOutlookCompatMode, ignoreErrors, needAppleICalHacks,
+            trimCalItemsList, escapeHtmlTags, false /* includeAttaches */);
+    }
+
+    public void writeICalendarForCalendarItems(Writer writer, OperationContext octxt, Collection<CalendarItem> calItems,
+            Folder f, boolean useOutlookCompatMode, boolean ignoreErrors, boolean needAppleICalHacks,
+            boolean trimCalItemsList, boolean escapeHtmlTags, boolean includeAttaches)
+    throws ServiceException {
         lock.lock();
         try {
             writer.write("BEGIN:VCALENDAR\r\n");
@@ -4582,11 +4592,11 @@ public class Mailbox {
                     ZComponent[] comps = null;
                     try {
                         comps = Invite.toVComponents(invites, allowPrivateAccess, useOutlookCompatMode,
-                                        appleICalExdateHack);
+                                        appleICalExdateHack, includeAttaches);
                     } catch (ServiceException e) {
                         if (ignoreErrors) {
-                            ZimbraLog.calendar.warn("Error retrieving iCalendar data for item " + calItem.getId()
-                                            + ": " + e.getMessage(), e);
+                            ZimbraLog.calendar.warn("Error retrieving iCalendar data for item %s: %s", calItem.getId(),
+                                            e.getMessage(), e);
                         } else {
                             throw e;
                         }
@@ -5280,7 +5290,7 @@ public class Mailbox {
         if (pm == null) {
             inv.setDontIndexMimeMessage(true); // the MimeMessage is fake, so we don't need to index it
             String desc = inv.getDescription();
-            if (desc != null && desc.length() > Invite.getMaxDescInMeta()) {
+            if (inv.hasAttachment() || (desc != null && (desc.length() > Invite.getMaxDescInMeta()))) {
                 MimeMessage mm = CalendarMailSender.createCalendarMessage(inv);
                 pm = new ParsedMessage(mm, octxt == null ? System.currentTimeMillis() : octxt.getTimestamp(), true);
             }

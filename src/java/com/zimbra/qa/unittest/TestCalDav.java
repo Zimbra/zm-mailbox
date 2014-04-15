@@ -141,29 +141,40 @@ public class TestCalDav extends TestCase {
         return icalString;
     }
 
-    public void executeHttpMethod(HttpClient client, HttpMethod method, int expectedCode) throws IOException {
-        try {
-            int respCode = HttpClientUtil.executeMethod(client, method);
-            int statusCode = method.getStatusCode();
-            String statusLine = method.getStatusLine().toString();
+    public static class HttpMethodExecutor {
+        public int respCode;
+        public int statusCode;
+        public String statusLine;
+        public Header[] respHeaders;
+        public byte[] responseBodyBytes;
 
-            Header[] respHeaders = method.getResponseHeaders();
-            StringBuilder hdrsSb = new StringBuilder();
-            for (Header hdr : respHeaders) {
-                hdrsSb.append(hdr.toString());
+        public HttpMethodExecutor(HttpClient client, HttpMethod method, int expectedCode) throws IOException {
+            try {
+                respCode = HttpClientUtil.executeMethod(client, method);
+                statusCode = method.getStatusCode();
+                statusLine = method.getStatusLine().toString();
+
+                respHeaders = method.getResponseHeaders();
+                StringBuilder hdrsSb = new StringBuilder();
+                for (Header hdr : respHeaders) {
+                    hdrsSb.append(hdr.toString());
+                }
+                responseBodyBytes = ByteUtil.getContent(method.getResponseBodyAsStream(), -1);
+                ZimbraLog.test.debug("RESPONSE:\n%s\n%s\n\n", statusLine, hdrsSb.toString(),
+                        new String(responseBodyBytes));
+                assertEquals("Response code", expectedCode, respCode);
+                assertEquals("Status code", expectedCode, statusCode);
+            } catch (IOException e) {
+                ZimbraLog.test.debug("Exception thrown", e);
+                fail("Unexpected Exception" + e);
+                throw e;
+            } finally {
+                method.releaseConnection();
             }
-
-            byte[] responseBodyBytes = ByteUtil.getContent(method.getResponseBodyAsStream(), -1);
-            ZimbraLog.test.debug("RESPONSE:\n%s\n%s\n\n", statusLine, hdrsSb.toString(), new String(responseBodyBytes));
-
-            assertEquals("Response code", expectedCode, respCode);
-            assertEquals("Status code", expectedCode, statusCode);
-        } catch (IOException e) {
-            ZimbraLog.test.debug("Exception thrown", e);
-            fail("Unexpected Exception" + e);
-            throw e;
-        } finally {
-            method.releaseConnection();
+        }
+        public static HttpMethodExecutor execute(HttpClient client, HttpMethod method, int expectedCode)
+                throws IOException {
+            return new HttpMethodExecutor(client, method, expectedCode);
         }
     }
 
@@ -183,7 +194,7 @@ public class TestCalDav extends TestCase {
         method.setRequestEntity(new ByteArrayRequestEntity(exampleCancelIcal(dav1, dav2, dav3).getBytes(),
                 MimeConstants.CT_TEXT_CALENDAR));
 
-        executeHttpMethod(client, method, HttpStatus.SC_OK);
+        HttpMethodExecutor.execute(client, method, HttpStatus.SC_OK);
     }
 
     public void testBadPostToSchedulingOutbox() throws Exception {
@@ -201,7 +212,7 @@ public class TestCalDav extends TestCase {
         method.setRequestEntity(new ByteArrayRequestEntity(exampleCancelIcal(dav1, dav2, dav3).getBytes(),
                 MimeConstants.CT_TEXT_CALENDAR));
 
-        executeHttpMethod(client, method, HttpStatus.SC_BAD_REQUEST);
+        HttpMethodExecutor.execute(client, method, HttpStatus.SC_BAD_REQUEST);
     }
 
     public static void addBasicAuthHeaderForUser(HttpMethod method, Account acct) throws UnsupportedEncodingException {
@@ -230,7 +241,7 @@ public class TestCalDav extends TestCase {
         MkColMethod method = new MkColMethod(url.toString());
         addBasicAuthHeaderForUser(method, dav1);
         HttpClient client = new HttpClient();
-        executeHttpMethod(client, method, HttpStatus.SC_CREATED);
+        HttpMethodExecutor.execute(client, method, HttpStatus.SC_CREATED);
     }
 
     public void testMkcol4addressBook() throws Exception {
@@ -254,7 +265,7 @@ public class TestCalDav extends TestCase {
         HttpClient client = new HttpClient();
         method.addRequestHeader("Content-Type", MimeConstants.CT_TEXT_XML);
         method.setRequestEntity(new ByteArrayRequestEntity(xml.getBytes(), MimeConstants.CT_TEXT_XML));
-        executeHttpMethod(client, method, HttpStatus.SC_MULTI_STATUS);
+        HttpMethodExecutor.execute(client, method, HttpStatus.SC_MULTI_STATUS);
 
         ZMailbox.Options options = new ZMailbox.Options();
         options.setAccount(dav1.getName());

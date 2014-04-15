@@ -804,6 +804,11 @@ extends Assert {
 
     public static ZFolder createFolder(ZMailbox mbox, String path)
     throws ServiceException {
+        return createFolder(mbox, path, ZFolder.View.message);
+    }
+
+    public static ZFolder createFolder(ZMailbox mbox, String path, ZFolder.View view)
+    throws ServiceException {
         String parentId = Integer.toString(Mailbox.ID_FOLDER_USER_ROOT);
         String name = null;
         int idxLastSlash = path.lastIndexOf('/');
@@ -823,7 +828,7 @@ extends Assert {
             parentId = parent.getId();
         }
 
-        return mbox.createFolder(parentId, name, ZFolder.View.message, null, null, null);
+        return mbox.createFolder(parentId, name, view, null, null, null);
     }
 
     public static ZFolder createFolder(ZMailbox mbox, String parentId, String folderName)

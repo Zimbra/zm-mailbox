@@ -2,18 +2,19 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
 package com.zimbra.qa.unittest;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -26,15 +27,34 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.util.SharedByteArrayInputStream;
 
 import junit.framework.TestCase;
+import net.fortuna.ical4j.data.CalendarOutputter;
+import net.fortuna.ical4j.model.Date;
+import net.fortuna.ical4j.model.Property;
+import net.fortuna.ical4j.model.ValidationException;
+import net.fortuna.ical4j.model.component.VEvent;
+import net.fortuna.ical4j.model.parameter.FmtType;
+import net.fortuna.ical4j.model.parameter.Value;
+import net.fortuna.ical4j.model.parameter.XParameter;
+import net.fortuna.ical4j.model.property.Attach;
+import net.fortuna.ical4j.model.property.CalScale;
+import net.fortuna.ical4j.model.property.ProdId;
+import net.fortuna.ical4j.model.property.Uid;
+import net.fortuna.ical4j.model.property.Version;
 
 import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.commons.httpclient.methods.InputStreamRequestEntity;
+import org.apache.commons.httpclient.methods.PostMethod;
 
 import com.zimbra.client.ZDocument;
+import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.common.httpclient.HttpClientUtil;
+import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.util.tar.TarEntry;
 import com.zimbra.common.util.tar.TarInputStream;
 import com.zimbra.common.zmime.ZMimeMessage;
@@ -113,6 +133,66 @@ extends TestCase {
         verifyZipFile(mbox, "/Inbox/?fmt=zip", true);
         verifyZipFile(mbox, "/Inbox/?fmt=zip&body=1", true);
         verifyZipFile(mbox, "/Inbox/?fmt=zip&body=0", false);
+    }
+
+    /**
+     * Test that can import into a new calendar from ICALENDAR containing an inline ATTACHment.
+     * Test that it is possible to export calendar entry with an attachment with the attachment
+     * inlined if icalAttach=inline or ignoring the attachment if icalAttach=none
+     */
+    public void testIcsImportExport() throws IOException, ValidationException, ServiceException {
+        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        String calName = NAME_PREFIX + "2ndCalendar";
+        String calUri = String.format("/%s?fmt=ics", calName);
+        TestUtil.createFolder(mbox, calName, ZFolder.View.appointment);
+        net.fortuna.ical4j.model.Calendar calendar = new net.fortuna.ical4j.model.Calendar();
+        calendar.getProperties().add(new ProdId("-//ZimbraTest 1.0//EN"));
+        calendar.getProperties().add(Version.VERSION_2_0);
+        calendar.getProperties().add(CalScale.GREGORIAN);
+        java.util.Calendar start = java.util.Calendar.getInstance();
+        start.set(java.util.Calendar.MONTH, java.util.Calendar.SEPTEMBER);
+        start.set(java.util.Calendar.DAY_OF_MONTH, 03);
+
+        VEvent wwII = new VEvent(new Date(start.getTime()), NAME_PREFIX + " Declarations of war");
+        wwII.getProperties().getProperty(Property.DTSTART).getParameters().add(Value.DATE);
+        wwII.getProperties().add(new Uid("3-14159"));
+        Attach attach = new Attach("Attachment.\nIsn't it short.".getBytes(MimeConstants.P_CHARSET_ASCII));
+        attach.getParameters().add(new XParameter("X-APPLE-FILENAME", "short.txt"));
+        attach.getParameters().add(new FmtType(MimeConstants.CT_TEXT_PLAIN));
+        wwII.getProperties().add(attach);
+        calendar.getComponents().add(wwII);
+        ByteArrayOutputStream buf = new ByteArrayOutputStream();
+        CalendarOutputter outputter = new CalendarOutputter();
+        outputter.setValidating(false);
+        outputter.output(calendar, buf);
+        URI uri = mbox.getRestURI(calUri);
+        HttpClient client = mbox.getHttpClient(uri);
+        PostMethod post = new PostMethod(uri.toString());
+        post.setRequestEntity(new InputStreamRequestEntity(new ByteArrayInputStream(buf.toByteArray()),
+                MimeConstants.CT_TEXT_CALENDAR));
+        ZimbraLog.test.info("testIcsImportExport:ICS to be imported:%s", new String(buf.toByteArray()));
+        TestCalDav.HttpMethodExecutor.execute(client, post, HttpStatus.SC_OK);
+        uri = mbox.getRestURI(calUri + "&icalAttach=inline");
+        GetMethod get = new GetMethod(uri.toString());
+        TestCalDav.HttpMethodExecutor executor = new TestCalDav.HttpMethodExecutor(client, get, HttpStatus.SC_OK);
+        String respIcal = new String(executor.responseBodyBytes, MimeConstants.P_CHARSET_UTF8);
+        ZimbraLog.test.info("testIcsImportExport:ICS exported (with icalAttach=inline):%s", respIcal);
+        int attachNdx = respIcal.indexOf("ATTACH;");
+        assertTrue("ATTACH should be present", -1 != attachNdx);
+        String fromAttach = respIcal.substring(attachNdx);
+        assertTrue("BINARY should be present", -1 != fromAttach.indexOf("VALUE=BINARY"));
+        uri = mbox.getRestURI(calUri + "&icalAttach=none");
+        get = new GetMethod(uri.toString());
+        executor = new TestCalDav.HttpMethodExecutor(client, get, HttpStatus.SC_OK);
+        respIcal = new String(executor.responseBodyBytes, MimeConstants.P_CHARSET_UTF8);
+        ZimbraLog.test.info("testIcsImportExport:ICS exported (with icalAttach=none):%s", respIcal);
+        assertTrue("ATTACH should be present", -1 == respIcal.indexOf("ATTACH;"));
+        uri = mbox.getRestURI(calUri);
+        get = new GetMethod(uri.toString());
+        executor = new TestCalDav.HttpMethodExecutor(client, get, HttpStatus.SC_OK);
+        respIcal = new String(executor.responseBodyBytes, MimeConstants.P_CHARSET_UTF8);
+        ZimbraLog.test.info("testIcsImportExport:ICS exported (default - same as icalAttach=none):%s", respIcal);
+        assertTrue("ATTACH should be present", -1 == respIcal.indexOf("ATTACH;"));
     }
 
     private void verifyZipFile(ZMailbox mbox, String relativePath, boolean hasBody)

@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -31,9 +31,14 @@ import javax.mail.Part;
 import javax.mail.internet.ContentType;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
+import javax.mail.internet.MimePart;
 
+import org.apache.commons.io.IOUtils;
+
+import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.calendar.Attach;
 import com.zimbra.common.calendar.Geo;
 import com.zimbra.common.calendar.ICalTimeZone;
 import com.zimbra.common.calendar.ParsedDateTime;
@@ -52,6 +57,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Identity;
@@ -67,6 +73,8 @@ import com.zimbra.cs.mailbox.calendar.Alarm.Action;
 import com.zimbra.cs.mailbox.calendar.Alarm.TriggerRelated;
 import com.zimbra.cs.mailbox.calendar.Alarm.TriggerType;
 import com.zimbra.cs.mailbox.calendar.Recurrence.IRecurrence;
+import com.zimbra.cs.mime.MPartInfo;
+import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.util.AccountUtil.AccountAddressMatcher;
 
 /**
@@ -1110,6 +1118,23 @@ public class Invite {
         return !mAlarms.isEmpty();
     }
 
+    private List<Attach> attaches = null;
+    /**
+     * Warning! Not always populated!
+     * @return
+     */
+    public List<Attach> getIcalendarAttaches() {
+        return attaches != null ? attaches : new ArrayList<Attach>();
+    }
+
+    public void addIcalendarAttach(Attach attach) {
+        if (attaches == null) {
+            attaches = Lists.newArrayList();
+            setHasAttachment(true);
+        }
+        attaches.add(attach);
+    }
+
     public boolean hasAttachment() { return ((mFlags & APPT_FLAG_HAS_ATTACHMENT)!=0); }
     public void setHasAttachment(boolean hasAttachment) {
         if (hasAttachment) {
@@ -1654,7 +1679,7 @@ public class Invite {
     throws ServiceException {
         List<Invite> list = new ArrayList<Invite>();
         for (ZVCalendar cal : cals) {
-            createFromCalendar(list, account, fragment, cal, sentByMe, null, 0,
+            createFromCalendar(list, account, fragment, cal, sentByMe, (Mailbox)null, 0,
                                continueOnError, visitor);
         }
         return list;
@@ -1964,6 +1989,12 @@ public class Invite {
                                 case X_ZIMBRA_CHANGES:
                                     newInv.addXProp(prop);
                                     break;
+                                case ATTACH:
+                                    Attach attach = Attach.parse(prop);
+                                    if (attach.getBinaryB64Data() != null) {
+                                        newInv.addIcalendarAttach(attach);
+                                    }
+                                    break;
                                 }
                             }
                         }
@@ -2093,7 +2124,61 @@ public class Invite {
                 e);
     }
 
+    protected ZComponent addInlineATTACHes(ZComponent comp) {
+        MimeMessage mimeMsg = null;
+        try {
+            mimeMsg = getMimeMessage();
+        } catch (ServiceException e1) {
+            return comp;
+        }
+        if (mimeMsg == null) {
+            return comp;
+        }
+        try {
+            List<MPartInfo> parts = Mime.getParts(mimeMsg, MimeConstants.P_CHARSET_UTF8);
+            if (parts != null && !parts.isEmpty()) {
+                for (MPartInfo body : parts.get(0).getChildren()) {
+                    if (body.isMultipart()) {
+                        continue;
+                    }
+                    MimePart mp = body.getMimePart();
+                    String ctype = StringUtil.stripControlCharacters(body.getContentType());
+                    if (MimeConstants.CT_TEXT_CALENDAR.equalsIgnoreCase(ctype)) {
+                        // A true calendar part has "method" parameter in the content type.
+                        // Otherwise it's just an attachment that happens to be a .ics file.
+                        try {
+                            ContentType ct = new ContentType(body.getMimePart().getContentType());
+                            if (ct.getParameter("method") != null) {
+                                continue;
+                            }
+                        } catch (MessagingException e) {
+                        }
+                    }
+                    String contentType = StringUtil.stripControlCharacters(body.getContentType());
+                    String fileName = Mime.getFilename(mp);
+                    try (InputStream in = mp.getInputStream()) {
+                        byte[] rawBytes = IOUtils.toByteArray(in);
+                        Attach attachment = Attach.fromUnencodedAndContentType(rawBytes, contentType);
+                        if (!Strings.isNullOrEmpty(fileName)) {
+                            attachment.setFileName(fileName);
+                        }
+                        comp.addProperty(attachment.toZProperty());
+                    }
+                }
+            }
+        } catch (MessagingException | IOException e) {
+            ZimbraLog.calendar.warn("Problem adding inline ATTACHes", e);
+        }
+        return comp;
+    }
+
     public ZComponent newToVComponent(boolean useOutlookCompatAllDayEvents, boolean includePrivateData)
+    throws ServiceException {
+        return newToVComponent(useOutlookCompatAllDayEvents, includePrivateData, false);
+    }
+
+    public ZComponent newToVComponent(boolean useOutlookCompatAllDayEvents, boolean includePrivateData,
+                                             boolean includeAttaches)
     throws ServiceException {
         boolean isRequestPublishCancel =
             ICalTok.REQUEST.equals(mMethod) || ICalTok.PUBLISH.equals(mMethod) || ICalTok.CANCEL.equals(mMethod);
@@ -2328,6 +2413,9 @@ public class Invite {
         if (isLocalOnly())
             component.addProperty(new ZProperty(ICalTok.X_ZIMBRA_LOCAL_ONLY, true));
 
+        if (includeAttaches) {
+            addInlineATTACHes(component);
+        }
         return component;
     }
 
@@ -2336,10 +2424,21 @@ public class Invite {
                                              boolean useOutlookCompatAllDayEvents,
                                              boolean convertCanceledInstancesToExdates)
     throws ServiceException {
+        return toVComponents(invites, includePrivateData, useOutlookCompatAllDayEvents,
+                convertCanceledInstancesToExdates, false /* includeAttaches */);
+    }
+
+    public static ZComponent[] toVComponents(Invite[] invites,
+                                             boolean includePrivateData,
+                                             boolean useOutlookCompatAllDayEvents,
+                                             boolean convertCanceledInstancesToExdates,
+                                             boolean includeAttaches)
+    throws ServiceException {
         List<ZComponent> comps = new ArrayList<ZComponent>(invites.length);
         if (!convertCanceledInstancesToExdates || invites.length <= 1) {
             for (Invite inv : invites) {
-                ZComponent comp = inv.newToVComponent(useOutlookCompatAllDayEvents, includePrivateData);
+                ZComponent comp = inv.newToVComponent(useOutlookCompatAllDayEvents, includePrivateData,
+                        includeAttaches);
                 comps.add(comp);
             }
         } else {
@@ -2350,7 +2449,8 @@ public class Invite {
             // Find the series invite.
             for (Invite inv : invites) {
                 if (inv.isRecurrence()) {
-                    ZComponent comp = inv.newToVComponent(useOutlookCompatAllDayEvents, includePrivateData);
+                    ZComponent comp = inv.newToVComponent(useOutlookCompatAllDayEvents, includePrivateData,
+                            includeAttaches);
                     seriesComp = comp;
                     comps.add(seriesComp);
                     seriesInv = inv;
@@ -2374,13 +2474,15 @@ public class Invite {
                             seriesComp.addProperty(exdateProp);
                         } else {
                             // But if there is no series component, let the canceled instance be a component.
-                            ZComponent comp = inv.newToVComponent(useOutlookCompatAllDayEvents, includePrivateData);
-                            if (comp != null)
+                            ZComponent comp = inv.newToVComponent(useOutlookCompatAllDayEvents, includePrivateData,
+                                                includeAttaches);
+                                if (comp != null)
                                 comps.add(comp);
                         }
                     } else {
                         // Modified instances are added as standalone components.
-                        ZComponent comp = inv.newToVComponent(useOutlookCompatAllDayEvents, includePrivateData);
+                        ZComponent comp = inv.newToVComponent(useOutlookCompatAllDayEvents, includePrivateData,
+                                includeAttaches);
                         if (comp != null)
                             comps.add(comp);
                     }
