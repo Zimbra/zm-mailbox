@@ -729,12 +729,12 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Maximum number of contacts allowed in mailbox.  0 means no limit.</desc>
 </attr>
 
-<attr id="108" name="zimbraAuthTokenLifetime" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+<attr id="108" name="zimbraAuthTokenLifetime" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" callback="PositiveTimeInterval">
   <defaultCOSValue>2d</defaultCOSValue>
   <desc>lifetime of newly created auth tokens</desc>
 </attr>
 
-<attr id="109" name="zimbraAdminAuthTokenLifetime" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+<attr id="109" name="zimbraAdminAuthTokenLifetime" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" callback="PositiveTimeInterval">
   <defaultCOSValue>12h</defaultCOSValue>
   <desc>lifetime of newly created admin auth tokens</desc>
 </attr>
