@@ -280,6 +280,38 @@ SECTION mailbox
 	REWRITE mailboxd/start.d/setuid.ini.in mailboxd/start.d/setuid.ini
 	RESTART mailboxd
 
+SECTION zimbra
+    VAR zimbraLogToSyslog
+    VAR zimbraAdminURL  
+    LOCAL mailboxd_keystore_password
+    LOCAL mailboxd_truststore_password
+    LOCAL zimbra_uid
+    LOCAL zimbra_gid
+    REWRITE conf/log4j.properties.in conf/log4j.properties
+    REWRITE mailboxd/etc/jetty.xml.in mailboxd/etc/jetty.xml
+    REWRITE mailboxd/etc/zimbra.web.xml.in mailboxd/webapps/zimbra/WEB-INF/web.xml
+    REWRITE mailboxd/etc/zimbra-jetty-env.xml.in mailboxd/webapps/zimbra/WEB-INF/jetty-env.xml
+    REWRITE conf/spnego_java_options.in conf/spnego_java_options
+    REWRITE mailboxd/modules/setuid.mod.in mailboxd/modules/setuid.mod
+    REWRITE mailboxd/start.d/setuid.ini.in mailboxd/start.d/setuid.ini
+    RESTART mailboxd
+    
+SECTION zimbraAdmin 
+    VAR zimbraLogToSyslog
+    VAR zimbraAdminURL
+    LOCAL mailboxd_keystore_password
+    LOCAL mailboxd_truststore_password
+    LOCAL zimbra_uid
+    LOCAL zimbra_gid
+    REWRITE conf/log4j.properties.in conf/log4j.properties
+    REWRITE mailboxd/etc/jetty.xml.in mailboxd/etc/jetty.xml
+    REWRITE mailboxd/etc/zimbraAdmin.web.xml.in mailboxd/webapps/zimbraAdmin/WEB-INF/web.xml
+    REWRITE mailboxd/etc/zimbraAdmin-jetty-env.xml.in mailboxd/webapps/zimbraAdmin/WEB-INF/jetty-env.xml
+    REWRITE conf/spnego_java_options.in conf/spnego_java_options
+    REWRITE mailboxd/modules/setuid.mod.in mailboxd/modules/setuid.mod
+    REWRITE mailboxd/start.d/setuid.ini.in mailboxd/start.d/setuid.ini
+    RESTART mailboxd
+    
 SECTION proxy
 	LOCAL ldap_url
 	VAR getAllMemcachedServers
@@ -329,6 +361,7 @@ SECTION proxy
 	VAR zimbraReverseProxyWorkerConnections
 	VAR zimbraReverseProxyWorkerProcesses
 	VAR zimbraReverseProxyAcceptMutex
+	VAR zimbraReverseProxyMailstoreSplit
 	PROXYGEN
 	RESTART proxy
 
