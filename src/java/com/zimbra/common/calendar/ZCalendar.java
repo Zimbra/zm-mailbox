@@ -93,6 +93,10 @@ public class ZCalendar {
 
         X_MICROSOFT_CDO_ALLDAYEVENT, X_MICROSOFT_CDO_INTENDEDSTATUS, X_MICROSOFT_DISALLOW_COUNTER,
 
+        // Used with ATTACH according to http://msdn.microsoft.com/en-us/library/ee124339%28v=exchg.80%29.aspx
+        X_FILENAME,
+        X_APPLE_FILENAME, // Used with ATTACH in Apple Calendar
+
         // ZCO Custom values
         X_ZIMBRA_STATUS, X_ZIMBRA_STATUS_WAITING, X_ZIMBRA_STATUS_DEFERRED,
         X_ZIMBRA_PARTSTAT_WAITING, X_ZIMBRA_PARTSTAT_DEFERRED,
@@ -226,6 +230,12 @@ public class ZCalendar {
                         comp.addProperty(altDescProp);
                     }
                 }
+            }
+        }
+
+        public void removeInlineIcalAttachments() {
+            for (ZComponent compo : getComponents()) {
+                compo.removeInlineIcalAttachments();
             }
         }
 
@@ -364,6 +374,21 @@ public class ZCalendar {
             }
             return null;
         }
+
+        public void removeInlineIcalAttachments() {
+            Iterator<ZProperty> propIter = getPropertyIterator();
+            while (propIter.hasNext()) {
+                ZProperty prop = propIter.next();
+                if (!ICalTok.ATTACH.equals(prop.getToken())) {
+                    continue;
+                }
+                ZParameter valueType = prop.getParameter(ICalTok.VALUE);
+                if ((valueType != null) && (valueType.getValue().equals("BINARY"))) {
+                    propIter.remove();
+                }
+            }
+        }
+
     }
 
     // these are the characters that MUST be escaped: , ; " \n and \ -- note that \
