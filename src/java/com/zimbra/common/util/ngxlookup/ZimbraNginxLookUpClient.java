@@ -55,7 +55,9 @@ public class ZimbraNginxLookUpClient {
     public void setAttributes(String[] lookUpServers, String[] upstreamMailServers, int connectTimeout,
             int retryTimeout) {
         this.ngxLookUpServers = parseServerList(lookUpServers, DEFAULT_NGINX_HANDLER_PORT);
+        ZimbraLog.misc.debug("got %s lookup servers", this.ngxLookUpServers == null ? "null" : this.ngxLookUpServers.size());
         this.upstreamMailServers = parseServerList(upstreamMailServers, DEFAULT_UPSTREAM_MAIL_SERVER_PORT);
+        ZimbraLog.misc.debug("got %s mailstore servers", this.upstreamMailServers == null ? "null" : this.upstreamMailServers.size());
         this.ngxConnectTimeout = connectTimeout;
         this.ngxRetryTimeout = retryTimeout;
     }
@@ -152,6 +154,7 @@ public class ZimbraNginxLookUpClient {
     public NginxAuthServer getRouteforAccount(String userName, String authMethod, String authProtocol, String clientIP,
             String proxyIP, String virtualHost) throws ServiceException {
         Route nginxLookUpHandler = getNginxRouteHandler();
+        ZimbraLog.misc.debug("getting route for account %s with handler %s", userName, nginxLookUpHandler);
         if (nginxLookUpHandler != null) {
             GetMethod method = new GetMethod((new StringBuilder("http://").append(nginxLookUpHandler.ngxServerAddress.getHostName()).
                     append(":").append(nginxLookUpHandler.ngxServerAddress.getPort()).append(urlExtension)).toString());
@@ -174,9 +177,12 @@ public class ZimbraNginxLookUpClient {
                 if (statusCode == 200 && method.getResponseHeader("Auth-Status").getValue().equals("OK")) {
                     return new NginxAuthServer(method.getResponseHeader("Auth-Server").getValue(), method.getResponseHeader("Auth-Port").getValue(),
                             method.getResponseHeader("Auth-User").getValue());
+                } else {
+                	ZimbraLog.misc.debug("unexpected return %d\r\n%s", statusCode, method.getResponseBodyAsString());
                 }
             } catch (IOException e) {
                 nginxLookUpHandler.failureTime = System.nanoTime();
+                ZimbraLog.misc.debug("IOException getting route", e);
             } finally {
                 method.releaseConnection();
             }
@@ -206,8 +212,11 @@ public class ZimbraNginxLookUpClient {
                     continue;
                 // In case of nginx lookup handlers, there might be additional '/service/extension/nginx-lookup' at the end.
                 // Remove it as the parser expects a server value with hostname:port or just hostname
-                if (defaultPort == DEFAULT_NGINX_HANDLER_PORT)
+                if (defaultPort == DEFAULT_NGINX_HANDLER_PORT) {
                 	server = server.replace(urlExtension, "");
+                	ZimbraLog.misc.debug("Lookup server after removing urlExtension " + server);
+                }
+                ZimbraLog.misc.debug("Server before parsing " + server);
                 String[] parts = server.split(":");
                 if (parts != null) {
                     String host;
@@ -219,17 +228,17 @@ public class ZimbraNginxLookUpClient {
                         try {
                             port = Integer.parseInt(parts[1]);
                         } catch (NumberFormatException e) {
-                            ZimbraLog.misc.warn("Invalid server " + server);
+                            ZimbraLog.misc.warn("Invalid server parsing ports " + server);
                             continue;
                         }
                     } else {
-                        ZimbraLog.misc.warn("Invalid server " + server);
+                        ZimbraLog.misc.warn("Invalid server " + server + "has %d parts" + parts.length);
                         continue;
                     }
                     Route rt = this.new Route(new InetSocketAddress(host, port), 0);
                     addrs.add(rt);
                 } else {
-                    ZimbraLog.misc.warn("Invalid server " + server);
+                    ZimbraLog.misc.warn("Invalid server has null parts" + server);
                     continue;
                 }
             }
