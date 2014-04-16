@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2008, 2009, 2010, 2011, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.DateUtil;
@@ -31,7 +32,6 @@ import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.SearchAccountsOptions;
-import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.cs.account.ldap.LdapProv;
 import com.zimbra.cs.datasource.DataSourceManager;
 import com.zimbra.cs.db.DbMailbox;
@@ -56,13 +56,14 @@ public class DataSourceCallback extends AttributeCallback {
         INTERVAL_ATTRS.add(Provisioning.A_zimbraDataSourceCaldavPollingInterval);
         INTERVAL_ATTRS.add(Provisioning.A_zimbraDataSourceYabPollingInterval);
         INTERVAL_ATTRS.add(Provisioning.A_zimbraDataSourceCalendarPollingInterval);
+        INTERVAL_ATTRS.add(Provisioning.A_zimbraDataSourceGalPollingInterval);
     }
 
     /**
      * Confirms that polling interval values are not set lower than the minimum.
      */
     @SuppressWarnings("unchecked")
-    @Override 
+    @Override
     public void preModify(CallbackContext context, String attrName, Object attrValue,
             Map attrsToModify, Entry entry)
     throws ServiceException {
@@ -82,13 +83,13 @@ public class DataSourceCallback extends AttributeCallback {
      * Updates scheduled tasks for data sources whose polling interval has changed.
      */
     @SuppressWarnings("unchecked")
-    @Override 
+    @Override
     public void postModify(CallbackContext context, String attrName, Entry entry) {
         // Don't do anything unless inside the server
         if (!Zimbra.started() || !LC.data_source_scheduling_enabled.booleanValue()) {
             return;
         }
-        
+
         // Don't do anything if this postModify is triggered by creating a COS,
         // because no account will be on this COS yet.
         if (context.isCreate() && (entry instanceof Cos))
