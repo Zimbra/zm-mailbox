@@ -3499,6 +3499,14 @@ public class Mailbox {
     }
 
     public void beginTrackingSync() throws ServiceException {
+        lock.lock(false);
+        try {
+            if (isTrackingSync()) {
+                return;
+            }
+        } finally {
+            lock.release();
+        }
         lock.lock();
         try {
             if (isTrackingSync()) {
