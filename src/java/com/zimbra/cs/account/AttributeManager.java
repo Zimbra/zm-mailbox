@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -31,6 +31,7 @@ import org.dom4j.DocumentException;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.SetUtil;
@@ -187,6 +188,15 @@ public class AttributeManager {
         }
     }
 
+    @VisibleForTesting
+    void addAttribute(AttributeInfo info) {
+        mAttrs.put(info.mName.toLowerCase(), info);
+    }
+
+    @VisibleForTesting
+    AttributeManager() {
+    }
+
     public AttributeManager(String dir) throws ServiceException {
         initFlagsToAttrsMap();
         initClassToAttrsMap();
@@ -336,7 +346,7 @@ public class AttributeManager {
 
             List<AttributeServerType> requiresRestart = null;
             Version deprecatedSinceVer = null;
-            Version sinceVer = null;
+            List<Version> sinceVer = null;
 
             for (Iterator attrIter = eattr.attributeIterator(); attrIter.hasNext();) {
                 Attribute attr = (Attribute) attrIter.next();
@@ -407,7 +417,11 @@ public class AttributeManager {
                     String since = attr.getValue();
                     if (since != null) {
                         try {
-                            sinceVer = new Version(since);
+                            String[] versions = since.split(",");
+                            sinceVer = new ArrayList<Version>();
+                            for (String verStr : versions) {
+                                sinceVer.add(new Version(verStr.trim()));
+                            }
                         } catch (ServiceException e) {
                             error(name, file, aname + " is not valid: " + attr.getValue() + " (" + e.getMessage() + ")");
                         }
@@ -573,7 +587,7 @@ public class AttributeManager {
             List<String> globalConfigValues, List<String> defaultCOSValues,
             List<String> defaultExternalCOSValues, List<String> globalConfigValuesUpgrade,
             List<String> defaultCOSValuesUpgrade, String description, List<AttributeServerType> requiresRestart,
-            Version sinceVer, Version deprecatedSinceVer) {
+            List<Version> sinceVer, Version deprecatedSinceVer) {
         return new AttributeInfo(
                 name, id, parentOid, groupId, callback, type, order, value, immutable, min, max,
                 cardinality, requiredIn, optionalIn, flags, globalConfigValues, defaultCOSValues,
@@ -1017,15 +1031,7 @@ public class AttributeManager {
      * @throws ServiceException
      */
     public boolean inVersion(String attr, String version) throws ServiceException {
-        AttributeInfo ai = mAttrs.get(attr.toLowerCase());
-        if (ai != null) {
-            Version since = ai.getSince();
-            if (since == null)
-                return true;
-            else
-                return since.compare(version) <= 0;
-        } else
-            throw AccountServiceException.INVALID_ATTR_NAME("unknown attribute: " + attr, null);
+        return versionCheck(attr, version, true, true);
     }
 
     /**
@@ -1042,16 +1048,48 @@ public class AttributeManager {
      * @throws ServiceException
      */
     public boolean beforeVersion(String attr, String version) throws ServiceException {
+        return versionCheck(attr, version, false, true);
+    }
+
+    private boolean versionCheck(String attr, String version, boolean in, boolean before) throws ServiceException {
         AttributeInfo ai = mAttrs.get(attr.toLowerCase());
         if (ai != null) {
-            Version since = ai.getSince();
-            if (since == null)
+            List<Version> since = ai.getSince();
+            if (since == null) {
                 return true;
-            else
-                return since.compare(version) < 0;
-        } else
+            } else {
+                Version current = new Version(version);
+                boolean good = false;
+                for (Version sinceVer : since) {
+                    if (current.isSameMinorRelease(sinceVer)) {
+                        //ok same release; just compare
+                        return (before && sinceVer.compare(version) < 0) || (in && sinceVer.compare(version) == 0);
+                    } else if (!current.isLaterMajorMinorRelease(sinceVer)) {
+                        //current is lower series than one item in list
+                        //if it was OK from earlier series then it's OK
+                        return good;
+                    } else {
+                        //current is later major/minor, so check in/before and iterate further
+                        good = (before && sinceVer.compare(version) < 0) || (in && sinceVer.compare(version) == 0);
+                    }
+                }
+                return good;
+            }
+        } else {
             throw AccountServiceException.INVALID_ATTR_NAME("unknown attribute: " + attr, null);
+        }
     }
+
+    public boolean isFuture(String attr) {
+        AttributeInfo ai = mAttrs.get(attr.toLowerCase());
+        return (ai != null && ai.getSince() != null && ai.getSince().size() == 1 && ai.getSince().iterator().next().isFuture());
+    }
+
+    public boolean addedIn(String attr, String version) throws ServiceException {
+        return versionCheck(attr, version, true, false);
+    }
+
+
 
     public AttributeType getAttributeType(String attr) throws ServiceException {
         AttributeInfo ai = mAttrs.get(attr.toLowerCase());
@@ -1262,5 +1300,4 @@ public class AttributeManager {
             prov.getAttrsInOCs(extraObjectClasses, attrsInOCs);
         }
     }
-
 }

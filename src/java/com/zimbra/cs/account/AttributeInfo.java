@@ -15,6 +15,7 @@
 
 package com.zimbra.cs.account;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -107,7 +108,7 @@ public class AttributeInfo {
 
     private List<AttributeServerType> mRequiresRestart;
 
-    private Version mSince;
+    private List<Version> mSince;
 
     private Version mDeprecatedSince;
 
@@ -150,7 +151,7 @@ public class AttributeInfo {
             List<String> globalConfigValues, List<String> defaultCOSValues,
             List<String> defaultExternalCOSValues, List<String> globalConfigValuesUpgrade,
             List<String> defaultCOSValuesUpgrade, String description, List<AttributeServerType> requiresRestart,
-            Version since, Version deprecatedSince) {
+            List<Version> since, Version deprecatedSince) {
         mName = attrName;
         mImmutable = immutable;
         mCallback = callback;
@@ -172,6 +173,10 @@ public class AttributeInfo {
         mDescription = description;
         mRequiresRestart = requiresRestart;
         mSince = since;
+        if (mSince != null && mSince.size() > 1) {
+            //just in case someone specifies order incorrectly
+            Collections.sort(mSince);
+        }
         mDeprecatedSince = deprecatedSince;
 
         mMin = parseLong(attrName, AttributeManager.A_MIN, min, Long.MIN_VALUE);
@@ -535,7 +540,7 @@ public class AttributeInfo {
         return mRequiresRestart;
     }
 
-    public Version getSince() {
+    public List<Version> getSince() {
         return mSince;
     }
 
