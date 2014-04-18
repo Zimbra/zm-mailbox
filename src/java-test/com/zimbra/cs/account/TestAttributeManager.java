@@ -52,7 +52,6 @@ public class TestAttributeManager  {
                 AttributeClass.distributionList,
                 AttributeClass.domain,
                 AttributeClass.server,
-                AttributeClass.alwaysOnCluster,
                 AttributeClass.ucService,
                 AttributeClass.cos,
                 AttributeClass.xmppComponent,
