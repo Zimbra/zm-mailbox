@@ -40019,7 +40019,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * The servers to be included in the proxy lookup hanlders list. Proxy
+     * The servers to be included in the proxy lookup handlers list. Proxy
      * will only use the servers specified here to do the lookup. Leaving
      * empty means using all the servers whose zimbraReverseProxyLookupTarget
      * is TRUE.
@@ -40034,7 +40034,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * The servers to be included in the proxy lookup hanlders list. Proxy
+     * The servers to be included in the proxy lookup handlers list. Proxy
      * will only use the servers specified here to do the lookup. Leaving
      * empty means using all the servers whose zimbraReverseProxyLookupTarget
      * is TRUE.
@@ -40052,7 +40052,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * The servers to be included in the proxy lookup hanlders list. Proxy
+     * The servers to be included in the proxy lookup handlers list. Proxy
      * will only use the servers specified here to do the lookup. Leaving
      * empty means using all the servers whose zimbraReverseProxyLookupTarget
      * is TRUE.
@@ -40071,7 +40071,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * The servers to be included in the proxy lookup hanlders list. Proxy
+     * The servers to be included in the proxy lookup handlers list. Proxy
      * will only use the servers specified here to do the lookup. Leaving
      * empty means using all the servers whose zimbraReverseProxyLookupTarget
      * is TRUE.
@@ -40089,7 +40089,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * The servers to be included in the proxy lookup hanlders list. Proxy
+     * The servers to be included in the proxy lookup handlers list. Proxy
      * will only use the servers specified here to do the lookup. Leaving
      * empty means using all the servers whose zimbraReverseProxyLookupTarget
      * is TRUE.
@@ -40108,7 +40108,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * The servers to be included in the proxy lookup hanlders list. Proxy
+     * The servers to be included in the proxy lookup handlers list. Proxy
      * will only use the servers specified here to do the lookup. Leaving
      * empty means using all the servers whose zimbraReverseProxyLookupTarget
      * is TRUE.
@@ -40126,7 +40126,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * The servers to be included in the proxy lookup hanlders list. Proxy
+     * The servers to be included in the proxy lookup handlers list. Proxy
      * will only use the servers specified here to do the lookup. Leaving
      * empty means using all the servers whose zimbraReverseProxyLookupTarget
      * is TRUE.
@@ -40145,7 +40145,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * The servers to be included in the proxy lookup hanlders list. Proxy
+     * The servers to be included in the proxy lookup handlers list. Proxy
      * will only use the servers specified here to do the lookup. Leaving
      * empty means using all the servers whose zimbraReverseProxyLookupTarget
      * is TRUE.
@@ -40162,7 +40162,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * The servers to be included in the proxy lookup hanlders list. Proxy
+     * The servers to be included in the proxy lookup handlers list. Proxy
      * will only use the servers specified here to do the lookup. Leaving
      * empty means using all the servers whose zimbraReverseProxyLookupTarget
      * is TRUE.

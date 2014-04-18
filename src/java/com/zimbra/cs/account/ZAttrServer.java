@@ -29466,7 +29466,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * The servers to be included in the proxy lookup hanlders list. Proxy
+     * The servers to be included in the proxy lookup handlers list. Proxy
      * will only use the servers specified here to do the lookup. Leaving
      * empty means using all the servers whose zimbraReverseProxyLookupTarget
      * is TRUE.
@@ -29481,7 +29481,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * The servers to be included in the proxy lookup hanlders list. Proxy
+     * The servers to be included in the proxy lookup handlers list. Proxy
      * will only use the servers specified here to do the lookup. Leaving
      * empty means using all the servers whose zimbraReverseProxyLookupTarget
      * is TRUE.
@@ -29499,7 +29499,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * The servers to be included in the proxy lookup hanlders list. Proxy
+     * The servers to be included in the proxy lookup handlers list. Proxy
      * will only use the servers specified here to do the lookup. Leaving
      * empty means using all the servers whose zimbraReverseProxyLookupTarget
      * is TRUE.
@@ -29518,7 +29518,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * The servers to be included in the proxy lookup hanlders list. Proxy
+     * The servers to be included in the proxy lookup handlers list. Proxy
      * will only use the servers specified here to do the lookup. Leaving
      * empty means using all the servers whose zimbraReverseProxyLookupTarget
      * is TRUE.
@@ -29536,7 +29536,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * The servers to be included in the proxy lookup hanlders list. Proxy
+     * The servers to be included in the proxy lookup handlers list. Proxy
      * will only use the servers specified here to do the lookup. Leaving
      * empty means using all the servers whose zimbraReverseProxyLookupTarget
      * is TRUE.
@@ -29555,7 +29555,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * The servers to be included in the proxy lookup hanlders list. Proxy
+     * The servers to be included in the proxy lookup handlers list. Proxy
      * will only use the servers specified here to do the lookup. Leaving
      * empty means using all the servers whose zimbraReverseProxyLookupTarget
      * is TRUE.
@@ -29573,7 +29573,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * The servers to be included in the proxy lookup hanlders list. Proxy
+     * The servers to be included in the proxy lookup handlers list. Proxy
      * will only use the servers specified here to do the lookup. Leaving
      * empty means using all the servers whose zimbraReverseProxyLookupTarget
      * is TRUE.
@@ -29592,7 +29592,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * The servers to be included in the proxy lookup hanlders list. Proxy
+     * The servers to be included in the proxy lookup handlers list. Proxy
      * will only use the servers specified here to do the lookup. Leaving
      * empty means using all the servers whose zimbraReverseProxyLookupTarget
      * is TRUE.
@@ -29609,7 +29609,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * The servers to be included in the proxy lookup hanlders list. Proxy
+     * The servers to be included in the proxy lookup handlers list. Proxy
      * will only use the servers specified here to do the lookup. Leaving
      * empty means using all the servers whose zimbraReverseProxyLookupTarget
      * is TRUE.
@@ -33468,6 +33468,366 @@ public abstract class ZAttrServer extends NamedEntry {
     public Map<String,Object> unsetScheduledTaskNumThreads(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraScheduledTaskNumThreads, "");
+        return attrs;
+    }
+
+    /**
+     * Current version of ZCS installed on this server
+     *
+     * @return zimbraServerVersion, or null if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1598)
+    public String getServerVersion() {
+        return getAttr(Provisioning.A_zimbraServerVersion, null);
+    }
+
+    /**
+     * Current version of ZCS installed on this server
+     *
+     * @param zimbraServerVersion new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1598)
+    public void setServerVersion(String zimbraServerVersion) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraServerVersion, zimbraServerVersion);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Current version of ZCS installed on this server
+     *
+     * @param zimbraServerVersion new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1598)
+    public Map<String,Object> setServerVersion(String zimbraServerVersion, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraServerVersion, zimbraServerVersion);
+        return attrs;
+    }
+
+    /**
+     * Current version of ZCS installed on this server
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1598)
+    public void unsetServerVersion() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraServerVersion, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Current version of ZCS installed on this server
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1598)
+    public Map<String,Object> unsetServerVersion(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraServerVersion, "");
+        return attrs;
+    }
+
+    /**
+     * Current build number of ZCS installed on this server for this version
+     *
+     * @return zimbraServerVersionBuild, or -1 if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1602)
+    public int getServerVersionBuild() {
+        return getIntAttr(Provisioning.A_zimbraServerVersionBuild, -1);
+    }
+
+    /**
+     * Current build number of ZCS installed on this server for this version
+     *
+     * @param zimbraServerVersionBuild new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1602)
+    public void setServerVersionBuild(int zimbraServerVersionBuild) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraServerVersionBuild, Integer.toString(zimbraServerVersionBuild));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Current build number of ZCS installed on this server for this version
+     *
+     * @param zimbraServerVersionBuild new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1602)
+    public Map<String,Object> setServerVersionBuild(int zimbraServerVersionBuild, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraServerVersionBuild, Integer.toString(zimbraServerVersionBuild));
+        return attrs;
+    }
+
+    /**
+     * Current build number of ZCS installed on this server for this version
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1602)
+    public void unsetServerVersionBuild() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraServerVersionBuild, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Current build number of ZCS installed on this server for this version
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1602)
+    public Map<String,Object> unsetServerVersionBuild(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraServerVersionBuild, "");
+        return attrs;
+    }
+
+    /**
+     * Current major version of ZCS installed on this server
+     *
+     * @return zimbraServerVersionMajor, or -1 if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1599)
+    public int getServerVersionMajor() {
+        return getIntAttr(Provisioning.A_zimbraServerVersionMajor, -1);
+    }
+
+    /**
+     * Current major version of ZCS installed on this server
+     *
+     * @param zimbraServerVersionMajor new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1599)
+    public void setServerVersionMajor(int zimbraServerVersionMajor) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraServerVersionMajor, Integer.toString(zimbraServerVersionMajor));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Current major version of ZCS installed on this server
+     *
+     * @param zimbraServerVersionMajor new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1599)
+    public Map<String,Object> setServerVersionMajor(int zimbraServerVersionMajor, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraServerVersionMajor, Integer.toString(zimbraServerVersionMajor));
+        return attrs;
+    }
+
+    /**
+     * Current major version of ZCS installed on this server
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1599)
+    public void unsetServerVersionMajor() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraServerVersionMajor, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Current major version of ZCS installed on this server
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1599)
+    public Map<String,Object> unsetServerVersionMajor(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraServerVersionMajor, "");
+        return attrs;
+    }
+
+    /**
+     * Current minor version of ZCS installed on this server
+     *
+     * @return zimbraServerVersionMinor, or -1 if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1600)
+    public int getServerVersionMinor() {
+        return getIntAttr(Provisioning.A_zimbraServerVersionMinor, -1);
+    }
+
+    /**
+     * Current minor version of ZCS installed on this server
+     *
+     * @param zimbraServerVersionMinor new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1600)
+    public void setServerVersionMinor(int zimbraServerVersionMinor) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraServerVersionMinor, Integer.toString(zimbraServerVersionMinor));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Current minor version of ZCS installed on this server
+     *
+     * @param zimbraServerVersionMinor new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1600)
+    public Map<String,Object> setServerVersionMinor(int zimbraServerVersionMinor, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraServerVersionMinor, Integer.toString(zimbraServerVersionMinor));
+        return attrs;
+    }
+
+    /**
+     * Current minor version of ZCS installed on this server
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1600)
+    public void unsetServerVersionMinor() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraServerVersionMinor, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Current minor version of ZCS installed on this server
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1600)
+    public Map<String,Object> unsetServerVersionMinor(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraServerVersionMinor, "");
+        return attrs;
+    }
+
+    /**
+     * Current patch level version of ZCS installed on this server
+     *
+     * @return zimbraServerVersionPatch, or -1 if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1601)
+    public int getServerVersionPatch() {
+        return getIntAttr(Provisioning.A_zimbraServerVersionPatch, -1);
+    }
+
+    /**
+     * Current patch level version of ZCS installed on this server
+     *
+     * @param zimbraServerVersionPatch new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1601)
+    public void setServerVersionPatch(int zimbraServerVersionPatch) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraServerVersionPatch, Integer.toString(zimbraServerVersionPatch));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Current patch level version of ZCS installed on this server
+     *
+     * @param zimbraServerVersionPatch new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1601)
+    public Map<String,Object> setServerVersionPatch(int zimbraServerVersionPatch, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraServerVersionPatch, Integer.toString(zimbraServerVersionPatch));
+        return attrs;
+    }
+
+    /**
+     * Current patch level version of ZCS installed on this server
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1601)
+    public void unsetServerVersionPatch() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraServerVersionPatch, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Current patch level version of ZCS installed on this server
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1601)
+    public Map<String,Object> unsetServerVersionPatch(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraServerVersionPatch, "");
         return attrs;
     }
 
