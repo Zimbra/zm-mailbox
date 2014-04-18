@@ -11639,7 +11639,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraReverseProxyAuthWaitInterval = "zimbraReverseProxyAuthWaitInterval";
 
     /**
-     * The servers to be included in the proxy lookup hanlders list. Proxy
+     * The servers to be included in the proxy lookup handlers list. Proxy
      * will only use the servers specified here to do the lookup. Leaving
      * empty means using all the servers whose zimbraReverseProxyLookupTarget
      * is TRUE.
@@ -12307,6 +12307,46 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=62)
     public static final String A_zimbraServerInheritedAttr = "zimbraServerInheritedAttr";
+
+    /**
+     * Current version of ZCS installed on this server
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1598)
+    public static final String A_zimbraServerVersion = "zimbraServerVersion";
+
+    /**
+     * Current build number of ZCS installed on this server for this version
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1602)
+    public static final String A_zimbraServerVersionBuild = "zimbraServerVersionBuild";
+
+    /**
+     * Current major version of ZCS installed on this server
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1599)
+    public static final String A_zimbraServerVersionMajor = "zimbraServerVersionMajor";
+
+    /**
+     * Current minor version of ZCS installed on this server
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1600)
+    public static final String A_zimbraServerVersionMinor = "zimbraServerVersionMinor";
+
+    /**
+     * Current patch level version of ZCS installed on this server
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1601)
+    public static final String A_zimbraServerVersionPatch = "zimbraServerVersionPatch";
 
     /**
      * services that are enabled on this server
