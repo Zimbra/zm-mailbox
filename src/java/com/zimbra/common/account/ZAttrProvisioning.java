@@ -12333,20 +12333,20 @@ public class ZAttrProvisioning {
     public static final String A_zimbraServerVersionMajor = "zimbraServerVersionMajor";
 
     /**
+     * Current micro level version of ZCS installed on this server
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1601)
+    public static final String A_zimbraServerVersionMicro = "zimbraServerVersionMicro";
+
+    /**
      * Current minor version of ZCS installed on this server
      *
      * @since ZCS 8.5.0
      */
     @ZAttr(id=1600)
     public static final String A_zimbraServerVersionMinor = "zimbraServerVersionMinor";
-
-    /**
-     * Current patch level version of ZCS installed on this server
-     *
-     * @since ZCS 8.5.0
-     */
-    @ZAttr(id=1601)
-    public static final String A_zimbraServerVersionPatch = "zimbraServerVersionPatch";
 
     /**
      * services that are enabled on this server
