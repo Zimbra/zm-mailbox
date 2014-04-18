@@ -55,8 +55,8 @@ import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.service.util.ItemId;
-import com.zimbra.soap.type.GalSearchType;
 import com.zimbra.soap.ZimbraSoapContext;
+import com.zimbra.soap.type.GalSearchType;
 
 public class ContactAutoComplete {
     public static final class AutoCompleteResult {
@@ -527,8 +527,10 @@ public class ContactAutoComplete {
                 return true;
             }
             String fullName = getFieldAsString(attrs, ContactConstants.A_fullName);
-            if (!Strings.isNullOrEmpty(fullName) && fullName.toLowerCase().startsWith(token)) {
-                return true;
+            for(String fullNameToken :TOKEN_SPLITTER.split(fullName)){
+            	if (!Strings.isNullOrEmpty(fullNameToken) && fullNameToken.toLowerCase().startsWith(token)) {
+                    return true;
+                }
             }
             String nickname = getFieldAsString(attrs, ContactConstants.A_nickname);
             if (!Strings.isNullOrEmpty(nickname) && nickname.toLowerCase().startsWith(token)) {
@@ -558,7 +560,8 @@ public class ContactAutoComplete {
             if (pattern.matcher(Joiner.on(' ').skipNulls().join(lastName, firstName, middleName)).matches()) {
                 return true;
             }
-
+            
+      
             String fullName = getFieldAsString(attrs, ContactConstants.A_fullName);
             if (!Strings.isNullOrEmpty(fullName) && pattern.matcher(fullName).matches()) {
                 return true;
@@ -586,7 +589,7 @@ public class ContactAutoComplete {
     private Pattern toPattern(List<String> tokens) {
         StringBuilder regex = new StringBuilder();
         for (String token : tokens) {
-            regex.append(regex.length() == 0 ? "(^|\\s)" : "\\s").append(Pattern.quote(token)).append(".*");
+            regex.append(regex.length() == 0 ? "(^|.*\\s)" : "\\s").append(Pattern.quote(token)).append(".*");
         }
         return Pattern.compile(regex.toString(), Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
     }
