@@ -992,6 +992,58 @@ class WebEwsSSLUpstreamServersVar extends ServersVar {
     }
 }
 
+class WebLoginUpstreamServersVar extends ServersVar {
+
+	public WebLoginUpstreamServersVar() {
+		super("web.upstream.loginserver.:servers", Provisioning.A_zimbraReverseProxyUpstreamLoginServers,
+				"List of upstream Login servers used by Web Proxy");
+	}
+
+    @Override
+    public void update() throws ServiceException {
+        ArrayList<String> directives = new ArrayList<String>();
+        String portName = configSource.getAttr(Provisioning.A_zimbraReverseProxyHttpPortAttribute, "");
+        String[] upstreams = serverSource.getMultiAttr(Provisioning.A_zimbraReverseProxyUpstreamLoginServers);
+        
+        if (upstreams.length > 0) {
+            for (String serverName: upstreams) {
+                Server server = mProv.getServerByName(serverName);
+                if (isValidUpstream(server, serverName)) {
+                    directives.add(generateServerDirective(server, serverName, portName));
+                    mLog.info("Added Login server to HTTP upstream: " + serverName);
+                }
+            }
+        }
+        mValue = directives;
+    }
+}
+
+class WebLoginSSLUpstreamServersVar extends ServersVar {
+
+    public WebLoginSSLUpstreamServersVar() {
+    	super("web.ssl.upstream.loginserver.:servers",Provisioning.A_zimbraReverseProxyUpstreamLoginServers,
+				"List of upstream Login servers used by Web Proxy");
+    }
+
+    @Override
+    public void update() throws ServiceException {
+        ArrayList<String> directives = new ArrayList<String>();
+        String portName = configSource.getAttr(Provisioning.A_zimbraReverseProxyHttpSSLPortAttribute, "");
+        String[] upstreams = serverSource.getMultiAttr(Provisioning.A_zimbraReverseProxyUpstreamLoginServers);
+        
+        if (upstreams.length > 0) {
+            for (String serverName: upstreams) {
+                Server server = mProv.getServerByName(serverName);
+                if (isValidUpstream(server, serverName)) {
+                    directives.add(generateServerDirective(server, serverName, portName));
+                    mLog.info("Added Login server to HTTPS upstream: " + serverName);
+                }
+            }
+        }
+        mValue = directives;
+    }
+}
+
 class ImapCapaVar extends ProxyConfVar {
 
     public ImapCapaVar() {
@@ -1426,6 +1478,31 @@ class EwsEnablerVar extends WebEnablerVar {
 }
 
 /**
+ * 
+ * @author zimbra
+ *
+ */
+class LoginEnablerVar extends WebEnablerVar {
+
+    public LoginEnablerVar() {
+        super("web.login.upstream.disable", "#",
+                "Indicates whether upstream Login servers blob in nginx.conf.web should be populated " +
+                "(false unless zimbraReverseProxyUpstreamLoginServers is populated)");
+    }
+
+    
+    @Override
+    public String format(Object o)  {
+    	String[] upstreams = serverSource.getMultiAttr(Provisioning.A_zimbraReverseProxyUpstreamLoginServers);
+        if (upstreams.length  == 0) {
+            return "#";
+        } else {
+            return "";
+        }
+    }
+}
+
+/**
  * A simple class of Triple<VirtualHostName, VirtualIPAddress, DomainName>. Uses
  * this only for convenient and HashMap can't guarantee order
  * @author jiankuan
@@ -1505,6 +1582,9 @@ public class ProxyConfGen
     static final String ZIMBRA_ADMIN_CONSOLE_CLIENT_UPSTREAM_NAME = "zimbra_adminclient";
     static final String ZIMBRA_UPSTREAM_EWS_NAME = "zimbra_ews";
     static final String ZIMBRA_SSL_UPSTREAM_EWS_NAME = "zimbra_ews_ssl";
+    static final String ZIMBRA_UPSTREAM_LOGIN_NAME = "zimbra_login";
+    static final String ZIMBRA_SSL_UPSTREAM_LOGIN_NAME = "zimbra_login_ssl";
+
 
     /** the pattern for custom header cmd, such as "!{explode domain} */
     private static Pattern cmdPattern = Pattern.compile("(.*)\\!\\{([^\\}]+)\\}(.*)", Pattern.DOTALL);
@@ -2211,12 +2291,18 @@ public class ProxyConfGen
         mConfVars.put("web.admin.upstream.adminclient.:servers", new WebAdminUpstreamAdminClientServersVar());
         mConfVars.put("web.upstream.noop.timeout", new TimeoutVar("web.upstream.noop.timeout", "zimbra_noop_max_timeout", 1200, ProxyConfOverride.LOCALCONFIG, 20, "the response timeout for NoOpRequest"));
         mConfVars.put("web.upstream.waitset.timeout", new TimeoutVar("web.upstream.waitset.timeout", "zimbra_waitset_max_request_timeout", 1200, ProxyConfOverride.LOCALCONFIG, 20, "the response timeout for WaitSetRequest"));
-	    mConfVars.put("main.accept_mutex", new ProxyConfVar("main.accept_mutex", "zimbraReverseProxyAcceptMutex", "on", ProxyConfValueType.STRING, ProxyConfOverride.SERVER,"accept_mutex flag for NGINX - can be on|off - on indicates regular distribution, off gets better distribution of client connections between workers"));
+	    mConfVars.put("main.accept_mutex", new ProxyConfVar("main.accept_mutex", "zimbraReverseProxyAcceptMutex", "on", ProxyConfValueType.STRING, ProxyConfOverride.SERVER, "accept_mutex flag for NGINX - can be on|off - on indicates regular distribution, off gets better distribution of client connections between workers"));
 	    mConfVars.put("web.ews.upstream.disable", new EwsEnablerVar());
 	    mConfVars.put("web.upstream.ewsserver.:servers", new WebEwsUpstreamServersVar());
 	    mConfVars.put("web.ssl.upstream.ewsserver.:servers", new WebEwsSSLUpstreamServersVar());      
 	    mConfVars.put("web.ews.upstream.name", new ProxyConfVar("web.ews.upstream.name", null, ZIMBRA_UPSTREAM_EWS_NAME, ProxyConfValueType.STRING, ProxyConfOverride.CONFIG, "Symbolic name for ews upstream server cluster"));
 	    mConfVars.put("web.ssl.ews.upstream.name", new ProxyConfVar("web.ssl.ews.upstream.name", null, ZIMBRA_SSL_UPSTREAM_EWS_NAME, ProxyConfValueType.STRING, ProxyConfOverride.CONFIG, "Symbolic name for https ews upstream server cluster"));  
+	    mConfVars.put("web.login.upstream.disable", new LoginEnablerVar());
+	    mConfVars.put("web.upstream.loginserver.:servers", new WebLoginUpstreamServersVar());
+	    mConfVars.put("web.ssl.upstream.loginserver.:servers", new WebLoginSSLUpstreamServersVar());      
+	    mConfVars.put("web.login.upstream.name", new ProxyConfVar("web.login.upstream.name", null, ZIMBRA_UPSTREAM_LOGIN_NAME, ProxyConfValueType.STRING, ProxyConfOverride.CONFIG, "Symbolic name for upstream login server cluster"));
+	    mConfVars.put("web.ssl.login.upstream.name", new ProxyConfVar("web.ssl.login.upstream.name", null, ZIMBRA_SSL_UPSTREAM_LOGIN_NAME, ProxyConfValueType.STRING, ProxyConfOverride.CONFIG, "Symbolic name for https upstream login server cluster"));
+	    mConfVars.put("web.login.upstream.url", new ProxyConfVar("web.login.upstream.url", "zimbraMailURL", "/", ProxyConfValueType.STRING, ProxyConfOverride.SERVER, "Zimbra Login URL"));
     }
 
     /* update the default variable map from the active configuration */

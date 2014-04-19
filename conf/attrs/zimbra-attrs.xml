@@ -8028,4 +8028,9 @@ TODO: delete them permanently from here
   <desc>Current build number of ZCS installed on this server for this version</desc>
 </attr>
 
+<attr id="1603" name="zimbraReverseProxyUpstreamLoginServers" type="string" cardinality="multi" optionalIn="server,globalConfig" flags="serverInherited" since="8.5.0">
+  <desc>The servers to be included in the login block in the nginx web proxy config file.
+  The servers configured here will only affect the proxy of login URL requests.</desc>
+</attr>
+
 </attrs>
