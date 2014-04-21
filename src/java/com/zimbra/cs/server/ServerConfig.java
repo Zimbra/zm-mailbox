@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -109,7 +109,14 @@ public abstract class ServerConfig {
     }
 
     public String[] getSslExcludedCiphers() {
-        String key = Provisioning.A_zimbraSSLExcludeCipherSuites;
+        return getConfigAttr(Provisioning.A_zimbraSSLExcludeCipherSuites);
+    }
+
+    public String[] getSslIncludedCiphers() {
+        return getConfigAttr(Provisioning.A_zimbraSSLIncludeCipherSuites);
+    }
+
+    private String[] getConfigAttr(String key) {
         try {
             return Provisioning.getInstance().getConfig().getMultiAttr(key);
         } catch (ServiceException e) {
@@ -160,7 +167,7 @@ public abstract class ServerConfig {
 
     public ServerSocket getServerSocket() throws ServiceException {
         return isSslEnabled() ?
-            NetUtil.getSslTcpServerSocket(getBindAddress(), getBindPort(), getSslExcludedCiphers()) :
+            NetUtil.getSslTcpServerSocket(getBindAddress(), getBindPort(), getSslExcludedCiphers(), getSslIncludedCiphers()) :
             NetUtil.getTcpServerSocket(getBindAddress(), getBindPort());
     }
 

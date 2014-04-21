@@ -159,7 +159,10 @@ public abstract class NioServer implements Server {
                 if (excludeCiphers != null && excludeCiphers.length > 0) {
                     // create a SSLEngine to get the ciphers enabled for the engine
                     SSLEngine sslEng = sslCtxt.createSSLEngine();
-                    String[] enabledCiphers = sslEng.getEnabledCipherSuites();
+                    String[] enabledCiphers = serverConfig.getSslIncludedCiphers();
+                    if (enabledCiphers == null || enabledCiphers.length == 0) {
+                        enabledCiphers = sslEng.getEnabledCipherSuites();
+                    }
                     mSslEnabledCipherSuites = NetUtil.computeEnabledCipherSuites(enabledCiphers, excludeCiphers);
                 }
 

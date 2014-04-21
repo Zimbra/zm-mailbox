@@ -48287,6 +48287,176 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * List of included cipher suites for Jetty. If any value is set only
+     * these ciphers will be used, in effect superseding
+     * zimbraSSLExcludeCipherSuites. Order of selection is based on client
+     * preference and default Java order since Java SSLEngine does not allow
+     * changing the preference order.
+     *
+     * @return zimbraSSLIncludeCipherSuites, or empty array if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1604)
+    public String[] getSSLIncludeCipherSuites() {
+        return getMultiAttr(Provisioning.A_zimbraSSLIncludeCipherSuites);
+    }
+
+    /**
+     * List of included cipher suites for Jetty. If any value is set only
+     * these ciphers will be used, in effect superseding
+     * zimbraSSLExcludeCipherSuites. Order of selection is based on client
+     * preference and default Java order since Java SSLEngine does not allow
+     * changing the preference order.
+     *
+     * @param zimbraSSLIncludeCipherSuites new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1604)
+    public void setSSLIncludeCipherSuites(String[] zimbraSSLIncludeCipherSuites) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSSLIncludeCipherSuites, zimbraSSLIncludeCipherSuites);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * List of included cipher suites for Jetty. If any value is set only
+     * these ciphers will be used, in effect superseding
+     * zimbraSSLExcludeCipherSuites. Order of selection is based on client
+     * preference and default Java order since Java SSLEngine does not allow
+     * changing the preference order.
+     *
+     * @param zimbraSSLIncludeCipherSuites new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1604)
+    public Map<String,Object> setSSLIncludeCipherSuites(String[] zimbraSSLIncludeCipherSuites, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSSLIncludeCipherSuites, zimbraSSLIncludeCipherSuites);
+        return attrs;
+    }
+
+    /**
+     * List of included cipher suites for Jetty. If any value is set only
+     * these ciphers will be used, in effect superseding
+     * zimbraSSLExcludeCipherSuites. Order of selection is based on client
+     * preference and default Java order since Java SSLEngine does not allow
+     * changing the preference order.
+     *
+     * @param zimbraSSLIncludeCipherSuites new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1604)
+    public void addSSLIncludeCipherSuites(String zimbraSSLIncludeCipherSuites) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraSSLIncludeCipherSuites, zimbraSSLIncludeCipherSuites);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * List of included cipher suites for Jetty. If any value is set only
+     * these ciphers will be used, in effect superseding
+     * zimbraSSLExcludeCipherSuites. Order of selection is based on client
+     * preference and default Java order since Java SSLEngine does not allow
+     * changing the preference order.
+     *
+     * @param zimbraSSLIncludeCipherSuites new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1604)
+    public Map<String,Object> addSSLIncludeCipherSuites(String zimbraSSLIncludeCipherSuites, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraSSLIncludeCipherSuites, zimbraSSLIncludeCipherSuites);
+        return attrs;
+    }
+
+    /**
+     * List of included cipher suites for Jetty. If any value is set only
+     * these ciphers will be used, in effect superseding
+     * zimbraSSLExcludeCipherSuites. Order of selection is based on client
+     * preference and default Java order since Java SSLEngine does not allow
+     * changing the preference order.
+     *
+     * @param zimbraSSLIncludeCipherSuites existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1604)
+    public void removeSSLIncludeCipherSuites(String zimbraSSLIncludeCipherSuites) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraSSLIncludeCipherSuites, zimbraSSLIncludeCipherSuites);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * List of included cipher suites for Jetty. If any value is set only
+     * these ciphers will be used, in effect superseding
+     * zimbraSSLExcludeCipherSuites. Order of selection is based on client
+     * preference and default Java order since Java SSLEngine does not allow
+     * changing the preference order.
+     *
+     * @param zimbraSSLIncludeCipherSuites existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1604)
+    public Map<String,Object> removeSSLIncludeCipherSuites(String zimbraSSLIncludeCipherSuites, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraSSLIncludeCipherSuites, zimbraSSLIncludeCipherSuites);
+        return attrs;
+    }
+
+    /**
+     * List of included cipher suites for Jetty. If any value is set only
+     * these ciphers will be used, in effect superseding
+     * zimbraSSLExcludeCipherSuites. Order of selection is based on client
+     * preference and default Java order since Java SSLEngine does not allow
+     * changing the preference order.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1604)
+    public void unsetSSLIncludeCipherSuites() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSSLIncludeCipherSuites, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * List of included cipher suites for Jetty. If any value is set only
+     * these ciphers will be used, in effect superseding
+     * zimbraSSLExcludeCipherSuites. Order of selection is based on client
+     * preference and default Java order since Java SSLEngine does not allow
+     * changing the preference order.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1604)
+    public Map<String,Object> unsetSSLIncludeCipherSuites(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSSLIncludeCipherSuites, "");
+        return attrs;
+    }
+
+    /**
      * SSL private key
      *
      * @return zimbraSSLPrivateKey, or null if unset
