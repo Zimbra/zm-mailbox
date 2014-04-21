@@ -12359,6 +12359,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraServerVersionMinor = "zimbraServerVersionMinor";
 
     /**
+     * Current version type of ZCS installed on this server
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1605)
+    public static final String A_zimbraServerVersionType = "zimbraServerVersionType";
+
+    /**
      * services that are enabled on this server
      */
     @ZAttr(id=220)
