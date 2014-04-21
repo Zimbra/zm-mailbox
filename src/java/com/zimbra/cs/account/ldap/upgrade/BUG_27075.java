@@ -185,7 +185,7 @@ public class BUG_27075 extends UpgradeOp {
             if (needsUpgrade(am, attr)) {
                 if (verbose) {
                     printer.println("");
-                    printer.println("Checking " + entryName + " attribute: " + attr + "(" + attrVersion + ")");
+                    printer.println("Checking " + entryName + " attribute: " + attr + attrVersion);
                 }
 
                 String curVal = entry.getAttr(attr);
@@ -234,10 +234,10 @@ public class BUG_27075 extends UpgradeOp {
 
                 attrValues.clear();
                 if (ai.getCardinality() != AttributeCardinality.multi) {
-                    printer.println("    setting " + entryName + " attribute " + attr + "(" + attrVersion + ")" + " to: " + values.get(0));
+                    printer.println("    setting " + entryName + " attribute " + attr + attrVersion + " to: " + values.get(0));
                     attrValues.put(attr, values.get(0));
                 } else {
-                    printer.println("    setting " + entryName + " attribute " + attr + "(" + attrVersion + ")" + " to: " + formatMultiValue(values));
+                    printer.println("    setting " + entryName + " attribute " + attr + attrVersion + " to: " + formatMultiValue(values));
                     attrValues.put(attr, values.toArray(new String[0]));
                 }
 
