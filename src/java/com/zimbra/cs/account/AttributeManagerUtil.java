@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -49,6 +49,7 @@ import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.SetUtil;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.Version;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AttributeManager.ObjectClassInfo;
 import com.zimbra.cs.account.ldap.LdapProv;
@@ -1130,11 +1131,26 @@ public class AttributeManagerUtil {
        result.append(String.format("     * @return %s%s%n", name, javaDocReturns));
        if (ai.getSince() != null) {
            result.append("     *\n");
-           result.append(String.format("     * @since ZCS %s%n", ai.getSince().toString()));
+           result.append(String.format("     * @since ZCS %s%n", versionListAsString(ai.getSince())));
        }
        result.append("     */\n");
        result.append(String.format("    @ZAttr(id=%d)%n", ai.getId()));
        result.append(String.format("    public %s %s() {%n        %s%n    }%n", javaType, methodName, javaBody));
+   }
+
+   private static String versionListAsString(List<Version> versions) {
+       if (versions == null || versions.size() == 0) {
+           return "";
+       } else if (versions.size() == 1) {
+           return versions.iterator().next().toString();
+       } else {
+           StringBuilder sb = new StringBuilder();
+           for (Version version : versions) {
+               sb.append(version.toString()).append(",");
+           }
+           sb.setLength(sb.length() - 1);
+           return sb.toString();
+       }
    }
 
    private static enum SetterType { set, add, unset, remove }
@@ -1241,7 +1257,7 @@ public class AttributeManagerUtil {
        }
        if (ai.getSince() != null) {
            result.append("     *\n");
-           result.append(String.format("     * @since ZCS %s%n", ai.getSince().toString()));
+           result.append(String.format("     * @since ZCS %s%n", versionListAsString(ai.getSince())));
        }
        result.append("     */\n");
        result.append(String.format("    @ZAttr(id=%d)%n", ai.getId()));
@@ -1298,7 +1314,7 @@ public class AttributeManagerUtil {
            }
            if (ai.getSince() != null) {
                result.append("     *\n");
-               result.append(String.format("     * @since ZCS %s%n", ai.getSince().toString()));
+               result.append(String.format("     * @since ZCS %s%n", versionListAsString(ai.getSince())));
            }
            result.append("     */\n");
            result.append(String.format("    @ZAttr(id=%d)%n", ai.getId()));
