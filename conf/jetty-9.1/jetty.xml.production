@@ -131,6 +131,13 @@
               %%zimbraSSLExcludeCipherSuitesXML%%
             </Array>
 		</Set>
+		<!-- INCLUDESUITESBEGIN %%comment VAR:zimbraSSLIncludeCipherSuitesXML,-->%%
+		<Set name="IncludeCipherSuites">
+		    <Array type="java.lang.String">
+		      %%zimbraSSLIncludeCipherSuitesXML%%
+		    </Array>
+		</Set>
+		%%comment VAR:zimbraSSLIncludeCipherSuitesXML,<!--%% INCLUDESUITESEND -->
 	</New>
 	
     <!-- user services connector, SSL -->

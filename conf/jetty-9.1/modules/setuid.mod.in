@@ -33,6 +33,7 @@ zimbraImapSSLBindAddress=%%zimbraImapSSLBindAddress%%
 zimbraImapSSLBindPort=%%zimbraImapSSLBindPort%%
 
 zimbraSSLExcludeCipherSuites=%%zimbraSSLExcludeCipherSuites%%
+zimbraSSLIncludeCipherSuites=%%zimbraSSLIncludeCipherSuites%%
 
 nio_imap_enabled=%%truefalse LOCAL:nio_imap_enabled%%
 
