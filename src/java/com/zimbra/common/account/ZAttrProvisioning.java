@@ -13039,6 +13039,18 @@ public class ZAttrProvisioning {
     public static final String A_zimbraSSLExcludeCipherSuites = "zimbraSSLExcludeCipherSuites";
 
     /**
+     * List of included cipher suites for Jetty. If any value is set only
+     * these ciphers will be used, in effect superseding
+     * zimbraSSLExcludeCipherSuites. Order of selection is based on client
+     * preference and default Java order since Java SSLEngine does not allow
+     * changing the preference order.
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1604)
+    public static final String A_zimbraSSLIncludeCipherSuites = "zimbraSSLIncludeCipherSuites";
+
+    /**
      * SSL private key
      *
      * @since ZCS 5.0.0
