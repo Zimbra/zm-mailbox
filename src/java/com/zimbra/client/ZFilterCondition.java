@@ -2,25 +2,17 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2008, 2009, 2010, 2011, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
 package com.zimbra.client;
-
-import com.google.common.base.Joiner;
-import com.zimbra.common.filter.Sieve;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.zclient.ZClientException;
-import com.zimbra.soap.mail.type.FilterTest;
-
-import org.json.JSONException;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -29,6 +21,14 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+
+import org.json.JSONException;
+
+import com.google.common.base.Joiner;
+import com.zimbra.common.filter.Sieve;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.zclient.ZClientException;
+import com.zimbra.soap.mail.type.FilterTest;
 
 public abstract class ZFilterCondition implements ToZJSONObject {
 
@@ -303,6 +303,93 @@ public abstract class ZFilterCondition implements ToZJSONObject {
     }
 
     public abstract String toConditionString();
+
+    public static final class ZCommunityRequestsCondition extends ZFilterCondition {
+        private final SimpleOp op;
+
+        public ZCommunityRequestsCondition(SimpleOp op) {
+            this.op = op;
+        }
+
+        ZCommunityRequestsCondition(FilterTest.CommunityRequestsTest test) {
+            this.op = test.isNegative() ? SimpleOp.NOT_IS : SimpleOp.IS;
+        }
+
+        @Override
+        public String getName() {
+            return "community_requests";
+        }
+
+        @Override
+        FilterTest.CommunityRequestsTest toJAXB() {
+            FilterTest.CommunityRequestsTest test = new FilterTest.CommunityRequestsTest();
+            test.setNegative(op == SimpleOp.NOT_IS);
+            return test;
+        }
+
+        @Override
+        public String toConditionString() {
+            return "community_requests" + (op == SimpleOp.IS ? "" : " not");
+        }
+    }
+
+    public static final class ZCommunityContentCondition extends ZFilterCondition {
+        private final SimpleOp op;
+
+        public ZCommunityContentCondition(SimpleOp op) {
+            this.op = op;
+        }
+
+        ZCommunityContentCondition(FilterTest.CommunityContentTest test) {
+            this.op = test.isNegative() ? SimpleOp.NOT_IS : SimpleOp.IS;
+        }
+
+        @Override
+        public String getName() {
+            return "community_content";
+        }
+
+        @Override
+        FilterTest.CommunityContentTest toJAXB() {
+            FilterTest.CommunityContentTest test = new FilterTest.CommunityContentTest();
+            test.setNegative(op == SimpleOp.NOT_IS);
+            return test;
+        }
+
+        @Override
+        public String toConditionString() {
+            return "community_content" + (op == SimpleOp.IS ? "" : " not");
+        }
+    }
+
+    public static final class ZCommunityConnectionsCondition extends ZFilterCondition {
+        private final SimpleOp op;
+
+        public ZCommunityConnectionsCondition(SimpleOp op) {
+            this.op = op;
+        }
+
+        ZCommunityConnectionsCondition(FilterTest.CommunityConnectionsTest test) {
+            this.op = test.isNegative() ? SimpleOp.NOT_IS : SimpleOp.IS;
+        }
+
+        @Override
+        public String getName() {
+            return "community_connections";
+        }
+
+        @Override
+        FilterTest.CommunityConnectionsTest toJAXB() {
+            FilterTest.CommunityConnectionsTest test = new FilterTest.CommunityConnectionsTest();
+            test.setNegative(op == SimpleOp.NOT_IS);
+            return test;
+        }
+
+        @Override
+        public String toConditionString() {
+            return "community_connections" + (op == SimpleOp.IS ? "" : " not");
+        }
+    }
 
     public static final class ZFacebookCondition extends ZFilterCondition {
         private final SimpleOp op;
@@ -1131,7 +1218,7 @@ public abstract class ZFilterCondition implements ToZJSONObject {
         public String getName() {
             return C_ADDRESS;
         }
-                
+
         public HeaderOp getHeaderOp() {
             return op;
         }
