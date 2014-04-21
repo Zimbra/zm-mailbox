@@ -2,23 +2,23 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2014 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
 package com.zimbra.cs.filter;
 
-import com.zimbra.common.util.ZimbraLog;
-
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+
+import com.zimbra.common.util.ZimbraLog;
 
 /**
  * Handler class for jSieve's configuration map, such as CommandMap & TestMap.
@@ -73,7 +73,9 @@ public class JsieveConfigMapHandler {
         mTestMap.put("bulk", com.zimbra.cs.filter.jsieve.BulkTest.class.getName());
         mTestMap.put("importance", com.zimbra.cs.filter.jsieve.ImportanceTest.class.getName());
         mTestMap.put("flagged", com.zimbra.cs.filter.jsieve.FlaggedTest.class.getName());
-
+        mTestMap.put("community_connections", com.zimbra.cs.filter.jsieve.CommunityConnectionsTest.class.getName());
+        mTestMap.put("community_requests", com.zimbra.cs.filter.jsieve.CommunityRequestsTest.class.getName());
+        mTestMap.put("community_content", com.zimbra.cs.filter.jsieve.CommunityContentTest.class.getName());
         return mTestMap;
     }
 
@@ -82,17 +84,17 @@ public class JsieveConfigMapHandler {
      * This is supposed to be invoked from the init() method of ZimbraExtension.
      */
     public static void registerCommand(String actionName, String actionClassName) {
-        
+
         //  sanity check
         String registeredClassName = mCommandMap.get(actionName);
         if (registeredClassName != null) {
             // warning if something has been already registered with same actionName,
             ZimbraLog.filter.warn("action name " + actionName + " is already registered as action. registered " +
                     registeredClassName + " is overwritten with "+actionClassName);
-        }    
+        }
         mCommandMap.put(actionName, actionClassName);
     }
-    
+
     public static Map<String, String> getCommandMap(){
         return mCommandMap;
     }
