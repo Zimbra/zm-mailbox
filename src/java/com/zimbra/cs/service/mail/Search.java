@@ -75,7 +75,7 @@ public class Search extends MailDocumentHandler  {
         Mailbox mbox = getRequestedMailbox(zsc);
         Account account = getRequestedAccount(zsc);
         OperationContext octxt = getOperationContext(zsc, context);
-
+        fixBooleanRecipients(request);
         SearchRequest req = JaxbUtil.elementToJaxb(request);
         if (Objects.firstNonNull(req.getWarmup(), false)) {
             mbox.index.getIndexStore().warmup();
@@ -477,5 +477,15 @@ public class Search extends MailDocumentHandler  {
             map.put(acctId, folderIds);
         }
         return groupedByServer;
+    }
+
+    private static void fixBooleanRecipients(Element request) throws ServiceException {
+        String recipField = MailConstants.A_RECIPIENTS;
+        String recip = request.getAttribute(recipField);
+        if (recip.equals("true")) {
+            request.addAttribute(recipField, "1");
+        } else if (recip.equals("false")) {
+            request.addAttribute(recipField, "0");
+        }
     }
 }
