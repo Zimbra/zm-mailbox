@@ -479,9 +479,15 @@ public class Search extends MailDocumentHandler  {
         return groupedByServer;
     }
 
-    private static void fixBooleanRecipients(Element request) throws ServiceException {
+    private static void fixBooleanRecipients(Element request) {
         String recipField = MailConstants.A_RECIPIENTS;
-        String recip = request.getAttribute(recipField);
+        String recip;
+        try {
+            recip = request.getAttribute(recipField);
+        }  catch (ServiceException e) {
+            // request doesn't have a "recip" field
+            return;
+        }
         if (recip.equals("true")) {
             request.addAttribute(recipField, "1");
         } else if (recip.equals("false")) {
@@ -489,3 +495,4 @@ public class Search extends MailDocumentHandler  {
         }
     }
 }
+
