@@ -210,6 +210,11 @@ SECTION mta DEPENDS amavis
 	POSTCONF milter_content_timeout			VAR zimbraMtaMilterContentTimeout
 	POSTCONF milter_default_action			VAR zimbraMtaMilterDefaultAction
 	POSTCONF inet_protocols				VAR zimbraPostconfProtocol
+	POSTCONF unverified_recipient_defer_code	VAR zimbraMtaUnverifiedRecipientDeferCode
+	POSTCONF address_verify_poll_count		VAR zimbraMtaAddressVerifyPollCount
+	POSTCONF address_verify_poll_delay		VAR zimbraMtaAddressVerifyPollDelay
+	POSTCONF address_verify_negative_refresh_time	VAR zimbraMtaAddressVerifyNegativeRefreshTime
+	POSTCONF address_verify_positive_refresh_time	VAR zimbraMtaAddressVerifyPositiveRefreshTime
 	RESTART mta
 
 SECTION opendkim DEPENDS mta
