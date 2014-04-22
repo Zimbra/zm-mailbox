@@ -8427,6 +8427,38 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMobileSyncKeyFormatConvertedFolders = "zimbraMobileSyncKeyFormatConvertedFolders";
 
     /**
+     * Value for postconf address_verify_negative_refresh_time
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1609)
+    public static final String A_zimbraMtaAddressVerifyNegativeRefreshTime = "zimbraMtaAddressVerifyNegativeRefreshTime";
+
+    /**
+     * Value for postconf address_verify_poll_count
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1607)
+    public static final String A_zimbraMtaAddressVerifyPollCount = "zimbraMtaAddressVerifyPollCount";
+
+    /**
+     * Value for postconf address_verify_poll_delay
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1608)
+    public static final String A_zimbraMtaAddressVerifyPollDelay = "zimbraMtaAddressVerifyPollDelay";
+
+    /**
+     * Value for postconf address_verify_positive_refresh_time
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1610)
+    public static final String A_zimbraMtaAddressVerifyPositiveRefreshTime = "zimbraMtaAddressVerifyPositiveRefreshTime";
+
+    /**
      * Value for postconf alias_maps. Comma separated list.
      *
      * @since ZCS 8.5.0
@@ -9183,6 +9215,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1555)
     public static final String A_zimbraMtaTransportMaps = "zimbraMtaTransportMaps";
+
+    /**
+     * Value for postconf unverified_recipient_defer_code
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1606)
+    public static final String A_zimbraMtaUnverifiedRecipientDeferCode = "zimbraMtaUnverifiedRecipientDeferCode";
 
     /**
      * Value for postconf virtual_alias_domains. Comma separated list.
