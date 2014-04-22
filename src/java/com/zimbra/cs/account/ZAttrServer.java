@@ -17059,6 +17059,294 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Value for postconf address_verify_negative_refresh_time
+     *
+     * @return zimbraMtaAddressVerifyNegativeRefreshTime, or "10m" if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1609)
+    public String getMtaAddressVerifyNegativeRefreshTime() {
+        return getAttr(Provisioning.A_zimbraMtaAddressVerifyNegativeRefreshTime, "10m");
+    }
+
+    /**
+     * Value for postconf address_verify_negative_refresh_time
+     *
+     * @param zimbraMtaAddressVerifyNegativeRefreshTime new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1609)
+    public void setMtaAddressVerifyNegativeRefreshTime(String zimbraMtaAddressVerifyNegativeRefreshTime) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaAddressVerifyNegativeRefreshTime, zimbraMtaAddressVerifyNegativeRefreshTime);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf address_verify_negative_refresh_time
+     *
+     * @param zimbraMtaAddressVerifyNegativeRefreshTime new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1609)
+    public Map<String,Object> setMtaAddressVerifyNegativeRefreshTime(String zimbraMtaAddressVerifyNegativeRefreshTime, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaAddressVerifyNegativeRefreshTime, zimbraMtaAddressVerifyNegativeRefreshTime);
+        return attrs;
+    }
+
+    /**
+     * Value for postconf address_verify_negative_refresh_time
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1609)
+    public void unsetMtaAddressVerifyNegativeRefreshTime() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaAddressVerifyNegativeRefreshTime, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf address_verify_negative_refresh_time
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1609)
+    public Map<String,Object> unsetMtaAddressVerifyNegativeRefreshTime(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaAddressVerifyNegativeRefreshTime, "");
+        return attrs;
+    }
+
+    /**
+     * Value for postconf address_verify_poll_count
+     *
+     * @return zimbraMtaAddressVerifyPollCount, or "${stress?3}${stress:5}" if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1607)
+    public String getMtaAddressVerifyPollCount() {
+        return getAttr(Provisioning.A_zimbraMtaAddressVerifyPollCount, "${stress?3}${stress:5}");
+    }
+
+    /**
+     * Value for postconf address_verify_poll_count
+     *
+     * @param zimbraMtaAddressVerifyPollCount new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1607)
+    public void setMtaAddressVerifyPollCount(String zimbraMtaAddressVerifyPollCount) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaAddressVerifyPollCount, zimbraMtaAddressVerifyPollCount);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf address_verify_poll_count
+     *
+     * @param zimbraMtaAddressVerifyPollCount new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1607)
+    public Map<String,Object> setMtaAddressVerifyPollCount(String zimbraMtaAddressVerifyPollCount, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaAddressVerifyPollCount, zimbraMtaAddressVerifyPollCount);
+        return attrs;
+    }
+
+    /**
+     * Value for postconf address_verify_poll_count
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1607)
+    public void unsetMtaAddressVerifyPollCount() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaAddressVerifyPollCount, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf address_verify_poll_count
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1607)
+    public Map<String,Object> unsetMtaAddressVerifyPollCount(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaAddressVerifyPollCount, "");
+        return attrs;
+    }
+
+    /**
+     * Value for postconf address_verify_poll_delay
+     *
+     * @return zimbraMtaAddressVerifyPollDelay, or "3s" if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1608)
+    public String getMtaAddressVerifyPollDelay() {
+        return getAttr(Provisioning.A_zimbraMtaAddressVerifyPollDelay, "3s");
+    }
+
+    /**
+     * Value for postconf address_verify_poll_delay
+     *
+     * @param zimbraMtaAddressVerifyPollDelay new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1608)
+    public void setMtaAddressVerifyPollDelay(String zimbraMtaAddressVerifyPollDelay) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaAddressVerifyPollDelay, zimbraMtaAddressVerifyPollDelay);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf address_verify_poll_delay
+     *
+     * @param zimbraMtaAddressVerifyPollDelay new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1608)
+    public Map<String,Object> setMtaAddressVerifyPollDelay(String zimbraMtaAddressVerifyPollDelay, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaAddressVerifyPollDelay, zimbraMtaAddressVerifyPollDelay);
+        return attrs;
+    }
+
+    /**
+     * Value for postconf address_verify_poll_delay
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1608)
+    public void unsetMtaAddressVerifyPollDelay() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaAddressVerifyPollDelay, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf address_verify_poll_delay
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1608)
+    public Map<String,Object> unsetMtaAddressVerifyPollDelay(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaAddressVerifyPollDelay, "");
+        return attrs;
+    }
+
+    /**
+     * Value for postconf address_verify_positive_refresh_time
+     *
+     * @return zimbraMtaAddressVerifyPositiveRefreshTime, or "12h" if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1610)
+    public String getMtaAddressVerifyPositiveRefreshTime() {
+        return getAttr(Provisioning.A_zimbraMtaAddressVerifyPositiveRefreshTime, "12h");
+    }
+
+    /**
+     * Value for postconf address_verify_positive_refresh_time
+     *
+     * @param zimbraMtaAddressVerifyPositiveRefreshTime new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1610)
+    public void setMtaAddressVerifyPositiveRefreshTime(String zimbraMtaAddressVerifyPositiveRefreshTime) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaAddressVerifyPositiveRefreshTime, zimbraMtaAddressVerifyPositiveRefreshTime);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf address_verify_positive_refresh_time
+     *
+     * @param zimbraMtaAddressVerifyPositiveRefreshTime new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1610)
+    public Map<String,Object> setMtaAddressVerifyPositiveRefreshTime(String zimbraMtaAddressVerifyPositiveRefreshTime, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaAddressVerifyPositiveRefreshTime, zimbraMtaAddressVerifyPositiveRefreshTime);
+        return attrs;
+    }
+
+    /**
+     * Value for postconf address_verify_positive_refresh_time
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1610)
+    public void unsetMtaAddressVerifyPositiveRefreshTime() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaAddressVerifyPositiveRefreshTime, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf address_verify_positive_refresh_time
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1610)
+    public Map<String,Object> unsetMtaAddressVerifyPositiveRefreshTime(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaAddressVerifyPositiveRefreshTime, "");
+        return attrs;
+    }
+
+    /**
      * Value for postconf alias_maps. Comma separated list.
      *
      * @return zimbraMtaAliasMaps, or "lmdb:/etc/aliases" if unset
@@ -25536,6 +25824,78 @@ public abstract class ZAttrServer extends NamedEntry {
     public Map<String,Object> unsetMtaTransportMaps(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMtaTransportMaps, "");
+        return attrs;
+    }
+
+    /**
+     * Value for postconf unverified_recipient_defer_code
+     *
+     * @return zimbraMtaUnverifiedRecipientDeferCode, or 250 if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1606)
+    public int getMtaUnverifiedRecipientDeferCode() {
+        return getIntAttr(Provisioning.A_zimbraMtaUnverifiedRecipientDeferCode, 250);
+    }
+
+    /**
+     * Value for postconf unverified_recipient_defer_code
+     *
+     * @param zimbraMtaUnverifiedRecipientDeferCode new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1606)
+    public void setMtaUnverifiedRecipientDeferCode(int zimbraMtaUnverifiedRecipientDeferCode) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaUnverifiedRecipientDeferCode, Integer.toString(zimbraMtaUnverifiedRecipientDeferCode));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf unverified_recipient_defer_code
+     *
+     * @param zimbraMtaUnverifiedRecipientDeferCode new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1606)
+    public Map<String,Object> setMtaUnverifiedRecipientDeferCode(int zimbraMtaUnverifiedRecipientDeferCode, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaUnverifiedRecipientDeferCode, Integer.toString(zimbraMtaUnverifiedRecipientDeferCode));
+        return attrs;
+    }
+
+    /**
+     * Value for postconf unverified_recipient_defer_code
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1606)
+    public void unsetMtaUnverifiedRecipientDeferCode() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaUnverifiedRecipientDeferCode, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf unverified_recipient_defer_code
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1606)
+    public Map<String,Object> unsetMtaUnverifiedRecipientDeferCode(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaUnverifiedRecipientDeferCode, "");
         return attrs;
     }
 

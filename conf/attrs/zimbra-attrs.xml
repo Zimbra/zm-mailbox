@@ -8041,4 +8041,29 @@ TODO: delete them permanently from here
   <desc>Current version type of ZCS installed on this server</desc>
 </attr>
 
+<attr id="1606" name="zimbraMtaUnverifiedRecipientDeferCode" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
+  <globalConfigValue>250</globalConfigValue>
+  <desc>Value for postconf unverified_recipient_defer_code</desc>
+</attr>
+
+<attr id="1607" name="zimbraMtaAddressVerifyPollCount" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
+  <globalConfigValue>${stress?3}${stress:5}</globalConfigValue>
+  <desc>Value for postconf address_verify_poll_count</desc>
+</attr>
+
+<attr id="1608" name="zimbraMtaAddressVerifyPollDelay" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
+  <globalConfigValue>3s</globalConfigValue>
+  <desc>Value for postconf address_verify_poll_delay</desc>
+</attr>
+
+<attr id="1609" name="zimbraMtaAddressVerifyNegativeRefreshTime" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
+  <globalConfigValue>10m</globalConfigValue>
+  <desc>Value for postconf address_verify_negative_refresh_time</desc>
+</attr>
+
+<attr id="1610" name="zimbraMtaAddressVerifyPositiveRefreshTime" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
+  <globalConfigValue>12h</globalConfigValue>
+  <desc>Value for postconf address_verify_positive_refresh_time</desc>
+</attr>
+
 </attrs>
