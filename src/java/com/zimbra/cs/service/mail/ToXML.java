@@ -452,7 +452,7 @@ public final class ToXML {
                 elem.addAttribute(MailConstants.A_ABS_FOLDER_PATH, folder.getPath());
             }
             if (needToOutput(fields, Change.FOLDER)) {
-                elem.addAttribute(MailConstants.A_FOLDER, ifmt.formatItemId(folder.getFolderId()));
+                elem.addAttribute(MailConstants.A_FOLDER, ifmt.formatItemId(new ItemId(folder.getMailbox(), folder.getFolderId())));
                 elem.addAttribute(MailConstants.A_FOLDER_UUID, folder.getFolderUuid());
             }
         }
