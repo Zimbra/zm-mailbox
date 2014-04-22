@@ -570,7 +570,7 @@
     </Set>
 
     <Array id="plusConfig" type="java.lang.String">
-       <Item>org.eclipse.jetty.webapp.WebInfConfiguration</Item
+       <Item>org.eclipse.jetty.webapp.WebInfConfiguration</Item>
        <Item>org.eclipse.jetty.webapp.WebXmlConfiguration</Item>
        <Item>org.eclipse.jetty.webapp.MetaInfConfiguration</Item>
        <Item>org.eclipse.jetty.webapp.FragmentConfiguration</Item>
