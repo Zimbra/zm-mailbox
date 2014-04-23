@@ -6354,7 +6354,7 @@ TODO: delete them permanently from here
 </attr>
 
 <attr id="1289" name="zimbraMobilePolicyMaxCalendarAgeFilter" type="integer" min="-1" max="7" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.0.0">
-  <defaultCOSValue>4</defaultCOSValue>
+  <defaultCOSValue>5</defaultCOSValue>
   <desc>
     the maximum range of calendar days that can be synchronized to the device;
     0 - PAST ALL
@@ -6375,7 +6375,7 @@ TODO: delete them permanently from here
 </attr>
 
 <attr id="1291" name="zimbraMobilePolicyMaxEmailAgeFilter" type="integer" min="-1" max="5" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.0.0">
-  <defaultCOSValue>2</defaultCOSValue>
+  <defaultCOSValue>5</defaultCOSValue>
   <desc>
     the maximum number of days of e-mail items to synchronize to the device;
     0 - PAST ALL

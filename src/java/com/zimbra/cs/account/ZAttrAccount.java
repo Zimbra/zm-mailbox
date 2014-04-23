@@ -27283,13 +27283,13 @@ public abstract class ZAttrAccount  extends MailTarget {
      * Six Months ignored if zimbraFeatureMobilePolicyEnabled=FALSE or
      * zimbraMobilePolicyMaxCalendarAgeFilter value is set to -1, 1, 2 or, 3
      *
-     * @return zimbraMobilePolicyMaxCalendarAgeFilter, or 4 if unset
+     * @return zimbraMobilePolicyMaxCalendarAgeFilter, or 5 if unset
      *
      * @since ZCS 8.0.0
      */
     @ZAttr(id=1289)
     public int getMobilePolicyMaxCalendarAgeFilter() {
-        return getIntAttr(Provisioning.A_zimbraMobilePolicyMaxCalendarAgeFilter, 4);
+        return getIntAttr(Provisioning.A_zimbraMobilePolicyMaxCalendarAgeFilter, 5);
     }
 
     /**
@@ -27452,13 +27452,13 @@ public abstract class ZAttrAccount  extends MailTarget {
      * Weeks 5 - One Month ignored if zimbraFeatureMobilePolicyEnabled=FALSE
      * or zimbraMobilePolicyMaxEmailAgeFilter value is set to -1
      *
-     * @return zimbraMobilePolicyMaxEmailAgeFilter, or 2 if unset
+     * @return zimbraMobilePolicyMaxEmailAgeFilter, or 5 if unset
      *
      * @since ZCS 8.0.0
      */
     @ZAttr(id=1291)
     public int getMobilePolicyMaxEmailAgeFilter() {
-        return getIntAttr(Provisioning.A_zimbraMobilePolicyMaxEmailAgeFilter, 2);
+        return getIntAttr(Provisioning.A_zimbraMobilePolicyMaxEmailAgeFilter, 5);
     }
 
     /**
