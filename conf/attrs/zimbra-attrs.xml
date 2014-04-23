@@ -7216,12 +7216,12 @@ TODO: delete them permanently from here
   <desc>Whether to force devices using Active Sync 2.5</desc>
 </attr>
 
-<attr id="1588" name="zimbraMtaSmtpdClientPortLogging" type="enum" value="yes,no" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.0.8">
+<attr id="1588" name="zimbraMtaSmtpdClientPortLogging" type="enum" value="yes,no" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.0.8, 8.5.0">
   <globalConfigValue>no</globalConfigValue>
   <desc>Value for postconf smtpd_client_port_logging. Defaults to no</desc>
 </attr>
 
-<attr id="1596" name="zimbraMobileMaxMessageSize" type="integer" min="0" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.0.8" requiresRestart="mailbox">
+<attr id="1596" name="zimbraMobileMaxMessageSize" type="integer" min="0" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.0.8, 8.5.0" requiresRestart="mailbox">
   <globalConfigValue>10240000</globalConfigValue>
   <desc>Maximum total size of a mail message that can be synced to device without truncation. It cannot be larger than zimbraMTAMaxMessageSize. 0 means zimbraMTAMaxMessageSize or INTEGER_MAX, whichever is smaller</desc>
 </attr>
