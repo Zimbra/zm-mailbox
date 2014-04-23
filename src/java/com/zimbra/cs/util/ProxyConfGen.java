@@ -336,13 +336,14 @@ class ProxyConfVar
         int serverPort = server.getIntAttr(portName, 0);
         int timeout = server.getIntAttr(
                 Provisioning.A_zimbraMailProxyReconnectTimeout, 60);
+        String version = server.getAttr(Provisioning.A_zimbraServerVersion, "");
         int maxFails = server.getIntAttr("zimbraMailProxyMaxFails", 1);
         if (maxFails != 1) {
-            return String.format("%s:%d fail_timeout=%ds max_fails=%d", serverName, serverPort,
-                    timeout, maxFails);
+            return String.format("%s:%d fail_timeout=%ds version=%s max_fails=%d", serverName, serverPort,
+                    timeout, version, maxFails);
         } else  {
-            return String.format("%s:%d fail_timeout=%ds", serverName, serverPort,
-                    timeout);
+            return String.format("%s:%d fail_timeout=%ds version=%s", serverName, serverPort,
+                    timeout, version);
         }
     }
 }
@@ -872,7 +873,7 @@ class WebUpstreamServersVar extends ServersVar {
     	ArrayList<String> directives = new ArrayList<String>();
     	String portName = configSource.getAttr(Provisioning.A_zimbraReverseProxyHttpPortAttribute, "");
     	
-    	List<Server> servers = mProv.getAllServers(Provisioning.SERVICE_MAILBOX);
+    	List<Server> servers = mProv.getAllServers(Provisioning.SERVICE_MAILCLIENT);
     	for (Server server : servers) {
     		String serverName = server.getAttr(
     				Provisioning.A_zimbraServiceHostname, "");
@@ -900,7 +901,7 @@ class WebSSLUpstreamServersVar extends ServersVar {
     	ArrayList<String> directives = new ArrayList<String>();
     	String portName = configSource.getAttr(Provisioning.A_zimbraReverseProxyHttpSSLPortAttribute, "");
     	
-    	List<Server> servers = mProv.getAllServers(Provisioning.SERVICE_MAILBOX);
+    	List<Server> servers = mProv.getAllServers(Provisioning.SERVICE_MAILCLIENT);
     	for (Server server : servers) {
     		String serverName = server.getAttr(
     				Provisioning.A_zimbraServiceHostname, "");
@@ -926,7 +927,7 @@ class WebAdminUpstreamServersVar extends ServersVar {
 		 ArrayList<String> directives = new ArrayList<String>();
 		 String portName = configSource.getAttr(Provisioning.A_zimbraReverseProxyAdminPortAttribute, "");
 		 
-		 List<Server> servers = mProv.getAllServers(Provisioning.SERVICE_MAILBOX);
+		 List<Server> servers = mProv.getAllServers(Provisioning.SERVICE_MAILCLIENT);
 		 for (Server server : servers) {
 			 String serverName = server.getAttr(
 					 Provisioning.A_zimbraServiceHostname, "");

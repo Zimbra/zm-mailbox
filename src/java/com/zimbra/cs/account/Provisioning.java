@@ -1102,7 +1102,8 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public static final int SO_NO_ACCOUNT_SECONDARY_DEFAULTS = 0x400;  // do not set secondary defaults in makeAccount
     public static final String SERVICE_WEBCLIENT = "zimbra";
     public static final String SERVICE_ADMINCLIENT = "zimbraAdmin";
-
+    public static final String SERVICE_MAILCLIENT = "service";
+    
     public abstract List<Account> getAllAdminAccounts()  throws ServiceException;
 
     public abstract void setCOS(Account acct, Cos cos) throws ServiceException;
