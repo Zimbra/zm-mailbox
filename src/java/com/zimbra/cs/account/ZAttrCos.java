@@ -11712,6 +11712,78 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
+     * admin setting to enable/disable the web client offline access feature
+     *
+     * @return zimbraFeatureWebClientOfflineAccessEnabled, or true if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1611)
+    public boolean isFeatureWebClientOfflineAccessEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraFeatureWebClientOfflineAccessEnabled, true);
+    }
+
+    /**
+     * admin setting to enable/disable the web client offline access feature
+     *
+     * @param zimbraFeatureWebClientOfflineAccessEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1611)
+    public void setFeatureWebClientOfflineAccessEnabled(boolean zimbraFeatureWebClientOfflineAccessEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureWebClientOfflineAccessEnabled, zimbraFeatureWebClientOfflineAccessEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * admin setting to enable/disable the web client offline access feature
+     *
+     * @param zimbraFeatureWebClientOfflineAccessEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1611)
+    public Map<String,Object> setFeatureWebClientOfflineAccessEnabled(boolean zimbraFeatureWebClientOfflineAccessEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureWebClientOfflineAccessEnabled, zimbraFeatureWebClientOfflineAccessEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * admin setting to enable/disable the web client offline access feature
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1611)
+    public void unsetFeatureWebClientOfflineAccessEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureWebClientOfflineAccessEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * admin setting to enable/disable the web client offline access feature
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1611)
+    public Map<String,Object> unsetFeatureWebClientOfflineAccessEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureWebClientOfflineAccessEnabled, "");
+        return attrs;
+    }
+
+    /**
      * Deprecated since: 6.0.0_GA. deprecated per bug 40170. Orig desc:
      * whether web search feature is enabled
      *

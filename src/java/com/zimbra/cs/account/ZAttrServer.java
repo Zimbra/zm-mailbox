@@ -16983,7 +16983,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @return zimbraMobileMaxMessageSize, or 10240000 if unset
      *
-     * @since ZCS 8.0.8
+     * @since ZCS 8.0.8,8.5.0
      */
     @ZAttr(id=1596)
     public int getMobileMaxMessageSize() {
@@ -16998,7 +16998,7 @@ public abstract class ZAttrServer extends NamedEntry {
      * @param zimbraMobileMaxMessageSize new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.0.8
+     * @since ZCS 8.0.8,8.5.0
      */
     @ZAttr(id=1596)
     public void setMobileMaxMessageSize(int zimbraMobileMaxMessageSize) throws com.zimbra.common.service.ServiceException {
@@ -17016,7 +17016,7 @@ public abstract class ZAttrServer extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.0.8
+     * @since ZCS 8.0.8,8.5.0
      */
     @ZAttr(id=1596)
     public Map<String,Object> setMobileMaxMessageSize(int zimbraMobileMaxMessageSize, Map<String,Object> attrs) {
@@ -17032,7 +17032,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.0.8
+     * @since ZCS 8.0.8,8.5.0
      */
     @ZAttr(id=1596)
     public void unsetMobileMaxMessageSize() throws com.zimbra.common.service.ServiceException {
@@ -17049,7 +17049,7 @@ public abstract class ZAttrServer extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.0.8
+     * @since ZCS 8.0.8,8.5.0
      */
     @ZAttr(id=1596)
     public Map<String,Object> unsetMobileMaxMessageSize(Map<String,Object> attrs) {
@@ -23126,7 +23126,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @return zimbraMtaSmtpdClientPortLogging, or ZAttrProvisioning.MtaSmtpdClientPortLogging.no if unset and/or has invalid value
      *
-     * @since ZCS 8.0.8
+     * @since ZCS 8.0.8,8.5.0
      */
     @ZAttr(id=1588)
     public ZAttrProvisioning.MtaSmtpdClientPortLogging getMtaSmtpdClientPortLogging() {
@@ -23140,7 +23140,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @return zimbraMtaSmtpdClientPortLogging, or "no" if unset
      *
-     * @since ZCS 8.0.8
+     * @since ZCS 8.0.8,8.5.0
      */
     @ZAttr(id=1588)
     public String getMtaSmtpdClientPortLoggingAsString() {
@@ -23155,7 +23155,7 @@ public abstract class ZAttrServer extends NamedEntry {
      * @param zimbraMtaSmtpdClientPortLogging new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.0.8
+     * @since ZCS 8.0.8,8.5.0
      */
     @ZAttr(id=1588)
     public void setMtaSmtpdClientPortLogging(ZAttrProvisioning.MtaSmtpdClientPortLogging zimbraMtaSmtpdClientPortLogging) throws com.zimbra.common.service.ServiceException {
@@ -23173,7 +23173,7 @@ public abstract class ZAttrServer extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.0.8
+     * @since ZCS 8.0.8,8.5.0
      */
     @ZAttr(id=1588)
     public Map<String,Object> setMtaSmtpdClientPortLogging(ZAttrProvisioning.MtaSmtpdClientPortLogging zimbraMtaSmtpdClientPortLogging, Map<String,Object> attrs) {
@@ -23190,7 +23190,7 @@ public abstract class ZAttrServer extends NamedEntry {
      * @param zimbraMtaSmtpdClientPortLogging new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.0.8
+     * @since ZCS 8.0.8,8.5.0
      */
     @ZAttr(id=1588)
     public void setMtaSmtpdClientPortLoggingAsString(String zimbraMtaSmtpdClientPortLogging) throws com.zimbra.common.service.ServiceException {
@@ -23208,7 +23208,7 @@ public abstract class ZAttrServer extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.0.8
+     * @since ZCS 8.0.8,8.5.0
      */
     @ZAttr(id=1588)
     public Map<String,Object> setMtaSmtpdClientPortLoggingAsString(String zimbraMtaSmtpdClientPortLogging, Map<String,Object> attrs) {
@@ -23224,7 +23224,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.0.8
+     * @since ZCS 8.0.8,8.5.0
      */
     @ZAttr(id=1588)
     public void unsetMtaSmtpdClientPortLogging() throws com.zimbra.common.service.ServiceException {
@@ -23241,7 +23241,7 @@ public abstract class ZAttrServer extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.0.8
+     * @since ZCS 8.0.8,8.5.0
      */
     @ZAttr(id=1588)
     public Map<String,Object> unsetMtaSmtpdClientPortLogging(Map<String,Object> attrs) {

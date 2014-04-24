@@ -8066,4 +8066,10 @@ TODO: delete them permanently from here
   <desc>Value for postconf address_verify_positive_refresh_time</desc>
 </attr>
 
+<attr id="1611" name="zimbraFeatureWebClientOfflineAccessEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,accountInfo" since="8.5.0">
+  <defaultCOSValue>TRUE</defaultCOSValue>
+  <defaultExternalCOSValue>FALSE</defaultExternalCOSValue>
+  <desc>admin setting to enable/disable the web client offline access feature</desc>
+</attr>
+
 </attrs>
