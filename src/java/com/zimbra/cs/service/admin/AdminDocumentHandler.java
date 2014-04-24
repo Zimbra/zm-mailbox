@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -19,7 +19,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.base.Joiner;
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AttributeClass;
@@ -34,18 +40,12 @@ import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
-import com.zimbra.common.account.Key;
-import com.zimbra.common.account.Key.AccountBy;
-import com.zimbra.common.account.Key.CalendarResourceBy;
-import com.zimbra.common.account.Key.ServerBy;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
-import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
+import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.cs.account.names.NameUtil;
 import com.zimbra.cs.session.Session;
 import com.zimbra.soap.DocumentHandler;
-import com.zimbra.common.soap.AdminConstants;
-import com.zimbra.common.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
@@ -111,21 +111,33 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
         try {
             Provisioning prov = Provisioning.getInstance();
 
+            Provisioning.Reasons reasons = new Provisioning.Reasons();
             // check whether we need to proxy to the home server of a target account
             String[] xpath = getProxiedAccountPath();
             String acctId = (xpath != null ? getXPath(request, xpath) : null);
             if (acctId != null) {
                 Account acct = getAccount(prov, AccountBy.id, acctId, zsc.getAuthToken());
-                if (acct != null && !Provisioning.onLocalServer(acct))
+                if (acct != null && !Provisioning.onLocalServer(acct, reasons)) {
+                    if (zsc.getHopCount() > 2 || (ZimbraLog.soap.isDebugEnabled())) {
+                        ZimbraLog.soap.info("Proxying request:ProxiedAccountPath=%s reasons:%s",
+                                Joiner.on("/").join(xpath), reasons.getReason());
+                    }
                     return proxyRequest(request, context, acctId);
+                }
             }
 
             xpath = getProxiedAccountElementPath();
             Element acctElt = (xpath != null ? getXPathElement(request, xpath) : null);
             if (acctElt != null) {
-                Account acct = getAccount(prov, AccountBy.fromString(acctElt.getAttribute(AdminConstants.A_BY)), acctElt.getText(), zsc.getAuthToken());
-                if (acct != null && !Provisioning.onLocalServer(acct))
+                Account acct = getAccount(prov, AccountBy.fromString(acctElt.getAttribute(AdminConstants.A_BY)),
+                        acctElt.getText(), zsc.getAuthToken());
+                if (acct != null && !Provisioning.onLocalServer(acct, reasons)) {
+                    if (zsc.getHopCount() > 2 || (ZimbraLog.soap.isDebugEnabled())) {
+                        ZimbraLog.soap.info("Proxying request:ProxiedAccountElementPath=%s acctElt=%s reasons:%s",
+                                Joiner.on("/").join(xpath), acctElt.toString(), reasons.getReason());
+                    }
                     return proxyRequest(request, context, acct.getId());
+                }
             }
 
             // check whether we need to proxy to the home server of a target calendar resource
@@ -133,7 +145,11 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
             String rsrcId = (xpath != null ? getXPath(request, xpath) : null);
             if (rsrcId != null) {
                 CalendarResource rsrc = getCalendarResource(prov, Key.CalendarResourceBy.id, rsrcId);
-                if (rsrc != null && !Provisioning.onLocalServer(rsrc)) {
+                if (rsrc != null && !Provisioning.onLocalServer(rsrc, reasons)) {
+                    if (zsc.getHopCount() > 2 || (ZimbraLog.soap.isDebugEnabled())) {
+                        ZimbraLog.soap.info("Proxying request:ProxiedResourcePath=%s rsrcId=%s reasons:%s",
+                                Joiner.on("/").join(xpath), rsrcId, reasons.getReason());
+                    }
                     return proxyRequest(request, context, rsrcId);
                 }
             }
@@ -141,8 +157,13 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
             xpath = getProxiedResourceElementPath();
             Element resourceElt = (xpath != null ? getXPathElement(request, xpath) : null);
             if (resourceElt != null) {
-                CalendarResource rsrc = getCalendarResource(prov, Key.CalendarResourceBy.fromString(resourceElt.getAttribute(AdminConstants.A_BY)), resourceElt.getText());
-                if (rsrc != null && !Provisioning.onLocalServer(rsrc)) {
+                CalendarResource rsrc = getCalendarResource(prov, Key.CalendarResourceBy.fromString(
+                        resourceElt.getAttribute(AdminConstants.A_BY)), resourceElt.getText());
+                if (rsrc != null && !Provisioning.onLocalServer(rsrc, reasons)) {
+                    if (zsc.getHopCount() > 2 || (ZimbraLog.soap.isDebugEnabled())) {
+                        ZimbraLog.soap.info("Proxying request:ProxiedResourceElementPath=%s resourceElt=%s reasons:%s",
+                                Joiner.on("/").join(xpath), resourceElt.toString(), reasons.getReason());
+                    }
                     return proxyRequest(request, context, rsrc.getId());
                 }
             }
@@ -152,8 +173,14 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
             String serverId = (xpath != null ? getXPath(request, xpath) : null);
             if (serverId != null) {
                 Server server = prov.get(Key.ServerBy.id, serverId);
-                if (server != null && !getLocalHostId().equalsIgnoreCase(server.getId()))
+                if (server != null && !getLocalHostId().equalsIgnoreCase(server.getId())) {
+                    if (zsc.getHopCount() > 2 || (ZimbraLog.soap.isDebugEnabled())) {
+                        ZimbraLog.soap.info(
+                            "Proxying request:ProxiedServerPath=%s serverId=%s server=%s server ID=%s != localHostId=%s",
+                            Joiner.on("/").join(xpath), serverId, server.getName(), server.getId(), getLocalHostId());
+                    }
                     return proxyRequest(request, context, server);
+                }
             }
 
             return null;
@@ -189,7 +216,7 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
         if (attrsStr == null) {
             return null;
         }
-        
+
         String[] attrs = attrsStr.split(",");
 
         Set<String> attrsOnEntry = AttributeManager.getInstance().getAllAttrsInClass(klass);
@@ -199,7 +226,7 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
             if (attrsOnEntry.contains(attr)) {
                 validAttrs.add(attr);
             } else {
-                throw ServiceException.INVALID_REQUEST("requested attribute " + attr + 
+                throw ServiceException.INVALID_REQUEST("requested attribute " + attr +
                         " is not on " + klass.name(), null);
             }
         }
@@ -399,20 +426,20 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
      * DL right
      * --------
      */
-    protected AdminAccessControl checkDistributionListRight(ZimbraSoapContext zsc, 
+    protected AdminAccessControl checkDistributionListRight(ZimbraSoapContext zsc,
             DistributionList dl, Object needed) throws ServiceException {
         AdminAccessControl aac = AdminAccessControl.getAdminAccessControl(zsc);
         aac.checkDistributionListRight(this, dl, needed);
         return aac;
     }
-    
+
 
     /*
      * --------
      * Dynamic group right
      * --------
      */
-    protected AdminAccessControl checkDynamicGroupRight(ZimbraSoapContext zsc, 
+    protected AdminAccessControl checkDynamicGroupRight(ZimbraSoapContext zsc,
             DynamicGroup group, Object needed) throws ServiceException {
         AdminAccessControl aac = AdminAccessControl.getAdminAccessControl(zsc);
         aac.checkDynamicGroupRight(this, group, needed);

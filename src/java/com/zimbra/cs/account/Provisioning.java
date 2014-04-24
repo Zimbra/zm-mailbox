@@ -1325,10 +1325,32 @@ public abstract class Provisioning extends ZAttrProvisioning {
 
     public abstract Server getLocalServer() throws ServiceException;
 
+    public static final class Reasons {
+        StringBuilder sb = new StringBuilder();
+        public void addReason(String reason) {
+            if (0 < sb.length()) {
+                sb.append('\n');
+            }
+            sb.append(reason);
+        }
+        public String getReason() {
+            return sb.toString();
+        }
+    }
+
     public static boolean onLocalServer(Account account) throws ServiceException {
+        return onLocalServer(account, null);
+    }
+
+    public static boolean onLocalServer(Account account, Reasons reasons) throws ServiceException {
         String target    = account.getAttr(Provisioning.A_zimbraMailHost);
         String localhost = getInstance().getLocalServer().getAttr(Provisioning.A_zimbraServiceHostname);
-        return (target != null && target.equalsIgnoreCase(localhost));
+        boolean isLocal = (target != null && target.equalsIgnoreCase(localhost));
+        if (!isLocal && reasons != null) {
+            reasons.addReason(String.format("isLocal=%b target=%s localhost=%s account=%s",
+                    isLocal, target, localhost, account.getName()));
+        }
+        return isLocal;
     }
 
     public static boolean onLocalServer(Group group) throws ServiceException {
