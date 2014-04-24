@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -42,8 +42,8 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
-import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.Message.CalendarItemInfo;
+import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mime.MimeVisitor;
 import com.zimbra.cs.service.util.ItemId;
@@ -72,13 +72,31 @@ public class ForwardAppointmentInvite extends ForwardAppointment {
             ParseMimeMessage.parseMimeMsgSoap(zsc, octxt, mbox, msgElem,
                 null, ParseMimeMessage.NO_INV_ALLOWED_PARSER, parsedMessageData);
 
+        Message msg = mbox.getMessageById(octxt, iid.getId());
+        if (msg == null) {
+            throw MailServiceException.NO_SUCH_MSG(iid.getId());
+        }
+
+        Pair<MimeMessage, MimeMessage> msgPair = getMessagePair(mbox, senderAcct, msg, mmFwdWrapper);
+        forwardMessages(mbox, octxt, msgPair);
+
+        Element response = getResponseElement(zsc);
+        return response;
+    }
+
+    public static void forwardMessages(Mailbox mbox,  OperationContext octxt, Pair<MimeMessage,MimeMessage> msgPair) throws ServiceException {
+        if (msgPair.getFirst() != null) {
+            sendFwdMsg(octxt, mbox, msgPair.getFirst());
+        }
+        if (msgPair.getSecond() != null) {
+            sendFwdNotifyMsg(octxt, mbox, msgPair.getSecond());
+        }
+    }
+
+    public static Pair<MimeMessage, MimeMessage> getMessagePair(Mailbox mbox, Account senderAcct, Message msg, MimeMessage mmFwdWrapper ) throws ServiceException {
         Pair<MimeMessage, MimeMessage> msgPair;
         mbox.lock.lock();
         try {
-            Message msg = mbox.getMessageById(octxt, iid.getId());
-            if (msg == null) {
-                throw MailServiceException.NO_SUCH_MSG(iid.getId());
-            }
             MimeMessage mmInv = msg.getMimeMessage();
             List<Invite> invs = new ArrayList<Invite>();
             for (Iterator<CalendarItemInfo> iter = msg.getCalendarItemInfoIterator(); iter.hasNext(); ) {
@@ -125,29 +143,21 @@ public class ForwardAppointmentInvite extends ForwardAppointment {
                         if (invList != null && !invList.isEmpty())
                             firstInv = invList.get(0);
                         if (firstInv == null)
-                            throw ServiceException.FAILURE("Error building Invite for calendar part in message " + iid.getId(), null);
+                            throw ServiceException.FAILURE("Error building Invite for calendar part in message " + msg.getId(), null);
                     }
                 } catch (MessagingException e) {
-                    throw ServiceException.FAILURE("Error getting calendar part in message " + iid.getId(), null);
+                    throw ServiceException.FAILURE("Error getting calendar part in message " + msg.getId(), null);
                 } catch (IOException e) {
-                    throw ServiceException.FAILURE("Error getting calendar part in message " + iid.getId(), null);
+                    throw ServiceException.FAILURE("Error getting calendar part in message " +  msg.getId(), null);
                 }
             }
 
             msgPair = getInstanceFwdMsg(senderAcct, firstInv, cal, mmInv, mmFwdWrapper);
-            
+
         } finally {
             mbox.lock.release();
         }
-        
-        if (msgPair.getFirst() != null) {
-            sendFwdMsg(octxt, mbox, msgPair.getFirst());
-        }
-        if (msgPair.getSecond() != null) {
-            sendFwdNotifyMsg(octxt, mbox, msgPair.getSecond());
-        }
-        Element response = getResponseElement(zsc);
-        return response;
+        return msgPair;
     }
 
     // MimeVisitor that finds text/calendar part.
