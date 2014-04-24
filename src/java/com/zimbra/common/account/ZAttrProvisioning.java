@@ -5491,6 +5491,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureVoiceUpsellURL = "zimbraFeatureVoiceUpsellURL";
 
     /**
+     * admin setting to enable/disable the web client offline access feature
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1611)
+    public static final String A_zimbraFeatureWebClientOfflineAccessEnabled = "zimbraFeatureWebClientOfflineAccessEnabled";
+
+    /**
      * Deprecated since: 6.0.0_GA. deprecated per bug 40170. Orig desc:
      * whether web search feature is enabled
      *
@@ -7886,7 +7894,7 @@ public class ZAttrProvisioning {
      * without truncation. It cannot be larger than zimbraMTAMaxMessageSize.
      * 0 means zimbraMTAMaxMessageSize or INTEGER_MAX, whichever is smaller
      *
-     * @since ZCS 8.0.8
+     * @since ZCS 8.0.8,8.5.0
      */
     @ZAttr(id=1596)
     public static final String A_zimbraMobileMaxMessageSize = "zimbraMobileMaxMessageSize";
@@ -8907,7 +8915,7 @@ public class ZAttrProvisioning {
     /**
      * Value for postconf smtpd_client_port_logging. Defaults to no
      *
-     * @since ZCS 8.0.8
+     * @since ZCS 8.0.8,8.5.0
      */
     @ZAttr(id=1588)
     public static final String A_zimbraMtaSmtpdClientPortLogging = "zimbraMtaSmtpdClientPortLogging";
