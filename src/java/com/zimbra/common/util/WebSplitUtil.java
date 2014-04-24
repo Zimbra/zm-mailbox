@@ -26,7 +26,7 @@ public class WebSplitUtil {
     private static final String webClientApp = "zimbra";
     private static final String webServiceApp = "service";
     private static final String adminClientApp = "zimbraAdmin";
-    private static final String zimlets = "zimlets";
+    private static final String zimletApp = "zimlet";
 
 
     static {
@@ -73,7 +73,7 @@ public class WebSplitUtil {
 
     private static boolean allServicesEnabled() {
         if (servicesEnabled.contains(webClientApp) && servicesEnabled.contains(webServiceApp) &&
-                servicesEnabled.contains(adminClientApp) && servicesEnabled.contains(zimlets)) {
+                servicesEnabled.contains(adminClientApp) && servicesEnabled.contains(zimletApp)) {
         	ZimbraLog.misc.debug("all services enabled = true");
             return true;
         }
