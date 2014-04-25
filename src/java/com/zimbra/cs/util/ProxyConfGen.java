@@ -335,15 +335,14 @@ class ProxyConfVar
     String generateServerDirective(Server server, String serverName, String portName) {
         int serverPort = server.getIntAttr(portName, 0);
         int timeout = server.getIntAttr(
-                Provisioning.A_zimbraMailProxyReconnectTimeout, 60);
-        String version = server.getAttr(Provisioning.A_zimbraServerVersion, "");
+                Provisioning.A_zimbraMailProxyReconnectTimeout, 60);        
         int maxFails = server.getIntAttr("zimbraMailProxyMaxFails", 1);
         if (maxFails != 1) {
-            return String.format("%s:%d fail_timeout=%ds version=%s max_fails=%d", serverName, serverPort,
-                    timeout, version, maxFails);
+            return String.format("%s:%d fail_timeout=%ds max_fails=%d", serverName, serverPort,
+                    timeout, maxFails);
         } else  {
-            return String.format("%s:%d fail_timeout=%ds version=%s", serverName, serverPort,
-                    timeout, version);
+            return String.format("%s:%d fail_timeout=%ds", serverName, serverPort,
+                    timeout);
         }
     }
 }
