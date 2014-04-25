@@ -527,8 +527,8 @@ public class ContactAutoComplete {
                 return true;
             }
             String fullName = getFieldAsString(attrs, ContactConstants.A_fullName);
-            for(String fullNameToken :TOKEN_SPLITTER.split(fullName)){
-            	if (!Strings.isNullOrEmpty(fullNameToken) && fullNameToken.toLowerCase().startsWith(token)) {
+            for (String fullNameToken : TOKEN_SPLITTER.split(fullName)) {
+                if (!Strings.isNullOrEmpty(fullNameToken) && fullNameToken.toLowerCase().startsWith(token)) {
                     return true;
                 }
             }
