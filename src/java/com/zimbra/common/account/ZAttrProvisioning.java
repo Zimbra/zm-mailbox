@@ -6363,6 +6363,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraHttpHeaderCacheSize = "zimbraHttpHeaderCacheSize";
 
     /**
+     * The maximum allowed size in bytes for a HTTP form content in Jetty
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1612)
+    public static final String A_zimbraHttpMaxFormContentSize = "zimbraHttpMaxFormContentSize";
+
+    /**
      * number of http handler threads
      */
     @ZAttr(id=518)
