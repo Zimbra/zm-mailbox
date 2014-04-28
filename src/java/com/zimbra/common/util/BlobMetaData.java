@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -76,7 +76,8 @@ public final class BlobMetaData {
                 p++;
             }
             if (p >= len || metaData.charAt(p) != ':') {
-                throw new BlobMetaDataEncodingException("error decoding value length");
+                throw new BlobMetaDataEncodingException(
+                        String.format("error decoding value length for key '%s' at offset %d", name, offset));
             }
 
             int value_len = Integer.parseInt(metaData.substring(i, p));
@@ -85,7 +86,8 @@ public final class BlobMetaData {
             i = p;
 
             if (p + value_len > len) {
-                throw new BlobMetaDataEncodingException("invalid value length");
+                throw new BlobMetaDataEncodingException(
+                        String.format("invalid value length %d for key '%s' at offset %d", value_len, name, offset));
             }
             String value = metaData.substring(i, p + value_len);
 
@@ -93,7 +95,8 @@ public final class BlobMetaData {
 
             // TODO: should throw an exception and remove the meta data from the DB
             if (p >= len || metaData.charAt(p) != ';') {
-                throw new BlobMetaDataEncodingException("expecting ';' after value");
+                throw new BlobMetaDataEncodingException(
+                        String.format("expecting ';' after value for key '%s' at offset %d", name, offset));
             }
             p++;
             map.put(name, value);
@@ -102,16 +105,25 @@ public final class BlobMetaData {
         return map;
     }
 
-    public static Map<Object, Object> decodeRecursive(String metaData) throws BlobMetaDataEncodingException {
+    public static Map<Object, Object> decodeRecursive(String metaData, Integer associatedItemId)
+    throws BlobMetaDataEncodingException {
         Map<Object, Object> map = decode(metaData);
         for (Map.Entry<Object, Object> entry : map.entrySet()) {
             if (entry.getValue() instanceof String) {
                 String value = (String) entry.getValue();
                 if (value.length() > 5 && value.indexOf('=') != -1) {
                     try {
-                        entry.setValue(decodeRecursive(value));
+                        entry.setValue(decodeRecursive(value, associatedItemId));
                     } catch (BlobMetaDataEncodingException e) {
-                        ZimbraLog.mailbox.warn("Unable to decode BlobMetaData value [%s] due to exception", value, e);
+                        if (associatedItemId == null) {
+                            ZimbraLog.mailbox.warn("Unable to decode BlobMetaData value [%s] due to exception",
+                                    value, e);
+                        } else {
+                            ZimbraLog.mailbox.warn(
+                                    "Unable to decode BlobMetaData value [%s] for item=%s due to exception",
+                                    value, associatedItemId, e);
+
+                        }
                     }
                 }
             }
