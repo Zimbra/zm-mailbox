@@ -72,6 +72,7 @@ public class MimeConstants {
     public static final String CT_XML_WILD = "xml/.*";
     public static final String CT_DEFAULT = CT_TEXT_PLAIN;
     public static final String CT_APPLEFILE = "application/applefile";
+    public static final String CT_APPLICATION_ZIP = "application/zip";
 
     // encodings
     public static final String ET_7BIT = "7bit";
