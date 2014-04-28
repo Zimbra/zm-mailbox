@@ -121,17 +121,26 @@ public final class Metadata {
     public static final String FN_ELIDED           = "X";
     public static final String FN_EXTRA_DATA       = "xd";
 
+    private final Integer associatedItemId;
+
     Map<Object, Object> map;
 
     public Metadata() {
+        associatedItemId = null;
         map = new TreeMap<Object, Object>();
     }
 
     public Metadata(Map<?, ?> map) {
+        associatedItemId = null;
         this.map = new TreeMap<Object, Object>(map);
     }
 
     public Metadata(String encoded) throws MailServiceException {
+        this(encoded, (Integer) null);
+    }
+
+    public Metadata(String encoded, Integer associatedItemId) throws MailServiceException {
+        this.associatedItemId = associatedItemId;
         if (Strings.isNullOrEmpty(encoded)) {
             map = new HashMap<Object, Object>();
             return;
@@ -157,7 +166,7 @@ public final class Metadata {
             }
         } catch (BEncodingException e) {
             try {
-                map = BlobMetaData.decodeRecursive(encoded);
+                map = BlobMetaData.decodeRecursive(encoded, associatedItemId);
                 return;
             } catch (BlobMetaDataEncodingException e1) {
             }

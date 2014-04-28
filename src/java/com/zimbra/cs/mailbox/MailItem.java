@@ -850,7 +850,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
                         return Integer.parseInt(pair[1]);
                     }
                 }
-            } catch (Exception e) {}   
+            } catch (Exception e) {}
         }
         return -1;
     }
@@ -3406,7 +3406,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
 
     void decodeMetadata(String metadata) throws ServiceException {
         try {
-            decodeMetadata(new Metadata(metadata));
+            decodeMetadata(new Metadata(metadata, mId));
         } catch (ServiceException e) {
             ZimbraLog.mailbox.error("Failed to parse metadata id=%d,type=%s", mId, getType(), e);
             throw e;
