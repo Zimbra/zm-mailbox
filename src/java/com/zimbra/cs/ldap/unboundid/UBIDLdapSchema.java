@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -30,31 +30,27 @@ import com.zimbra.cs.ldap.ZLdapSchema;
 public class UBIDLdapSchema extends ZLdapSchema {
 
     private Schema schema;
-    
+
     UBIDLdapSchema(Schema schema) {
         this.schema = schema;
     }
-    
+
     @Override
     public void debug() {
-        // TODO Auto-generated method stub
-        
     }
-    
+
     public static class UBIDObjectClassDefinition extends ZObjectClassDefinition {
 
         private ObjectClassDefinition ocDef;
-        
+
         private UBIDObjectClassDefinition(ObjectClassDefinition ocDef) {
             this.ocDef = ocDef;
         }
-        
+
         @Override
         public void debug() {
-            // TODO Auto-generated method stub
-            
         }
-        
+
         ObjectClassDefinition getNative() {
             return ocDef;
         }
@@ -64,7 +60,7 @@ public class UBIDLdapSchema extends ZLdapSchema {
         public String getName() {
             return ocDef.getNameOrOID();
         }
-        
+
         @Override
         public List<String> getSuperiorClasses() throws LdapException {
             return Arrays.asList(ocDef.getSuperiorClasses());
@@ -80,11 +76,11 @@ public class UBIDLdapSchema extends ZLdapSchema {
             return Arrays.asList(ocDef.getRequiredAttributes());
         }
 
-        
+
     }
 
     @Override
-    public ZObjectClassDefinition getObjectClass(String objectClass) 
+    public ZObjectClassDefinition getObjectClass(String objectClass)
     throws LdapException {
         ObjectClassDefinition oc = schema.getObjectClass(objectClass);
         if (oc == null) {
@@ -92,26 +88,26 @@ public class UBIDLdapSchema extends ZLdapSchema {
         } else {
             return new UBIDObjectClassDefinition(oc);
         }
-        
+
     }
 
     @Override
     public List<ZObjectClassDefinition> getObjectClasses() throws LdapException {
         List<ZObjectClassDefinition> ocList = new ArrayList<ZObjectClassDefinition>();
-        
+
         Set<ObjectClassDefinition> ocs = schema.getObjectClasses();
         for (ObjectClassDefinition oc : ocs) {
             UBIDObjectClassDefinition ubidOC = new UBIDObjectClassDefinition(oc);
             ocList.add(ubidOC);
         }
-        
+
         Comparator comparator = new Comparator<UBIDObjectClassDefinition>() {
             public int compare(UBIDObjectClassDefinition first,
                     UBIDObjectClassDefinition second) {
                 return first.getName().compareTo(second.getName());
             }
         };
-        
+
         Collections.sort(ocList, comparator);
         return ocList;
     }

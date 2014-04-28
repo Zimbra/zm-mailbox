@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2010, 2011, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -28,16 +28,15 @@ public class AuthMech extends AttributeCallback {
     public void preModify(CallbackContext context, String attrName, Object attrValue,
             Map attrsToModify, Entry entry)
             throws ServiceException {
-        // TODO Auto-generated method stub
-        
+
         String authMech;
-        
+
         SingleValueMod mod = singleValueMod(attrName, attrValue);
         if (mod.setting()) {
             authMech = mod.value();
-            
+
             boolean valid = false;
-            
+
             if (authMech == null) {
                 valid = true;
             } else if (authMech.startsWith(AuthMechanism.AuthMech.custom.name())) {
@@ -50,7 +49,7 @@ public class AuthMech extends AttributeCallback {
                     ZimbraLog.account.error("invalud auth mech", e);
                 }
             }
-           
+
             if (!valid) {
                 throw ServiceException.INVALID_REQUEST("invalud value: " + authMech, null);
             }
@@ -58,7 +57,7 @@ public class AuthMech extends AttributeCallback {
 
     }
 
-    
+
     @Override
     public void postModify(CallbackContext context, String attrName, Entry entry) {
     }

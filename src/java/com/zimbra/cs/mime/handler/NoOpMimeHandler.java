@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -27,7 +27,7 @@ import com.zimbra.cs.mime.MimeHandlerException;
 /**
  * A mime handler that does nothing. Unlike the unknown type handler
  * this won't throw any exceptions for calling the wrong method.
- * 
+ *
  * This handler is returned when indexing is turned off
  * @author jpowers
  *
@@ -56,19 +56,16 @@ public class NoOpMimeHandler extends MimeHandler {
 
     @Override
     public String getContentType() {
-        // TODO Auto-generated method stub
         return super.getContentType();
     }
 
     @Override
     public String getDescription() {
-        // TODO Auto-generated method stub
         return super.getDescription();
     }
 
     @Override
     public String getPartName() {
-        // TODO Auto-generated method stub
         return super.getPartName();
     }
 

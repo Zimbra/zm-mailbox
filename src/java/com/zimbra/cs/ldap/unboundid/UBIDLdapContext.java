@@ -134,8 +134,6 @@ public class UBIDLdapContext extends ZLdapContext {
 
     @Override
     public void debug() {
-        // TODO Auto-generated method stub
-
     }
 
     static synchronized void alwaysUseMaster() {

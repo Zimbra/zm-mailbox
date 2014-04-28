@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -42,22 +42,22 @@ import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.account.accesscontrol.Rights.User;
 
 public class ACLTestUtil {
-    
+
     /*
      * if not running from ZimbraServer/build.xml, do:
-     * 
+     *
      * zmlocalconfig -e debug_running_unittest=true
      * cp /Users/pshao/p4/main/ZimbraServer/data/unittest/ldap/rights-unittest.xml /opt/zimbra/conf/rights
-     * 
+     *
      */
-    
+
     // user rights
     static Right USER_LOGIN_AS;
     static Right USER_RIGHT;
     static Right USER_RIGHT_DISTRIBUTION_LIST;
     static Right USER_RIGHT_DOMAIN;
     static Right USER_RIGHT_RESTRICTED_GRANT_TARGET_TYPE;
-    
+
     // admin preset rights
     static Right ADMIN_PRESET_LOGIN_AS;
     static Right ADMIN_PRESET_ACCOUNT;
@@ -72,7 +72,7 @@ public class ACLTestUtil {
     static Right ADMIN_PRESET_UC_SERVICE;
     static Right ADMIN_PRESET_XMPP_COMPONENT;
     static Right ADMIN_PRESET_ZIMLET;
-    
+
     // admin attrs rights
     static Right ADMIN_ATTR_GETALL_ACCOUNT;
     static Right ADMIN_ATTR_SETALL_ACCOUNT;
@@ -113,8 +113,8 @@ public class ACLTestUtil {
     static Right ADMIN_ATTR_GETALL_ZIMLET;
     static Right ADMIN_ATTR_SETALL_ZIMLET;
     static Right ADMIN_ATTR_GETSOME_ZIMLET;
-    static Right ADMIN_ATTR_SETSOME_ZIMLET; 
-    
+    static Right ADMIN_ATTR_SETSOME_ZIMLET;
+
     // admin combo rights
     static Right ADMIN_COMBO_ACCOUNT;
     static Right ADMIN_COMBO_CALENDAR_RESOURCE;
@@ -129,8 +129,8 @@ public class ACLTestUtil {
     static Right ADMIN_COMBO_XMPP_COMPONENT;
     static Right ADMIN_COMBO_ZIMLET;
     // static Right ADMIN_COMBO_ALL;
-    
-    
+
+
     /*
      * init rights defined in rights-unittest.xml
      */
@@ -140,7 +140,7 @@ public class ACLTestUtil {
         USER_RIGHT_DISTRIBUTION_LIST  = getRight("test-user-distributionlist");
         USER_RIGHT_DOMAIN             = User.R_createDistList;
         USER_RIGHT_RESTRICTED_GRANT_TARGET_TYPE = User.R_sendAs;
-        
+
         ADMIN_PRESET_LOGIN_AS          = Admin.R_adminLoginAs;
         ADMIN_PRESET_ACCOUNT           = getRight("test-preset-account");
         ADMIN_PRESET_CALENDAR_RESOURCE = getRight("test-preset-calendarresource");
@@ -154,7 +154,7 @@ public class ACLTestUtil {
         ADMIN_PRESET_UC_SERVICE        = getRight("test-preset-ucservice");
         ADMIN_PRESET_XMPP_COMPONENT    = getRight("test-preset-xmppcomponent");
         ADMIN_PRESET_ZIMLET            = getRight("test-preset-zimlet");
-        
+
         ADMIN_ATTR_GETALL_ACCOUNT               = Admin.R_getAccount;
         ADMIN_ATTR_SETALL_ACCOUNT               = Admin.R_modifyAccount;
         ADMIN_ATTR_GETSOME_ACCOUNT              = getRight("test-getAttrs-account");
@@ -194,8 +194,8 @@ public class ACLTestUtil {
         ADMIN_ATTR_GETALL_ZIMLET                = Admin.R_getZimlet;
         ADMIN_ATTR_SETALL_ZIMLET                = Admin.R_modifyZimlet;
         ADMIN_ATTR_GETSOME_ZIMLET               = getRight("test-getAttrs-zimlet");
-        ADMIN_ATTR_SETSOME_ZIMLET               = getRight("test-setAttrs-zimlet");           
-        
+        ADMIN_ATTR_SETSOME_ZIMLET               = getRight("test-setAttrs-zimlet");
+
         ADMIN_COMBO_ACCOUNT           = getRight("test-combo-account");
         ADMIN_COMBO_CALENDAR_RESOURCE = getRight("test-combo-calendarresource");
         ADMIN_COMBO_CONFIG            = getRight("test-combo-globalconfig");
@@ -210,36 +210,36 @@ public class ACLTestUtil {
         ADMIN_COMBO_ZIMLET            = getRight("test-combo-zimlet");
         // ADMIN_COMBO_ALL               = getRight("test-combo-all");
     }
-    
+
     static Right getRight(String right) throws ServiceException {
         return RightManager.getInstance().getRight(right);
     }
-    
+
     static enum AllowOrDeny {
         ALLOW(true, false),
         DELEGABLE(true, true),
         DENY(false, false);
-        
+
         boolean mAllow;
         boolean mDelegable;
-        
+
         AllowOrDeny(boolean allow, boolean delegable) {
             mAllow = allow;
             mDelegable = delegable;
         }
-        
+
         boolean deny() {
             return !mAllow;
         }
-        
+
         boolean allow() {
             return mAllow;
         }
-        
+
         boolean delegable() {
             return mDelegable;
         }
-        
+
         RightModifier toRightModifier() {
             if (deny())
                 return RightModifier.RM_DENY;
@@ -249,177 +249,151 @@ public class ACLTestUtil {
                 return null;
         }
     }
-    
+
     static enum GetOrSet {
         GET(true),
         SET(false);
-        
+
         boolean mGet;
-        
+
         GetOrSet(boolean get) {
             mGet = get;
         }
-        
+
         boolean isGet() {
             return mGet;
         }
     }
-    
+
     protected static enum AsAdmin {
         AS_ADMIN(true),
         AS_USER(false);
-        
+
         boolean mAsAdmin;
-        
+
         AsAdmin(boolean asAdmin) {
             mAsAdmin = asAdmin;
         }
-        
+
         boolean yes()  {
             return mAsAdmin;
         }
     }
-    
+
     /*
      * for testing key grantees
      */
     public static class KeyAuthToken extends AuthToken {
-    
+
         private String mName;
         private String mAccessKey;
-        
+
         public KeyAuthToken(String name, String accessKey) {
             mName = name;
             mAccessKey = accessKey;
         }
-        
+
         @Override
         public void encode(HttpClient client, HttpMethod method,
                 boolean isAdminReq, String cookieDomain) throws ServiceException {
-            // TODO Auto-generated method stub
-    
         }
-    
+
         @Override
         public void encode(HttpState state, boolean isAdminReq, String cookieDomain)
                 throws ServiceException {
-            // TODO Auto-generated method stub
-    
         }
-    
+
         @Override
-        public void encode(HttpServletResponse resp, boolean isAdminReq, 
+        public void encode(HttpServletResponse resp, boolean isAdminReq,
                 boolean secureCookie, boolean rememberMe)
                 throws ServiceException {
-            // TODO Auto-generated method stub
-    
         }
-    
+
         @Override
         public void encodeAuthResp(Element parent, boolean isAdmin)
                 throws ServiceException {
-            // TODO Auto-generated method stub
-    
         }
-    
+
         @Override
         public String getAccountId() {
-            // TODO Auto-generated method stub
             return null;
         }
-    
+
         @Override
         public String getAdminAccountId() {
-            // TODO Auto-generated method stub
             return null;
         }
-    
+
         @Override
         public String getCrumb() throws AuthTokenException {
-            // TODO Auto-generated method stub
             return null;
         }
-    
+
         @Override
         public String getDigest() {
-            // TODO Auto-generated method stub
             return null;
         }
-    
+
         @Override
         public String getEncoded() throws AuthTokenException {
-            // TODO Auto-generated method stub
             return null;
         }
-    
+
         @Override
         public long getExpires() {
-            // TODO Auto-generated method stub
             return 0;
         }
-    
+
         @Override
         public String getExternalUserEmail() {
-            // TODO Auto-generated method stub
             return mName;
         }
-    
+
         @Override
         public boolean isAdmin() {
-            // TODO Auto-generated method stub
             return false;
         }
-    
+
         @Override
         public boolean isDomainAdmin() {
-            // TODO Auto-generated method stub
             return false;
         }
-        
+
         @Override
         public boolean isDelegatedAdmin() {
-            // TODO Auto-generated method stub
             return false;
         }
-    
+
         @Override
         public boolean isExpired() {
-            // TODO Auto-generated method stub
             return false;
         }
-    
+
         @Override
         public boolean isZimbraUser() {
-            // TODO Auto-generated method stub
             return false;
         }
-    
+
         @Override
         public String toString() {
-            // TODO Auto-generated method stub
             return null;
         }
-    
+
         @Override
         public ZAuthToken toZAuthToken() throws ServiceException {
-            // TODO Auto-generated method stub
             return null;
         }
-        
+
         public String getAccessKey() {
             return mAccessKey;
         }
 
 		@Override
 		public void register() {
-			// TODO Auto-generated method stub
-			
 		}
 
 		@Override
 		public void deRegister() {
-			// TODO Auto-generated method stub
-			
 		}
 
 		@Override
@@ -427,20 +401,20 @@ public class ACLTestUtil {
 			return true;
 		}
     }
-    
+
     static class TestViaGrant extends ViaGrant {
         static final boolean POSITIVE = false;
         static final boolean NEGATIVE = true;
-        
+
         String mTargetType;
         String mTargetName;
         String mGranteeType;
         String mGranteeName;
         String mRight;
         boolean mIsNegativeGrant;
-        
+
         Set<TestViaGrant> mCanAlsoVia;
-        
+
         TestViaGrant(TargetType targetType,
                      Entry target,
                      GranteeType granteeType,
@@ -454,37 +428,37 @@ public class ACLTestUtil {
             mRight = right.getName();
             mIsNegativeGrant = isNegativeGrant;
         }
-        
-        public String getTargetType() { 
+
+        public String getTargetType() {
             return mTargetType;
-        } 
-        
+        }
+
         public String getTargetName() {
             return mTargetName;
         }
-        
+
         public String getGranteeType() {
             return mGranteeType;
         }
-        
+
         public String getGranteeName() {
             return mGranteeName;
         }
-        
+
         public String getRight() {
             return mRight;
         }
-        
+
         public boolean isNegativeGrant() {
             return mIsNegativeGrant;
         }
-        
+
         public void addCanAlsoVia(TestViaGrant canAlsoVia) {
             if (mCanAlsoVia == null)
                 mCanAlsoVia = new HashSet<TestViaGrant>();
             mCanAlsoVia.add(canAlsoVia);
         }
-        
+
         public static void verifyEquals(TestViaGrant expected, ViaGrant actual) {
             if (expected == null) {
                 assertNull(actual);
@@ -494,7 +468,7 @@ public class ACLTestUtil {
             }
             expected.verify(actual);
         }
-        
+
         public void verify(ViaGrant actual) {
             try {
                 assertEquals(getTargetType(),   actual.getTargetType());
@@ -507,7 +481,7 @@ public class ACLTestUtil {
                 if (mCanAlsoVia == null) {
                     throw e;
                 }
-                
+
                 // see if any canAlsoVia matches
                 for (TestViaGrant canAlsoVia : mCanAlsoVia) {
                     try {
@@ -525,16 +499,16 @@ public class ACLTestUtil {
         }
     }
 
-    
+
     /*
     static void installUnitTestRights() throws Exception {
         FileUtil.copy("data/unittest/ldap/rights-unittest.xml", "/opt/zimbra/conf/rights/rights-unittest.xml");
     }
-    
+
     static void uninstallUnitTestRights() throws Exception {
         FileUtil.delete(new File("/opt/zimbra/conf/rights/rights-unittest.xml"));
     }
     */
 
-    
+
 }

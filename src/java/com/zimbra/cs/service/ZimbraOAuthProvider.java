@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -33,9 +33,9 @@ import com.zimbra.cs.account.ZimbraAuthToken;
  * @author pshao
  */
 public class ZimbraOAuthProvider extends ZimbraAuthProvider {
-    
+
     public static final String ZIMBRA_OAUTH_PROVIDER = "oauth";
-    
+
     public static final String OAUTH_ACCESS_TOKEN = "access_token";
 
     protected ZimbraOAuthProvider() {
@@ -45,19 +45,17 @@ public class ZimbraOAuthProvider extends ZimbraAuthProvider {
     @Override
     protected AuthToken authToken(HttpServletRequest req, boolean isAdminReq)
             throws AuthProviderException, AuthTokenException {
-        // TODO Auto-generated method stub
         return null;
     }
 
     @Override
     protected AuthToken authToken(Element soapCtxt, Map engineCtxt)
             throws AuthProviderException, AuthTokenException {
-        // TODO Auto-generated method stub
         return null;
     }
-    
+
     @Override
-    protected AuthToken authToken(Element authTokenElem, Account acct) 
+    protected AuthToken authToken(Element authTokenElem, Account acct)
     throws AuthProviderException, AuthTokenException {
         ZAuthToken zAuthToken;
         try {
@@ -65,16 +63,16 @@ public class ZimbraOAuthProvider extends ZimbraAuthProvider {
         } catch (ServiceException e) {
             throw AuthProviderException.FAILURE(e.getMessage());
         }
-        
+
         if (ZIMBRA_OAUTH_PROVIDER.equals(zAuthToken.getType())) {
             Map<String, String> attrs = zAuthToken.getAttrs();
-            
+
             // TODO: no validation of access_token in IronMaiden D4!!!
             String accessToken = attrs.get(OAUTH_ACCESS_TOKEN);
             if (Strings.isNullOrEmpty(accessToken)) {
                 throw new AuthTokenException("no oauth access token");
             }
-            
+
             return authToken(acct);
         } else {
             throw AuthProviderException.NO_AUTH_DATA();
