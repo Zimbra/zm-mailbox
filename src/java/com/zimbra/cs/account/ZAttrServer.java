@@ -8100,6 +8100,78 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * The maximum allowed size in bytes for a HTTP form content in Jetty
+     *
+     * @return zimbraHttpMaxFormContentSize, or 200000 if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1612)
+    public int getHttpMaxFormContentSize() {
+        return getIntAttr(Provisioning.A_zimbraHttpMaxFormContentSize, 200000);
+    }
+
+    /**
+     * The maximum allowed size in bytes for a HTTP form content in Jetty
+     *
+     * @param zimbraHttpMaxFormContentSize new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1612)
+    public void setHttpMaxFormContentSize(int zimbraHttpMaxFormContentSize) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraHttpMaxFormContentSize, Integer.toString(zimbraHttpMaxFormContentSize));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The maximum allowed size in bytes for a HTTP form content in Jetty
+     *
+     * @param zimbraHttpMaxFormContentSize new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1612)
+    public Map<String,Object> setHttpMaxFormContentSize(int zimbraHttpMaxFormContentSize, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraHttpMaxFormContentSize, Integer.toString(zimbraHttpMaxFormContentSize));
+        return attrs;
+    }
+
+    /**
+     * The maximum allowed size in bytes for a HTTP form content in Jetty
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1612)
+    public void unsetHttpMaxFormContentSize() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraHttpMaxFormContentSize, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The maximum allowed size in bytes for a HTTP form content in Jetty
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1612)
+    public Map<String,Object> unsetHttpMaxFormContentSize(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraHttpMaxFormContentSize, "");
+        return attrs;
+    }
+
+    /**
      * number of http handler threads
      *
      * @return zimbraHttpNumThreads, or 250 if unset

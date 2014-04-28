@@ -724,6 +724,11 @@
         </Arg>
     </Call>
 
+    <Call name="setAttribute">
+        <Arg>org.eclipse.jetty.server.Request.maxFormContentSize</Arg>
+        <Arg>%%zimbraHttpMaxFormContentSize%%</Arg>
+    </Call>
+
     <!-- =========================================================== -->
     <!-- Configure Authentication Realms                             -->
     <!-- Realms may be configured for the entire server here, or     -->
