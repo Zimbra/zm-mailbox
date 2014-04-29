@@ -527,9 +527,12 @@ public class ContactAutoComplete {
                 return true;
             }
             String fullName = getFieldAsString(attrs, ContactConstants.A_fullName);
-            for (String fullNameToken : TOKEN_SPLITTER.split(fullName)) {
-                if (!Strings.isNullOrEmpty(fullNameToken) && fullNameToken.toLowerCase().startsWith(token)) {
-                    return true;
+            if (!Strings.isNullOrEmpty(fullName)) {
+                for (String fullNameToken : TOKEN_SPLITTER.split(fullName)) {
+                    if (!Strings.isNullOrEmpty(fullNameToken) &&
+                        fullNameToken.toLowerCase().startsWith(token)) {
+                        return true;
+                    }
                 }
             }
             String nickname = getFieldAsString(attrs, ContactConstants.A_nickname);
