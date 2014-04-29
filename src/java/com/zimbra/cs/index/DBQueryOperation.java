@@ -729,9 +729,9 @@ public class DBQueryOperation extends QueryOperation {
                     // we have to get ALL of the lucene hits for these ids.  There can very likely be more
                     // hits from Lucene then there are DB id's, so we just ask for a large number.
                     while (hasMore) {
-                        luceneChunk = luceneOp.getNextResultsChunk(MAX_HITS_PER_CHUNK);
+                        luceneChunk = luceneOp.getNextResultsChunk(MAX_HITS_PER_CHUNK*3);
                         Set<Integer> indexIds = luceneChunk.getIndexIds();
-                        if (indexIds.size() < MAX_HITS_PER_CHUNK) {
+                        if (indexIds.size() < MAX_HITS_PER_CHUNK*3) {
                             hasMore = false;
                         }
                         for (int indexId : indexIds) {
