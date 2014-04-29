@@ -6693,6 +6693,32 @@ public class ZAttrProvisioning {
     public static final String A_zimbraInternalSharingDomain = "zimbraInternalSharingDomain";
 
     /**
+     * Min time between current req and last req before this suspended IP
+     * will be reinstated
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1614)
+    public static final String A_zimbraInvalidLoginFilterDelayInMinBetwnReqBeforeReinstating = "zimbraInvalidLoginFilterDelayInMinBetwnReqBeforeReinstating";
+
+    /**
+     * Whether to do DOSFilter style check for repeated failed logins from
+     * IP, if set to 0 no check happens, else failed login is recorded.
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1613)
+    public static final String A_zimbraInvalidLoginFilterMaxFailedLogin = "zimbraInvalidLoginFilterMaxFailedLogin";
+
+    /**
+     * Interval at which Task to reinstate suspended IPs is run
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1615)
+    public static final String A_zimbraInvalidLoginFilterReinstateIpTaskIntervalInMin = "zimbraInvalidLoginFilterReinstateIpTaskIntervalInMin";
+
+    /**
      * supported IP mode
      *
      * @since ZCS 7.1.0
