@@ -2821,13 +2821,16 @@ public class Mailbox {
                 msg = getMessageById(-id);
             }
             if (msg.getConversationId() != id) {
-                return msg.getParent();
+                item = msg.getParent();
             } else {
                 item = new VirtualConversation(this, msg);
             }
         } else {
             // cache miss, so fetch from the database
             item = MailItem.getById(this, id, type);
+        }
+        if (item == null) {
+            throw MailItem.noSuchItem(id, type);
         }
         return item;
     }
