@@ -54,6 +54,7 @@ import com.zimbra.cs.redolog.RedoLogProvider;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.admin.AdminAccessControl;
 import com.zimbra.cs.service.admin.AdminDocumentHandler;
+import com.zimbra.cs.servlet.ZimbraInvalidLoginFilter;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.session.SoapSession;
@@ -537,6 +538,12 @@ public class SoapEngine {
                 LOG.debug("handler exception", e);
             }
         } catch (AuthFailedServiceException e) {
+            HttpServletRequest httpReq = (HttpServletRequest) context
+                .get(SoapServlet.SERVLET_REQUEST);
+            httpReq.setAttribute(ZimbraInvalidLoginFilter.AUTH_FAILED, Boolean.TRUE);
+            String clientIp = (String) context.get(SoapEngine.REQUEST_IP);
+            httpReq.setAttribute(SoapEngine.REQUEST_IP, clientIp);
+
             response = soapProto.soapFault(e);
 
             if (LOG.isDebugEnabled()) {

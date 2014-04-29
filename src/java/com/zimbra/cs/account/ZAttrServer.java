@@ -10925,6 +10925,232 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Min time between current req and last req before this suspended IP
+     * will be reinstated
+     *
+     * @return zimbraInvalidLoginFilterDelayInMinBetwnReqBeforeReinstating, or 15 if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1614)
+    public int getInvalidLoginFilterDelayInMinBetwnReqBeforeReinstating() {
+        return getIntAttr(Provisioning.A_zimbraInvalidLoginFilterDelayInMinBetwnReqBeforeReinstating, 15);
+    }
+
+    /**
+     * Min time between current req and last req before this suspended IP
+     * will be reinstated
+     *
+     * @param zimbraInvalidLoginFilterDelayInMinBetwnReqBeforeReinstating new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1614)
+    public void setInvalidLoginFilterDelayInMinBetwnReqBeforeReinstating(int zimbraInvalidLoginFilterDelayInMinBetwnReqBeforeReinstating) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraInvalidLoginFilterDelayInMinBetwnReqBeforeReinstating, Integer.toString(zimbraInvalidLoginFilterDelayInMinBetwnReqBeforeReinstating));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Min time between current req and last req before this suspended IP
+     * will be reinstated
+     *
+     * @param zimbraInvalidLoginFilterDelayInMinBetwnReqBeforeReinstating new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1614)
+    public Map<String,Object> setInvalidLoginFilterDelayInMinBetwnReqBeforeReinstating(int zimbraInvalidLoginFilterDelayInMinBetwnReqBeforeReinstating, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraInvalidLoginFilterDelayInMinBetwnReqBeforeReinstating, Integer.toString(zimbraInvalidLoginFilterDelayInMinBetwnReqBeforeReinstating));
+        return attrs;
+    }
+
+    /**
+     * Min time between current req and last req before this suspended IP
+     * will be reinstated
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1614)
+    public void unsetInvalidLoginFilterDelayInMinBetwnReqBeforeReinstating() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraInvalidLoginFilterDelayInMinBetwnReqBeforeReinstating, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Min time between current req and last req before this suspended IP
+     * will be reinstated
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1614)
+    public Map<String,Object> unsetInvalidLoginFilterDelayInMinBetwnReqBeforeReinstating(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraInvalidLoginFilterDelayInMinBetwnReqBeforeReinstating, "");
+        return attrs;
+    }
+
+    /**
+     * Whether to do DOSFilter style check for repeated failed logins from
+     * IP, if set to 0 no check happens, else failed login is recorded.
+     *
+     * @return zimbraInvalidLoginFilterMaxFailedLogin, or 10 if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1613)
+    public int getInvalidLoginFilterMaxFailedLogin() {
+        return getIntAttr(Provisioning.A_zimbraInvalidLoginFilterMaxFailedLogin, 10);
+    }
+
+    /**
+     * Whether to do DOSFilter style check for repeated failed logins from
+     * IP, if set to 0 no check happens, else failed login is recorded.
+     *
+     * @param zimbraInvalidLoginFilterMaxFailedLogin new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1613)
+    public void setInvalidLoginFilterMaxFailedLogin(int zimbraInvalidLoginFilterMaxFailedLogin) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraInvalidLoginFilterMaxFailedLogin, Integer.toString(zimbraInvalidLoginFilterMaxFailedLogin));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to do DOSFilter style check for repeated failed logins from
+     * IP, if set to 0 no check happens, else failed login is recorded.
+     *
+     * @param zimbraInvalidLoginFilterMaxFailedLogin new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1613)
+    public Map<String,Object> setInvalidLoginFilterMaxFailedLogin(int zimbraInvalidLoginFilterMaxFailedLogin, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraInvalidLoginFilterMaxFailedLogin, Integer.toString(zimbraInvalidLoginFilterMaxFailedLogin));
+        return attrs;
+    }
+
+    /**
+     * Whether to do DOSFilter style check for repeated failed logins from
+     * IP, if set to 0 no check happens, else failed login is recorded.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1613)
+    public void unsetInvalidLoginFilterMaxFailedLogin() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraInvalidLoginFilterMaxFailedLogin, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to do DOSFilter style check for repeated failed logins from
+     * IP, if set to 0 no check happens, else failed login is recorded.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1613)
+    public Map<String,Object> unsetInvalidLoginFilterMaxFailedLogin(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraInvalidLoginFilterMaxFailedLogin, "");
+        return attrs;
+    }
+
+    /**
+     * Interval at which Task to reinstate suspended IPs is run
+     *
+     * @return zimbraInvalidLoginFilterReinstateIpTaskIntervalInMin, or 5 if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1615)
+    public int getInvalidLoginFilterReinstateIpTaskIntervalInMin() {
+        return getIntAttr(Provisioning.A_zimbraInvalidLoginFilterReinstateIpTaskIntervalInMin, 5);
+    }
+
+    /**
+     * Interval at which Task to reinstate suspended IPs is run
+     *
+     * @param zimbraInvalidLoginFilterReinstateIpTaskIntervalInMin new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1615)
+    public void setInvalidLoginFilterReinstateIpTaskIntervalInMin(int zimbraInvalidLoginFilterReinstateIpTaskIntervalInMin) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraInvalidLoginFilterReinstateIpTaskIntervalInMin, Integer.toString(zimbraInvalidLoginFilterReinstateIpTaskIntervalInMin));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Interval at which Task to reinstate suspended IPs is run
+     *
+     * @param zimbraInvalidLoginFilterReinstateIpTaskIntervalInMin new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1615)
+    public Map<String,Object> setInvalidLoginFilterReinstateIpTaskIntervalInMin(int zimbraInvalidLoginFilterReinstateIpTaskIntervalInMin, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraInvalidLoginFilterReinstateIpTaskIntervalInMin, Integer.toString(zimbraInvalidLoginFilterReinstateIpTaskIntervalInMin));
+        return attrs;
+    }
+
+    /**
+     * Interval at which Task to reinstate suspended IPs is run
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1615)
+    public void unsetInvalidLoginFilterReinstateIpTaskIntervalInMin() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraInvalidLoginFilterReinstateIpTaskIntervalInMin, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Interval at which Task to reinstate suspended IPs is run
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1615)
+    public Map<String,Object> unsetInvalidLoginFilterReinstateIpTaskIntervalInMin(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraInvalidLoginFilterReinstateIpTaskIntervalInMin, "");
+        return attrs;
+    }
+
+    /**
      * true if this server is the monitor host
      *
      * @return zimbraIsMonitorHost, or false if unset

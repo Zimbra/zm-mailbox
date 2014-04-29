@@ -8077,4 +8077,20 @@ TODO: delete them permanently from here
   <desc>The maximum allowed size in bytes for a HTTP form content in Jetty. Can be set to 0 to block all web form submission</desc>
 </attr>
 
+<attr id="1613" name="zimbraInvalidLoginFilterMaxFailedLogin" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited"  since="8.5.0">
+  <globalConfigValue>10</globalConfigValue>
+  <desc>Whether to do DOSFilter style check for repeated failed logins from IP, if set to 0 no check happens, else failed login is recorded.</desc>
+</attr>
+
+<attr id="1614" name="zimbraInvalidLoginFilterDelayInMinBetwnReqBeforeReinstating" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited"  since="8.5.0">
+  <globalConfigValue>15</globalConfigValue>
+  <desc>Min time between current req and last req before this suspended IP will be reinstated</desc>
+</attr>
+
+<attr id="1615" name="zimbraInvalidLoginFilterReinstateIpTaskIntervalInMin" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited"  since="8.5.0">
+  <globalConfigValue>5</globalConfigValue>
+  <desc>Interval at which Task to reinstate suspended IPs is run</desc>
+</attr>
+
+
 </attrs>

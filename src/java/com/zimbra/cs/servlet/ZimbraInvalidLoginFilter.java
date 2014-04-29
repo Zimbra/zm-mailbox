@@ -1,0 +1,177 @@
+/*
+ * ***** BEGIN LICENSE BLOCK *****
+ * Zimbra Collaboration Suite Server
+ * Copyright (C) 2014 Zimbra, Inc.
+ *
+ * The contents of this file are subject to the Zimbra Public License
+ * Version 1.3 ("License"); you may not use this file except in
+ * compliance with the License.  You may obtain a copy of the License at
+ * http://www.zimbra.com/license.
+ *
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * ***** END LICENSE BLOCK *****
+ */
+
+package com.zimbra.cs.servlet;
+
+import java.io.IOException;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import javax.servlet.FilterChain;
+import javax.servlet.FilterConfig;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.soap.SoapEngine;
+
+
+public class ZimbraInvalidLoginFilter extends DoSFilter {
+
+    private static final int  DEFAULT_MAX_FAILED_LOGIN  = 5;
+    private int maxFailedLogin;
+    private Set<String> suspiciousIpAddrSet;
+    private ConcurrentMap<String, AtomicInteger> numberOfFailedOccurence;
+    private ConcurrentMap<String, Long> suspiciousIpAddrLastAttempt;
+    private Timer reInStateIpTimer;
+    private final int DEFAULT_DELAY_IN_MIN_BETWEEN_REQ_BEFORE_REINSTATING = 60;
+    private int delayInMinBetwnReqBeforeReinstating;
+    private final int DEFAULT_REINSTATE_IP_TASK_INTERVAL_IN_MIN = 5;
+    private int reinstateIpTaskIntervalInMin;
+    private static final int MIN_TO_MS = 60 * 1000;
+    public static final String AUTH_FAILED = "auth.failed";
+
+    /* (non-Javadoc)
+     * @see com.zimbra.cs.servlet.DoSFilter#init(javax.servlet.FilterConfig)
+     */
+    @Override
+    public void init(FilterConfig filterConfig) throws ServletException {
+        super.init(filterConfig);
+        Provisioning prov = Provisioning.getInstance();
+        try {
+            this.maxFailedLogin = prov.getConfig().getInvalidLoginFilterMaxFailedLogin();
+        } catch (ServiceException e) {
+            this.maxFailedLogin = DEFAULT_MAX_FAILED_LOGIN;
+        }
+
+        try {
+            this.reinstateIpTaskIntervalInMin = prov.getConfig()
+                .getInvalidLoginFilterReinstateIpTaskIntervalInMin();
+        } catch (ServiceException e) {
+            this.reinstateIpTaskIntervalInMin = DEFAULT_REINSTATE_IP_TASK_INTERVAL_IN_MIN;
+        }
+
+        try {
+            this.delayInMinBetwnReqBeforeReinstating = prov.getConfig()
+                .getInvalidLoginFilterDelayInMinBetwnReqBeforeReinstating();
+        } catch (ServiceException e) {
+            this.delayInMinBetwnReqBeforeReinstating = DEFAULT_DELAY_IN_MIN_BETWEEN_REQ_BEFORE_REINSTATING;
+        }
+        this.suspiciousIpAddrSet = Collections.synchronizedSet(new HashSet<String>());
+        this.numberOfFailedOccurence = new ConcurrentHashMap<String, AtomicInteger>();
+        this.suspiciousIpAddrLastAttempt = new ConcurrentHashMap<String, Long>();
+        this.reInStateIpTimer = new Timer();
+        this.reInStateIpTimer.schedule(new ReInStateIpTask(), 1000,
+            this.reinstateIpTaskIntervalInMin * MIN_TO_MS);
+        ZimbraLog.misc.info("ZimbraInvalidLoginFilter intialized");
+
+    }
+
+    /* (non-Javadoc)
+     * @see com.zimbra.cs.servlet.ZimbraQoSFilter#doFilter(javax.servlet.ServletRequest, javax.servlet.ServletResponse, javax.servlet.FilterChain)
+     */
+    @Override
+    public void doFilter(ServletRequest request, ServletResponse response,
+        FilterChain chain) throws IOException, ServletException {
+        HttpServletRequest req = (HttpServletRequest) request;
+        HttpServletResponse res = (HttpServletResponse) response;
+        String clientIp = req.getRemoteAddr();
+
+        if (this.maxFailedLogin <=0) {
+            // InvalidLoginFilter feature is turned off
+            chain.doFilter(request, response);
+            return;
+        }
+
+        if (this.suspiciousIpAddrSet.contains(clientIp)) {
+            ZimbraLog.misc.info ("Access to IP " + clientIp +  "suspended, for repeated failed login.");
+            res.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
+            return;
+        } else {
+            chain.doFilter(request, response);
+
+            if (req.getAttribute(AUTH_FAILED) != null) {
+                ZimbraLog.misc
+                .info("Invalid login filter, checking if this was an auth req and authentication failed.");
+                String clientIP = (String) req.getAttribute(SoapEngine.REQUEST_IP);
+                boolean loginFailed = (Boolean) req.getAttribute(AUTH_FAILED);
+                if (loginFailed) {
+                    AtomicInteger count = this.numberOfFailedOccurence
+                        .putIfAbsent(clientIp, new AtomicInteger(0));
+                    if (count.incrementAndGet() > maxFailedLogin) {
+                        suspiciousIpAddrSet.add(clientIp);
+                        this.numberOfFailedOccurence.put(clientIp, count);
+                        suspiciousIpAddrLastAttempt.put(clientIp,
+                            System.currentTimeMillis());
+                    }
+                    this.numberOfFailedOccurence.put(clientIp, count);
+                }
+                if (ZimbraLog.misc.isDebugEnabled()) {
+                    ZimbraLog.misc.debug("Login failed " + clientIP + ", "
+                        + loginFailed);
+                }
+            }
+        }
+    }
+
+
+    /* (non-Javadoc)
+     * @see com.zimbra.cs.servlet.ZimbraQoSFilter#destroy()
+     */
+    @Override
+    public void destroy() {
+        super.destroy();
+        this.suspiciousIpAddrSet.clear();
+        this.numberOfFailedOccurence.clear();
+        this.suspiciousIpAddrLastAttempt.clear();
+        ZimbraLog.misc.info("ZimbraInvalidLoginFilter destroyed");
+    }
+
+    public  final class ReInStateIpTask extends TimerTask {
+
+        public ReInStateIpTask() {
+
+        }
+        /* (non-Javadoc)
+         * @see java.util.TimerTask#run()
+         */
+        @Override
+        public void run() {
+
+            Set<String> clientIps = suspiciousIpAddrLastAttempt.keySet();
+            long now = System.currentTimeMillis();
+            for (String clientIp : clientIps) {
+                long lastLoginAttempt = suspiciousIpAddrLastAttempt.get(clientIp);
+                if ((now - lastLoginAttempt) > delayInMinBetwnReqBeforeReinstating * MIN_TO_MS) {
+                    suspiciousIpAddrLastAttempt.remove(clientIp);
+                    suspiciousIpAddrSet.remove(clientIp);
+
+                }
+            }
+        }
+
+    }
+}

@@ -45,6 +45,17 @@
   </filter-mapping>
   
   <filter>
+    <filter-name>ZimbraInvalidLoginFilter</filter-name>
+    <filter-class>com.zimbra.cs.servlet.ZimbraInvalidLoginFilter</filter-class>
+    <async-supported>true</async-supported>
+  </filter>
+
+  <filter-mapping>
+    <filter-name>ZimbraInvalidLoginFilter</filter-name>
+    <url-pattern>/*</url-pattern>
+  </filter-mapping>
+  
+  <filter>
     <filter-name>ZimbraQoSFilter</filter-name>
     <filter-class>com.zimbra.cs.servlet.ZimbraQoSFilter</filter-class>
     <async-supported>true</async-supported>
