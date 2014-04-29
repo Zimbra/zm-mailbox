@@ -75,6 +75,7 @@ import com.zimbra.client.ZMessage.ZMimePart;
 import com.zimbra.client.ZMountpoint;
 import com.zimbra.client.ZSearchHit;
 import com.zimbra.client.ZSearchParams;
+import com.zimbra.client.ZSearchResult;
 import com.zimbra.client.ZTag;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
@@ -230,6 +231,19 @@ extends Assert {
         ParsedMessage pm = new ParsedMessage(message.getBytes(), timestamp, false);
         DeliveryOptions dopt = new DeliveryOptions().setFolderId(folderId).setFlags(Flag.BITMASK_UNREAD);
         return mbox.addMessage(null, pm, dopt, null);
+    }
+
+    public static Message addMessage(Mailbox mbox, ParsedMessage pm)
+    throws Exception {
+        DeliveryOptions dopt = new DeliveryOptions().setFolderId( Mailbox.ID_FOLDER_INBOX).setFlags(Flag.BITMASK_UNREAD);
+        return mbox.addMessage(null, pm, dopt, null);
+    }
+
+    public static Message addMessage(Mailbox mbox, String recipient, String sender, String subject, String body, long timestamp)
+    throws Exception {
+        String message = getTestMessage(subject, recipient, sender, body, new Date(timestamp));
+        ParsedMessage pm = new ParsedMessage(message.getBytes(), timestamp, false);
+        return addMessage(mbox, pm);
     }
 
     public static String getTestMessage(String subject)
@@ -406,16 +420,31 @@ extends Assert {
 
     public static List<ZMessage> search(ZMailbox mbox, String query)
     throws ServiceException {
-        List<ZMessage> msgs = new ArrayList<ZMessage>();
         ZSearchParams params = new ZSearchParams(query);
         params.setTypes(ZSearchParams.TYPE_MESSAGE);
 
+        return search(mbox, params);
+    }
+
+    public static List<ZMessage> search(ZMailbox mbox, ZSearchParams params)
+    throws ServiceException {
+        List<ZMessage> msgs = new ArrayList<ZMessage>();
         for (ZSearchHit hit : mbox.search(params).getHits()) {
             ZGetMessageParams msgParams = new ZGetMessageParams();
             msgParams.setId(hit.getId());
             msgs.add(mbox.getMessage(msgParams));
         }
         return msgs;
+    }
+
+    public static List<String> searchMessageIds(ZMailbox mbox, ZSearchParams params)
+    throws ServiceException {
+        List<String> msgsIds = new ArrayList<String>();
+        ZSearchResult results = mbox.search(params);
+        for (ZSearchHit hit :results.getHits()) {
+            msgsIds.add(hit.getId());
+        }
+        return msgsIds;
     }
 
     /**
