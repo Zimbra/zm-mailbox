@@ -37264,7 +37264,9 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Whether or not Jetty thread monitor is enabled. Defaults to FALSE
+     * Whether or not Jetty thread monitor is enabled. Used for debugging
+     * Jetty, not recommended for extended use in production environment.
+     * Defaults to FALSE
      *
      * @return zimbraThreadMonitorEnabled, or false if unset
      *
@@ -37276,7 +37278,9 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Whether or not Jetty thread monitor is enabled. Defaults to FALSE
+     * Whether or not Jetty thread monitor is enabled. Used for debugging
+     * Jetty, not recommended for extended use in production environment.
+     * Defaults to FALSE
      *
      * @param zimbraThreadMonitorEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -37291,7 +37295,9 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Whether or not Jetty thread monitor is enabled. Defaults to FALSE
+     * Whether or not Jetty thread monitor is enabled. Used for debugging
+     * Jetty, not recommended for extended use in production environment.
+     * Defaults to FALSE
      *
      * @param zimbraThreadMonitorEnabled new value
      * @param attrs existing map to populate, or null to create a new map
@@ -37307,7 +37313,9 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Whether or not Jetty thread monitor is enabled. Defaults to FALSE
+     * Whether or not Jetty thread monitor is enabled. Used for debugging
+     * Jetty, not recommended for extended use in production environment.
+     * Defaults to FALSE
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -37321,7 +37329,9 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Whether or not Jetty thread monitor is enabled. Defaults to FALSE
+     * Whether or not Jetty thread monitor is enabled. Used for debugging
+     * Jetty, not recommended for extended use in production environment.
+     * Defaults to FALSE
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs

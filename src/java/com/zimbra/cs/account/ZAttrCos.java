@@ -30472,11 +30472,11 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * default font family
      *
-     * @return zimbraPrefHtmlEditorDefaultFontFamily, or "times new roman, new york, times, serif" if unset
+     * @return zimbraPrefHtmlEditorDefaultFontFamily, or "arial, helvetica, sans-serif" if unset
      */
     @ZAttr(id=258)
     public String getPrefHtmlEditorDefaultFontFamily() {
-        return getAttr(Provisioning.A_zimbraPrefHtmlEditorDefaultFontFamily, "times new roman, new york, times, serif");
+        return getAttr(Provisioning.A_zimbraPrefHtmlEditorDefaultFontFamily, "arial, helvetica, sans-serif");
     }
 
     /**
