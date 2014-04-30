@@ -3,7 +3,7 @@ package com.zimbra.qa.unittest;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -45,7 +45,7 @@ public class TestBug89152 extends TestCase {
 
 
     @Test
-    public void testMessages()  {
+    public void testMessagesWithDifferentTimestamps()  {
         try {
             int numMessages = 2207;
             int firstLimit = 100;
@@ -53,16 +53,13 @@ public class TestBug89152 extends TestCase {
             int offset = 0;
             Mailbox recieverMbox = TestUtil.getMailbox(RECIPIENT1);
             long timestamp = System.currentTimeMillis() - 3600*60*1000;
-            ArrayList<String> expectedIds = new ArrayList<String>();
             byte[] msgBytes = Files.readAllBytes(FileSystems.getDefault().getPath(TEST_MESSAGE_FILE));
             for(int i=0;i<numMessages;i++) {
                 ParsedMessage pm = new ParsedMessage(msgBytes,timestamp, true);
                 Message msg = TestUtil.addMessage(recieverMbox, pm);
-                expectedIds.add(Integer.toString(msg.getId()));
                 timestamp +=1001;
                 //Thread.sleep(300);
             }
-            Collections.reverse(expectedIds);
             Thread.sleep(150);
             ZMailbox zmbx = TestUtil.getZMailbox(RECIPIENT1);
             ZSearchParams searchParams = new ZSearchParams("in:inbox " + SEARCH_STRING);
@@ -99,9 +96,6 @@ public class TestBug89152 extends TestCase {
                 }
                 Thread.sleep(300);
                 offset+=incLimit;
-            }
-            for(int i=0;i<expectedIds.size();i++) {
-               assertEquals("IDs at index " + i + " do not match", expectedIds.get(i),seenIds.get(i) );
             }
             assertEquals("expecting " + numMessages + " messages. Got " + seenIds.size(), numMessages, seenIds.size());
         } catch (ServiceException e) {
@@ -113,27 +107,23 @@ public class TestBug89152 extends TestCase {
         }
     }
 
-
-
     @Test
-    public void testMessagesCloseTimestamps()  {
+    public void testMessagesWithSimilarTimestamps()  {
         try {
-            int numMessages = 5500;
-            int firstLimit = 100;
+            int numMessages = 5207;
+            int firstLimit = 150;
             int incLimit = 50;
             int offset = 0;
             Mailbox recieverMbox = TestUtil.getMailbox(RECIPIENT1);
             long timestamp = System.currentTimeMillis();
-            ArrayList<String> expectedIds = new ArrayList<String>();
             byte[] msgBytes = Files.readAllBytes(FileSystems.getDefault().getPath(TEST_MESSAGE_FILE));
             for(int i=0;i<numMessages;i++) {
                 ParsedMessage pm = new ParsedMessage(msgBytes,timestamp, true);
+                pm.getMimeMessage().setSentDate(new Date());
                 Message msg = TestUtil.addMessage(recieverMbox, pm);
-                expectedIds.add(Integer.toString(msg.getId()));
                 timestamp+=1;
                 //Thread.sleep(300);
             }
-            Collections.reverse(expectedIds);
             Thread.sleep(150);
             ZMailbox zmbx = TestUtil.getZMailbox(RECIPIENT1);
             ZSearchParams searchParams = new ZSearchParams("in:inbox " + SEARCH_STRING);
@@ -151,7 +141,6 @@ public class TestBug89152 extends TestCase {
             }
             int recCount = 1;
             offset+=firstLimit;
-       //     int numDups = 0;
             while(gotMessages > 0) {
                 searchParams = new ZSearchParams("in:inbox " + SEARCH_STRING);
                 searchParams.setCursor((new Cursor(lastHit.getId(), Long.toString(lastHit.getReceivedDate())) ));
@@ -172,17 +161,11 @@ public class TestBug89152 extends TestCase {
                 Thread.sleep(300);
                 offset+=incLimit;
             }
-          /*  for(int i=0;i<expectedIds.size();i++) {
-               assertEquals("IDs at index " + i + " do not match", expectedIds.get(i),seenIds.get(i) );
-            }*/
             assertEquals("expecting " + numMessages + " messages. Got " + seenIds.size(), numMessages, seenIds.size());
-     //       assertEquals("expecting 0 dups. Got " + numDups, 0,numDups);
         } catch (ServiceException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
             fail(e.getMessage());
         } catch (Exception e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
             fail(e.getMessage());
         }
