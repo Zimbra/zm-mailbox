@@ -7900,7 +7900,7 @@ TODO: delete them permanently from here
 
 <attr id="1583" name="zimbraThreadMonitorEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="8.5.0">
   <globalConfigValue>FALSE</globalConfigValue>
-  <desc>Whether or not Jetty thread monitor is enabled.  Defaults to FALSE</desc>
+  <desc>Whether or not Jetty thread monitor is enabled. Used for debugging Jetty, not recommended for extended use in production environment. Defaults to FALSE</desc>
 </attr>
 
 <attr id="1584" name="zimbraDNSUseTCP" type="enum" value="yes,no" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
