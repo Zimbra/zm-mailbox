@@ -6363,7 +6363,8 @@ public class ZAttrProvisioning {
     public static final String A_zimbraHttpHeaderCacheSize = "zimbraHttpHeaderCacheSize";
 
     /**
-     * The maximum allowed size in bytes for a HTTP form content in Jetty
+     * The maximum allowed size in bytes for a HTTP form content in Jetty.
+     * Can be set to 0 to block all web form submission
      *
      * @since ZCS 8.5.0
      */
@@ -11852,6 +11853,17 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1332)
     public static final String A_zimbraReverseProxyErrorHandlerURL = "zimbraReverseProxyErrorHandlerURL";
+
+    /**
+     * Whether nginx will match exact server version against the version
+     * received in the client request (in ZM_AUTH_TOKEN). Defaults to TRUE
+     * Setting this to FALSE will make nginx compare only the major and minor
+     * server versions (eg. all 8.5.x will be treated same by nginx)
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1616)
+    public static final String A_zimbraReverseProxyExactServerVersionCheck = "zimbraReverseProxyExactServerVersionCheck";
 
     /**
      * During migrations Nginx lookup handler rewrites non-qualified username
