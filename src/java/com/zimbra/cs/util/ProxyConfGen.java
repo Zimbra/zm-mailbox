@@ -540,7 +540,23 @@ class WebUpstreamClientServersVar extends ProxyConfVar {
         ArrayList<String> directives = new ArrayList<String>();
         String portName = configSource.getAttr(Provisioning.A_zimbraReverseProxyHttpPortAttribute, "");
 
-        List<Server> servers = mProv.getAllServers(Provisioning.SERVICE_WEBCLIENT);
+        List<Server> servers = mProv.getAllServers(Provisioning.SERVICE_MAILBOX);
+		for (Server server : servers) {
+			String version = server.getAttr(Provisioning.A_zimbraServerVersion, "");
+			// We skip all the 8.5+ mailbox servers here to get only the pre 8.5 servers first which don't have the zimbraServerVersion set
+			if (version != "") {
+				continue;
+	    	}		
+			String serverName = server.getAttr(
+					Provisioning.A_zimbraServiceHostname, "");
+	    
+			if (isValidUpstream(server, serverName)) {
+				directives.add(generateServerDirective(server, serverName, portName));
+				mLog.info("Added server to HTTP webclient upstream: " + serverName);
+			}
+	    }
+		
+        servers = mProv.getAllServers(Provisioning.SERVICE_WEBCLIENT);
         for (Server server : servers) {
             String serverName = server.getAttr(
                     Provisioning.A_zimbraServiceHostname, "");
@@ -583,7 +599,23 @@ class WebSSLUpstreamClientServersVar extends ProxyConfVar {
         ArrayList<String> directives = new ArrayList<String>();
         String portName = configSource.getAttr(Provisioning.A_zimbraReverseProxyHttpSSLPortAttribute, "");
 
-        List<Server> servers = mProv.getAllServers(Provisioning.SERVICE_WEBCLIENT);
+        List<Server> servers = mProv.getAllServers(Provisioning.SERVICE_MAILBOX);
+		for (Server server : servers) {
+			String version = server.getAttr(Provisioning.A_zimbraServerVersion, "");
+			// We skip all the 8.5+ mailbox servers here to get only the pre 8.5 servers first which don't have the zimbraServerVersion set
+			if (version != "") {
+				continue;
+	    	}		
+			String serverName = server.getAttr(
+					Provisioning.A_zimbraServiceHostname, "");
+	    
+			if (isValidUpstream(server, serverName)) {
+				directives.add(generateServerDirective(server, serverName, portName));
+				mLog.info("Added server to HTTPS webclient upstream: " + serverName);
+			}
+	    }
+		
+        servers = mProv.getAllServers(Provisioning.SERVICE_WEBCLIENT);
         for (Server server : servers) {
             String serverName = server.getAttr(
                     Provisioning.A_zimbraServiceHostname, "");
@@ -626,7 +658,23 @@ class WebAdminUpstreamAdminClientServersVar extends ProxyConfVar {
         ArrayList<String> directives = new ArrayList<String>();
         String portName = configSource.getAttr(Provisioning.A_zimbraReverseProxyAdminPortAttribute, "");
 
-        List<Server> servers = mProv.getAllServers(Provisioning.SERVICE_ADMINCLIENT);
+        List<Server> servers = mProv.getAllServers(Provisioning.SERVICE_MAILBOX);
+		for (Server server : servers) {
+			String version = server.getAttr(Provisioning.A_zimbraServerVersion, "");
+			// We skip all the 8.5+ mailbox servers here to get only the pre 8.5 servers first which don't have the zimbraServerVersion set
+			if (version != "") {
+				continue;
+	    	}		
+			String serverName = server.getAttr(
+					Provisioning.A_zimbraServiceHostname, "");
+	    
+			if (isValidUpstream(server, serverName)) {
+				directives.add(generateServerDirective(server, serverName, portName));
+				mLog.info("Added server to HTTPS Admin client upstream: " + serverName);
+			}
+	    }
+		
+        servers = mProv.getAllServers(Provisioning.SERVICE_ADMINCLIENT);
         for (Server server : servers) {
             String serverName = server.getAttr(
                     Provisioning.A_zimbraServiceHostname, "");
@@ -872,7 +920,23 @@ class WebUpstreamServersVar extends ServersVar {
     	ArrayList<String> directives = new ArrayList<String>();
     	String portName = configSource.getAttr(Provisioning.A_zimbraReverseProxyHttpPortAttribute, "");
     	
-    	List<Server> servers = mProv.getAllServers(Provisioning.SERVICE_MAILCLIENT);
+    	List<Server> servers = mProv.getAllServers(Provisioning.SERVICE_MAILBOX);
+    	for (Server server : servers) {
+    		String version = server.getAttr(Provisioning.A_zimbraServerVersion, "");
+    		// We skip all the 8.5+ mailbox servers here to get only the pre 8.5 servers first which don't have the zimbraServerVersion set
+    		if (version != "") {
+    			continue;
+    		}
+    		String serverName = server.getAttr(
+    				Provisioning.A_zimbraServiceHostname, "");
+    
+    		if (isValidUpstream(server, serverName)) {
+    			directives.add(generateServerDirective(server, serverName, portName));
+    			mLog.info("Added server to HTTP mailstore upstream: " + serverName);
+    		}
+    	}
+    	
+    	servers = mProv.getAllServers(Provisioning.SERVICE_MAILCLIENT);
     	for (Server server : servers) {
     		String serverName = server.getAttr(
     				Provisioning.A_zimbraServiceHostname, "");
@@ -900,7 +964,23 @@ class WebSSLUpstreamServersVar extends ServersVar {
     	ArrayList<String> directives = new ArrayList<String>();
     	String portName = configSource.getAttr(Provisioning.A_zimbraReverseProxyHttpSSLPortAttribute, "");
     	
-    	List<Server> servers = mProv.getAllServers(Provisioning.SERVICE_MAILCLIENT);
+    	List<Server> servers = mProv.getAllServers(Provisioning.SERVICE_MAILBOX);
+    	for (Server server : servers) {
+    		String version = server.getAttr(Provisioning.A_zimbraServerVersion, "");
+    		// We skip all the 8.5+ mailbox servers here to get only the pre 8.5 servers first which don't have the zimbraServerVersion set
+    		if (version != "") {
+    			continue;
+    		}
+    		String serverName = server.getAttr(
+    				Provisioning.A_zimbraServiceHostname, "");
+    
+    		if (isValidUpstream(server, serverName)) {
+    			directives.add(generateServerDirective(server, serverName, portName));
+    			mLog.info("Added server to HTTPS mailstore upstream: " + serverName);
+    		}
+    	}
+    	
+    	servers = mProv.getAllServers(Provisioning.SERVICE_MAILCLIENT);
     	for (Server server : servers) {
     		String serverName = server.getAttr(
     				Provisioning.A_zimbraServiceHostname, "");
@@ -921,23 +1001,39 @@ class WebAdminUpstreamServersVar extends ServersVar {
 				"for which zimbraReverseProxyLookupTarget is true");
 	}
 	
-	 @Override
-	 public void update() throws ServiceException {
-		 ArrayList<String> directives = new ArrayList<String>();
-		 String portName = configSource.getAttr(Provisioning.A_zimbraReverseProxyAdminPortAttribute, "");
+	@Override
+	public void update() throws ServiceException {
+		ArrayList<String> directives = new ArrayList<String>();
+		String portName = configSource.getAttr(Provisioning.A_zimbraReverseProxyAdminPortAttribute, "");
 		 
-		 List<Server> servers = mProv.getAllServers(Provisioning.SERVICE_MAILCLIENT);
-		 for (Server server : servers) {
-			 String serverName = server.getAttr(
-					 Provisioning.A_zimbraServiceHostname, "");
+		List<Server> servers = mProv.getAllServers(Provisioning.SERVICE_MAILBOX);
+		for (Server server : servers) {
+			String version = server.getAttr(Provisioning.A_zimbraServerVersion, "");
+			// We skip all the 8.5+ mailbox servers here to get only the pre 8.5 servers first which don't have the zimbraServerVersion set
+			if (version != "") {
+				continue;
+	    	}		
+			String serverName = server.getAttr(
+					Provisioning.A_zimbraServiceHostname, "");
+	    
+			if (isValidUpstream(server, serverName)) {
+				directives.add(generateServerDirective(server, serverName, portName));
+				mLog.info("Added server to HTTPS Admin mailstore upstream: " + serverName);
+			}
+	    }
+		
+		servers = mProv.getAllServers(Provisioning.SERVICE_MAILCLIENT);
+		for (Server server : servers) {
+			String serverName = server.getAttr(
+					Provisioning.A_zimbraServiceHostname, "");
 			 
-			 if (isValidUpstream(server, serverName)) {
-				 directives.add(generateServerDirective(server, serverName, portName));
-				 mLog.info("Added server to HTTPS Admin mailstore upstream: " + serverName);
-			 }
-		 }
-		 mValue = directives;
-	 }
+			if (isValidUpstream(server, serverName)) {
+				directives.add(generateServerDirective(server, serverName, portName));
+				mLog.info("Added server to HTTPS Admin mailstore upstream: " + serverName);
+			}
+		}
+		mValue = directives;
+	}
 }
 
 class WebEwsUpstreamServersVar extends ServersVar {
