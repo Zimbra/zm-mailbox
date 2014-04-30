@@ -2293,6 +2293,7 @@ public final class ToXML {
                     if (e.getCode() != ServiceException.PERM_DENIED) {
                         throw e;
                     }
+                    calendarItemId = null;  // If we can't access it.  Don't include a reference to it.
                 }
                 // Do staleness check for invitation messages.
                 if (ICalTok.REQUEST.equals(method) || ICalTok.PUBLISH.equals(method)) {
