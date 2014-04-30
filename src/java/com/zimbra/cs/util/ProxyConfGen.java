@@ -335,7 +335,7 @@ class ProxyConfVar
     String generateServerDirective(Server server, String serverName, String portName) {
         int serverPort = server.getIntAttr(portName, 0);
         int timeout = server.getIntAttr(
-                Provisioning.A_zimbraMailProxyReconnectTimeout, 60);        
+                Provisioning.A_zimbraMailProxyReconnectTimeout, 60);
         int maxFails = server.getIntAttr("zimbraMailProxyMaxFails", 1);
         if (maxFails != 1) {
             return String.format("%s:%d fail_timeout=%ds max_fails=%d", serverName, serverPort,
@@ -540,13 +540,17 @@ class WebUpstreamClientServersVar extends ProxyConfVar {
         ArrayList<String> directives = new ArrayList<String>();
         String portName = configSource.getAttr(Provisioning.A_zimbraReverseProxyHttpPortAttribute, "");
 
-        List<Server> servers = mProv.getAllServers(Provisioning.SERVICE_MAILBOX);
-		for (Server server : servers) {
+        List<Server> mailboxservers = mProv.getAllServers(Provisioning.SERVICE_MAILBOX);
+        List<Server> webclientservers = mProv.getAllServers(Provisioning.SERVICE_WEBCLIENT);
+        
+		for (Server server : mailboxservers) {
 			String version = server.getAttr(Provisioning.A_zimbraServerVersion, "");
 			// We skip all the 8.5+ mailbox servers here to get only the pre 8.5 servers first which don't have the zimbraServerVersion set
 			if (version != "") {
 				continue;
-	    	}		
+	    	}
+			// Remove it from the other list if present so that we don't duplicate the same entry
+    		webclientservers.remove(server);
 			String serverName = server.getAttr(
 					Provisioning.A_zimbraServiceHostname, "");
 	    
@@ -556,8 +560,7 @@ class WebUpstreamClientServersVar extends ProxyConfVar {
 			}
 	    }
 		
-        servers = mProv.getAllServers(Provisioning.SERVICE_WEBCLIENT);
-        for (Server server : servers) {
+        for (Server server : webclientservers) {
             String serverName = server.getAttr(
                     Provisioning.A_zimbraServiceHostname, "");
 
@@ -599,13 +602,17 @@ class WebSSLUpstreamClientServersVar extends ProxyConfVar {
         ArrayList<String> directives = new ArrayList<String>();
         String portName = configSource.getAttr(Provisioning.A_zimbraReverseProxyHttpSSLPortAttribute, "");
 
-        List<Server> servers = mProv.getAllServers(Provisioning.SERVICE_MAILBOX);
-		for (Server server : servers) {
+        List<Server> mailboxservers = mProv.getAllServers(Provisioning.SERVICE_MAILBOX);
+        List<Server> webclientservers = mProv.getAllServers(Provisioning.SERVICE_WEBCLIENT);
+        
+		for (Server server : mailboxservers) {
 			String version = server.getAttr(Provisioning.A_zimbraServerVersion, "");
 			// We skip all the 8.5+ mailbox servers here to get only the pre 8.5 servers first which don't have the zimbraServerVersion set
 			if (version != "") {
 				continue;
-	    	}		
+	    	}
+			// Remove it from the other list if present so that we don't duplicate the same entry
+    		webclientservers.remove(server);
 			String serverName = server.getAttr(
 					Provisioning.A_zimbraServiceHostname, "");
 	    
@@ -614,9 +621,8 @@ class WebSSLUpstreamClientServersVar extends ProxyConfVar {
 				mLog.info("Added server to HTTPS webclient upstream: " + serverName);
 			}
 	    }
-		
-        servers = mProv.getAllServers(Provisioning.SERVICE_WEBCLIENT);
-        for (Server server : servers) {
+		       
+        for (Server server : webclientservers) {
             String serverName = server.getAttr(
                     Provisioning.A_zimbraServiceHostname, "");
 
@@ -658,13 +664,17 @@ class WebAdminUpstreamAdminClientServersVar extends ProxyConfVar {
         ArrayList<String> directives = new ArrayList<String>();
         String portName = configSource.getAttr(Provisioning.A_zimbraReverseProxyAdminPortAttribute, "");
 
-        List<Server> servers = mProv.getAllServers(Provisioning.SERVICE_MAILBOX);
-		for (Server server : servers) {
+        List<Server> mailboxservers = mProv.getAllServers(Provisioning.SERVICE_MAILBOX);
+        List<Server> adminclientservers = mProv.getAllServers(Provisioning.SERVICE_ADMINCLIENT);
+        
+		for (Server server : mailboxservers) {
 			String version = server.getAttr(Provisioning.A_zimbraServerVersion, "");
 			// We skip all the 8.5+ mailbox servers here to get only the pre 8.5 servers first which don't have the zimbraServerVersion set
 			if (version != "") {
 				continue;
-	    	}		
+	    	}
+			// Remove it from the other list if present so that we don't duplicate the same entry
+    		adminclientservers.remove(server);
 			String serverName = server.getAttr(
 					Provisioning.A_zimbraServiceHostname, "");
 	    
@@ -674,8 +684,7 @@ class WebAdminUpstreamAdminClientServersVar extends ProxyConfVar {
 			}
 	    }
 		
-        servers = mProv.getAllServers(Provisioning.SERVICE_ADMINCLIENT);
-        for (Server server : servers) {
+        for (Server server : adminclientservers) {
             String serverName = server.getAttr(
                     Provisioning.A_zimbraServiceHostname, "");
 
@@ -920,13 +929,17 @@ class WebUpstreamServersVar extends ServersVar {
     	ArrayList<String> directives = new ArrayList<String>();
     	String portName = configSource.getAttr(Provisioning.A_zimbraReverseProxyHttpPortAttribute, "");
     	
-    	List<Server> servers = mProv.getAllServers(Provisioning.SERVICE_MAILBOX);
-    	for (Server server : servers) {
+    	List<Server> mailboxservers = mProv.getAllServers(Provisioning.SERVICE_MAILBOX);
+    	List<Server> mailclientservers = mProv.getAllServers(Provisioning.SERVICE_MAILCLIENT);
+    	
+    	for (Server server : mailboxservers) {
     		String version = server.getAttr(Provisioning.A_zimbraServerVersion, "");
     		// We skip all the 8.5+ mailbox servers here to get only the pre 8.5 servers first which don't have the zimbraServerVersion set
     		if (version != "") {
     			continue;
     		}
+    		// Remove it from the other list if present so that we don't duplicate the same entry
+    		mailclientservers.remove(server);
     		String serverName = server.getAttr(
     				Provisioning.A_zimbraServiceHostname, "");
     
@@ -935,9 +948,8 @@ class WebUpstreamServersVar extends ServersVar {
     			mLog.info("Added server to HTTP mailstore upstream: " + serverName);
     		}
     	}
-    	
-    	servers = mProv.getAllServers(Provisioning.SERVICE_MAILCLIENT);
-    	for (Server server : servers) {
+    	  	
+    	for (Server server : mailclientservers) {
     		String serverName = server.getAttr(
     				Provisioning.A_zimbraServiceHostname, "");
     
@@ -964,13 +976,17 @@ class WebSSLUpstreamServersVar extends ServersVar {
     	ArrayList<String> directives = new ArrayList<String>();
     	String portName = configSource.getAttr(Provisioning.A_zimbraReverseProxyHttpSSLPortAttribute, "");
     	
-    	List<Server> servers = mProv.getAllServers(Provisioning.SERVICE_MAILBOX);
-    	for (Server server : servers) {
+    	List<Server> mailboxservers = mProv.getAllServers(Provisioning.SERVICE_MAILBOX);
+    	List<Server> mailclientservers = mProv.getAllServers(Provisioning.SERVICE_MAILCLIENT);
+    	
+    	for (Server server : mailboxservers) {
     		String version = server.getAttr(Provisioning.A_zimbraServerVersion, "");
     		// We skip all the 8.5+ mailbox servers here to get only the pre 8.5 servers first which don't have the zimbraServerVersion set
     		if (version != "") {
     			continue;
     		}
+    		// Remove it from the other list if present so that we don't duplicate the same entry
+    		mailclientservers.remove(server);
     		String serverName = server.getAttr(
     				Provisioning.A_zimbraServiceHostname, "");
     
@@ -980,8 +996,7 @@ class WebSSLUpstreamServersVar extends ServersVar {
     		}
     	}
     	
-    	servers = mProv.getAllServers(Provisioning.SERVICE_MAILCLIENT);
-    	for (Server server : servers) {
+    	for (Server server : mailclientservers) {
     		String serverName = server.getAttr(
     				Provisioning.A_zimbraServiceHostname, "");
     		
@@ -1006,13 +1021,17 @@ class WebAdminUpstreamServersVar extends ServersVar {
 		ArrayList<String> directives = new ArrayList<String>();
 		String portName = configSource.getAttr(Provisioning.A_zimbraReverseProxyAdminPortAttribute, "");
 		 
-		List<Server> servers = mProv.getAllServers(Provisioning.SERVICE_MAILBOX);
-		for (Server server : servers) {
+		List<Server> mailboxservers = mProv.getAllServers(Provisioning.SERVICE_MAILBOX);
+		List<Server> mailclientservers = mProv.getAllServers(Provisioning.SERVICE_MAILCLIENT);
+		
+		for (Server server : mailboxservers) {
 			String version = server.getAttr(Provisioning.A_zimbraServerVersion, "");
 			// We skip all the 8.5+ mailbox servers here to get only the pre 8.5 servers first which don't have the zimbraServerVersion set
 			if (version != "") {
 				continue;
-	    	}		
+	    	}
+			// Remove it from the other list if present so that we don't duplicate the same entry
+    		mailclientservers.remove(server);
 			String serverName = server.getAttr(
 					Provisioning.A_zimbraServiceHostname, "");
 	    
@@ -1022,8 +1041,7 @@ class WebAdminUpstreamServersVar extends ServersVar {
 			}
 	    }
 		
-		servers = mProv.getAllServers(Provisioning.SERVICE_MAILCLIENT);
-		for (Server server : servers) {
+		for (Server server : mailclientservers) {
 			String serverName = server.getAttr(
 					Provisioning.A_zimbraServiceHostname, "");
 			 
