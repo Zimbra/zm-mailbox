@@ -44,6 +44,7 @@ import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.MapUtil;
 import com.zimbra.common.util.ZimbraCookie;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.auth.AuthMechanism.AuthMech;
 
 /**
@@ -360,6 +361,7 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
 		        acct.removeAuthTokens(String.format("%d|%d", tokenID,this.expires));
 		    }
 		} catch (ServiceException e) {
+		    ZimbraLog.account.error("unable to de-register auth token", e);
 			throw new AuthTokenException("unable to de-register auth token", e);
 		}
 
