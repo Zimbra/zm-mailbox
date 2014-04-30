@@ -8092,5 +8092,10 @@ TODO: delete them permanently from here
   <desc>Interval at which Task to reinstate suspended IPs is run</desc>
 </attr>
 
+<attr id="1616" name="zimbraReverseProxyExactServerVersionCheck" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="nginxproxy" since="8.5.0">
+  <globalConfigValue>TRUE</globalConfigValue>
+  <desc>Whether nginx will match exact server version against the version received in the client request (in ZM_AUTH_TOKEN).  Defaults to TRUE
+        Setting this to FALSE will make nginx compare only the major and minor server versions (eg. all 8.5.x will be treated same by nginx)</desc>
+</attr>
 
 </attrs>

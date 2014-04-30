@@ -16665,7 +16665,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * The maximum allowed size in bytes for a HTTP form content in Jetty
+     * The maximum allowed size in bytes for a HTTP form content in Jetty.
+     * Can be set to 0 to block all web form submission
      *
      * @return zimbraHttpMaxFormContentSize, or 200000 if unset
      *
@@ -16677,7 +16678,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * The maximum allowed size in bytes for a HTTP form content in Jetty
+     * The maximum allowed size in bytes for a HTTP form content in Jetty.
+     * Can be set to 0 to block all web form submission
      *
      * @param zimbraHttpMaxFormContentSize new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -16692,7 +16694,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * The maximum allowed size in bytes for a HTTP form content in Jetty
+     * The maximum allowed size in bytes for a HTTP form content in Jetty.
+     * Can be set to 0 to block all web form submission
      *
      * @param zimbraHttpMaxFormContentSize new value
      * @param attrs existing map to populate, or null to create a new map
@@ -16708,7 +16711,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * The maximum allowed size in bytes for a HTTP form content in Jetty
+     * The maximum allowed size in bytes for a HTTP form content in Jetty.
+     * Can be set to 0 to block all web form submission
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -16722,7 +16726,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * The maximum allowed size in bytes for a HTTP form content in Jetty
+     * The maximum allowed size in bytes for a HTTP form content in Jetty.
+     * Can be set to 0 to block all web form submission
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -41972,6 +41977,93 @@ public abstract class ZAttrConfig extends Entry {
     public Map<String,Object> unsetReverseProxyErrorHandlerURL(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraReverseProxyErrorHandlerURL, "");
+        return attrs;
+    }
+
+    /**
+     * Whether nginx will match exact server version against the version
+     * received in the client request (in ZM_AUTH_TOKEN). Defaults to TRUE
+     * Setting this to FALSE will make nginx compare only the major and minor
+     * server versions (eg. all 8.5.x will be treated same by nginx)
+     *
+     * @return zimbraReverseProxyExactServerVersionCheck, or true if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1616)
+    public boolean isReverseProxyExactServerVersionCheck() {
+        return getBooleanAttr(Provisioning.A_zimbraReverseProxyExactServerVersionCheck, true);
+    }
+
+    /**
+     * Whether nginx will match exact server version against the version
+     * received in the client request (in ZM_AUTH_TOKEN). Defaults to TRUE
+     * Setting this to FALSE will make nginx compare only the major and minor
+     * server versions (eg. all 8.5.x will be treated same by nginx)
+     *
+     * @param zimbraReverseProxyExactServerVersionCheck new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1616)
+    public void setReverseProxyExactServerVersionCheck(boolean zimbraReverseProxyExactServerVersionCheck) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyExactServerVersionCheck, zimbraReverseProxyExactServerVersionCheck ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether nginx will match exact server version against the version
+     * received in the client request (in ZM_AUTH_TOKEN). Defaults to TRUE
+     * Setting this to FALSE will make nginx compare only the major and minor
+     * server versions (eg. all 8.5.x will be treated same by nginx)
+     *
+     * @param zimbraReverseProxyExactServerVersionCheck new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1616)
+    public Map<String,Object> setReverseProxyExactServerVersionCheck(boolean zimbraReverseProxyExactServerVersionCheck, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyExactServerVersionCheck, zimbraReverseProxyExactServerVersionCheck ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether nginx will match exact server version against the version
+     * received in the client request (in ZM_AUTH_TOKEN). Defaults to TRUE
+     * Setting this to FALSE will make nginx compare only the major and minor
+     * server versions (eg. all 8.5.x will be treated same by nginx)
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1616)
+    public void unsetReverseProxyExactServerVersionCheck() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyExactServerVersionCheck, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether nginx will match exact server version against the version
+     * received in the client request (in ZM_AUTH_TOKEN). Defaults to TRUE
+     * Setting this to FALSE will make nginx compare only the major and minor
+     * server versions (eg. all 8.5.x will be treated same by nginx)
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1616)
+    public Map<String,Object> unsetReverseProxyExactServerVersionCheck(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyExactServerVersionCheck, "");
         return attrs;
     }
 
