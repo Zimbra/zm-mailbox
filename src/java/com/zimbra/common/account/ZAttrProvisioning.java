@@ -13237,7 +13237,9 @@ public class ZAttrProvisioning {
     public static final String A_zimbraTextAnalyzer = "zimbraTextAnalyzer";
 
     /**
-     * Whether or not Jetty thread monitor is enabled. Defaults to FALSE
+     * Whether or not Jetty thread monitor is enabled. Used for debugging
+     * Jetty, not recommended for extended use in production environment.
+     * Defaults to FALSE
      *
      * @since ZCS 8.5.0
      */
