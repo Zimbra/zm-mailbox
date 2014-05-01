@@ -3057,11 +3057,16 @@ use and error handling.  The old APIs still work in ZCS 6.0, but have been remov
         [test]
         ...
       </filterTests>
-      <filterActions>
+      [<nestedRule>
+        <filterTests>...</filterTests>
+        [<nestedRule>...</nestedRule>]
+        [<filterActions>...</filterActions>]
+      </nestedRule>]
+      [<filterActions>
         {action}
         [action]
         ...
-      </filterActions>
+      </filterActions>]
     </filterRule>
   </filterRules>
 </GetFilterRulesResponse>
@@ -3175,6 +3180,12 @@ communityConnectionsTest:
 1cee0f92-3650-4110-9f0b-69b0e175914d - Mentions
 bb196c30-fad3-4ad8-a644-2a0187fc5617 - Group Membership
 328e5139-d759-405c-98da-91cd25bcc80c - Group Mentions
+
+Nested Rules:
+
+In addition to the normal set of tests and actions, a filter rule may contain one or more layers of nested rules. If nested rules are
+specified the filter action(s) must be specified on the innermost level. All conditions are evaluated and if true the innermost action(s) are executed.
+Note that as of ZCS 8.5 nested filter rules are supported in the SOAP API but not in the end user filter preferences UI.
 
 ---------------------------
 
