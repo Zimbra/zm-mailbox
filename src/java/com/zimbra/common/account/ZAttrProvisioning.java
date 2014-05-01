@@ -1702,6 +1702,22 @@ public class ZAttrProvisioning {
         public boolean isOn() { return this == on;}
     }
 
+    public static enum ReverseProxyExactServerVersionCheck {
+        off("off"),
+        on("on");
+        private String mValue;
+        private ReverseProxyExactServerVersionCheck(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static ReverseProxyExactServerVersionCheck fromString(String s) throws ServiceException {
+            for (ReverseProxyExactServerVersionCheck value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isOff() { return this == off;}
+        public boolean isOn() { return this == on;}
+    }
+
     public static enum ReverseProxyImapStartTlsMode {
         off("off"),
         on("on"),
@@ -11856,8 +11872,8 @@ public class ZAttrProvisioning {
 
     /**
      * Whether nginx will match exact server version against the version
-     * received in the client request (in ZM_AUTH_TOKEN). Defaults to TRUE
-     * Setting this to FALSE will make nginx compare only the major and minor
+     * received in the client request (in ZM_AUTH_TOKEN). Defaults to on.
+     * Setting this to off will make nginx compare only the major and minor
      * server versions (eg. all 8.5.x will be treated same by nginx)
      *
      * @since ZCS 8.5.0
