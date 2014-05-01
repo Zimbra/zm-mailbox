@@ -41982,24 +41982,45 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * Whether nginx will match exact server version against the version
-     * received in the client request (in ZM_AUTH_TOKEN). Defaults to TRUE
-     * Setting this to FALSE will make nginx compare only the major and minor
+     * received in the client request (in ZM_AUTH_TOKEN). Defaults to on.
+     * Setting this to off will make nginx compare only the major and minor
      * server versions (eg. all 8.5.x will be treated same by nginx)
      *
-     * @return zimbraReverseProxyExactServerVersionCheck, or true if unset
+     * <p>Valid values: [off, on]
+     *
+     * @return zimbraReverseProxyExactServerVersionCheck, or ZAttrProvisioning.ReverseProxyExactServerVersionCheck.on if unset and/or has invalid value
      *
      * @since ZCS 8.5.0
      */
     @ZAttr(id=1616)
-    public boolean isReverseProxyExactServerVersionCheck() {
-        return getBooleanAttr(Provisioning.A_zimbraReverseProxyExactServerVersionCheck, true);
+    public ZAttrProvisioning.ReverseProxyExactServerVersionCheck getReverseProxyExactServerVersionCheck() {
+        try { String v = getAttr(Provisioning.A_zimbraReverseProxyExactServerVersionCheck); return v == null ? ZAttrProvisioning.ReverseProxyExactServerVersionCheck.on : ZAttrProvisioning.ReverseProxyExactServerVersionCheck.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.ReverseProxyExactServerVersionCheck.on; }
     }
 
     /**
      * Whether nginx will match exact server version against the version
-     * received in the client request (in ZM_AUTH_TOKEN). Defaults to TRUE
-     * Setting this to FALSE will make nginx compare only the major and minor
+     * received in the client request (in ZM_AUTH_TOKEN). Defaults to on.
+     * Setting this to off will make nginx compare only the major and minor
      * server versions (eg. all 8.5.x will be treated same by nginx)
+     *
+     * <p>Valid values: [off, on]
+     *
+     * @return zimbraReverseProxyExactServerVersionCheck, or "on" if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1616)
+    public String getReverseProxyExactServerVersionCheckAsString() {
+        return getAttr(Provisioning.A_zimbraReverseProxyExactServerVersionCheck, "on");
+    }
+
+    /**
+     * Whether nginx will match exact server version against the version
+     * received in the client request (in ZM_AUTH_TOKEN). Defaults to on.
+     * Setting this to off will make nginx compare only the major and minor
+     * server versions (eg. all 8.5.x will be treated same by nginx)
+     *
+     * <p>Valid values: [off, on]
      *
      * @param zimbraReverseProxyExactServerVersionCheck new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -42007,17 +42028,19 @@ public abstract class ZAttrConfig extends Entry {
      * @since ZCS 8.5.0
      */
     @ZAttr(id=1616)
-    public void setReverseProxyExactServerVersionCheck(boolean zimbraReverseProxyExactServerVersionCheck) throws com.zimbra.common.service.ServiceException {
+    public void setReverseProxyExactServerVersionCheck(ZAttrProvisioning.ReverseProxyExactServerVersionCheck zimbraReverseProxyExactServerVersionCheck) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraReverseProxyExactServerVersionCheck, zimbraReverseProxyExactServerVersionCheck ? Provisioning.TRUE : Provisioning.FALSE);
+        attrs.put(Provisioning.A_zimbraReverseProxyExactServerVersionCheck, zimbraReverseProxyExactServerVersionCheck.toString());
         getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
      * Whether nginx will match exact server version against the version
-     * received in the client request (in ZM_AUTH_TOKEN). Defaults to TRUE
-     * Setting this to FALSE will make nginx compare only the major and minor
+     * received in the client request (in ZM_AUTH_TOKEN). Defaults to on.
+     * Setting this to off will make nginx compare only the major and minor
      * server versions (eg. all 8.5.x will be treated same by nginx)
+     *
+     * <p>Valid values: [off, on]
      *
      * @param zimbraReverseProxyExactServerVersionCheck new value
      * @param attrs existing map to populate, or null to create a new map
@@ -42026,17 +42049,60 @@ public abstract class ZAttrConfig extends Entry {
      * @since ZCS 8.5.0
      */
     @ZAttr(id=1616)
-    public Map<String,Object> setReverseProxyExactServerVersionCheck(boolean zimbraReverseProxyExactServerVersionCheck, Map<String,Object> attrs) {
+    public Map<String,Object> setReverseProxyExactServerVersionCheck(ZAttrProvisioning.ReverseProxyExactServerVersionCheck zimbraReverseProxyExactServerVersionCheck, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraReverseProxyExactServerVersionCheck, zimbraReverseProxyExactServerVersionCheck ? Provisioning.TRUE : Provisioning.FALSE);
+        attrs.put(Provisioning.A_zimbraReverseProxyExactServerVersionCheck, zimbraReverseProxyExactServerVersionCheck.toString());
         return attrs;
     }
 
     /**
      * Whether nginx will match exact server version against the version
-     * received in the client request (in ZM_AUTH_TOKEN). Defaults to TRUE
-     * Setting this to FALSE will make nginx compare only the major and minor
+     * received in the client request (in ZM_AUTH_TOKEN). Defaults to on.
+     * Setting this to off will make nginx compare only the major and minor
      * server versions (eg. all 8.5.x will be treated same by nginx)
+     *
+     * <p>Valid values: [off, on]
+     *
+     * @param zimbraReverseProxyExactServerVersionCheck new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1616)
+    public void setReverseProxyExactServerVersionCheckAsString(String zimbraReverseProxyExactServerVersionCheck) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyExactServerVersionCheck, zimbraReverseProxyExactServerVersionCheck);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether nginx will match exact server version against the version
+     * received in the client request (in ZM_AUTH_TOKEN). Defaults to on.
+     * Setting this to off will make nginx compare only the major and minor
+     * server versions (eg. all 8.5.x will be treated same by nginx)
+     *
+     * <p>Valid values: [off, on]
+     *
+     * @param zimbraReverseProxyExactServerVersionCheck new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1616)
+    public Map<String,Object> setReverseProxyExactServerVersionCheckAsString(String zimbraReverseProxyExactServerVersionCheck, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyExactServerVersionCheck, zimbraReverseProxyExactServerVersionCheck);
+        return attrs;
+    }
+
+    /**
+     * Whether nginx will match exact server version against the version
+     * received in the client request (in ZM_AUTH_TOKEN). Defaults to on.
+     * Setting this to off will make nginx compare only the major and minor
+     * server versions (eg. all 8.5.x will be treated same by nginx)
+     *
+     * <p>Valid values: [off, on]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -42051,9 +42117,11 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * Whether nginx will match exact server version against the version
-     * received in the client request (in ZM_AUTH_TOKEN). Defaults to TRUE
-     * Setting this to FALSE will make nginx compare only the major and minor
+     * received in the client request (in ZM_AUTH_TOKEN). Defaults to on.
+     * Setting this to off will make nginx compare only the major and minor
      * server versions (eg. all 8.5.x will be treated same by nginx)
+     *
+     * <p>Valid values: [off, on]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
