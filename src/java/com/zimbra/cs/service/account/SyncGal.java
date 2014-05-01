@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -19,10 +19,6 @@
 package com.zimbra.cs.service.account;
 
 import java.util.Map;
-
-import org.eclipse.jetty.io.EndPoint;
-import org.eclipse.jetty.io.SelectChannelEndPoint;
-import org.eclipse.jetty.server.HttpConnection;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mailbox.ContactConstants;
@@ -37,6 +33,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.gal.GalSearchControl;
 import com.zimbra.cs.gal.GalSearchParams;
 import com.zimbra.cs.gal.GalSearchResultCallback;
+import com.zimbra.cs.servlet.util.JettyUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.type.GalSearchType;
 
@@ -48,7 +45,6 @@ public class SyncGal extends GalDocumentHandler {
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         disableJettyTimeout();
-
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Account account = getRequestedAccount(getZimbraSoapContext(context));
 
@@ -167,11 +163,7 @@ public class SyncGal extends GalDocumentHandler {
      */
     private void disableJettyTimeout() {
         if (LC.zimbra_gal_sync_disable_timeout.booleanValue()) {
-            EndPoint endPoint = HttpConnection.getCurrentConnection().getEndPoint();
-            if (endPoint instanceof SelectChannelEndPoint) {
-                SelectChannelEndPoint scEndPoint = (SelectChannelEndPoint) endPoint;
-                scEndPoint.setIdleTimeout(0);
-            }
+            JettyUtil.setIdleTimeout(0);
         }
     }
 }

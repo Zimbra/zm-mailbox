@@ -26,9 +26,6 @@ import org.apache.commons.httpclient.methods.InputStreamRequestEntity;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.httpclient.methods.RequestEntity;
 import org.dom4j.io.XMLWriter;
-import org.eclipse.jetty.io.EndPoint;
-import org.eclipse.jetty.io.SelectChannelEndPoint;
-import org.eclipse.jetty.server.HttpConnection;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
@@ -36,6 +33,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.DavProtocol;
+import com.zimbra.cs.servlet.util.JettyUtil;
 
 /**
  * Base class for DAV methods.
@@ -137,11 +135,7 @@ public abstract class DavMethod {
     protected void disableJettyTimeout() throws IOException {
         // millisecond value.  0 or negative means infinite.
         long maxIdleTime = LC.zimbra_dav_max_idle_time_ms.intValue();
-        EndPoint endPoint = HttpConnection.getCurrentConnection().getEndPoint();
-        if (endPoint instanceof SelectChannelEndPoint) {
-            SelectChannelEndPoint scEndPoint = (SelectChannelEndPoint) endPoint;
-            scEndPoint.setIdleTimeout(maxIdleTime);
-        }
+        JettyUtil.setIdleTimeout(maxIdleTime);
     }
 
 }
