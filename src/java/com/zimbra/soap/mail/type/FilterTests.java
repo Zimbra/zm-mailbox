@@ -2,21 +2,18 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
 
 package com.zimbra.soap.mail.type;
-
-import com.google.common.base.Objects;
-import com.google.common.collect.Lists;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -28,6 +25,8 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElements;
 
+import com.google.common.base.Objects;
+import com.google.common.collect.Lists;
 import com.zimbra.common.soap.MailConstants;
 
 @XmlAccessorType(XmlAccessType.NONE)
@@ -67,7 +66,10 @@ public final class FilterTests {
         @XmlElement(name=MailConstants.E_SIZE_TEST, type=FilterTest.SizeTest.class),
         @XmlElement(name=MailConstants.E_SOCIALCAST_TEST, type=FilterTest.SocialcastTest.class),
         @XmlElement(name=MailConstants.E_TRUE_TEST, type=FilterTest.TrueTest.class),
-        @XmlElement(name=MailConstants.E_TWITTER_TEST, type=FilterTest.TwitterTest.class)
+        @XmlElement(name=MailConstants.E_TWITTER_TEST, type=FilterTest.TwitterTest.class),
+        @XmlElement(name=MailConstants.E_COMMUNITY_REQUESTS_TEST, type=FilterTest.CommunityRequestsTest.class),
+        @XmlElement(name=MailConstants.E_COMMUNITY_CONTENT_TEST, type=FilterTest.CommunityContentTest.class),
+        @XmlElement(name=MailConstants.E_COMMUNITY_CONNECTIONS_TEST, type=FilterTest.CommunityConnectionsTest.class),
     })
     private final List<FilterTest> tests = Lists.newArrayList();
 
