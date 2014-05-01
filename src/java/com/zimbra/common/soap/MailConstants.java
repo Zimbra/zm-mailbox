@@ -603,6 +603,9 @@ public final class MailConstants {
     public static final String E_METHOD = "method";
     public static final String E_IMPORTANCE_TEST = "importanceTest";
     public static final String E_FLAGGED_TEST = "flaggedTest";
+    public static final String E_COMMUNITY_REQUESTS_TEST = "communityRequestsTest";
+    public static final String E_COMMUNITY_CONTENT_TEST = "communityContentTest";
+    public static final String E_COMMUNITY_CONNECTIONS_TEST = "communityConnectionsTest";
 
     public static final String E_FILTER_ACTIONS = "filterActions";
     public static final String E_ACTION_KEEP = "actionKeep";
