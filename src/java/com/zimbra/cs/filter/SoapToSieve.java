@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -30,9 +30,9 @@ import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.soap.mail.type.FilterAction;
 import com.zimbra.soap.mail.type.FilterRule;
-import com.zimbra.soap.mail.type.NestedRule;
 import com.zimbra.soap.mail.type.FilterTest;
 import com.zimbra.soap.mail.type.FilterTests;
+import com.zimbra.soap.mail.type.NestedRule;
 
 public final class SoapToSieve {
 
@@ -278,6 +278,12 @@ public final class SoapToSieve {
             snippet = "socialcast";
         } else if (test instanceof FilterTest.TwitterTest) {
             snippet = "twitter";
+        } else if (test instanceof FilterTest.CommunityRequestsTest) {
+            snippet = "community_requests";
+        } else if (test instanceof FilterTest.CommunityContentTest) {
+            snippet = "community_content";
+        } else if (test instanceof FilterTest.CommunityConnectionsTest) {
+            snippet = "community_connections";
         } else if (test instanceof FilterTest.ListTest) {
             snippet = "list";
         } else if (test instanceof FilterTest.BulkTest) {
