@@ -17,7 +17,6 @@ package com.zimbra.cs.servlet;
 
 import java.io.IOException;
 import java.util.Set;
-import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -45,7 +44,6 @@ public class ZimbraInvalidLoginFilter extends DoSFilter {
     private int maxFailedLogin;
     private ConcurrentMap<String, AtomicInteger> numberOfFailedOccurence;
     private ConcurrentMap<String, Long> suspiciousIpAddrLastAttempt;
-    private Timer reInStateIpTimer;
     private final int DEFAULT_DELAY_IN_MIN_BETWEEN_REQ_BEFORE_REINSTATING = 60;
     private int delayInMinBetwnReqBeforeReinstating;
     private final int DEFAULT_REINSTATE_IP_TASK_INTERVAL_IN_MIN = 5;
@@ -118,6 +116,9 @@ public class ZimbraInvalidLoginFilter extends DoSFilter {
                 if (loginFailed) {
                     AtomicInteger count = this.numberOfFailedOccurence
                         .putIfAbsent(clientIp, new AtomicInteger(0));
+                    if (count == null) {
+                        count = this.numberOfFailedOccurence.get(clientIp);
+                    }
                     if (count.incrementAndGet() > maxFailedLogin) {
                         this.numberOfFailedOccurence.put(clientIp, count);
                         suspiciousIpAddrLastAttempt.put(clientIp,
