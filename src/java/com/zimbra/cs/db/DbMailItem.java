@@ -3113,6 +3113,8 @@ public class DbMailItem {
                         } catch (Exception e1) { }
                     }
                 }
+                long revisionSize = rs.getLong(3);
+                info.size += revisionSize;
             }
         } catch (SQLException e) {
             throw ServiceException.FAILURE("getting version deletion info for items: " + versioned, e);
