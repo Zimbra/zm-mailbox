@@ -2,34 +2,35 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2008, 2009, 2010, 2011, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
 package com.zimbra.cs.filter;
 
-import com.google.common.collect.ImmutableSet;
-import com.zimbra.common.filter.Sieve;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.soap.mail.type.FilterTest;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+import java.util.Set;
+
 import org.apache.jsieve.TagArgument;
 import org.apache.jsieve.parser.SieveNode;
 import org.apache.jsieve.parser.generated.ASTcommand;
 import org.apache.jsieve.parser.generated.ASTtest;
 import org.apache.jsieve.parser.generated.Node;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-import java.util.Set;
+import com.google.common.collect.ImmutableSet;
+import com.zimbra.common.filter.Sieve;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.soap.mail.type.FilterTest;
 
 /**
  * Iterates a Sieve node tree and calls callbacks at various
@@ -128,6 +129,16 @@ public abstract class SieveVisitor {
 
     @SuppressWarnings("unused")
     protected void visitBulkTest(Node node, VisitPhase phase, RuleProperties props) throws ServiceException {
+    }
+
+    @SuppressWarnings("unused")
+    protected void visitCommunityRequestsTest(Node node, VisitPhase phase, RuleProperties props) throws ServiceException {
+    }
+    @SuppressWarnings("unused")
+    protected void visitCommunityContentTest(Node node, VisitPhase phase, RuleProperties props) throws ServiceException {
+    }
+    @SuppressWarnings("unused")
+    protected void visitCommunityConnectionsTest(Node node, VisitPhase phase, RuleProperties props) throws ServiceException {
     }
 
     @SuppressWarnings("unused")
@@ -489,7 +500,19 @@ public abstract class SieveVisitor {
                 visitTrueTest(node, VisitPhase.begin, props);
                 accept(node, props);
                 visitTrueTest(node, VisitPhase.end, props);
-            } else {
+            } else if ("community_requests".equalsIgnoreCase(nodeName)) {
+                visitCommunityRequestsTest(node, VisitPhase.begin, props);
+                accept(node, props);
+                visitCommunityRequestsTest(node, VisitPhase.end, props);
+            } else if ("community_content".equalsIgnoreCase(nodeName)) {
+                visitCommunityContentTest(node, VisitPhase.begin, props);
+                accept(node, props);
+                visitCommunityContentTest(node, VisitPhase.end, props);
+            } else if ("community_connections".equalsIgnoreCase(nodeName)) {
+                visitCommunityConnectionsTest(node, VisitPhase.begin, props);
+                accept(node, props);
+                visitCommunityConnectionsTest(node, VisitPhase.end, props);
+            }else {
                 ZimbraLog.filter.debug("Ignoring unrecognized test type '%s'.", nodeName);
                 accept(node, props);
             }

@@ -2,17 +2,22 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2008, 2009, 2010, 2011, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
 package com.zimbra.cs.filter;
+
+import java.util.Date;
+import java.util.List;
+
+import org.apache.jsieve.parser.generated.Node;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
@@ -20,14 +25,9 @@ import com.google.common.collect.Lists;
 import com.zimbra.common.filter.Sieve;
 import com.zimbra.soap.mail.type.FilterAction;
 import com.zimbra.soap.mail.type.FilterRule;
-import com.zimbra.soap.mail.type.NestedRule;
 import com.zimbra.soap.mail.type.FilterTest;
 import com.zimbra.soap.mail.type.FilterTests;
-
-import org.apache.jsieve.parser.generated.Node;
-
-import java.util.Date;
-import java.util.List;
+import com.zimbra.soap.mail.type.NestedRule;
 
 /**
  * Converts a Sieve node tree to the SOAP representation of
@@ -304,6 +304,25 @@ public final class SieveToSoap extends SieveVisitor {
     protected void visitTwitterTest(Node node, VisitPhase phase, RuleProperties props) {
         if (phase == VisitPhase.begin) {
             addTest(new FilterTest.TwitterTest(), props);
+        }
+    }
+
+    @Override
+    protected void visitCommunityRequestsTest(Node node, VisitPhase phase, RuleProperties props) {
+        if (phase == VisitPhase.begin) {
+            addTest(new FilterTest.CommunityRequestsTest(), props);
+        }
+    }
+    @Override
+    protected void visitCommunityContentTest(Node node, VisitPhase phase, RuleProperties props) {
+        if (phase == VisitPhase.begin) {
+            addTest(new FilterTest.CommunityContentTest(), props);
+        }
+    }
+    @Override
+    protected void visitCommunityConnectionsTest(Node node, VisitPhase phase, RuleProperties props) {
+        if (phase == VisitPhase.begin) {
+            addTest(new FilterTest.CommunityConnectionsTest(), props);
         }
     }
 
