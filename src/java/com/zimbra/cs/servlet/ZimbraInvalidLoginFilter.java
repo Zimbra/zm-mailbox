@@ -16,8 +16,6 @@
 package com.zimbra.cs.servlet;
 
 import java.io.IOException;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -34,8 +32,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.RemoteIP;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.util.Zimbra;
 import com.zimbra.soap.SoapEngine;
 
 
@@ -43,7 +43,6 @@ public class ZimbraInvalidLoginFilter extends DoSFilter {
 
     private static final int  DEFAULT_MAX_FAILED_LOGIN  = 5;
     private int maxFailedLogin;
-    private Set<String> suspiciousIpAddrSet;
     private ConcurrentMap<String, AtomicInteger> numberOfFailedOccurence;
     private ConcurrentMap<String, Long> suspiciousIpAddrLastAttempt;
     private Timer reInStateIpTimer;
@@ -80,11 +79,9 @@ public class ZimbraInvalidLoginFilter extends DoSFilter {
         } catch (ServiceException e) {
             this.delayInMinBetwnReqBeforeReinstating = DEFAULT_DELAY_IN_MIN_BETWEEN_REQ_BEFORE_REINSTATING;
         }
-        this.suspiciousIpAddrSet = Collections.synchronizedSet(new HashSet<String>());
         this.numberOfFailedOccurence = new ConcurrentHashMap<String, AtomicInteger>();
         this.suspiciousIpAddrLastAttempt = new ConcurrentHashMap<String, Long>();
-        this.reInStateIpTimer = new Timer();
-        this.reInStateIpTimer.schedule(new ReInStateIpTask(), 1000,
+        Zimbra.sTimer.schedule(new ReInStateIpTask(), 1000,
             this.reinstateIpTaskIntervalInMin * MIN_TO_MS);
         ZimbraLog.misc.info("ZimbraInvalidLoginFilter intialized");
 
@@ -98,15 +95,15 @@ public class ZimbraInvalidLoginFilter extends DoSFilter {
         FilterChain chain) throws IOException, ServletException {
         HttpServletRequest req = (HttpServletRequest) request;
         HttpServletResponse res = (HttpServletResponse) response;
-        String clientIp = req.getRemoteAddr();
+        RemoteIP remoteIp = new RemoteIP(req, ZimbraServlet.getTrustedIPs());
+        String clientIp = remoteIp.getRequestIP();
 
         if (this.maxFailedLogin <=0) {
             // InvalidLoginFilter feature is turned off
             chain.doFilter(request, response);
             return;
         }
-
-        if (this.suspiciousIpAddrSet.contains(clientIp)) {
+        if (this.suspiciousIpAddrLastAttempt.containsKey(clientIp)) {
             ZimbraLog.misc.info ("Access to IP " + clientIp +  "suspended, for repeated failed login.");
             res.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
             return;
@@ -122,7 +119,6 @@ public class ZimbraInvalidLoginFilter extends DoSFilter {
                     AtomicInteger count = this.numberOfFailedOccurence
                         .putIfAbsent(clientIp, new AtomicInteger(0));
                     if (count.incrementAndGet() > maxFailedLogin) {
-                        suspiciousIpAddrSet.add(clientIp);
                         this.numberOfFailedOccurence.put(clientIp, count);
                         suspiciousIpAddrLastAttempt.put(clientIp,
                             System.currentTimeMillis());
@@ -144,7 +140,6 @@ public class ZimbraInvalidLoginFilter extends DoSFilter {
     @Override
     public void destroy() {
         super.destroy();
-        this.suspiciousIpAddrSet.clear();
         this.numberOfFailedOccurence.clear();
         this.suspiciousIpAddrLastAttempt.clear();
         ZimbraLog.misc.info("ZimbraInvalidLoginFilter destroyed");
@@ -167,7 +162,7 @@ public class ZimbraInvalidLoginFilter extends DoSFilter {
                 long lastLoginAttempt = suspiciousIpAddrLastAttempt.get(clientIp);
                 if ((now - lastLoginAttempt) > delayInMinBetwnReqBeforeReinstating * MIN_TO_MS) {
                     suspiciousIpAddrLastAttempt.remove(clientIp);
-                    suspiciousIpAddrSet.remove(clientIp);
+                    numberOfFailedOccurence.remove(clientIp);
 
                 }
             }
