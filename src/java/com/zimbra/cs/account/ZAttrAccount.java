@@ -12203,13 +12203,13 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * Whether to allow a user to access EWS service
      *
-     * @return zimbraFeatureEwsEnabled, or true if unset
+     * @return zimbraFeatureEwsEnabled, or false if unset
      *
      * @since ZCS 8.5.0
      */
     @ZAttr(id=1574)
     public boolean isFeatureEwsEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraFeatureEwsEnabled, true);
+        return getBooleanAttr(Provisioning.A_zimbraFeatureEwsEnabled, false);
     }
 
     /**
