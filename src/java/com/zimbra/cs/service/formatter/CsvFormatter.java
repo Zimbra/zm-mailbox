@@ -67,7 +67,7 @@ public class CsvFormatter extends Formatter {
     @Override
     public void formatCallback(UserServletContext context) throws IOException, ServiceException {
         // Disable the jetty timeout
-        disableJettyTimeout();
+        disableJettyTimeout(context);
 
         Iterator<? extends MailItem> iterator = null;
         StringBuilder sb = new StringBuilder();
@@ -117,7 +117,7 @@ public class CsvFormatter extends Formatter {
     public void saveCallback(UserServletContext context, String contentType, Folder folder, String filename)
     throws UserServletException, ServiceException, IOException {
         // Disable the jetty timeout
-        disableJettyTimeout();
+        disableJettyTimeout(context);
         // Detect the charset of upload file.
         PushbackInputStream pis = new PushbackInputStream(context.getRequestInputStream(), READ_AHEAD_BUFFER_SIZE);
         byte[] buf = new byte[READ_AHEAD_BUFFER_SIZE];
@@ -178,9 +178,9 @@ public class CsvFormatter extends Formatter {
      * in this case.
      * @throws IOException
      */
-    private void disableJettyTimeout() {
+    private void disableJettyTimeout(UserServletContext context) {
         if (LC.zimbra_csv_formatter_disable_timeout.booleanValue()) {
-            JettyUtil.setIdleTimeout(0);
+            JettyUtil.setIdleTimeout(0, context.req);
         }
     }
 }

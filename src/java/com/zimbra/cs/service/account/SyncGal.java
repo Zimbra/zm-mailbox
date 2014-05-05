@@ -20,6 +20,8 @@ package com.zimbra.cs.service.account;
 
 import java.util.Map;
 
+import javax.servlet.http.HttpServletRequest;
+
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.service.ServiceException;
@@ -34,6 +36,7 @@ import com.zimbra.cs.gal.GalSearchControl;
 import com.zimbra.cs.gal.GalSearchParams;
 import com.zimbra.cs.gal.GalSearchResultCallback;
 import com.zimbra.cs.servlet.util.JettyUtil;
+import com.zimbra.soap.SoapServlet;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.type.GalSearchType;
 
@@ -44,7 +47,7 @@ public class SyncGal extends GalDocumentHandler {
 
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-        disableJettyTimeout();
+        disableJettyTimeout(context);
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Account account = getRequestedAccount(getZimbraSoapContext(context));
 
@@ -161,9 +164,14 @@ public class SyncGal extends GalDocumentHandler {
      * leaving this endpoint without a timeout is safe. If the connection was being reused (ie keep-alive) this could have issues, but its not
      * in this case.
      */
-    private void disableJettyTimeout() {
+    private void disableJettyTimeout(Map<String, Object> context) {
         if (LC.zimbra_gal_sync_disable_timeout.booleanValue()) {
-            JettyUtil.setIdleTimeout(0);
+            Object request = context.get(SoapServlet.SERVLET_REQUEST);
+            if (request instanceof HttpServletRequest) {
+                JettyUtil.setIdleTimeout(0, (HttpServletRequest) request);
+            } else {
+                ZimbraLog.misc.warn("no request in context map, cannot disable timeout");
+            }
         }
     }
 }

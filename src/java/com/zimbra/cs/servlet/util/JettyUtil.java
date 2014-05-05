@@ -15,25 +15,33 @@
 
 package com.zimbra.cs.servlet.util;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.eclipse.jetty.io.EndPoint;
-import org.eclipse.jetty.server.HttpChannel;
+import org.eclipse.jetty.server.HttpConnection;
 
 import com.zimbra.common.util.ZimbraLog;
 
 public class JettyUtil {
 
-    public static void setIdleTimeout(long timeout) {
-        HttpChannel<?> channel = HttpChannel.getCurrentHttpChannel();
-        if (channel != null) {
-            EndPoint ep = channel.getEndPoint();
-            if (ep != null) {
-                ep.setIdleTimeout(timeout);
+    public static void setIdleTimeout(long timeout, HttpServletRequest request) {
+        if (request != null) {
+            Object attr = request.getAttribute("org.eclipse.jetty.server.HttpConnection");
+            if (attr instanceof HttpConnection) {
+                @SuppressWarnings("resource")
+                HttpConnection conn = (HttpConnection) attr;
+                EndPoint ep = conn.getEndPoint();
+                if (ep != null) {
+                    ep.setIdleTimeout(timeout);
+                } else {
+                    ZimbraLog.misc.warn("null endpoint setting Jetty timeout?", new Exception());
+                }
             } else {
-                ZimbraLog.misc.warn("null endpoint setting Jetty timeout?", new Exception());
+                //this won't work for SPDY connections, so we'll have to consider this further once we enable it.
+                ZimbraLog.misc.warn("got [%s] not instanceof org.eclipse.jetty.server.HttpConnection", attr, new Exception());
             }
         } else {
-            ZimbraLog.misc.warn("null channel setting Jetty timeout?", new Exception());
+            ZimbraLog.misc.warn("cannot set timeout for null request", new Exception());
         }
     }
-
 }

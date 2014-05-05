@@ -184,7 +184,7 @@ public abstract class ArchiveFormatter extends Formatter {
     public void formatCallback(UserServletContext context)
     throws IOException, ServiceException, UserServletException {
         // Disable the jetty timeout
-        disableJettyTimeout();
+        disableJettyTimeout(context);
 
         HashMap<Integer, Integer> cnts = new HashMap<Integer, Integer>();
         int dot;
@@ -384,9 +384,9 @@ public abstract class ArchiveFormatter extends Formatter {
      * in this case.
      * @throws IOException
      */
-    private void disableJettyTimeout() {
+    private void disableJettyTimeout(UserServletContext context) {
         if (LC.zimbra_archive_formatter_disable_timeout.booleanValue()) {
-            JettyUtil.setIdleTimeout(0);
+            JettyUtil.setIdleTimeout(0, context.req);
         }
     }
 
@@ -765,7 +765,7 @@ public abstract class ArchiveFormatter extends Formatter {
     throws IOException, ServiceException {
 
         // Disable the jetty timeout
-        disableJettyTimeout();
+        disableJettyTimeout(context);
 
         Exception ex = null;
         ItemData id = null;

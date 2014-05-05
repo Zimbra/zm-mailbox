@@ -70,7 +70,7 @@ public class Report extends DavMethod {
             throw new DavException.UnsupportedReport(topName);
         }
 
-        disableJettyTimeout();
+        disableJettyTimeout(ctxt);
         if (ctxt.getDepth() != DavContext.Depth.zero) {
             ctxt.getDavResponse().createResponse(ctxt);
         }

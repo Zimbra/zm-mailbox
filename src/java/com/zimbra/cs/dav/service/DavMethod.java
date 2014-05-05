@@ -132,10 +132,10 @@ public abstract class DavMethod {
      *
      * @throws IOException
      */
-    protected void disableJettyTimeout() throws IOException {
+    protected void disableJettyTimeout(DavContext context) throws IOException {
         // millisecond value.  0 or negative means infinite.
         long maxIdleTime = LC.zimbra_dav_max_idle_time_ms.intValue();
-        JettyUtil.setIdleTimeout(maxIdleTime);
+        JettyUtil.setIdleTimeout(maxIdleTime, context.getRequest());
     }
 
 }
