@@ -268,8 +268,8 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
         try {
             Server server = acct.getServer();
             if (server != null) {
-		server_version = server.getAttr(Provisioning.A_zimbraServerVersion, "");
-	    }
+                server_version = server.getAttr(Provisioning.A_zimbraServerVersion, "");
+            }
         } catch (ServiceException e) {
             LOG.error("Unable to fetch server version for the user account", e);
         }
@@ -285,9 +285,10 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
         try {
             Account acct = Provisioning.getInstance().getAccountById(accountId);
             if (acct != null) {
-        	Server server = acct.getServer();
-        	if (server != null) {
-		    server_version = server.getAttr(Provisioning.A_zimbraServerVersion, "");
+                Server server = acct.getServer();
+                if (server != null) {
+                    server_version = server.getAttr(Provisioning.A_zimbraServerVersion, "");
+                }
         	}
         } catch (ServiceException e) {
             LOG.error("Unable to fetch server version for the user account", e);
