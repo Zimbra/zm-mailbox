@@ -7201,11 +7201,6 @@ TODO: delete them permanently from here
   <desc>Maximum size in bytes for file preview in web client</desc>
 </attr>
 
-<attr id="1443" name="zimbraPrefWebClientOfflineAccessEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.5.0">
-  <defaultCOSValue>FALSE</defaultCOSValue>
-  <desc>user preference to enable/disable access to his mailbox data in the web client when offline</desc>
-</attr>
-
 <attr id="1444" name="zimbraMobilePolicyRequireStorageCardEncryption" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.5.0">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>
