@@ -11422,15 +11422,6 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefWarnOnExit = "zimbraPrefWarnOnExit";
 
     /**
-     * user preference to enable/disable access to his mailbox data in the
-     * web client when offline
-     *
-     * @since ZCS 8.5.0
-     */
-    @ZAttr(id=1443)
-    public static final String A_zimbraPrefWebClientOfflineAccessEnabled = "zimbraPrefWebClientOfflineAccessEnabled";
-
-    /**
      * set of known keys corresponding to browsers used by the user for web
      * client offline access
      *
