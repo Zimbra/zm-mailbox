@@ -44,7 +44,6 @@ import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.MapUtil;
 import com.zimbra.common.util.ZimbraCookie;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.auth.AuthMechanism.AuthMech;
 
 /**
@@ -68,6 +67,8 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
     private static final String C_AUTH_MECH = "am";
     //cookie ID for keeping track of account's cookies
     private static final String C_TOKEN_ID = "tid";
+    //mailbox server version where this account resides
+    private static final String C_SERVER_VERSION = "version";
     private static final Map<String, ZimbraAuthToken> CACHE = MapUtil.newLruMap(LC.zimbra_authtoken_cache_size.intValue());
     private static final Log LOG = LogFactory.getLog(AuthToken.class);
 
@@ -86,6 +87,7 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
     private String proxyAuthToken;
     private AuthMech authMech;
     private Integer tokenID = -1;
+    private String server_version;   // version of the mailbox server where this account resides
     @Override
     public String toString() {
         return Objects.toStringHelper(this)
@@ -212,6 +214,7 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
             } else {
             	tokenID = -1;
             }
+            server_version = (String)map.get(C_SERVER_VERSION);
         } catch (ServiceException e) {
             throw new AuthTokenException("service exception", e);
         }
@@ -262,6 +265,14 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
             type = C_TYPE_ZIMBRA_USER;
         }
         tokenID = new Random().nextInt(Integer.MAX_VALUE-1) + 1;
+        try {
+            Server server = acct.getServer();
+            if (server != null) {
+		server_version = server.getAttr(Provisioning.A_zimbraServerVersion, "");
+	    }
+        } catch (ServiceException e) {
+            LOG.error("Unable to fetch server version for the user account", e);
+        }
     }
 
     public ZimbraAuthToken(String acctId, String externalEmail, String pass, String digest, long expires)  {
@@ -271,6 +282,16 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
         this.digest = digest != null ? digest : generateDigest(externalEmail, pass);
         type = C_TYPE_EXTERNAL_USER;
         tokenID = new Random().nextInt(Integer.MAX_VALUE-1) + 1;
+        try {
+            Account acct = Provisioning.getInstance().getAccountById(accountId);
+            if (acct != null) {
+        	Server server = acct.getServer();
+        	if (server != null) {
+		    server_version = server.getAttr(Provisioning.A_zimbraServerVersion, "");
+        	}
+        } catch (ServiceException e) {
+            LOG.error("Unable to fetch server version for the user account", e);
+        }
     }
 
     @Override
@@ -344,7 +365,7 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
 		try {
 		    Account acct = Provisioning.getInstance().getAccountById(accountId);
 		    if(acct != null) {
-		        acct.addAuthTokens(String.format("%d|%d", tokenID,this.expires));
+		        acct.addAuthTokens(String.format("%d|%d|%s", tokenID, this.expires, server_version));
 		    }
 		} catch (ServiceException e) {
 			throw new AuthTokenException("unable to register auth token", e);
@@ -358,10 +379,9 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
 		try {
 		    Account acct = Provisioning.getInstance().getAccountById(accountId);
 		    if(acct != null) {
-		        acct.removeAuthTokens(String.format("%d|%d", tokenID,this.expires));
+		        acct.removeAuthTokens(String.format("%d|%d|%s", tokenID, this.expires, server_version));
 		    }
 		} catch (ServiceException e) {
-		    ZimbraLog.account.error("unable to de-register auth token", e);
 			throw new AuthTokenException("unable to de-register auth token", e);
 		}
 
@@ -397,6 +417,7 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
             BlobMetaData.encodeMetaData(C_TOKEN_ID, tokenID, encodedBuff);
             BlobMetaData.encodeMetaData(C_EXTERNAL_USER_EMAIL, externalUserEmail, encodedBuff);
             BlobMetaData.encodeMetaData(C_DIGEST, digest, encodedBuff);
+            BlobMetaData.encodeMetaData(C_SERVER_VERSION, server_version, encodedBuff);
 
             String data = new String(Hex.encodeHex(encodedBuff.toString().getBytes()));
             AuthTokenKey key = getCurrentKey();
@@ -544,7 +565,7 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
 
     static class ByteKey implements SecretKey {
         private static final long serialVersionUID = -7237091299729195624L;
-        private byte[] mKey;
+        private final byte[] mKey;
 
         ByteKey(byte[] key) {
             mKey = key.clone();

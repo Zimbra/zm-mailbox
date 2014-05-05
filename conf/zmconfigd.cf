@@ -366,7 +366,7 @@ SECTION proxy
 	VAR zimbraReverseProxyWorkerConnections
 	VAR zimbraReverseProxyWorkerProcesses
 	VAR zimbraReverseProxyAcceptMutex
-	VAR zimbraReverseProxyMailstoreSplit
+	VAR zimbraReverseProxyExactServerVersionCheck
 	PROXYGEN
 	RESTART proxy
 

@@ -336,11 +336,18 @@ class ProxyConfVar
         int serverPort = server.getIntAttr(portName, 0);
         int timeout = server.getIntAttr(
                 Provisioning.A_zimbraMailProxyReconnectTimeout, 60);
+        String version = server.getAttr(Provisioning.A_zimbraServerVersion, "");
         int maxFails = server.getIntAttr("zimbraMailProxyMaxFails", 1);
-        if (maxFails != 1) {
-            return String.format("%s:%d fail_timeout=%ds max_fails=%d", serverName, serverPort,
+        if (maxFails != 1 && version != "") {
+            return String.format("%s:%d fail_timeout=%ds max_fails=%d version=%s", serverName, serverPort,
+                    timeout, maxFails, version);
+        } else if (maxFails != 1) {
+        	return String.format("%s:%d fail_timeout=%ds max_fails=%d", serverName, serverPort,
                     timeout, maxFails);
-        } else  {
+        } else if (version != "") {
+        	return String.format("%s:%d fail_timeout=%ds version=%s", serverName, serverPort,
+                    timeout, version);
+        } else {
             return String.format("%s:%d fail_timeout=%ds", serverName, serverPort,
                     timeout);
         }
@@ -2381,6 +2388,7 @@ public class ProxyConfGen
         mConfVars.put("web.upstream.send.timeout", new TimeInSecVarWrapper(new ProxyConfVar("web.upstream.send.timeout", "zimbraReverseProxyUpstreamSendTimeout", new Long(60), ProxyConfValueType.TIME, ProxyConfOverride.SERVER, "upstream send timeout")));
         mConfVars.put("web.upstream.polling.timeout", new TimeInSecVarWrapper(new ProxyConfVar("web.upstream.polling.timeout", "zimbraReverseProxyUpstreamPollingTimeout", new Long(3600), ProxyConfValueType.TIME, ProxyConfOverride.SERVER, "the response timeout for Microsoft Active Sync polling")));
         mConfVars.put("web.enabled", new ProxyConfVar("web.enabled", "zimbraReverseProxyHttpEnabled", false, ProxyConfValueType.ENABLER, ProxyConfOverride.SERVER, "Indicates whether HTTP proxying is enabled"));
+        mConfVars.put("web.upstream.exactversioncheck", new ProxyConfVar("web.upstream.exactversioncheck", "zimbraReverseProxyExactServerVersionCheck", "on", ProxyConfValueType.STRING, ProxyConfOverride.SERVER, "Indicates whether nginx will match exact server version against the version received in the client request"));
         mConfVars.put("web.http.enabled", new HttpEnablerVar());
         mConfVars.put("web.https.enabled", new HttpsEnablerVar());
         mConfVars.put("web.upstream.target", new WebProxyUpstreamTargetVar());
