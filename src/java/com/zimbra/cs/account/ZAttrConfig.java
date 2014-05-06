@@ -16215,7 +16215,7 @@ public abstract class ZAttrConfig extends Entry {
      */
     @ZAttr(id=1593)
     public String[] getHttpContextPathBasedThreadPoolBalancingFilterRules() {
-        String[] value = getMultiAttr(Provisioning.A_zimbraHttpContextPathBasedThreadPoolBalancingFilterRules); return value.length > 0 ? value : new String[] {"/service:min=10;max=10%","/soap:min=10;max=40%","/zimbra:min=10;max=40%","/zimbraAdmin:min=10;max=5%"};
+        String[] value = getMultiAttr(Provisioning.A_zimbraHttpContextPathBasedThreadPoolBalancingFilterRules); return value.length > 0 ? value : new String[] {"/service:min=10;max=80%","/zimbra:min=10;max=15%","/zimbraAdmin:min=10;max=5%"};
     }
 
     /**
