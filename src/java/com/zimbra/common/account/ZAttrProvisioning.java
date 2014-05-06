@@ -7961,6 +7961,20 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMobileMetadataMaxSizeEnabled = "zimbraMobileMetadataMaxSizeEnabled";
 
     /**
+     * Retention policy for stale mobile metadata. Format is
+     * &quot;aa:bb:c&quot;, &quot;aa&quot; being the number of days to define
+     * stale data. e.g. 180 means if device&#039;s last_used_date is 180 days
+     * ago, its metadata need to be removed. &quot;bb&quot; being the days
+     * between two retentions are run, e.g. 30 means to run retention every
+     * 30 days. &quot;hh&quot; being the hour of day to run retention, from 0
+     * to 23. e.g. 1 means to run retention at some time between 1am and 2am.
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1617)
+    public static final String A_zimbraMobileMetadataRetentionPolicy = "zimbraMobileMetadataRetentionPolicy";
+
+    /**
      * admin email address used for receiving notifications
      *
      * @since ZCS 8.5.0
