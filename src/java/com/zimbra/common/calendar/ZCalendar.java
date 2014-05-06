@@ -895,10 +895,11 @@ public class ZCalendar {
         @Override
         public void propertyValue(String value) throws ParserException {
             ICalTok token = mCurProperty.getToken();
-            if (ICalTok.CATEGORIES.equals(token) || ICalTok.RESOURCES.equals(token) || ICalTok.FREEBUSY.equals(token))
+            if (ICalTok.CATEGORIES.equals(token) || ICalTok.RESOURCES.equals(token) || ICalTok.FREEBUSY.equals(token)) {
                 mCurProperty.setValueList(parseCommaSepText(value));
-            else
-                mCurProperty.setValue(unescape(value));
+            } else {
+                mCurProperty.setValue(unescape(null == value ? value : value.trim())); //be forgiving for leading and trailing spaces in property values
+            }
             if (mComponents.size() == 0) {
                 if (ICalTok.VERSION.equals(mCurProperty.getToken())) {
                     if (sObsoleteVcalVersion.equals(value))
