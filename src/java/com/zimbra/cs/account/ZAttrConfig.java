@@ -26218,6 +26218,108 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * Retention policy for stale mobile metadata. Format is
+     * &quot;aa:bb:c&quot;, &quot;aa&quot; being the number of days to define
+     * stale data. e.g. 180 means if device&#039;s last_used_date is 180 days
+     * ago, its metadata need to be removed. &quot;bb&quot; being the days
+     * between two retentions are run, e.g. 30 means to run retention every
+     * 30 days. &quot;hh&quot; being the hour of day to run retention, from 0
+     * to 23. e.g. 1 means to run retention at some time between 1am and 2am.
+     *
+     * @return zimbraMobileMetadataRetentionPolicy, or "180:30:1" if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1617)
+    public String getMobileMetadataRetentionPolicy() {
+        return getAttr(Provisioning.A_zimbraMobileMetadataRetentionPolicy, "180:30:1");
+    }
+
+    /**
+     * Retention policy for stale mobile metadata. Format is
+     * &quot;aa:bb:c&quot;, &quot;aa&quot; being the number of days to define
+     * stale data. e.g. 180 means if device&#039;s last_used_date is 180 days
+     * ago, its metadata need to be removed. &quot;bb&quot; being the days
+     * between two retentions are run, e.g. 30 means to run retention every
+     * 30 days. &quot;hh&quot; being the hour of day to run retention, from 0
+     * to 23. e.g. 1 means to run retention at some time between 1am and 2am.
+     *
+     * @param zimbraMobileMetadataRetentionPolicy new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1617)
+    public void setMobileMetadataRetentionPolicy(String zimbraMobileMetadataRetentionPolicy) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileMetadataRetentionPolicy, zimbraMobileMetadataRetentionPolicy);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Retention policy for stale mobile metadata. Format is
+     * &quot;aa:bb:c&quot;, &quot;aa&quot; being the number of days to define
+     * stale data. e.g. 180 means if device&#039;s last_used_date is 180 days
+     * ago, its metadata need to be removed. &quot;bb&quot; being the days
+     * between two retentions are run, e.g. 30 means to run retention every
+     * 30 days. &quot;hh&quot; being the hour of day to run retention, from 0
+     * to 23. e.g. 1 means to run retention at some time between 1am and 2am.
+     *
+     * @param zimbraMobileMetadataRetentionPolicy new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1617)
+    public Map<String,Object> setMobileMetadataRetentionPolicy(String zimbraMobileMetadataRetentionPolicy, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileMetadataRetentionPolicy, zimbraMobileMetadataRetentionPolicy);
+        return attrs;
+    }
+
+    /**
+     * Retention policy for stale mobile metadata. Format is
+     * &quot;aa:bb:c&quot;, &quot;aa&quot; being the number of days to define
+     * stale data. e.g. 180 means if device&#039;s last_used_date is 180 days
+     * ago, its metadata need to be removed. &quot;bb&quot; being the days
+     * between two retentions are run, e.g. 30 means to run retention every
+     * 30 days. &quot;hh&quot; being the hour of day to run retention, from 0
+     * to 23. e.g. 1 means to run retention at some time between 1am and 2am.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1617)
+    public void unsetMobileMetadataRetentionPolicy() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileMetadataRetentionPolicy, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Retention policy for stale mobile metadata. Format is
+     * &quot;aa:bb:c&quot;, &quot;aa&quot; being the number of days to define
+     * stale data. e.g. 180 means if device&#039;s last_used_date is 180 days
+     * ago, its metadata need to be removed. &quot;bb&quot; being the days
+     * between two retentions are run, e.g. 30 means to run retention every
+     * 30 days. &quot;hh&quot; being the hour of day to run retention, from 0
+     * to 23. e.g. 1 means to run retention at some time between 1am and 2am.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1617)
+    public Map<String,Object> unsetMobileMetadataRetentionPolicy(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileMetadataRetentionPolicy, "");
+        return attrs;
+    }
+
+    /**
      * Value for postconf address_verify_negative_refresh_time
      *
      * @return zimbraMtaAddressVerifyNegativeRefreshTime, or "10m" if unset

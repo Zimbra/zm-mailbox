@@ -8093,4 +8093,10 @@ TODO: delete them permanently from here
         Setting this to off will make nginx compare only the major and minor server versions (eg. all 8.5.x will be treated same by nginx)</desc>
 </attr>
 
+<attr id="1617" name="zimbraMobileMetadataRetentionPolicy" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
+  <globalConfigValue>180:30:1</globalConfigValue>
+  <desc>Retention policy for stale mobile metadata. Format is "aa:bb:c", "aa" being the number of days to define stale data. e.g. 180 means if device's last_used_date is 180 days ago,
+        its metadata need to be removed. "bb" being the days between two retentions are run, e.g. 30 means to run retention every 30 days. "hh" being the hour of day to run retention,
+        from 0 to 23. e.g. 1 means to run retention at some time between 1am and 2am.</desc>
+</attr>
 </attrs>

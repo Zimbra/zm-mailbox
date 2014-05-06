@@ -373,3 +373,13 @@ Get SyncState of a given folder from a given device, this can be used to trouble
      Description of SyncState
   </syncstate>
 </GetSyncStateResponse>
+
+---------------------
+<RemoveStaleDeviceMetadata>
+---------------------
+
+Remove stale data from mailbox_metadata. Stale data are metadata from devices whose last_used_date is at least 90 days before now.
+
+<RemoveStaleDeviceMetadataRequest @lastUsedDateOlderThan="{days}"/>
+
+<RemoveStaleDeviceMetadataResponse />
