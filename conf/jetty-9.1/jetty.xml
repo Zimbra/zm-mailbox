@@ -149,7 +149,7 @@
                https://bugzilla.zimbra.com/show_bug.cgi?id=64689#c8
         -->
 		<!-- 
-		<Set name="TrustStorePath">/System/Library/Frameworks/JavaVM.framework/Versions/CurrentJDK/Home/lib/security/cacerts</Set>
+		<Set name="TrustStorePath">/System/Library/Frameworks/JavaVM.framework/Versions/CurrentJDK/Home/jre/lib/security/cacerts</Set>
   		<Set name="TrustStorePassword">changeit</Set>
 		-->
 		<Set name="EndpointIdentificationAlgorithm"></Set>
