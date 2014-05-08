@@ -1922,13 +1922,12 @@ public class ProvUtil implements HttpDebugListener {
             }
         };
 
-        SearchAccountsOptions options = new SearchAccountsOptions(domain);
-        options.setUseControl(false);
+        SearchAccountsOptions options = new SearchAccountsOptions();
+        if(domain != null) {
+            options.setDomain(domain);
+        }
         options.setIncludeType(IncludeType.ACCOUNTS_ONLY);
-        if (verbose && applyDefault) {
-            // ldapProv.getAllAccounts(domain, server, visitor);
-        } else {
-            // ldapProv.getAllAccountsNoDefaults(domain, server, visitor);
+        if (!applyDefault) {
             options.setMakeObjectOpt(MakeObjectOpt.NO_DEFAULTS);
         }
 
@@ -1993,9 +1992,7 @@ public class ProvUtil implements HttpDebugListener {
             server = lookupServer(s);
         }
         if (d == null) {
-            for (Domain domain : ldapProv.getAllDomains()) {
-                doGetAllAccounts(ldapProv, domain, server, verbose, applyDefault, null);
-            }
+            doGetAllAccounts(ldapProv, null, server, verbose, applyDefault, null);
         } else {
             Domain domain = lookupDomain(d, ldapProv);
             doGetAllAccounts(ldapProv, domain, server, verbose, applyDefault, null);
