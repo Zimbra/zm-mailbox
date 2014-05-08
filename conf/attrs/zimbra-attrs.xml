@@ -8073,17 +8073,20 @@ TODO: delete them permanently from here
 
 <attr id="1613" name="zimbraInvalidLoginFilterMaxFailedLogin" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited"  since="8.5.0">
   <globalConfigValue>10</globalConfigValue>
-  <desc>Whether to do DOSFilter style check for repeated failed logins from IP, if set to 0 no check happens, else failed login is recorded.</desc>
+  <desc>This attribute is used for failed authentication requests.This is a DOSFilter style check for repeated failed 
+        logins from IP, if set to 0 no check happens, else failed login is recorded. </desc>
 </attr>
 
 <attr id="1614" name="zimbraInvalidLoginFilterDelayInMinBetwnReqBeforeReinstating" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited"  since="8.5.0">
   <globalConfigValue>15</globalConfigValue>
-  <desc>Min time between current req and last req before this suspended IP will be reinstated</desc>
+  <desc>This attribute is used for failed authentication requests. It indicates the minimum time between current req and last req from the same IP before this
+        suspended IP will be reinstated</desc>
 </attr>
 
 <attr id="1615" name="zimbraInvalidLoginFilterReinstateIpTaskIntervalInMin" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited"  since="8.5.0">
   <globalConfigValue>5</globalConfigValue>
-  <desc>Interval at which Task to reinstate suspended IPs is run</desc>
+  <desc>This attribute is used for failed authentication requests.
+        Interval at which Task to reinstate IPs suspended as part of ZimbraInvalidLoging filter are run.</desc>
 </attr>
 
 <attr id="1616" name="zimbraReverseProxyExactServerVersionCheck" type="enum" value="on,off" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="nginxproxy" since="8.5.0">
@@ -8098,4 +8101,11 @@ TODO: delete them permanently from here
         its metadata need to be removed. "bb" being the days between two retentions are run, e.g. 30 means to run retention every 30 days. "hh" being the hour of day to run retention,
         from 0 to 23. e.g. 1 means to run retention at some time between 1am and 2am.</desc>
 </attr>
+
+<attr id="1618" name="zimbraInvalidLoginFilterMaxSizeOfFailedIpDb" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited"  since="8.5.0">
+  <globalConfigValue>7000</globalConfigValue>
+  <desc>This attribute is used for failed authentication requests. It indicates the max size of data structures that 
+        holds the list of failed logins</desc>
+</attr>
+
 </attrs>

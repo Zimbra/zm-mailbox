@@ -16,10 +16,11 @@
 package com.zimbra.cs.servlet;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Set;
 import java.util.TimerTask;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.servlet.FilterChain;
@@ -42,14 +43,16 @@ public class ZimbraInvalidLoginFilter extends DoSFilter {
 
     private static final int  DEFAULT_MAX_FAILED_LOGIN  = 5;
     private int maxFailedLogin;
-    private ConcurrentMap<String, AtomicInteger> numberOfFailedOccurence;
-    private ConcurrentMap<String, Long> suspiciousIpAddrLastAttempt;
+    private Map<String, AtomicInteger> numberOfFailedOccurence;
+    private Map<String, Long> suspiciousIpAddrLastAttempt;
     private final int DEFAULT_DELAY_IN_MIN_BETWEEN_REQ_BEFORE_REINSTATING = 60;
     private int delayInMinBetwnReqBeforeReinstating;
     private final int DEFAULT_REINSTATE_IP_TASK_INTERVAL_IN_MIN = 5;
     private int reinstateIpTaskIntervalInMin;
     private static final int MIN_TO_MS = 60 * 1000;
     public static final String AUTH_FAILED = "auth.failed";
+    public int maxSizeOfFailedIpDb;
+    public int DEFAULT_SIZE_OF_FAILED_IP_DB = 7000; // Considering we do not want to exceed 1MB of data
 
     /* (non-Javadoc)
      * @see com.zimbra.cs.servlet.DoSFilter#init(javax.servlet.FilterConfig)
@@ -77,8 +80,28 @@ public class ZimbraInvalidLoginFilter extends DoSFilter {
         } catch (ServiceException e) {
             this.delayInMinBetwnReqBeforeReinstating = DEFAULT_DELAY_IN_MIN_BETWEEN_REQ_BEFORE_REINSTATING;
         }
-        this.numberOfFailedOccurence = new ConcurrentHashMap<String, AtomicInteger>();
-        this.suspiciousIpAddrLastAttempt = new ConcurrentHashMap<String, Long>();
+
+        try {
+            this.maxSizeOfFailedIpDb = prov.getConfig().getInvalidLoginFilterMaxSizeOfFailedIpDb();
+        } catch (ServiceException e) {
+            this.maxSizeOfFailedIpDb = this.DEFAULT_SIZE_OF_FAILED_IP_DB;
+        }
+
+        this.numberOfFailedOccurence = Collections.synchronizedMap(new LinkedHashMap<String, AtomicInteger>(
+            this.maxSizeOfFailedIpDb) {
+            @Override
+            protected boolean removeEldestEntry(Map.Entry  eldest) {
+               return size() >  maxSizeOfFailedIpDb;
+            }
+         });
+
+        this.suspiciousIpAddrLastAttempt = Collections.synchronizedMap(new LinkedHashMap<String, Long>(
+            this.maxSizeOfFailedIpDb) {
+            @Override
+            protected boolean removeEldestEntry(Map.Entry  eldest) {
+               return size() >  maxSizeOfFailedIpDb;
+            }
+         });
         Zimbra.sTimer.schedule(new ReInStateIpTask(), 1000,
             this.reinstateIpTaskIntervalInMin * MIN_TO_MS);
         ZimbraLog.misc.info("ZimbraInvalidLoginFilter intialized");
@@ -114,11 +137,15 @@ public class ZimbraInvalidLoginFilter extends DoSFilter {
                 String clientIP = (String) req.getAttribute(SoapEngine.REQUEST_IP);
                 boolean loginFailed = (Boolean) req.getAttribute(AUTH_FAILED);
                 if (loginFailed) {
-                    AtomicInteger count = this.numberOfFailedOccurence
-                        .putIfAbsent(clientIp, new AtomicInteger(0));
-                    if (count == null) {
+
+                    AtomicInteger count = null;
+                    if (this.numberOfFailedOccurence.containsKey(clientIp)) {
+                        count = this.numberOfFailedOccurence.get(clientIp);
+                    } else{
+                        this.numberOfFailedOccurence.put(clientIp, new AtomicInteger(0));
                         count = this.numberOfFailedOccurence.get(clientIp);
                     }
+
                     if (count.incrementAndGet() > maxFailedLogin) {
                         this.numberOfFailedOccurence.put(clientIp, count);
                         suspiciousIpAddrLastAttempt.put(clientIp,

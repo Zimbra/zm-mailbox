@@ -10930,8 +10930,9 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Min time between current req and last req before this suspended IP
-     * will be reinstated
+     * This attribute is used for failed authentication requests. It
+     * indicates the minimum time between current req and last req from the
+     * same IP before this suspended IP will be reinstated
      *
      * @return zimbraInvalidLoginFilterDelayInMinBetwnReqBeforeReinstating, or 15 if unset
      *
@@ -10943,8 +10944,9 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Min time between current req and last req before this suspended IP
-     * will be reinstated
+     * This attribute is used for failed authentication requests. It
+     * indicates the minimum time between current req and last req from the
+     * same IP before this suspended IP will be reinstated
      *
      * @param zimbraInvalidLoginFilterDelayInMinBetwnReqBeforeReinstating new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -10959,8 +10961,9 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Min time between current req and last req before this suspended IP
-     * will be reinstated
+     * This attribute is used for failed authentication requests. It
+     * indicates the minimum time between current req and last req from the
+     * same IP before this suspended IP will be reinstated
      *
      * @param zimbraInvalidLoginFilterDelayInMinBetwnReqBeforeReinstating new value
      * @param attrs existing map to populate, or null to create a new map
@@ -10976,8 +10979,9 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Min time between current req and last req before this suspended IP
-     * will be reinstated
+     * This attribute is used for failed authentication requests. It
+     * indicates the minimum time between current req and last req from the
+     * same IP before this suspended IP will be reinstated
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -10991,8 +10995,9 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Min time between current req and last req before this suspended IP
-     * will be reinstated
+     * This attribute is used for failed authentication requests. It
+     * indicates the minimum time between current req and last req from the
+     * same IP before this suspended IP will be reinstated
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -11007,8 +11012,9 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Whether to do DOSFilter style check for repeated failed logins from
-     * IP, if set to 0 no check happens, else failed login is recorded.
+     * This attribute is used for failed authentication requests.This is a
+     * DOSFilter style check for repeated failed logins from IP, if set to 0
+     * no check happens, else failed login is recorded.
      *
      * @return zimbraInvalidLoginFilterMaxFailedLogin, or 10 if unset
      *
@@ -11020,8 +11026,9 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Whether to do DOSFilter style check for repeated failed logins from
-     * IP, if set to 0 no check happens, else failed login is recorded.
+     * This attribute is used for failed authentication requests.This is a
+     * DOSFilter style check for repeated failed logins from IP, if set to 0
+     * no check happens, else failed login is recorded.
      *
      * @param zimbraInvalidLoginFilterMaxFailedLogin new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -11036,8 +11043,9 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Whether to do DOSFilter style check for repeated failed logins from
-     * IP, if set to 0 no check happens, else failed login is recorded.
+     * This attribute is used for failed authentication requests.This is a
+     * DOSFilter style check for repeated failed logins from IP, if set to 0
+     * no check happens, else failed login is recorded.
      *
      * @param zimbraInvalidLoginFilterMaxFailedLogin new value
      * @param attrs existing map to populate, or null to create a new map
@@ -11053,8 +11061,9 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Whether to do DOSFilter style check for repeated failed logins from
-     * IP, if set to 0 no check happens, else failed login is recorded.
+     * This attribute is used for failed authentication requests.This is a
+     * DOSFilter style check for repeated failed logins from IP, if set to 0
+     * no check happens, else failed login is recorded.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -11068,8 +11077,9 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Whether to do DOSFilter style check for repeated failed logins from
-     * IP, if set to 0 no check happens, else failed login is recorded.
+     * This attribute is used for failed authentication requests.This is a
+     * DOSFilter style check for repeated failed logins from IP, if set to 0
+     * no check happens, else failed login is recorded.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -11084,7 +11094,91 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Interval at which Task to reinstate suspended IPs is run
+     * This attribute is used for failed authentication requests. It
+     * indicates the max size of data structures that holds the list of
+     * failed logins
+     *
+     * @return zimbraInvalidLoginFilterMaxSizeOfFailedIpDb, or 7000 if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1618)
+    public int getInvalidLoginFilterMaxSizeOfFailedIpDb() {
+        return getIntAttr(Provisioning.A_zimbraInvalidLoginFilterMaxSizeOfFailedIpDb, 7000);
+    }
+
+    /**
+     * This attribute is used for failed authentication requests. It
+     * indicates the max size of data structures that holds the list of
+     * failed logins
+     *
+     * @param zimbraInvalidLoginFilterMaxSizeOfFailedIpDb new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1618)
+    public void setInvalidLoginFilterMaxSizeOfFailedIpDb(int zimbraInvalidLoginFilterMaxSizeOfFailedIpDb) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraInvalidLoginFilterMaxSizeOfFailedIpDb, Integer.toString(zimbraInvalidLoginFilterMaxSizeOfFailedIpDb));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * This attribute is used for failed authentication requests. It
+     * indicates the max size of data structures that holds the list of
+     * failed logins
+     *
+     * @param zimbraInvalidLoginFilterMaxSizeOfFailedIpDb new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1618)
+    public Map<String,Object> setInvalidLoginFilterMaxSizeOfFailedIpDb(int zimbraInvalidLoginFilterMaxSizeOfFailedIpDb, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraInvalidLoginFilterMaxSizeOfFailedIpDb, Integer.toString(zimbraInvalidLoginFilterMaxSizeOfFailedIpDb));
+        return attrs;
+    }
+
+    /**
+     * This attribute is used for failed authentication requests. It
+     * indicates the max size of data structures that holds the list of
+     * failed logins
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1618)
+    public void unsetInvalidLoginFilterMaxSizeOfFailedIpDb() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraInvalidLoginFilterMaxSizeOfFailedIpDb, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * This attribute is used for failed authentication requests. It
+     * indicates the max size of data structures that holds the list of
+     * failed logins
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1618)
+    public Map<String,Object> unsetInvalidLoginFilterMaxSizeOfFailedIpDb(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraInvalidLoginFilterMaxSizeOfFailedIpDb, "");
+        return attrs;
+    }
+
+    /**
+     * This attribute is used for failed authentication requests. Interval at
+     * which Task to reinstate IPs suspended as part of ZimbraInvalidLoging
+     * filter are run.
      *
      * @return zimbraInvalidLoginFilterReinstateIpTaskIntervalInMin, or 5 if unset
      *
@@ -11096,7 +11190,9 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Interval at which Task to reinstate suspended IPs is run
+     * This attribute is used for failed authentication requests. Interval at
+     * which Task to reinstate IPs suspended as part of ZimbraInvalidLoging
+     * filter are run.
      *
      * @param zimbraInvalidLoginFilterReinstateIpTaskIntervalInMin new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -11111,7 +11207,9 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Interval at which Task to reinstate suspended IPs is run
+     * This attribute is used for failed authentication requests. Interval at
+     * which Task to reinstate IPs suspended as part of ZimbraInvalidLoging
+     * filter are run.
      *
      * @param zimbraInvalidLoginFilterReinstateIpTaskIntervalInMin new value
      * @param attrs existing map to populate, or null to create a new map
@@ -11127,7 +11225,9 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Interval at which Task to reinstate suspended IPs is run
+     * This attribute is used for failed authentication requests. Interval at
+     * which Task to reinstate IPs suspended as part of ZimbraInvalidLoging
+     * filter are run.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -11141,7 +11241,9 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Interval at which Task to reinstate suspended IPs is run
+     * This attribute is used for failed authentication requests. Interval at
+     * which Task to reinstate IPs suspended as part of ZimbraInvalidLoging
+     * filter are run.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
