@@ -89,7 +89,7 @@ public class SendDeliveryReport extends MailDocumentHandler {
         return getAuthenticatedAccount(zsc);
     }
 
-    void sendReport(Account authAccount, Message msg, boolean automatic, String requestHost, String userAgent)
+    public static void sendReport(Account authAccount, Message msg, boolean automatic, String requestHost, String userAgent)
     throws ServiceException {
         MimeMessage mm = msg.getMimeMessage();
         Account owner = msg.getMailbox().getAccount();
@@ -151,7 +151,7 @@ public class SendDeliveryReport extends MailDocumentHandler {
         }
     }
 
-    protected String generateTextPart(Account owner, MimeMessage mm, Locale lc) throws MessagingException {
+    static String generateTextPart(Account owner, MimeMessage mm, Locale lc) throws MessagingException {
         String subject = Mime.getSubject(mm);
 
         String dateStr = "???";
@@ -165,7 +165,7 @@ public class SendDeliveryReport extends MailDocumentHandler {
         return L10nUtil.getMessage(MsgKey.readReceiptNotification, lc, dateStr, owner.getName(), subject);
     }
 
-    protected String generateReport(Account owner, MimeMessage mm, boolean automatic, String requestHost, String userAgent)
+    static String generateReport(Account owner, MimeMessage mm, boolean automatic, String requestHost, String userAgent)
     throws MessagingException {
         StringBuilder mdn = new StringBuilder();
 
