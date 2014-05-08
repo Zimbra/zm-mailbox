@@ -6710,8 +6710,9 @@ public class ZAttrProvisioning {
     public static final String A_zimbraInternalSharingDomain = "zimbraInternalSharingDomain";
 
     /**
-     * Min time between current req and last req before this suspended IP
-     * will be reinstated
+     * This attribute is used for failed authentication requests. It
+     * indicates the minimum time between current req and last req from the
+     * same IP before this suspended IP will be reinstated
      *
      * @since ZCS 8.5.0
      */
@@ -6719,8 +6720,9 @@ public class ZAttrProvisioning {
     public static final String A_zimbraInvalidLoginFilterDelayInMinBetwnReqBeforeReinstating = "zimbraInvalidLoginFilterDelayInMinBetwnReqBeforeReinstating";
 
     /**
-     * Whether to do DOSFilter style check for repeated failed logins from
-     * IP, if set to 0 no check happens, else failed login is recorded.
+     * This attribute is used for failed authentication requests.This is a
+     * DOSFilter style check for repeated failed logins from IP, if set to 0
+     * no check happens, else failed login is recorded.
      *
      * @since ZCS 8.5.0
      */
@@ -6728,7 +6730,19 @@ public class ZAttrProvisioning {
     public static final String A_zimbraInvalidLoginFilterMaxFailedLogin = "zimbraInvalidLoginFilterMaxFailedLogin";
 
     /**
-     * Interval at which Task to reinstate suspended IPs is run
+     * This attribute is used for failed authentication requests. It
+     * indicates the max size of data structures that holds the list of
+     * failed logins
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1618)
+    public static final String A_zimbraInvalidLoginFilterMaxSizeOfFailedIpDb = "zimbraInvalidLoginFilterMaxSizeOfFailedIpDb";
+
+    /**
+     * This attribute is used for failed authentication requests. Interval at
+     * which Task to reinstate IPs suspended as part of ZimbraInvalidLoging
+     * filter are run.
      *
      * @since ZCS 8.5.0
      */
