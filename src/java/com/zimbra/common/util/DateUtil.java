@@ -146,9 +146,9 @@ public final class DateUtil {
         cal.setTime(date);
         return toRFC822Date(cal);
     }
-
+    
     public static String toRFC822Date(Calendar cal) {
-
+        
         String tzabbr = getTimezoneAbbreviation(cal.getTimeZone().getID(), cal.get(Calendar.DST_OFFSET) != 0);
         int tzoffset = (cal.get(Calendar.ZONE_OFFSET) + cal.get(Calendar.DST_OFFSET)) / 60000;
         char tzsign = tzoffset > 0 ? '+' : '-';
@@ -169,6 +169,22 @@ public final class DateUtil {
         append2DigitNumber(sb, tzoffset % 60);
         if (tzabbr != null)
             sb.append(" (").append(tzabbr).append(')');
+        return sb.toString();
+    }
+
+    public static String toRFC1123Date(Calendar cal) {
+        cal.setTimeZone(TimeZone.getTimeZone("GMT"));
+        
+        StringBuilder sb = new StringBuilder(40);
+        sb.append(DAY_NAME[cal.get(Calendar.DAY_OF_WEEK)]);
+        append2DigitNumber(sb, cal.get(Calendar.DAY_OF_MONTH)).append(' ');
+        sb.append(MONTH_NAME[cal.get(Calendar.MONTH)]).append(' ');
+        sb.append(cal.get(Calendar.YEAR)).append(' ');
+
+        append2DigitNumber(sb, cal.get(Calendar.HOUR_OF_DAY)).append(':');
+        append2DigitNumber(sb, cal.get(Calendar.MINUTE)).append(':');
+        append2DigitNumber(sb, cal.get(Calendar.SECOND)).append(' ');
+        sb.append("GMT");
         return sb.toString();
     }
 

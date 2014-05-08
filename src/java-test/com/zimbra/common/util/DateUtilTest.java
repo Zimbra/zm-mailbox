@@ -15,12 +15,12 @@
 
 package com.zimbra.common.util;
 
-import org.junit.Assert;
-
 import java.util.Calendar;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.TimeZone;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 import com.zimbra.common.service.ServiceException;
@@ -272,6 +272,12 @@ public final class DateUtilTest {
     @Test
     public void toImapDateTime() throws Exception {
         Assert.assertEquals("31-Dec-1969 16:00:00 -0800", DateUtil.toImapDateTime(new Date(0L), TimeZone.getTimeZone("US/Pacific")));
+    }
+    
+    public void toRFC1123Date() throws Exception {
+        Calendar cal = new GregorianCalendar(TimeZone.getTimeZone("GMT"));
+        cal.setTimeInMillis(1398412488000L);
+        Assert.assertEquals(DateUtil.toRFC1123Date(cal), "Fri, 25 Apr 2014 07:54:48 GMT");
     }
 
     @Test
