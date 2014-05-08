@@ -231,7 +231,7 @@ public abstract class DavResource {
     protected void setLastModifiedDate(long ts) {
         Calendar cal = new GregorianCalendar(TimeZone.getTimeZone("GMT"));
         cal.setTimeInMillis(ts);
-        setProperty(DavElements.P_GETLASTMODIFIED, DateUtil.toRFC822Date(cal));
+        setProperty(DavElements.P_GETLASTMODIFIED, DateUtil.toRFC1123Date(cal));
     }
 
     protected void addProperty(ResourceProperty prop) {
