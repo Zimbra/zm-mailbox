@@ -231,9 +231,9 @@ public abstract class NioServer implements Server {
         if (sc.isSslEnabled()) {
             fc.addFirst("ssl", newSSLFilter());
         }
+        fc.addLast("executer", executorFilter);
         fc.addLast("logger", new NioLoggingFilter(this, false));
         fc.addLast("codec", new ProtocolCodecFilter(getProtocolCodecFactory()));
-        fc.addLast("executer", executorFilter);
         for (IoFilter filter : FILTERS.get(getClass())) { // insert custom filters
             fc.addLast(filter.getClass().getName(), filter);
         }
