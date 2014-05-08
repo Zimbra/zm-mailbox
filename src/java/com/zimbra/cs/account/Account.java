@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -15,22 +15,20 @@
 
 package com.zimbra.cs.account;
 
-import com.google.common.base.Strings;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import com.google.common.collect.Sets;
 import com.zimbra.common.account.Key;
-import com.zimbra.soap.admin.type.DataSourceType;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning.GroupMembership;
 import com.zimbra.cs.account.Provisioning.SetPasswordResult;
 import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.account.names.NameUtil;
-
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import com.zimbra.soap.admin.type.DataSourceType;
 
 /**
  * @author schemers
@@ -500,15 +498,18 @@ public class Account extends ZAttrAccount implements GroupedEntry, AliasedEntry 
     throws ServiceException {
         return DataSource.encryptData(acctId, plainPassword);
     }
-    
+
     public void cleanExpiredTokens() throws ServiceException {
     	String[] tokens = getAuthTokens();
     	for(String tk : tokens) {
-    		String szExpire = tk.substring(tk.indexOf("|")+1);
-    		Long expires = Long.parseLong(szExpire);
-    		if(System.currentTimeMillis() > expires) {
-    			removeAuthTokens(tk);
-    		}
+    	    String[] tokenParts = tk.split("\\|");
+    	    if(tokenParts.length > 0) {
+    	        String szExpire = tokenParts[1];
+    	        Long expires = Long.parseLong(szExpire);
+    	        if(System.currentTimeMillis() > expires) {
+    	            removeAuthTokens(tk);
+    	        }
+    	    }
     	}
     }
 }

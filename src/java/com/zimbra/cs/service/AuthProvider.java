@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -23,9 +23,10 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 
 import com.google.common.base.Strings;
+import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.ZimbraLog;
@@ -34,59 +35,58 @@ import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.auth.AuthMechanism.AuthMech;
-import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.cs.service.admin.AdminAccessControl;
 import com.zimbra.cs.servlet.ZimbraServlet;
 
 public abstract class AuthProvider {
-        
+
     private static Log sLog = LogFactory.getLog(AuthProvider.class);
-  
+
     // registered/installed providers
     private static Map<String, AuthProvider> registeredProviders = new HashMap<String, AuthProvider>();
-    
+
     // ordered list of enabled providers
     private static List<AuthProvider> enabledProviders = null;
-    
+
     static {
         register(new ZimbraAuthProvider());
         // register(new ZimbraOAuthProvider());
         refresh();
     }
-    
+
     public synchronized static void register(AuthProvider ap) {
         String name = ap.getName();
         logger().info("Adding auth provider: " + name + " " + ap.getClass().getName());
-            
+
         if (registeredProviders.get(name) == null) {
             registeredProviders.put(name, ap);
         } else {
-            logger().error("auth provider " + name + " already exists, not adding " + 
+            logger().error("auth provider " + name + " already exists, not adding " +
                     ap.getClass().getName());
         }
     }
 
     /**
      * refresh the enabled cache
-     * 
+     *
      * TODO, can be called from zmprov flushCache to flush the enabled cache
      */
     public static void refresh() {
         List<AuthProvider> providerList = new ArrayList<AuthProvider>();
         String[] providers = LC.zimbra_auth_provider.value().split(",");
         for (String provider : providers) {
-            
+
             /*
              * ignore zimbra and oauth auth providers, they are built-in providers.
-             * 
-             * If no external auth providers is configured, zimbra and oauth providers 
+             *
+             * If no external auth providers is configured, zimbra and oauth providers
              * will be used.
              */
             if (ZimbraAuthProvider.ZIMBRA_AUTH_PROVIDER.equals(provider) ||
                 ZimbraOAuthProvider.ZIMBRA_OAUTH_PROVIDER.equals(provider)) {
                 continue;
             }
-            
+
             provider = provider.trim();
             if (!Strings.isNullOrEmpty(provider)) {
                 AuthProvider ap = registeredProviders.get(provider);
@@ -95,105 +95,105 @@ public abstract class AuthProvider {
                 }
             }
         }
-        
-        // always add the zimbra providers if there is no provider configured. 
+
+        // always add the zimbra providers if there is no provider configured.
         if (providerList.size() == 0) {
             providerList.add(registeredProviders.get(ZimbraAuthProvider.ZIMBRA_AUTH_PROVIDER));
             // providerList.add(registeredProviders.get(ZimbraOAuthProvider.ZIMBRA_OAUTH_PROVIDER));
         }
-        
+
         setProviders(providerList);
     }
-    
+
     private static synchronized void setProviders(List<AuthProvider> providers) {
         enabledProviders = providers;
     }
-    
+
     private static synchronized List<AuthProvider> getProviders() {
         return enabledProviders;
     }
-    
+
     private String mName;
-    
+
     protected AuthProvider(String name) {
         mName = name;
     }
-    
+
     private String getName() {
         return mName;
     }
-    
+
     protected static Log logger() {
         return sLog;
     }
-    
+
     /**
      * Returns an AuthToken by auth data in http request
-     * 
+     *
      * Should never return null.
-     * Throws AuthProviderException.NO_AUTH_TOKEN if auth data for the provider is not present 
-     * Throws AuthTokenException if auth data for the provider is present but cannot be 
+     * Throws AuthProviderException.NO_AUTH_TOKEN if auth data for the provider is not present
+     * Throws AuthTokenException if auth data for the provider is present but cannot be
      * resolved into a valid AuthToken
-     * 
+     *
      * @param req
      * @param isAdmin
      * @return
      * @throws AuthTokenException
      */
-    protected abstract AuthToken authToken(HttpServletRequest req, boolean isAdminReq) 
+    protected abstract AuthToken authToken(HttpServletRequest req, boolean isAdminReq)
     throws AuthProviderException, AuthTokenException;
 
     /**
      * Returns an AuthToken by auth data in http request
-     * 
+     *
      * Should never return null.
-     * Throws AuthProviderException.NO_AUTH_TOKEN if auth data for the provider is not present 
-     * Throws AuthTokenException if auth data for the provider is present but cannot be 
+     * Throws AuthProviderException.NO_AUTH_TOKEN if auth data for the provider is not present
+     * Throws AuthTokenException if auth data for the provider is present but cannot be
      * resolved into a valid AuthToken
-     * 
+     *
      * @param soapCtxt
      * @param engineCtxt
      * @param isAdmin
-     * @return 
+     * @return
      * @throws AuthTokenException
      */
-    protected abstract AuthToken authToken(Element soapCtxt, Map engineCtxt) 
+    protected abstract AuthToken authToken(Element soapCtxt, Map engineCtxt)
     throws AuthProviderException, AuthTokenException;
-    
-   
+
+
     /**
      * Returns an AuthToken by auth data in the <authToken> element.
-     * 
+     *
      * @param authTokenElem
-     * @param acct  TODO: This may not be needed if we can get account info from the 
+     * @param acct  TODO: This may not be needed if we can get account info from the
      *              OAuth access token.
      * @return
      * @throws AuthProviderException
      * @throws AuthTokenException
      */
-    protected AuthToken authToken(Element authTokenElem, Account acct) 
+    protected AuthToken authToken(Element authTokenElem, Account acct)
     throws AuthProviderException, AuthTokenException {
         // default implementation just extracts the text and calls the authToken(String)
         // the acct parameter is ignored.
         String token = authTokenElem.getText();
         return authToken(token);
     }
-    
+
     /**
      *
      * Returns an AuthToken from an encoded String.
-     * 
+     *
      * This API is for servlets that support auth from a non-cookie channel, where it
-     * honors a String token from a specific element in the request, which is neither 
+     * honors a String token from a specific element in the request, which is neither
      * a cookie nor a SOAP context header.  e.g. a query param.
-     * 
-     * By default, an AuthProvider do not need to implement this method.  
+     *
+     * By default, an AuthProvider do not need to implement this method.
      * The default implementation is throwing AuthProviderException.NOT_SUPPORTED.
-     * 
+     *
      * Should never return null.
-     * Throws AuthProviderException.NO_SUPPORTED if this API is not supported by the auth provider 
-     * Throws AuthProviderException.NO_AUTH_TOKEN if auth data for the provider is not present 
-     * Throws AuthTokenException if auth data for the provider is present but cannot be 
+     * Throws AuthProviderException.NO_SUPPORTED if this API is not supported by the auth provider
+     * Throws AuthProviderException.NO_AUTH_TOKEN if auth data for the provider is not present
+     * Throws AuthTokenException if auth data for the provider is present but cannot be
      * resolved into a valid AuthToken
      *
      * @param encoded
@@ -204,11 +204,11 @@ public abstract class AuthProvider {
     protected AuthToken authToken(String encoded) throws AuthProviderException, AuthTokenException {
         throw AuthProviderException.NOT_SUPPORTED();
     }
-    
+
     /**
      * Returns an AuthToken from the account object.
      * Should never return null.
-     * 
+     *
      * @param acct
      * @return
      * @throws AuthProviderException
@@ -216,35 +216,35 @@ public abstract class AuthProvider {
     protected AuthToken authToken(Account acct) throws AuthProviderException {
         return authToken(acct, false, null);
     }
-    
+
     /**
      * Returns an AuthToken from the account object.
      * Should never return null.
-     * 
+     *
      * @param acct
      * @param isAdmin
-     * @param authMech 
+     * @param authMech
      * @return
      * @throws AuthProviderException
      */
-    protected AuthToken authToken(Account acct, boolean isAdmin, AuthMech authMech) 
+    protected AuthToken authToken(Account acct, boolean isAdmin, AuthMech authMech)
     throws AuthProviderException {
         if (acct == null) {
             throw AuthProviderException.NOT_SUPPORTED();
         }
-        
+
         long lifetime = isAdmin ?
-                acct.getTimeInterval(Provisioning.A_zimbraAdminAuthTokenLifetime, 
-                        AuthToken.DEFAULT_AUTH_LIFETIME * 1000) :                                    
-                acct.getTimeInterval(Provisioning.A_zimbraAuthTokenLifetime, 
+                acct.getTimeInterval(Provisioning.A_zimbraAdminAuthTokenLifetime,
+                        AuthToken.DEFAULT_AUTH_LIFETIME * 1000) :
+                acct.getTimeInterval(Provisioning.A_zimbraAuthTokenLifetime,
                         AuthToken.DEFAULT_AUTH_LIFETIME * 1000);
-        return authToken(acct, lifetime);        
+        return authToken(acct, lifetime);
     }
-    
+
     /**
      * Returns an AuthToken from the account object with specified lifetime.
      * Should never return null.
-     * 
+     *
      * @param acct
      * @param expires
      * @return
@@ -253,40 +253,40 @@ public abstract class AuthProvider {
     protected AuthToken authToken(Account acct, long expires) throws AuthProviderException {
         throw AuthProviderException.NOT_SUPPORTED();
     }
-    
+
     /**
      * Returns an AuthToken from the account object with specified expiration.
      * Should never return null.
-     * 
+     *
      * @param acct
      * @param expires
      * @param isAdmin
      * @param adminAcct
-     * 
+     *
      * @param acct account authtoken will be valid for
      * @param expires when the token expires
      * @param isAdmin true if acct is using its admin privileges
-     * @param adminAcct the admin account accessing acct's information, if this token was created by an admin. 
-     *        
+     * @param adminAcct the admin account accessing acct's information, if this token was created by an admin.
+     *
      * @return
      * @throws AuthProviderException
      */
-    protected AuthToken authToken(Account acct, long expires, boolean isAdmin, Account adminAcct) 
+    protected AuthToken authToken(Account acct, long expires, boolean isAdmin, Account adminAcct)
     throws AuthProviderException {
         throw AuthProviderException.NOT_SUPPORTED();
     }
-    
+
     /**
-     * 
+     *
      * @param req
      * @return whether http basic authentication is allowed
      */
     protected boolean allowHttpBasicAuth(HttpServletRequest req, ZimbraServlet servlet) {
         return true;
     }
-    
+
     /**
-     * 
+     *
      * @param req
      * @return whether accesskey authentication is allowed
      */
@@ -295,32 +295,32 @@ public abstract class AuthProvider {
     }
 
     /**
-     * The static getAuthToken methods go through all the providers, trying them in order 
+     * The static getAuthToken methods go through all the providers, trying them in order
      * until one returns an AuthToken.
      * Return null when there is no auth data for any of the enabled providers
      * Throw AuthTokenException if any provider in the chain throws an AuthTokenException.
-     * 
-     * Note: 1. we proceed to try the next provider if the provider throws an 
-     *          AuthProviderException that is ignorable (AuthProviderException.canIgnore()).  
+     *
+     * Note: 1. we proceed to try the next provider if the provider throws an
+     *          AuthProviderException that is ignorable (AuthProviderException.canIgnore()).
      *          for example: AuthProviderException.NO_AUTH_TOKEN, AuthProviderException.NOT_SUPPORTED.
      *
-     *       2. in all other cases, we stop processing and throws an AuthTokenException 
+     *       2. in all other cases, we stop processing and throws an AuthTokenException
      *          to our caller.
      *             In particular, when a provider:
-     *             - returns null -> it should not.  Treat it as a provider error and 
+     *             - returns null -> it should not.  Treat it as a provider error and
      *               throws AuthTokenException
-     *             - throws AuthTokenException, this means auth data is present for a 
+     *             - throws AuthTokenException, this means auth data is present for a
      *               provider but it cannot be resolved into a valid AuthToken.
      *             - Any AuthProviderException that is not ignorable.
-     * 
+     *
      */
-    
-    /** 
+
+    /**
      * @param req http request
      * @return an AuthToken object, or null if auth data is not present for any of the enabled providers
      * @throws ServiceException
      */
-    public static AuthToken getAuthToken(HttpServletRequest req, boolean isAdminReq) 
+    public static AuthToken getAuthToken(HttpServletRequest req, boolean isAdminReq)
     throws AuthTokenException {
         AuthToken at = null;
         List<AuthProvider> providers = getProviders();
@@ -345,25 +345,25 @@ public abstract class AuthProvider {
                 throw e;
             }
         }
-        
+
         // there is no auth data for any of the enabled providers
         return null;
     }
 
     /**
-     * For SOAP, we do not pass in isAdminReq, because with the current flow in SoapEngine, 
-     * at the point when the SOAP context(ZimbraSoapContext) is examined, we haven't looked 
-     * at the SOAP body yet.  Whether admin auth is required is based on the SOAP command, 
-     * which has to be extracted from the body.  ZimbraAuthProvider always retrieves the 
-     * encoded auth token from the fixed tag, so does YahooYT auth.  
+     * For SOAP, we do not pass in isAdminReq, because with the current flow in SoapEngine,
+     * at the point when the SOAP context(ZimbraSoapContext) is examined, we haven't looked
+     * at the SOAP body yet.  Whether admin auth is required is based on the SOAP command,
+     * which has to be extracted from the body.  ZimbraAuthProvider always retrieves the
+     * encoded auth token from the fixed tag, so does YahooYT auth.
      * This should be fine for now.
-     *    
+     *
      * @param soapCtxt <context> element in SOAP header
      * @param engineCtxt soap engine context
      * @return an AuthToken object, or null if auth data is not present for any of the enabled providers
      * @throws AuthTokenException
      */
-    public static AuthToken getAuthToken(Element soapCtxt, Map engineCtxt) 
+    public static AuthToken getAuthToken(Element soapCtxt, Map engineCtxt)
     throws AuthTokenException {
         AuthToken at = null;
         List<AuthProvider> providers = getProviders();
@@ -388,12 +388,12 @@ public abstract class AuthProvider {
                 throw e;
             }
         }
-        
+
         // there is no auth data for any of the enabled providers
         return null;
     }
-    
-    public static AuthToken getAuthToken(Element authTokenElem, Account acct) 
+
+    public static AuthToken getAuthToken(Element authTokenElem, Account acct)
     throws AuthTokenException {
         AuthToken at = null;
         List<AuthProvider> providers = getProviders();
@@ -418,11 +418,11 @@ public abstract class AuthProvider {
                 throw e;
             }
         }
-        
+
         // there is no auth data for any of the enabled providers
         return null;
     }
-    
+
     /**
      * Creates an AuthToken object from token string.
      *
@@ -455,12 +455,12 @@ public abstract class AuthProvider {
                 throw e;
             }
         }
-        
+
         // there is no auth data for any of the enabled providers
         logger().error("unable to get AuthToken from encoded " + encoded);
         return null;
     }
-    
+
     public static AuthToken getAuthToken(Account acct) throws AuthProviderException {
         List<AuthProvider> providers = getProviders();
         for (AuthProvider ap : providers) {
@@ -482,18 +482,18 @@ public abstract class AuthProvider {
                 } else {
                     throw e;
                 }
-            } 
+            }
         }
-        
+
         throw AuthProviderException.FAILURE("cannot get authtoken from account " + acct.getName());
     }
-    
-    public static AuthToken getAuthToken(Account acct, boolean isAdmin) 
+
+    public static AuthToken getAuthToken(Account acct, boolean isAdmin)
     throws AuthProviderException {
         return getAuthToken(acct, isAdmin, null);
     }
-    
-    public static AuthToken getAuthToken(Account acct, boolean isAdmin, AuthMech authMech) 
+
+    public static AuthToken getAuthToken(Account acct, boolean isAdmin, AuthMech authMech)
     throws AuthProviderException {
         List<AuthProvider> providers = getProviders();
         for (AuthProvider ap : providers) {
@@ -515,18 +515,18 @@ public abstract class AuthProvider {
                 } else {
                     throw e;
                 }
-            } 
+            }
         }
 
         String acctName = acct != null ? acct.getName() : "null";
         throw AuthProviderException.FAILURE("cannot get authtoken from account " + acctName);
     }
-    
+
     public static AuthToken getAdminAuthToken() throws ServiceException {
         Account acct = Provisioning.getInstance().get(AccountBy.adminName, LC.zimbra_ldap_user.value());
         return AuthProvider.getAuthToken(acct, true);
     }
-    
+
     public static AuthToken getAuthToken(Account acct, long expires) throws AuthProviderException {
         List<AuthProvider> providers = getProviders();
         for (AuthProvider ap : providers) {
@@ -548,13 +548,13 @@ public abstract class AuthProvider {
                 } else {
                     throw e;
                 }
-            } 
+            }
         }
-        
+
         throw AuthProviderException.FAILURE("cannot get authtoken from account " + acct.getName());
     }
-    
-    public static AuthToken getAuthToken(Account acct, long expires, boolean isAdmin, Account adminAcct) 
+
+    public static AuthToken getAuthToken(Account acct, long expires, boolean isAdmin, Account adminAcct)
     throws AuthProviderException {
         List<AuthProvider> providers = getProviders();
         for (AuthProvider ap : providers) {
@@ -576,12 +576,12 @@ public abstract class AuthProvider {
                 } else {
                     throw e;
                 }
-            } 
+            }
         }
-        
+
         throw AuthProviderException.FAILURE("cannot get authtoken from account " + acct.getName());
     }
-    
+
     public static boolean allowBasicAuth(HttpServletRequest req, ZimbraServlet servlet) {
         List<AuthProvider> providers = getProviders();
         for (AuthProvider ap : providers) {
@@ -591,7 +591,7 @@ public abstract class AuthProvider {
         }
         return false;
     }
-    
+
     public static boolean allowAccessKeyAuth(HttpServletRequest req, ZimbraServlet servlet) {
         List<AuthProvider> providers = getProviders();
         for (AuthProvider ap : providers) {
@@ -601,15 +601,15 @@ public abstract class AuthProvider {
         }
         return false;
     }
-    
-    public static Account validateAuthToken(Provisioning prov, AuthToken at, 
+
+    public static Account validateAuthToken(Provisioning prov, AuthToken at,
             boolean addToLoggingContext) throws ServiceException {
         try {
             return validateAuthTokenInternal(prov, at, addToLoggingContext);
         } catch (ServiceException e) {
             if (ServiceException.AUTH_EXPIRED.equals(e.getCode())) {
                 // we may not want to expose the details to malicious caller
-                // debug log the message and throw a vanilla AUTH_EXPIRED 
+                // debug log the message and throw a vanilla AUTH_EXPIRED
                 ZimbraLog.account.debug("auth token validation failed", e);
                 throw ServiceException.AUTH_EXPIRED();
             } else {
@@ -618,68 +618,70 @@ public abstract class AuthProvider {
             }
         }
     }
-    
-    private static Account validateAuthTokenInternal(Provisioning prov, AuthToken at, 
+
+    private static Account validateAuthTokenInternal(Provisioning prov, AuthToken at,
             boolean addToLoggingContext) throws ServiceException {
         if (prov == null) {
             prov = Provisioning.getInstance();
         }
-        
+
         if (at.isExpired()) {
-        	try {
-				at.deRegister();
-			} catch (AuthTokenException e) {
-				ZimbraLog.account.error(e);
-			}
+            if(at.isRegistered()) {
+            	try {
+    				at.deRegister();
+    			} catch (AuthTokenException e) {
+    				ZimbraLog.account.error(e);
+    			}
+            }
             throw ServiceException.AUTH_EXPIRED();
         }
-        
+
         // make sure that the authenticated account is still active and has not been deleted since the last request
         String acctId = at.getAccountId();
         Account acct = prov.get(AccountBy.id, acctId, at);
-        
+
         if (acct == null) {
             throw ServiceException.AUTH_EXPIRED("account " + acctId + " not found");
         }
-        
+
         if (addToLoggingContext) {
             ZimbraLog.addAccountNameToContext(acct.getName());
         }
-        
+
         if (!acct.checkAuthTokenValidityValue(at)) {
             throw ServiceException.AUTH_EXPIRED("invalid validity value");
         }
-        
+
         boolean delegatedAuth = at.isDelegatedAuth();
         String acctStatus = acct.getAccountStatus(prov);
-        
+
         if (!delegatedAuth && !Provisioning.ACCOUNT_STATUS_ACTIVE.equals(acctStatus)) {
             throw ServiceException.AUTH_EXPIRED("account not active");
         }
 
         // if using delegated auth, make sure the "admin" is really an active admin account
         if (delegatedAuth) {
-            
+
             // note that delegated auth allows access unless the account's in maintenance mode
             if (Provisioning.ACCOUNT_STATUS_MAINTENANCE.equals(acctStatus)) {
                 throw ServiceException.AUTH_EXPIRED("delegated account in MAINTENANCE mode");
             }
-            
+
             Account admin = prov.get(AccountBy.id, at.getAdminAccountId());
             if (admin == null) {
                 throw ServiceException.AUTH_EXPIRED("delegating account " + at.getAdminAccountId() + " not found");
             }
-            
+
             boolean isAdmin = AdminAccessControl.isAdequateAdminAccount(admin);
             if (!isAdmin) {
                 throw ServiceException.PERM_DENIED("not an admin for delegated auth");
             }
-            
+
             if (!Provisioning.ACCOUNT_STATUS_ACTIVE.equals(admin.getAccountStatus(prov))) {
                 throw ServiceException.AUTH_EXPIRED("delegating account is not active");
             }
         }
-        
+
         return acct;
     }
 
