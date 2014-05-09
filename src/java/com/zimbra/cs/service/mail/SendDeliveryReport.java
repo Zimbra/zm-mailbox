@@ -151,7 +151,7 @@ public class SendDeliveryReport extends MailDocumentHandler {
         }
     }
 
-    static String generateTextPart(Account owner, MimeMessage mm, Locale lc) throws MessagingException {
+    public static String generateTextPart(Account owner, MimeMessage mm, Locale lc) throws MessagingException {
         String subject = Mime.getSubject(mm);
 
         String dateStr = "???";
@@ -165,7 +165,7 @@ public class SendDeliveryReport extends MailDocumentHandler {
         return L10nUtil.getMessage(MsgKey.readReceiptNotification, lc, dateStr, owner.getName(), subject);
     }
 
-    static String generateReport(Account owner, MimeMessage mm, boolean automatic, String requestHost, String userAgent)
+    public static String generateReport(Account owner, MimeMessage mm, boolean automatic, String requestHost, String userAgent)
     throws MessagingException {
         StringBuilder mdn = new StringBuilder();
 
