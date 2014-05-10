@@ -982,4 +982,8 @@ public class StringUtil {
             return true;
         return false;
     }
+
+    public static String nonNull(String s) {
+        return s == null ? "" : s;
+    }
 }

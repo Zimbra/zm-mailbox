@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -115,6 +115,9 @@ public abstract class SoapTransport {
         mTargetAcctName = acctName;
     }
 
+    public String getTargetAcctName() {
+    	return mTargetAcctName;
+    }
     /**
      * @return Zimbra context (&lt;context xmlns="urn:zimbra"&gt;) from last invoke, if there was one present.
      */
@@ -266,7 +269,7 @@ public abstract class SoapTransport {
         String targetName = targetId == null ? mTargetAcctName : null;
 
         Element context = null;
-        if (generateContextHeader()) { 
+        if (generateContextHeader()) {
             context = SoapUtil.toCtxt(proto, mAuthToken);
             if (noSession) {
                 SoapUtil.disableNotificationOnCtxt(context);
@@ -279,7 +282,7 @@ public abstract class SoapTransport {
             if (responseProto != proto) {
                 SoapUtil.addResponseProtocolToCtxt(context, responseProto);
             }
-    
+
             String via = viaHolder.get().peek();
             if (via != null) {
                 context.addUniqueElement(HeaderConstants.E_VIA).setText(via);

@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011, 2012, 2013 Zimbra Software, LLC.
+ * Copyright (C) 2011, 2012, 2013, 2014 Zimbra Software, LLC.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
@@ -39,6 +39,10 @@ public final class SyncAdminConstants {
     public static final String E_SUSPEND_DEVICE_RESPONSE = "SuspendDeviceResponse";
     public static final String E_RESUME_DEVICE_REQUEST = "ResumeDeviceRequest";
     public static final String E_RESUME_DEVICE_RESPONSE = "ResumeDeviceResponse";
+    public static final String E_GET_SYNC_STATE_REQUEST = "GetSyncStateRequest";
+    public static final String E_GET_SYNC_STATE_RESPONSE = "GetSyncStateResponse";
+    public static final String E_REMOVE_STALE_DEVICE_METADATA_REQUEST = "RemoveStaleDeviceMetadataRequest";
+    public static final String E_REMOVE_STALE_DEVICE_METADATA_RESPONSE = "RemoveStaleDeviceMetadataResponse";
 
     public static final QName GET_DEVICES_COUNT_REQUEST = QName.get(E_GET_DEVICES_COUNT_REQUEST, NAMESPACE);
     public static final QName GET_DEVICES_COUNT_RESPONSE = QName.get(E_GET_DEVICES_COUNT_RESPONSE, NAMESPACE);
@@ -58,9 +62,14 @@ public final class SyncAdminConstants {
     public static final QName SUSPEND_DEVICE_RESPONSE = QName.get(E_SUSPEND_DEVICE_RESPONSE, NAMESPACE);
     public static final QName RESUME_DEVICE_REQUEST = QName.get(E_RESUME_DEVICE_REQUEST, NAMESPACE);
     public static final QName RESUME_DEVICE_RESPONSE = QName.get(E_RESUME_DEVICE_RESPONSE, NAMESPACE);
+    public static final QName GET_SYNC_STATE_REQUEST = QName.get(E_GET_SYNC_STATE_REQUEST, NAMESPACE);
+    public static final QName GET_SYNC_STATE_RESPONSE = QName.get(E_GET_SYNC_STATE_RESPONSE, NAMESPACE);
+    public static final QName REMOVE_STALE_DEVICE_METADATA_REQUEST = QName.get(E_REMOVE_STALE_DEVICE_METADATA_REQUEST, NAMESPACE);
+    public static final QName REMOVE_STALE_DEVICE_METADATA_RESPONSE = QName.get(E_REMOVE_STALE_DEVICE_METADATA_RESPONSE, NAMESPACE);
 
     public static final String E_LAST_USED_DATE = "lastUsedDate";
 
     public static final String A_COUNT = "count";
     public static final String A_DATE = "date";
+    public static final String A_LAST_USED_DATE_OLDER_THAN = "lastUsedDateOlderThan";
 }

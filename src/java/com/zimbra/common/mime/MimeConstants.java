@@ -27,8 +27,10 @@ public class MimeConstants {
     public static final String CT_TEXT_VCARD_LEGACY = "text/x-vcard";
     public static final String CT_TEXT_VCARD_LEGACY2 = "text/directory";
     public static final String CT_TEXT_XML = "text/xml";
+    public static final String CT_TEXT_RFC822_HEADERS = "text/rfc822-headers";
     public static final String CT_TEXT_XML_LEGACY = "application/xml";
     public static final String CT_MESSAGE_RFC822 = "message/rfc822";
+    public static final String CT_MESSAGE_DELIVERY_STATUS = "message/delivery-status";
     public static final String CT_APPLICATION_BINARY = "application/binary";
     public static final String CT_APPLICATION_JSON = "application/json";
     public static final String CT_APPLICATION_MSWORD = "application/msword";
@@ -70,6 +72,7 @@ public class MimeConstants {
     public static final String CT_XML_WILD = "xml/.*";
     public static final String CT_DEFAULT = CT_TEXT_PLAIN;
     public static final String CT_APPLEFILE = "application/applefile";
+    public static final String CT_APPLICATION_ZIP = "application/zip";
 
     // encodings
     public static final String ET_7BIT = "7bit";

@@ -535,6 +535,18 @@ public class FileUtil {
         }
         return filename.substring(lastDot + 1, filename.length());
     }
+    
+    /**
+     * Returns the total size of all files within a folder hierarchy.
+     */
+    public static long getTotalFileSizesRecursively(File dir) throws IOException {
+        List<File> files = listFilesRecursively(dir);
+        long bytes = 0;
+        for (File file: files) {
+            bytes += file.length();
+        }
+        return bytes;
+    }
 
     public static void rename(File src, File dst) throws IOException {
         if (src.renameTo(dst))
