@@ -731,10 +731,16 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
                         Filter.createORFilter(filters)));
     }
 
-
     /*
      * dynamic group
      */
+    @Override
+    public ZLdapFilter allDynamicGroups() {
+        return new UBIDLdapFilter(
+                FilterId.ALL_DYNAMIC_GROUPS,
+                FILTER_ALL_DYNAMIC_GROUPS);
+    }
+
     @Override
     public ZLdapFilter dynamicGroupById(String id) {
         return new UBIDLdapFilter(

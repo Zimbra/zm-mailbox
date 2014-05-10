@@ -25,6 +25,7 @@ import java.util.Set;
 import javax.mail.internet.InternetAddress;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Objects;
 import com.google.common.collect.Lists;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
@@ -681,6 +682,15 @@ public abstract class Provisioning extends ZAttrProvisioning {
         public boolean isAdminGroup() {
             return mIsAdminGroup;
         }
+
+        @Override
+        public String toString() {
+            return Objects.toStringHelper(this)
+                        .add("mId", mId)
+                        .add("mIsAdminGroup", mIsAdminGroup)
+                        .add("mIsDynamicGroup", mIsDynamicGroup)
+                        .toString();
+        }
     }
 
     /**
@@ -747,6 +757,14 @@ public abstract class Provisioning extends ZAttrProvisioning {
                 copy.append(mMemberOf.get(i), mGroupIds.get(i));
             }
             return copy;
+        }
+
+        @Override
+        public String toString() {
+            return Objects.toStringHelper(this)
+                        .add("mMemberOf", mMemberOf)
+                        .add("mGroupIds", mGroupIds)
+                        .toString();
         }
     }
 
@@ -1554,6 +1572,9 @@ public abstract class Provisioning extends ZAttrProvisioning {
         throw ServiceException.UNSUPPORTED();
     }
 
+    /**
+     * Get all static distribution lists and dynamic groups
+     */
     public List getAllGroups(Domain domain) throws ServiceException {
         throw ServiceException.UNSUPPORTED();
     }

@@ -36,6 +36,8 @@ import java.util.TreeSet;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Objects;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -1536,7 +1538,7 @@ public class LdapProvisioning extends LdapProv {
         searchDirectoryInternal(options, visitor);
     }
 
-    private List<?> searchDirectoryInternal(SearchDirectoryOptions options)
+    protected List<?> searchDirectoryInternal(SearchDirectoryOptions options)
     throws ServiceException{
         return searchDirectoryInternal(options, null);
     }
@@ -4499,6 +4501,9 @@ public class LdapProvisioning extends LdapProv {
         return new GroupMembership(groups, groupIds);
     }
 
+    /**
+     * @return distribution lists and both custom and normal dynamic groups the account is a member of
+     */
     @Override
     public GroupMembership getGroupMembership(Account acct, boolean adminGroupsOnly)
     throws ServiceException {
@@ -4510,64 +4515,15 @@ public class LdapProvisioning extends LdapProv {
         if (cacheableGroups == null) {
             cacheableGroups = setupGroupedEntryCacheData(acct, adminGroupsOnly);
         }
-        GroupMembershipAtTime membersAtTime =
-                (GroupMembershipAtTime)acct.getCachedData(EntryCacheDataKey.GROUPEDENTRY_MEMBERSHIP_BY_CUSTOM_URL);
-        GroupMembership customUrlDefinedGroups = null;
-        boolean recalc = true;
-        if (membersAtTime != null) {
-            // Account objects time to live in the accounts cache is 15 minutes.  We could choose to accept that
-            // custom URL based groups can be up to that much out of date, however, this mechanism allows
-            // us to have a smaller tolerance for inaccuracy.
-            long now = System.currentTimeMillis();
-            if (now < membersAtTime.getCorrectAtTime() +
-                    LC.ldap_cache_custom_dynamic_group_membership_maxage_ms.intValue()) {
-                recalc = false;
-                customUrlDefinedGroups = membersAtTime.getMembership();
-            }
-        }
-        if (recalc) {
-            customUrlDefinedGroups = setupGroupsDefinedByCustomURL(acct);
-        }
-        if (adminGroupsOnly) {
-            customUrlDefinedGroups = getAdminAclGroups(customUrlDefinedGroups);
-        }
+        GroupMembership customUrlDefinedGroups = getCustomDynamicGroupMembership(acct, adminGroupsOnly);
         GroupMembership groups = cacheableGroups.clone();
         return groups.mergeFrom(customUrlDefinedGroups);
     }
 
-    private GroupMembership setupGroupsDefinedByCustomURL(Account acct)
+    @VisibleForTesting
+    public GroupMembership getCustomDynamicGroupMembership(Account acct, boolean adminGroupsOnly)
     throws ServiceException {
-        GroupMembership groups = new GroupMembership();
-        for (Domain domain : getAllDomains()) {
-            groups = addGroupsDefinedByCustomURL(acct, domain, groups);
-        }
-        acct.setCachedData(EntryCacheDataKey.GROUPEDENTRY_MEMBERSHIP_BY_CUSTOM_URL,
-                new GroupMembershipAtTime(groups, System.currentTimeMillis()));
-        return groups;
-    }
-
-    private GroupMembership addGroupsDefinedByCustomURL(Account acct, Domain domain, GroupMembership groups)
-    throws ServiceException {
-        List dls = getAllGroups(domain);
-        for (Iterator it = dls.iterator(); it.hasNext(); ) {
-            Group dl = (Group) it.next();
-            if (dl instanceof DynamicGroup) {
-                DynamicGroup dynGroup = (DynamicGroup) dl;
-                if (dynGroup.isMembershipDefinedByCustomURL()) {
-                    String[] allMembers = dynGroup.getAllMembers(true);
-                    for (String member : allMembers) {
-                        // Assumption is that member cannot be a group.  Doesn't seem too unreasonable as
-                        // you aren't allowed to add a group as a member of an classic dynamic group.
-                        if (member.equals(acct.getName())) {
-                            groups.append(new MemberOf(dynGroup.getId(), dynGroup.isIsAdminGroup(), true),
-                                    dynGroup.getId());
-                            break;
-                        }
-                    }
-                }
-            }
-        }
-        return groups;
+        return CustomDynamicGroupMembershipCache.getInstance(this).get(acct, adminGroupsOnly);
     }
 
     private GroupMembership setupGroupedEntryCacheData(Account acct, boolean adminGroupsOnly)
@@ -5618,11 +5574,11 @@ public class LdapProvisioning extends LdapProv {
         return getZimlet(name, zlc, false);
     }
 
-    private Zimlet getZimlet(String name, ZLdapContext initZlc, boolean useCache)
+    private Zimlet getZimlet(String name, ZLdapContext initZlc, boolean useZimletCache)
     throws ServiceException {
 
         LdapZimlet zimlet = null;
-        if (useCache) {
+        if (useZimletCache) {
             zimlet = zimletCache.getByName(name);
         }
 
@@ -5635,7 +5591,7 @@ public class LdapProvisioning extends LdapProv {
             ZAttributes attrs = helper.getAttributes(
                     initZlc, LdapServerType.REPLICA, LdapUsage.GET_ZIMLET, dn, null);
             zimlet = new LdapZimlet(dn, attrs, this);
-            if (useCache) {
+            if (useZimletCache) {
                 ZimletUtil.reloadZimlet(name);
                 zimletCache.put(zimlet);  // put LdapZimlet into the cache after successful ZimletUtil.reloadZimlet()
             }
@@ -6424,7 +6380,7 @@ public class LdapProvisioning extends LdapProv {
 
         @Override
         public void setHasMoreResult(boolean more) {
-            this.hasMore = hasMore;
+            this.hasMore = more;
         }
 
         @Override
@@ -6820,8 +6776,8 @@ public class LdapProvisioning extends LdapProv {
         acct.setCachedData(EntryCacheDataKey.ACCOUNT_DIRECT_DLS, null);
         acct.setCachedData(EntryCacheDataKey.GROUPEDENTRY_MEMBERSHIP, null);
         acct.setCachedData(EntryCacheDataKey.GROUPEDENTRY_MEMBERSHIP_ADMINS_ONLY, null);
-        acct.setCachedData(EntryCacheDataKey.GROUPEDENTRY_MEMBERSHIP_BY_CUSTOM_URL, null);
         acct.setCachedData(EntryCacheDataKey.GROUPEDENTRY_DIRECT_GROUPIDS.getKeyName(), null);
+        CustomDynamicGroupMembershipCache.getInstance(this).clearCache();
     }
 
     private class AddrsOfEntry {
@@ -8791,6 +8747,9 @@ public class LdapProvisioning extends LdapProv {
         return group;
     }
 
+    /**
+     * Get all static distribution lists and dynamic groups
+     */
     @SuppressWarnings("unchecked")
     @Override
     public List getAllGroups(Domain domain) throws ServiceException {
@@ -8802,6 +8761,151 @@ public class LdapProvisioning extends LdapProv {
         List<NamedEntry> groups = (List<NamedEntry>) searchDirectoryInternal(searchOpts);
 
         return groups;
+    }
+
+    /**
+     * Computing which dynamic groups with custom memberURL we are a member of is an expensive
+     * operation involving searching for all dynamic groups and then scanning their member lists
+     *
+     * An alternative approach that was considered was to construct an LDAP query to only return
+     * dynamic groups which contain a particular member, but currently this isn't possible.
+     * Although membership info is included in entries returned from a search, that is filled in by
+     * the "dynlist overlay" (see man 5 slapo-dynlist) AFTER the query.
+     *
+     * This class caches the inverse relationship - i.e. members to lists.
+     *
+     * As the same search query would be used for all accounts that need this information, it saves
+     * on the number of LDAP queries if we can gather the info for several of them at the same time.
+     */
+    private static class CustomDynamicGroupMembershipCache {
+
+        public static class CustomGroupMembership {
+            public List<String> groupIds = Lists.newArrayList();    // list of group ids
+            public GroupMembership addTo(GroupMembership membership, boolean isAdminGroup) {
+                for (String id : groupIds) {
+                    membership.append(new MemberOf(id, isAdminGroup, true), id);
+                }
+                return membership;
+            }
+
+            @Override
+            public String toString() {
+                return Objects.toStringHelper(this).add("groupIds", groupIds) .toString();
+            }
+        }
+
+        private static volatile CustomDynamicGroupMembershipCache instance = null;
+        private Map<String, CustomGroupMembership> adminGroupCache = null;
+        private Map<String, CustomGroupMembership> nonAdminGroupCache = null;
+        Long updateTime = -1L;
+        LdapProvisioning prov;
+
+        private CustomDynamicGroupMembershipCache(LdapProvisioning prov) {
+            this.prov = prov;
+        }
+
+        public static CustomDynamicGroupMembershipCache getInstance(LdapProvisioning prov) {
+            if (instance == null) {
+                synchronized (CustomDynamicGroupMembershipCache.class) {
+                    if (instance == null) {
+                        instance = new CustomDynamicGroupMembershipCache(prov);
+                    }
+                }
+            }
+            return instance;
+        }
+
+        public synchronized void clearCache() {
+            Long updateTime = -1L;
+            adminGroupCache = null;
+            nonAdminGroupCache = null;
+        }
+
+        public synchronized GroupMembership get(Account acct, boolean adminGroupsOnly)
+        throws ServiceException {
+            long now = System.currentTimeMillis();
+            if ((updateTime == -1L) || (now > updateTime +
+                    LC.ldap_cache_custom_dynamic_group_membership_maxage_ms.intValue())) {
+                populateCustomDynamicGroupCache();
+            }
+            CustomGroupMembership cgAdmin = adminGroupCache.get(acct.getName());
+            GroupMembership membership = new GroupMembership();
+            if (cgAdmin != null) {
+                cgAdmin.addTo(membership, true);
+            }
+            if (!adminGroupsOnly) {
+                CustomGroupMembership cgNonAdmin = nonAdminGroupCache.get(acct.getName());
+                if (cgNonAdmin != null) {
+                    cgNonAdmin.addTo(membership, false);
+                }
+            }
+            return membership;
+        }
+
+        private void populateCustomDynamicGroupCache()
+        throws ServiceException {
+            adminGroupCache = Maps.newHashMap();
+            nonAdminGroupCache = Maps.newHashMap();
+            for (Domain domain : prov.getAllDomains()) {
+                updateCacheForDomain(domain);
+            }
+            updateTime = System.currentTimeMillis();
+        }
+
+        private void updateCacheForDomain(Domain domain)
+        throws ServiceException {
+            List<DynamicGroup> groups = getCustomGroups(domain);
+            for (DynamicGroup grp : groups) {
+                updateCacheForGroup(grp);
+            }
+            updateTime = System.currentTimeMillis();
+        }
+
+        private void updateCacheForGroup(DynamicGroup grp)
+        throws ServiceException {
+            String[] allMembers = grp.getAllMembers(true);
+            CustomGroupMembership membership;
+            for (String member : allMembers) {
+                if (grp.isIsAdminGroup()) {
+                    membership = adminGroupCache.get(member);
+                    if (membership == null) {
+                        membership = new CustomGroupMembership();
+                        adminGroupCache.put(member, membership);
+                    }
+                } else {
+                    membership = nonAdminGroupCache.get(member);
+                    if (membership == null) {
+                        membership = new CustomGroupMembership();
+                        nonAdminGroupCache.put(member, membership);
+                    }
+                }
+                membership.groupIds.add(grp.getId());
+            }
+        }
+
+        /**
+         * @return list of all dynamic groups in a given domain whose membership is defined by a custom URL.
+         *         Empty if there are no groups
+         */
+        private List<DynamicGroup> getCustomGroups(Domain domain) throws ServiceException {
+            SearchDirectoryOptions searchOpts = new SearchDirectoryOptions(domain);
+            searchOpts.setFilter(ZLdapFilterFactory.getInstance().allDynamicGroups());
+            searchOpts.setTypes(ObjectType.dynamicgroups);
+            searchOpts.setSortOpt(SortOpt.SORT_ASCENDING);
+            List<NamedEntry> namedEntries = (List<NamedEntry>) prov.searchDirectoryInternal(searchOpts);
+            List<DynamicGroup> groups = Lists.newArrayList();
+            if (namedEntries != null) {
+                for (NamedEntry ne : namedEntries) {
+                    if (ne instanceof DynamicGroup) {
+                        DynamicGroup dynGroup = (DynamicGroup) ne;
+                        if (dynGroup.isMembershipDefinedByCustomURL()) {
+                            groups.add(dynGroup);
+                        }
+                    }
+                }
+            }
+            return Collections.unmodifiableList(groups);
+        }
     }
 
     @Override
