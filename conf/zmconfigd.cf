@@ -316,7 +316,7 @@ SECTION zimbraAdmin
     REWRITE mailboxd/modules/setuid.mod.in mailboxd/modules/setuid.mod
     REWRITE mailboxd/start.d/setuid.ini.in mailboxd/start.d/setuid.ini
     RESTART mailboxd
-  
+
 SECTION proxy
 	LOCAL ldap_url
 	VAR getAllMemcachedServers
