@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -106,6 +106,7 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
         DOMAIN_LOCKED_FOR_AUTO_PROVISION(SINGLETON.domainLockedForEagerAutoProvision()),
         DOMAINS_ON_UCSERVICE(SINGLETON.domainsOnUCService("{UCSERVICE-ID}")),
 
+        ALL_DYNAMIC_GROUPS(SINGLETON.allDynamicGroups()),
         DYNAMIC_GROUP_BY_ID(SINGLETON.dynamicGroupById("{DYNAMIC-GROUP-ID}")),
         DYNAMIC_GROUP_BY_NAME(SINGLETON.dynamicGroupByName("{DYNAMIC-GROUP-NAME}")),
         DYNAMIC_GROUP_DYNAMIC_UNIT_BY_MAIL_ADDR(SINGLETON.dynamicGroupDynamicUnitByMailAddr("{ADDR}")),
@@ -168,7 +169,7 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
 
         TODO("TODO");
 
-        private String template;
+        private final String template;
 
         private FilterId(ZLdapFilter template) {
             this(template.toFilterString());
@@ -376,6 +377,7 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
     /*
      * dynamic group
      */
+    public abstract ZLdapFilter allDynamicGroups();
     public abstract ZLdapFilter dynamicGroupById(String id);
     public abstract ZLdapFilter dynamicGroupByName(String name);
     public abstract ZLdapFilter dynamicGroupDynamicUnitByMailAddr(String mailAddr);

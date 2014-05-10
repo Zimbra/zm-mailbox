@@ -49,7 +49,6 @@ public enum EntryCacheDataKey {
     GROUPEDENTRY_DIRECT_GROUPIDS,
     GROUPEDENTRY_MEMBERSHIP,                 /* excludes entries by custom URL */
     GROUPEDENTRY_MEMBERSHIP_ADMINS_ONLY,     /* excludes entries by custom URL */
-    GROUPEDENTRY_MEMBERSHIP_BY_CUSTOM_URL,
     GROUPEDENTRY_EXTERNAL_GROUP_DNS,
 
     /*
