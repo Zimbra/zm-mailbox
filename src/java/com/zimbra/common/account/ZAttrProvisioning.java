@@ -2503,15 +2503,6 @@ public class ZAttrProvisioning {
     public static final String A_zimbraAmavisEnableDKIMVerification = "zimbraAmavisEnableDKIMVerification";
 
     /**
-     * Whether or not Amavis disclaimers should only be attached to emails
-     * going to an external delivery domain. Defaults to FALSE
-     *
-     * @since ZCS 8.5.0
-     */
-    @ZAttr(id=1577)
-    public static final String A_zimbraAmavisExternalDisclaimerOnly = "zimbraAmavisExternalDisclaimerOnly";
-
-    /**
      * Amavis final destination for Spam. Default is to discard it
      *
      * @since ZCS 8.5.0
@@ -2543,6 +2534,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1464)
     public static final String A_zimbraAmavisOriginatingBypassSA = "zimbraAmavisOriginatingBypassSA";
+
+    /**
+     * Whether or not Amavis disclaimers should only be attached to outbound
+     * emails. Defaults to FALSE (Always attach a disclaimer)
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1577)
+    public static final String A_zimbraAmavisOutboundDisclaimersOnly = "zimbraAmavisOutboundDisclaimersOnly";
 
     /**
      * When a virus is detected quarantine message to this account
