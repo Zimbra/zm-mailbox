@@ -578,7 +578,8 @@
        <Item>org.eclipse.jetty.plus.webapp.PlusConfiguration</Item>
        <Item>org.eclipse.jetty.webapp.JettyWebXmlConfiguration</Item>
     </Array>
-
+    
+    <!-- SERVICEWEBAPPBEGIN %%comment SERVICE:mailbox,-->%%
     <New id="service" class="org.eclipse.jetty.webapp.WebAppContext">
       <Arg><Ref id="Contexts"/></Arg>
       <Arg><SystemProperty name="jetty.home" default="."/>/webapps/service</Arg>
@@ -597,6 +598,9 @@
 		<Arg>.*/.*jsp-api-[^/]*\.jar$|.*/.*jsp-[^/]*\.jar$|.*/.*taglibs[^/]*\.jar$</Arg>
       </Call> 
     </New>
+    %%comment SERVICE:mailbox,<!--%% SERVICEWEBAPPEND -->
+    
+    <!-- ZIMBRAWEBAPPBEGIN %%comment SERVICE:zimbra,-->%%
     <New id="zimbra" class="org.eclipse.jetty.webapp.WebAppContext">
       <Arg><Ref id="Contexts"/></Arg>
       <Arg><SystemProperty name="jetty.home" default="."/>/webapps/zimbra</Arg>
@@ -623,7 +627,9 @@
 		<Arg>.*/.*jsp-api-[^/]*\.jar$|.*/.*jsp-[^/]*\.jar$|.*/.*taglibs[^/]*\.jar$</Arg>
       </Call>  
     </New>
+    %%comment SERVICE:zimbra,<!--%% ZIMBRAWEBAPPEND -->
 
+    <!-- ZIMBRAADMINWEBAPPBEGIN %%comment SERVICE:zimbraAdmin,-->%%
     <New id="zimbraAdmin" class="org.eclipse.jetty.webapp.WebAppContext">
       <Arg><Ref id="Contexts"/></Arg>
       <Arg><SystemProperty name="jetty.home" default="."/>/webapps/zimbraAdmin</Arg>
@@ -650,6 +656,7 @@
 		<Arg>.*/.*jsp-api-[^/]*\.jar$|.*/.*jsp-[^/]*\.jar$|.*/.*taglibs[^/]*\.jar$</Arg>
       </Call>
     </New>
+    %%comment SERVICE:zimbraAdmin,<!--%% ZIMBRAADMINWEBAPPEND -->
     
     <New id="zimlet" class="org.eclipse.jetty.webapp.WebAppContext">
       <Arg><Ref id="Contexts"/></Arg>
