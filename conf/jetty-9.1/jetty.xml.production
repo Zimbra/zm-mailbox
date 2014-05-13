@@ -579,7 +579,7 @@
        <Item>org.eclipse.jetty.webapp.JettyWebXmlConfiguration</Item>
     </Array>
     
-    <!-- SERVICEWEBAPPBEGIN %%comment SERVICE:mailbox,-->%%
+    <!-- SERVICEWEBAPPBEGIN %%comment SERVICE:service,-->%%
     <New id="service" class="org.eclipse.jetty.webapp.WebAppContext">
       <Arg><Ref id="Contexts"/></Arg>
       <Arg><SystemProperty name="jetty.home" default="."/>/webapps/service</Arg>
@@ -598,7 +598,7 @@
 		<Arg>.*/.*jsp-api-[^/]*\.jar$|.*/.*jsp-[^/]*\.jar$|.*/.*taglibs[^/]*\.jar$</Arg>
       </Call> 
     </New>
-    %%comment SERVICE:mailbox,<!--%% SERVICEWEBAPPEND -->
+    %%comment SERVICE:service,<!--%% SERVICEWEBAPPEND -->
     
     <!-- ZIMBRAWEBAPPBEGIN %%comment SERVICE:zimbra,-->%%
     <New id="zimbra" class="org.eclipse.jetty.webapp.WebAppContext">
