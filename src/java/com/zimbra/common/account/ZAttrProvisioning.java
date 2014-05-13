@@ -3726,6 +3726,23 @@ public class ZAttrProvisioning {
     public static final String A_zimbraChildVisibleAccount = "zimbraChildVisibleAccount";
 
     /**
+     * IP Address/hostname for ClamAV to bind to for attachment scanning.
+     * Default is localhost
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1619)
+    public static final String A_zimbraClamAVBindAddress = "zimbraClamAVBindAddress";
+
+    /**
+     * Port to bind to for attachment scanning. Default is 3310
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1620)
+    public static final String A_zimbraClamAVListenPort = "zimbraClamAVListenPort";
+
+    /**
      * Maximum number of ClamAV servers to run. Default is 10
      *
      * @since ZCS 8.5.0
