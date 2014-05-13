@@ -8081,6 +8081,155 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * IP Address/hostname for ClamAV to bind to for attachment scanning.
+     * Default is localhost
+     *
+     * @return zimbraClamAVBindAddress, or "localhost" if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1619)
+    public String getClamAVBindAddress() {
+        return getAttr(Provisioning.A_zimbraClamAVBindAddress, "localhost");
+    }
+
+    /**
+     * IP Address/hostname for ClamAV to bind to for attachment scanning.
+     * Default is localhost
+     *
+     * @param zimbraClamAVBindAddress new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1619)
+    public void setClamAVBindAddress(String zimbraClamAVBindAddress) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraClamAVBindAddress, zimbraClamAVBindAddress);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * IP Address/hostname for ClamAV to bind to for attachment scanning.
+     * Default is localhost
+     *
+     * @param zimbraClamAVBindAddress new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1619)
+    public Map<String,Object> setClamAVBindAddress(String zimbraClamAVBindAddress, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraClamAVBindAddress, zimbraClamAVBindAddress);
+        return attrs;
+    }
+
+    /**
+     * IP Address/hostname for ClamAV to bind to for attachment scanning.
+     * Default is localhost
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1619)
+    public void unsetClamAVBindAddress() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraClamAVBindAddress, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * IP Address/hostname for ClamAV to bind to for attachment scanning.
+     * Default is localhost
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1619)
+    public Map<String,Object> unsetClamAVBindAddress(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraClamAVBindAddress, "");
+        return attrs;
+    }
+
+    /**
+     * Port to bind to for attachment scanning. Default is 3310
+     *
+     * @return zimbraClamAVListenPort, or 3310 if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1620)
+    public int getClamAVListenPort() {
+        return getIntAttr(Provisioning.A_zimbraClamAVListenPort, 3310);
+    }
+
+    /**
+     * Port to bind to for attachment scanning. Default is 3310
+     *
+     * @param zimbraClamAVListenPort new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1620)
+    public void setClamAVListenPort(int zimbraClamAVListenPort) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraClamAVListenPort, Integer.toString(zimbraClamAVListenPort));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Port to bind to for attachment scanning. Default is 3310
+     *
+     * @param zimbraClamAVListenPort new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1620)
+    public Map<String,Object> setClamAVListenPort(int zimbraClamAVListenPort, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraClamAVListenPort, Integer.toString(zimbraClamAVListenPort));
+        return attrs;
+    }
+
+    /**
+     * Port to bind to for attachment scanning. Default is 3310
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1620)
+    public void unsetClamAVListenPort() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraClamAVListenPort, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Port to bind to for attachment scanning. Default is 3310
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1620)
+    public Map<String,Object> unsetClamAVListenPort(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraClamAVListenPort, "");
+        return attrs;
+    }
+
+    /**
      * Maximum number of ClamAV servers to run. Default is 10
      *
      * @return zimbraClamAVMaxThreads, or 10 if unset

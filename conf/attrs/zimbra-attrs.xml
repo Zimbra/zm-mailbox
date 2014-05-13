@@ -8108,4 +8108,14 @@ TODO: delete them permanently from here
         holds the list of failed logins</desc>
 </attr>
 
+<attr id="1619" name="zimbraClamAVBindAddress" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mta" since="8.5.0">
+  <globalConfigValue>localhost</globalConfigValue>
+  <desc>IP Address/hostname for ClamAV to bind to for attachment scanning.  Default is localhost</desc>
+</attr>
+
+<attr id="1620" name="zimbraClamAVListenPort" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mta" since="8.5.0">
+  <globalConfigValue>3310</globalConfigValue>
+  <desc>Port to bind to for attachment scanning.  Default is 3310</desc>
+</attr>
+
 </attrs>
