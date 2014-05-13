@@ -1109,6 +1109,7 @@ public final class LC {
 
     public static final KnownKey antispam_enable_restarts = KnownKey.newKey(false);
     public static final KnownKey antispam_enable_rule_updates = KnownKey.newKey(false);
+    public static final KnownKey antispam_enable_rule_compilation = KnownKey.newKey(false);
 
     @Supported
     public static final KnownKey antispam_backup_retention = KnownKey.newKey(0);
