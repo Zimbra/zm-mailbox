@@ -77,14 +77,14 @@ LocalSocket /opt/zimbra/data/clamav/clamav.sock
 
 # TCP port address.
 # Default: no
-#TCPSocket 3310
+TCPSocket %%zimbraClamAVListenPort%%
 
 # TCP address.
 # By default we bind to INADDR_ANY, probably not wise.
 # Enable the following to provide some degree of protection
 # from the outside world.
 # Default: no
-#TCPAddr %%zimbraIPv4BindAddress%%
+TCPAddr %%zimbraClamAVBindAddress%%
 
 # Maximum length the queue of pending connections may grow to.
 # Default: 15
