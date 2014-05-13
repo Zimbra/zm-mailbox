@@ -1917,83 +1917,6 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Whether or not Amavis disclaimers should only be attached to emails
-     * going to an external delivery domain. Defaults to FALSE
-     *
-     * @return zimbraAmavisExternalDisclaimerOnly, or false if unset
-     *
-     * @since ZCS 8.5.0
-     */
-    @ZAttr(id=1577)
-    public boolean isAmavisExternalDisclaimerOnly() {
-        return getBooleanAttr(Provisioning.A_zimbraAmavisExternalDisclaimerOnly, false);
-    }
-
-    /**
-     * Whether or not Amavis disclaimers should only be attached to emails
-     * going to an external delivery domain. Defaults to FALSE
-     *
-     * @param zimbraAmavisExternalDisclaimerOnly new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.5.0
-     */
-    @ZAttr(id=1577)
-    public void setAmavisExternalDisclaimerOnly(boolean zimbraAmavisExternalDisclaimerOnly) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraAmavisExternalDisclaimerOnly, zimbraAmavisExternalDisclaimerOnly ? Provisioning.TRUE : Provisioning.FALSE);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * Whether or not Amavis disclaimers should only be attached to emails
-     * going to an external delivery domain. Defaults to FALSE
-     *
-     * @param zimbraAmavisExternalDisclaimerOnly new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.5.0
-     */
-    @ZAttr(id=1577)
-    public Map<String,Object> setAmavisExternalDisclaimerOnly(boolean zimbraAmavisExternalDisclaimerOnly, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraAmavisExternalDisclaimerOnly, zimbraAmavisExternalDisclaimerOnly ? Provisioning.TRUE : Provisioning.FALSE);
-        return attrs;
-    }
-
-    /**
-     * Whether or not Amavis disclaimers should only be attached to emails
-     * going to an external delivery domain. Defaults to FALSE
-     *
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.5.0
-     */
-    @ZAttr(id=1577)
-    public void unsetAmavisExternalDisclaimerOnly() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraAmavisExternalDisclaimerOnly, "");
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * Whether or not Amavis disclaimers should only be attached to emails
-     * going to an external delivery domain. Defaults to FALSE
-     *
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.5.0
-     */
-    @ZAttr(id=1577)
-    public Map<String,Object> unsetAmavisExternalDisclaimerOnly(Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraAmavisExternalDisclaimerOnly, "");
-        return attrs;
-    }
-
-    /**
      * Amavis final destination for Spam. Default is to discard it
      *
      * <p>Valid values: [D_REJECT, D_DISCARD, D_BOUNCE, D_PASS]
@@ -2342,6 +2265,83 @@ public abstract class ZAttrConfig extends Entry {
     public Map<String,Object> unsetAmavisOriginatingBypassSA(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAmavisOriginatingBypassSA, "");
+        return attrs;
+    }
+
+    /**
+     * Whether or not Amavis disclaimers should only be attached to outbound
+     * emails. Defaults to FALSE (Always attach a disclaimer)
+     *
+     * @return zimbraAmavisOutboundDisclaimersOnly, or false if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1577)
+    public boolean isAmavisOutboundDisclaimersOnly() {
+        return getBooleanAttr(Provisioning.A_zimbraAmavisOutboundDisclaimersOnly, false);
+    }
+
+    /**
+     * Whether or not Amavis disclaimers should only be attached to outbound
+     * emails. Defaults to FALSE (Always attach a disclaimer)
+     *
+     * @param zimbraAmavisOutboundDisclaimersOnly new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1577)
+    public void setAmavisOutboundDisclaimersOnly(boolean zimbraAmavisOutboundDisclaimersOnly) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAmavisOutboundDisclaimersOnly, zimbraAmavisOutboundDisclaimersOnly ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether or not Amavis disclaimers should only be attached to outbound
+     * emails. Defaults to FALSE (Always attach a disclaimer)
+     *
+     * @param zimbraAmavisOutboundDisclaimersOnly new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1577)
+    public Map<String,Object> setAmavisOutboundDisclaimersOnly(boolean zimbraAmavisOutboundDisclaimersOnly, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAmavisOutboundDisclaimersOnly, zimbraAmavisOutboundDisclaimersOnly ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether or not Amavis disclaimers should only be attached to outbound
+     * emails. Defaults to FALSE (Always attach a disclaimer)
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1577)
+    public void unsetAmavisOutboundDisclaimersOnly() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAmavisOutboundDisclaimersOnly, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether or not Amavis disclaimers should only be attached to outbound
+     * emails. Defaults to FALSE (Always attach a disclaimer)
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1577)
+    public Map<String,Object> unsetAmavisOutboundDisclaimersOnly(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAmavisOutboundDisclaimersOnly, "");
         return attrs;
     }
 
