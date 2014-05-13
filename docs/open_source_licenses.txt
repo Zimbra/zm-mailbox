@@ -34245,7 +34245,7 @@ available (as would be noted above), you may obtain a copy of
 the source code corresponding to the binaries for such open
 source components and modifications thereto, if any, (the
 "Source Files"), by downloading the Source Files from Telligent's source repository
-described at http://wiki.zimbra.com/wiki/Building_Zimbra_using_Perforce, or by
+described at http://wiki.zimbra.com/wiki/Building_Zimbra_using_Git, or by
 sending a request, with your name and address to:
 Telligent, Inc., 3000 Internet Blvd., Suite 200
 Frisco, TX 75034,United States of America. All such
