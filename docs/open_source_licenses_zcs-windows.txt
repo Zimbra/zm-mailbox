@@ -1,19 +1,19 @@
 open_source_license.txt
 
-VMware Zimbra Windows Components 8.0.2 GA
+Zimbra Windows Components 8.5.0 GA
 
 
 ===========================================================================
 
 The following copyright statements and licenses apply to various open
 source software components (or portions thereof) that are distributed with
-this VMware software products.
+this Zimbra software products.
 
-The VMware Product may also include other VMware components, which may contain additional open 
+The Zimbra Product may also include other Zimbra components, which may contain additional open 
 source software packages. One or more such open_source_licenses.txt files may therefore 
-accompany this VMware Product. 
+accompany this Zimbra Product. 
 
-The VMware product that includes this file does not necessarily use all the
+The Zimbra product that includes this file does not necessarily use all the
 open source software components referred to below and may also only use
 portions of a given component.
 
@@ -159,16 +159,16 @@ source code and/or modifications to source code to be made
 available (as would be noted above), you may obtain a copy of
 the source code corresponding to the binaries for such open
 source components and modifications thereto, if any, (the
-"Source Files"), by downloading the Source Files from VMware's website at
-http://www.vmware.com/download/open_source.html, or by sending a request, with
-your name and address to: VMware, Inc., 3401 Hillview Avenue,
-Palo Alto, CA 94304,United States of America. All such
+"Source Files"), by downloading the Source Files from Zimbra's source repository
+described at http://wiki.zimbra.com/wiki/Building_Zimbra_using_Git, or by
+sending a request, with your name and address to:
+Zimbra, Inc., 3000 Internet Blvd., Suite 200
+Frisco, TX 75034,United States of America. All such
 requests should clearly specify: OPEN SOURCE FILES REQUEST,
-Attention General Counsel. VMware shall mail a copy of the
+Attention General Counsel. Zimbra shall mail a copy of the
 Source Files to you on a CD or equivalent physical medium. This
 offer to obtain a copy of the Source Files is valid for three
 years from the date you acquired this Software product. Alternatively,
-the Source Files may accompany the VMware product.
+the Source Files may accompany the Zimbra product.
 
-
-[ZCSWINDOWS802GAKD120512]
+[ZCSWINDOWS850GAVV051013]
