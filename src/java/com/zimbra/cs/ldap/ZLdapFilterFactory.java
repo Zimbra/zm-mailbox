@@ -108,6 +108,7 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
 
         ALL_DYNAMIC_GROUPS(SINGLETON.allDynamicGroups()),
         DYNAMIC_GROUP_BY_ID(SINGLETON.dynamicGroupById("{DYNAMIC-GROUP-ID}")),
+        DYNAMIC_GROUP_BY_IDS(SINGLETON.dynamicGroupByIds(new String[]{"{GROUP-ID-1}", "GROUP-ID-2", "..."})),
         DYNAMIC_GROUP_BY_NAME(SINGLETON.dynamicGroupByName("{DYNAMIC-GROUP-NAME}")),
         DYNAMIC_GROUP_DYNAMIC_UNIT_BY_MAIL_ADDR(SINGLETON.dynamicGroupDynamicUnitByMailAddr("{ADDR}")),
         DYNAMIC_GROUPS_STATIC_UNIT_BY_MEMBER_ADDR(SINGLETON.dynamicGroupsStaticUnitByMemberAddr("{ADDR}")),
@@ -379,6 +380,7 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
      */
     public abstract ZLdapFilter allDynamicGroups();
     public abstract ZLdapFilter dynamicGroupById(String id);
+    public abstract ZLdapFilter dynamicGroupByIds(String[] strings);
     public abstract ZLdapFilter dynamicGroupByName(String name);
     public abstract ZLdapFilter dynamicGroupDynamicUnitByMailAddr(String mailAddr);
     public abstract ZLdapFilter dynamicGroupsStaticUnitByMemberAddr(String memberAddr);

@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2008, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -27,12 +27,11 @@ import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.common.account.ZAttrProvisioning.DistributionListSubscriptionPolicy;
 import com.zimbra.common.account.ZAttrProvisioning.DistributionListUnsubscriptionPolicy;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.account.Provisioning.GroupMembership;
 import com.zimbra.cs.account.accesscontrol.ACLUtil;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.Right;
-import com.zimbra.cs.account.accesscontrol.ZimbraACE;
 import com.zimbra.cs.account.accesscontrol.Rights.User;
+import com.zimbra.cs.account.accesscontrol.ZimbraACE;
 
 /**
  * @author pshao
@@ -87,8 +86,7 @@ public abstract class Group extends MailTarget implements AliasedEntry {
     }
 
     public boolean isMemberOf(Account acct) throws ServiceException {
-        GroupMembership membership = getProvisioning().getGroupMembership(acct, false);
-        return membership.groupIds().contains(getId());
+        return getProvisioning().inACLGroup(acct, getId());
     }
 
     public DistributionListSubscriptionPolicy getSubscriptionPolicy() {
@@ -140,8 +138,8 @@ public abstract class Group extends MailTarget implements AliasedEntry {
          */
         public static Right GROUP_OWNER_RIGHT = User.R_ownDistList;
 
-        private GranteeType type;
-        private String id;
+        private final GranteeType type;
+        private final String id;
         private String name;
 
         private GroupOwner(ZimbraACE ace, boolean needName) {

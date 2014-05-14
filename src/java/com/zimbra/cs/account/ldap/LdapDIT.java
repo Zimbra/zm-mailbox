@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -756,13 +756,14 @@ public class LdapDIT {
         boolean accounts = (flags & Provisioning.SD_ACCOUNT_FLAG) != 0;
         boolean aliases = (flags & Provisioning.SD_ALIAS_FLAG) != 0;
         boolean lists = (flags & Provisioning.SD_DISTRIBUTION_LIST_FLAG) != 0;
+        boolean dynamicgroups = (flags & Provisioning.SD_DYNAMIC_GROUP_FLAG) != 0;
         boolean calendarResources = (flags & Provisioning.SD_CALENDAR_RESOURCE_FLAG) != 0;
         boolean domains = (flags & Provisioning.SD_DOMAIN_FLAG) != 0;
         boolean coses = (flags & Provisioning.SD_COS_FLAG) != 0;
         boolean servers = (flags & Provisioning.SD_SERVER_FLAG) != 0;
         boolean ucservices = (flags & Provisioning.SD_UC_SERVICE_FLAG) != 0;
 
-        if (accounts || aliases || lists || calendarResources) {
+        if (accounts || aliases || lists || dynamicgroups || calendarResources) {
             addBase(bases, mailBranchBaseDN());
         }
 
