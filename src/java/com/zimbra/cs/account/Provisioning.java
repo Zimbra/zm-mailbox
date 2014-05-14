@@ -746,6 +746,15 @@ public abstract class Provisioning extends ZAttrProvisioning {
             return mMemberOf;
         }
 
+        public MemberOf getMemberOfForId(String grpId) {
+            for (MemberOf memberOf : mMemberOf) {
+                if (grpId.equals(memberOf.getId())) {
+                    return memberOf;
+                }
+            }
+            return null;
+        }
+
         public List<String> groupIds() {
             return mGroupIds;
         }
@@ -787,7 +796,6 @@ public abstract class Provisioning extends ZAttrProvisioning {
     }
 
     /**
-     *
      * @param acct
      * @param adminGroupsOnly return admin groups only
      * @return List of all direct and indirect groups this account belongs to.
@@ -810,6 +818,19 @@ public abstract class Provisioning extends ZAttrProvisioning {
      * @throws ServiceException
      */
     public GroupMembership getGroupMembership(DistributionList list, boolean adminGroupsOnly)
+    throws ServiceException {
+        throw ServiceException.UNSUPPORTED();
+    }
+
+    /**
+     * @param adminGroupsOnly return admin groups only
+     * @param rights - the rights to check.  null or empty means "any rights"
+     * @return Groups which {@code acct} is a member of which have been granted one or more or the {@code rights}
+     * @return List of all direct and indirect groups {@code acct} is a member of that have been granted
+     * one or more or the {@code rights}.
+     * The returned List is not sorted in any particular way.
+     */
+    public GroupMembership getGroupMembershipWithRights(Account acct, Set<Right> rights, boolean adminGroupsOnly)
     throws ServiceException {
         throw ServiceException.UNSUPPORTED();
     }
@@ -1121,7 +1142,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public static final String SERVICE_WEBCLIENT = "zimbra";
     public static final String SERVICE_ADMINCLIENT = "zimbraAdmin";
     public static final String SERVICE_MAILCLIENT = "service";
-    
+
     public abstract List<Account> getAllAdminAccounts()  throws ServiceException;
 
     public abstract void setCOS(Account acct, Cos cos) throws ServiceException;

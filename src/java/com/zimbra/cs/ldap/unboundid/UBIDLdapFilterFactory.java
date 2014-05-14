@@ -736,9 +736,7 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
      */
     @Override
     public ZLdapFilter allDynamicGroups() {
-        return new UBIDLdapFilter(
-                FilterId.ALL_DYNAMIC_GROUPS,
-                FILTER_ALL_DYNAMIC_GROUPS);
+        return new UBIDLdapFilter(FilterId.ALL_DYNAMIC_GROUPS, FILTER_ALL_DYNAMIC_GROUPS);
     }
 
     @Override
@@ -748,6 +746,17 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
                 Filter.createANDFilter(
                         Filter.createEqualityFilter(Provisioning.A_zimbraId, id),
                         FILTER_ALL_DYNAMIC_GROUPS));
+    }
+
+    @Override
+    public ZLdapFilter dynamicGroupByIds(String[] ids) {
+        List<Filter> filters = Lists.newArrayList();
+        for (String id : ids) {
+            filters.add(Filter.createEqualityFilter(Provisioning.A_zimbraId, id));
+        }
+        return new UBIDLdapFilter(FilterId.DYNAMIC_GROUP_BY_IDS,
+                Filter.createANDFilter(FILTER_ALL_DYNAMIC_GROUPS,
+                        Filter.createORFilter(Filter.createORFilter(filters))));
     }
 
     @Override

@@ -4502,10 +4502,18 @@ public class LdapProvisioning extends LdapProv {
     }
 
     /**
+     * This is an expensive operation.  Avoid if possible.
      * @return distribution lists and both custom and normal dynamic groups the account is a member of
      */
     @Override
     public GroupMembership getGroupMembership(Account acct, boolean adminGroupsOnly)
+    throws ServiceException {
+        GroupMembership groups = getNonCustomGroupMembership(acct, adminGroupsOnly);
+        GroupMembership customUrlDefinedGroups = getCustomDynamicGroupMembership(acct, adminGroupsOnly);
+        return groups.mergeFrom(customUrlDefinedGroups);
+    }
+
+    private GroupMembership getNonCustomGroupMembership(Account acct, boolean adminGroupsOnly)
     throws ServiceException {
         EntryCacheDataKey cacheKey = adminGroupsOnly ?
                 EntryCacheDataKey.GROUPEDENTRY_MEMBERSHIP_ADMINS_ONLY :
@@ -4515,14 +4523,157 @@ public class LdapProvisioning extends LdapProv {
         if (cacheableGroups == null) {
             cacheableGroups = setupGroupedEntryCacheData(acct, adminGroupsOnly);
         }
-        GroupMembership customUrlDefinedGroups = getCustomDynamicGroupMembership(acct, adminGroupsOnly);
-        GroupMembership groups = cacheableGroups.clone();
-        return groups.mergeFrom(customUrlDefinedGroups);
+        return cacheableGroups.clone();
+    }
+
+    /**
+     * @param rights - the rights to check.  null or empty means "any rights"
+     * @return Groups which {@code acct} is a member of which have been granted one or more or the {@code rights}
+     */
+    @Override
+    public GroupMembership getGroupMembershipWithRights(Account acct, Set<Right> rights, boolean adminGroupsOnly)
+    throws ServiceException {
+        SearchForGroupsWithRightsVisitor visitor = new SearchForGroupsWithRightsVisitor(rights);
+        Set<String> groupsWithRights = searchForGroupsWhichUseRights(getDIT().zimbraBaseDN(), rights, visitor);
+        if (groupsWithRights.size() == 0) {
+            return new GroupMembership();
+        }
+        GroupMembership nonCustomMembership = getNonCustomGroupMembership(acct, adminGroupsOnly);
+        GroupMembership membership = getGroupMembership(acct, groupsWithRights, nonCustomMembership, adminGroupsOnly);
+        return membership;
+    }
+
+    /**
+     *
+     * @param acct - the account to test for membership of the groups
+     * @param ids - IDs for the set of possible groups to return.
+     * @param nonCustomGroups - non custom groups this account is known to be a member of.
+     * @return Groups which {@code acct} is a member of from {@code ids}
+     *         Empty if there are no groups
+     *         Applies to both custom and normal dynamic groups
+     */
+    private GroupMembership getGroupMembership(Account acct, Collection<String> ids,
+            GroupMembership nonCustomGroups, boolean adminGroupsOnly)
+    throws ServiceException {
+        GroupMembership membership = new GroupMembership();
+        if (ids.size() == 0) {
+            return membership;
+        }
+        List<String> searchIds = Lists.newArrayList(ids);
+        Iterator<String> iter = searchIds.iterator();
+        while (iter.hasNext()) {
+            String id = iter.next();
+            MemberOf memberOf = nonCustomGroups.getMemberOfForId(id);
+            if (memberOf != null) {
+                if (!adminGroupsOnly || (adminGroupsOnly && memberOf.isAdminGroup())) {
+                    membership.append(memberOf, id);
+                }
+                iter.remove();  // Processed this id - don't need to search for it again
+            }
+        }
+        if (searchIds.size() == 0) {
+            return membership;
+        }
+        SearchDirectoryOptions searchOpts = new SearchDirectoryOptions((String[])null);
+        searchOpts.setFilter(ZLdapFilterFactory.getInstance().dynamicGroupByIds(
+                searchIds.toArray(new String[searchIds.size()])));
+        searchOpts.setTypes(ObjectType.dynamicgroups);
+        List<NamedEntry> namedEntries = (List<NamedEntry>) searchDirectoryInternal(searchOpts);
+        if (namedEntries != null) {
+            for (NamedEntry ne : namedEntries) {
+                if (ne instanceof DynamicGroup) {
+                    DynamicGroup dGrp = (DynamicGroup) ne;
+                    if (adminGroupsOnly && !dGrp.isIsAdminGroup()) {
+                        continue;
+                    }
+                    for (String member : dGrp.getAllMembers(true)) {
+                        if (member.equals(acct.getName())) {
+                            membership.append(new MemberOf(dGrp.getId(), dGrp.isIsAdminGroup(), true), dGrp.getId());
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        return membership;
+    }
+
+    /**
+     * Visits entries which have zimbraACE
+     * Mine search results for groups which have been assigned certain rights
+     */
+    private static class SearchForGroupsWithRightsVisitor extends SearchLdapVisitor {
+        private final Set<String> results = Sets.newHashSet(); // group IDs
+        private final Set<String> rightNames;
+
+        SearchForGroupsWithRightsVisitor(Set<Right> rights) {
+            if (rights == null || rights.isEmpty()) {
+                rightNames = null;
+            } else {
+                rightNames = Sets.newHashSet();
+                for (Right right :rights) {
+                    rightNames.add(right.getName());
+                }
+            }
+        }
+
+        @Override
+        public void visit(String dn, Map<String, Object> attrs, IAttributes ldapAttrs) {
+            String[] zimbraACE = getMultiAttrString(attrs, Provisioning.A_zimbraACE);
+            if (zimbraACE != null) {
+                for (String ace : zimbraACE) {
+                    // expect form : <grantee> <granteeType> <right>
+                    String[] components = ace.split(" ");
+                    if (components.length < 3) {
+                        continue; // unexpected
+                    }
+                    if ("grp".equals(components[1])) {
+                        if ((rightNames == null) || rightNames.contains(components[2])) {
+                            results.add(components[0]);
+                        }
+                    }
+                }
+            }
+        }
+
+        private String[] getMultiAttrString(Map<String, Object> attrs, String attrName) {
+            Object obj = attrs.get(attrName);
+            if (obj instanceof String) {
+                return new String[] {(String) obj};
+            } else {
+                return (String[]) obj;
+            }
+        }
+    }
+
+    /**
+     * @param base - search base
+     * @param rights - the rights to search for.  null or empty implies ALL rights
+     * @return the IDs of the groups found
+     * @throws ServiceException
+     */
+    private Set<String> searchForGroupsWhichUseRights(String base, Set<Right> rights,
+            SearchForGroupsWithRightsVisitor visitor)
+    throws ServiceException {
+        String[] fetchAttrs = { LdapProvisioning.A_zimbraACE };
+        StringBuilder query = new StringBuilder("(|");
+        if ((rights == null) || rights.isEmpty()) {
+            query.append('(').append(Provisioning.A_zimbraACE).append('=').append("* grp *)");
+        } else {
+            for (Right right : rights) {
+                query.append('(').append(Provisioning.A_zimbraACE).append('=').append("* grp ")
+                .append(right.getName()).append(")");
+            }
+        }
+        query.append(")");
+
+        searchLdapOnReplica(base, query.toString(), fetchAttrs, visitor);
+        return Collections.unmodifiableSet(visitor.results);
     }
 
     @VisibleForTesting
     public GroupMembership getCustomDynamicGroupMembership(Account acct, boolean adminGroupsOnly)
-    throws ServiceException {
+            throws ServiceException {
         return CustomDynamicGroupMembershipCache.getInstance(this).get(acct, adminGroupsOnly);
     }
 
@@ -8816,7 +8967,7 @@ public class LdapProvisioning extends LdapProv {
         }
 
         public synchronized void clearCache() {
-            Long updateTime = -1L;
+            updateTime = -1L;
             adminGroupCache = null;
             nonAdminGroupCache = null;
         }
@@ -8858,7 +9009,6 @@ public class LdapProvisioning extends LdapProv {
             for (DynamicGroup grp : groups) {
                 updateCacheForGroup(grp);
             }
-            updateTime = System.currentTimeMillis();
         }
 
         private void updateCacheForGroup(DynamicGroup grp)
@@ -8970,8 +9120,17 @@ public class LdapProvisioning extends LdapProv {
 
     @Override
     public boolean inACLGroup(Account acct, String zimbraId) throws ServiceException {
-        GroupMembership membership = getGroupMembership(acct, false);
-        return membership.groupIds().contains(zimbraId);
+        // This will include expanded membership for non-custom groups and distribution lists
+        GroupMembership nonCustomMembership = getNonCustomGroupMembership(acct, false);
+        if (nonCustomMembership.groupIds().contains(zimbraId)) {
+            return true;
+        }
+        // dynamic groups can't contain other groups, so just need to see if we are a member
+        // of a dynamic group with that id.
+        List<String> ids = Lists.newArrayListWithExpectedSize(1);
+        ids.add(zimbraId);
+        GroupMembership membership = getGroupMembership(acct, ids, new GroupMembership(), false);
+        return (membership.groupIds().contains(zimbraId));
     }
 
     @Override
