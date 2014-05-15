@@ -76,17 +76,6 @@ public abstract class AuthProvider {
         String[] providers = LC.zimbra_auth_provider.value().split(",");
         for (String provider : providers) {
 
-            /*
-             * ignore zimbra and oauth auth providers, they are built-in providers.
-             *
-             * If no external auth providers is configured, zimbra and oauth providers
-             * will be used.
-             */
-            if (ZimbraAuthProvider.ZIMBRA_AUTH_PROVIDER.equals(provider) ||
-                ZimbraOAuthProvider.ZIMBRA_OAUTH_PROVIDER.equals(provider)) {
-                continue;
-            }
-
             provider = provider.trim();
             if (!Strings.isNullOrEmpty(provider)) {
                 AuthProvider ap = registeredProviders.get(provider);
