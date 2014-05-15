@@ -44412,6 +44412,150 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * Whether to enable IMAP proxy
+     *
+     * @return zimbraReverseProxyMailImapEnabled, or true if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1621)
+    public boolean isReverseProxyMailImapEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraReverseProxyMailImapEnabled, true);
+    }
+
+    /**
+     * Whether to enable IMAP proxy
+     *
+     * @param zimbraReverseProxyMailImapEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1621)
+    public void setReverseProxyMailImapEnabled(boolean zimbraReverseProxyMailImapEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyMailImapEnabled, zimbraReverseProxyMailImapEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to enable IMAP proxy
+     *
+     * @param zimbraReverseProxyMailImapEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1621)
+    public Map<String,Object> setReverseProxyMailImapEnabled(boolean zimbraReverseProxyMailImapEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyMailImapEnabled, zimbraReverseProxyMailImapEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether to enable IMAP proxy
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1621)
+    public void unsetReverseProxyMailImapEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyMailImapEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to enable IMAP proxy
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1621)
+    public Map<String,Object> unsetReverseProxyMailImapEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyMailImapEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * Whether to enable IMAPs proxy
+     *
+     * @return zimbraReverseProxyMailImapsEnabled, or true if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1622)
+    public boolean isReverseProxyMailImapsEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraReverseProxyMailImapsEnabled, true);
+    }
+
+    /**
+     * Whether to enable IMAPs proxy
+     *
+     * @param zimbraReverseProxyMailImapsEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1622)
+    public void setReverseProxyMailImapsEnabled(boolean zimbraReverseProxyMailImapsEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyMailImapsEnabled, zimbraReverseProxyMailImapsEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to enable IMAPs proxy
+     *
+     * @param zimbraReverseProxyMailImapsEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1622)
+    public Map<String,Object> setReverseProxyMailImapsEnabled(boolean zimbraReverseProxyMailImapsEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyMailImapsEnabled, zimbraReverseProxyMailImapsEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether to enable IMAPs proxy
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1622)
+    public void unsetReverseProxyMailImapsEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyMailImapsEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to enable IMAPs proxy
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1622)
+    public Map<String,Object> unsetReverseProxyMailImapsEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyMailImapsEnabled, "");
+        return attrs;
+    }
+
+    /**
      * whether to run proxy in HTTP, HTTPS, both, mixed, or redirect mode.
      * See also related attributes zimbraMailProxyPort and
      * zimbraMailSSLProxyPort
@@ -44555,6 +44699,150 @@ public abstract class ZAttrConfig extends Entry {
     public Map<String,Object> unsetReverseProxyMailMode(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraReverseProxyMailMode, "");
+        return attrs;
+    }
+
+    /**
+     * Whether to enable Pop3 proxy
+     *
+     * @return zimbraReverseProxyMailPop3Enabled, or true if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1623)
+    public boolean isReverseProxyMailPop3Enabled() {
+        return getBooleanAttr(Provisioning.A_zimbraReverseProxyMailPop3Enabled, true);
+    }
+
+    /**
+     * Whether to enable Pop3 proxy
+     *
+     * @param zimbraReverseProxyMailPop3Enabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1623)
+    public void setReverseProxyMailPop3Enabled(boolean zimbraReverseProxyMailPop3Enabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyMailPop3Enabled, zimbraReverseProxyMailPop3Enabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to enable Pop3 proxy
+     *
+     * @param zimbraReverseProxyMailPop3Enabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1623)
+    public Map<String,Object> setReverseProxyMailPop3Enabled(boolean zimbraReverseProxyMailPop3Enabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyMailPop3Enabled, zimbraReverseProxyMailPop3Enabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether to enable Pop3 proxy
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1623)
+    public void unsetReverseProxyMailPop3Enabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyMailPop3Enabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to enable Pop3 proxy
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1623)
+    public Map<String,Object> unsetReverseProxyMailPop3Enabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyMailPop3Enabled, "");
+        return attrs;
+    }
+
+    /**
+     * Whether to enable Pop3s proxy
+     *
+     * @return zimbraReverseProxyMailPop3sEnabled, or true if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1624)
+    public boolean isReverseProxyMailPop3sEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraReverseProxyMailPop3sEnabled, true);
+    }
+
+    /**
+     * Whether to enable Pop3s proxy
+     *
+     * @param zimbraReverseProxyMailPop3sEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1624)
+    public void setReverseProxyMailPop3sEnabled(boolean zimbraReverseProxyMailPop3sEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyMailPop3sEnabled, zimbraReverseProxyMailPop3sEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to enable Pop3s proxy
+     *
+     * @param zimbraReverseProxyMailPop3sEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1624)
+    public Map<String,Object> setReverseProxyMailPop3sEnabled(boolean zimbraReverseProxyMailPop3sEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyMailPop3sEnabled, zimbraReverseProxyMailPop3sEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether to enable Pop3s proxy
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1624)
+    public void unsetReverseProxyMailPop3sEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyMailPop3sEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to enable Pop3s proxy
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1624)
+    public Map<String,Object> unsetReverseProxyMailPop3sEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyMailPop3sEnabled, "");
         return attrs;
     }
 
