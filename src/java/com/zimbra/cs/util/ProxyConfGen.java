@@ -14,58 +14,53 @@
  */
 package com.zimbra.cs.util;
 
-import java.io.File;
-import java.io.IOException;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.net.Inet4Address;
 import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-
-import java.util.Collection;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Formatter;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.SortedSet;
-import java.util.Formatter;
 import java.util.List;
-import java.util.ArrayList;
+import java.util.Map;
+import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.GnuParser;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.Option;
 import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
 import com.zimbra.common.account.Key;
-import com.zimbra.common.account.Key.ServerBy;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
-import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.StringUtil;
-import com.zimbra.common.service.ServiceException;
-
-import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.ldap.LdapProv;
-import com.zimbra.cs.account.NamedEntry;
-import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Entry;
+import com.zimbra.cs.account.NamedEntry;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
+import com.zimbra.cs.account.ldap.LdapProv;
 import com.zimbra.cs.extension.ExtensionDispatcherServlet;
-import com.zimbra.cs.util.BuildInfo;
 
 enum ProxyConfOverride {
     NONE,
@@ -549,7 +544,7 @@ class WebUpstreamClientServersVar extends ProxyConfVar {
 
         List<Server> mailboxservers = mProv.getAllServers(Provisioning.SERVICE_MAILBOX);
         List<Server> webclientservers = mProv.getAllServers(Provisioning.SERVICE_WEBCLIENT);
-        
+
 		for (Server server : mailboxservers) {
 			String version = server.getAttr(Provisioning.A_zimbraServerVersion, "");
 			// We skip all the 8.5+ mailbox servers here to get only the pre 8.5 servers first which don't have the zimbraServerVersion set
@@ -560,13 +555,13 @@ class WebUpstreamClientServersVar extends ProxyConfVar {
     		webclientservers.remove(server);
 			String serverName = server.getAttr(
 					Provisioning.A_zimbraServiceHostname, "");
-	    
+
 			if (isValidUpstream(server, serverName)) {
 				directives.add(generateServerDirective(server, serverName, portName));
 				mLog.info("Added server to HTTP webclient upstream: " + serverName);
 			}
 	    }
-		
+
         for (Server server : webclientservers) {
             String serverName = server.getAttr(
                     Provisioning.A_zimbraServiceHostname, "");
@@ -611,7 +606,7 @@ class WebSSLUpstreamClientServersVar extends ProxyConfVar {
 
         List<Server> mailboxservers = mProv.getAllServers(Provisioning.SERVICE_MAILBOX);
         List<Server> webclientservers = mProv.getAllServers(Provisioning.SERVICE_WEBCLIENT);
-        
+
 		for (Server server : mailboxservers) {
 			String version = server.getAttr(Provisioning.A_zimbraServerVersion, "");
 			// We skip all the 8.5+ mailbox servers here to get only the pre 8.5 servers first which don't have the zimbraServerVersion set
@@ -622,13 +617,13 @@ class WebSSLUpstreamClientServersVar extends ProxyConfVar {
     		webclientservers.remove(server);
 			String serverName = server.getAttr(
 					Provisioning.A_zimbraServiceHostname, "");
-	    
+
 			if (isValidUpstream(server, serverName)) {
 				directives.add(generateServerDirective(server, serverName, portName));
 				mLog.info("Added server to HTTPS webclient upstream: " + serverName);
 			}
 	    }
-		       
+
         for (Server server : webclientservers) {
             String serverName = server.getAttr(
                     Provisioning.A_zimbraServiceHostname, "");
@@ -673,7 +668,7 @@ class WebAdminUpstreamAdminClientServersVar extends ProxyConfVar {
 
         List<Server> mailboxservers = mProv.getAllServers(Provisioning.SERVICE_MAILBOX);
         List<Server> adminclientservers = mProv.getAllServers(Provisioning.SERVICE_ADMINCLIENT);
-        
+
 		for (Server server : mailboxservers) {
 			String version = server.getAttr(Provisioning.A_zimbraServerVersion, "");
 			// We skip all the 8.5+ mailbox servers here to get only the pre 8.5 servers first which don't have the zimbraServerVersion set
@@ -684,13 +679,13 @@ class WebAdminUpstreamAdminClientServersVar extends ProxyConfVar {
     		adminclientservers.remove(server);
 			String serverName = server.getAttr(
 					Provisioning.A_zimbraServiceHostname, "");
-	    
+
 			if (isValidUpstream(server, serverName)) {
 				directives.add(generateServerDirective(server, serverName, portName));
 				mLog.info("Added server to HTTPS Admin client upstream: " + serverName);
 			}
 	    }
-		
+
         for (Server server : adminclientservers) {
             String serverName = server.getAttr(
                     Provisioning.A_zimbraServiceHostname, "");
@@ -867,7 +862,7 @@ abstract class ServersVar extends ProxyConfVar {
     /**
      * The port attribute name
      */
-    private String mPortAttrName;
+    private final String mPortAttrName;
 
     public ServersVar(String key, String portAttrName, String description) {
         super(key, null, null, ProxyConfValueType.CUSTOM, ProxyConfOverride.CUSTOM, description);
@@ -930,15 +925,15 @@ class WebUpstreamServersVar extends ServersVar {
     			"for which zimbraReverseProxyLookupTarget is true, and whose " +
     			"mail mode is http|mixed|both)");
     }
-    
+
     @Override
     public void update() throws ServiceException {
     	ArrayList<String> directives = new ArrayList<String>();
     	String portName = configSource.getAttr(Provisioning.A_zimbraReverseProxyHttpPortAttribute, "");
-    	
+
     	List<Server> mailboxservers = mProv.getAllServers(Provisioning.SERVICE_MAILBOX);
     	List<Server> mailclientservers = mProv.getAllServers(Provisioning.SERVICE_MAILCLIENT);
-    	
+
     	for (Server server : mailboxservers) {
     		String version = server.getAttr(Provisioning.A_zimbraServerVersion, "");
     		// We skip all the 8.5+ mailbox servers here to get only the pre 8.5 servers first which don't have the zimbraServerVersion set
@@ -949,17 +944,17 @@ class WebUpstreamServersVar extends ServersVar {
     		mailclientservers.remove(server);
     		String serverName = server.getAttr(
     				Provisioning.A_zimbraServiceHostname, "");
-    
+
     		if (isValidUpstream(server, serverName)) {
     			directives.add(generateServerDirective(server, serverName, portName));
     			mLog.info("Added server to HTTP mailstore upstream: " + serverName);
     		}
     	}
-    	  	
+
     	for (Server server : mailclientservers) {
     		String serverName = server.getAttr(
     				Provisioning.A_zimbraServiceHostname, "");
-    
+
     		if (isValidUpstream(server, serverName)) {
     			directives.add(generateServerDirective(server, serverName, portName));
     			mLog.info("Added server to HTTP mailstore upstream: " + serverName);
@@ -977,15 +972,15 @@ class WebSSLUpstreamServersVar extends ServersVar {
     			"for which zimbraReverseProxyLookupTarget is true, and whose " +
     			"mail mode is https|mixed|both)");
     }
-    
+
     @Override
     public void update() throws ServiceException {
     	ArrayList<String> directives = new ArrayList<String>();
     	String portName = configSource.getAttr(Provisioning.A_zimbraReverseProxyHttpSSLPortAttribute, "");
-    	
+
     	List<Server> mailboxservers = mProv.getAllServers(Provisioning.SERVICE_MAILBOX);
     	List<Server> mailclientservers = mProv.getAllServers(Provisioning.SERVICE_MAILCLIENT);
-    	
+
     	for (Server server : mailboxservers) {
     		String version = server.getAttr(Provisioning.A_zimbraServerVersion, "");
     		// We skip all the 8.5+ mailbox servers here to get only the pre 8.5 servers first which don't have the zimbraServerVersion set
@@ -996,17 +991,17 @@ class WebSSLUpstreamServersVar extends ServersVar {
     		mailclientservers.remove(server);
     		String serverName = server.getAttr(
     				Provisioning.A_zimbraServiceHostname, "");
-    
+
     		if (isValidUpstream(server, serverName)) {
     			directives.add(generateServerDirective(server, serverName, portName));
     			mLog.info("Added server to HTTPS mailstore upstream: " + serverName);
     		}
     	}
-    	
+
     	for (Server server : mailclientservers) {
     		String serverName = server.getAttr(
     				Provisioning.A_zimbraServiceHostname, "");
-    		
+
     		if (isValidUpstream(server, serverName)) {
     			directives.add(generateServerDirective(server, serverName, portName));
     			mLog.info("Added server to HTTPS mailstore upstream: " + serverName);
@@ -1022,15 +1017,15 @@ class WebAdminUpstreamServersVar extends ServersVar {
 				"List of upstream admin console servers used by Web Proxy (i.e. servers " +
 				"for which zimbraReverseProxyLookupTarget is true");
 	}
-	
+
 	@Override
 	public void update() throws ServiceException {
 		ArrayList<String> directives = new ArrayList<String>();
 		String portName = configSource.getAttr(Provisioning.A_zimbraReverseProxyAdminPortAttribute, "");
-		 
+
 		List<Server> mailboxservers = mProv.getAllServers(Provisioning.SERVICE_MAILBOX);
 		List<Server> mailclientservers = mProv.getAllServers(Provisioning.SERVICE_MAILCLIENT);
-		
+
 		for (Server server : mailboxservers) {
 			String version = server.getAttr(Provisioning.A_zimbraServerVersion, "");
 			// We skip all the 8.5+ mailbox servers here to get only the pre 8.5 servers first which don't have the zimbraServerVersion set
@@ -1041,17 +1036,17 @@ class WebAdminUpstreamServersVar extends ServersVar {
     		mailclientservers.remove(server);
 			String serverName = server.getAttr(
 					Provisioning.A_zimbraServiceHostname, "");
-	    
+
 			if (isValidUpstream(server, serverName)) {
 				directives.add(generateServerDirective(server, serverName, portName));
 				mLog.info("Added server to HTTPS Admin mailstore upstream: " + serverName);
 			}
 	    }
-		
+
 		for (Server server : mailclientservers) {
 			String serverName = server.getAttr(
 					Provisioning.A_zimbraServiceHostname, "");
-			 
+
 			if (isValidUpstream(server, serverName)) {
 				directives.add(generateServerDirective(server, serverName, portName));
 				mLog.info("Added server to HTTPS Admin mailstore upstream: " + serverName);
@@ -1073,7 +1068,7 @@ class WebEwsUpstreamServersVar extends ServersVar {
         ArrayList<String> directives = new ArrayList<String>();
         String portName = configSource.getAttr(Provisioning.A_zimbraReverseProxyHttpPortAttribute, "");
         String[] upstreams = serverSource.getMultiAttr(Provisioning.A_zimbraReverseProxyUpstreamEwsServers);
-        
+
         if (upstreams.length > 0) {
             for (String serverName: upstreams) {
                 Server server = mProv.getServerByName(serverName);
@@ -1099,7 +1094,7 @@ class WebEwsSSLUpstreamServersVar extends ServersVar {
         ArrayList<String> directives = new ArrayList<String>();
         String portName = configSource.getAttr(Provisioning.A_zimbraReverseProxyHttpSSLPortAttribute, "");
         String[] upstreams = serverSource.getMultiAttr(Provisioning.A_zimbraReverseProxyUpstreamEwsServers);
-        
+
         if (upstreams.length > 0) {
             for (String serverName: upstreams) {
                 Server server = mProv.getServerByName(serverName);
@@ -1125,7 +1120,7 @@ class WebLoginUpstreamServersVar extends ServersVar {
         ArrayList<String> directives = new ArrayList<String>();
         String portName = configSource.getAttr(Provisioning.A_zimbraReverseProxyHttpPortAttribute, "");
         String[] upstreams = serverSource.getMultiAttr(Provisioning.A_zimbraReverseProxyUpstreamLoginServers);
-        
+
         if (upstreams.length > 0) {
             for (String serverName: upstreams) {
                 Server server = mProv.getServerByName(serverName);
@@ -1151,7 +1146,7 @@ class WebLoginSSLUpstreamServersVar extends ServersVar {
         ArrayList<String> directives = new ArrayList<String>();
         String portName = configSource.getAttr(Provisioning.A_zimbraReverseProxyHttpSSLPortAttribute, "");
         String[] upstreams = serverSource.getMultiAttr(Provisioning.A_zimbraReverseProxyUpstreamLoginServers);
-        
+
         if (upstreams.length > 0) {
             for (String serverName: upstreams) {
                 Server server = mProv.getServerByName(serverName);
@@ -1479,7 +1474,7 @@ class ErrorPagesVar extends ProxyConfVar {
  *
  */
 class TimeoutVar extends ProxyConfVar {
-    private int offset;
+    private final int offset;
 
     public TimeoutVar(String keyword, String attribute, Object defaultValue,
             ProxyConfOverride overrideType, int offset,
@@ -1524,6 +1519,7 @@ class TimeInSecVarWrapper extends ProxyConfVar {
         mVar.mValue = ((Long)mVar.mValue).longValue() / 1000;
     }
 
+    @Override
     public String format(Object o) throws ProxyConfException {
         return mVar.mValue.toString();
     }
@@ -1574,7 +1570,7 @@ class WebProxyUpstreamClientTargetVar extends ProxyConfVar {
 }
 
 /**
- * 
+ *
  * @author zimbra
  *
  */
@@ -1586,7 +1582,7 @@ class EwsEnablerVar extends WebEnablerVar {
                 "(false unless zimbraReverseProxyUpstreamEwsServers is populated)");
     }
 
-    
+
     @Override
     public String format(Object o)  {
     	String[] upstreams = serverSource.getMultiAttr(Provisioning.A_zimbraReverseProxyUpstreamEwsServers);
@@ -1599,7 +1595,7 @@ class EwsEnablerVar extends WebEnablerVar {
 }
 
 /**
- * 
+ *
  * @author zimbra
  *
  */
@@ -1611,7 +1607,7 @@ class LoginEnablerVar extends WebEnablerVar {
                 "(false unless zimbraReverseProxyUpstreamLoginServers is populated)");
     }
 
-    
+
     @Override
     public String format(Object o)  {
     	String[] upstreams = serverSource.getMultiAttr(Provisioning.A_zimbraReverseProxyUpstreamLoginServers);
@@ -1788,6 +1784,7 @@ public class ProxyConfGen
 
         // visit domains
         NamedEntry.Visitor visitor = new NamedEntry.Visitor() {
+            @Override
             public void visit(NamedEntry entry) throws ServiceException {
                 String domainName = entry
                     .getAttr(Provisioning.A_zimbraDomainName);
@@ -2047,6 +2044,7 @@ public class ProxyConfGen
      * @throws ProxyConfException
      * @deprecated use expandTemplateByExplodeDomain instead
      */
+    @Deprecated
     private static void expandTemplateExplodeSSLConfigsForAllVhnsAndVIPs(
         BufferedReader temp, BufferedWriter conf) throws IOException, ProxyConfException {
         int size = mDomainReverseProxyAttrs.size();
@@ -2424,12 +2422,12 @@ public class ProxyConfGen
 	    mConfVars.put("main.accept_mutex", new ProxyConfVar("main.accept_mutex", "zimbraReverseProxyAcceptMutex", "on", ProxyConfValueType.STRING, ProxyConfOverride.SERVER, "accept_mutex flag for NGINX - can be on|off - on indicates regular distribution, off gets better distribution of client connections between workers"));
 	    mConfVars.put("web.ews.upstream.disable", new EwsEnablerVar());
 	    mConfVars.put("web.upstream.ewsserver.:servers", new WebEwsUpstreamServersVar());
-	    mConfVars.put("web.ssl.upstream.ewsserver.:servers", new WebEwsSSLUpstreamServersVar());      
+	    mConfVars.put("web.ssl.upstream.ewsserver.:servers", new WebEwsSSLUpstreamServersVar());
 	    mConfVars.put("web.ews.upstream.name", new ProxyConfVar("web.ews.upstream.name", null, ZIMBRA_UPSTREAM_EWS_NAME, ProxyConfValueType.STRING, ProxyConfOverride.CONFIG, "Symbolic name for ews upstream server cluster"));
-	    mConfVars.put("web.ssl.ews.upstream.name", new ProxyConfVar("web.ssl.ews.upstream.name", null, ZIMBRA_SSL_UPSTREAM_EWS_NAME, ProxyConfValueType.STRING, ProxyConfOverride.CONFIG, "Symbolic name for https ews upstream server cluster"));  
+	    mConfVars.put("web.ssl.ews.upstream.name", new ProxyConfVar("web.ssl.ews.upstream.name", null, ZIMBRA_SSL_UPSTREAM_EWS_NAME, ProxyConfValueType.STRING, ProxyConfOverride.CONFIG, "Symbolic name for https ews upstream server cluster"));
 	    mConfVars.put("web.login.upstream.disable", new LoginEnablerVar());
 	    mConfVars.put("web.upstream.loginserver.:servers", new WebLoginUpstreamServersVar());
-	    mConfVars.put("web.ssl.upstream.loginserver.:servers", new WebLoginSSLUpstreamServersVar());      
+	    mConfVars.put("web.ssl.upstream.loginserver.:servers", new WebLoginSSLUpstreamServersVar());
 	    mConfVars.put("web.login.upstream.name", new ProxyConfVar("web.login.upstream.name", null, ZIMBRA_UPSTREAM_LOGIN_NAME, ProxyConfValueType.STRING, ProxyConfOverride.CONFIG, "Symbolic name for upstream login server cluster"));
 	    mConfVars.put("web.ssl.login.upstream.name", new ProxyConfVar("web.ssl.login.upstream.name", null, ZIMBRA_SSL_UPSTREAM_LOGIN_NAME, ProxyConfValueType.STRING, ProxyConfOverride.CONFIG, "Symbolic name for https upstream login server cluster"));
 	    mConfVars.put("web.login.upstream.url", new ProxyConfVar("web.login.upstream.url", "zimbraMailURL", "/", ProxyConfValueType.STRING, ProxyConfOverride.SERVER, "Zimbra Login URL"));
@@ -2649,33 +2647,15 @@ public class ProxyConfGen
             expandTemplate(new File(mTemplateDir, getConfTemplateFileName("memcache")), new File(mConfIncludesDir, getConfFileName("memcache")));
             expandTemplate(new File(mTemplateDir, getConfTemplateFileName("zmlookup")), new File(mConfIncludesDir, getConfFileName("zmlookup")));
             expandTemplate(new File(mTemplateDir, getConfTemplateFileName("mail")), new File(mConfIncludesDir, getConfFileName("mail")));
-            expandTemplate(new File(mTemplateDir, getConfTemplateFileName("mail.imap")), new File(mConfIncludesDir, getConfFileName("mail.imap")));
             expandTemplate(new File(mTemplateDir, getConfTemplateFileName("mail.imap.default")), new File(mConfIncludesDir, getConfFileName("mail.imap.default")));
-            expandTemplate(new File(mTemplateDir, getConfTemplateFileName("mail.imaps")), new File(mConfIncludesDir, getConfFileName("mail.imaps")));
             expandTemplate(new File(mTemplateDir, getConfTemplateFileName("mail.imaps.default")), new File(mConfIncludesDir, getConfFileName("mail.imaps.default")));
-            expandTemplate(new File(mTemplateDir, getConfTemplateFileName("mail.pop3")), new File(mConfIncludesDir, getConfFileName("mail.pop3")));
             expandTemplate(new File(mTemplateDir, getConfTemplateFileName("mail.pop3.default")), new File(mConfIncludesDir, getConfFileName("mail.pop3.default")));
-            expandTemplate(new File(mTemplateDir, getConfTemplateFileName("mail.pop3s")), new File(mConfIncludesDir, getConfFileName("mail.pop3s")));
             expandTemplate(new File(mTemplateDir, getConfTemplateFileName("mail.pop3s.default")), new File(mConfIncludesDir, getConfFileName("mail.pop3s.default")));
             expandTemplate(new File(mTemplateDir, getConfTemplateFileName("web")), new File(mConfIncludesDir,getConfFileName("web")));
-            expandTemplate(new File(mTemplateDir, getConfTemplateFileName("web.http")), new File(mConfIncludesDir, getConfFileName("web.http")));
             expandTemplate(new File(mTemplateDir, getConfTemplateFileName("web.http.default")), new File(mConfIncludesDir, getConfFileName("web.http.default")));
-            expandTemplate(new File(mTemplateDir, getConfTemplateFileName("web.https")), new File(mConfIncludesDir, getConfFileName("web.https")));
             expandTemplate(new File(mTemplateDir, getConfTemplateFileName("web.https.default")), new File(mConfIncludesDir, getConfFileName("web.https.default")));
-            expandTemplate(new File(mTemplateDir, getConfTemplateFileName("web.sso")), new File(mConfIncludesDir, getConfFileName("web.sso")));
             expandTemplate(new File(mTemplateDir, getConfTemplateFileName("web.sso.default")), new File(mConfIncludesDir, getConfFileName("web.sso.default")));
-            expandTemplate(new File(mTemplateDir, getConfTemplateFileName("web.admin")), new File(mConfIncludesDir, getConfFileName("web.admin")));
             expandTemplate(new File(mTemplateDir, getConfTemplateFileName("web.admin.default")), new File(mConfIncludesDir, getConfFileName("web.admin.default")));
-            expandTemplate(new File(mTemplateDir, getWebHttpModeConfTemplate("http")), new File(mConfIncludesDir, getWebHttpModeConf("http")));
-            expandTemplate(new File(mTemplateDir, getWebHttpModeConfTemplate("https")), new File(mConfIncludesDir, getWebHttpModeConf("https")));
-            expandTemplate(new File(mTemplateDir, getWebHttpModeConfTemplate("both")), new File(mConfIncludesDir, getWebHttpModeConf("both")));
-            expandTemplate(new File(mTemplateDir, getWebHttpModeConfTemplate("redirect")), new File(mConfIncludesDir, getWebHttpModeConf("redirect")));
-            expandTemplate(new File(mTemplateDir, getWebHttpModeConfTemplate("mixed")), new File(mConfIncludesDir, getWebHttpModeConf("mixed")));
-            expandTemplate(new File(mTemplateDir, getWebHttpSModeConfTemplate("http")), new File(mConfIncludesDir, getWebHttpSModeConf("http")));
-            expandTemplate(new File(mTemplateDir, getWebHttpSModeConfTemplate("https")), new File(mConfIncludesDir, getWebHttpSModeConf("https")));
-            expandTemplate(new File(mTemplateDir, getWebHttpSModeConfTemplate("both")), new File(mConfIncludesDir, getWebHttpSModeConf("both")));
-            expandTemplate(new File(mTemplateDir, getWebHttpSModeConfTemplate("redirect")), new File(mConfIncludesDir, getWebHttpSModeConf("redirect")));
-            expandTemplate(new File(mTemplateDir, getWebHttpSModeConfTemplate("mixed")), new File(mConfIncludesDir, getWebHttpSModeConf("mixed")));
         } catch (ProxyConfException pe) {
             handleException(pe);
             exitCode = 1;
