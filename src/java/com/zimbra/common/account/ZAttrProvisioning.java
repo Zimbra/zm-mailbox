@@ -12120,6 +12120,22 @@ public class ZAttrProvisioning {
     public static final String A_zimbraReverseProxyMailHostSearchBase = "zimbraReverseProxyMailHostSearchBase";
 
     /**
+     * Whether to enable IMAP proxy
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1621)
+    public static final String A_zimbraReverseProxyMailImapEnabled = "zimbraReverseProxyMailImapEnabled";
+
+    /**
+     * Whether to enable IMAPs proxy
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1622)
+    public static final String A_zimbraReverseProxyMailImapsEnabled = "zimbraReverseProxyMailImapsEnabled";
+
+    /**
      * whether to run proxy in HTTP, HTTPS, both, mixed, or redirect mode.
      * See also related attributes zimbraMailProxyPort and
      * zimbraMailSSLProxyPort
@@ -12128,6 +12144,22 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=685)
     public static final String A_zimbraReverseProxyMailMode = "zimbraReverseProxyMailMode";
+
+    /**
+     * Whether to enable Pop3 proxy
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1623)
+    public static final String A_zimbraReverseProxyMailPop3Enabled = "zimbraReverseProxyMailPop3Enabled";
+
+    /**
+     * Whether to enable Pop3s proxy
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1624)
+    public static final String A_zimbraReverseProxyMailPop3sEnabled = "zimbraReverseProxyMailPop3sEnabled";
 
     /**
      * whether NGINX mail proxy will pass upstream server errors back to the
