@@ -370,6 +370,9 @@ public final class NativeFormatter extends Formatter {
         String disp = req.getParameter(UserServlet.QP_DISP);
         disp = (disp == null || disp.toLowerCase().startsWith("i")) ? Part.INLINE : Part.ATTACHMENT;
         if (desc != null && desc.length() <= 2048) { // do not return ridiculously long header.
+            if (desc.contains(" ") && !(desc.startsWith("\"") && desc.endsWith("\""))) {
+                desc = "\"" + desc.trim() +"\"";
+            }
             resp.addHeader("Content-Description", desc);
         }
         // defang when the html and svg attachment was requested with disposition inline
