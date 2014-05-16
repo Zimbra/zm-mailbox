@@ -5476,6 +5476,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureSocialFiltersEnabled = "zimbraFeatureSocialFiltersEnabled";
 
     /**
+     * social tab name
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1625)
+    public static final String A_zimbraFeatureSocialName = "zimbraFeatureSocialName";
+
+    /**
      * tagging feature
      */
     @ZAttr(id=137)
