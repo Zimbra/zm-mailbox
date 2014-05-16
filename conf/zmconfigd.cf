@@ -350,6 +350,10 @@ SECTION proxy
 	VAR zimbraReverseProxyIpThrottleMsg
 	VAR zimbraReverseProxyLogLevel
 	VAR zimbraReverseProxyMailEnabled
+	VAR zimbraReverseProxyMailImapEnabled
+	VAR zimbraReverseProxyMailImapsEnabled
+	VAR zimbraReverseProxyMailPop3Enabled
+	VAR zimbraReverseProxyMailPop3sEnabled
 	VAR zimbraReverseProxyMailMode
 	VAR zimbraReverseProxyPassErrors
 	VAR zimbraReverseProxyPop3EnabledCapability
