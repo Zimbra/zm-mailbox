@@ -15892,6 +15892,78 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * social tab name
+     *
+     * @return zimbraFeatureSocialName, or null if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1625)
+    public String getFeatureSocialName() {
+        return getAttr(Provisioning.A_zimbraFeatureSocialName, null);
+    }
+
+    /**
+     * social tab name
+     *
+     * @param zimbraFeatureSocialName new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1625)
+    public void setFeatureSocialName(String zimbraFeatureSocialName) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureSocialName, zimbraFeatureSocialName);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * social tab name
+     *
+     * @param zimbraFeatureSocialName new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1625)
+    public Map<String,Object> setFeatureSocialName(String zimbraFeatureSocialName, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureSocialName, zimbraFeatureSocialName);
+        return attrs;
+    }
+
+    /**
+     * social tab name
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1625)
+    public void unsetFeatureSocialName() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureSocialName, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * social tab name
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1625)
+    public Map<String,Object> unsetFeatureSocialName(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureSocialName, "");
+        return attrs;
+    }
+
+    /**
      * whether Socialcast integration is enabled in the web client
      *
      * @return zimbraFeatureSocialcastEnabled, or false if unset

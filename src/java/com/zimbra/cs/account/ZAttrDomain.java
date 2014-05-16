@@ -7848,6 +7848,294 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
+     * internal social features
+     *
+     * @return zimbraFeatureSocialEnabled, or false if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1490)
+    public boolean isFeatureSocialEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraFeatureSocialEnabled, false);
+    }
+
+    /**
+     * internal social features
+     *
+     * @param zimbraFeatureSocialEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1490)
+    public void setFeatureSocialEnabled(boolean zimbraFeatureSocialEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureSocialEnabled, zimbraFeatureSocialEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * internal social features
+     *
+     * @param zimbraFeatureSocialEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1490)
+    public Map<String,Object> setFeatureSocialEnabled(boolean zimbraFeatureSocialEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureSocialEnabled, zimbraFeatureSocialEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * internal social features
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1490)
+    public void unsetFeatureSocialEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureSocialEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * internal social features
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1490)
+    public Map<String,Object> unsetFeatureSocialEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureSocialEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * external social features
+     *
+     * @return zimbraFeatureSocialExternalEnabled, or false if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1491)
+    public boolean isFeatureSocialExternalEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraFeatureSocialExternalEnabled, false);
+    }
+
+    /**
+     * external social features
+     *
+     * @param zimbraFeatureSocialExternalEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1491)
+    public void setFeatureSocialExternalEnabled(boolean zimbraFeatureSocialExternalEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureSocialExternalEnabled, zimbraFeatureSocialExternalEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * external social features
+     *
+     * @param zimbraFeatureSocialExternalEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1491)
+    public Map<String,Object> setFeatureSocialExternalEnabled(boolean zimbraFeatureSocialExternalEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureSocialExternalEnabled, zimbraFeatureSocialExternalEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * external social features
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1491)
+    public void unsetFeatureSocialExternalEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureSocialExternalEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * external social features
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1491)
+    public Map<String,Object> unsetFeatureSocialExternalEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureSocialExternalEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * external social URL
+     *
+     * @return zimbraFeatureSocialExternalURL, or null if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1492)
+    public String getFeatureSocialExternalURL() {
+        return getAttr(Provisioning.A_zimbraFeatureSocialExternalURL, null);
+    }
+
+    /**
+     * external social URL
+     *
+     * @param zimbraFeatureSocialExternalURL new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1492)
+    public void setFeatureSocialExternalURL(String zimbraFeatureSocialExternalURL) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureSocialExternalURL, zimbraFeatureSocialExternalURL);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * external social URL
+     *
+     * @param zimbraFeatureSocialExternalURL new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1492)
+    public Map<String,Object> setFeatureSocialExternalURL(String zimbraFeatureSocialExternalURL, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureSocialExternalURL, zimbraFeatureSocialExternalURL);
+        return attrs;
+    }
+
+    /**
+     * external social URL
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1492)
+    public void unsetFeatureSocialExternalURL() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureSocialExternalURL, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * external social URL
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1492)
+    public Map<String,Object> unsetFeatureSocialExternalURL(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureSocialExternalURL, "");
+        return attrs;
+    }
+
+    /**
+     * social tab name
+     *
+     * @return zimbraFeatureSocialName, or null if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1625)
+    public String getFeatureSocialName() {
+        return getAttr(Provisioning.A_zimbraFeatureSocialName, null);
+    }
+
+    /**
+     * social tab name
+     *
+     * @param zimbraFeatureSocialName new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1625)
+    public void setFeatureSocialName(String zimbraFeatureSocialName) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureSocialName, zimbraFeatureSocialName);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * social tab name
+     *
+     * @param zimbraFeatureSocialName new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1625)
+    public Map<String,Object> setFeatureSocialName(String zimbraFeatureSocialName, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureSocialName, zimbraFeatureSocialName);
+        return attrs;
+    }
+
+    /**
+     * social tab name
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1625)
+    public void unsetFeatureSocialName() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureSocialName, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * social tab name
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1625)
+    public Map<String,Object> unsetFeatureSocialName(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureSocialName, "");
+        return attrs;
+    }
+
+    /**
      * Maximum size in bytes for each attachment.
      *
      * @return zimbraFileUploadMaxSizePerFile, or 2147483648 if unset
