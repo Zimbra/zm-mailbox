@@ -190,6 +190,8 @@
               %%zimbraSSLExcludeCipherSuitesXML%%
             </Array>
 		</Set>
+		<Set name="WantClientAuth">%%contains VAR:zimbraMailSSLClientCertMode WantClientAuth^ true^ false%%</Set>
+		<Set name="NeedClientAuth">%%contains VAR:zimbraMailSSLClientCertMode NeedClientAuth^ true^ false%%</Set>
 	</New>
 
    	<Call id="httpsClientConnector" name="addConnector">
@@ -204,7 +206,7 @@
 							<New class="org.eclipse.jetty.server.SslConnectionFactory">
 								<Arg name="next">http/1.1</Arg>
 								<Arg name="sslContextFactory">
-									<Ref refid="zimbraSslContextFactory" />
+									<Ref refid="zimbraSslClientContextFactory" />
 								</Arg>
 							</New>
 						</Item>
