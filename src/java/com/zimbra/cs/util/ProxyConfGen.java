@@ -1068,10 +1068,14 @@ class WebEwsUpstreamServersVar extends ServersVar {
         ArrayList<String> directives = new ArrayList<String>();
         String portName = configSource.getAttr(Provisioning.A_zimbraReverseProxyHttpPortAttribute, "");
         String[] upstreams = serverSource.getMultiAttr(Provisioning.A_zimbraReverseProxyUpstreamEwsServers);
+        List<Server> mailclientservers = mProv.getAllServers(Provisioning.SERVICE_MAILCLIENT);
 
         if (upstreams.length > 0) {
             for (String serverName: upstreams) {
                 Server server = mProv.getServerByName(serverName);
+                // Skip all the webclient servers running just 'zimbra/zimbraAdmin' webapps for ews server block
+                if (!mailclientservers.contains(server))
+                    continue;
                 if (isValidUpstream(server, serverName)) {
                     directives.add(generateServerDirective(server, serverName, portName));
                     mLog.info("Added EWS server to HTTP upstream: " + serverName);
@@ -1094,10 +1098,14 @@ class WebEwsSSLUpstreamServersVar extends ServersVar {
         ArrayList<String> directives = new ArrayList<String>();
         String portName = configSource.getAttr(Provisioning.A_zimbraReverseProxyHttpSSLPortAttribute, "");
         String[] upstreams = serverSource.getMultiAttr(Provisioning.A_zimbraReverseProxyUpstreamEwsServers);
+        List<Server> mailclientservers = mProv.getAllServers(Provisioning.SERVICE_MAILCLIENT);
 
         if (upstreams.length > 0) {
             for (String serverName: upstreams) {
                 Server server = mProv.getServerByName(serverName);
+                // Skip all the webclient servers running just 'zimbra/zimbraAdmin' webapps for ews server block
+                if (!mailclientservers.contains(server))
+                    continue;
                 if (isValidUpstream(server, serverName)) {
                     directives.add(generateServerDirective(server, serverName, portName));
                     mLog.info("Added EWS server to HTTPS upstream: " + serverName);
