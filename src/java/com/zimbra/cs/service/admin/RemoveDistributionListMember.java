@@ -16,12 +16,10 @@
 package com.zimbra.cs.service.admin;
 
 import java.util.Arrays;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.zimbra.common.account.Key.DistributionListBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
@@ -36,45 +34,19 @@ import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.soap.ZimbraSoapContext;
 
-public class RemoveDistributionListMember extends DistributionListDocumentHandler {
-
-    /**
-     * must be careful and only allow access to domain if domain admin
-     */
-    @Override
-    public boolean domainAuthSufficient(Map context) {
-        return true;
-    }
+public class RemoveDistributionListMember extends ReloadMemberPostProxyHandler {
 
     @Override
-    protected Group getGroup(Element request) throws ServiceException {
-        String id = request.getAttribute(AdminConstants.E_ID);
-        return Provisioning.getInstance().getGroup(DistributionListBy.id, id);
-    }
-
-    @Override
-    public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-
-        ZimbraSoapContext zsc = getZimbraSoapContext(context);
-        Provisioning prov = Provisioning.getInstance();
-
-        List<String> memberList = new LinkedList<String>();
-        for (Element elem : request.listElements(AdminConstants.E_DLM)) {
-        	memberList.add(elem.getTextTrim());
-        }
-
+    protected List<String> getMemberList(Element request, Map<String, Object> context)
+            throws ServiceException {
+        List<String> memberList = super.getMemberList(request, context);
         Group group = getGroupFromContext(context);
-        if (group == null) {
-            String id = request.getAttribute(AdminConstants.E_ID);
-            throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(id);
-        }
+        memberList = addMembersFromAccountElements(request, memberList, group);
+        return memberList;
+    }
 
-        if (group.isDynamic()) {
-            checkDynamicGroupRight(zsc, (DynamicGroup) group, Admin.R_removeGroupMember);
-        } else {
-            checkDistributionListRight(zsc, (DistributionList) group, Admin.R_removeDistributionListMember);
-        }
-
+    private List<String> addMembersFromAccountElements(Element request, List<String> memberList, Group group) throws ServiceException {
+        Provisioning prov = Provisioning.getInstance();
         for (Element elem : request.listElements(AdminConstants.E_ACCOUNT)) {
             Set<String> listAddresses = group.getAllMembersSet();
             Account account = prov.getAccount(elem.getTextTrim());
@@ -90,6 +62,30 @@ public class RemoveDistributionListMember extends DistributionListDocumentHandle
                 }
             }
         }
+        return memberList;
+    }
+
+    @Override
+    public Element handle(Element request, Map<String, Object> context) throws ServiceException {
+
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        Provisioning prov = Provisioning.getInstance();
+
+        List<String> memberList = getMemberList(request, context);
+
+        Group group = getGroupFromContext(context);
+        if (group == null) {
+            String id = request.getAttribute(AdminConstants.E_ID);
+            throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(id);
+        }
+
+        if (group.isDynamic()) {
+            checkDynamicGroupRight(zsc, (DynamicGroup) group, Admin.R_removeGroupMember);
+        } else {
+            checkDistributionListRight(zsc, (DistributionList) group, Admin.R_removeDistributionListMember);
+        }
+
+        memberList = addMembersFromAccountElements(request, memberList, group);
 
         String[] members = memberList.toArray(new String[0]);
         prov.removeGroupMembers(group, members);
@@ -107,4 +103,5 @@ public class RemoveDistributionListMember extends DistributionListDocumentHandle
         relatedRights.add(Admin.R_removeDistributionListMember);
         relatedRights.add(Admin.R_removeGroupMember);
     }
+
 }
