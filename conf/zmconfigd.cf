@@ -375,6 +375,8 @@ SECTION proxy
 	VAR zimbraReverseProxyAcceptMutex
 	VAR zimbraReverseProxyExactServerVersionCheck
 	VAR zimbraReverseProxySSLECDHCurve
+	VAR zimbraReverseProxyUpstreamLoginServers
+	VAR zimbraReverseProxyUpstreamEwsServers
 	PROXYGEN
 	RESTART proxy
 
