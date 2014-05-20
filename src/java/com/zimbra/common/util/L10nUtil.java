@@ -251,6 +251,11 @@ public class L10nUtil {
         mobile_notification_skip_item_reason_other,
         mobile_notification_skip_item_attachment_name,
 
+        mobile_partial_failure_report_subject,
+        mobile_partial_failure_report_message,
+        mobile_send_failure_report_subject,
+        mobile_send_failure_report_message,
+
         //TODO remove octopus
         octopus_share_notification_email_subject,
         octopus_share_notification_email_message,
