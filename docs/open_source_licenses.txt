@@ -91,7 +91,7 @@ SECTION 1: BSD-STYLE, MIT-STYLE, OR SIMILAR STYLE LICENSES
    >>> spymemcached-2.6
    >>> sqlite-amalgamation-3.7.6.2
    >>> sqlitejdbc-3.6.20.1
-   >>> tnef-1.6.0
+   >>> tnef-1.8.0
    >>> xp-0.5
    >>> xpp3-1.1.4c
    >>> yui-2.4.2
@@ -16042,7 +16042,7 @@ ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 
->>> tnef-1.6.0
+>>> tnef-1.8.0
 
 JTNEF Software License Agreement
 
