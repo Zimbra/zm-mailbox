@@ -1120,10 +1120,15 @@ class WebLoginUpstreamServersVar extends ServersVar {
         ArrayList<String> directives = new ArrayList<String>();
         String portName = configSource.getAttr(Provisioning.A_zimbraReverseProxyHttpPortAttribute, "");
         String[] upstreams = serverSource.getMultiAttr(Provisioning.A_zimbraReverseProxyUpstreamLoginServers);
+        List<Server> webclientservers = mProv.getAllServers(Provisioning.SERVICE_WEBCLIENT);
+        List<Server> adminclientservers = mProv.getAllServers(Provisioning.SERVICE_ADMINCLIENT);
 
         if (upstreams.length > 0) {
             for (String serverName: upstreams) {
                 Server server = mProv.getServerByName(serverName);
+                // Skip all the servers running just the 'service' webapp for login server block
+                if (!(webclientservers.contains(server) || adminclientservers.contains(server)))
+                    continue;
                 if (isValidUpstream(server, serverName)) {
                     directives.add(generateServerDirective(server, serverName, portName));
                     mLog.info("Added Login server to HTTP upstream: " + serverName);
@@ -1146,10 +1151,15 @@ class WebLoginSSLUpstreamServersVar extends ServersVar {
         ArrayList<String> directives = new ArrayList<String>();
         String portName = configSource.getAttr(Provisioning.A_zimbraReverseProxyHttpSSLPortAttribute, "");
         String[] upstreams = serverSource.getMultiAttr(Provisioning.A_zimbraReverseProxyUpstreamLoginServers);
+        List<Server> webclientservers = mProv.getAllServers(Provisioning.SERVICE_WEBCLIENT);
+        List<Server> adminclientservers = mProv.getAllServers(Provisioning.SERVICE_ADMINCLIENT);
 
         if (upstreams.length > 0) {
             for (String serverName: upstreams) {
                 Server server = mProv.getServerByName(serverName);
+                // Skip all the servers running just the 'service' webapp for login server block
+                if (!(webclientservers.contains(server) || adminclientservers.contains(server)))
+                    continue;
                 if (isValidUpstream(server, serverName)) {
                     directives.add(generateServerDirective(server, serverName, portName));
                     mLog.info("Added Login server to HTTPS upstream: " + serverName);
