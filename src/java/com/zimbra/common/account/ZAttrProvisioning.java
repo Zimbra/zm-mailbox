@@ -12298,6 +12298,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraReverseProxySSLCiphers = "zimbraReverseProxySSLCiphers";
 
     /**
+     * SSL ECDH cipher curve for web proxy
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1626)
+    public static final String A_zimbraReverseProxySSLECDHCurve = "zimbraReverseProxySSLECDHCurve";
+
+    /**
      * If set as TRUE, proxy will use SSL to connect to the upstream mail
      * servers for web and mail proxy. Note admin console proxy always use
      * https no matter how this attr is set.
