@@ -45992,6 +45992,78 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * SSL ECDH cipher curve for web proxy
+     *
+     * @return zimbraReverseProxySSLECDHCurve, or "prime256v1" if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1626)
+    public String getReverseProxySSLECDHCurve() {
+        return getAttr(Provisioning.A_zimbraReverseProxySSLECDHCurve, "prime256v1");
+    }
+
+    /**
+     * SSL ECDH cipher curve for web proxy
+     *
+     * @param zimbraReverseProxySSLECDHCurve new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1626)
+    public void setReverseProxySSLECDHCurve(String zimbraReverseProxySSLECDHCurve) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxySSLECDHCurve, zimbraReverseProxySSLECDHCurve);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * SSL ECDH cipher curve for web proxy
+     *
+     * @param zimbraReverseProxySSLECDHCurve new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1626)
+    public Map<String,Object> setReverseProxySSLECDHCurve(String zimbraReverseProxySSLECDHCurve, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxySSLECDHCurve, zimbraReverseProxySSLECDHCurve);
+        return attrs;
+    }
+
+    /**
+     * SSL ECDH cipher curve for web proxy
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1626)
+    public void unsetReverseProxySSLECDHCurve() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxySSLECDHCurve, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * SSL ECDH cipher curve for web proxy
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1626)
+    public Map<String,Object> unsetReverseProxySSLECDHCurve(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxySSLECDHCurve, "");
+        return attrs;
+    }
+
+    /**
      * If set as TRUE, proxy will use SSL to connect to the upstream mail
      * servers for web and mail proxy. Note admin console proxy always use
      * https no matter how this attr is set.

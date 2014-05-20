@@ -8142,4 +8142,9 @@ TODO: delete them permanently from here
   <desc>social tab name</desc>
 </attr>
 
+<attr id="1626" name="zimbraReverseProxySSLECDHCurve" type="string" cardinality="single" optionalIn="globalConfig" requiresRestart="nginxproxy" since="8.5.0">
+  <globalConfigValue>prime256v1</globalConfigValue>
+  <desc>SSL ECDH cipher curve for web proxy</desc>
+</attr>
+
 </attrs>
