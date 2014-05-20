@@ -124,7 +124,7 @@ SECTION 2: Apache License, V2.0
    >>> concurrentlinkedhashmap-lru-1.3.1
    >>> ehcache-core-2.5.1
    >>> google-caja-r4817
-   >>> guava-10.0.1
+   >>> guava-13.0.1
    >>> jackson-1.9.2
    >>> jettison-1.1
    >>> jetty-7.6.12
@@ -17882,7 +17882,7 @@ Unless required by applicable law or agreed to in writing software distributed u
 See the License for the specific language governing permissions and limitations under the License.
 
 
->>> guava-10.0.1
+>>> guava-13.0.1
 
 Copyright (C) 2010 The Guava Authors
 
