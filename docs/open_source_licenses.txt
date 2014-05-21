@@ -89,7 +89,7 @@ SECTION 1: BSD-STYLE, MIT-STYLE, OR SIMILAR STYLE LICENSES
    >>> soundmanager2-2.0b
    >>> spymemcached-2.6
    >>> sqlite-amalgamation-3.7.6.2
-   >>> sqlitejdbc-3.6.20.1
+   >>> sqlitejdbc-3.7.5-1
    >>> tnef-1.8.0
    >>> xp-0.5
    >>> xpp3-1.1.4c
@@ -102,9 +102,9 @@ SECTION 2: Apache License, V2.0
    >>> apache-ant-1.7.0
    >>> apache-apr-1.5.0
    >>> apache-apr-util-1.5.3
-   >>> apache-commons-beanutils-1.8.0
+   >>> apache-commons-beanutils-1.7.0
    >>> apache-commons-cli-1.2
-   >>> apache-commons-codec-1.6
+   >>> apache-commons-codec-1.7
    >>> apache-commons-dbcp-1.4
    >>> apache-commons-fileupload-1.2.2
    >>> apache-commons-httpclient-3.1
@@ -112,7 +112,7 @@ SECTION 2: Apache License, V2.0
    >>> apache-commons-logging-1.1.1
    >>> apache-commons-pool-1.6
    >>> apache-derby-10.5.3.0
-   >>> apache-httpd-2.4.7
+   >>> apache-httpd-2.4.9
    >>> apache-jcs-1.3
    >>> apache-log4j-1.2.16
    >>> apache-log4j-extras-1.0
@@ -15975,7 +15975,7 @@ All of the deliverable code in SQLite has been written from scratch. No code has
 (Available at http://www.sqlite.org/copyright.html on 4th May 2011)
 
 
->>> sqlitejdbc-3.6.20.1
+>>> sqlitejdbc-3.7.5-1
 
 Copyright (c) 2007 David Crawshaw 
 
@@ -16775,7 +16775,7 @@ software without specific prior written permission. This software
 is provided ``as is'' without express or implied warranty.
 
 
->>> apache-commons-beanutils-1.8.0
+>>> apache-commons-beanutils-1.7.0
 
 Licensed to the Apache Software Foundation (ASF) under one or more
 contributor license agreements.  See the NOTICE file distributed with
@@ -16807,9 +16807,9 @@ The ASF licenses this file to You under the Apache License, Version 2.0
  * See the License for the specific language governing permissions and limitations under the License.
 
 
->>> apache-commons-codec-1.6
+>>> apache-commons-codec-1.7
 
-apache-commons-codec-1.6-2.fc17.src.rpm\apache-commons-codec-1.6-2.fc17.src.cpio.gz\apache-commons-codec-1.6-2.fc17.src.cpio\commons-codec-1.6-src.tar.gz\commons-codec-1.6-src.tar\commons-codec-1.6-src\NOTICE.txt
+apache-commons-codec-1.7-2.fc17.src.rpm\apache-commons-codec-1.7-2.fc17.src.cpio.gz\apache-commons-codec-1.7-2.fc17.src.cpio\commons-codec-1.7-src.tar.gz\commons-codec-1.7-src.tar\commons-codec-1.7-src\NOTICE.txt
 
 Apache Commons Codec
 
@@ -17058,7 +17058,7 @@ Portions of this software were originally based on the following:
 ====================================================
 
 
->>> apache-httpd-2.4.7
+>>> apache-httpd-2.4.9
 
 copyright 2013 The Apache Software Foundation.
 
