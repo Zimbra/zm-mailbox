@@ -76,14 +76,14 @@ SECTION 1: BSD-STYLE, MIT-STYLE, OR SIMILAR STYLE LICENSES
    >>> opendkim-2.9.1
    >>> openldap-2.4.39
    >>> openssl-1.0.1g
-   >>> perl-data-uuid-1.218
+   >>> perl-data-uuid-1.219
    >>> perl-geography-countries-2009041301
    >>> perl-locale-maketext-simple-0.21
-   >>> perl-mail-spf-2.8.0
-   >>> perl-net-ssleay-1.52
-   >>> perl-socket6-0.23
-   >>> perl-try-tiny-0.11
-   >>> php-5.4.17
+   >>> perl-mail-spf-2.9.0
+   >>> perl-net-ssleay-1.55
+   >>> perl-socket6-0.25
+   >>> perl-try-tiny-0.19
+   >>> php-5.4.20
    >>> sendmail-8.14.8
    >>> slf4j-1.6.4
    >>> soundmanager2-2.0b
@@ -15482,7 +15482,7 @@ LICENSE ISSUES
  */
 
 
->>> perl-data-uuid-1.218
+>>> perl-data-uuid-1.219
 
 Copyright (c) 1990- 1993, 1996 Open Software Foundation, Inc.
 Copyright (c) 1989 by Hewlett-Packard Company, Palo Alto, Ca. &
@@ -15579,7 +15579,7 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 
 
->>> perl-mail-spf-2.8.0
+>>> perl-mail-spf-2.9.0
 
 (C) 2005-2012 Julian Mehnle <julian@mehnle.net>
     2005      Shevek <cpan@anarres.org>
@@ -15608,7 +15608,7 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
->>> perl-net-ssleay-1.52
+>>> perl-net-ssleay-1.55
 
 Copyright (c) 1996-2002 Sampo Kellomaki <sampo@iki.fi>
 Copyright (C) 2005 Florian Ragwitz <rafl@debian.org>
@@ -15625,7 +15625,7 @@ listed in LICENSE file at the root of OpenSSL-0.9.6b
 distribution (i.e. free, but mandatory attribution and NO WARRANTY).
 
 
->>> perl-socket6-0.23
+>>> perl-socket6-0.25
 
 Copyright (C) 2000-2008 Hajimu UMEMOTO <ume@mahoroba.org>.
 All rights reserved.
@@ -15665,14 +15665,14 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 SUCH DAMAGE.
 
 
->>> perl-try-tiny-0.11
+>>> perl-try-tiny-0.19
 
 Copyright (c) 2009 Yuval Kogman. All rights reserved.
 This program is free software; you can redistribute
 it and/or modify it under the terms of the MIT license.
 
 
->>> php-5.4.17
+>>> php-5.4.20
 
 The PHP License, version 3.01
 
@@ -15701,7 +15701,7 @@ ADDITIONAL LICENSE INFORMATION:
 
 > BSD style
 
-php-5.4.17.tar.bz2\php-5.4.17.tar\php-5.4.17\Zend\LICENSE
+php-5.4.20.tar.bz2\php-5.4.20.tar\php-5.4.20\Zend\LICENSE
 
 The Zend Engine License, Version 2.00
 Copyright (c) 1999-2006 Zend Technologies Ltd. All rights reserved.
@@ -15725,7 +15725,7 @@ THIS SOFTWARE IS PROVIDED BY ZEND TECHNOLOGIES LTD. ``AS IS'' AND  ANY EXPRESSED
 
 > GPL 2.0
 
-php-5.4.17.tar.bz2\php-5.4.17.tar\php-5.4.17\build\shtool
+php-5.4.20.tar.bz2\php-5.4.20.tar\php-5.4.20\build\shtool
 
 GNU shtool -- The GNU Portable Shell Tool
 Copyright (c) 1994-2008 Ralf S. Engelschall <rse@engelschall.com>
@@ -15746,14 +15746,14 @@ NOTICE: Given that you include this file verbatim into your own source tree, you
 
 > LGPL 2.1
 
-php-5.4.17.tar.bz2\php-5.4.17.tar\php-5.4.17\ext\bcmath\libbcmath\COPYING.LIB
+php-5.4.20.tar.bz2\php-5.4.20.tar\php-5.4.20\ext\bcmath\libbcmath\COPYING.LIB
 
 License: LGPL 2.1
 
 
 > LGPL 2.0
 
-php-5.4.17.tar.bz2\php-5.4.17.tar\php-5.4.17\ext\bcmath\libbcmath\src\add.c
+php-5.4.20.tar.bz2\php-5.4.20.tar\php-5.4.20\ext\bcmath\libbcmath\src\add.c
 
 Copyright (C) 1991, 1992, 1993, 1994, 1997 Free Software Foundation, Inc.
 Copyright (C) 2000 Philip A. Nelson
@@ -15774,7 +15774,7 @@ Bellingham, WA 98226-9062
 
 > MIT
 
-php-5.4.17.tar.bz2\php-5.4.17.tar\php-5.4.17\ext\gd\libgd\ COPYING
+php-5.4.20.tar.bz2\php-5.4.20.tar\php-5.4.20\ext\gd\libgd\ COPYING
 
 Portions copyright 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002 by Cold Spring Harbor Laboratory. Funded under Grant P41-RR02188 by the National Institutes of Health.
  
@@ -15800,7 +15800,7 @@ Although their code does not appear in gd, the authors wish to thank David Kobla
 
 > Public Domain
 
-php-5.4.17.tar.bz2\php-5.4.17.tar\php-5.4.17\ext\sqlite3\libsqlite\sqlite3.h
+php-5.4.20.tar.bz2\php-5.4.20.tar\php-5.4.20\ext\sqlite3\libsqlite\sqlite3.h
 
 2001 September 15
 
