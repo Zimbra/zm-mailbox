@@ -194,24 +194,23 @@ SECTION 7: GNU General Public License, V1.0
    >>> perl-http-parser-0.06
    >>> perl-io-html-1.00
    >>> perl-io-socket-ip-0.28
-   >>> perl-json-pp-2.27200
+   >>> perl-json-pp-2.27203
    >>> perl-json-pp-compat5006-1.09
    >>> perl-list-moreutils-0.33
-   >>> perl-mime-lite-3.029
-   >>> perl-moose-2.0604
-   >>> perl-ostype-1.002
-   >>> perl-package-stash-0.33
-   >>> perl-package-stash-xs-0.25
+   >>> perl-mime-lite-3.030
+   >>> perl-moose-2.1204
+   >>> perl-ostype-1.007
+   >>> perl-package-stash-0.36
+   >>> perl-package-stash-xs-0.28
    >>> perl-params-util-1.07
-   >>> perl-socket-2.006
-   >>> perl-sub-exporter-0.984
-   >>> perl-sub-install-0.926
+   >>> perl-socket-2.013
+   >>> perl-sub-exporter-0.987
+   >>> perl-sub-install-0.927
    >>> perl-sub-uplevel-0.24
    >>> perl-task-weaken-1.04
-   >>> perl-test-fatal-0.010
-   >>> perl-test-pod-1.45
-   >>> perl-test-simple-0.98
-   >>> perl-version-requirements-0.101022
+   >>> perl-test-fatal-0.013
+   >>> perl-test-pod-1.48
+   >>> perl-test-simple-1.001002
    >>> perl-xml-namespace-support-1.11
    >>> perl-xml-sax-0.99
    >>> perl-xml-sax-base-1.08
@@ -25644,7 +25643,7 @@ a) the GNU General Public License as published by the Free
 b) the "Artistic License"
 
 
->>> perl-json-pp-2.27200
+>>> perl-json-pp-2.27203
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 1.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 1.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
@@ -25682,7 +25681,7 @@ a) the GNU General Public License as published by the Free
 b) the "Artistic License"
 
 
->>> perl-mime-lite-3.029
+>>> perl-mime-lite-3.030
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 1.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 1.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
@@ -25695,7 +25694,7 @@ a) the GNU General Public License as published by the Free
 b) the "Artistic License"
 
 
->>> perl-moose-2.0604
+>>> perl-moose-2.1204
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 1.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 1.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
@@ -25712,7 +25711,7 @@ a) the GNU General Public License as published by the Free
 b) the "Artistic License"
 
 
->>> perl-ostype-1.002
+>>> perl-ostype-1.007
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 1.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 1.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
@@ -25729,7 +25728,7 @@ a) the GNU General Public License as published by the Free
 b) the "Artistic License"
 
 
->>> perl-package-stash-0.33
+>>> perl-package-stash-0.36
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 1.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 1.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
@@ -25746,7 +25745,7 @@ a) the GNU General Public License as published by the Free
 b) the "Artistic License"
 
 
->>> perl-package-stash-xs-0.25
+>>> perl-package-stash-xs-0.28
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 1.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 1.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
@@ -25775,7 +25774,7 @@ a) the GNU General Public License as published by the Free
 b) the "Artistic License"
 
 
->>> perl-socket-2.006
+>>> perl-socket-2.013
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 1.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 1.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
@@ -25808,7 +25807,7 @@ Boston, MA 02110-1301, USA or visit their web page on the internet at
 http://www.gnu.org/copyleft/gpl.html.
 
 
->>> perl-sub-exporter-0.984
+>>> perl-sub-exporter-0.987
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 1.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 1.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
@@ -25825,7 +25824,7 @@ a) the GNU General Public License as published by the Free
 b) the "Artistic License"
 
 
->>> perl-sub-install-0.926
+>>> perl-sub-install-0.927
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 1.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 1.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
@@ -25867,7 +25866,7 @@ a) the GNU General Public License as published by the Free Software Foundation; 
 b) the "Artistic License".
 
 
->>> perl-test-fatal-0.010
+>>> perl-test-fatal-0.013
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 1.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 1.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
@@ -25884,7 +25883,7 @@ a) the GNU General Public License as published by the Free
 b) the "Artistic License"
 
 
->>> perl-test-pod-1.45
+>>> perl-test-pod-1.48
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 1.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 1.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
@@ -25897,7 +25896,7 @@ a) the GNU General Public License as published by the Free Software Foundation; 
 b) the "Artistic License".
 
 
->>> perl-test-simple-0.98
+>>> perl-test-simple-1.001002
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 1.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 1.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
@@ -25908,23 +25907,6 @@ It is free software; you can redistribute it and/or modify it under the terms of
 a) the GNU General Public License as published by the Free Software Foundation; either external linkversion 1, or (at your option) any later versionexternal link, or
 
 b) the "Artistic License".
-
-
->>> perl-version-requirements-0.101022
-
-[PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 1.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 1.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
-
-This software is copyright (c) 2010 by Ricardo Signes.
-
-This is free software; you can redistribute it and/or modify it under
-the same terms as the Perl 5 programming language system itself.
-
-Terms of the Perl programming language system itself
-
-a) the GNU General Public License as published by the Free
-   Software Foundation; either version 1, or (at your option) any
-   later version, or
-b) the "Artistic License"
 
 
 >>> perl-xml-namespace-support-1.11
