@@ -175,25 +175,25 @@ SECTION 6: GNU AFFERO GENERAL PUBLIC LICENSE 3.0
 
 SECTION 7: GNU General Public License, V1.0
 
-   >>> perl-class-load-0.20
+   >>> perl-class-load-0.21
    >>> perl-convert-asn1-0.26
    >>> perl-convert-uulib-1.4
-   >>> perl-cpan-meta-2.120921
-   >>> perl-cpan-meta-requirements-2.122
-   >>> perl-cpan-meta-yaml-0.008
+   >>> perl-cpan-meta-2.133380
+   >>> perl-cpan-meta-requirements-2.125
+   >>> perl-cpan-meta-yaml-0.010
    >>> perl-crypt-openssl-rsa-0.27
-   >>> perl-data-optlist-0.107
-   >>> perl-dbd-sqlite-1.37
+   >>> perl-data-optlist-0.109
+   >>> perl-dbd-sqlite-1.40
    >>> perl-digest-hmac-1.03
-   >>> perl-dist-checkconflicts-0.02
-   >>> perl-error-0.17019
-   >>> perl-eval-closure-0.08
-   >>> perl-extutils-cbuilder-0.280205
-   >>> perl-extutils-manifest-1.61
+   >>> perl-dist-checkconflicts-0.10
+   >>> perl-error-0.17022
+   >>> perl-eval-closure-0.11
+   >>> perl-extutils-cbuilder-0.280212
+   >>> perl-extutils-manifest-1.63
    >>> perl-file-listing-6.04
    >>> perl-http-parser-0.06
-   >>> perl-io-html-0.04
-   >>> perl-io-socket-ip-0.17
+   >>> perl-io-html-1.00
+   >>> perl-io-socket-ip-0.28
    >>> perl-json-pp-2.27200
    >>> perl-json-pp-compat5006-1.09
    >>> perl-list-moreutils-0.33
@@ -25319,7 +25319,7 @@ License.
 GNU General Public License, V1.0 is applicable to the following component(s).
 
 
->>> perl-class-load-0.20
+>>> perl-class-load-0.21
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 1.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 1.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
@@ -25368,7 +25368,7 @@ a) the GNU General Public License as published by the Free Software Foundation; 
 b) the "Artistic License".
 
 
->>> perl-cpan-meta-2.120921
+>>> perl-cpan-meta-2.133380
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 1.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 1.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
@@ -25385,7 +25385,7 @@ a) the GNU General Public License as published by the Free
 b) the "Artistic License"
 
 
->>> perl-cpan-meta-requirements-2.122
+>>> perl-cpan-meta-requirements-2.125
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 1.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 1.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
@@ -25402,7 +25402,7 @@ a) the GNU General Public License as published by the Free
 b) the "Artistic License"
 
 
->>> perl-cpan-meta-yaml-0.008
+>>> perl-cpan-meta-yaml-0.010
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 1.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 1.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
@@ -25433,7 +25433,7 @@ a) the GNU General Public License as published by the Free
 b) the "Artistic License"
 
 
->>> perl-data-optlist-0.107
+>>> perl-data-optlist-0.109
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 1.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 1.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
@@ -25450,7 +25450,7 @@ a) the GNU General Public License as published by the Free
 b) the "Artistic License"
 
 
->>> perl-dbd-sqlite-1.37
+>>> perl-dbd-sqlite-1.40
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 1.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 1.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
@@ -25491,7 +25491,7 @@ a) the GNU General Public License as published by the Free Software Foundation; 
 b) the "Artistic License".
 
 
->>> perl-dist-checkconflicts-0.02
+>>> perl-dist-checkconflicts-0.10
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 1.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 1.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
@@ -25509,7 +25509,7 @@ a) the GNU General Public License as published by the Free
 b) the "Artistic License"
 
 
->>> perl-error-0.17019
+>>> perl-error-0.17022
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 1.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 1.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
@@ -25532,7 +25532,7 @@ of the Error distribution as a whole is the GPLv1+ and the Artistic
 licence).
 
 
->>> perl-eval-closure-0.08
+>>> perl-eval-closure-0.11
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 1.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 1.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
@@ -25549,7 +25549,7 @@ a) the GNU General Public License as published by the Free
 b) the "Artistic License"
 
 
->>> perl-extutils-cbuilder-0.280205
+>>> perl-extutils-cbuilder-0.280212
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 1.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 1.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
@@ -25566,7 +25566,7 @@ a) the GNU General Public License as published by the Free
 b) the "Artistic License"
 
 
->>> perl-extutils-manifest-1.61
+>>> perl-extutils-manifest-1.63
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 1.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 1.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
@@ -25610,7 +25610,7 @@ a) the GNU General Public License as published by the Free Software Foundation; 
 b) the "Artistic License".
 
 
->>> perl-io-html-0.04
+>>> perl-io-html-1.00
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 1.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 1.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
@@ -25627,7 +25627,7 @@ a) the GNU General Public License as published by the Free
 b) the "Artistic License"
 
 
->>> perl-io-socket-ip-0.17
+>>> perl-io-socket-ip-0.28
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 1.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 1.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
