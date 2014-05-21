@@ -66,16 +66,16 @@ SECTION 1: BSD-STYLE, MIT-STYLE, OR SIMILAR STYLE LICENSES
    >>> libevent-2.0.21
    >>> libmemcached-1.0.6
    >>> libpng-1.5.10
-   >>> libxml2-2.7.8-zimbra
+   >>> libxml2-2.9.1
    >>> md5.js-2.1
    >>> memcached-1.4.17
    >>> net-snmp-5.7.2
    >>> nginx-1.2-zimbra
    >>> nist-sip-1.2
    >>> nviennot-nginx-tcp-keepalive-4d7186d
-   >>> opendkim-2.9.0
-   >>> openldap-2.4.38
-   >>> openssl-1.0.1f
+   >>> opendkim-2.9.1
+   >>> openldap-2.4.39
+   >>> openssl-1.0.1g
    >>> perl-data-uuid-1.218
    >>> perl-geography-countries-2009041301
    >>> perl-locale-maketext-simple-0.21
@@ -14555,7 +14555,7 @@ supporting documentation. This software is provided "as is" without
 express or implied warranty.
 
 
->>> libxml2-2.7.8-zimbra
+>>> libxml2-2.9.1
 
 Except where otherwise noted in the source code (e.g. the files hash.c,
 list.c and the trio files, which are covered by a similar licence but
@@ -15158,7 +15158,7 @@ Copyright (C) 2011 Nicolas Viennot <nicolas@viennot.biz>
 This file is subject to the terms and conditions of the MIT License.
 
 
->>> opendkim-2.9.0
+>>> opendkim-2.9.1
 
 Copyright (c) 2009, 2010, 2012, The Trusted Domain Project.
 All rights reserved.
@@ -15198,7 +15198,7 @@ ADDITIONAL LICENSE INFORMATION :
 
 > SENDMAIL OPEN SOURCE LICENSE
 
-opendkim-2.9.0.tar.gz\opendkim-2.9.0.tar\opendkim-2.9.0\LICENSE
+opendkim-2.9.1.tar.gz\opendkim-2.9.1.tar\opendkim-2.9.1\LICENSE
 
 The following license terms and conditions apply to this open source
 software ("Software"), unless a different license is obtained directly
@@ -15279,7 +15279,7 @@ $Revision: 1.1 $ $Date: 2009/07/16 18:43:18 $
 
 > MIT
 
-opendkim-2.9.0.tar.gz\opendkim-2.9.0.tar\opendkim-2.9.0\libopendkim\base32.c
+opendkim-2.9.1.tar.gz\opendkim-2.9.1.tar\opendkim-2.9.1\libopendkim\base32.c
 
 Copyright (c) 2006-2009 Bjorn Andersson <flex@kryo.se>,
 Erik Ekman <yarrick@kryo.se>
@@ -15302,7 +15302,7 @@ Portions Copyright (c) 2010-2012, The Trusted Domain Project.
 All rights reserved.
 
 
->>> openldap-2.4.38
+>>> openldap-2.4.39
 
 The OpenLDAP Public License
 Version 2.8, 17 August 2003
@@ -15353,7 +15353,7 @@ California, USA.  All Rights Reserved.  Permission to copy and
 distribute verbatim copies of this document is granted.
 
 
->>> openssl-1.0.1f
+>>> openssl-1.0.1g
 
 LICENSE ISSUES
   ==============
