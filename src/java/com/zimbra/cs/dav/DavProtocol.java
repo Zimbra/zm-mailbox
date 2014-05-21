@@ -114,6 +114,7 @@ public class DavProtocol {
     public static final String HEADER_ETAG = "ETag";
     public static final String HEADER_USER_AGENT = "User-Agent";
     public static final String HEADER_ACCEPT_ENCODING = "Accept-Encoding";
+    public static final String HEADER_RANGE = "RANGE";
 
     public static final String NO_CACHE = "no-cache";
 

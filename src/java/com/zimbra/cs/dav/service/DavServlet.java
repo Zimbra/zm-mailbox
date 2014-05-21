@@ -245,6 +245,12 @@ public class DavServlet extends ZimbraServlet {
         ZimbraLog.clearContext();
         addRemoteIpToLoggingContext(req);
         ZimbraLog.addUserAgentToContext(req.getHeader(DavProtocol.HEADER_USER_AGENT));
+        
+        //bug fix - send 400 for Range requests
+        String rangeHeader = req.getHeader(DavProtocol.HEADER_RANGE);
+        if(null != rangeHeader){
+           sendError(resp, HttpServletResponse.SC_BAD_REQUEST, "Range header not supported", null, Level.debug);
+        }
 
         RequestType rtype = getAllowedRequestType(req);
         ZimbraLog.dav.debug("Allowable request types %s", rtype);
