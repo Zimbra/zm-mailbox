@@ -181,6 +181,7 @@ public class CsrfUtilTest {
         EasyMock.expect(request.getServerName()).andReturn("example.com");
         EasyMock.expect(request.getServerName()).andReturn("example.com");
         EasyMock.expect(request.getHeader("X-Forwarded-Host")).andReturn(null);
+        EasyMock.expect(request.getMethod()).andReturn("POST");
         EasyMock.expect(request.getHeader(HttpHeaders.REFERER)).andReturn(null);
 
         try {
@@ -207,6 +208,7 @@ public class CsrfUtilTest {
         EasyMock.expect(request.getHeader("X-Forwarded-Host")).andReturn(null);
         EasyMock.expect(request.getHeader(HttpHeaders.REFERER)).andReturn(
             "http://www.example.com/zimbra/#15");
+        EasyMock.expect(request.getMethod()).andReturn("POST");
 
         try {
 
@@ -235,6 +237,7 @@ public class CsrfUtilTest {
         EasyMock.expect(request.getHeader("X-Forwarded-Host")).andReturn(null);
         EasyMock.expect(request.getHeader(HttpHeaders.REFERER)).andReturn(
             "http://www.newexample.com");
+        EasyMock.expect(request.getMethod()).andReturn("POST");
 
         try {
             EasyMock.replay(request);
@@ -259,6 +262,7 @@ public class CsrfUtilTest {
         EasyMock.expect(request.getHeader("X-Forwarded-Host")).andReturn(null);
         EasyMock.expect(request.getHeader(HttpHeaders.REFERER)).andReturn(
             "http://www.newexample.com");
+        EasyMock.expect(request.getMethod()).andReturn("POST");
 
         try {
 
@@ -284,6 +288,7 @@ public class CsrfUtilTest {
         EasyMock.expect(request.getServerName()).andReturn("example.com");
         EasyMock.expect(request.getHeader(HttpHeaders.REFERER)).andReturn(
             "http://www.newexample.com");
+        EasyMock.expect(request.getMethod()).andReturn("POST");
 
         try {
             EasyMock.replay(request);
@@ -308,6 +313,7 @@ public class CsrfUtilTest {
         EasyMock.expect(request.getHeader("X-Forwarded-Host")).andReturn(null);
         EasyMock.expect(request.getHeader(HttpHeaders.REFERER)).andReturn(
             "http://www.example.com:7070");
+        EasyMock.expect(request.getMethod()).andReturn("POST");
         try {
 
             EasyMock.replay(request);
@@ -332,6 +338,7 @@ public class CsrfUtilTest {
         EasyMock.expect(request.getHeader("X-Forwarded-Host")).andReturn(null);
         EasyMock.expect(request.getHeader(HttpHeaders.REFERER)).andReturn(
             "https://mail.zimbra.com/zimbra/");
+        EasyMock.expect(request.getMethod()).andReturn("POST");
         try {
 
             EasyMock.replay(request);
@@ -354,6 +361,7 @@ public class CsrfUtilTest {
             "mail.zimbra.com");
         EasyMock.expect(request.getHeader(HttpHeaders.REFERER)).andReturn(
             "https://mail.zimbra.com/zimbra/");
+        EasyMock.expect(request.getMethod()).andReturn("POST");
         try {
 
             EasyMock.replay(request);
