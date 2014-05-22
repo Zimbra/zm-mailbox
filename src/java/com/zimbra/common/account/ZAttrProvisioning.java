@@ -3908,6 +3908,53 @@ public class ZAttrProvisioning {
     public static final String A_zimbraCreateTimestamp = "zimbraCreateTimestamp";
 
     /**
+     * A list of hosts like www.abc.com, www.xyz.com. These are used while
+     * doing CSRF referer check.
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1630)
+    public static final String A_zimbraCsrfAllowedRefererHosts = "zimbraCsrfAllowedRefererHosts";
+
+    /**
+     * A flag to turn on or off CSRF referer related check. When set to FALSE
+     * no CSRF referer check happens. When set to true CSRF referer type
+     * check happens.
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1631)
+    public static final String A_zimbraCsrfRefererCheckEnabled = "zimbraCsrfRefererCheckEnabled";
+
+    /**
+     * A flag to turn on or off CSRF token related check. When set to FALSE
+     * no CSRF check happens. When set to true both CSRF referer and CSRF
+     * token change is effective.
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1628)
+    public static final String A_zimbraCsrfTokenCheckEnabled = "zimbraCsrfTokenCheckEnabled";
+
+    /**
+     * List of data associated with CSRF token for an account. The data
+     * format is CSRF token data:Auth token Key crumb:Auth Token Key
+     * expiration
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1629)
+    public static final String A_zimbraCsrfTokenData = "zimbraCsrfTokenData";
+
+    /**
+     * CSRF token secret key
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1627)
+    public static final String A_zimbraCsrfTokenKey = "zimbraCsrfTokenKey";
+
+    /**
      * set to 1 or 3 to specify customer care account tier level
      *
      * @since ZCS 5.0.3

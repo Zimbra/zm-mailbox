@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -356,6 +356,8 @@ public class AccountConstants {
     public static final String A_SMIME_SOURCE_LOOKUP_OPT = "sourceLookupOpt";
     public static final String A_VIA = "via";
     public static final String A_VERIFY_ACCOUNT = "verifyAccount";
+    public static final String A_CSRF_SUPPORT = "csrfTokenSecured";
+
 
     // account ACLs
     public static final String A_ACCESSKEY = "key";
@@ -427,7 +429,7 @@ public class AccountConstants {
     // upload limits
     public static final String A_ATTACHMENT_SIZE_LIMIT = "attSizeLimit";
     public static final String A_DOCUMENT_SIZE_LIMIT = "docSizeLimit";
-    
+
     //auth
     public static final String A_LOG_OFF = "logoff";
 }
