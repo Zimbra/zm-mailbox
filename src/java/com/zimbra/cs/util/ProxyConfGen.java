@@ -558,7 +558,7 @@ class WebUpstreamClientServersVar extends ProxyConfVar {
 
 			if (isValidUpstream(server, serverName)) {
 				directives.add(generateServerDirective(server, serverName, portName));
-				mLog.info("Added server to HTTP webclient upstream: " + serverName);
+				mLog.info("Added pre 8.5 server to HTTP webclient upstream: " + serverName);
 			}
 	    }
 
@@ -568,7 +568,7 @@ class WebUpstreamClientServersVar extends ProxyConfVar {
 
             if (isValidUpstream(server, serverName)) {
                 directives.add(generateServerDirective(server, serverName, portName));
-                mLog.info("Added server to HTTP webclient upstream: " + serverName);
+                mLog.info("Added 8.5+ server to HTTP webclient upstream: " + serverName);
             }
         }
         mValue = directives;
@@ -620,7 +620,7 @@ class WebSSLUpstreamClientServersVar extends ProxyConfVar {
 
 			if (isValidUpstream(server, serverName)) {
 				directives.add(generateServerDirective(server, serverName, portName));
-				mLog.info("Added server to HTTPS webclient upstream: " + serverName);
+				mLog.info("Added pre 8.5 server to HTTPS webclient upstream: " + serverName);
 			}
 	    }
 
@@ -630,7 +630,7 @@ class WebSSLUpstreamClientServersVar extends ProxyConfVar {
 
             if (isValidUpstream(server, serverName)) {
                 directives.add(generateServerDirective(server, serverName, portName));
-                mLog.info("Added server to HTTPS webclient upstream: " + serverName);
+                mLog.info("Added 8.5+ server to HTTPS webclient upstream: " + serverName);
             }
         }
         mValue = directives;
@@ -682,7 +682,7 @@ class WebAdminUpstreamAdminClientServersVar extends ProxyConfVar {
 
 			if (isValidUpstream(server, serverName)) {
 				directives.add(generateServerDirective(server, serverName, portName));
-				mLog.info("Added server to HTTPS Admin client upstream: " + serverName);
+				mLog.info("Added pre 8.5 server to HTTPS Admin client upstream: " + serverName);
 			}
 	    }
 
@@ -692,7 +692,7 @@ class WebAdminUpstreamAdminClientServersVar extends ProxyConfVar {
 
             if (isValidUpstream(server, serverName)) {
                 directives.add(generateServerDirective(server, serverName, portName));
-                mLog.info("Added server to HTTPS Admin client upstream: " + serverName);
+                mLog.info("Added 8.5+ server to HTTPS Admin client upstream: " + serverName);
             }
         }
         mValue = directives;
@@ -947,7 +947,7 @@ class WebUpstreamServersVar extends ServersVar {
 
     		if (isValidUpstream(server, serverName)) {
     			directives.add(generateServerDirective(server, serverName, portName));
-    			mLog.info("Added server to HTTP mailstore upstream: " + serverName);
+    			mLog.info("Added pre 8.5 server to HTTP mailstore upstream: " + serverName);
     		}
     	}
 
@@ -957,7 +957,7 @@ class WebUpstreamServersVar extends ServersVar {
 
     		if (isValidUpstream(server, serverName)) {
     			directives.add(generateServerDirective(server, serverName, portName));
-    			mLog.info("Added server to HTTP mailstore upstream: " + serverName);
+    			mLog.info("Added 8.5+ server to HTTP mailstore upstream: " + serverName);
     		}
     	}
     	mValue = directives;
@@ -994,7 +994,7 @@ class WebSSLUpstreamServersVar extends ServersVar {
 
     		if (isValidUpstream(server, serverName)) {
     			directives.add(generateServerDirective(server, serverName, portName));
-    			mLog.info("Added server to HTTPS mailstore upstream: " + serverName);
+    			mLog.info("Added pre 8.5 server to HTTPS mailstore upstream: " + serverName);
     		}
     	}
 
@@ -1004,7 +1004,7 @@ class WebSSLUpstreamServersVar extends ServersVar {
 
     		if (isValidUpstream(server, serverName)) {
     			directives.add(generateServerDirective(server, serverName, portName));
-    			mLog.info("Added server to HTTPS mailstore upstream: " + serverName);
+    			mLog.info("Added 8.5+ server to HTTPS mailstore upstream: " + serverName);
     		}
     	}
     	mValue = directives;
@@ -1039,7 +1039,7 @@ class WebAdminUpstreamServersVar extends ServersVar {
 
 			if (isValidUpstream(server, serverName)) {
 				directives.add(generateServerDirective(server, serverName, portName));
-				mLog.info("Added server to HTTPS Admin mailstore upstream: " + serverName);
+				mLog.info("Added pre 8.5 server to HTTPS Admin mailstore upstream: " + serverName);
 			}
 	    }
 
@@ -1049,7 +1049,7 @@ class WebAdminUpstreamServersVar extends ServersVar {
 
 			if (isValidUpstream(server, serverName)) {
 				directives.add(generateServerDirective(server, serverName, portName));
-				mLog.info("Added server to HTTPS Admin mailstore upstream: " + serverName);
+				mLog.info("Added 8.5+ server to HTTPS Admin mailstore upstream: " + serverName);
 			}
 		}
 		mValue = directives;
@@ -1068,15 +1068,12 @@ class WebEwsUpstreamServersVar extends ServersVar {
         ArrayList<String> directives = new ArrayList<String>();
         String portName = configSource.getAttr(Provisioning.A_zimbraReverseProxyHttpPortAttribute, "");
         String[] upstreams = serverSource.getMultiAttr(Provisioning.A_zimbraReverseProxyUpstreamEwsServers);
-        List<Server> mailclientservers = mProv.getAllServers(Provisioning.SERVICE_MAILCLIENT);
 
         if (upstreams.length > 0) {
             for (String serverName: upstreams) {
                 Server server = mProv.getServerByName(serverName);
-                // Skip all the webclient servers running just 'zimbra/zimbraAdmin' webapps for ews server block
-                if (!mailclientservers.contains(server))
-                    continue;
-                if (isValidUpstream(server, serverName)) {
+                // Add only the mailclient upstreams (i.e upstreams running 'service' webapp)
+                if (server.hasMailclientService() && isValidUpstream(server, serverName)) {
                     directives.add(generateServerDirective(server, serverName, portName));
                     mLog.info("Added EWS server to HTTP upstream: " + serverName);
                 }
@@ -1098,15 +1095,12 @@ class WebEwsSSLUpstreamServersVar extends ServersVar {
         ArrayList<String> directives = new ArrayList<String>();
         String portName = configSource.getAttr(Provisioning.A_zimbraReverseProxyHttpSSLPortAttribute, "");
         String[] upstreams = serverSource.getMultiAttr(Provisioning.A_zimbraReverseProxyUpstreamEwsServers);
-        List<Server> mailclientservers = mProv.getAllServers(Provisioning.SERVICE_MAILCLIENT);
 
         if (upstreams.length > 0) {
             for (String serverName: upstreams) {
                 Server server = mProv.getServerByName(serverName);
-                // Skip all the webclient servers running just 'zimbra/zimbraAdmin' webapps for ews server block
-                if (!mailclientservers.contains(server))
-                    continue;
-                if (isValidUpstream(server, serverName)) {
+                // Add only the mailclient upstreams (i.e upstreams running 'service' webapp)
+                if (server.hasMailclientService() && isValidUpstream(server, serverName)) {
                     directives.add(generateServerDirective(server, serverName, portName));
                     mLog.info("Added EWS server to HTTPS upstream: " + serverName);
                 }
@@ -1128,16 +1122,12 @@ class WebLoginUpstreamServersVar extends ServersVar {
         ArrayList<String> directives = new ArrayList<String>();
         String portName = configSource.getAttr(Provisioning.A_zimbraReverseProxyHttpPortAttribute, "");
         String[] upstreams = serverSource.getMultiAttr(Provisioning.A_zimbraReverseProxyUpstreamLoginServers);
-        List<Server> webclientservers = mProv.getAllServers(Provisioning.SERVICE_WEBCLIENT);
-        List<Server> adminclientservers = mProv.getAllServers(Provisioning.SERVICE_ADMINCLIENT);
 
         if (upstreams.length > 0) {
             for (String serverName: upstreams) {
                 Server server = mProv.getServerByName(serverName);
-                // Skip all the servers running just the 'service' webapp for login server block
-                if (!(webclientservers.contains(server) || adminclientservers.contains(server)))
-                    continue;
-                if (isValidUpstream(server, serverName)) {
+                // Add only the webclient/adminclient upstreams (i.e upstreams running 'zimbra/zimbraAdmin' webapps)
+                if ((server.hasWebclientService() || server.hasAdminclientService()) && isValidUpstream(server, serverName)) {
                     directives.add(generateServerDirective(server, serverName, portName));
                     mLog.info("Added Login server to HTTP upstream: " + serverName);
                 }
@@ -1159,16 +1149,12 @@ class WebLoginSSLUpstreamServersVar extends ServersVar {
         ArrayList<String> directives = new ArrayList<String>();
         String portName = configSource.getAttr(Provisioning.A_zimbraReverseProxyHttpSSLPortAttribute, "");
         String[] upstreams = serverSource.getMultiAttr(Provisioning.A_zimbraReverseProxyUpstreamLoginServers);
-        List<Server> webclientservers = mProv.getAllServers(Provisioning.SERVICE_WEBCLIENT);
-        List<Server> adminclientservers = mProv.getAllServers(Provisioning.SERVICE_ADMINCLIENT);
 
         if (upstreams.length > 0) {
             for (String serverName: upstreams) {
                 Server server = mProv.getServerByName(serverName);
-                // Skip all the servers running just the 'service' webapp for login server block
-                if (!(webclientservers.contains(server) || adminclientservers.contains(server)))
-                    continue;
-                if (isValidUpstream(server, serverName)) {
+                // Add only the webclient/adminclient upstreams (i.e upstreams running 'zimbra/zimbraAdmin' webapps)
+                if ((server.hasWebclientService() || server.hasAdminclientService()) && isValidUpstream(server, serverName)) {
                     directives.add(generateServerDirective(server, serverName, portName));
                     mLog.info("Added Login server to HTTPS upstream: " + serverName);
                 }
