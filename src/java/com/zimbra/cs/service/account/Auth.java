@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -17,6 +17,15 @@
  * Created on May 26, 2004
  */
 package com.zimbra.cs.service.account;
+
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
+
+import javax.servlet.ServletRequest;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
@@ -34,11 +43,12 @@ import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.krb5.Krb5Principal;
-import com.zimbra.cs.account.names.NameUtil.EmailAddress;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.auth.AuthContext;
+import com.zimbra.cs.account.krb5.Krb5Principal;
+import com.zimbra.cs.account.names.NameUtil.EmailAddress;
 import com.zimbra.cs.service.AuthProvider;
+import com.zimbra.cs.servlet.CsrfFilter;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.SkinUtil;
@@ -46,20 +56,12 @@ import com.zimbra.soap.SoapEngine;
 import com.zimbra.soap.SoapServlet;
 import com.zimbra.soap.ZimbraSoapContext;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
-
-import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 /**
  * @author schemers
  */
 public class Auth extends AccountDocumentHandler {
 
+	@Override
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
@@ -94,15 +96,15 @@ public class Auth extends AccountDocumentHandler {
             }
             try {
                 AuthToken at = AuthProvider.getAuthToken(authTokenEl, acct);
-                
+
                 addAccountToLogContextByAuthToken(prov, at);
-                
+
                 // this could've been done in the very beginning of the method,
-                // we do it here instead - after the account is added to log context 
+                // we do it here instead - after the account is added to log context
                 // so the account will show in log context
                 if (!checkPasswordSecurity(context))
                     throw ServiceException.INVALID_REQUEST("clear text password is not allowed", null);
-                
+
                 Account authTokenAcct = AuthProvider.validateAuthToken(prov, at, false);
                 if (verifyAccount) {
                     // Verify the named account matches the account in the auth token.  Client can easily decode
@@ -112,7 +114,8 @@ public class Auth extends AccountDocumentHandler {
                         throw new AuthTokenException("auth token doesn't match the named account");
                     }
                 }
-
+                ServletRequest httpReq = (ServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
+                httpReq.setAttribute(CsrfFilter.AUTH_TOKEN, at);
                 return doResponse(request, at, zsc, context, authTokenAcct);
             } catch (AuthTokenException e) {
                 throw ServiceException.AUTH_REQUIRED();
@@ -126,13 +129,13 @@ public class Auth extends AccountDocumentHandler {
             String password = request.getAttribute(AccountConstants.E_PASSWORD, null);
 
             long expires = 0;
-            
+
             Map<String, Object> authCtxt = new HashMap<String, Object>();
             authCtxt.put(AuthContext.AC_ORIGINATING_CLIENT_IP, context.get(SoapEngine.ORIG_REQUEST_IP));
             authCtxt.put(AuthContext.AC_REMOTE_IP, context.get(SoapEngine.SOAP_REQUEST_IP));
             authCtxt.put(AuthContext.AC_ACCOUNT_NAME_PASSEDIN, acctValuePassedIn);
             authCtxt.put(AuthContext.AC_USER_AGENT, zsc.getUserAgent());
-            
+
             boolean acctAutoProvisioned = false;
             if (acct == null) {
                 //
@@ -151,7 +154,7 @@ public class Auth extends AccountDocumentHandler {
                                 expires = preAuthEl.getAttributeLong(AccountConstants.A_EXPIRES, 0);
                                 String preAuth = preAuthEl.getTextTrim();
                                 prov.preAuthAccount(domain, acctValue, acctByStr, timestamp, expires, preAuth, authCtxt);
-                                
+
                                 acct = prov.autoProvAccountLazy(domain, acctValuePassedIn, null, AutoProvAuthMech.PREAUTH);
                             }
                         } else if (acctBy == AccountBy.krb5Principal) {
@@ -162,7 +165,7 @@ public class Auth extends AccountDocumentHandler {
                                 }
                             }
                         }
-                        
+
                         if (acct != null) {
                             acctAutoProvisioned = true;
                         }
@@ -173,14 +176,14 @@ public class Auth extends AccountDocumentHandler {
                     }
                 }
             }
-            
+
             if (acct == null) {
                 throw AuthFailedServiceException.AUTH_FAILED(acctValue, acctValuePassedIn, "account not found");
             }
-            
+
             AccountUtil.addAccountToLogContext(prov, acct.getId(), ZimbraLog.C_NAME, ZimbraLog.C_ID, null);
 
-            // if account was auto provisioned, we had already authenticated the principal 
+            // if account was auto provisioned, we had already authenticated the principal
             if (!acctAutoProvisioned) {
                 if (password != null) {
                     prov.authAccount(acct, password, AuthContext.Protocol.soap, authCtxt);
@@ -193,19 +196,26 @@ public class Auth extends AccountDocumentHandler {
                     throw ServiceException.INVALID_REQUEST("must specify "+AccountConstants.E_PASSWORD, null);
                 }
             }
-            
+
             AuthToken at = expires ==  0 ? AuthProvider.getAuthToken(acct) : AuthProvider.getAuthToken(acct, expires);
+            ServletRequest httpReq = (ServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
+            // For CSRF filter so that token generation can happen
+           boolean csrfSupport = request.getAttributeBool(AccountConstants.A_CSRF_SUPPORT, false);
+            if (csrfSupport) {
+                at.setCsrfTokenEnabled(Boolean.TRUE);
+            }
+            httpReq.setAttribute(CsrfFilter.AUTH_TOKEN, at);
             return doResponse(request, at, zsc, context, acct);
         }
     }
 
-    private Element doResponse(Element request, AuthToken at, ZimbraSoapContext zsc, 
+    private Element doResponse(Element request, AuthToken at, ZimbraSoapContext zsc,
             Map<String, Object> context, Account acct)
     throws ServiceException {
         Element response = zsc.createElement(AccountConstants.AUTH_RESPONSE);
         at.encodeAuthResp(response, false);
-        
-        /* 
+
+        /*
          * bug 67078
          * also return auth token cookie in http header
          */
@@ -213,7 +223,7 @@ public class Auth extends AccountDocumentHandler {
         HttpServletResponse httpResp = (HttpServletResponse)context.get(SoapServlet.SERVLET_RESPONSE);
         boolean rememberMe = request.getAttributeBool(AccountConstants.A_PERSIST_AUTH_TOKEN_COOKIE, false);
         at.encode(httpResp, false, ZimbraCookie.secureCookie(httpReq), rememberMe);
-        
+
         response.addAttribute(AccountConstants.E_LIFETIME, at.getExpires() - System.currentTimeMillis(), Element.Disposition.CONTENT);
         boolean isCorrectHost = Provisioning.onLocalServer(acct);
         if (isCorrectHost) {
@@ -221,7 +231,7 @@ public class Auth extends AccountDocumentHandler {
             if (session != null)
                 ZimbraSoapContext.encodeSession(response, session.getSessionId(), session.getSessionType());
         }
-        
+
         Server localhost = Provisioning.getInstance().getLocalServer();
         String referMode = localhost.getAttr(Provisioning.A_zimbraMailReferMode, "wronghost");
         // if (!isCorrectHost || LC.zimbra_auth_always_send_refer.booleanValue()) {
@@ -253,7 +263,7 @@ public class Auth extends AccountDocumentHandler {
         }
 
 		Element requestedSkinEl = request.getOptionalElement(AccountConstants.E_REQUESTED_SKIN);
-		String requestedSkin = requestedSkinEl != null ? requestedSkinEl.getText() : null;  
+		String requestedSkin = requestedSkinEl != null ? requestedSkinEl.getText() : null;
 		String skin = SkinUtil.chooseSkin(acct, requestedSkin);
 		ZimbraLog.webclient.debug("chooseSkin() returned "+skin );
 		if (skin != null) {
@@ -263,10 +273,11 @@ public class Auth extends AccountDocumentHandler {
 		return response;
     }
 
-    public boolean needsAuth(Map<String, Object> context) {
+    @Override
+	public boolean needsAuth(Map<String, Object> context) {
 		return false;
 	}
-    
+
     // for auth by auth token
     public static void addAccountToLogContextByAuthToken(Provisioning prov, AuthToken at) {
         String id = at.getAccountId();

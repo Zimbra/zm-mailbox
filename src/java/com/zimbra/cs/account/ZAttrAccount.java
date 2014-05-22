@@ -6485,6 +6485,158 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * List of data associated with CSRF token for an account. The data
+     * format is CSRF token data:Auth token Key crumb:Auth Token Key
+     * expiration
+     *
+     * @return zimbraCsrfTokenData, or empty array if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1629)
+    public String[] getCsrfTokenData() {
+        return getMultiAttr(Provisioning.A_zimbraCsrfTokenData);
+    }
+
+    /**
+     * List of data associated with CSRF token for an account. The data
+     * format is CSRF token data:Auth token Key crumb:Auth Token Key
+     * expiration
+     *
+     * @param zimbraCsrfTokenData new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1629)
+    public void setCsrfTokenData(String[] zimbraCsrfTokenData) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCsrfTokenData, zimbraCsrfTokenData);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * List of data associated with CSRF token for an account. The data
+     * format is CSRF token data:Auth token Key crumb:Auth Token Key
+     * expiration
+     *
+     * @param zimbraCsrfTokenData new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1629)
+    public Map<String,Object> setCsrfTokenData(String[] zimbraCsrfTokenData, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCsrfTokenData, zimbraCsrfTokenData);
+        return attrs;
+    }
+
+    /**
+     * List of data associated with CSRF token for an account. The data
+     * format is CSRF token data:Auth token Key crumb:Auth Token Key
+     * expiration
+     *
+     * @param zimbraCsrfTokenData new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1629)
+    public void addCsrfTokenData(String zimbraCsrfTokenData) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraCsrfTokenData, zimbraCsrfTokenData);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * List of data associated with CSRF token for an account. The data
+     * format is CSRF token data:Auth token Key crumb:Auth Token Key
+     * expiration
+     *
+     * @param zimbraCsrfTokenData new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1629)
+    public Map<String,Object> addCsrfTokenData(String zimbraCsrfTokenData, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraCsrfTokenData, zimbraCsrfTokenData);
+        return attrs;
+    }
+
+    /**
+     * List of data associated with CSRF token for an account. The data
+     * format is CSRF token data:Auth token Key crumb:Auth Token Key
+     * expiration
+     *
+     * @param zimbraCsrfTokenData existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1629)
+    public void removeCsrfTokenData(String zimbraCsrfTokenData) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraCsrfTokenData, zimbraCsrfTokenData);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * List of data associated with CSRF token for an account. The data
+     * format is CSRF token data:Auth token Key crumb:Auth Token Key
+     * expiration
+     *
+     * @param zimbraCsrfTokenData existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1629)
+    public Map<String,Object> removeCsrfTokenData(String zimbraCsrfTokenData, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraCsrfTokenData, zimbraCsrfTokenData);
+        return attrs;
+    }
+
+    /**
+     * List of data associated with CSRF token for an account. The data
+     * format is CSRF token data:Auth token Key crumb:Auth Token Key
+     * expiration
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1629)
+    public void unsetCsrfTokenData() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCsrfTokenData, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * List of data associated with CSRF token for an account. The data
+     * format is CSRF token data:Auth token Key crumb:Auth Token Key
+     * expiration
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1629)
+    public Map<String,Object> unsetCsrfTokenData(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCsrfTokenData, "");
+        return attrs;
+    }
+
+    /**
      * set to 1 or 3 to specify customer care account tier level
      *
      * @return zimbraCustomerCareTier, or -1 if unset

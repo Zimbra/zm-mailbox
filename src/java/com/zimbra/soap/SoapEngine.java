@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
 
+import javax.servlet.ServletRequest;
 import javax.servlet.http.HttpServletRequest;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
@@ -54,7 +55,10 @@ import com.zimbra.cs.redolog.RedoLogProvider;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.admin.AdminAccessControl;
 import com.zimbra.cs.service.admin.AdminDocumentHandler;
+import com.zimbra.cs.servlet.CsrfFilter;
+import com.zimbra.cs.servlet.CsrfTokenException;
 import com.zimbra.cs.servlet.ZimbraInvalidLoginFilter;
+import com.zimbra.cs.servlet.util.CsrfUtil;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.session.SoapSession;
@@ -232,7 +236,7 @@ public class SoapEngine {
         return soapProto;
     }
 
-    public Element dispatch(String path, byte[] soapMessage, Map<String, Object> context) {
+    public Element dispatch(String path, byte[] soapMessage, Map<String, Object> context) throws CsrfTokenException {
         if (soapMessage == null || soapMessage.length == 0) {
             SoapProtocol soapProto = SoapProtocol.Soap12;
             return soapFaultEnv(soapProto, "SOAP exception",
@@ -283,9 +287,9 @@ public class SoapEngine {
      * @param envelope the top-level element of the message
      * @param context user context parameters
      * @return an XmlObject which is a SoapEnvelope containing the response
-     *
+     * @throws CsrfTokenException if CSRF token validation fails
      */
-    private Element dispatch(String path, Element envelope, Map<String, Object> context) {
+    private Element dispatch(String path, Element envelope, Map<String, Object> context) throws CsrfTokenException {
         SoapProtocol soapProto = SoapProtocol.determineProtocol(envelope);
         if (soapProto == null) {
             // FIXME: have to pick 1.1 or 1.2 since we can't parse any
@@ -295,6 +299,31 @@ public class SoapEngine {
         }
 
         Element doc = soapProto.getBodyElement(envelope);
+        ServletRequest servReq = (ServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
+        boolean doCsrfCheck = false;
+        if (servReq.getAttribute(CsrfFilter.CSRF_TOKEN_CHECK) != null) {
+            doCsrfCheck =  (Boolean) servReq.getAttribute(CsrfFilter.CSRF_TOKEN_CHECK);
+        }
+        if (doCsrfCheck) {
+            try {
+                Element contextElmt = soapProto.getHeader(envelope).getElement(HeaderConstants.E_CONTEXT);
+                if (contextElmt != null && contextElmt.getElement(HeaderConstants.E_CSRFTOKEN) != null){
+                    Element csrfTokenElmt = contextElmt.getElement(HeaderConstants.E_CSRFTOKEN);
+                    String csrfToken = csrfTokenElmt.getText();
+                    HttpServletRequest httpReq = (HttpServletRequest) servReq;
+                    AuthToken authToken = CsrfUtil.getAuthTokenFromReq(httpReq);
+                    if (!CsrfUtil.isValidCsrfToken(csrfToken, authToken)) {
+                        throw new CsrfTokenException("Csrf Token is invalid");
+                    }
+                }
+            } catch (ServiceException e) {
+                // we came here which implies clients supports CSRF authorization
+                // and CSRF token is generated
+                throw new CsrfTokenException("Did not find CSRF token in the request sent by  client."
+                    + "The client has indicated that is supports CSRF tokens.");
+            }
+        }
+
         if (doc == null) {
             return soapFaultEnv(soapProto, "SOAP exception", ServiceException.INVALID_REQUEST("No SOAP body", null));
         }

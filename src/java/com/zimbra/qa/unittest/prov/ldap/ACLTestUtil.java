@@ -14,13 +14,16 @@
  */
 package com.zimbra.qa.unittest.prov.ldap;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+
 import java.util.HashSet;
 import java.util.Set;
 
 import javax.servlet.http.HttpServletResponse;
 
 import junit.framework.AssertionFailedError;
-import static org.junit.Assert.*;
 
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethod;
@@ -29,17 +32,17 @@ import org.apache.commons.httpclient.HttpState;
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
+import com.zimbra.cs.account.AccessManager.ViaGrant;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Entry;
-import com.zimbra.cs.account.AccessManager.ViaGrant;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.RightManager;
 import com.zimbra.cs.account.accesscontrol.RightModifier;
-import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.account.accesscontrol.Rights.User;
+import com.zimbra.cs.account.accesscontrol.TargetType;
 
 public class ACLTestUtil {
 
@@ -285,8 +288,8 @@ public class ACLTestUtil {
      */
     public static class KeyAuthToken extends AuthToken {
 
-        private String mName;
-        private String mAccessKey;
+        private final String mName;
+        private final String mAccessKey;
 
         public KeyAuthToken(String name, String accessKey) {
             mName = name;
@@ -384,6 +387,7 @@ public class ACLTestUtil {
             return null;
         }
 
+        @Override
         public String getAccessKey() {
             return mAccessKey;
         }
@@ -400,6 +404,24 @@ public class ACLTestUtil {
 		public boolean isRegistered() {
 			return true;
 		}
+
+        /* (non-Javadoc)
+         * @see com.zimbra.cs.account.AuthToken#isCsrfTokenEnabled()
+         */
+        @Override
+        public boolean isCsrfTokenEnabled() {
+            // TODO Auto-generated method stub
+            return false;
+        }
+
+        /* (non-Javadoc)
+         * @see com.zimbra.cs.account.AuthToken#setCsrfTokenEnabled(boolean)
+         */
+        @Override
+        public boolean setCsrfTokenEnabled(boolean csrfEnabled) {
+            // TODO Auto-generated method stub
+            return false;
+        }
     }
 
     static class TestViaGrant extends ViaGrant {
@@ -429,26 +451,32 @@ public class ACLTestUtil {
             mIsNegativeGrant = isNegativeGrant;
         }
 
+        @Override
         public String getTargetType() {
             return mTargetType;
         }
 
+        @Override
         public String getTargetName() {
             return mTargetName;
         }
 
+        @Override
         public String getGranteeType() {
             return mGranteeType;
         }
 
+        @Override
         public String getGranteeName() {
             return mGranteeName;
         }
 
+        @Override
         public String getRight() {
             return mRight;
         }
 
+        @Override
         public boolean isNegativeGrant() {
             return mIsNegativeGrant;
         }

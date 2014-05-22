@@ -16,11 +16,16 @@
 package com.zimbra.cs.servlet.util;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.UUID;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -29,7 +34,19 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.google.common.collect.Maps;
 import com.google.common.net.HttpHeaders;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.Pair;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.account.AuthTokenException;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.ZimbraAuthToken;
+import com.zimbra.cs.mailbox.MailboxTestUtil;
+
+
+
 
 /**
  * @author zimbra
@@ -37,11 +54,25 @@ import com.google.common.net.HttpHeaders;
  */
 public class CsrfUtilTest {
 
+    private static final long AUTH_TOKEN_EXPR = System.currentTimeMillis() + 60 * 1000 * 60;
+    private static final int CSRFTOKEN_SALT = 5;
+    private static final String ACCOUNT_ID = UUID.randomUUID().toString();
+
     /**
      * @throws java.lang.Exception
      */
     @BeforeClass
     public static void setUpBeforeClass() throws Exception {
+        byte[] nonce = new byte[16];
+        Random nonceGen = new Random();
+        nonceGen.nextBytes(nonce);
+        MailboxTestUtil.initServer();
+        Provisioning prov = Provisioning.getInstance();
+
+        Map<String, Object> attrs = Maps.newHashMap();
+        attrs.put(Provisioning.A_zimbraId, ACCOUNT_ID);
+        prov.createAccount("test@zimbra.com", "secret", attrs);
+
     }
 
     /**
@@ -59,18 +90,17 @@ public class CsrfUtilTest {
     @Test
     public final void testIsCsrfRequest() {
 
-        boolean checkReqForCsrf = false;
-        List<String> allowedRefHost = null;
-        HttpServletRequest request = EasyMock.createMock(HttpServletRequest.class);
-        EasyMock.expect(request.getHeader(HttpHeaders.HOST)).andReturn("example.com");
-        EasyMock.expect(request.getHeader("X-Forwarded-Host")).andReturn(null);
-        EasyMock.expect(request.getHeader(HttpHeaders.REFERER)).andReturn(
-            "http://www.texample.com/user");
-
+        List<String> urlsWithDisabledCsrfCheck = new ArrayList<String>();
+        urlsWithDisabledCsrfCheck.add("/AuthRequest");
+        HttpServletRequest request = EasyMock
+            .createMock(HttpServletRequest.class);
+        EasyMock.expect(request.getMethod()).andReturn("POST");
+        EasyMock.expect(request.getRequestURI()).andReturn(
+            "service/soap/AuthRequest");
         try {
-
             EasyMock.replay(request);
-            boolean csrfReq = CsrfUtil.isCsrfRequest(request, checkReqForCsrf, allowedRefHost);
+            boolean csrfReq = CsrfUtil.doCsrfCheck(request,
+                null);
             assertEquals(false, csrfReq);
 
         } catch (IOException e) {
@@ -78,24 +108,85 @@ public class CsrfUtilTest {
             fail("Should not throw exception. ");
         }
     }
+
+    @Test
+    public final void testIsCsrfRequestForGet() {
+
+        List<String> urlsWithDisabledCsrfCheck = new ArrayList<String>();
+        urlsWithDisabledCsrfCheck.add("/AuthRequest");
+        HttpServletRequest request = EasyMock
+            .createMock(HttpServletRequest.class);
+        EasyMock.expect(request.getMethod()).andReturn("GET");
+        EasyMock.expect(request.getRequestURI()).andReturn(
+            "service/soap/AuthRequest");
+        try {
+            EasyMock.replay(request);
+            boolean csrfReq = CsrfUtil.doCsrfCheck(request,
+                null);
+            assertEquals(false, csrfReq);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            fail("Should not throw exception. ");
+        }
+    }
+
+
+    @Test
+    public final void testDecodeValidCsrfToken() {
+        try {
+            Account acct = Provisioning.getInstance().getAccountByName(
+                "test@zimbra.com");
+            AuthToken authToken = new ZimbraAuthToken(acct);
+
+            String csrfToken = CsrfUtil.generateCsrfToken(acct.getId(),
+                AUTH_TOKEN_EXPR, CSRFTOKEN_SALT, authToken.getCrumb());
+            Pair<String, String> tokenParts = CsrfUtil.parseCsrfToken(csrfToken);
+            assertNotNull(tokenParts.getFirst());
+            assertNotNull(tokenParts.getSecond());
+            assertEquals("0", tokenParts.getSecond());
+
+        } catch (ServiceException | AuthTokenException e) {
+            fail("Should not throw exception.");
+        }
+    }
+
+    @Test
+    public final void testIsValidCsrfTokenForAccountWithMultipleTokens() {
+        try {
+            Account acct = Provisioning.getInstance().getAccountByName(
+                "test@zimbra.com");
+            AuthToken authToken = new ZimbraAuthToken(acct);
+
+            String csrfToken1 = CsrfUtil.generateCsrfToken(acct.getId(),
+                AUTH_TOKEN_EXPR, CSRFTOKEN_SALT, authToken.getCrumb());
+            boolean validToken = CsrfUtil.isValidCsrfToken(csrfToken1, authToken);
+            assertTrue(validToken);
+
+
+        } catch (ServiceException | AuthTokenException e) {
+            fail("Should not throw exception.");
+        }
+    }
+
 
     @Test
     public final void testIsCsrfRequestWhenCsrfCheckIsTurnedOn() {
 
-        boolean checkReqForCsrf = true;
-        List<String> allowedRefHost = null;
-        HttpServletRequest request = EasyMock.createMock(HttpServletRequest.class);
-        EasyMock.expect(request.getHeader(HttpHeaders.HOST)).andReturn("example.com");
+        String []  allowedRefHost = new String [1];
+        HttpServletRequest request = EasyMock
+            .createMock(HttpServletRequest.class);
+        EasyMock.expect(request.getHeader(HttpHeaders.HOST)).andReturn(
+            "example.com");
         EasyMock.expect(request.getServerName()).andReturn("example.com");
         EasyMock.expect(request.getServerName()).andReturn("example.com");
         EasyMock.expect(request.getHeader("X-Forwarded-Host")).andReturn(null);
-        EasyMock.expect(request.getHeader(HttpHeaders.REFERER)).andReturn(
-           null);
+        EasyMock.expect(request.getHeader(HttpHeaders.REFERER)).andReturn(null);
 
         try {
 
             EasyMock.replay(request);
-            boolean csrfReq = CsrfUtil.isCsrfRequest(request, checkReqForCsrf, allowedRefHost);
+            boolean csrfReq = CsrfUtil.isCsrfRequestBasedOnReferrer(request, allowedRefHost);
             assertEquals(false, csrfReq);
 
         } catch (IOException e) {
@@ -104,23 +195,23 @@ public class CsrfUtilTest {
         }
     }
 
-
     @Test
     public final void testIsCsrfRequestForSameReferer() {
 
-        boolean checkReqForCsrf = true;
-        List<String> allowedRefHost = null;
-        HttpServletRequest request = EasyMock.createMock(HttpServletRequest.class);
-        EasyMock.expect(request.getHeader(HttpHeaders.HOST)).andReturn("www.example.com");
+        String []  allowedRefHost = new String [1];
+        HttpServletRequest request = EasyMock
+            .createMock(HttpServletRequest.class);
+        EasyMock.expect(request.getHeader(HttpHeaders.HOST)).andReturn(
+            "www.example.com");
         EasyMock.expect(request.getServerName()).andReturn("www.example.com");
         EasyMock.expect(request.getHeader("X-Forwarded-Host")).andReturn(null);
         EasyMock.expect(request.getHeader(HttpHeaders.REFERER)).andReturn(
-           "http://www.example.com/zimbra/#15");
+            "http://www.example.com/zimbra/#15");
 
         try {
 
             EasyMock.replay(request);
-            boolean csrfReq = CsrfUtil.isCsrfRequest(request, checkReqForCsrf, allowedRefHost);
+            boolean csrfReq = CsrfUtil.isCsrfRequestBasedOnReferrer(request, allowedRefHost);
             assertEquals(false, csrfReq);
 
         } catch (IOException e) {
@@ -132,21 +223,22 @@ public class CsrfUtilTest {
     @Test
     public final void testIsCsrfRequestForRefererInMatchHost() {
 
-        boolean checkReqForCsrf = true;
-        List<String> allowedRefHost = new ArrayList<String>();
-        allowedRefHost.add("www.newexample.com");
-        allowedRefHost.add("www.zimbra.com:8080");
-        allowedRefHost.add("www.abc.com");
-        HttpServletRequest request = EasyMock.createMock(HttpServletRequest.class);
-        EasyMock.expect(request.getHeader(HttpHeaders.HOST)).andReturn("example.com");
+        String []  allowedRefHost = new String [3];
+        allowedRefHost[0] = "www.newexample.com";
+        allowedRefHost[1] = "www.zimbra.com:8080";
+        allowedRefHost[2] = "www.abc.com";
+        HttpServletRequest request = EasyMock
+            .createMock(HttpServletRequest.class);
+        EasyMock.expect(request.getHeader(HttpHeaders.HOST)).andReturn(
+            "example.com");
         EasyMock.expect(request.getServerName()).andReturn("example.com");
         EasyMock.expect(request.getHeader("X-Forwarded-Host")).andReturn(null);
         EasyMock.expect(request.getHeader(HttpHeaders.REFERER)).andReturn(
-           "http://www.newexample.com");
+            "http://www.newexample.com");
 
         try {
             EasyMock.replay(request);
-            boolean csrfReq = CsrfUtil.isCsrfRequest(request, checkReqForCsrf, allowedRefHost);
+            boolean csrfReq = CsrfUtil.isCsrfRequestBasedOnReferrer(request, allowedRefHost);
             assertEquals(false, csrfReq);
 
         } catch (IOException e) {
@@ -158,19 +250,20 @@ public class CsrfUtilTest {
     @Test
     public final void testIsCsrfRequestForAllowedRefHostListEmptyAndNonMatchingHost() {
 
-        boolean checkReqForCsrf = true;
-        List<String> allowedRefHost = null;
-        HttpServletRequest request = EasyMock.createMock(HttpServletRequest.class);
-        EasyMock.expect(request.getHeader(HttpHeaders.HOST)).andReturn("example.com");
+        String []  allowedRefHost = new String [1];
+        HttpServletRequest request = EasyMock
+            .createMock(HttpServletRequest.class);
+        EasyMock.expect(request.getHeader(HttpHeaders.HOST)).andReturn(
+            "example.com");
         EasyMock.expect(request.getServerName()).andReturn("example.com");
         EasyMock.expect(request.getHeader("X-Forwarded-Host")).andReturn(null);
         EasyMock.expect(request.getHeader(HttpHeaders.REFERER)).andReturn(
-           "http://www.newexample.com");
+            "http://www.newexample.com");
 
         try {
 
             EasyMock.replay(request);
-            boolean csrfReq = CsrfUtil.isCsrfRequest(request, checkReqForCsrf, allowedRefHost);
+            boolean csrfReq = CsrfUtil.isCsrfRequestBasedOnReferrer(request, allowedRefHost);
             assertEquals(true, csrfReq);
 
         } catch (IOException e) {
@@ -178,24 +271,23 @@ public class CsrfUtilTest {
             fail("Should not throw exception. ");
         }
     }
-
-
 
     @Test
     public final void testIsCsrfRequestForRefererNotInMatchHost() {
 
-        boolean checkReqForCsrf = true;
-        List<String> allowedRefHost = new ArrayList<String>();
-        HttpServletRequest request = EasyMock.createMock(HttpServletRequest.class);
+        String []  allowedRefHost = new String [3];
+        HttpServletRequest request = EasyMock
+            .createMock(HttpServletRequest.class);
         EasyMock.expect(request.getHeader("X-Forwarded-Host")).andReturn(null);
-        EasyMock.expect(request.getHeader(HttpHeaders.HOST)).andReturn("example.com");
+        EasyMock.expect(request.getHeader(HttpHeaders.HOST)).andReturn(
+            "example.com");
         EasyMock.expect(request.getServerName()).andReturn("example.com");
         EasyMock.expect(request.getHeader(HttpHeaders.REFERER)).andReturn(
-           "http://www.newexample.com");
+            "http://www.newexample.com");
 
         try {
             EasyMock.replay(request);
-            boolean csrfReq = CsrfUtil.isCsrfRequest(request, checkReqForCsrf, allowedRefHost);
+            boolean csrfReq = CsrfUtil.isCsrfRequestBasedOnReferrer(request, allowedRefHost);
             assertEquals(true, csrfReq);
         } catch (IOException e) {
             e.printStackTrace();
@@ -203,22 +295,23 @@ public class CsrfUtilTest {
         }
     }
 
-
     @Test
     public final void testIsCsrfRequestForSameRefererWithUrlHavingPort() {
 
-        boolean checkReqForCsrf = true;
-        List<String> allowedRefHost = null;
-        HttpServletRequest request = EasyMock.createMock(HttpServletRequest.class);
-        EasyMock.expect(request.getHeader(HttpHeaders.HOST)).andReturn("www.example.com:7070");
-        EasyMock.expect(request.getServerName()).andReturn("www.example.com:7070");
+        String []  allowedRefHost = new String [1];
+        HttpServletRequest request = EasyMock
+            .createMock(HttpServletRequest.class);
+        EasyMock.expect(request.getHeader(HttpHeaders.HOST)).andReturn(
+            "www.example.com:7070");
+        EasyMock.expect(request.getServerName()).andReturn(
+            "www.example.com:7070");
         EasyMock.expect(request.getHeader("X-Forwarded-Host")).andReturn(null);
         EasyMock.expect(request.getHeader(HttpHeaders.REFERER)).andReturn(
-           "http://www.example.com:7070");
+            "http://www.example.com:7070");
         try {
 
             EasyMock.replay(request);
-            boolean csrfReq = CsrfUtil.isCsrfRequest(request, checkReqForCsrf, allowedRefHost);
+            boolean csrfReq = CsrfUtil.isCsrfRequestBasedOnReferrer(request, allowedRefHost);
             assertEquals(false, csrfReq);
 
         } catch (IOException e) {
@@ -230,18 +323,19 @@ public class CsrfUtilTest {
     @Test
     public final void testIsCsrfRequestForSameRefererWithHttpsUrl() {
 
-        boolean checkReqForCsrf = true;
-        List<String> allowedRefHost = null;
-        HttpServletRequest request = EasyMock.createMock(HttpServletRequest.class);
-        EasyMock.expect(request.getHeader(HttpHeaders.HOST)).andReturn("mail.zimbra.com");
+        String []  allowedRefHost = new String [1];
+        HttpServletRequest request = EasyMock
+            .createMock(HttpServletRequest.class);
+        EasyMock.expect(request.getHeader(HttpHeaders.HOST)).andReturn(
+            "mail.zimbra.com");
         EasyMock.expect(request.getServerName()).andReturn("mail.zimbra.com");
         EasyMock.expect(request.getHeader("X-Forwarded-Host")).andReturn(null);
         EasyMock.expect(request.getHeader(HttpHeaders.REFERER)).andReturn(
-           "https://mail.zimbra.com/zimbra/");
+            "https://mail.zimbra.com/zimbra/");
         try {
 
             EasyMock.replay(request);
-            boolean csrfReq = CsrfUtil.isCsrfRequest(request, checkReqForCsrf, allowedRefHost);
+            boolean csrfReq = CsrfUtil.isCsrfRequestBasedOnReferrer(request, allowedRefHost);
             assertEquals(false, csrfReq);
 
         } catch (IOException e) {
@@ -253,16 +347,17 @@ public class CsrfUtilTest {
     @Test
     public final void testIsCsrfRequestForSameRefererWithXFowardedHostHdr() {
 
-        boolean checkReqForCsrf = true;
-        List<String> allowedRefHost = null;
-        HttpServletRequest request = EasyMock.createMock(HttpServletRequest.class);
-        EasyMock.expect(request.getHeader("X-Forwarded-Host")).andReturn("mail.zimbra.com");
+        String []  allowedRefHost = new String [1];
+        HttpServletRequest request = EasyMock
+            .createMock(HttpServletRequest.class);
+        EasyMock.expect(request.getHeader("X-Forwarded-Host")).andReturn(
+            "mail.zimbra.com");
         EasyMock.expect(request.getHeader(HttpHeaders.REFERER)).andReturn(
-           "https://mail.zimbra.com/zimbra/");
+            "https://mail.zimbra.com/zimbra/");
         try {
 
             EasyMock.replay(request);
-            boolean csrfReq = CsrfUtil.isCsrfRequest(request, checkReqForCsrf, allowedRefHost);
+            boolean csrfReq = CsrfUtil.isCsrfRequestBasedOnReferrer(request, allowedRefHost);
             assertEquals(false, csrfReq);
 
         } catch (IOException e) {

@@ -8147,4 +8147,37 @@ TODO: delete them permanently from here
   <desc>SSL ECDH cipher curve for web proxy</desc>
 </attr>
 
+<attr id="1627" name="zimbraCsrfTokenKey" type="ostring" max="128"
+  immutable="1" cardinality="multi" optionalIn="globalConfig"
+  requiresRestart="mailbox" since="8.5.0">
+  <desc>CSRF token secret key</desc>
+</attr>
+
+<attr id="1628" name="zimbraCsrfTokenCheckEnabled" type="boolean"
+  cardinality="single" optionalIn="globalConfig" since="8.5.0">
+  <globalConfigValue>TRUE</globalConfigValue>
+  <desc>A flag to turn on or off CSRF token related check. When set to FALSE no CSRF check happens. When set to 
+        true both CSRF referer and CSRF token change is effective.
+  </desc>
+</attr>
+
+<attr id="1629" name="zimbraCsrfTokenData" type="string"
+  cardinality="multi" optionalIn="account" since="8.5.0">
+  <desc>List of data associated with CSRF token for an account. The data format is 
+   CSRF token data:Auth token Key crumb:Auth Token Key expiration</desc>
+</attr>
+
+<attr id="1630" name="zimbraCsrfAllowedRefererHosts" type="string"
+  cardinality="multi" optionalIn="globalConfig,domain" since="8.5.0">
+  <desc>A list of hosts like www.abc.com, www.xyz.com. These are used while doing CSRF referer check.</desc>
+</attr>
+  
+<attr id="1631" name="zimbraCsrfRefererCheckEnabled" type="boolean"
+  cardinality="single" optionalIn="globalConfig" since="8.5.0">
+  <globalConfigValue>TRUE</globalConfigValue>
+  <desc>A flag to turn on or off CSRF referer related check. When set to FALSE no CSRF referer check happens.
+        When set to true CSRF referer type check happens.
+  </desc>
+</attr>
+
 </attrs>

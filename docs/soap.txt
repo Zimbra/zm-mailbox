@@ -45,6 +45,7 @@ urn:zimbra  -- top-level namespace for global attributes/elements
   <soap:Header>
     <context xmlns="urn:zimbra">
       [<authToken>...</authToken>]
+      [csrfToken>...</csrToken>]
       [<authTokenControl voidOnExpired="1"/>]
       [<session [id="{returned-from-server-in-last-response}" [seq="{highest_notification_received}"] [type="admin"]/>]
       [<account by="name|id">{account-name-or-id}</account>]
@@ -416,7 +417,7 @@ global soap/system errors used with zimbra:Error/Code:
    account.TOO_MANY_DATA_SOURCES
    account.TOO_MANY_SEARCH_RESULTS
 
- <AuthRequest xmlns="urn:zimbraAccount" [persistAuthTokenCookie="1"]>
+ <AuthRequest xmlns="urn:zimbraAccount" [persistAuthTokenCookie="1"][csrfTokenSecured="0|1"]>
    [<account by="name|id|foreignPrincipal">...</account>]
    [<password>...</password>]
    [<preauth timestamp="{timestamp}" expires="{expires}">{computed-preauth-value}</preauth>]
@@ -454,6 +455,9 @@ If verifyAccount="0" (default), only the auth token is verified and any <account
                              1: The "Expires" attribute of the cookie will be set per rfc6265.
                   
   
+  {csrfTokenSecured} = controls whether the client has the capability to handle CSRF token
+                0: (default) the client is not capable of handling CSRF token
+                1: The client is capable of handling CSRF token.
   {mail-host} = host additional SOAP requests should be directed to. Always returned, might be same as original host request was sent to.
 
   {virtual-host} = if specified (in conjunction with by="name"), virtual-host is used to determine the domain of the account name, if it

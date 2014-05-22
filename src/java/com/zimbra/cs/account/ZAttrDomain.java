@@ -4398,6 +4398,149 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
+     * A list of hosts like www.abc.com, www.xyz.com. These are used while
+     * doing CSRF referer check.
+     *
+     * @return zimbraCsrfAllowedRefererHosts, or empty array if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1630)
+    public String[] getCsrfAllowedRefererHosts() {
+        return getMultiAttr(Provisioning.A_zimbraCsrfAllowedRefererHosts);
+    }
+
+    /**
+     * A list of hosts like www.abc.com, www.xyz.com. These are used while
+     * doing CSRF referer check.
+     *
+     * @param zimbraCsrfAllowedRefererHosts new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1630)
+    public void setCsrfAllowedRefererHosts(String[] zimbraCsrfAllowedRefererHosts) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCsrfAllowedRefererHosts, zimbraCsrfAllowedRefererHosts);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * A list of hosts like www.abc.com, www.xyz.com. These are used while
+     * doing CSRF referer check.
+     *
+     * @param zimbraCsrfAllowedRefererHosts new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1630)
+    public Map<String,Object> setCsrfAllowedRefererHosts(String[] zimbraCsrfAllowedRefererHosts, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCsrfAllowedRefererHosts, zimbraCsrfAllowedRefererHosts);
+        return attrs;
+    }
+
+    /**
+     * A list of hosts like www.abc.com, www.xyz.com. These are used while
+     * doing CSRF referer check.
+     *
+     * @param zimbraCsrfAllowedRefererHosts new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1630)
+    public void addCsrfAllowedRefererHosts(String zimbraCsrfAllowedRefererHosts) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraCsrfAllowedRefererHosts, zimbraCsrfAllowedRefererHosts);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * A list of hosts like www.abc.com, www.xyz.com. These are used while
+     * doing CSRF referer check.
+     *
+     * @param zimbraCsrfAllowedRefererHosts new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1630)
+    public Map<String,Object> addCsrfAllowedRefererHosts(String zimbraCsrfAllowedRefererHosts, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraCsrfAllowedRefererHosts, zimbraCsrfAllowedRefererHosts);
+        return attrs;
+    }
+
+    /**
+     * A list of hosts like www.abc.com, www.xyz.com. These are used while
+     * doing CSRF referer check.
+     *
+     * @param zimbraCsrfAllowedRefererHosts existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1630)
+    public void removeCsrfAllowedRefererHosts(String zimbraCsrfAllowedRefererHosts) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraCsrfAllowedRefererHosts, zimbraCsrfAllowedRefererHosts);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * A list of hosts like www.abc.com, www.xyz.com. These are used while
+     * doing CSRF referer check.
+     *
+     * @param zimbraCsrfAllowedRefererHosts existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1630)
+    public Map<String,Object> removeCsrfAllowedRefererHosts(String zimbraCsrfAllowedRefererHosts, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraCsrfAllowedRefererHosts, zimbraCsrfAllowedRefererHosts);
+        return attrs;
+    }
+
+    /**
+     * A list of hosts like www.abc.com, www.xyz.com. These are used while
+     * doing CSRF referer check.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1630)
+    public void unsetCsrfAllowedRefererHosts() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCsrfAllowedRefererHosts, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * A list of hosts like www.abc.com, www.xyz.com. These are used while
+     * doing CSRF referer check.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1630)
+    public Map<String,Object> unsetCsrfAllowedRefererHosts(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCsrfAllowedRefererHosts, "");
+        return attrs;
+    }
+
+    /**
      * This attribute is used for DNS check by customers that configure their
      * MX to point at spam relays or other non-zimbra inbox smtp servers
      *

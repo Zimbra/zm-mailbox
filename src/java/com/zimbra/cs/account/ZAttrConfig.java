@@ -9415,6 +9415,447 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * A list of hosts like www.abc.com, www.xyz.com. These are used while
+     * doing CSRF referer check.
+     *
+     * @return zimbraCsrfAllowedRefererHosts, or empty array if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1630)
+    public String[] getCsrfAllowedRefererHosts() {
+        return getMultiAttr(Provisioning.A_zimbraCsrfAllowedRefererHosts);
+    }
+
+    /**
+     * A list of hosts like www.abc.com, www.xyz.com. These are used while
+     * doing CSRF referer check.
+     *
+     * @param zimbraCsrfAllowedRefererHosts new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1630)
+    public void setCsrfAllowedRefererHosts(String[] zimbraCsrfAllowedRefererHosts) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCsrfAllowedRefererHosts, zimbraCsrfAllowedRefererHosts);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * A list of hosts like www.abc.com, www.xyz.com. These are used while
+     * doing CSRF referer check.
+     *
+     * @param zimbraCsrfAllowedRefererHosts new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1630)
+    public Map<String,Object> setCsrfAllowedRefererHosts(String[] zimbraCsrfAllowedRefererHosts, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCsrfAllowedRefererHosts, zimbraCsrfAllowedRefererHosts);
+        return attrs;
+    }
+
+    /**
+     * A list of hosts like www.abc.com, www.xyz.com. These are used while
+     * doing CSRF referer check.
+     *
+     * @param zimbraCsrfAllowedRefererHosts new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1630)
+    public void addCsrfAllowedRefererHosts(String zimbraCsrfAllowedRefererHosts) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraCsrfAllowedRefererHosts, zimbraCsrfAllowedRefererHosts);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * A list of hosts like www.abc.com, www.xyz.com. These are used while
+     * doing CSRF referer check.
+     *
+     * @param zimbraCsrfAllowedRefererHosts new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1630)
+    public Map<String,Object> addCsrfAllowedRefererHosts(String zimbraCsrfAllowedRefererHosts, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraCsrfAllowedRefererHosts, zimbraCsrfAllowedRefererHosts);
+        return attrs;
+    }
+
+    /**
+     * A list of hosts like www.abc.com, www.xyz.com. These are used while
+     * doing CSRF referer check.
+     *
+     * @param zimbraCsrfAllowedRefererHosts existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1630)
+    public void removeCsrfAllowedRefererHosts(String zimbraCsrfAllowedRefererHosts) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraCsrfAllowedRefererHosts, zimbraCsrfAllowedRefererHosts);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * A list of hosts like www.abc.com, www.xyz.com. These are used while
+     * doing CSRF referer check.
+     *
+     * @param zimbraCsrfAllowedRefererHosts existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1630)
+    public Map<String,Object> removeCsrfAllowedRefererHosts(String zimbraCsrfAllowedRefererHosts, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraCsrfAllowedRefererHosts, zimbraCsrfAllowedRefererHosts);
+        return attrs;
+    }
+
+    /**
+     * A list of hosts like www.abc.com, www.xyz.com. These are used while
+     * doing CSRF referer check.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1630)
+    public void unsetCsrfAllowedRefererHosts() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCsrfAllowedRefererHosts, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * A list of hosts like www.abc.com, www.xyz.com. These are used while
+     * doing CSRF referer check.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1630)
+    public Map<String,Object> unsetCsrfAllowedRefererHosts(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCsrfAllowedRefererHosts, "");
+        return attrs;
+    }
+
+    /**
+     * A flag to turn on or off CSRF referer related check. When set to FALSE
+     * no CSRF referer check happens. When set to true CSRF referer type
+     * check happens.
+     *
+     * @return zimbraCsrfRefererCheckEnabled, or true if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1631)
+    public boolean isCsrfRefererCheckEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraCsrfRefererCheckEnabled, true);
+    }
+
+    /**
+     * A flag to turn on or off CSRF referer related check. When set to FALSE
+     * no CSRF referer check happens. When set to true CSRF referer type
+     * check happens.
+     *
+     * @param zimbraCsrfRefererCheckEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1631)
+    public void setCsrfRefererCheckEnabled(boolean zimbraCsrfRefererCheckEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCsrfRefererCheckEnabled, zimbraCsrfRefererCheckEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * A flag to turn on or off CSRF referer related check. When set to FALSE
+     * no CSRF referer check happens. When set to true CSRF referer type
+     * check happens.
+     *
+     * @param zimbraCsrfRefererCheckEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1631)
+    public Map<String,Object> setCsrfRefererCheckEnabled(boolean zimbraCsrfRefererCheckEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCsrfRefererCheckEnabled, zimbraCsrfRefererCheckEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * A flag to turn on or off CSRF referer related check. When set to FALSE
+     * no CSRF referer check happens. When set to true CSRF referer type
+     * check happens.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1631)
+    public void unsetCsrfRefererCheckEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCsrfRefererCheckEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * A flag to turn on or off CSRF referer related check. When set to FALSE
+     * no CSRF referer check happens. When set to true CSRF referer type
+     * check happens.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1631)
+    public Map<String,Object> unsetCsrfRefererCheckEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCsrfRefererCheckEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * A flag to turn on or off CSRF token related check. When set to FALSE
+     * no CSRF check happens. When set to true both CSRF referer and CSRF
+     * token change is effective.
+     *
+     * @return zimbraCsrfTokenCheckEnabled, or true if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1628)
+    public boolean isCsrfTokenCheckEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraCsrfTokenCheckEnabled, true);
+    }
+
+    /**
+     * A flag to turn on or off CSRF token related check. When set to FALSE
+     * no CSRF check happens. When set to true both CSRF referer and CSRF
+     * token change is effective.
+     *
+     * @param zimbraCsrfTokenCheckEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1628)
+    public void setCsrfTokenCheckEnabled(boolean zimbraCsrfTokenCheckEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCsrfTokenCheckEnabled, zimbraCsrfTokenCheckEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * A flag to turn on or off CSRF token related check. When set to FALSE
+     * no CSRF check happens. When set to true both CSRF referer and CSRF
+     * token change is effective.
+     *
+     * @param zimbraCsrfTokenCheckEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1628)
+    public Map<String,Object> setCsrfTokenCheckEnabled(boolean zimbraCsrfTokenCheckEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCsrfTokenCheckEnabled, zimbraCsrfTokenCheckEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * A flag to turn on or off CSRF token related check. When set to FALSE
+     * no CSRF check happens. When set to true both CSRF referer and CSRF
+     * token change is effective.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1628)
+    public void unsetCsrfTokenCheckEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCsrfTokenCheckEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * A flag to turn on or off CSRF token related check. When set to FALSE
+     * no CSRF check happens. When set to true both CSRF referer and CSRF
+     * token change is effective.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1628)
+    public Map<String,Object> unsetCsrfTokenCheckEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCsrfTokenCheckEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * CSRF token secret key
+     *
+     * @return zimbraCsrfTokenKey, or empty array if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1627)
+    public String[] getCsrfTokenKey() {
+        return getMultiAttr(Provisioning.A_zimbraCsrfTokenKey);
+    }
+
+    /**
+     * CSRF token secret key
+     *
+     * @param zimbraCsrfTokenKey new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1627)
+    public void setCsrfTokenKey(String[] zimbraCsrfTokenKey) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCsrfTokenKey, zimbraCsrfTokenKey);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * CSRF token secret key
+     *
+     * @param zimbraCsrfTokenKey new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1627)
+    public Map<String,Object> setCsrfTokenKey(String[] zimbraCsrfTokenKey, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCsrfTokenKey, zimbraCsrfTokenKey);
+        return attrs;
+    }
+
+    /**
+     * CSRF token secret key
+     *
+     * @param zimbraCsrfTokenKey new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1627)
+    public void addCsrfTokenKey(String zimbraCsrfTokenKey) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraCsrfTokenKey, zimbraCsrfTokenKey);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * CSRF token secret key
+     *
+     * @param zimbraCsrfTokenKey new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1627)
+    public Map<String,Object> addCsrfTokenKey(String zimbraCsrfTokenKey, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraCsrfTokenKey, zimbraCsrfTokenKey);
+        return attrs;
+    }
+
+    /**
+     * CSRF token secret key
+     *
+     * @param zimbraCsrfTokenKey existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1627)
+    public void removeCsrfTokenKey(String zimbraCsrfTokenKey) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraCsrfTokenKey, zimbraCsrfTokenKey);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * CSRF token secret key
+     *
+     * @param zimbraCsrfTokenKey existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1627)
+    public Map<String,Object> removeCsrfTokenKey(String zimbraCsrfTokenKey, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraCsrfTokenKey, zimbraCsrfTokenKey);
+        return attrs;
+    }
+
+    /**
+     * CSRF token secret key
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1627)
+    public void unsetCsrfTokenKey() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCsrfTokenKey, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * CSRF token secret key
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1627)
+    public Map<String,Object> unsetCsrfTokenKey(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCsrfTokenKey, "");
+        return attrs;
+    }
+
+    /**
      * Custom RFC822 header names (case-sensitive) allowed to specify in
      * SendMsgRequest
      *

@@ -69,6 +69,7 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
     private static final String C_TOKEN_ID = "tid";
     //mailbox server version where this account resides
     private static final String C_SERVER_VERSION = "version";
+    private static final String C_CSRF = "csrf";
     private static final Map<String, ZimbraAuthToken> CACHE = MapUtil.newLruMap(LC.zimbra_authtoken_cache_size.intValue());
     private static final Log LOG = LogFactory.getLog(AuthToken.class);
 
@@ -88,6 +89,7 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
     private AuthMech authMech;
     private Integer tokenID = -1;
     private String server_version;   // version of the mailbox server where this account resides
+    private boolean csrfTokenEnabled;
     @Override
     public String toString() {
         return Objects.toStringHelper(this)
@@ -215,6 +217,11 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
             	tokenID = -1;
             }
             server_version = (String)map.get(C_SERVER_VERSION);
+
+            String csrf = (String) map.get(C_CSRF);
+            if (csrf != null) {
+                csrfTokenEnabled = "1".equals(map.get(C_CSRF));
+            }
         } catch (ServiceException e) {
             throw new AuthTokenException("service exception", e);
         }
@@ -419,6 +426,9 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
             BlobMetaData.encodeMetaData(C_EXTERNAL_USER_EMAIL, externalUserEmail, encodedBuff);
             BlobMetaData.encodeMetaData(C_DIGEST, digest, encodedBuff);
             BlobMetaData.encodeMetaData(C_SERVER_VERSION, server_version, encodedBuff);
+            if (this.csrfTokenEnabled) {
+                BlobMetaData.encodeMetaData(C_CSRF, "1", encodedBuff);
+            }
 
             String data = new String(Hex.encodeHex(encodedBuff.toString().getBytes()));
             AuthTokenKey key = getCurrentKey();
@@ -563,6 +573,20 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
     public void resetProxyAuthToken() {
         proxyAuthToken = null;
     }
+
+    /* (non-Javadoc)
+     * @see com.zimbra.cs.account.AuthToken#isCsrfTokenEnabled()
+     */
+    @Override
+    public boolean isCsrfTokenEnabled() {
+        return this.csrfTokenEnabled;
+    }
+
+    @Override
+    public boolean setCsrfTokenEnabled(boolean csrfEnabled) {
+        return this.csrfTokenEnabled = csrfEnabled;
+    }
+
 
     static class ByteKey implements SecretKey {
         private static final long serialVersionUID = -7237091299729195624L;

@@ -21,6 +21,8 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import junit.framework.TestCase;
+
 import org.apache.commons.httpclient.Credentials;
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpClient;
@@ -31,9 +33,11 @@ import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.methods.GetMethod;
 
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
-
+import com.zimbra.client.ZFolder;
+import com.zimbra.client.ZGrant;
+import com.zimbra.client.ZMailbox;
+import com.zimbra.client.ZSearchParams;
+import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.service.ServiceException;
@@ -43,17 +47,11 @@ import com.zimbra.common.util.CliUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.AuthProviderException;
 import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.servlet.ZimbraServlet;
-import com.zimbra.cs.account.Provisioning;
-import com.zimbra.common.account.Key.AccountBy;
-import com.zimbra.client.ZFolder;
-import com.zimbra.client.ZGrant;
-import com.zimbra.client.ZMailbox;
-import com.zimbra.client.ZMountpoint;
-import com.zimbra.client.ZSearchParams;
 
 /*
  * To test key grant:
@@ -140,6 +138,7 @@ public class TestAccessKeyGrant extends TestCase {
             throw AuthProviderException.NO_AUTH_DATA();
         }
 
+        @Override
         protected boolean allowURLAccessKeyAuth(HttpServletRequest req, ZimbraServlet servlet) {
             return true;
         }
@@ -148,8 +147,8 @@ public class TestAccessKeyGrant extends TestCase {
 
     private static class DummyAuthToken extends AuthToken {
 
-        private String mAccessKey;
-        private String mOwnerId;
+        private final String mAccessKey;
+        private final String mOwnerId;
 
         DummyAuthToken(String accessKey, String ownerId) {
             mAccessKey = accessKey;
@@ -200,6 +199,7 @@ public class TestAccessKeyGrant extends TestCase {
             return null;
         }
 
+        @Override
         public String getAccessKey() {
             return mAccessKey;
         }
@@ -268,6 +268,24 @@ public class TestAccessKeyGrant extends TestCase {
             attrs.put(AUTH_K_ATTR, mAccessKey);
             attrs.put(AUTH_H_ATTR, mOwnerId);
             return new ZAuthToken(DUMMY_AUTH_PROVIDER, null, attrs);
+        }
+
+        /* (non-Javadoc)
+         * @see com.zimbra.cs.account.AuthToken#isCsrfTokenEnabled()
+         */
+        @Override
+        public boolean isCsrfTokenEnabled() {
+            // TODO Auto-generated method stub
+            return false;
+        }
+
+        /* (non-Javadoc)
+         * @see com.zimbra.cs.account.AuthToken#setCsrfTokenEnabled(boolean)
+         */
+        @Override
+        public boolean setCsrfTokenEnabled(boolean csrfEnabled) {
+            // TODO Auto-generated method stub
+            return false;
         }
 
     }
