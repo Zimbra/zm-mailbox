@@ -257,15 +257,15 @@ SECTION 8: GNU General Public License, V2.0
    >>> perl-digest-sha1-2.13
    >>> perl-encode-locale-1.03
    >>> perl-extutils-constant-0.23
-   >>> perl-extutils-makemaker-6.78
-   >>> perl-extutils-parsexs-3.18
+   >>> perl-extutils-makemaker-6.88
+   >>> perl-extutils-parsexs-3.22
    >>> perl-file-copy-recursive-0.38
    >>> perl-file-grep-0.02
    >>> perl-file-tail-0.99.3
-   >>> perl-file-temp-0.22
+   >>> perl-file-temp-0.2304
    >>> perl-filesys-df-0.92
    >>> perl-getopt-easy-0.1
-   >>> perl-html-parser-3.69
+   >>> perl-html-parser-3.71
    >>> perl-html-tagset-3.20
    >>> perl-http-cookies-6.01
    >>> perl-http-daemon-6.01
@@ -273,34 +273,34 @@ SECTION 8: GNU General Public License, V2.0
    >>> perl-http-message-6.06
    >>> perl-http-negotiate-6.01
    >>> perl-io-1.25
-   >>> perl-io-compress-2.058
-   >>> perl-io-socket-inet6-2.69
-   >>> perl-io-socket-ssl-1.79
+   >>> perl-io-compress-2.064
+   >>> perl-io-socket-inet6-2.72
+   >>> perl-io-socket-ssl-1.967
    >>> perl-io-stringy-2.110
    >>> perl-io-zlib-1.10
-   >>> perl-ip-country-2.27
-   >>> perl-ipc-cmd-0.78
-   >>> perl-ldap-0.53
-   >>> perl-libnet-1.22
-   >>> perl-list-compare-0.37
+   >>> perl-ip-country-2.28
+   >>> perl-ipc-cmd-0.92
+   >>> perl-ldap-0.61
+   >>> perl-libnet-1.25
+   >>> perl-list-compare-0.38
    >>> perl-lwp-mediatypes-6.02
-   >>> perl-lwp-protocol-https-6.03
-   >>> perl-mail-dkim-0.39
-   >>> perl-mailtools-2.11
+   >>> perl-lwp-protocol-https-6.04
+   >>> perl-mail-dkim-0.40
+   >>> perl-mailtools-2.13
    >>> perl-math-bigint-1.997
-   >>> perl-mime-tools-5.503
-   >>> perl-mime-types-1.36
-   >>> perl-module-build-0.4003
-   >>> perl-module-corelist-2.78
-   >>> perl-module-load-0.22
-   >>> perl-module-load-conditional-0.54
-   >>> perl-module-metadata-1.000011
-   >>> perl-module-runtime-0.013
-   >>> perl-mro-compat-0.11
+   >>> perl-mime-tools-5.505
+   >>> perl-mime-types-2.04
+   >>> perl-module-build-0.4205
+   >>> perl-module-corelist-3.04
+   >>> perl-module-load-0.30
+   >>> perl-module-load-conditional-0.62
+   >>> perl-module-metadata-1.000019
+   >>> perl-module-runtime-0.014
+   >>> perl-mro-compat-0.12
    >>> perl-net-cidr-0.17
-   >>> perl-net-dns-0.68
+   >>> perl-net-dns-0.74
    >>> perl-net-dns-resolver-programmable-0.003
-   >>> perl-net-http-6.05
+   >>> perl-net-http-6.06
    >>> perl-net-ip-1.25
    >>> perl-net-ldapapi-3.0.3
    >>> perl-net-server-2.007
@@ -27061,7 +27061,7 @@ file.
 Copyright  2001, 2002, 2005 Nicholas Clark
 
 
->>> perl-extutils-makemaker-6.78
+>>> perl-extutils-makemaker-6.88
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 2.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 2.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
@@ -27071,7 +27071,7 @@ This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.
 
 
->>> perl-extutils-parsexs-3.18
+>>> perl-extutils-parsexs-3.22
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 2.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 2.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
@@ -27114,7 +27114,7 @@ All rights reserved. This program is free software; you can
 redistribute it and/or modify it under the same terms as Perl itself.
 
 
->>> perl-file-temp-0.22
+>>> perl-file-temp-0.2304
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 2.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 2.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
@@ -27149,7 +27149,7 @@ it under the same terms as Perl itself, either Perl version 5.8.1 or,
 at your option, any later version of Perl 5 you may have available.
 
 
->>> perl-html-parser-3.69
+>>> perl-html-parser-3.71
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 2.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 2.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
@@ -27232,7 +27232,7 @@ This program is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.
 
 
->>> perl-io-compress-2.058
+>>> perl-io-compress-2.064
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 2.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 2.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
@@ -27242,7 +27242,7 @@ This program is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.
 
 
->>> perl-io-socket-inet6-2.69
+>>> perl-io-socket-inet6-2.72
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 2.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 2.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
@@ -27256,7 +27256,7 @@ This program is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.
 
 
->>> perl-io-socket-ssl-1.79
+>>> perl-io-socket-ssl-1.967
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 2.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 2.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
@@ -27303,14 +27303,14 @@ All rights reserved. This program is free software; you can
 redistribute it and/or modify it under the same terms as Perl itself.
 
 
->>> perl-ip-country-2.27
+>>> perl-ip-country-2.28
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 2.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 2.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
 License : GPL 2.0
 
 
->>> perl-ipc-cmd-0.78
+>>> perl-ipc-cmd-0.92
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 2.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 2.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
@@ -27320,7 +27320,7 @@ This module is copyright (c) 2002 Jos Boumans <kane@cpan.org>. All rights reserv
 This library is free software; you may redistribute and/or modify it under the same terms as Perl itself.
 
 
->>> perl-ldap-0.53
+>>> perl-ldap-0.61
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 2.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 2.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
@@ -27329,7 +27329,7 @@ This package is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.
 
 
->>> perl-libnet-1.22
+>>> perl-libnet-1.25
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 2.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 2.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
@@ -27341,7 +27341,7 @@ This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself.
 
 
->>> perl-list-compare-0.37
+>>> perl-list-compare-0.38
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 2.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 2.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
@@ -27359,7 +27359,7 @@ Copyright 1995-1999 Gisle Aas.
 This library is free software; you can redistribute it and/or modify it under the same terms as Perl itself.
 
 
->>> perl-lwp-protocol-https-6.03
+>>> perl-lwp-protocol-https-6.04
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 2.0. PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 2.0. THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
@@ -27368,7 +27368,7 @@ Copyright 1997-2011 Gisle Aas.
 This library is free software; you can redistribute it and/or modify it under the same terms as Perl itself.
 
 
->>> perl-mail-dkim-0.39
+>>> perl-mail-dkim-0.40
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 2.0. PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 2.0. THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
@@ -27380,7 +27380,7 @@ IT UNDER THE SAME TERMS AS PERL ITSELF, EITHER PERL VERSION 5.8.6 OR,
 AT YOUR OPTION, ANY LATER VERSION OF PERL 5 YOU MAY HAVE AVAILABLE.
 
 
->>> perl-mailtools-2.11
+>>> perl-mailtools-2.13
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 2.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 2.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
@@ -27406,7 +27406,7 @@ Completely rewritten by Tels L<http://bloodgate.com> in 2001 - 2006, and still
 at it in 2007.
 
 
->>> perl-mime-tools-5.503
+>>> perl-mime-tools-5.505
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 2.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 2.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
@@ -27451,7 +27451,7 @@ POSSIBILITY OF SUCH DAMAGES.
 		     END OF TERMS AND CONDITIONS
 
 
->>> perl-mime-types-1.36
+>>> perl-mime-types-2.04
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 2.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 2.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
@@ -27463,7 +27463,7 @@ under the same terms as Perl itself.
 See F<http://www.perl.com/perl/misc/Artistic.html>
 
 
->>> perl-module-build-0.4003
+>>> perl-module-build-0.4205
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 2.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 2.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
@@ -27472,7 +27472,7 @@ Copyright (c) 2001-2006 Ken Williams. All rights reserved.
 This library is free software; you can redistribute it and/or modify it under the same terms as Perl itself.
 
 
->>> perl-module-corelist-2.78
+>>> perl-module-corelist-3.04
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 2.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 2.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
@@ -27481,7 +27481,7 @@ Copyright (C) 2002-2009 Richard Clamp.  All Rights Reserved.
 This module is free software; you can redistribute it and/or modify it under the same terms as Perl itself.
 
 
->>> perl-module-load-0.22
+>>> perl-module-load-0.30
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 2.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 2.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
@@ -27491,7 +27491,7 @@ This module is copyright (c) 2002 Jos Boumans <kane@cpan.org>. All
 This library is free software; you may redistribute and/or modify it under the same terms as Perl itself.
 
 
->>> perl-module-load-conditional-0.54
+>>> perl-module-load-conditional-0.62
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 2.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 2.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
@@ -27506,7 +27506,7 @@ COPYRIGHT
     under the same terms as Perl itself.
 
 
->>> perl-module-metadata-1.000011
+>>> perl-module-metadata-1.000019
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 2.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 2.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
@@ -27518,7 +27518,7 @@ This library is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.
 
 
->>> perl-module-runtime-0.013
+>>> perl-module-runtime-0.014
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 2.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 2.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
@@ -27530,7 +27530,7 @@ LICENSE
 This module is free software; you can redistribute it and/or modify it under the same terms as Perl itself.
 
 
->>> perl-mro-compat-0.11
+>>> perl-mro-compat-0.12
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 2.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 2.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
@@ -27552,7 +27552,7 @@ This program is free software; you can redistribute it
 and/or modify it under the same terms as Perl itself.
 
 
->>> perl-net-dns-0.68
+>>> perl-net-dns-0.74
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 2.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 2.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
@@ -27604,7 +27604,7 @@ either the GNU General Public License (version 2 or later) or the Artistic
 License.
 
 
->>> perl-net-http-6.05
+>>> perl-net-http-6.06
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 2.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 2.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
