@@ -220,24 +220,24 @@ SECTION 7: GNU General Public License, V1.0
 
 SECTION 8: GNU General Public License, V2.0
 
-   >>> amavisd-2.8.0
+   >>> amavisd-2.9.0
    >>> clamav-0.98.3
    >>> cluebringer-2.1.0-beta
    >>> libtool-2.2.6b
-   >>> libwww-perl-6.04
+   >>> libwww-perl-6.05
    >>> mariadb-10.0.10
    >>> mysql-connector-java-5.1.29
-   >>> perl-archive-tar-1.90
-   >>> perl-archive-zip-1.30
+   >>> perl-archive-tar-1.96
+   >>> perl-archive-zip-1.37
    >>> perl-array-compare-2.02
    >>> perl-berkeleydb-0.51
-   >>> perl-bit-vector-7.2
+   >>> perl-bit-vector-7.3
    >>> perl-cache-fastmmap-1.40
-   >>> perl-carp-1.26
+   >>> perl-carp-1.32
    >>> perl-carp-clan-6.04
    >>> perl-class-inspector-1.28
-   >>> perl-compress-raw-bzip2-2.059
-   >>> perl-compress-raw-zlib-2.059
+   >>> perl-compress-raw-bzip2-2.064
+   >>> perl-compress-raw-zlib-2.065
    >>> perl-config-inifiles-2.78
    >>> perl-config-properties-1.75
    >>> perl-convert-binhex-1.119
@@ -25967,7 +25967,7 @@ b) the "Artistic License"
 GNU General Public License, V2.0 is applicable to the following component(s).
 
 
->>> amavisd-2.8.0
+>>> amavisd-2.9.0
 
 GNU GENERAL PUBLIC LICENSE
 Version 2, June 1991
@@ -25982,7 +25982,7 @@ ADDITIONAL LICENSE INFORMATION :
 
 > BSD
 
-\amavisd-new-2.8.0.tar.gz\amavisd-new-2.8.0.tar\amavisd-new-2.8.0\p0f-analyzer.pl
+\amavisd-new-2.9.0.tar.gz\amavisd-new-2.9.0.tar\amavisd-new-2.9.0\p0f-analyzer.pl
 
 Copyright (C) 2006  Mark Martinec,  All Rights Reserved.
 
@@ -26016,7 +26016,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 > GFDL 1.2
 
-amavisd-new-2.8.0.tar.gz\amavisd-new-2.8.0.tar\amavisd-new-2.8.0\LDAP.schema
+amavisd-new-2.9.0.tar.gz\amavisd-new-2.9.0.tar\amavisd-new-2.9.0\LDAP.schema
 
 Copyright (c) 2004 Jacques Supcik, Swisscom Enterprise Solutions Ltd.
 Permission is granted to copy, distribute and/or modify this document
@@ -26366,7 +26366,7 @@ Texts.  A copy of the license is included in the section entitled "GNU
 Free Documentation License".
 
 
->>> libwww-perl-6.04
+>>> libwww-perl-6.05
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 2.0. PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 2.0. THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
@@ -26664,7 +26664,7 @@ Package Name                  Qualifying License and Version
 Apache Portable Runtime (APR) Apache Software License 2.0
 
 
->>> perl-archive-tar-1.90
+>>> perl-archive-tar-1.96
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 2.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 2.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
@@ -26676,7 +26676,7 @@ This library is free software; you may redistribute and/or modify
 it under the same terms as Perl itself.
 
 
->>> perl-archive-zip-1.30
+>>> perl-archive-zip-1.37
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 2.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 2.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
@@ -26710,7 +26710,7 @@ under the same terms as Perl itself.
 Copyright (c) 1997-2012 Paul Marquess. All rights reserved. This program is free software; you can redistribute it and/or modify it under the same terms as Perl itself.
 
 
->>> perl-bit-vector-7.2
+>>> perl-bit-vector-7.3
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 2.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 2.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
@@ -26733,7 +26733,7 @@ This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself.
 
 
->>> perl-carp-1.26
+>>> perl-carp-1.32
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 2.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 2.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
@@ -26778,7 +26778,7 @@ The full text of the license can be found in the
 LICENSE file included with this module.
 
 
->>> perl-compress-raw-bzip2-2.059
+>>> perl-compress-raw-bzip2-2.064
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 2.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 2.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
@@ -26789,7 +26789,7 @@ This program is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.
 
 
->>> perl-compress-raw-zlib-2.059
+>>> perl-compress-raw-zlib-2.065
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 2.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 2.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
