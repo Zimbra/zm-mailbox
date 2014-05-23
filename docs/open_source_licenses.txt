@@ -45,7 +45,7 @@ SECTION 1: BSD-STYLE, MIT-STYLE, OR SIMILAR STYLE LICENSES
    >>> freetype-2.4.9
    >>> ganymed-ssh2-build210-none
    >>> gifencoder-none
-   >>> google-perftools-2.2
+   >>> google-perftools-2.1
    >>> heimdal-1.5.2
    >>> ical4j-0.9.16
    >>> icu4j-4.8.1.1
@@ -75,7 +75,7 @@ SECTION 1: BSD-STYLE, MIT-STYLE, OR SIMILAR STYLE LICENSES
    >>> nviennot-nginx-tcp-keepalive-4d7186d
    >>> opendkim-2.9.1
    >>> openldap-2.4.39
-   >>> openssl-1.0.1g
+   >>> openssl-1.0.1f
    >>> perl-data-uuid-1.219
    >>> perl-geography-countries-2009041301
    >>> perl-locale-maketext-simple-0.21
@@ -301,12 +301,12 @@ SECTION 8: GNU General Public License, V2.0
    >>> perl-net-dns-0.74
    >>> perl-net-dns-resolver-programmable-0.003
    >>> perl-net-http-6.06
-   >>> perl-net-ip-1.25
+   >>> perl-net-ip-1.26
    >>> perl-net-ldapapi-3.0.3
    >>> perl-net-server-2.007
-   >>> perl-net-telnet-3.03
-   >>> perl-netaddr-ip-4.066
-   >>> perl-package-constants-0.02
+   >>> perl-net-telnet-3.04
+   >>> perl-netaddr-ip-4.072
+   >>> perl-package-constants-0.04
    >>> perl-parallel-forkmanager-0.7.9
    >>> perl-params-check-0.36
    >>> perl-parse-cpan-meta-1.4404
@@ -1305,7 +1305,7 @@ SUCH DAMAGE.
  University of Illinois, Urbana-Champaign.
 
 
->>> google-perftools-2.2
+>>> google-perftools-2.1
 
 Copyright (c) 2005, Google Inc.
 All rights reserved.
@@ -1341,7 +1341,7 @@ ADDITIONAL LICENSE INFORMATION:
 
 > BSD Style 
 
-gperftools-2.2.tar.gz\gperftools-2.2.tar\gperftools-2.2\src\third_party\valgrind.h
+gperftools-2.1.tar.gz\gperftools-2.1.tar\gperftools-2.1\src\third_party\valgrind.h
 
 
 ----------------------------------------------------------------
@@ -1402,7 +1402,7 @@ COPYING file in the source distribution for details.
 
 > MIT
 
-gperftools-2.2.tar.gz\gperftools-2.2.tar\gperftools-2.2\m4\ltversion.m4
+gperftools-2.1.tar.gz\gperftools-2.1.tar\gperftools-2.1\m4\ltversion.m4
 
 Copyright (C) 2004 Free Software Foundation, Inc.
 Written by Scott James Remnant, 2004
@@ -15352,7 +15352,7 @@ California, USA.  All Rights Reserved.  Permission to copy and
 distribute verbatim copies of this document is granted.
 
 
->>> openssl-1.0.1g
+>>> openssl-1.0.1f
 
 LICENSE ISSUES
   ==============
@@ -27613,7 +27613,7 @@ Copyright 2001-2003 Gisle Aas.
 This library is free software; you can redistribute it and/or modify it under the same terms as Perl itself.
 
 
->>> perl-net-ip-1.25
+>>> perl-net-ip-1.26
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 2.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 2.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
@@ -27666,7 +27666,7 @@ or the
 Perl Artistic License
 
 
->>> perl-net-telnet-3.03
+>>> perl-net-telnet-3.04
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 2.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 2.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
@@ -27676,7 +27676,7 @@ This program is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.
 
 
->>> perl-netaddr-ip-4.066
+>>> perl-netaddr-ip-4.072
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 2.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 2.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
@@ -27718,7 +27718,7 @@ AUTHOR
 Michael Robinton <michael@bizsystems.com>
 
 
->>> perl-package-constants-0.02
+>>> perl-package-constants-0.04
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 2.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 2.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
