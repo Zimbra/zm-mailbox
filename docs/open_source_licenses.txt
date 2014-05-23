@@ -100,6 +100,7 @@ SECTION 1: BSD-STYLE, MIT-STYLE, OR SIMILAR STYLE LICENSES
    >>> xp-0.5
    >>> xpp3-1.1.4c
    >>> yui-2.4.2
+   >>> zeroclipboard-1.0.7
 
 
 
@@ -16805,6 +16806,19 @@ YUI is issued by Yahoo! under the BSD license above. Below is a list of certain 
     * Robert Penner's animation-easing algorithms: In the Animation Utility, YUI makes use of Robert Penner's algorithms for easing.
     * Geoff Stearns's SWFObject: In the Charts Control and the Uploader versions through 2.7.0, YUI makes use of Geoff Stearns's SWFObject v1.5 for Flash Player detection and embedding. More information on SWFObject can be found here (http://blog.deconcept.com/swfobject/). SWFObject is (c) 2007 Geoff Stearns and is released under the MIT License (http://www.opensource.org/licenses/mit-license.php).
     * Diego Perini's IEContentLoaded technique: The Event Utility employs a technique developed by Diego Perini and licensed under GPL. YUI's use of this technique is included under our BSD license with the author's permission.
+
+
+>>> zeroclipboard-1.0.7
+
+The MIT License (MIT)
+Copyright (c) 2014 Jon Rohan, James M. Greene
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 
 
 --------------- SECTION 2: Apache License, V2.0 ----------
