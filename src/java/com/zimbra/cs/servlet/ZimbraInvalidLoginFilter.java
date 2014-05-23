@@ -192,12 +192,13 @@ public class ZimbraInvalidLoginFilter extends DoSFilter {
 
             Set<String> clientIps = suspiciousIpAddrLastAttempt.keySet();
             long now = System.currentTimeMillis();
-            for (String clientIp : clientIps) {
-                long lastLoginAttempt = suspiciousIpAddrLastAttempt.get(clientIp);
-                if ((now - lastLoginAttempt) > delayInMinBetwnReqBeforeReinstating * MIN_TO_MS) {
-                    suspiciousIpAddrLastAttempt.remove(clientIp);
-                    numberOfFailedOccurence.remove(clientIp);
-
+            synchronized (suspiciousIpAddrLastAttempt) {
+                for (String clientIp : clientIps) {
+                    long lastLoginAttempt = suspiciousIpAddrLastAttempt.get(clientIp);
+                    if ((now - lastLoginAttempt) > delayInMinBetwnReqBeforeReinstating * MIN_TO_MS) {
+                        suspiciousIpAddrLastAttempt.remove(clientIp);
+                        numberOfFailedOccurence.remove(clientIp);
+                    }
                 }
             }
         }
