@@ -357,10 +357,10 @@ SECTION 10: GNU Lesser General Public License, V2.1
    >>> jcommon-1.0.20
    >>> jfreechart-1.0.16
    >>> jna-3.4.0
-   >>> perl-mozilla-ca-20120823
+   >>> perl-mozilla-ca-20130114
    >>> perl-test-nowarnings-1.04
    >>> syslog4j-0.9.46
-   >>> tinymce-3.5.4.1
+   >>> tinymce-4.0.25
    >>> unbound-ldap-sdk-2.3.5
 
 
@@ -380,7 +380,7 @@ SECTION 12: GNU Library General Public License, V2.0
 
 SECTION 13: IBM Public License, V1.0
 
-   >>> postfix-2.10.2
+   >>> postfix-2.11.1
 
 
 
@@ -28496,7 +28496,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 Lesser General Public License for more details.
 
 
->>> perl-mozilla-ca-20120823
+>>> perl-mozilla-ca-20130114
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE LGPL 2.1.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE LGPL 2.1.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
@@ -28682,7 +28682,7 @@ Boston, MA 02111-1307, USA.
 IBM Public License, V1.0 is applicable to the following component(s).
 
 
->>> postfix-2.10.2
+>>> postfix-2.11.1
 
 License: IBM Public License 1.0
 
@@ -28690,7 +28690,7 @@ Additional license information:
 
 >BSD
 
-postfix_2.10.2.orig.tar.gz\postfix_2.10.2.orig.tar\postfix-2.10.2\COPYRIGHT
+postfix_2.11.1.orig.tar.gz\postfix_2.11.1.orig.tar\postfix-2.11.1\COPYRIGHT
 
 Copyright (c) 1987, 1993
 The Regents of the University of California.  All rights reserved.
