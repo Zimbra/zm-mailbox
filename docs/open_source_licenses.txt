@@ -238,22 +238,22 @@ SECTION 8: GNU General Public License, V2.0
    >>> perl-class-inspector-1.28
    >>> perl-compress-raw-bzip2-2.064
    >>> perl-compress-raw-zlib-2.065
-   >>> perl-config-inifiles-2.78
-   >>> perl-config-properties-1.75
-   >>> perl-convert-binhex-1.119
+   >>> perl-config-inifiles-2.83
+   >>> perl-config-properties-1.76
+   >>> perl-convert-binhex-1.123
    >>> perl-convert-tnef-0.18
-   >>> perl-crypt-openssl-random-0.04
-   >>> perl-crypt-saltedhash-0.05
+   >>> perl-crypt-openssl-random-0.06
+   >>> perl-crypt-saltedhash-0.09
    >>> perl-crypt-ssleay-0.64
    >>> perl-date-calc-6.3
-   >>> perl-date-manip-6.36
-   >>> perl-db_file-1.827
-   >>> perl-dbd-mysql-4.0.22
-   >>> perl-dbi-1.622
-   >>> perl-devel-globaldestruction-0.09
-   >>> perl-devel-symdump-2.08
+   >>> perl-date-manip-6.42
+   >>> perl-db_file-1.831
+   >>> perl-dbd-mysql-4.0.24
+   >>> perl-dbi-1.631
+   >>> perl-devel-globaldestruction-0.12
+   >>> perl-devel-symdump-2.11
    >>> perl-device-serialport-1.04
-   >>> perl-digest-sha-5.74
+   >>> perl-digest-sha-5.86
    >>> perl-digest-sha1-2.13
    >>> perl-encode-locale-1.03
    >>> perl-extutils-constant-0.23
@@ -26828,7 +26828,7 @@ Copyright (C) 1995-2012 Jean-loup Gailly and Mark Adler
   jloup@gzip.org          madler@alumni.caltech.edu
 
 
->>> perl-config-inifiles-2.78
+>>> perl-config-inifiles-2.83
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 2.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 2.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
@@ -26838,7 +26838,7 @@ This program is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.
 
 
->>> perl-config-properties-1.75
+>>> perl-config-properties-1.76
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 2.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 2.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
@@ -26869,7 +26869,7 @@ This program is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.
 
 
->>> perl-crypt-openssl-random-0.04
+>>> perl-crypt-openssl-random-0.06
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 2.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 2.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
@@ -26877,7 +26877,7 @@ modify it under the same terms as Perl itself.
 LICENSE : GPL 2.0
 
 
->>> perl-crypt-saltedhash-0.05
+>>> perl-crypt-saltedhash-0.09
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 2.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 2.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
@@ -26919,7 +26919,7 @@ Please refer to the files "Artistic.txt", "GNU_GPL.txt" and
 for any details!
 
 
->>> perl-date-manip-6.36
+>>> perl-date-manip-6.42
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 2.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 2.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
@@ -26929,7 +26929,7 @@ This program is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.
 
 
->>> perl-db_file-1.827
+>>> perl-db_file-1.831
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 2.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 2.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
@@ -26938,7 +26938,7 @@ Copyright (c) 1995-2002 Paul Marquess. All rights reserved.
      modify it under the same terms as Perl itself.
 
 
->>> perl-dbd-mysql-4.0.22
+>>> perl-dbd-mysql-4.0.24
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 2.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 2.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
@@ -26950,7 +26950,7 @@ Copyright (c) 2003      Rudolf Lippan
    License or the Artistic License, as specified in the Perl README file.
 
 
->>> perl-dbi-1.622
+>>> perl-dbi-1.631
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 2.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 2.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
@@ -26982,7 +26982,7 @@ commercial products, such as books, magazine articles or CD-ROMs should be
 made to Alligator Descartes.
 
 
->>> perl-devel-globaldestruction-0.09
+>>> perl-devel-globaldestruction-0.12
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 2.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 2.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
@@ -26992,7 +26992,7 @@ This program is free software; you can redistribute
 it and/or modify it under the same terms as Perl itself.
 
 
->>> perl-devel-symdump-2.08
+>>> perl-devel-symdump-2.11
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 2.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 2.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
@@ -27016,7 +27016,7 @@ This module is free software; you can redistribute it and/or modify it under
 the same terms as Perl itself.
 
 
->>> perl-digest-sha-5.74
+>>> perl-digest-sha-5.86
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 2.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 2.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
