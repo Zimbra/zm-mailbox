@@ -307,37 +307,37 @@ SECTION 8: GNU General Public License, V2.0
    >>> perl-net-telnet-3.04
    >>> perl-netaddr-ip-4.072
    >>> perl-package-constants-0.04
-   >>> perl-parallel-forkmanager-0.7.9
-   >>> perl-params-check-0.36
-   >>> perl-parse-cpan-meta-1.4404
-   >>> perl-pod-coverage-0.22
-   >>> perl-pod-escapes-1.04
-   >>> perl-pod-simple-3.23
-   >>> perl-proc-processtable-0.46
-   >>> perl-scalar-list-utils-1.25
-   >>> perl-soap-lite-0.715
+   >>> perl-parallel-forkmanager-1.06
+   >>> perl-params-check-0.38
+   >>> perl-parse-cpan-meta-1.4409
+   >>> perl-pod-coverage-0.23
+   >>> perl-pod-escapes-1.05
+   >>> perl-pod-simple-3.28
+   >>> perl-proc-processtable-0.50
+   >>> perl-scalar-list-utils-1.38
+   >>> perl-soap-lite-1.10
    >>> perl-socket-linux-0.01
-   >>> perl-storable-2.39
-   >>> perl-sub-exporter-progressive-0.001006
+   >>> perl-storable-2.45
+   >>> perl-sub-exporter-progressive-0.001011
    >>> perl-sub-name-0.05
-   >>> perl-test-deep-0.110
-   >>> perl-test-exception-0.31
-   >>> perl-test-harness-3.25
-   >>> perl-test-inter-1.03
+   >>> perl-test-deep-0.112
+   >>> perl-test-exception-0.32
+   >>> perl-test-harness-3.30
+   >>> perl-test-inter-1.05
    >>> perl-test-pod-coverage-1.08
    >>> perl-test-requires-0.06
-   >>> perl-test-tester-0.108
+   >>> perl-test-tester-0.109
    >>> perl-test-warn-0.24
-   >>> perl-time-hires-1.9725
-   >>> perl-timedate-1.20
-   >>> perl-tree-dag_node-1.09
+   >>> perl-time-hires-1.9726
+   >>> perl-timedate-2.30
+   >>> perl-tree-dag_node-1.22
    >>> perl-unix-syslog-1.1
    >>> perl-uri-1.60
-   >>> perl-version-0.9901
+   >>> perl-version-0.9908
    >>> perl-www-robotrules-6.02
-   >>> perl-xml-sax-expat-0.40
-   >>> perl-zmq-constants-1.01
-   >>> perl-zmq-libzmq3-1.01
+   >>> perl-xml-sax-expat-0.51
+   >>> perl-zmq-constants-1.03
+   >>> perl-zmq-libzmq3-1.13
    >>> rrdtool-1.2.30
    >>> swatch-3.2.3
 
@@ -27729,7 +27729,7 @@ This library is free software; you may redistribute and/or modify it
 under the same terms as Perl itself.
 
 
->>> perl-parallel-forkmanager-0.7.9
+>>> perl-parallel-forkmanager-1.06
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 2.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 2.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
@@ -27739,7 +27739,7 @@ All right reserved. This program is free software; you can redistribute it
 and/or modify it under the same terms as Perl itself.
 
 
->>> perl-params-check-0.36
+>>> perl-params-check-0.38
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 2.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 2.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
@@ -27751,7 +27751,7 @@ COPYRIGHT
     under the same terms as Perl itself.
 
 
->>> perl-parse-cpan-meta-1.4404
+>>> perl-parse-cpan-meta-1.4409
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 2.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 2.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
@@ -27764,7 +27764,7 @@ The full text of the license can be found in the
 LICENSE file included with this module.
 
 
->>> perl-pod-coverage-0.22
+>>> perl-pod-coverage-0.23
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 2.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 2.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
@@ -27773,7 +27773,7 @@ Stevens. All rights reserved.  This program is free software; you can
 redistribute it and/or modify it under the same terms as Perl itself.
 
 
->>> perl-pod-escapes-1.04
+>>> perl-pod-escapes-1.05
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 2.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 2.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
@@ -27783,7 +27783,7 @@ This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself.
 
 
->>> perl-pod-simple-3.23
+>>> perl-pod-simple-3.28
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 2.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 2.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
@@ -27793,7 +27793,7 @@ This library is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.
 
 
->>> perl-proc-processtable-0.46
+>>> perl-proc-processtable-0.50
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 2.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 2.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
@@ -27802,7 +27802,7 @@ This package is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself.
 
 
->>> perl-scalar-list-utils-1.25
+>>> perl-scalar-list-utils-1.38
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 2.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 2.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
@@ -27811,7 +27811,7 @@ This library is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.
 
 
->>> perl-soap-lite-0.715
+>>> perl-soap-lite-1.10
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 2.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 2.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
@@ -27830,7 +27830,7 @@ it under the same terms as Perl itself, either Perl version 5.10.1 or,
 at your option, any later version of Perl 5 you may have available.
 
 
->>> perl-storable-2.39
+>>> perl-storable-2.45
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 2.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 2.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
@@ -27848,7 +27848,7 @@ Copyright (c) 1995-2000, Raphael Manfredi
 ----------------------------------------------
 
 
->>> perl-sub-exporter-progressive-0.001006
+>>> perl-sub-exporter-progressive-0.001011
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 2.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 2.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
@@ -27872,7 +27872,7 @@ Matthijs van Duin <xmath@cpan.org>
     the same terms as Perl itself.
 
 
->>> perl-test-deep-0.110
+>>> perl-test-deep-0.112
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 2.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 2.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
@@ -27884,7 +27884,7 @@ modify it under the same terms as Perl itself.
 See F<http://www.perl.com/perl/misc/Artistic.html>
 
 
->>> perl-test-exception-0.31
+>>> perl-test-exception-0.32
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 2.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 2.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
@@ -27895,7 +27895,7 @@ This program is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.
 
 
->>> perl-test-harness-3.25
+>>> perl-test-harness-3.30
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 2.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 2.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
@@ -27905,7 +27905,7 @@ This program is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.
 
 
->>> perl-test-inter-1.03
+>>> perl-test-inter-1.05
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 2.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 2.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
@@ -27945,7 +27945,7 @@ This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself.
 
 
->>> perl-test-tester-0.108
+>>> perl-test-tester-0.109
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 2.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 2.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
@@ -27983,7 +27983,7 @@ COPYRIGHT AND LICENSE
     under the same terms as Perl itself.
 
 
->>> perl-time-hires-1.9725
+>>> perl-time-hires-1.9726
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 2.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 2.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
@@ -27997,7 +27997,7 @@ All rights reserved. This program is free software; you can
 redistribute it and/or modify it under the same terms as Perl itself.
 
 
->>> perl-timedate-1.20
+>>> perl-timedate-2.30
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 2.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 2.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
@@ -28007,7 +28007,7 @@ This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself.
 
 
->>> perl-tree-dag_node-1.09
+>>> perl-tree-dag_node-1.22
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 2.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 2.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
@@ -28038,7 +28038,7 @@ Copyright 1998 Graham Barr.
 This library is free software; you can redistribute it and/or modify it under the same terms as Perl itself.
 
 
->>> perl-version-0.9901
+>>> perl-version-0.9908
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 2.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 2.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
@@ -28060,7 +28060,7 @@ COPYRIGHT
 This library is free software; you can redistribute it and/or modify it under the same terms as Perl itself.
 
 
->>> perl-xml-sax-expat-0.40
+>>> perl-xml-sax-expat-0.51
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 2.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 2.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
@@ -28069,7 +28069,7 @@ FREE SOFTWARE; YOU CAN REDISTRIBUTE IT AND/OR MODIFY IT UNDER THE SAME
 TERMS AS PERL ITSELF.
 
 
->>> perl-zmq-constants-1.01
+>>> perl-zmq-constants-1.03
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 2.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 2.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
@@ -28080,7 +28080,7 @@ it under the same terms as Perl itself, either Perl version 5.8.0 or,
 at your option, any later version of Perl 5 you may have available.
 
 
->>> perl-zmq-libzmq3-1.01
+>>> perl-zmq-libzmq3-1.13
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 2.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 2.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
