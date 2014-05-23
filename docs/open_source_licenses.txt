@@ -125,6 +125,7 @@ SECTION 2: Apache License, V2.0
    >>> cindy-3.0b1
    >>> commons-lang-2.6
    >>> concurrentlinkedhashmap-lru-1.3.1
+   >>> curator-2.0.1
    >>> ehcache-core-2.5.1
    >>> google-caja-r4817
    >>> guava-13.0.1
@@ -17745,6 +17746,11 @@ The Apache Software Foundation (http://www.apache.org/).
 
 
 >>> concurrentlinkedhashmap-lru-1.3.1
+
+License: Apache 2.0
+
+
+>>> curator-2.0.1
 
 License: Apache 2.0
 
