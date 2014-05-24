@@ -303,6 +303,7 @@ SECTION 8: GNU General Public License, V2.0
    >>> perl-mime-tools-5.505
    >>> perl-mime-types-2.04
    >>> perl-module-build-0.4205
+   >>> perl-module-build-tiny-0.034
    >>> perl-module-corelist-3.04
    >>> perl-module-load-0.30
    >>> perl-module-load-conditional-0.62
@@ -29861,6 +29862,23 @@ See F<http://www.perl.com/perl/misc/Artistic.html>
 Copyright (c) 2001-2006 Ken Williams. All rights reserved.
 
 This library is free software; you can redistribute it and/or modify it under the same terms as Perl itself.
+
+
+>>> perl-module-build-tiny-0.034
+
+[PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 2.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 2.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
+
+This software is copyright (c) 2011 by Leon Timmermans, David Golden.
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
+
+Terms of the Perl programming language system itself
+
+a) the GNU General Public License as published by the Free
+   Software Foundation; either version 1, or (at your option) any
+   later version, or
+b) the "Artistic License"
 
 
 >>> perl-module-corelist-3.04
