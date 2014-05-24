@@ -232,6 +232,7 @@ SECTION 8: GNU General Public License, V2.0
    >>> amavisd-2.9.0
    >>> clamav-0.98.3
    >>> cluebringer-2.1.0-beta
+   >>> innotop-1.9.1
    >>> libtool-2.2.6b
    >>> libwww-perl-6.05
    >>> mariadb-10.0.10
@@ -27156,6 +27157,25 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
 >>> cluebringer-2.1.0-beta
 
 License: GPL 2.0
+
+
+>>> innotop-1.9.1
+
+# This program is copyright (c) 2006 Baron Schwartz, baron at xaprb dot com.
+# Feedback and improvements are gratefully received.
+#
+# THIS PROGRAM IS PROVIDED "AS IS" AND WITHOUT ANY EXPRESS OR IMPLIED
+# WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF
+# MERCHANTIBILITY AND FITNESS FOR A PARTICULAR PURPOSE.
+#
+# This program is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free Software
+# Foundation, version 2; OR the Perl Artistic License.  On UNIX and similar
+# systems, you can issue an perlgpl' or an perlartistic' to read these
+
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, write to the Free Software Foundation, Inc., 59 Temple
+# Place, Suite 330, Boston, MA  02111-1307  USA
 
 
 >>> libtool-2.2.6b
