@@ -253,6 +253,7 @@ SECTION 8: GNU General Public License, V2.0
    >>> perl-crypt-openssl-random-0.06
    >>> perl-crypt-saltedhash-0.09
    >>> perl-crypt-ssleay-0.64
+   >>> perl-data-validate-ip-0.22
    >>> perl-date-calc-6.3
    >>> perl-date-manip-6.42
    >>> perl-db_file-1.831
@@ -29215,6 +29216,23 @@ Copyright 1998 Gisle Aas.
 
 This library is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.
+
+
+>>> perl-data-validate-ip-0.22
+
+[PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 2.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 2.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
+
+This software is copyright (c) 2013 by Neil Neely.
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
+
+Terms of the Perl programming language system itself
+
+a) the GNU General Public License as published by the Free
+   Software Foundation; either version 1, or (at your option) any
+   later version, or
+b) the "Artistic License"
 
 
 >>> perl-date-calc-6.3
