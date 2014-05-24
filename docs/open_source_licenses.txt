@@ -348,6 +348,7 @@ SECTION 8: GNU General Public License, V2.0
    >>> perl-time-hires-1.9726
    >>> perl-timedate-2.30
    >>> perl-tree-dag_node-1.22
+   >>> perl-unix-getrusage-0.03
    >>> perl-unix-syslog-1.1
    >>> perl-uri-1.60
    >>> perl-version-0.9908
@@ -30708,6 +30709,21 @@ Copyright 1998-2001, 2004, 2007 by Sean M. Burke and David Hand.
 
 This program is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.
+
+
+>>> perl-unix-getrusage-0.03
+
+[PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 2.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 2.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
+
+COPYRIGHT AND LICENCE
+
+Put the correct copyright and licence information here.
+
+Copyright (C) 2006 by User &
+
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself, either Perl version 5.8.6 or,
+at your option, any later version of Perl 5 you may have available.
 
 
 >>> perl-unix-syslog-1.1
