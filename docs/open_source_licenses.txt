@@ -273,6 +273,8 @@ SECTION 8: GNU General Public License, V2.0
    >>> perl-extutils-parsexs-3.22
    >>> perl-file-copy-recursive-0.38
    >>> perl-file-grep-0.02
+   >>> perl-file-slurp-9999.19
+   >>> perl-file-slurp-tiny-0.003
    >>> perl-file-tail-0.99.3
    >>> perl-file-temp-0.2304
    >>> perl-filesys-df-0.92
@@ -29493,6 +29495,34 @@ Copyright (C) 2002,2005 Michael K. Neylon
 
 This program is free software; you can redistribute it
 and/or modify it under the same terms as Perl itself.
+
+
+>>> perl-file-slurp-9999.19
+
+[PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 2.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 2.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
+
+COPYRIGHT AND LICENCE
+
+Copyright (C) 2010 Uri Guttman <uri@PerlHunter.com>
+
+Licensed the same as Perl.
+
+
+>>> perl-file-slurp-tiny-0.003
+
+[PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 2.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 2.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
+
+This software is copyright (c) 2013 by Leon Timmermans.
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
+
+Terms of the Perl programming language system itself
+
+a) the GNU General Public License as published by the Free
+   Software Foundation; either version 1, or (at your option) any
+   later version, or
+b) the "Artistic License"
 
 
 >>> perl-file-tail-0.99.3
