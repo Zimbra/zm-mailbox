@@ -51,7 +51,6 @@ SECTION 1: BSD-STYLE, MIT-STYLE, OR SIMILAR STYLE LICENSES
    >>> ical4j-0.9.16
    >>> icu4j-4.8.1.1
    >>> iscroll-3.5.1
-   >>> jain-sip-api-1.2
    >>> jakarta-taglibs-standard-1.1.0-b1
    >>> javamail-1.4.5
    >>> jaxen-1.1.3
@@ -1583,15 +1582,6 @@ HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
 WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE.
-
-
->>> jain-sip-api-1.2
-
-LICENSE
--------
-
-The implementation is public domain although the API itself is'nt. 
-See the license directory in this distribution for definitive information.
 
 
 >>> jakarta-taglibs-standard-1.1.0-b1
