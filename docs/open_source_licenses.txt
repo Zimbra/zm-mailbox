@@ -119,7 +119,6 @@ SECTION 2: Apache License, V2.0
    >>> apache-jcs-1.3
    >>> apache-log4j-1.2.16
    >>> apache-log4j-extras-1.0
-   >>> apache-pdfbox-1.6.0
    >>> cindy-3.0b1
    >>> commons-lang-2.6
    >>> concurrentlinkedhashmap-lru-1.3.1
@@ -17515,11 +17514,6 @@ Licensed under the Apache License, Version 2.0 (the "License");
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
    See the License for the specific language governing permissions and
    limitations under the License.
-
-
->>> apache-pdfbox-1.6.0
-
-License: Apache 2.0
 
 
 >>> cindy-3.0b1
