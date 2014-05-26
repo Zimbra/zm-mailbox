@@ -124,7 +124,7 @@ SECTION 2: Apache License, V2.0
    >>> google-caja-r4817
    >>> guava-13.0.1
    >>> jackson-1.9.2
-   >>> jetty-9.1.5
+   >>> jetty-9.1.4
    >>> jsieve-0.4
    >>> junixsocket-1.3
    >>> lucene-3.5.0
@@ -18355,7 +18355,7 @@ Parts of Cobertura are licensed under the Apache Software License,
 Version 1.1.
 
 
->>> jetty-9.1.5
+>>> jetty-9.1.4
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE APACHE 2.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE APACHE 2.0.THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.] 
 
@@ -18371,45 +18371,45 @@ javax.mail.glassfish-1.4.1.v201005082020.jar
 javax.transaction-api-1.2.jar
 javax.annotation-api-1.2.jar
 javax.websocket-api-1.0.jar
-javax-websocket-client-impl-9.1.5.v20140505.jar
-javax-websocket-server-impl-9.1.5.v20140505.jar
-websocket-api-9.1.5.v20140505.jar
-websocket-client-9.1.5.v20140505.jar
-websocket-common-9.1.5.v20140505.jar
-websocket-server-9.1.5.v20140505.jar
-websocket-servlet-9.1.5.v20140505.jar
-spdy-core-9.1.5.v20140505.jar
-spdy-client-9.1.5.v20140505.jar
-spdy-http-server-9.1.5.v20140505.jar
-spdy-server-9.1.5.v20140505.jar
-spdy-http-common-9.1.5.v20140505.jar
+javax-websocket-client-impl-9.1.4.v20140401.jar
+javax-websocket-server-impl-9.1.4.v20140401.jar
+websocket-api-9.1.4.v20140401.jar
+websocket-client-9.1.4.v20140401.jar
+websocket-common-9.1.4.v20140401.jar
+websocket-server-9.1.4.v20140401.jar
+websocket-servlet-9.1.4.v20140401.jar
+spdy-core-9.1.4.v20140401.jar
+spdy-client-9.1.4.v20140401.jar
+spdy-http-server-9.1.4.v20140401.jar
+spdy-server-9.1.4.v20140401.jar
+spdy-http-common-9.1.4.v20140401.jar
 servlet-api-3.1.jar
-jetty-annotations-9.1.5.v20140505.jar
-jetty-client-9.1.5.v20140505.jar
-jetty-continuation-9.1.5.v20140505.jar
-jetty-deploy-9.1.5.v20140505.jar
-jetty-http-9.1.5.v20140505.jar
-jetty-io-9.1.5.v20140505.jar
-jetty-jaas-9.1.5.v20140505.jar
-jetty-jaspi-9.1.5.v20140505.jar
-jetty-jmx-9.1.5.v20140505.jar
-jetty-jndi-9.1.5.v20140505.jar
-jetty-monitor-9.1.5.v20140505.jar
-jetty-plus-9.1.5.v20140505.jar
-jetty-proxy-9.1.5.v20140505.jar
-jetty-rewrite-9.1.5.v20140505.jar
+jetty-annotations-9.1.4.v20140401.jar
+jetty-client-9.1.4.v20140401.jar
+jetty-continuation-9.1.4.v20140401.jar
+jetty-deploy-9.1.4.v20140401.jar
+jetty-http-9.1.4.v20140401.jar
+jetty-io-9.1.4.v20140401.jar
+jetty-jaas-9.1.4.v20140401.jar
+jetty-jaspi-9.1.4.v20140401.jar
+jetty-jmx-9.1.4.v20140401.jar
+jetty-jndi-9.1.4.v20140401.jar
+jetty-monitor-9.1.4.v20140401.jar
+jetty-plus-9.1.4.v20140401.jar
+jetty-proxy-9.1.4.v20140401.jar
+jetty-rewrite-9.1.4.v20140401.jar
 jetty-schemas-3.1.jar
-jetty-security-9.1.5.v20140505.jar
-jetty-server-9.1.5.v20140505.jar
-jetty-servlet-9.1.5.v20140505.jar
-jetty-servlets-9.1.5.v20140505.jar
-jetty-util-9.1.5.v20140505.jar
-jetty-webapp-9.1.5.v20140505.jar
-jetty-xml-9.1.5.v20140505.jar
+jetty-security-9.1.4.v20140401.jar
+jetty-server-9.1.4.v20140401.jar
+jetty-servlet-9.1.4.v20140401.jar
+jetty-servlets-9.1.4.v20140401.jar
+jetty-util-9.1.4.v20140401.jar
+jetty-webapp-9.1.4.v20140401.jar
+jetty-xml-9.1.4.v20140401.jar
 
 > EPL 1.0
 
-jetty-distribution-9.1.5.v20140505.tar.gz\jetty-distribution-9.1.5.v20140505.tar\jetty-distribution-9.1.5.v20140505\lib\jta\javax.transaction-1.1.1.v201105210645.jar\about.html
+jetty-distribution-9.1.4.v20140401.tar.gz\jetty-distribution-9.1.4.v20140401.tar\jetty-distribution-9.1.4.v20140401\lib\jta\javax.transaction-1.1.1.v201105210645.jar\about.html
 
 The Eclipse Foundation makes available all content in this plug-in unless otherwise indicated below, the Content is provided to you under the terms and conditions of the Eclipse Public License Version 1.0.
 
@@ -18438,7 +18438,7 @@ servlet-api-3.1.jar
 
 > MIT
 
-jetty-distribution-9.1.5.v20140505.tar.gz\jetty-distribution-9.1.5.v20140505.tar\jetty-distribution-9.1.5.v20140505\lib\monitor\jetty-monitor-9.1.5.v20140505.jar\about.html
+jetty-distribution-9.1.4.v20140401.tar.gz\jetty-distribution-9.1.4.v20140401.tar\jetty-distribution-9.1.4.v20140401\lib\monitor\jetty-monitor-9.1.4.v20140401.jar\about.html
 
 Copyright 1996 Aki Yoshida,
 
@@ -18451,7 +18451,7 @@ granted provided that the copyright notice appears in all copies.
 
 > Apache 2.0
 
-jetty-distribution-9.1.5.v20140505.tar.gz\jetty-istribution-9.1.5.v20140505.tar\jetty-distribution-9.1.5.v20140505\lib\jta\javax.transaction-1.1.1.v201105210645.jar\META-INF\maven\org.apache.geronimo.specs\geronimo-jta_1.1_spec\pom.xml
+jetty-distribution-9.1.4.v20140401.tar.gz\jetty-istribution-9.1.4.v20140401.tar\jetty-distribution-9.1.4.v20140401\lib\jta\javax.transaction-1.1.1.v201105210645.jar\META-INF\maven\org.apache.geronimo.specs\geronimo-jta_1.1_spec\pom.xml
 
 Licensed to the Apache Software Foundation (ASF) under one
 or more contributor license agreements.  See the NOTICE file
@@ -18480,7 +18480,7 @@ javax.activation-1.1.0.v201105071233.jar
 
 > CDDL 1.0
 
-jetty-distribution-9.1.5.v20140505.tar.gz\jetty-distribution-9.1.5.v20140505.tar\jetty-distribution-9.1.5.v20140505\lib\jsp\org.apache.taglibs.standard.glassfish-1.2.0.v201112081803.jar\org\apache\taglibs\standard\resources\Resources.properties
+jetty-distribution-9.1.4.v20140401.tar.gz\jetty-distribution-9.1.4.v20140401.tar\jetty-distribution-9.1.4.v20140401\lib\jsp\org.apache.taglibs.standard.glassfish-1.2.0.v201112081803.jar\org\apache\taglibs\standard\resources\Resources.properties
 
 
 DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
@@ -18528,7 +18528,7 @@ javax.mail.glassfish-1.4.1.v201005082020.jar
 
 > 3RD-PARTY-LICENSE.txt
 
-jetty-distribution-9.1.5.v20140505.tar.gz\jetty-distribution-9.1.5.v20140505.tar\jetty-distribution-9.1.5.v20140505\lib\jndi\javax.mail.glassfish-1.4.1.v201005082020.jar\about_files\ 3RD-PARTY-LICENSE.txt
+jetty-distribution-9.1.4.v20140401.tar.gz\jetty-distribution-9.1.4.v20140401.tar\jetty-distribution-9.1.4.v20140401\lib\jndi\javax.mail.glassfish-1.4.1.v201005082020.jar\about_files\ 3RD-PARTY-LICENSE.txt
 
 DO NOT TRANSLATE OR LOCALIZE.
 
