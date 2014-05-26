@@ -56,7 +56,6 @@ SECTION 1: BSD-STYLE, MIT-STYLE, OR SIMILAR STYLE LICENSES
    >>> jce_policy-7
    >>> jdk-1.7.0_55
    >>> jdom-1.1
-   >>> jplayer-2.1.0
    >>> jquery-1.8.1
    >>> json-1.0
    >>> jython-2.5.2
@@ -13231,16 +13230,6 @@ Copyright (C) 2000-2004 Jason Hunter & Brett McLaughlin.
  created by Jason Hunter <jhunter_AT_jdom_DOT_org> and
  Brett McLaughlin <brett_AT_jdom_DOT_org>.  For more information
  on the JDOM Project, please see <http://www.jdom.org/>.
-
-
->>> jplayer-2.1.0
-
-[PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE MIT.  PLEASE SEE THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.] 
-
-Copyright (c) 2009 - 2011 Happyworm Ltd
-   Dual licensed under the MIT and GPL licenses.
-    - http://www.opensource.org/licenses/mit-license.php
-    - http://www.gnu.org/copyleft/gpl.html
 
 
 >>> jquery-1.8.1
