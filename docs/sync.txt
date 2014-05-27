@@ -44,8 +44,8 @@
   <-- modified/created folders (none here) -->
   <-- modified/created tags (none here) -->
   <-- other modified/created things (only id/folder/date means new or content changed) */
-  <m id="275" l="2" cid="276" f="" t="" md="1078024283" ms="409"/>
-  <m id="321" l="3" cid="312" f="u" t="" md="1078025663" ms="441"/>
+  <m id="275" l="2" cid="276" f="" t="" d="10780241830000" md="1078024283" ms="409"/>
+  <m id="321" l="3" cid="312" f="u" t="" d="10780241820000" md="1078025663" ms="441"/>
   <tag id="68" name="bob" color="6" md="1078025983" ms="442"/>
   <cn id="664" l="7" f="" t="" md="1078026283" ms="496"/>
   <cn id="662" l="7" md="1078026270" ms="499"/>
@@ -103,8 +103,8 @@
   <folder id="663" name="new name" l="1" md="1078054291" ms="520"/>
   <-- modified/created tags (none here) -->
   <-- other modified/created things (only id/folder/date means new or content changed) */
-  <m id="5526" l="2" md="1078054265" ms="503"/>
-  <m id="5522" l="2" cid="5521" f="" t="" md="1078054297" ms="519"/>
+  <m id="5526" l="2" d="10780241820000" md="1078054265" ms="503"/>
+  <m id="5522" l="2" d="10780241820000" cid="5521" f="" t="" md="1078054297" ms="519"/>
   <cn id="5531" l="7" md="1078054296" ms="520"/>
 </SyncResponse>
 

@@ -304,7 +304,7 @@ public class Sync extends MailDocumentHandler {
                 // content servlet's "include metadata in headers" hack.
                 // If it's just the metadata that changed, send back the set of mutable attributes.
                 boolean created = item.getSavedSequence() > begin;
-                ToXML.encodeItem(response, ifmt, octxt, item, created ? Change.FOLDER | Change.CONFLICT : MUTABLE_FIELDS);
+                ToXML.encodeItem(response, ifmt, octxt, item, created ? Change.FOLDER | Change.CONFLICT | Change.DATE : MUTABLE_FIELDS);
                 itemCount++;
             }
             batch.clear();
