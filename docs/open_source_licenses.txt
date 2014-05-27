@@ -84,6 +84,7 @@ SECTION 1: BSD-STYLE, MIT-STYLE, OR SIMILAR STYLE LICENSES
    >>> perl-mail-spf-2.9.0
    >>> perl-net-ssleay-1.55
    >>> perl-socket6-0.25
+   >>> perl-termreadkey-2.30.02
    >>> perl-try-tiny-0.19
    >>> php-5.4.20
    >>> sendmail-8.14.8
@@ -20138,6 +20139,15 @@ HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
 LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 SUCH DAMAGE.
+
+
+>>> perl-termreadkey-2.30.02
+
+Copyright (C) 1994-1999 Kenneth Albanowski.
+2001-2005 Jonathan Stowe and others
+
+Unlimited distribution and/or modification is allowed as long as this
+copyright notice remains intact.
 
 
 >>> perl-try-tiny-0.19
