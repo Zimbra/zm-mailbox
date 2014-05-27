@@ -14,8 +14,9 @@
  */
 package com.zimbra.soap;
 
-import java.util.List;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -505,6 +506,7 @@ public final class ZimbraSoapContext {
         boolean needRecheck = false;
         do {
             String[] sharedItems = targetAccount.getSharedItem();
+            Set<String> groupIds = null;
             for (String sharedItem : sharedItems) {
                 ShareInfoData shareData = AclPushSerializer.deserialize(sharedItem);
                 switch (shareData.getGranteeTypeCode()) {
@@ -522,10 +524,10 @@ public final class ZimbraSoapContext {
                         return;
                     case ACL.GRANTEE_GROUP:
                         if (authAccount != null) {
-                            List<String> groupIds = prov.getGroupMembership(authAccount, false).groupIds();
-                            if (groupIds != null && groupIds.contains(shareData.getGranteeId())) {
-                                return;
+                            if (groupIds == null) {
+                                groupIds = new HashSet<String>();
                             }
+                            groupIds.add(shareData.getGranteeId());
                         }
                         break;
                     case ACL.GRANTEE_AUTHUSER:
@@ -551,6 +553,14 @@ public final class ZimbraSoapContext {
                         }
                         break;
                  }
+            }
+
+            if (groupIds != null) {
+                for (String groupId : groupIds) {
+                    if (prov.inACLGroup(authAccount, groupId)) {
+                        return;
+                    }
+                }
             }
 
             if (needRecheck) {
