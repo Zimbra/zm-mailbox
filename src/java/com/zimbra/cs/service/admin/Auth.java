@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -25,28 +25,27 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AccountConstants;
+import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.util.ZimbraCookie;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.common.account.Key;
-import com.zimbra.common.account.Key.AccountBy;
-import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.cs.account.ZimbraAuthToken;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.account.auth.AuthMechanism.AuthMech;
-import com.zimbra.cs.session.Session;
 import com.zimbra.cs.service.AuthProvider;
+import com.zimbra.cs.session.Session;
 import com.zimbra.cs.util.AccountUtil;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ZimbraCookie;
-import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.common.soap.AccountConstants;
-import com.zimbra.common.soap.AdminConstants;
-import com.zimbra.common.soap.Element;
 import com.zimbra.soap.SoapEngine;
 import com.zimbra.soap.SoapServlet;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -74,6 +73,9 @@ public class Auth extends AdminDocumentHandler {
                 if (at.isExpired())
                     throw ServiceException.AUTH_EXPIRED();
 
+                if(!at.isRegistered())
+                    throw ServiceException.AUTH_EXPIRED("This auth token is not valid anymore");
+
                 // make sure that the authenticated account is active and has not been deleted/disabled since the last request
                 acct = prov.get(AccountBy.id, at.getAccountId(), at);
                 if (acct == null || !acct.getAccountStatus(prov).equals(Provisioning.ACCOUNT_STATUS_ACTIVE))
@@ -87,11 +89,11 @@ public class Auth extends AdminDocumentHandler {
 
         } else {
             /*
-             * only one of  
+             * only one of
              *     <name>...</name>
-             * or 
+             * or
              *     <account by="name|id|foreignPrincipal">...</account>
-             * can/must be specified    
+             * can/must be specified
              */
             String name = request.getAttribute(AdminConstants.E_NAME, null);
             Element acctEl = request.getOptionalElement(AccountConstants.E_ACCOUNT);
@@ -121,7 +123,7 @@ public class Auth extends AdminDocumentHandler {
 
                 if (by == AccountBy.name && value.indexOf("@") == -1) {
                     // first try to get by adminName, which resolves the account under cn=admins,cn=zimbra
-                    // and does not need a domain 
+                    // and does not need a domain
                     acct = prov.get(AccountBy.adminName, value, zsc.getAuthToken());
 
                     // not found, try applying virtual host name
@@ -130,8 +132,8 @@ public class Auth extends AdminDocumentHandler {
                             Domain d = prov.get(Key.DomainBy.virtualHostname, virtualHost);
                             if (d != null)
                                 value = value + "@" + d.getName();
-                        }                    
-                    } 
+                        }
+                    }
                 }
 
                 if (acct == null)
@@ -143,7 +145,7 @@ public class Auth extends AdminDocumentHandler {
                 AccountUtil.addAccountToLogContext(prov, acct.getId(), ZimbraLog.C_NAME, ZimbraLog.C_ID, null);
 
                 ZimbraLog.security.info(ZimbraLog.encodeAttrs(
-                        new String[] {"cmd", "AdminAuth","account", value})); 
+                        new String[] {"cmd", "AdminAuth","account", value}));
 
                 Map<String, Object> authCtxt = new HashMap<String, Object>();
                 authCtxt.put(AuthContext.AC_ORIGINATING_CLIENT_IP, context.get(SoapEngine.ORIG_REQUEST_IP));
@@ -158,7 +160,7 @@ public class Auth extends AdminDocumentHandler {
 
             } catch (ServiceException se) {
                 ZimbraLog.security.warn(ZimbraLog.encodeAttrs(
-                        new String[] {"cmd", "AdminAuth","account", value, "error", se.getMessage()}));    
+                        new String[] {"cmd", "AdminAuth","account", value, "error", se.getMessage()}));
                 throw se;
             }
         }
@@ -166,7 +168,7 @@ public class Auth extends AdminDocumentHandler {
         return doResponse(request, at, zsc, context, acct);
     }
 
-    private AuthToken dummyYCCTokenTestNeverCallMe(Element authTokenEl) 
+    private AuthToken dummyYCCTokenTestNeverCallMe(Element authTokenEl)
     throws ServiceException, AuthTokenException  {
         String atType = authTokenEl.getAttribute(AdminConstants.A_TYPE);
         if ("YAHOO_CALENDAR_AUTH_PROVIDER".equals(atType)) {
@@ -185,19 +187,19 @@ public class Auth extends AdminDocumentHandler {
 
     private void checkAdmin(Account acct) throws ServiceException {
         boolean isDomainAdmin = acct.getBooleanAttr(Provisioning.A_zimbraIsDomainAdminAccount, false);
-        boolean isAdmin= acct.getBooleanAttr(Provisioning.A_zimbraIsAdminAccount, false);            
-        boolean isDelegatedAdmin= acct.getBooleanAttr(Provisioning.A_zimbraIsDelegatedAdminAccount, false);            
+        boolean isAdmin= acct.getBooleanAttr(Provisioning.A_zimbraIsAdminAccount, false);
+        boolean isDelegatedAdmin= acct.getBooleanAttr(Provisioning.A_zimbraIsDelegatedAdminAccount, false);
         boolean ok = (isDomainAdmin || isAdmin || isDelegatedAdmin);
-        if (!ok) 
+        if (!ok)
             throw ServiceException.PERM_DENIED("not an admin account");
     }
 
-    private Element doResponse(Element request, AuthToken at, ZimbraSoapContext zsc, 
+    private Element doResponse(Element request, AuthToken at, ZimbraSoapContext zsc,
             Map<String, Object> context, Account acct) throws ServiceException {
         Element response = zsc.createElement(AdminConstants.AUTH_RESPONSE);
         at.encodeAuthResp(response, true);
 
-        /* 
+        /*
          * bug 67078
          * also return auth token cookie in http header
          */
@@ -205,7 +207,7 @@ public class Auth extends AdminDocumentHandler {
         HttpServletResponse httpResp = (HttpServletResponse)context.get(SoapServlet.SERVLET_RESPONSE);
         boolean rememberMe = request.getAttributeBool(AdminConstants.A_PERSIST_AUTH_TOKEN_COOKIE, false);
         at.encode(httpResp, true, ZimbraCookie.secureCookie(httpReq), rememberMe);
-        
+
         response.addAttribute(AdminConstants.E_LIFETIME, at.getExpires() - System.currentTimeMillis(), Element.Disposition.CONTENT);
 
         Session session = updateAuthenticatedAccount(zsc, at, context, true);

@@ -240,10 +240,6 @@ public class TestAccessKeyGrant extends TestCase {
         }
 
 		@Override
-		public void register() throws AuthTokenException {
-		}
-
-		@Override
 		public void deRegister() throws AuthTokenException {
 		}
 

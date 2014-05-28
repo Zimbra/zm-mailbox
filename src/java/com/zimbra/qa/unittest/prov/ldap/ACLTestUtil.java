@@ -393,10 +393,6 @@ public class ACLTestUtil {
         }
 
 		@Override
-		public void register() {
-		}
-
-		@Override
 		public void deRegister() {
 		}
 

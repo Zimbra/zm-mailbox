@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -26,8 +26,6 @@ import java.util.Set;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import com.zimbra.cs.account.AuthTokenException;
-import com.zimbra.cs.service.AuthProvider;
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpException;
@@ -41,7 +39,9 @@ import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.httpclient.methods.PutMethod;
 
+import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.httpclient.HttpClientUtil;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.ContentDisposition;
 import com.zimbra.common.mime.ContentType;
 import com.zimbra.common.service.ServiceException;
@@ -50,15 +50,15 @@ import com.zimbra.common.util.ZimbraHttpConnectionManager;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.cs.httpclient.HttpProxyUtil;
 import com.zimbra.cs.mailbox.MailServiceException;
+import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.service.FileUploadServlet.Upload;
 import com.zimbra.cs.servlet.ZimbraServlet;
-import com.zimbra.common.localconfig.LC;
 /**
  * @author jylee
  */
@@ -75,7 +75,7 @@ public class ProxyServlet extends ZimbraServlet {
     private static final String PASS_PARAM = "pass";
     private static final String AUTH_PARAM = "auth";
     private static final String AUTH_BASIC = "basic";
-   
+
 
     private Set<String> getAllowedDomains(AuthToken auth) throws ServiceException {
         Provisioning prov = Provisioning.getInstance();
@@ -86,10 +86,10 @@ public class ProxyServlet extends ZimbraServlet {
         Set<String> allowedDomains = cos.getMultiAttrSet(Provisioning.A_zimbraProxyAllowedDomains);
 
         ZimbraLog.zimlet.debug("get allowedDomains result: "+allowedDomains);
-        
+
         return allowedDomains;
     }
-    
+
     private boolean checkPermissionOnTarget(URL target, AuthToken auth) {
         String host = target.getHost().toLowerCase();
         ZimbraLog.zimlet.debug("checking allowedDomains permission on target host: "+host);
@@ -113,7 +113,7 @@ public class ProxyServlet extends ZimbraServlet {
         }
         return false;
     }
-    
+
     private boolean canProxyHeader(String header) {
         if (header == null) return false;
         header = header.toLowerCase();
@@ -131,7 +131,7 @@ public class ProxyServlet extends ZimbraServlet {
         }
         return true;
     }
-    
+
     private byte[] copyPostedData(HttpServletRequest req) throws IOException {
         int size = req.getContentLength();
         if (req.getMethod().equalsIgnoreCase("GET") || size <= 0) {
@@ -141,7 +141,7 @@ public class ProxyServlet extends ZimbraServlet {
         ByteArrayOutputStream baos = null;
         try {
             if (size < 0)
-                size = 0; 
+                size = 0;
             baos = new ByteArrayOutputStream(size);
             byte[] buffer = new byte[8192];
             int num;
@@ -174,10 +174,11 @@ public class ProxyServlet extends ZimbraServlet {
         doProxy(req, resp);
     }
 
+    @Override
     protected boolean isAdminRequest(HttpServletRequest req) {
         return req.getServerPort() == LC.zimbra_admin_service_port.intValue();
     }
-    
+
     private static final String DEFAULT_CTYPE = "text/xml";
 
     private void doProxy(HttpServletRequest req, HttpServletResponse resp) throws IOException {
@@ -192,6 +193,10 @@ public class ProxyServlet extends ZimbraServlet {
                     authToken = AuthProvider.getAuthToken(zAuthToken);
                     if (authToken.isExpired()) {
                         resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, "authtoken expired");
+                        return;
+                    }
+                    if (!authToken.isRegistered()) {
+                        resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, "this auth token is not valid anymore");
                         return;
                     }
                     if (isAdmin && !authToken.isAdmin()) {
@@ -271,7 +276,7 @@ public class ProxyServlet extends ZimbraServlet {
                 client.setState(state);
                 method.setDoAuthentication(true);
             }
-            
+
             Enumeration headers = req.getHeaderNames();
             while (headers.hasMoreElements()) {
                 String hdr = (String) headers.nextElement();
@@ -284,7 +289,7 @@ public class ProxyServlet extends ZimbraServlet {
                 		method.addRequestHeader(hdr, req.getHeader(hdr));
                 }
             }
-            
+
             try {
                 if (!(reqMethod.equalsIgnoreCase("POST") || reqMethod.equalsIgnoreCase("PUT"))) {
                     method.setFollowRedirects(true);
@@ -303,7 +308,7 @@ public class ProxyServlet extends ZimbraServlet {
             String contentType = ctHeader == null || ctHeader.getValue() == null ? DEFAULT_CTYPE : ctHeader.getValue();
 
             InputStream targetResponseBody = method.getResponseBodyAsStream();
-            
+
             if (asUpload) {
                 String filename = req.getParameter(FILENAME_PARAM);
                 if (filename == null || filename.equals(""))
@@ -314,7 +319,7 @@ public class ProxyServlet extends ZimbraServlet {
                     filename = "unknown";
 
                 List<Upload> uploads = null;
-                
+
                 if (targetResponseBody != null) {
                     try {
                         Upload up = FileUploadServlet.saveUpload(targetResponseBody, filename, contentType, authToken.getAccountId());

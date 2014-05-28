@@ -458,11 +458,6 @@ public abstract class AuthProvider {
                 if (at == null) {
                     throw AuthProviderException.FAILURE("auth provider " + ap.getName() + " returned null");
                 } else {
-        			try {
-						at.register();
-					} catch (AuthTokenException e) {
-						throw AuthProviderException.FAILURE("failed to register auth token");
-					}
                     return at;
                 }
             } catch (AuthProviderException e) {
@@ -491,11 +486,6 @@ public abstract class AuthProvider {
                 if (at == null) {
                     throw AuthProviderException.FAILURE("auth provider " + ap.getName() + " returned null");
                 } else {
-                	try {
-						at.register();
-					} catch (AuthTokenException e) {
-						throw AuthProviderException.FAILURE("failed to register auth token");
-					}
                     return at;
                 }
             } catch (AuthProviderException e) {
@@ -524,11 +514,6 @@ public abstract class AuthProvider {
                 if (at == null) {
                     throw AuthProviderException.FAILURE("auth provider " + ap.getName() + " returned null");
                 } else {
-                	try {
-						at.register();
-					} catch (AuthTokenException e) {
-						throw AuthProviderException.FAILURE("failed to register auth token");
-					}
                     return at;
                 }
             } catch (AuthProviderException e) {
@@ -552,11 +537,6 @@ public abstract class AuthProvider {
                 if (at == null) {
                     throw AuthProviderException.FAILURE("auth provider " + ap.getName() + " returned null");
                 } else {
-                	try {
-						at.register();
-					} catch (AuthTokenException e) {
-						throw AuthProviderException.FAILURE("failed to register auth token");
-					}
                     return at;
                 }
             } catch (AuthProviderException e) {
@@ -625,6 +605,9 @@ public abstract class AuthProvider {
             throw ServiceException.AUTH_EXPIRED();
         }
 
+        if(!at.isRegistered()) {
+            throw ServiceException.AUTH_EXPIRED();
+        }
         // make sure that the authenticated account is still active and has not been deleted since the last request
         String acctId = at.getAccountId();
         Account acct = prov.get(AccountBy.id, acctId, at);

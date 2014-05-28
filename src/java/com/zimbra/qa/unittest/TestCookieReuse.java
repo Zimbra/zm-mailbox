@@ -3,6 +3,7 @@ package com.zimbra.qa.unittest;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.List;
 
 import junit.framework.TestCase;
 
@@ -15,19 +16,31 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import com.zimbra.client.ZMailbox;
+import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.Element.JSONElement;
+import com.zimbra.common.soap.Element.XMLElement;
+import com.zimbra.common.soap.SoapFaultException;
+import com.zimbra.common.soap.SoapHttpTransport;
+import com.zimbra.common.soap.SoapProtocol;
+import com.zimbra.common.soap.SoapUtil;
 import com.zimbra.common.util.ZimbraHttpConnectionManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ZimbraAuthToken;
+import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.account.message.EndSessionRequest;
+import com.zimbra.soap.mail.message.SearchRequest;
+import com.zimbra.soap.mail.message.SearchResponse;
+import com.zimbra.soap.type.SearchHit;
 
 public class TestCookieReuse extends TestCase {
     private static final String NAME_PREFIX = TestUserServlet.class.getSimpleName();
     private static final String USER_NAME = "user1";
     private int currentSupportedAuthVersion = 2;
-
     @Override
     public void setUp()
     throws Exception {
@@ -41,7 +54,6 @@ public class TestCookieReuse extends TestCase {
     public void tearDown()
     throws Exception {
         cleanUp();
-
     }
 
     private void cleanUp()
@@ -59,6 +71,7 @@ public class TestCookieReuse extends TestCase {
     /**
      * Verify that we can use the cookie for REST session if the session is valid
      */
+    @Test
     public void testValidCookie() throws ServiceException, IOException {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         URI uri = mbox.getRestURI("Inbox?fmt=rss");
@@ -72,6 +85,7 @@ public class TestCookieReuse extends TestCase {
     /**
      * Verify that we can RE-use the cookie for REST session if the session is valid
      */
+    @Test
     public void testValidSessionCookieReuse() throws ServiceException, IOException {
         //establish legitimate connection
     	ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
@@ -94,6 +108,7 @@ public class TestCookieReuse extends TestCase {
     /**
      * Verify that we canNOT RE-use the cookie for REST session if the session is valid
      */
+    @Test
     public void testAutoEndSession() throws ServiceException, IOException {
         //establish legitimate connection
     	TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraForceClearCookies, "TRUE");
@@ -121,8 +136,9 @@ public class TestCookieReuse extends TestCase {
     }
 
     /**
-     * Verify that we canNOT RE-use the cookie for REST session if the session is valid
+     * Verify that we canNOT RE-use the cookie taken from a legitimate HTTP session for a REST request after ending the original session
      */
+    @Test
     public void testForceEndSession() throws ServiceException, IOException {
         //establish legitimate connection
     	TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraForceClearCookies, "FALSE");
@@ -151,17 +167,15 @@ public class TestCookieReuse extends TestCase {
     }
 
     /**
-     * Verify that we canNOT RE-use the cookie for REST session if the session is valid
+     * Verify that we canNOT RE-use the cookie taken from a legitimate HTTP session for a SOAP request after ending the original session
      */
-    /*
-     * //this is not fixed yet. SOAP handlers do not require token registration
+    @Test
     public void testInvalidSearchRequest() throws ServiceException, IOException {
-    	return;
         //establish legitimate connection
     	TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraForceClearCookies, "FALSE");
     	ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         URI uri = mbox.getRestURI("Inbox?fmt=rss");
-        HttpClient alice = mbox.getHttpClient(uri);
+        mbox.getHttpClient(uri);
         ZAuthToken authT = mbox.getAuthToken();
 
         //create evesdropper's SOAP client
@@ -200,16 +214,17 @@ public class TestCookieReuse extends TestCase {
 	        searchHits = searchResp.getSearchHits();
 	        assertTrue("this search request should fail", searchHits.isEmpty());
         } catch (SoapFaultException ex) {
-        	assertEquals("Should be getting 'auth required' exception", ex.AUTH_REQUIRED, ex.getCode());
+        	assertEquals("Should be getting 'auth required' exception", ServiceException.AUTH_EXPIRED, ex.getCode());
         }
-    }*/
+    }
 
     /**
-     * Verify that we canNOT RE-use the cookie for REST session if the session is valid
+     * Verify that we canNOT RE-use the cookie for REST session after logging out of plain HTML client
      * @throws URISyntaxException
      * @throws InterruptedException
      */
-    public void testLogOut() throws ServiceException, IOException, URISyntaxException, InterruptedException {
+    @Test
+    public void testWebLogOut() throws ServiceException, IOException, URISyntaxException, InterruptedException {
         //establish legitimate connection
     	TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraForceClearCookies, "FALSE");
     	ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
@@ -240,7 +255,6 @@ public class TestCookieReuse extends TestCase {
     public void testTokenRegistration () throws Exception {
     	Account a = TestUtil.getAccount(USER_NAME);
     	ZimbraAuthToken at = new ZimbraAuthToken(a);
-    	at.register();
     	Assert.assertTrue("token should be registered", at.isRegistered());
     }
 
@@ -248,7 +262,6 @@ public class TestCookieReuse extends TestCase {
     public void testTokenDeregistration () throws Exception {
     	Account a = TestUtil.getAccount(USER_NAME);
     	ZimbraAuthToken at = new ZimbraAuthToken(a);
-    	at.register();
     	Assert.assertTrue("token should be registered", at.isRegistered());
     	at.deRegister();
     	Assert.assertFalse("token should not be registered", at.isRegistered());
@@ -258,23 +271,17 @@ public class TestCookieReuse extends TestCase {
     public void testTokenExpiredTokenDeregistration() throws Exception {
     	Account a = TestUtil.getAccount(USER_NAME);
     	ZimbraAuthToken at = new ZimbraAuthToken(a, System.currentTimeMillis() - 1000);
-    	at.register();
 
     	ZimbraAuthToken at2 = new ZimbraAuthToken(a, System.currentTimeMillis() + 10000);
-    	at2.register();
 
-    	Assert.assertTrue("First token should be registered", at.isRegistered());
+    	Assert.assertFalse("First token should not be registered", at.isRegistered());
     	Assert.assertTrue("Second token should be registered", at2.isRegistered());
-    	a.cleanExpiredTokens();
-    	Assert.assertFalse("First token should not be registered after cleanup", at.isRegistered());
-    	Assert.assertTrue("Second token should be registered after cleanup", at2.isRegistered());
     }
 
     @Test
     public void testOldClientSupport() throws Exception {
     	Account a = TestUtil.getAccount(USER_NAME);
     	ZimbraAuthToken at = new ZimbraAuthToken(a, System.currentTimeMillis() - 1000);
-    	at.register();
     	Assert.assertTrue("token should be registered", at.isRegistered());
     	at.deRegister();
     	Assert.assertFalse("token should not be registered", at.isRegistered());
@@ -292,7 +299,6 @@ public class TestCookieReuse extends TestCase {
     	Account a = TestUtil.getAccount(USER_NAME);
     	a.setForceClearCookies(true);
     	ZimbraAuthToken at = new ZimbraAuthToken(a);
-    	at.register();
     	Assert.assertTrue("token should be registered", at.isRegistered());
     	at.deRegister();
     	Assert.assertFalse("token should not be registered", at.isRegistered());
@@ -302,7 +308,7 @@ public class TestCookieReuse extends TestCase {
      * version of SOAP transport that uses HTTP cookies instead of SOAP message header for transporting Auth Token
      * @author gsolovyev
      */
-   /* private class HttpCookieSoapTransport extends SoapHttpTransport {
+    private class HttpCookieSoapTransport extends SoapHttpTransport {
 
 		public HttpCookieSoapTransport(String uri) {
 			super(uri);
@@ -345,5 +351,5 @@ public class TestCookieReuse extends TestCase {
 		        Element envelope = proto.soapEnvelope(document, context);
 		        return envelope;
 		    }
-    }*/
+    }
 }
