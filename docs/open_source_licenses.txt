@@ -135,6 +135,7 @@ SECTION 2: Apache License, V2.0
    >>> smack-3.2.1
    >>> spamassassin-3.4.0
    >>> testng-5.12.1
+   >>> unoil-4.0.2
    >>> xerces-j-2.9.1
 
 
@@ -27429,6 +27430,11 @@ License: Apache 2.0
 >>> testng-5.12.1
 
 LICENSE = Apache License 2.0
+
+
+>>> unoil-4.0.2
+
+License: Apache 2.0
 
 
 >>> xerces-j-2.9.1
