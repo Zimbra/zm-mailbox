@@ -48,10 +48,12 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 import javax.mail.util.ByteArrayDataSource;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.io.Closeables;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.SignatureUtil;
+import com.zimbra.common.account.ZAttrProvisioning;
 import com.zimbra.common.calendar.Attach;
 import com.zimbra.common.calendar.ICalTimeZone;
 import com.zimbra.common.calendar.ParsedDateTime;
@@ -61,6 +63,7 @@ import com.zimbra.common.calendar.ZCalendar.ICalTok;
 import com.zimbra.common.calendar.ZCalendar.ZComponent;
 import com.zimbra.common.calendar.ZCalendar.ZProperty;
 import com.zimbra.common.calendar.ZCalendar.ZVCalendar;
+import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.mime.ContentDisposition;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.mime.shim.JavaMailInternetAddress;
@@ -85,6 +88,8 @@ import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.Recurrence.IRecurrence;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.MimeVisitor;
+import com.zimbra.cs.redolog.RedoLogProvider;
+import com.zimbra.cs.redolog.op.RedoableOp;
 import com.zimbra.cs.service.FileUploadServlet.Upload;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.util.AccountUtil;
@@ -854,6 +859,89 @@ public class CalendarMailSender {
         List<Address> toAddrs = new ArrayList<Address>(1);
         toAddrs.add(toAddr);
         return createCalendarMessage(senderAccount, fromAddr, senderAddr, toAddrs, subject, replyText.toString(), null, uid, iCal);
+    }
+
+    @VisibleForTesting
+    public static boolean allowInviteAutoDeclinedNotification(
+            final Mailbox mbox, final Account declinerAcct, String senderEmail, final Account senderAccount,
+            boolean applyToCalendar, ZAttendee matchingAttendee)
+    throws ServiceException {
+        if (senderEmail == null) {
+            ZimbraLog.calendar.info("Suppressed Invite Auto Decline - unknown sender");
+            return false;
+        }
+        if (!applyToCalendar) {
+            ZimbraLog.calendar.info(
+                    "Suppressed Invite Auto Decline to %s - no auto-reply when processed as message-only", senderEmail);
+            return false;
+        }
+        if (declinerAcct.isIsSystemResource()) {
+            ZimbraLog.calendar.info(
+                    "Suppressed Invite Auto Decline from %s to %s - because %s is a system resource",
+                    declinerAcct.getName(), senderEmail, declinerAcct.getName());
+            return false;
+        }
+        if (!declinerAcct.isPrefCalendarSendInviteDeniedAutoReply()) {
+            ZimbraLog.calendar.info("Suppressed Invite Auto Decline to=%s - %s=%s",
+                    senderEmail, Provisioning.A_zimbraPrefCalendarSendInviteDeniedAutoReply,
+                    declinerAcct.isPrefCalendarSendInviteDeniedAutoReply());
+            return false;
+        }
+        if (!DebugConfig.calendarEnableInviteDeniedReplyForUnlistedAttendee && (matchingAttendee == null)) {
+            // Send auto replies if addressed directly as an attendee, not indirectly via a mailing list.
+            ZimbraLog.calendar.info("Suppressed Invite Auto Decline to=%s - %s is not a direct attendee",
+                    senderEmail, declinerAcct.getName());
+            return false;
+        }
+        ZAttrProvisioning.PrefCalendarAllowedTargetsForInviteDeniedAutoReply validTargetSetting =
+                declinerAcct.getPrefCalendarAllowedTargetsForInviteDeniedAutoReply();
+        switch (validTargetSetting) {
+            case all :
+                return true;
+            case internal:
+                if (senderAccount == null) {
+                    ZimbraLog.calendar.info("Suppressed Invite Auto Decline to=%s - not internal", senderEmail);
+                    return false;
+                }
+                return true;
+            case sameDomain:
+            default:
+                // Send auto replies only to users in the same domain.
+                // if the senderEmail has the same domain but we weren't able to create a senderAccount for it
+                // then still don't allow it - assume it is an invalid address.
+                if (senderAccount == null) {
+                    ZimbraLog.calendar.info(
+                            "Suppressed Invite Auto Decline to=%s - no account for sender so not in attendee domain=%s",
+                            senderEmail, declinerAcct.getDomainName());
+                    return false;
+                }
+                String senderDomain = senderAccount.getDomainName();
+                if (senderDomain != null && senderDomain.equalsIgnoreCase(declinerAcct.getDomainName())) {
+                    return true;
+                }
+                ZimbraLog.calendar.info("Suppressed Invite Auto Decline to=%s - not in attendee domain=%s",
+                            senderEmail, declinerAcct.getDomainName());
+                return false;
+        }
+    }
+
+    public static void handleInviteAutoDeclinedNotification(final OperationContext octxt,
+            final Mailbox mbox, final Account fromAccount, String senderEmail, final Account senderAccount,
+            boolean onBehalfOf, boolean applyToCalendar, int inviteMsgId, Invite invite)
+    throws ServiceException {
+        if (allowInviteAutoDeclinedNotification(mbox, fromAccount, senderEmail, senderAccount,
+                applyToCalendar, invite.getMatchingAttendee(fromAccount))) {
+            RedoableOp redoPlayer = octxt != null ? octxt.getPlayer() : null;
+            RedoLogProvider redoProvider = RedoLogProvider.getInstance();
+            // Don't generate auto-reply email during redo playback or if delivering to a system account.
+            // (e.g. archiving, galsync, ham/spam)
+            if (redoProvider.isMaster() &&
+                (redoPlayer == null || redoProvider.getRedoLogManager().getInCrashRecovery())) {
+                ItemId origMsgId = new ItemId(mbox, inviteMsgId);
+                CalendarMailSender.sendInviteDeniedMessage(
+                        octxt, fromAccount, senderAccount, onBehalfOf, true, mbox, origMsgId, senderEmail, invite);
+            }
+        }
     }
 
     public static void sendInviteDeniedMessage(

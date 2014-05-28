@@ -4502,7 +4502,10 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 
 <attr id="849" name="zimbraPrefCalendarSendInviteDeniedAutoReply" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="6.0.0_BETA1">
   <defaultCOSValue>FALSE</defaultCOSValue>
-  <desc>if an invite is received from an organizer who does not have permission to invite this user to a meeting, send an auto-decline reply</desc>
+  <desc>
+    If an invite is received from an organizer who does not have permission to invite this user to a meeting, send an auto-decline reply.
+    Note that zimbraPrefCalendarAllowedTargetsForInviteDeniedAutoReply may further restrict who can receive this reply.
+  </desc>
 </attr>
 
 <attr id="850" name="zimbraGalType" type="enum" value="zimbra,ldap" cardinality="single" requiredIn="galDataSource" since="6.0.0_BETA1">
@@ -8171,12 +8174,21 @@ TODO: delete them permanently from here
   cardinality="multi" optionalIn="globalConfig,domain" since="8.5.0">
   <desc>A list of hosts like www.abc.com, www.xyz.com. These are used while doing CSRF referer check.</desc>
 </attr>
-  
+
 <attr id="1631" name="zimbraCsrfRefererCheckEnabled" type="boolean"
   cardinality="single" optionalIn="globalConfig" since="8.5.0">
   <globalConfigValue>TRUE</globalConfigValue>
   <desc>A flag to turn on or off CSRF referer related check. When set to FALSE no CSRF referer check happens.
         When set to true CSRF referer type check happens.
+  </desc>
+</attr>
+
+<attr id="1632" name="zimbraPrefCalendarAllowedTargetsForInviteDeniedAutoReply" type="enum" value="internal,sameDomain,all" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="8.5.0">
+  <defaultCOSValue>internal</defaultCOSValue>
+  <desc>Allowed recipients if "zimbraPrefCalendarSendInviteDeniedAutoReply" is TRUE:
+    internal    - Only send "invite denied" auto-response if the sender of the original invite is an internal user.
+    sameDomain  - Only send "invite denied" auto-response if the sender of the original invite is in the same domain as the invitee.
+    all         - No restrictions on who to send "invite denied" auto-responses to.
   </desc>
 </attr>
 

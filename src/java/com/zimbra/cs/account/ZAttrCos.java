@@ -25514,6 +25514,193 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
+     * Allowed recipients if
+     * &quot;zimbraPrefCalendarSendInviteDeniedAutoReply&quot; is TRUE:
+     * internal - Only send &quot;invite denied&quot; auto-response if the
+     * sender of the original invite is an internal user. sameDomain - Only
+     * send &quot;invite denied&quot; auto-response if the sender of the
+     * original invite is in the same domain as the invitee. all - No
+     * restrictions on who to send &quot;invite denied&quot; auto-responses
+     * to.
+     *
+     * <p>Valid values: [sameDomain, internal, all]
+     *
+     * @return zimbraPrefCalendarAllowedTargetsForInviteDeniedAutoReply, or ZAttrProvisioning.PrefCalendarAllowedTargetsForInviteDeniedAutoReply.internal if unset and/or has invalid value
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1632)
+    public ZAttrProvisioning.PrefCalendarAllowedTargetsForInviteDeniedAutoReply getPrefCalendarAllowedTargetsForInviteDeniedAutoReply() {
+        try { String v = getAttr(Provisioning.A_zimbraPrefCalendarAllowedTargetsForInviteDeniedAutoReply); return v == null ? ZAttrProvisioning.PrefCalendarAllowedTargetsForInviteDeniedAutoReply.internal : ZAttrProvisioning.PrefCalendarAllowedTargetsForInviteDeniedAutoReply.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.PrefCalendarAllowedTargetsForInviteDeniedAutoReply.internal; }
+    }
+
+    /**
+     * Allowed recipients if
+     * &quot;zimbraPrefCalendarSendInviteDeniedAutoReply&quot; is TRUE:
+     * internal - Only send &quot;invite denied&quot; auto-response if the
+     * sender of the original invite is an internal user. sameDomain - Only
+     * send &quot;invite denied&quot; auto-response if the sender of the
+     * original invite is in the same domain as the invitee. all - No
+     * restrictions on who to send &quot;invite denied&quot; auto-responses
+     * to.
+     *
+     * <p>Valid values: [sameDomain, internal, all]
+     *
+     * @return zimbraPrefCalendarAllowedTargetsForInviteDeniedAutoReply, or "internal" if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1632)
+    public String getPrefCalendarAllowedTargetsForInviteDeniedAutoReplyAsString() {
+        return getAttr(Provisioning.A_zimbraPrefCalendarAllowedTargetsForInviteDeniedAutoReply, "internal");
+    }
+
+    /**
+     * Allowed recipients if
+     * &quot;zimbraPrefCalendarSendInviteDeniedAutoReply&quot; is TRUE:
+     * internal - Only send &quot;invite denied&quot; auto-response if the
+     * sender of the original invite is an internal user. sameDomain - Only
+     * send &quot;invite denied&quot; auto-response if the sender of the
+     * original invite is in the same domain as the invitee. all - No
+     * restrictions on who to send &quot;invite denied&quot; auto-responses
+     * to.
+     *
+     * <p>Valid values: [sameDomain, internal, all]
+     *
+     * @param zimbraPrefCalendarAllowedTargetsForInviteDeniedAutoReply new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1632)
+    public void setPrefCalendarAllowedTargetsForInviteDeniedAutoReply(ZAttrProvisioning.PrefCalendarAllowedTargetsForInviteDeniedAutoReply zimbraPrefCalendarAllowedTargetsForInviteDeniedAutoReply) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarAllowedTargetsForInviteDeniedAutoReply, zimbraPrefCalendarAllowedTargetsForInviteDeniedAutoReply.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Allowed recipients if
+     * &quot;zimbraPrefCalendarSendInviteDeniedAutoReply&quot; is TRUE:
+     * internal - Only send &quot;invite denied&quot; auto-response if the
+     * sender of the original invite is an internal user. sameDomain - Only
+     * send &quot;invite denied&quot; auto-response if the sender of the
+     * original invite is in the same domain as the invitee. all - No
+     * restrictions on who to send &quot;invite denied&quot; auto-responses
+     * to.
+     *
+     * <p>Valid values: [sameDomain, internal, all]
+     *
+     * @param zimbraPrefCalendarAllowedTargetsForInviteDeniedAutoReply new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1632)
+    public Map<String,Object> setPrefCalendarAllowedTargetsForInviteDeniedAutoReply(ZAttrProvisioning.PrefCalendarAllowedTargetsForInviteDeniedAutoReply zimbraPrefCalendarAllowedTargetsForInviteDeniedAutoReply, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarAllowedTargetsForInviteDeniedAutoReply, zimbraPrefCalendarAllowedTargetsForInviteDeniedAutoReply.toString());
+        return attrs;
+    }
+
+    /**
+     * Allowed recipients if
+     * &quot;zimbraPrefCalendarSendInviteDeniedAutoReply&quot; is TRUE:
+     * internal - Only send &quot;invite denied&quot; auto-response if the
+     * sender of the original invite is an internal user. sameDomain - Only
+     * send &quot;invite denied&quot; auto-response if the sender of the
+     * original invite is in the same domain as the invitee. all - No
+     * restrictions on who to send &quot;invite denied&quot; auto-responses
+     * to.
+     *
+     * <p>Valid values: [sameDomain, internal, all]
+     *
+     * @param zimbraPrefCalendarAllowedTargetsForInviteDeniedAutoReply new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1632)
+    public void setPrefCalendarAllowedTargetsForInviteDeniedAutoReplyAsString(String zimbraPrefCalendarAllowedTargetsForInviteDeniedAutoReply) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarAllowedTargetsForInviteDeniedAutoReply, zimbraPrefCalendarAllowedTargetsForInviteDeniedAutoReply);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Allowed recipients if
+     * &quot;zimbraPrefCalendarSendInviteDeniedAutoReply&quot; is TRUE:
+     * internal - Only send &quot;invite denied&quot; auto-response if the
+     * sender of the original invite is an internal user. sameDomain - Only
+     * send &quot;invite denied&quot; auto-response if the sender of the
+     * original invite is in the same domain as the invitee. all - No
+     * restrictions on who to send &quot;invite denied&quot; auto-responses
+     * to.
+     *
+     * <p>Valid values: [sameDomain, internal, all]
+     *
+     * @param zimbraPrefCalendarAllowedTargetsForInviteDeniedAutoReply new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1632)
+    public Map<String,Object> setPrefCalendarAllowedTargetsForInviteDeniedAutoReplyAsString(String zimbraPrefCalendarAllowedTargetsForInviteDeniedAutoReply, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarAllowedTargetsForInviteDeniedAutoReply, zimbraPrefCalendarAllowedTargetsForInviteDeniedAutoReply);
+        return attrs;
+    }
+
+    /**
+     * Allowed recipients if
+     * &quot;zimbraPrefCalendarSendInviteDeniedAutoReply&quot; is TRUE:
+     * internal - Only send &quot;invite denied&quot; auto-response if the
+     * sender of the original invite is an internal user. sameDomain - Only
+     * send &quot;invite denied&quot; auto-response if the sender of the
+     * original invite is in the same domain as the invitee. all - No
+     * restrictions on who to send &quot;invite denied&quot; auto-responses
+     * to.
+     *
+     * <p>Valid values: [sameDomain, internal, all]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1632)
+    public void unsetPrefCalendarAllowedTargetsForInviteDeniedAutoReply() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarAllowedTargetsForInviteDeniedAutoReply, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Allowed recipients if
+     * &quot;zimbraPrefCalendarSendInviteDeniedAutoReply&quot; is TRUE:
+     * internal - Only send &quot;invite denied&quot; auto-response if the
+     * sender of the original invite is an internal user. sameDomain - Only
+     * send &quot;invite denied&quot; auto-response if the sender of the
+     * original invite is in the same domain as the invitee. all - No
+     * restrictions on who to send &quot;invite denied&quot; auto-responses
+     * to.
+     *
+     * <p>Valid values: [sameDomain, internal, all]
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1632)
+    public Map<String,Object> unsetPrefCalendarAllowedTargetsForInviteDeniedAutoReply(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarAllowedTargetsForInviteDeniedAutoReply, "");
+        return attrs;
+    }
+
+    /**
      * always show the mini calendar
      *
      * @return zimbraPrefCalendarAlwaysShowMiniCal, or true if unset
@@ -26949,9 +27136,11 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * if an invite is received from an organizer who does not have
+     * If an invite is received from an organizer who does not have
      * permission to invite this user to a meeting, send an auto-decline
-     * reply
+     * reply. Note that
+     * zimbraPrefCalendarAllowedTargetsForInviteDeniedAutoReply may further
+     * restrict who can receive this reply.
      *
      * @return zimbraPrefCalendarSendInviteDeniedAutoReply, or false if unset
      *
@@ -26963,9 +27152,11 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * if an invite is received from an organizer who does not have
+     * If an invite is received from an organizer who does not have
      * permission to invite this user to a meeting, send an auto-decline
-     * reply
+     * reply. Note that
+     * zimbraPrefCalendarAllowedTargetsForInviteDeniedAutoReply may further
+     * restrict who can receive this reply.
      *
      * @param zimbraPrefCalendarSendInviteDeniedAutoReply new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -26980,9 +27171,11 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * if an invite is received from an organizer who does not have
+     * If an invite is received from an organizer who does not have
      * permission to invite this user to a meeting, send an auto-decline
-     * reply
+     * reply. Note that
+     * zimbraPrefCalendarAllowedTargetsForInviteDeniedAutoReply may further
+     * restrict who can receive this reply.
      *
      * @param zimbraPrefCalendarSendInviteDeniedAutoReply new value
      * @param attrs existing map to populate, or null to create a new map
@@ -26998,9 +27191,11 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * if an invite is received from an organizer who does not have
+     * If an invite is received from an organizer who does not have
      * permission to invite this user to a meeting, send an auto-decline
-     * reply
+     * reply. Note that
+     * zimbraPrefCalendarAllowedTargetsForInviteDeniedAutoReply may further
+     * restrict who can receive this reply.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -27014,9 +27209,11 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * if an invite is received from an organizer who does not have
+     * If an invite is received from an organizer who does not have
      * permission to invite this user to a meeting, send an auto-decline
-     * reply
+     * reply. Note that
+     * zimbraPrefCalendarAllowedTargetsForInviteDeniedAutoReply may further
+     * restrict who can receive this reply.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs

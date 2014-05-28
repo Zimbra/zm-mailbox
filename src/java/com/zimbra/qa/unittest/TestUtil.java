@@ -661,9 +661,18 @@ extends Assert {
      */
     public static Account createAccount(String username)
     throws ServiceException {
+        return createAccount(username, null);
+    }
+
+    /**
+     * Creates an account for the given username, with
+     * password set to {@link #DEFAULT_PASSWORD}.
+     */
+    public static Account createAccount(String username, Map<String, Object> attrs)
+    throws ServiceException {
         Provisioning prov = Provisioning.getInstance();
         String address = getAddress(username);
-        return prov.createAccount(address, DEFAULT_PASSWORD, null);
+        return prov.createAccount(address, DEFAULT_PASSWORD, attrs);
     }
 
     /**

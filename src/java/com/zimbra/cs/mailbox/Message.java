@@ -781,31 +781,8 @@ public class Message extends MailItem {
             }
             if (!canInvite) {
                 Invite invite = invites.get(0);
-                boolean sameDomain = false;
-                if (senderAcct != null) {
-                    String senderDomain = senderAcct.getDomainName();
-                    sameDomain = senderDomain != null && senderDomain.equalsIgnoreCase(acct.getDomainName());
-                }
-                boolean directAttendee =
-                        DebugConfig.calendarEnableInviteDeniedReplyForUnlistedAttendee
-                        || invite.getMatchingAttendee(acct) != null;
-                // Send auto replies only to users in the same domain and if addressed directly as an attendee,
-                // not indirectly via a mailing list.
-                if (acct.isPrefCalendarSendInviteDeniedAutoReply() && senderEmail != null && sameDomain && directAttendee) {
-                    RedoableOp redoPlayer = octxt != null ? octxt.getPlayer() : null;
-                    RedoLogProvider redoProvider = RedoLogProvider.getInstance();
-                    // Don't generate auto-reply email during redo playback or if delivering to a system account. (e.g. archiving, galsync, ham/spam)
-                    boolean needAutoReply =
-                            applyToCalendar &&  // no auto-reply when processing as message-only
-                            redoProvider.isMaster() &&
-                            (redoPlayer == null || redoProvider.getRedoLogManager().getInCrashRecovery()) &&
-                            !acct.isIsSystemResource();
-                    if (needAutoReply) {
-                        ItemId origMsgId = new ItemId(getMailbox(), getId());
-                        CalendarMailSender.sendInviteDeniedMessage(
-                                octxt, acct, senderAcct, onBehalfOf, true, getMailbox(), origMsgId, senderEmail, invite);
-                    }
-                }
+                CalendarMailSender.handleInviteAutoDeclinedNotification(octxt, getMailbox(), acct,
+                        senderEmail, senderAcct, onBehalfOf, applyToCalendar, getId(), invite);
                 String inviteSender = senderEmail != null ? senderEmail : "unknown sender";
                 ZimbraLog.calendar.info("Calendar invite from %s to %s is not allowed", inviteSender, acct.getName());
 
