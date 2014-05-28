@@ -43,6 +43,7 @@ SECTION 1: BSD-STYLE, MIT-STYLE, OR SIMILAR STYLE LICENSES
    >>> cyrus-sasl-zimbra-2.1.26
    >>> datetimepicker-1.0
    >>> dom4j-1.5.2
+   >>> ext.ux.touchcalendar-0.1
    >>> freetype-2.4.9
    >>> ganymed-ssh2-build210-none
    >>> gifencoder-none
@@ -1066,6 +1067,19 @@ Copyright 2001-2004 (C) MetaStuff, Ltd. All Rights Reserved.
  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  OF THE POSSIBILITY OF SUCH DAMAGE.
+
+
+>>> ext.ux.touchcalendar-0.1
+
+ * @copyright     (c) 2012, by SwarmOnline.com
+ * @date          29th May 2012
+ * @version       0.1
+ * @documentation
+ * @website        http://www.swarmonline.com
+
+Free to use:
+http://www.swarmonline.com/2011/11/ext-ux-touchcalendar/#comment-1921
+
 
 
 >>> freetype-2.4.9
