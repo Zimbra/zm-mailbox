@@ -56,7 +56,7 @@ public abstract class Session {
         NULL(0, 0), // unused dummy session type
         SOAP(1, LC.zimbra_session_limit_soap.intValue()),
         IMAP(2, Math.max(0, LC.zimbra_session_limit_imap.intValue())),
-        ADMIN(3, 5),
+        ADMIN(3, LC.zimbra_session_limit_admin.intValue()),
         WIKI(4, 0),
         SYNCLISTENER(5, LC.zimbra_session_limit_sync.intValue()),
         WAITSET(6, 0)
