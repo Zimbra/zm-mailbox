@@ -131,6 +131,7 @@ SECTION 2: Apache License, V2.0
    >>> nekohtml-1.9.13
    >>> org.apache.mina-2.0.4
    >>> org.openid4java-0.9.5
+   >>> ridl-4.0.2
    >>> selenium-2.37.0
    >>> smack-3.2.1
    >>> spamassassin-3.4.0
@@ -27387,6 +27388,11 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
 
 >>> org.openid4java-0.9.5
+
+License : Apache 2.0
+
+
+>>> ridl-4.0.2
 
 License : Apache 2.0
 
