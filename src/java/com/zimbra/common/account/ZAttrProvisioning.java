@@ -1178,6 +1178,24 @@ public class ZAttrProvisioning {
         public boolean isRight() { return this == right;}
     }
 
+    public static enum PrefCalendarAllowedTargetsForInviteDeniedAutoReply {
+        sameDomain("sameDomain"),
+        internal("internal"),
+        all("all");
+        private String mValue;
+        private PrefCalendarAllowedTargetsForInviteDeniedAutoReply(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static PrefCalendarAllowedTargetsForInviteDeniedAutoReply fromString(String s) throws ServiceException {
+            for (PrefCalendarAllowedTargetsForInviteDeniedAutoReply value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isSameDomain() { return this == sameDomain;}
+        public boolean isInternal() { return this == internal;}
+        public boolean isAll() { return this == all;}
+    }
+
     public static enum PrefCalendarApptVisibility {
         public_("public"),
         private_("private");
@@ -10053,6 +10071,21 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefCalendarAllowCancelEmailToSelf = "zimbraPrefCalendarAllowCancelEmailToSelf";
 
     /**
+     * Allowed recipients if
+     * &quot;zimbraPrefCalendarSendInviteDeniedAutoReply&quot; is TRUE:
+     * internal - Only send &quot;invite denied&quot; auto-response if the
+     * sender of the original invite is an internal user. sameDomain - Only
+     * send &quot;invite denied&quot; auto-response if the sender of the
+     * original invite is in the same domain as the invitee. all - No
+     * restrictions on who to send &quot;invite denied&quot; auto-responses
+     * to.
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1632)
+    public static final String A_zimbraPrefCalendarAllowedTargetsForInviteDeniedAutoReply = "zimbraPrefCalendarAllowedTargetsForInviteDeniedAutoReply";
+
+    /**
      * whether calendar invite part in a forwarded email is auto-added to
      * calendar
      *
@@ -10282,9 +10315,11 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefCalendarReminderYMessenger = "zimbraPrefCalendarReminderYMessenger";
 
     /**
-     * if an invite is received from an organizer who does not have
+     * If an invite is received from an organizer who does not have
      * permission to invite this user to a meeting, send an auto-decline
-     * reply
+     * reply. Note that
+     * zimbraPrefCalendarAllowedTargetsForInviteDeniedAutoReply may further
+     * restrict who can receive this reply.
      *
      * @since ZCS 6.0.0_BETA1
      */
