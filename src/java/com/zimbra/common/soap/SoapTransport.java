@@ -244,7 +244,7 @@ public abstract class SoapTransport {
         return true;
     }
 
-    protected final Element generateSoapMessage(Element document, boolean raw, boolean noSession,
+    protected Element generateSoapMessage(Element document, boolean raw, boolean noSession,
             String requestedAccountId, String changeToken, String tokenType) {
 
         if (raw) {
