@@ -50,10 +50,10 @@ public class TestCustomDynamicGroupCache extends TestCase {
     final String domainName1 = "cdgcache1.test";
     final String domainName2 = "cdgcache2.test";
     final String acctPatt = "person%03d@" + domainName;
-    final String normalDLPatt = "normalDL%03d@" + domainName;
-    final String dynamicDLPatt = "dynamicDL%03d@" + domainName;
-    final String customDLPatt = "cosDL%03d@" + domainName;
-    final String cosPatt = "cdgcacheCOS%03d";
+    final String normalDLPatt = "normaldl%03d@" + domainName;
+    final String dynamicDLPatt = "dynamicdl%03d@" + domainName;
+    final String customDLPatt = "cosdl%03d@" + domainName;
+    final String cosPatt = "cdgcachecos%03d";
 
     final int NUM_ACCOUNTS_SMALL = 8;
     final int NUM_NORMAL_DL_SMALL = 8;
@@ -255,6 +255,26 @@ public class TestCustomDynamicGroupCache extends TestCase {
 
     public void testCustomDynamicGroupsCreateDistListRights4() throws Exception {
         doRightsTestForAccount(String.format(acctPatt, 4), 2, 0); // person004@cdgcache.test
+    }
+
+    private void doGetCustomDynamicGroupMembership(int acctNum)
+    throws ServiceException {
+        String acctName = String.format(acctPatt, acctNum);
+        Account acct = ldapProv.getAccountByName(acctName);
+        GroupMembership membership = ldapProv.getCustomDynamicGroupMembership(acct, false);
+        String groupNames = groupInfo(membership.groupIds());
+        assertEquals(String.format("Number of dynamic groups with custom memberURL s which contain %s groups=%s",
+                                    acct.getName(), groupNames), 1, membership.groupIds().size());
+        String cosName = String.format(customDLPatt, acctNum % NUM_COS + 1);
+        Group grp = groups.get(membership.groupIds().get(0));
+        String groupName = (grp == null) ? "UNKNOWN" : grp.getName();
+        assertEquals(String.format("Name of dynamic group with custom memberURL s which contains %s", acctName),
+                    cosName, groupName);
+    }
+
+    public void testGetCustomDynamicGroups() throws Exception {
+        doGetCustomDynamicGroupMembership(1);
+        doGetCustomDynamicGroupMembership(4);
     }
 
     public void testInACLGRoup() throws Exception {

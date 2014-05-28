@@ -8780,7 +8780,21 @@ public class LdapProvisioning extends LdapProv {
 
         private void updateCacheForDomain(Domain domain)
         throws ServiceException {
-            List<DynamicGroup> groups = getCustomGroups(domain);
+            List<DynamicGroup> groups;
+            try {
+                groups = getCustomGroups(domain);
+            } catch (ServiceException se) {
+                if (domain instanceof LdapDomain) {
+                    LdapDomain ldapDomain = (LdapDomain) domain;
+                    ZimbraLog.account.warn("Problem populating custom groups cache for domain %s (dn=%s) - ignoring",
+                            ldapDomain.getName(), ldapDomain.getDN(), se);
+                } else {
+                    ZimbraLog.account.warn(
+                            "Problem populating custom groups cache for non-LDAP domain %s (class=%s)- ignoring",
+                            domain.getName(), domain.getClass().getName(), se);
+                }
+                return;
+            }
             for (DynamicGroup grp : groups) {
                 updateCacheForGroup(grp);
             }
