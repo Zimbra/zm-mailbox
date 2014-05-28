@@ -287,6 +287,9 @@ public final class LC {
     public static final KnownKey zimbra_session_limit_imap = KnownKey.newKey(15);
 
     @Supported
+    public static final KnownKey zimbra_session_limit_admin = KnownKey.newKey(5);
+
+    @Supported
     public static final KnownKey zimbra_session_limit_sync = KnownKey.newKey(5);
 
     @Supported
