@@ -380,4 +380,224 @@ public class MailboxLockTest {
         mbox.lock.lock(true);
         mbox.lock.release();
     }
+
+    @Test
+    public void tooManyWaitersWithSingleReadOwner() {
+        int threads = LC.zimbra_mailbox_lock_max_waiting_threads.intValue();
+        final AtomicBoolean done = new AtomicBoolean(false);
+        final Set<Thread> waitThreads = new HashSet<Thread>();
+        for (int i = 0; i < threads; i++) {
+            Thread waitThread = new Thread("MailboxLockTest-Waiter") {
+                @Override
+                public void run() {
+                    Mailbox mbox;
+                    try {
+                        mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+                        mbox.lock.lock(true);
+                        while (!done.get()) {
+                            try {
+                                Thread.sleep(100);
+                            } catch (InterruptedException e) {
+                            }
+                        }
+                        mbox.lock.release();
+                    } catch (ServiceException e) {
+                    }
+                }
+            };
+            waitThread.setDaemon(true);
+            waitThreads.add(waitThread);
+        }
+
+        Thread readThread = new Thread("MailboxLockTest-Reader") {
+            @Override
+            public void run() {
+                Mailbox mbox;
+                try {
+                    mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+                    int holdCount = 20;
+                    for (int i = 0; i < holdCount; i++) {
+                        mbox.lock.lock(false);
+                    }
+                    for (Thread waiter : waitThreads) {
+                        waiter.start();
+                    }
+                    while (!done.get()) {
+                        try {
+                            Thread.sleep(100);
+                        } catch (InterruptedException e) {
+                        }
+                    }
+                    for (int i = 0; i < holdCount; i++) {
+                        mbox.lock.release();
+                    }
+                } catch (ServiceException e) {
+                }
+            }
+        };
+
+        readThread.start();
+
+        Mailbox mbox = null;
+        try {
+            mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        } catch (ServiceException e) {
+            Assert.fail();
+        }
+        while (mbox.lock.getQueueLength() < LC.zimbra_mailbox_lock_max_waiting_threads.intValue()) {
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+            }
+        }
+
+        try {
+            mbox.lock.lock(false); //one more reader...this should give too many waiters
+            Assert.fail("expected too many waiters");
+        } catch (LockFailedException e) {
+            //expected
+            Assert.assertTrue(e.getMessage().startsWith("too many waiters"));
+            done.set(true); //cause writer to finish
+        }
+
+        long joinTimeout = 50000;
+        joinWithTimeout(readThread, joinTimeout);
+        for (Thread t: waitThreads) {
+            joinWithTimeout(t, joinTimeout);
+        }
+
+        //now do a write lock in same thread. previously this would break due to read assert not clearing
+        mbox.lock.lock(true);
+        mbox.lock.release();
+    }
+
+
+    @Test
+    public void tooManyWaitersWithMultipleReadOwners() {
+        int threads = LC.zimbra_mailbox_lock_max_waiting_threads.intValue();
+        final AtomicBoolean done = new AtomicBoolean(false);
+        final Set<Thread> waitThreads = new HashSet<Thread>();
+        for (int i = 0; i < threads; i++) {
+            Thread waitThread = new Thread("MailboxLockTest-Waiter-"+i) {
+                @Override
+                public void run() {
+                    Mailbox mbox;
+                    try {
+                        mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+                        mbox.lock.lock(true);
+                        while (!done.get()) {
+                            try {
+                                Thread.sleep(100);
+                            } catch (InterruptedException e) {
+                            }
+                        }
+                        mbox.lock.release();
+                    } catch (ServiceException e) {
+                    }
+                }
+            };
+            waitThread.setDaemon(true);
+            waitThreads.add(waitThread);
+        }
+
+        int readThreadCount = 20;
+        final Set<Thread> readThreads = new HashSet<Thread>();
+        for (int i = 0; i < readThreadCount; i++) {
+            Thread readThread = new Thread("MailboxLockTest-Reader-"+i) {
+                @Override
+                public void run() {
+                    Mailbox mbox;
+                    try {
+                        mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+                        int holdCount = 20;
+                        for (int i = 0; i < holdCount; i++) {
+                            mbox.lock.lock(false);
+                        }
+                        while (!done.get()) {
+                            try {
+                                Thread.sleep(100);
+                            } catch (InterruptedException e) {
+                            }
+                        }
+                        for (int i = 0; i < holdCount; i++) {
+                            mbox.lock.release();
+                        }
+                    } catch (ServiceException e) {
+                    }
+                }
+            };
+            readThreads.add(readThread);
+        }
+
+
+        Thread lastReadThread = new Thread("MailboxLockTest-LastReader") {
+            @Override
+            public void run() {
+                Mailbox mbox;
+                try {
+                    mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+                    int holdCount = 20;
+                    for (int i = 0; i < holdCount; i++) {
+                        mbox.lock.lock(false);
+                    }
+                    //this thread starts the waiters
+                    //and the other readers
+                    for (Thread reader : readThreads) {
+                        reader.start();
+                    }
+                    for (Thread waiter : waitThreads) {
+                        waiter.start();
+                    }
+                    while (!done.get()) {
+                        try {
+                            Thread.sleep(100);
+                        } catch (InterruptedException e) {
+                        }
+                    }
+                    for (int i = 0; i < holdCount; i++) {
+                        mbox.lock.release();
+                    }
+                } catch (ServiceException e) {
+                }
+            }
+        };
+
+        lastReadThread.start();
+
+        Mailbox mbox = null;
+        try {
+            mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        } catch (ServiceException e) {
+            Assert.fail();
+        }
+        while (mbox.lock.getQueueLength() < LC.zimbra_mailbox_lock_max_waiting_threads.intValue()) {
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+            }
+        }
+
+        try {
+            mbox.lock.lock(false); //one more reader...this should give too many waiters
+            Assert.fail("expected too many waiters");
+        } catch (LockFailedException e) {
+            //expected
+            Assert.assertTrue(e.getMessage().startsWith("too many waiters"));
+            done.set(true); //cause writer to finish
+        }
+
+        long joinTimeout = 50000;
+        joinWithTimeout(lastReadThread, joinTimeout);
+        for (Thread t: readThreads) {
+            joinWithTimeout(t, joinTimeout);
+        }
+        for (Thread t: waitThreads) {
+            joinWithTimeout(t, joinTimeout);
+        }
+
+        //now do a write lock in same thread. previously this would break due to read assert not clearing
+        mbox.lock.lock(true);
+        mbox.lock.release();
+    }
+
 }

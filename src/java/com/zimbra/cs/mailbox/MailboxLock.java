@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011, 2013 Zimbra Software, LLC.
+ * Copyright (C) 2011, 2013, 2014 Zimbra Software, LLC.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
@@ -17,15 +17,16 @@ package com.zimbra.cs.mailbox;
 import java.util.EmptyStackException;
 import java.util.Stack;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.ReentrantLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.apache.curator.framework.recipes.locks.InterProcessSemaphoreMutex;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.mailbox.lock.DebugZLock;
+import com.zimbra.cs.mailbox.lock.ZLock;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.zookeeper.CuratorManager;
 
@@ -37,10 +38,9 @@ import com.zimbra.cs.zookeeper.CuratorManager;
  * {@code Mailbox.endTransaction()}, so that you don't have to explicitly call {@link #lock()} and {@link #release()}
  * wrapping a mailbox transaction.
  *
- * @author ysasaki
  */
 public final class MailboxLock {
-    private final ZLock zLock = new ZLock();
+    private final ZLock zLock = DebugConfig.debugMailboxLock ? new DebugZLock() : new ZLock();
     private InterProcessSemaphoreMutex dLock = null;
     private final Stack<Boolean> lockStack = new Stack<Boolean>();
     private Mailbox mbox;
@@ -157,7 +157,7 @@ public final class MailboxLock {
 
     public void lock(boolean write) {
         write = write || mbox.requiresWriteLock();
-        ZimbraLog.mailbox.trace("LOCK " + (write ? "WRITE" : "READ"));
+        ZimbraLog.mailbox.trace("LOCK %s", (write ? "WRITE" : "READ"));
         assert(neverReadBeforeWrite(write));
         try {
             if (tryLock(write)) {
@@ -181,8 +181,12 @@ public final class MailboxLock {
             if (queueLength >= LC.zimbra_mailbox_lock_max_waiting_threads.intValue()) {
                 // Too many threads are already waiting for the lock, can't let you queued. We don't want to log stack trace
                 // here because once requests back up, each new incoming request falls into here, which creates too much
-                // noise in the logs.
-                throw new LockFailedException("too many waiters: " + queueLength);
+                // noise in the logs. Unless debug switch is enabled
+                LockFailedException e = new LockFailedException("too many waiters: " + queueLength);
+                if (DebugConfig.debugMailboxLock) {
+                    e.logStackTrace();
+                }
+                throw e;
             }
             // Wait for the lock up to the timeout.
             if (tryLockWithTimeout(write)) {
@@ -225,7 +229,7 @@ public final class MailboxLock {
             return;
         }
         //keep release in order so caller doesn't have to manage write/read flag
-        ZimbraLog.mailbox.trace("RELEASE " + (write ? "WRITE" : "READ"));
+        ZimbraLog.mailbox.trace("RELEASE %s", (write ? "WRITE" : "READ"));
 
         releaseDistributedLock(write);
         if (write) {
@@ -247,43 +251,6 @@ public final class MailboxLock {
         assert(debugReleaseReadLock());
         for (int i = 0; i < count; i++) {
             lock(true);
-        }
-    }
-
-    /**
-     * Extend {@link ReentrantLock} to access protected methods.
-     */
-    private static final class ZLock extends ReentrantReadWriteLock {
-        private static final long serialVersionUID = -3009063384967180207L;
-
-        void printStackTrace(StringBuilder out) {
-            Thread owner = getOwner();
-            if (owner != null) {
-                out.append("Write Lock Owner - ");
-                printStackTrace(owner, out);
-            }
-            int readCount = getReadLockCount();
-            if (readCount > 0) {
-                out.append("Reader Count - " + readCount);
-            }
-            for (Thread waiter : getQueuedThreads()) {
-                out.append("Lock Waiter - ");
-                printStackTrace(waiter, out);
-            }
-        }
-
-        private void printStackTrace(Thread thread, StringBuilder out) {
-            out.append(thread.getName());
-            if (thread.isDaemon()) {
-                out.append(" daemon");
-            }
-            out.append(" prio=").append(thread.getPriority());
-            out.append(" id=").append(thread.getId());
-            out.append(" state=").append(thread.getState());
-            out.append('\n');
-            for (StackTraceElement el : thread.getStackTrace()) {
-                out.append("\tat ").append(el.toString()).append('\n');
-            }
         }
     }
 
