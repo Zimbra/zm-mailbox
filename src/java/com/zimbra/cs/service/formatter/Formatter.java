@@ -321,6 +321,12 @@ public abstract class Formatter {
             context.logError(exception);
         }
 
+        // Don't report a ConversionUnsupportedException to the caller, unless they registered an error callback.
+        // This ensures seamless display of manual download link provided by error callback, or otherwise a null blank preview pane.
+        if (exception instanceof ConversionUnsupportedException && (callback == null || !callback.startsWith("ZmPreviewView._errorCallback"))) {
+            exception = null;
+        }
+
         if (callback == null || callback.equals("")) {
             if (context.params.get(PROGRESS) == null) {
                 if (exception == null) {
