@@ -75,6 +75,7 @@ public final class MockProvisioning extends Provisioning {
         attrs.put(A_zimbraId, UUID.randomUUID().toString());
         attrs.put(A_zimbraMailMode, MailMode.http.toString());
         attrs.put(A_zimbraSmtpPort, "7025");
+        attrs.put(A_zimbraLowestSupportedAuthVersion, "1");
         localhost = new Server("localhost", "localhost", attrs, Collections.<String, Object>emptyMap(), this);
         try {
             config.setDefaultDomainName("testdomain.biz");
