@@ -237,6 +237,9 @@ public final class DebugConfig {
     public static final int visibileFolderRecalcInterval =
          value("visible_folder_recal_interval", 0);
 
+    public static final boolean debugMailboxLock =
+            value("debug_mailbox_lock", false);
+
     private static boolean value(String key, boolean defaultValue) {
         String value = LC.get(key);
         return value.isEmpty() ? defaultValue : Boolean.parseBoolean(value);
