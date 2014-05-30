@@ -75,7 +75,7 @@ SECTION 1: BSD-STYLE, MIT-STYLE, OR SIMILAR STYLE LICENSES
    >>> nist-sip-1.2
    >>> nviennot-nginx-tcp-keepalive-4d7186d
    >>> opendkim-2.9.0
-   >>> openldap-2.4.38
+   >>> openldap-2.4.39
    >>> openssl-1.0.1f
    >>> perl-data-uuid-1.218
    >>> perl-geography-countries-2009041301
@@ -15349,7 +15349,7 @@ Portions Copyright (c) 2010-2012, The Trusted Domain Project.
 All rights reserved.
 
 
->>> openldap-2.4.38
+>>> openldap-2.4.39
 
 The OpenLDAP Public License
 Version 2.8, 17 August 2003
