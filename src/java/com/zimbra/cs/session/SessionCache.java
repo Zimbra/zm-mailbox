@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -316,13 +316,19 @@ public final class SessionCache {
                     removedByType[sessionMap.getType().getIndex()]+=toReap.size();
 
                     for (Session s : toReap) {
-                        if (ZimbraLog.session.isDebugEnabled())
-                            ZimbraLog.session.debug("Removing cached session: " + s);
+                        if (ZimbraLog.session.isDebugEnabled()) {
+                            ZimbraLog.session.debug("Removing cached session: %s", s);
+                        }
                         assert(!Thread.holdsLock(sessionMap));
                         // IMPORTANT: Clean up sessions *after* releasing lock on Session Map
                         // If Session.doCleanup() is called with sMap locked, it can lead
                         // to deadlock. (bug 7866)
-                        s.doCleanup();
+                        try {
+                            s.doCleanup();
+                        } catch (Exception e) {
+                            //continue to cleanup other sessions that have already been pruned
+                            ZimbraLog.session.warn("cleanup failed for session %s", s);
+                        }
                     }
                 }
 
