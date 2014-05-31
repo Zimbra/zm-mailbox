@@ -52,8 +52,8 @@ public class BUG_85224 extends UpgradeOp {
         printer.println("------------------------------");
         printer.println("Checking " + ATTR_NAME + " on " + entryName);
 
-        String curValue = entry.getAttr(ATTR_NAME, NEW_VALUE);
-        if (curValue == OLD_VALUE) {
+        String curValue = entry.getAttr(ATTR_NAME, OLD_VALUE);
+        if (OLD_VALUE.equals(curValue)) {
             Map<String, Object> attrs = new HashMap<String, Object>();
             printer.println("Changing " + ATTR_NAME + " on " + entryName + " from " + OLD_VALUE + " to " + NEW_VALUE);
             attrs.put(Provisioning.A_zimbraReverseProxySSLCiphers, NEW_VALUE);
