@@ -16,8 +16,6 @@
 package com.zimbra.cs.servlet;
 
 import java.io.IOException;
-import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.TimerTask;
@@ -31,6 +29,7 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.RemoteIP;
 import com.zimbra.common.util.ZimbraLog;
@@ -87,25 +86,17 @@ public class ZimbraInvalidLoginFilter extends DoSFilter {
             this.maxSizeOfFailedIpDb = this.DEFAULT_SIZE_OF_FAILED_IP_DB;
         }
 
-        this.numberOfFailedOccurence = Collections.synchronizedMap(new LinkedHashMap<String, AtomicInteger>(
-            this.maxSizeOfFailedIpDb) {
-            @Override
-            protected boolean removeEldestEntry(Map.Entry  eldest) {
-               return size() >  maxSizeOfFailedIpDb;
-            }
-         });
+        this.numberOfFailedOccurence = new ConcurrentLinkedHashMap.Builder<String, AtomicInteger>()
+            .maximumWeightedCapacity(maxSizeOfFailedIpDb)
+            .build();
 
-        this.suspiciousIpAddrLastAttempt = Collections.synchronizedMap(new LinkedHashMap<String, Long>(
-            this.maxSizeOfFailedIpDb) {
-            @Override
-            protected boolean removeEldestEntry(Map.Entry  eldest) {
-               return size() >  maxSizeOfFailedIpDb;
-            }
-         });
+        this.suspiciousIpAddrLastAttempt = new ConcurrentLinkedHashMap.Builder<String, Long>()
+            .maximumWeightedCapacity(maxSizeOfFailedIpDb)
+            .build();
+
         Zimbra.sTimer.schedule(new ReInStateIpTask(), 1000,
             this.reinstateIpTaskIntervalInMin * MIN_TO_MS);
-        ZimbraLog.misc.info("ZimbraInvalidLoginFilter intialized");
-
+        ZimbraLog.misc.info("ZimbraInvalidLoginFilter initialized");
     }
 
     /* (non-Javadoc)
@@ -192,13 +183,12 @@ public class ZimbraInvalidLoginFilter extends DoSFilter {
 
             Set<String> clientIps = suspiciousIpAddrLastAttempt.keySet();
             long now = System.currentTimeMillis();
-            synchronized (suspiciousIpAddrLastAttempt) {
-                for (String clientIp : clientIps) {
-                    long lastLoginAttempt = suspiciousIpAddrLastAttempt.get(clientIp);
-                    if ((now - lastLoginAttempt) > delayInMinBetwnReqBeforeReinstating * MIN_TO_MS) {
-                        suspiciousIpAddrLastAttempt.remove(clientIp);
-                        numberOfFailedOccurence.remove(clientIp);
-                    }
+            for (String clientIp : clientIps) {
+                long lastLoginAttempt = suspiciousIpAddrLastAttempt.get(clientIp);
+                if ((now - lastLoginAttempt) > delayInMinBetwnReqBeforeReinstating * MIN_TO_MS) {
+                    suspiciousIpAddrLastAttempt.remove(clientIp);
+                    numberOfFailedOccurence.remove(clientIp);
+
                 }
             }
         }
