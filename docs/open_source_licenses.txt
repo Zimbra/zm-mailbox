@@ -1,6 +1,6 @@
 open_source_license.txt
 
-Zimbra Collaboration Suite 8.5.0 GA
+Zimbra Collaboration Suite 8.5.0 BETA3
 
 
 ===========================================================================
@@ -47,7 +47,7 @@ SECTION 1: BSD-STYLE, MIT-STYLE, OR SIMILAR STYLE LICENSES
    >>> freetype-2.4.9
    >>> ganymed-ssh2-build210-none
    >>> gifencoder-none
-   >>> google-perftools-2.1
+   >>> google-perftools-2.2
    >>> heimdal-1.5.2
    >>> ical4j-0.9.16
    >>> icu4j-4.8.1.1
@@ -78,7 +78,7 @@ SECTION 1: BSD-STYLE, MIT-STYLE, OR SIMILAR STYLE LICENSES
    >>> nviennot-nginx-tcp-keepalive-4d7186d
    >>> opendkim-2.9.1
    >>> openldap-2.4.39
-   >>> openssl-1.0.1f
+   >>> openssl-1.0.1g
    >>> perl-data-uuid-1.219
    >>> perl-geography-countries-2009041301
    >>> perl-locale-maketext-simple-0.21
@@ -125,7 +125,7 @@ SECTION 2: Apache License, V2.0
    >>> google-caja-r4817
    >>> guava-13.0.1
    >>> jackson-1.9.2
-   >>> jetty-9.1.4
+   >>> jetty-9.1.5
    >>> jsieve-0.4
    >>> juh-4.0.2
    >>> junixsocket-1.3
@@ -227,7 +227,7 @@ SECTION 8: GNU General Public License, V2.0
    >>> innotop-1.9.1
    >>> libtool-2.2.6b
    >>> libwww-perl-6.05
-   >>> mariadb-10.0.10
+   >>> mariadb-10.0.11
    >>> mysql-connector-java-5.1.29
    >>> perl-archive-tar-1.96
    >>> perl-archive-zip-1.37
@@ -1362,7 +1362,7 @@ SUCH DAMAGE.
  University of Illinois, Urbana-Champaign.
 
 
->>> google-perftools-2.1
+>>> google-perftools-2.2
 
 Copyright (c) 2005, Google Inc.
 All rights reserved.
@@ -19856,7 +19856,7 @@ California, USA.  All Rights Reserved.  Permission to copy and
 distribute verbatim copies of this document is granted.
 
 
->>> openssl-1.0.1f
+>>> openssl-1.0.1g
 
 LICENSE ISSUES
   ==============
@@ -22329,7 +22329,7 @@ Parts of Cobertura are licensed under the Apache Software License,
 Version 1.1.
 
 
->>> jetty-9.1.4
+>>> jetty-9.1.5
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE APACHE 2.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE APACHE 2.0.THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.] 
 
@@ -22345,45 +22345,45 @@ javax.mail.glassfish-1.4.1.v201005082020.jar
 javax.transaction-api-1.2.jar
 javax.annotation-api-1.2.jar
 javax.websocket-api-1.0.jar
-javax-websocket-client-impl-9.1.4.v20140401.jar
-javax-websocket-server-impl-9.1.4.v20140401.jar
-websocket-api-9.1.4.v20140401.jar
-websocket-client-9.1.4.v20140401.jar
-websocket-common-9.1.4.v20140401.jar
-websocket-server-9.1.4.v20140401.jar
-websocket-servlet-9.1.4.v20140401.jar
-spdy-core-9.1.4.v20140401.jar
-spdy-client-9.1.4.v20140401.jar
-spdy-http-server-9.1.4.v20140401.jar
-spdy-server-9.1.4.v20140401.jar
-spdy-http-common-9.1.4.v20140401.jar
+javax-websocket-client-impl-9.1.5.v20140505
+javax-websocket-server-impl-9.1.5.v20140505
+websocket-api-9.1.5.v20140505
+websocket-client-9.1.5.v20140505
+websocket-common-9.1.5.v20140505
+websocket-server-9.1.5.v20140505
+websocket-servlet-9.1.5.v20140505
+spdy-core-9.1.5.v20140505
+spdy-client-9.1.5.v20140505
+spdy-http-server-9.1.5.v20140505
+spdy-server-9.1.5.v20140505
+spdy-http-common-9.1.5.v20140505
 servlet-api-3.1.jar
-jetty-annotations-9.1.4.v20140401.jar
-jetty-client-9.1.4.v20140401.jar
-jetty-continuation-9.1.4.v20140401.jar
-jetty-deploy-9.1.4.v20140401.jar
-jetty-http-9.1.4.v20140401.jar
-jetty-io-9.1.4.v20140401.jar
-jetty-jaas-9.1.4.v20140401.jar
-jetty-jaspi-9.1.4.v20140401.jar
-jetty-jmx-9.1.4.v20140401.jar
-jetty-jndi-9.1.4.v20140401.jar
-jetty-monitor-9.1.4.v20140401.jar
-jetty-plus-9.1.4.v20140401.jar
-jetty-proxy-9.1.4.v20140401.jar
-jetty-rewrite-9.1.4.v20140401.jar
+jetty-annotations-9.1.5.v20140505
+jetty-client-9.1.5.v20140505
+jetty-continuation-9.1.5.v20140505
+jetty-deploy-9.1.5.v20140505
+jetty-http-9.1.5.v20140505
+jetty-io-9.1.5.v20140505
+jetty-jaas-9.1.5.v20140505
+jetty-jaspi-9.1.5.v20140505
+jetty-jmx-9.1.5.v20140505
+jetty-jndi-9.1.5.v20140505
+jetty-monitor-9.1.5.v20140505
+jetty-plus-9.1.5.v20140505
+jetty-proxy-9.1.5.v20140505
+jetty-rewrite-9.1.5.v20140505
 jetty-schemas-3.1.jar
-jetty-security-9.1.4.v20140401.jar
-jetty-server-9.1.4.v20140401.jar
-jetty-servlet-9.1.4.v20140401.jar
-jetty-servlets-9.1.4.v20140401.jar
-jetty-util-9.1.4.v20140401.jar
-jetty-webapp-9.1.4.v20140401.jar
-jetty-xml-9.1.4.v20140401.jar
+jetty-security-9.1.5.v20140505
+jetty-server-9.1.5.v20140505
+jetty-servlet-9.1.5.v20140505
+jetty-servlets-9.1.5.v20140505
+jetty-util-9.1.5.v20140505
+jetty-webapp-9.1.5.v20140505
+jetty-xml-9.1.5.v20140505
 
 > EPL 1.0
 
-jetty-distribution-9.1.4.v20140401.tar.gz\jetty-distribution-9.1.4.v20140401.tar\jetty-distribution-9.1.4.v20140401\lib\jta\javax.transaction-1.1.1.v201105210645.jar\about.html
+jetty-distribution-9.1.5.v20140505.tar.gz\jetty-distribution-9.1.5.v20140505.tar\jetty-distribution-9.1.5.v20140505\lib\jta\javax.transaction-1.1.1.v201105210645.jar\about.html
 
 The Eclipse Foundation makes available all content in this plug-in unless otherwise indicated below, the Content is provided to you under the terms and conditions of the Eclipse Public License Version 1.0.
 
@@ -22412,7 +22412,7 @@ servlet-api-3.1.jar
 
 > MIT
 
-jetty-distribution-9.1.4.v20140401.tar.gz\jetty-distribution-9.1.4.v20140401.tar\jetty-distribution-9.1.4.v20140401\lib\monitor\jetty-monitor-9.1.4.v20140401.jar\about.html
+jetty-distribution-9.1.5.v20140505.tar.gz\jetty-distribution-9.1.5.v20140505.tar\jetty-distribution-9.1.5.v20140505\lib\monitor\jetty-monitor-9.1.5.v20140505\about.html
 
 Copyright 1996 Aki Yoshida,
 
@@ -22425,7 +22425,7 @@ granted provided that the copyright notice appears in all copies.
 
 > Apache 2.0
 
-jetty-distribution-9.1.4.v20140401.tar.gz\jetty-istribution-9.1.4.v20140401.tar\jetty-distribution-9.1.4.v20140401\lib\jta\javax.transaction-1.1.1.v201105210645.jar\META-INF\maven\org.apache.geronimo.specs\geronimo-jta_1.1_spec\pom.xml
+jetty-distribution-9.1.5.v20140505.tar.gz\jetty-istribution-9.1.5.v20140505.tar\jetty-distribution-9.1.5.v20140505\lib\jta\javax.transaction-1.1.1.v201105210645.jar\META-INF\maven\org.apache.geronimo.specs\geronimo-jta_1.1_spec\pom.xml
 
 Licensed to the Apache Software Foundation (ASF) under one
 or more contributor license agreements.  See the NOTICE file
@@ -22454,7 +22454,7 @@ javax.activation-1.1.0.v201105071233.jar
 
 > CDDL 1.0
 
-jetty-distribution-9.1.4.v20140401.tar.gz\jetty-distribution-9.1.4.v20140401.tar\jetty-distribution-9.1.4.v20140401\lib\jsp\org.apache.taglibs.standard.glassfish-1.2.0.v201112081803.jar\org\apache\taglibs\standard\resources\Resources.properties
+jetty-distribution-9.1.5.v20140505.tar.gz\jetty-distribution-9.1.5.v20140505.tar\jetty-distribution-9.1.5.v20140505\lib\jsp\org.apache.taglibs.standard.glassfish-1.2.0.v201112081803.jar\org\apache\taglibs\standard\resources\Resources.properties
 
 
 DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
@@ -22502,7 +22502,7 @@ javax.mail.glassfish-1.4.1.v201005082020.jar
 
 > 3RD-PARTY-LICENSE.txt
 
-jetty-distribution-9.1.4.v20140401.tar.gz\jetty-distribution-9.1.4.v20140401.tar\jetty-distribution-9.1.4.v20140401\lib\jndi\javax.mail.glassfish-1.4.1.v201005082020.jar\about_files\ 3RD-PARTY-LICENSE.txt
+jetty-distribution-9.1.5.v20140505.tar.gz\jetty-distribution-9.1.5.v20140505.tar\jetty-distribution-9.1.5.v20140505\lib\jndi\javax.mail.glassfish-1.4.1.v201005082020.jar\about_files\ 3RD-PARTY-LICENSE.txt
 
 DO NOT TRANSLATE OR LOCALIZE.
 
@@ -30825,7 +30825,7 @@ COPYRIGHT
 This library is free software; you can redistribute it and/or modify it under the same terms as Perl itself.
 
 
->>> mariadb-10.0.10
+>>> mariadb-10.0.11
 
 
 This is a release of MariaDB.
@@ -40966,6 +40966,6 @@ offer to obtain a copy of the Source Files is valid for three
 years from the date you acquired this Software product. Alternatively,
 the Source Files may accompany the Zimbra product.
 
-Last updated 21 May 2014
+Last updated 02 Jun 2014
 
-[ZCS850GAVV051013]
+[ZCS850BETA3VV020614]
