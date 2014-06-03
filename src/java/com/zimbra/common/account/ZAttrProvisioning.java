@@ -8604,6 +8604,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMobileSyncKeyFormatConvertedFolders = "zimbraMobileSyncKeyFormatConvertedFolders";
 
     /**
+     * whether to enable tombstone syncing. If disabled, changes of
+     * tombstones won&#039;t be synced to device
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1633)
+    public static final String A_zimbraMobileTombstoneEnabled = "zimbraMobileTombstoneEnabled";
+
+    /**
      * Value for postconf address_verify_negative_refresh_time
      *
      * @since ZCS 8.5.0
