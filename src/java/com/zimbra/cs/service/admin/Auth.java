@@ -74,7 +74,7 @@ public class Auth extends AdminDocumentHandler {
                     throw ServiceException.AUTH_EXPIRED();
 
                 if(!at.isRegistered())
-                    throw ServiceException.AUTH_EXPIRED("This auth token is not valid anymore");
+                    throw ServiceException.AUTH_EXPIRED("authtoken is invalid");
 
                 // make sure that the authenticated account is active and has not been deleted/disabled since the last request
                 acct = prov.get(AccountBy.id, at.getAccountId(), at);
