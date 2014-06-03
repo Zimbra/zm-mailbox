@@ -119,7 +119,7 @@ public class PreAuthServlet extends ZimbraServlet {
                 } else if (authToken.isExpired()) {
                     throw new AuthTokenException("auth token expired");
                 } else if (!authToken.isRegistered()) {
-                    throw new AuthTokenException("this auth token is not valid anymore");
+                    throw new AuthTokenException("authtoken is invalid");
                 }
             }
 
