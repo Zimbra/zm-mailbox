@@ -33,6 +33,7 @@ PART 1. APPLICATION LAYER
 SECTION 1: BSD-STYLE, MIT-STYLE, OR SIMILAR STYLE LICENSES
 
    >>> altermime-0.3-20100505
+   >>> amavis-logwatch-1.51.03pre4
    >>> ant-contrib-1.0b1
    >>> asm-3.3.1
    >>> bdb-5.2.36
@@ -88,6 +89,7 @@ SECTION 1: BSD-STYLE, MIT-STYLE, OR SIMILAR STYLE LICENSES
    >>> perl-termreadkey-2.30.02
    >>> perl-try-tiny-0.19
    >>> php-5.4.20
+   >>> postfix-logwatch-1.40.01
    >>> sendmail-8.14.8
    >>> slf4j-1.6.4
    >>> spymemcached-2.6
@@ -538,6 +540,17 @@ each of the following conditions is met:
    ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
    (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
    THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
+
+
+>>> amavis-logwatch-1.51.03pre4
+
+#######################################################
+### All work since Dec 12, 2006 (logwatch CVS revision 1.28)
+### Copyright (c) 2006-2012  Mike Cappella
+###
+### Covered under the included MIT/X-Consortium License:
+###    http://www.opensource.org/licenses/mit-license.php
+##########################################################################
 
 
 >>> ant-contrib-1.0b1
@@ -20322,6 +20335,17 @@ a legal notice, here is a blessing:
 May you do good and not evil.
 May you find forgiveness for yourself and forgive others.
 May you share freely, never taking more than you give.
+
+
+>>> postfix-logwatch-1.40.01
+
+#######################################################
+### All work since Dec 12, 2006 (logwatch CVS revision 1.28)
+### Copyright (c) 2006-2012  Mike Cappella
+###
+### Covered under the included MIT/X-Consortium License:
+###    http://www.opensource.org/licenses/mit-license.php
+##########################################################################
 
 
 >>> sendmail-8.14.8
