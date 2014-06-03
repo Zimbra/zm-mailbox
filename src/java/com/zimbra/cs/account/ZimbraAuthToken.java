@@ -283,8 +283,10 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
             LOG.error("Unable to fetch server version for the user account", e);
         }
         try {
-            acct.cleanExpiredTokens(); //house keeping. If we are issuing a new token, clean up old ones.
-            acct.addAuthTokens(String.format("%d|%d|%s", tokenID, this.expires, server_version));
+            if(type != C_TYPE_EXTERNAL_USER) {
+                acct.cleanExpiredTokens(); //house keeping. If we are issuing a new token, clean up old ones.
+                acct.addAuthTokens(String.format("%d|%d|%s", tokenID, this.expires, server_version));
+            }
         } catch (ServiceException e) {
             LOG.error("unable to register auth token", e);
         }
