@@ -29513,6 +29513,83 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * whether to enable tombstone syncing. If disabled, changes of
+     * tombstones won&#039;t be synced to device
+     *
+     * @return zimbraMobileTombstoneEnabled, or true if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1633)
+    public boolean isMobileTombstoneEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraMobileTombstoneEnabled, true);
+    }
+
+    /**
+     * whether to enable tombstone syncing. If disabled, changes of
+     * tombstones won&#039;t be synced to device
+     *
+     * @param zimbraMobileTombstoneEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1633)
+    public void setMobileTombstoneEnabled(boolean zimbraMobileTombstoneEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileTombstoneEnabled, zimbraMobileTombstoneEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether to enable tombstone syncing. If disabled, changes of
+     * tombstones won&#039;t be synced to device
+     *
+     * @param zimbraMobileTombstoneEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1633)
+    public Map<String,Object> setMobileTombstoneEnabled(boolean zimbraMobileTombstoneEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileTombstoneEnabled, zimbraMobileTombstoneEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * whether to enable tombstone syncing. If disabled, changes of
+     * tombstones won&#039;t be synced to device
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1633)
+    public void unsetMobileTombstoneEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileTombstoneEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether to enable tombstone syncing. If disabled, changes of
+     * tombstones won&#039;t be synced to device
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1633)
+    public Map<String,Object> unsetMobileTombstoneEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileTombstoneEnabled, "");
+        return attrs;
+    }
+
+    /**
      * template used to construct the body of an email notification message
      *
      * @return zimbraNewMailNotificationBody, or "New message received at ${RECIPIENT_ADDRESS}.${NEWLINE}Sender: ${SENDER_ADDRESS}${NEWLINE}Subject: ${SUBJECT}" if unset
