@@ -196,7 +196,7 @@ public class ProxyServlet extends ZimbraServlet {
                         return;
                     }
                     if (!authToken.isRegistered()) {
-                        resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, "this auth token is not valid anymore");
+                        resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, "authtoken is invalid");
                         return;
                     }
                     if (isAdmin && !authToken.isAdmin()) {
