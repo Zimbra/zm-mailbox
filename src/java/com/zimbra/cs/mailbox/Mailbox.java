@@ -4682,13 +4682,19 @@ public class Mailbox {
                 if (folder.getDefaultView() != type) {
                     continue;
                 }
-                if (!folder.canAccess(ACL.RIGHT_READ)) {
-                    continue;
-                }
-                CalendarDataResult result = CalendarCacheManager.getInstance().getSummaryCache().
-                    getCalendarSummary(octxt, getAccountId(), folder.getId(), type, start, end, true);
-                if (result != null) {
-                    list.add(result);
+                try {
+                    if (!folder.canAccess(ACL.RIGHT_READ)) {
+                        continue;
+                    }
+                    CalendarDataResult result = CalendarCacheManager.getInstance().getSummaryCache().
+                        getCalendarSummary(octxt, getAccountId(), folder.getId(), type, start, end, true);
+                    if (result != null) {
+                        list.add(result);
+                    }
+                } catch (ServiceException se) {
+                    ZimbraLog.fb.info("Problem getting calendar summary cache for folder '%s' - ignoring",
+                            folder.getName(), se);
+                    throw se;
                 }
             }
             return list;

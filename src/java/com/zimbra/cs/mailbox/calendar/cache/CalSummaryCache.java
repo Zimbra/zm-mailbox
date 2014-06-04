@@ -517,12 +517,24 @@ public class CalSummaryCache {
             boolean asAdmin = octxt != null ? octxt.isUsingAdminPrivileges() : false;
             result.allowPrivateAccess = CalendarItem.allowPrivateAccess(folder, authAcct, asAdmin);
             result.data = reloadCalendarOverRangeWithFolderScan(octxt, mbox, folderId, type, rangeStart, rangeEnd, null);
+            if (ZimbraLog.calendar.isDebugEnabled()) {
+                ZimbraLog.calendar.debug("Calendar Summary for %s reloaded (no cache) - %s items private=%s",
+                        folder.getName(), result.data.getNumItems(), result.allowPrivateAccess);
+            }
             return result;
         }
 
         // Check if we have read permission.
-        FolderACL facl = new FolderACL(octxt, targetAcctId, folderId);
-        short perms = facl.getEffectivePermissions();
+        short perms;
+        try {
+            FolderACL facl = new FolderACL(octxt, targetAcctId, folderId);
+            perms = facl.getEffectivePermissions();
+        } catch (ServiceException se) {
+            ZimbraLog.calendar.warn("Problem discovering ACLs for folder %s:%s", targetAcctId, folderId, se);
+            throw ServiceException.PERM_DENIED(
+                    "problem determining whether you have sufficient permissions on folder " +
+                    targetAcctId + ":" + folderId + " (" + se.getMessage() + ")");
+        }
         if ((short) (perms & ACL.RIGHT_READ) != ACL.RIGHT_READ)
             throw ServiceException.PERM_DENIED(
                     "you do not have sufficient permissions on folder " + targetAcctId + ":" + folderId);
@@ -530,16 +542,25 @@ public class CalSummaryCache {
 
         // Look up from memcached.
         CalSummaryKey key = new CalSummaryKey(targetAcctId, folderId);
-            CalendarData calData = mMemcachedCache.getForRange(key, rangeStart, rangeEnd);
-            if (calData != null) {
-                ZimbraPerf.COUNTER_CALENDAR_CACHE_HIT.increment(1);
-                ZimbraPerf.COUNTER_CALENDAR_CACHE_MEM_HIT.increment(1);
+        CalendarData calData = mMemcachedCache.getForRange(key, rangeStart, rangeEnd);
+        if (calData != null) {
+            ZimbraPerf.COUNTER_CALENDAR_CACHE_HIT.increment(1);
+            ZimbraPerf.COUNTER_CALENDAR_CACHE_MEM_HIT.increment(1);
             result.data = calData;
-            return result;
+            if (ZimbraLog.calendar.isDebugEnabled()) {
+                ZimbraLog.calendar.debug("Calendar Summary for %s:%s reloaded (memcached) - %s items private=%s",
+                        targetAcctId, folderId, result.data.getNumItems(), result.allowPrivateAccess);
             }
+            return result;
+        }
         // If not found in memcached and account is not on local server, we're done.
-        if (!targetAcctOnLocalServer)
+        if (!targetAcctOnLocalServer) {
+            if (ZimbraLog.calendar.isDebugEnabled()) {
+                ZimbraLog.calendar.debug("Calendar Summary - ignoring non-local %s:%s",
+                        targetAcctId, folderId);
+            }
             return null;
+        }
 
         int lruSize = 0;
         CacheLevel dataFrom = CacheLevel.Memory;
@@ -680,6 +701,11 @@ public class CalSummaryCache {
         }
         ZimbraPerf.COUNTER_CALENDAR_CACHE_LRU_SIZE.increment(lruSize);
 
+        if (ZimbraLog.calendar.isDebugEnabled()) {
+            ZimbraLog.calendar.debug("Calendar Summary for %s:%s reloaded (dataFrom=%s) - %s items private=%s",
+                    targetAcctId, folderId, dataFrom, (result.data == null) ? 0 : result.data.getNumItems(),
+                    result.allowPrivateAccess);
+        }
         return result;
     }
 

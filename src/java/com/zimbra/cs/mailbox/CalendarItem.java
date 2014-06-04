@@ -954,9 +954,8 @@ public abstract class CalendarItem extends MailItem {
             if (ZimbraLog.calendar.isDebugEnabled()) {
                 long elapsed = System.currentTimeMillis() - startTime;
                 ZimbraLog.calendar.debug(
-                        "RECURRENCE EXPANSION for appt/task " + getId() +
-                        ": start=" + start + ", end=" + end +
-                        "; took " + elapsed + "ms");
+                        "RECURRENCE EXPANSION for appt/task %s: start=%s, end=%s; took %sms.  %s instances",
+                        getId(), start, end, elapsed, instances.size());
             }
         } else {
             // Calendar item has no recurrence.  The basic case is a simple, non-recurring appointment
