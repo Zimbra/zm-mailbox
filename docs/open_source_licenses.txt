@@ -150,6 +150,7 @@ SECTION 2: Apache License, V2.0
    >>> unoil-4.0.2
    >>> xerces-j-2.9.1
    >>> zkclient-0.1
+   >>> zookeeper-3.4.5
 
 
 
@@ -27746,6 +27747,16 @@ times remain with copyright holders.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+
+>>> zookeeper-3.4.5
+
+Apache ZooKeeper
+Copyright 2009-2011 The Apache Software Foundation
+
+This product includes software developed at
+The Apache Software Foundation (http://www.apache.org/).
+
 
 
 --------------- SECTION 3: Artistic License, V2.0 ----------
