@@ -118,6 +118,7 @@ SECTION 2: Apache License, V2.0
    >>> apache-commons-logging-1.1.1
    >>> apache-commons-pool-1.6
    >>> apache-helix-0.6.1
+   >>> apache-httpasyncclient-4.0-beta3
    >>> apache-httpd-2.4.9
    >>> apache-jcs-1.3
    >>> apache-log4j-1.2.16
@@ -21472,6 +21473,15 @@ Apache Helix
 Copyright 2013 The Apache Software Foundation
 
 This product includes software developed at
+The Apache Software Foundation (http://www.apache.org/).
+
+
+>>> apache-httpasyncclient-4.0-beta3
+
+Apache HttpComponents AsyncClient
+Copyright 2010-2012 The Apache Software Foundation
+
+This product includes software developed by
 The Apache Software Foundation (http://www.apache.org/).
 
 
