@@ -124,6 +124,7 @@ SECTION 2: Apache License, V2.0
    >>> apache-jcs-1.3
    >>> apache-log4j-1.2.16
    >>> apache-log4j-extras-1.0
+   >>> apache-neethi-3.0.2
    >>> commons-lang-2.6
    >>> concurrentlinkedhashmap-lru-1.3.1
    >>> curator-2.0.1
@@ -21571,6 +21572,20 @@ Licensed under the Apache License, Version 2.0 (the "License");
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
    See the License for the specific language governing permissions and
    limitations under the License.
+
+
+>>> apache-neethi-3.0.2
+
+Apache Neethi
+Copyright 2004-2012 The Apache Software Foundation
+
+This product includes software developed at
+The Apache Software Foundation (http://www.apache.org/).
+
+
+This product is tested with testcases developed at W3C under the license:
+http://www.w3.org/Consortium/Legal/2002/copyright-documents-20021231
+The source distribution of this product includes those testcases.
 
 
 >>> commons-lang-2.6
