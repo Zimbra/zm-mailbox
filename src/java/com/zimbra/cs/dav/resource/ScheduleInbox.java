@@ -167,11 +167,15 @@ public class ScheduleInbox extends CalendarCollection {
         String prefix = DavServlet.DAV_PATH + "/" + getOwner();
         Mailbox mbox = getMailbox(ctxt);
         HashMap<String,Folder> folders = new HashMap<String,Folder>();
-        for (Folder f : getCalendarFolders(ctxt))
+        for (Folder f : getCalendarFolders(ctxt)) {
             folders.put(f.getPath(), f);
-        for (String url : urls) {
-            if (!url.startsWith(prefix))
+        }
+        for (String origurl : urls) {
+            // Clients often encode the "@" we use in our URLs
+            String url = HttpUtil.urlUnescape(origurl);
+            if (!url.startsWith(prefix)) {
                 continue;
+            }
             String path = url.substring(prefix.length());
             if (path.endsWith("/"))
                 path = path.substring(0, path.length()-1);

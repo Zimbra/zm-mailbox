@@ -18,7 +18,9 @@ import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
+import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.List;
 
 import javax.xml.bind.DatatypeConverter;
 
@@ -35,6 +37,7 @@ import org.apache.commons.httpclient.methods.EntityEnclosingMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
 
 import com.google.common.base.Strings;
+import com.google.common.collect.Lists;
 import com.google.common.io.Closeables;
 import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZFolder.View;
@@ -53,6 +56,7 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
@@ -64,6 +68,8 @@ public class TestCalDav extends TestCase {
 
     static final boolean runningOutsideZimbra = false;  // set to true if running inside an IDE instead of from RunUnitTests
     static final TimeZoneRegistry tzRegistry = TimeZoneRegistryFactory.getInstance().createRegistry();
+    private static String NAME_PREFIX = "TestCalDav";
+    private static String USER_NAME = "user1";
     private static String DAV1 = "dav1";
     private static String DAV2 = "dav2";
     private static String DAV3 = "dav3";
@@ -74,6 +80,16 @@ public class TestCalDav extends TestCase {
             return "MKCOL";
         }
         public  MkColMethod(String uri) {
+            super(uri);
+        }
+    }
+
+    public static class PropPatchMethod extends EntityEnclosingMethod {
+        @Override
+        public String getName() {
+            return "PROPPATCH";
+        }
+        public  PropPatchMethod(String uri) {
             super(uri);
         }
     }
@@ -172,9 +188,14 @@ public class TestCalDav extends TestCase {
                 method.releaseConnection();
             }
         }
+
         public static HttpMethodExecutor execute(HttpClient client, HttpMethod method, int expectedCode)
                 throws IOException {
             return new HttpMethodExecutor(client, method, expectedCode);
+        }
+
+        public String getResponseAsString() {
+            return new String(responseBodyBytes);
         }
     }
 
@@ -234,6 +255,12 @@ public class TestCalDav extends TestCase {
         return sb.toString();
     }
 
+    public static String getSchedulingInboxUrl(Account auth, Account target) throws ServiceException {
+        StringBuilder sb = getLocalServerRoot();
+        sb.append(UrlNamespace.getSchedulingInboxUrl(auth.getName(), target.getName()));
+        return sb.toString();
+    }
+
     public void testSimpleMkcol() throws Exception {
         Account dav1 = TestUtil.createAccount(DAV1);
         StringBuilder url = getLocalServerRoot();
@@ -279,6 +306,141 @@ public class TestCalDav extends TestCase {
         assertEquals("OtherContacts default view", View.contact, folder.getDefaultView());
     }
 
+    public String makeFreeBusyRequestIcal(Account organizer, List<Account> attendees, Date start, Date end)
+    throws IOException {
+        ZVCalendar vcal = new ZVCalendar();
+        vcal.addVersionAndProdId();
+
+        vcal.addProperty(new ZProperty(ICalTok.METHOD, ICalTok.REQUEST.toString()));
+        ZComponent vfreebusy = new ZComponent(ICalTok.VFREEBUSY);
+        ParsedDateTime dtstart = ParsedDateTime.fromUTCTime(start.getTime());
+        vfreebusy.addProperty(dtstart.toProperty(ICalTok.DTSTART, false));
+        ParsedDateTime dtend = ParsedDateTime.fromUTCTime(end.getTime());
+        vfreebusy.addProperty(dtend.toProperty(ICalTok.DTEND, false));
+        vfreebusy.addProperty(new ZProperty(ICalTok.DTSTAMP, "20140108T224700Z"));
+        vfreebusy.addProperty(new ZProperty(ICalTok.UID, "d123f102-42a7-4283-b025-3376dabe53b3"));
+        vfreebusy.addProperty(organizer(organizer));
+        for (Account attendee : attendees) {
+            vfreebusy.addProperty(new ZProperty(ICalTok.ATTENDEE, "mailto:" + attendee.getName()));
+        }
+        vcal.addComponent(vfreebusy);
+        StringWriter calWriter = new StringWriter();
+        vcal.toICalendar(calWriter);
+        String icalString = calWriter.toString();
+        Closeables.closeQuietly(calWriter);
+        return icalString;
+    }
+
+    public HttpMethodExecutor doFreeBusyCheck(Account organizer, List<Account> attendees, Date start, Date end)
+    throws ServiceException, IOException {
+        HttpClient client = new HttpClient();
+        String outboxurl = getSchedulingOutboxUrl(organizer, organizer);
+        PostMethod postMethod = new PostMethod(outboxurl);
+        postMethod.addRequestHeader("Content-Type", "text/calendar");
+        postMethod.addRequestHeader("Originator", "mailto:" + organizer.getName());
+        for (Account attendee : attendees) {
+            postMethod.addRequestHeader("Recipient", "mailto:" + attendee.getName());
+        }
+
+        addBasicAuthHeaderForUser(postMethod, organizer);
+        String fbIcal = makeFreeBusyRequestIcal(organizer, attendees, start, end);
+        postMethod.setRequestEntity(new ByteArrayRequestEntity(fbIcal.getBytes(), MimeConstants.CT_TEXT_CALENDAR));
+
+        return HttpMethodExecutor.execute(client, postMethod, HttpStatus.SC_OK);
+    }
+
+    public HttpMethodExecutor doPropPatch(Account account, String url, String body)
+    throws IOException {
+        HttpClient client = new HttpClient();
+        PropPatchMethod propPatchMethod = new PropPatchMethod(url);
+        addBasicAuthHeaderForUser(propPatchMethod, account);
+        propPatchMethod.addRequestHeader("Content-Type", MimeConstants.CT_TEXT_XML);
+        propPatchMethod.setRequestEntity(
+                new ByteArrayRequestEntity(body.getBytes(), MimeConstants.CT_TEXT_XML));
+        return HttpMethodExecutor.execute(client, propPatchMethod, HttpStatus.SC_MULTI_STATUS);
+    }
+
+    /**
+     * http://tools.ietf.org/html/draft-desruisseaux-caldav-sched-03#section-5.3.1
+     * 5.3. Scheduling Inbox Properties
+     * 5.3.1. CALDAV:calendar-free-busy-set Property
+     * Purpose:  Identify the calendars that contribute to the free-busy information for the calendar user associated
+     * with the scheduling Inbox.
+     *
+     * If the list is empty - NO calendars affect freebusy.
+     * If the list is not empty, each listed calendar affects freebusy.
+     * Bug 85275 - Apple Calendar specifies URLs with "@" encoded as %40 - causing us to drop all calendar from FB set
+     */
+    public void testPropPatchCalendarFreeBusySetSettingUsingEscapedUrls() throws Exception {
+        String disableFreeBusyXml =
+                "<A:propertyupdate xmlns:A=\"DAV:\">" +
+                "  <A:set>" +
+                "    <A:prop>" +
+                "      <B:calendar-free-busy-set xmlns:B=\"urn:ietf:params:xml:ns:caldav\"/>" +
+                "    </A:prop>" +
+                "  </A:set>" +
+                "</A:propertyupdate>";
+        String enableFreeBusyTemplateXml =
+                "<A:propertyupdate xmlns:A=\"DAV:\">" +
+                "  <A:set>" +
+                "    <A:prop>" +
+                "      <B:calendar-free-busy-set xmlns:B=\"urn:ietf:params:xml:ns:caldav\">" +
+                "        <A:href>/dav/%s/Tasks/</A:href>" +
+                "        <A:href>/dav/%s/Calendar/</A:href>" +
+                "      </B:calendar-free-busy-set>" +
+                "    </A:prop>" +
+                "  </A:set>" +
+                "</A:propertyupdate>";
+
+        Account dav1 = TestUtil.createAccount(DAV1);
+
+        // Create an event in Dav1's calendar
+        ZMailbox organizer = TestUtil.getZMailbox(DAV1);
+        String subject = NAME_PREFIX + " testInvite request 1";
+        Date startDate = new Date(System.currentTimeMillis() + Constants.MILLIS_PER_DAY);
+        Date endDate = new Date(startDate.getTime() + Constants.MILLIS_PER_HOUR);
+        Date fbStartDate = new Date(startDate.getTime() - (Constants.MILLIS_PER_DAY * 2));
+        Date fbEndDate = new Date(endDate.getTime() + (Constants.MILLIS_PER_DAY * 3));
+        String busyTentativeMarker = "FREEBUSY;FBTYPE=BUSY";
+
+        // seed an appointment in dav1's calendar
+        TestUtil.createAppointment(organizer, subject, dav1.getName(), startDate, endDate);
+
+        String fbResponse;
+        fbResponse = doFreeBusyCheck(dav1, Lists.newArrayList(dav1), fbStartDate, fbEndDate).getResponseAsString();
+        assertTrue(String.format("First FB check Response [%s] should contain [%s]", fbResponse, busyTentativeMarker),
+                fbResponse.contains(busyTentativeMarker));
+
+        String inboxurl = getSchedulingInboxUrl(dav1, dav1);
+        doPropPatch(dav1, inboxurl, disableFreeBusyXml);
+
+        fbResponse = doFreeBusyCheck(dav1, Lists.newArrayList(dav1), fbStartDate, fbEndDate).getResponseAsString();
+        assertFalse(String.format("2nd FB check after disabling - Response [%s] should NOT contain [%s]",
+                fbResponse, busyTentativeMarker), fbResponse.contains(busyTentativeMarker));
+
+        String enableWithRawAt = String.format(enableFreeBusyTemplateXml, dav1.getName(), dav1.getName());
+        String encodedName = dav1.getName().replace("@", "%40");
+        String enableWithEncodedAt = String.format(enableFreeBusyTemplateXml, encodedName, encodedName);
+
+        doPropPatch(dav1, inboxurl, enableWithRawAt);
+
+        fbResponse = doFreeBusyCheck(dav1, Lists.newArrayList(dav1), fbStartDate, fbEndDate).getResponseAsString();
+        assertTrue(String.format("3rd FB check after enabling Response [%s] should contain [%s]",
+                fbResponse, busyTentativeMarker), fbResponse.contains(busyTentativeMarker));
+
+        doPropPatch(dav1, inboxurl, disableFreeBusyXml);
+
+        fbResponse = doFreeBusyCheck(dav1, Lists.newArrayList(dav1), fbStartDate, fbEndDate).getResponseAsString();
+        assertFalse(String.format("4th FB check after disabling - Response [%s] should NOT contain [%s]",
+                fbResponse, busyTentativeMarker), fbResponse.contains(busyTentativeMarker));
+
+        doPropPatch(dav1, inboxurl, enableWithEncodedAt);
+
+        fbResponse = doFreeBusyCheck(dav1, Lists.newArrayList(dav1), fbStartDate, fbEndDate).getResponseAsString();
+        assertTrue(String.format("4th FB check after enabling (encoded urls) Response [%s] should contain [%s]",
+                fbResponse, busyTentativeMarker), fbResponse.contains(busyTentativeMarker));
+    }
+
     @Override
     public void setUp() throws Exception {
         if (runningOutsideZimbra) {
@@ -295,6 +457,7 @@ public class TestCalDav extends TestCase {
         TestUtil.deleteAccount(DAV1);
         TestUtil.deleteAccount(DAV2);
         TestUtil.deleteAccount(DAV3);
+        TestUtil.deleteTestData(USER_NAME, NAME_PREFIX);
     }
 
     /**
