@@ -79,7 +79,7 @@ SECTION 1: BSD-STYLE, MIT-STYLE, OR SIMILAR STYLE LICENSES
    >>> nviennot-nginx-tcp-keepalive-4d7186d
    >>> opendkim-2.9.1
    >>> openldap-2.4.39
-   >>> openssl-1.0.1g
+   >>> openssl-1.0.1h
    >>> perl-data-uuid-1.219
    >>> perl-geography-countries-2009041301
    >>> perl-locale-maketext-simple-0.21
@@ -19878,7 +19878,7 @@ California, USA.  All Rights Reserved.  Permission to copy and
 distribute verbatim copies of this document is granted.
 
 
->>> openssl-1.0.1g
+>>> openssl-1.0.1h
 
 LICENSE ISSUES
   ==============
