@@ -385,6 +385,9 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
 		    if(acct != null) {
 		        acct.removeAuthTokens(String.format("%d|%d|%s", tokenID, this.expires, server_version));
 		    }
+		    if(acct.getBooleanAttr(Provisioning.A_zimbraLogOutFromAllServers, false)) {
+		        AuthTokenRegistry.addTokenToQueue(this);
+		    }
 		} catch (ServiceException e) {
 			throw new AuthTokenException("unable to de-register auth token", e);
 		}

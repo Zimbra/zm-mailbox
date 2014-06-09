@@ -1807,6 +1807,123 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * This attribute is used to configure the interval with which servers
+     * will send a list of invalidated tokens to each other. When an account
+     * logs out of a server, the account&#039;s authtoken is added to a queue
+     * of invalidated tokens on the server. Each server will send it&#039;s
+     * queue of invalidated tokens to all other servers with frequency
+     * configurable by this attribute. See zimbraLogOutFromAllServers for
+     * more info on configuring authtoken invalidation on Accounts and
+     * Classes of Service. Set to higher value to reduce network chatter. Set
+     * to lower value to decrease the window during which a stolen cookie may
+     * be reused to access an account.
+     *
+     * @return zimbraAuthTokenNotificationInterval, or 60000 if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1635)
+    public int getAuthTokenNotificationInterval() {
+        return getIntAttr(Provisioning.A_zimbraAuthTokenNotificationInterval, 60000);
+    }
+
+    /**
+     * This attribute is used to configure the interval with which servers
+     * will send a list of invalidated tokens to each other. When an account
+     * logs out of a server, the account&#039;s authtoken is added to a queue
+     * of invalidated tokens on the server. Each server will send it&#039;s
+     * queue of invalidated tokens to all other servers with frequency
+     * configurable by this attribute. See zimbraLogOutFromAllServers for
+     * more info on configuring authtoken invalidation on Accounts and
+     * Classes of Service. Set to higher value to reduce network chatter. Set
+     * to lower value to decrease the window during which a stolen cookie may
+     * be reused to access an account.
+     *
+     * @param zimbraAuthTokenNotificationInterval new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1635)
+    public void setAuthTokenNotificationInterval(int zimbraAuthTokenNotificationInterval) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAuthTokenNotificationInterval, Integer.toString(zimbraAuthTokenNotificationInterval));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * This attribute is used to configure the interval with which servers
+     * will send a list of invalidated tokens to each other. When an account
+     * logs out of a server, the account&#039;s authtoken is added to a queue
+     * of invalidated tokens on the server. Each server will send it&#039;s
+     * queue of invalidated tokens to all other servers with frequency
+     * configurable by this attribute. See zimbraLogOutFromAllServers for
+     * more info on configuring authtoken invalidation on Accounts and
+     * Classes of Service. Set to higher value to reduce network chatter. Set
+     * to lower value to decrease the window during which a stolen cookie may
+     * be reused to access an account.
+     *
+     * @param zimbraAuthTokenNotificationInterval new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1635)
+    public Map<String,Object> setAuthTokenNotificationInterval(int zimbraAuthTokenNotificationInterval, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAuthTokenNotificationInterval, Integer.toString(zimbraAuthTokenNotificationInterval));
+        return attrs;
+    }
+
+    /**
+     * This attribute is used to configure the interval with which servers
+     * will send a list of invalidated tokens to each other. When an account
+     * logs out of a server, the account&#039;s authtoken is added to a queue
+     * of invalidated tokens on the server. Each server will send it&#039;s
+     * queue of invalidated tokens to all other servers with frequency
+     * configurable by this attribute. See zimbraLogOutFromAllServers for
+     * more info on configuring authtoken invalidation on Accounts and
+     * Classes of Service. Set to higher value to reduce network chatter. Set
+     * to lower value to decrease the window during which a stolen cookie may
+     * be reused to access an account.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1635)
+    public void unsetAuthTokenNotificationInterval() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAuthTokenNotificationInterval, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * This attribute is used to configure the interval with which servers
+     * will send a list of invalidated tokens to each other. When an account
+     * logs out of a server, the account&#039;s authtoken is added to a queue
+     * of invalidated tokens on the server. Each server will send it&#039;s
+     * queue of invalidated tokens to all other servers with frequency
+     * configurable by this attribute. See zimbraLogOutFromAllServers for
+     * more info on configuring authtoken invalidation on Accounts and
+     * Classes of Service. Set to higher value to reduce network chatter. Set
+     * to lower value to decrease the window during which a stolen cookie may
+     * be reused to access an account.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1635)
+    public Map<String,Object> unsetAuthTokenNotificationInterval(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAuthTokenNotificationInterval, "");
+        return attrs;
+    }
+
+    /**
      * EAGER mode: required LAZY mode: N/A MANUAL mode: N/A Interval between
      * successive polling and provisioning accounts in EAGER mode. The actual
      * interval may take longer since it can be affected by two other

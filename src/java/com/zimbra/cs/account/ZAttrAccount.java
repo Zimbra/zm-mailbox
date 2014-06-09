@@ -21222,6 +21222,113 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Flag to control how authtokens are invalidated in multi-server
+     * environment. If set to TRUE: when this account logs out on a server,
+     * the server will notify other servers that this account&#039;s
+     * authtoken has been invalidated. If set to FALSE, an auth token may
+     * remain vallid on servers other than the account&#039;s home server
+     * after a user logs out for as long as an account object remains in
+     * Provisioning Cache. Set to TRUE for increased protection against
+     * Cookie Re-use attack. Default is FALSE to reduce network chatter.
+     *
+     * @return zimbraLogOutFromAllServers, or false if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1634)
+    public boolean isLogOutFromAllServers() {
+        return getBooleanAttr(Provisioning.A_zimbraLogOutFromAllServers, false);
+    }
+
+    /**
+     * Flag to control how authtokens are invalidated in multi-server
+     * environment. If set to TRUE: when this account logs out on a server,
+     * the server will notify other servers that this account&#039;s
+     * authtoken has been invalidated. If set to FALSE, an auth token may
+     * remain vallid on servers other than the account&#039;s home server
+     * after a user logs out for as long as an account object remains in
+     * Provisioning Cache. Set to TRUE for increased protection against
+     * Cookie Re-use attack. Default is FALSE to reduce network chatter.
+     *
+     * @param zimbraLogOutFromAllServers new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1634)
+    public void setLogOutFromAllServers(boolean zimbraLogOutFromAllServers) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLogOutFromAllServers, zimbraLogOutFromAllServers ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Flag to control how authtokens are invalidated in multi-server
+     * environment. If set to TRUE: when this account logs out on a server,
+     * the server will notify other servers that this account&#039;s
+     * authtoken has been invalidated. If set to FALSE, an auth token may
+     * remain vallid on servers other than the account&#039;s home server
+     * after a user logs out for as long as an account object remains in
+     * Provisioning Cache. Set to TRUE for increased protection against
+     * Cookie Re-use attack. Default is FALSE to reduce network chatter.
+     *
+     * @param zimbraLogOutFromAllServers new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1634)
+    public Map<String,Object> setLogOutFromAllServers(boolean zimbraLogOutFromAllServers, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLogOutFromAllServers, zimbraLogOutFromAllServers ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Flag to control how authtokens are invalidated in multi-server
+     * environment. If set to TRUE: when this account logs out on a server,
+     * the server will notify other servers that this account&#039;s
+     * authtoken has been invalidated. If set to FALSE, an auth token may
+     * remain vallid on servers other than the account&#039;s home server
+     * after a user logs out for as long as an account object remains in
+     * Provisioning Cache. Set to TRUE for increased protection against
+     * Cookie Re-use attack. Default is FALSE to reduce network chatter.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1634)
+    public void unsetLogOutFromAllServers() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLogOutFromAllServers, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Flag to control how authtokens are invalidated in multi-server
+     * environment. If set to TRUE: when this account logs out on a server,
+     * the server will notify other servers that this account&#039;s
+     * authtoken has been invalidated. If set to FALSE, an auth token may
+     * remain vallid on servers other than the account&#039;s home server
+     * after a user logs out for as long as an account object remains in
+     * Provisioning Cache. Set to TRUE for increased protection against
+     * Cookie Re-use attack. Default is FALSE to reduce network chatter.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1634)
+    public Map<String,Object> unsetLogOutFromAllServers(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLogOutFromAllServers, "");
+        return attrs;
+    }
+
+    /**
      * RFC822 email address of this recipient for accepting mail
      *
      * @return zimbraMailAddress, or empty array if unset
