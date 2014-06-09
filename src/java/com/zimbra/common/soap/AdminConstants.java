@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -468,6 +468,8 @@ public final class AdminConstants {
     // cookie
     public static final String E_CLEAR_COOKIE_REQUEST = "ClearCookieRequest";
     public static final String E_CLEAR_COOKIE_RESPONSE = "ClearCookieResponse";
+    public static final String E_REFRESH_REGISTERED_AUTHTOKENS_REQUEST = "RefreshRegisteredAuthTokensRequest";
+    public static final String E_REFRESH_REGISTERED_AUTHTOKENS_RESPONSE = "RefreshRegisteredAuthTokensResponse";
 
     // SMIME config
     public static final String E_GET_SMIME_CONFIG_REQUEST = "GetSMIMEConfigRequest";
@@ -962,6 +964,8 @@ public final class AdminConstants {
     // cookie
     public static final QName CLEAR_COOKIE_REQUEST = QName.get(E_CLEAR_COOKIE_REQUEST, NAMESPACE);
     public static final QName CLEAR_COOKIE_RESPONSE = QName.get(E_CLEAR_COOKIE_RESPONSE, NAMESPACE);
+    public static final QName REFRESH_REGISTERED_AUTHTOKENS_REQUEST = QName.get(E_REFRESH_REGISTERED_AUTHTOKENS_REQUEST, NAMESPACE);
+    public static final QName REFRESH_REGISTERED_AUTHTOKENS_RESPONSE = QName.get(E_REFRESH_REGISTERED_AUTHTOKENS_RESPONSE, NAMESPACE);
 
     public static final QName GET_SMIME_CONFIG_REQUEST = QName.get(E_GET_SMIME_CONFIG_REQUEST, NAMESPACE);
     public static final QName GET_SMIME_CONFIG_RESPONSE = QName.get(E_GET_SMIME_CONFIG_RESPONSE, NAMESPACE);
@@ -1090,6 +1094,7 @@ public final class AdminConstants {
     public static final String E_KEY = "key";
     public static final String E_PRINCIPAL = "principal";
     public static final String E_SKIN = "skin";
+    public static final String E_TOKEN = "token";
 
     public static final String A_ACCOUNT = "account";
     public static final String A_CALENDAR_RESOURCE = "calresource";

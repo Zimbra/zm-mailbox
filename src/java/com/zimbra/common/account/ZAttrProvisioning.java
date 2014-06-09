@@ -2776,6 +2776,23 @@ public class ZAttrProvisioning {
     public static final String A_zimbraAuthTokenLifetime = "zimbraAuthTokenLifetime";
 
     /**
+     * This attribute is used to configure the interval with which servers
+     * will send a list of invalidated tokens to each other. When an account
+     * logs out of a server, the account&#039;s authtoken is added to a queue
+     * of invalidated tokens on the server. Each server will send it&#039;s
+     * queue of invalidated tokens to all other servers with frequency
+     * configurable by this attribute. See zimbraLogOutFromAllServers for
+     * more info on configuring authtoken invalidation on Accounts and
+     * Classes of Service. Set to higher value to reduce network chatter. Set
+     * to lower value to decrease the window during which a stolen cookie may
+     * be reused to access an account.
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1635)
+    public static final String A_zimbraAuthTokenNotificationInterval = "zimbraAuthTokenNotificationInterval";
+
+    /**
      * list of currently active auth tokens
      *
      * @since ZCS 8.5.0
@@ -7056,6 +7073,21 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=250)
     public static final String A_zimbraLogHostname = "zimbraLogHostname";
+
+    /**
+     * Flag to control how authtokens are invalidated in multi-server
+     * environment. If set to TRUE: when this account logs out on a server,
+     * the server will notify other servers that this account&#039;s
+     * authtoken has been invalidated. If set to FALSE, an auth token may
+     * remain vallid on servers other than the account&#039;s home server
+     * after a user logs out for as long as an account object remains in
+     * Provisioning Cache. Set to TRUE for increased protection against
+     * Cookie Re-use attack. Default is FALSE to reduce network chatter.
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1634)
+    public static final String A_zimbraLogOutFromAllServers = "zimbraLogOutFromAllServers";
 
     /**
      * lifetime of raw log rows in consolidated logger tables. Must be in
