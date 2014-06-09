@@ -42,8 +42,16 @@ public class CountObjects extends AdminDocumentHandler {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
         String type = request.getAttribute(AdminConstants.A_TYPE);
-        CountObjectsTypeWrapper typeWrapper = CountObjectsTypeWrapper
-                .valueOf(type);
+        CountObjectsTypeWrapper typeWrapper;
+        try {
+            typeWrapper = CountObjectsTypeWrapper.valueOf(type);
+        } catch (IllegalArgumentException ex) {
+            throw ServiceException.INVALID_REQUEST("Invalid object type " + type,null);
+        }
+
+        if(typeWrapper == null) {
+            throw ServiceException.INVALID_REQUEST("Invalid object type " + type,null);
+        }
 
         UCService ucService = null;
         Element eUCService = request
@@ -65,7 +73,15 @@ public class CountObjects extends AdminDocumentHandler {
         }
 
         List<Pair<String, String>> domainList = new LinkedList<Pair<String, String>>();
-        for (Element elem : request.listElements(AdminConstants.E_DOMAIN)) {
+        List<Element> domainElements = request.listElements(AdminConstants.E_DOMAIN);
+
+        if(!typeWrapper.allowsDomain() && !domainElements.isEmpty()) {
+            throw ServiceException.INVALID_REQUEST(
+                    "domain cannot be specified for type: "
+                            + typeWrapper.name(), null);
+        }
+
+        for (Element elem : domainElements) {
             domainList.add(new Pair<String, String>(elem
                     .getAttribute(AdminConstants.A_BY), elem.getText()));
         }
@@ -88,12 +104,6 @@ public class CountObjects extends AdminDocumentHandler {
         } else if (!domainList.isEmpty() && typeWrapper.allowsDomain()) {
             // count objects within specified domains
             for (Pair<String, String> domainDef : domainList) {
-                if (!typeWrapper.allowsDomain()) {
-                    throw ServiceException.INVALID_REQUEST(
-                            "domain cannot be specified for type: "
-                                    + typeWrapper.name(), null);
-                }
-
                 Domain domain = prov.get(
                         Key.DomainBy.fromString(domainDef.getFirst()),
                         domainDef.getSecond());
