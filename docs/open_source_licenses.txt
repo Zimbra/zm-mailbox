@@ -146,6 +146,7 @@ SECTION 2: Apache License, V2.0
    >>> smack-3.2.1
    >>> spamassassin-3.4.0
    >>> spring-framework-3.0.7
+   >>> stax2-api-3.1.1
    >>> testng-5.12.1
    >>> unoil-4.0.2
    >>> xerces-j-2.9.1
@@ -27641,6 +27642,23 @@ License: Apache 2.0
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+
+>>> stax2-api-3.1.1
+
+This copy of Aalto XML processor is licensed under the
+Apache (Software) License, version 2.0 ("the License").
+See the License for details about distribution rights, and the
+specific rights regarding derivate works.
+
+You may obtain a copy of the License at:
+
+http://www.apache.org/licenses/
+
+A copy is also included with both the the downloadable source code package
+and jar that contains class bytecodes, as file "ASL 2.0". In both cases,
+that file should be located next to this file: in source distribution
+the location should be "release-notes/asl"; and in jar "META-INF/"
 
 
 >>> testng-5.12.1
