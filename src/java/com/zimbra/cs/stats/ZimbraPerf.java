@@ -201,6 +201,7 @@ public class ZimbraPerf {
     public static final Counter COUNTER_IDX_BYTES_READ = new Counter();
     public static final Counter COUNTER_BLOB_INPUT_STREAM_READ = new Counter();
     public static final Counter COUNTER_BLOB_INPUT_STREAM_SEEK_RATE = new Counter();
+    public static final StopWatch STOPWATCH_EWS = new StopWatch();
 
     public static final ActivityTracker SOAP_TRACKER = new ActivityTracker("soap.csv");
     public static final ActivityTracker IMAP_TRACKER = new ActivityTracker("imap.csv");
