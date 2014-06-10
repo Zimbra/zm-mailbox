@@ -1072,8 +1072,7 @@ class WebEwsUpstreamServersVar extends ServersVar {
         if (upstreams.length > 0) {
             for (String serverName: upstreams) {
                 Server server = mProv.getServerByName(serverName);
-                // Add only the mailclient upstreams (i.e upstreams running 'service' webapp)
-                if (server.hasMailclientService() && isValidUpstream(server, serverName)) {
+                if (isValidUpstream(server, serverName)) {
                     directives.add(generateServerDirective(server, serverName, portName));
                     mLog.info("Added EWS server to HTTP upstream: " + serverName);
                 }
@@ -1099,8 +1098,7 @@ class WebEwsSSLUpstreamServersVar extends ServersVar {
         if (upstreams.length > 0) {
             for (String serverName: upstreams) {
                 Server server = mProv.getServerByName(serverName);
-                // Add only the mailclient upstreams (i.e upstreams running 'service' webapp)
-                if (server.hasMailclientService() && isValidUpstream(server, serverName)) {
+                if (isValidUpstream(server, serverName)) {
                     directives.add(generateServerDirective(server, serverName, portName));
                     mLog.info("Added EWS server to HTTPS upstream: " + serverName);
                 }
@@ -1126,8 +1124,7 @@ class WebLoginUpstreamServersVar extends ServersVar {
         if (upstreams.length > 0) {
             for (String serverName: upstreams) {
                 Server server = mProv.getServerByName(serverName);
-                // Add only the webclient/adminclient upstreams (i.e upstreams running 'zimbra/zimbraAdmin' webapps)
-                if ((server.hasWebclientService() || server.hasAdminclientService()) && isValidUpstream(server, serverName)) {
+                if (isValidUpstream(server, serverName)) {
                     directives.add(generateServerDirective(server, serverName, portName));
                     mLog.info("Added Login server to HTTP upstream: " + serverName);
                 }
@@ -1153,8 +1150,7 @@ class WebLoginSSLUpstreamServersVar extends ServersVar {
         if (upstreams.length > 0) {
             for (String serverName: upstreams) {
                 Server server = mProv.getServerByName(serverName);
-                // Add only the webclient/adminclient upstreams (i.e upstreams running 'zimbra/zimbraAdmin' webapps)
-                if ((server.hasWebclientService() || server.hasAdminclientService()) && isValidUpstream(server, serverName)) {
+                if (isValidUpstream(server, serverName)) {
                     directives.add(generateServerDirective(server, serverName, portName));
                     mLog.info("Added Login server to HTTPS upstream: " + serverName);
                 }
