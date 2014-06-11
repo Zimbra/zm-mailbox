@@ -5624,11 +5624,14 @@ public class Mailbox {
         try {
             return zmbox.getRemoteCalItemByUID(ownerAccount.getId(), uid, includeInvites, includeContent);
         } catch (ServiceException e) {
-            if (e.getCode().equals(AccountServiceException.NO_SUCH_ACCOUNT)) {
-                return null;
+            String exceptionCode = e.getCode();
+            if (exceptionCode.equals(AccountServiceException.NO_SUCH_ACCOUNT) ||
+                    exceptionCode.equals(MailServiceException.NO_SUCH_CALITEM)) {
+                ZimbraLog.calendar.debug("Either remote acct or calendar item not found [%s]", exceptionCode);
             } else {
-                throw e;
+                ZimbraLog.calendar.debug("Unexpected exception thrown when getting remote calendar item - ignoring", e);
             }
+            return null;
         }
     }
 

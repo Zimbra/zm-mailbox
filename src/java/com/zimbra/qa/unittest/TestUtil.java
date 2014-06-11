@@ -493,7 +493,7 @@ extends Assert {
 
     public static ZMessage waitForMessage(ZMailbox mbox, String query)
     throws Exception {
-        for (int i = 1; i <= 20; i++) {
+        for (int i = 1; i <= 100; i++) {
             List<ZMessage> msgs = search(mbox, query);
             if (msgs.size() == 1) {
                 return msgs.get(0);
@@ -501,7 +501,7 @@ extends Assert {
             if (msgs.size() > 1) {
                 Assert.fail("Unexpected number of messages (" + msgs.size() + ") returned by query '" + query + "'");
             }
-            Thread.sleep(500);
+            Thread.sleep(100);
         }
         Assert.fail("Message for query '" + query + "' never arrived.  Either the MTA is not running or the test failed.");
         return null;
