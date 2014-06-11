@@ -72,7 +72,9 @@ public enum UpgradeTask {
     BUG_76427(BUG_76427.class),
     BUG_81385(BUG_81385.class),
     BUG_85224(BUG_85224.class),
-    BUG_88098(BUG_88098.class);
+    BUG_87674(BUG_87674.class),
+    BUG_88098(BUG_88098.class),
+    BUG_88766(BUG_88766.class);
 
     private static final String NAME_PREFIX = "BUG_";
 
