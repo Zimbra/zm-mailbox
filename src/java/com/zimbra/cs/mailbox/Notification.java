@@ -325,10 +325,10 @@ public class Notification implements LmtpCallback {
         				+ " is external user and no external reply option is set, so no OOO will be sent. ");
         		return;
             }
-            boolean sendExternalReply = account.isPrefOutOfOfficeExternalReplyEnabled() 
+            boolean sendExternalReply = account.isPrefOutOfOfficeExternalReplyEnabled()
                    && !isInternalSender(destination, account) && isOfExternalSenderType(destination, account, mbox);
             String body = account.getAttr(sendExternalReply ?
-                    Provisioning.A_zimbraPrefOutOfOfficeExternalReply : Provisioning.A_zimbraPrefOutOfOfficeReply, "");   
+                    Provisioning.A_zimbraPrefOutOfOfficeExternalReply : Provisioning.A_zimbraPrefOutOfOfficeReply, "");
             charset = getCharset(account, body);
             out.setText(body, charset);
 
@@ -378,6 +378,14 @@ public class Notification implements LmtpCallback {
                 try {
                     return !mbox.index.existsInContacts(
                             Collections.singleton(new com.zimbra.common.mime.InternetAddress(senderAddr)));
+                } catch (IOException e) {
+                    ZimbraLog.mailbox.error("Failed to lookup contacts", e);
+                    return true;
+                }
+            case INAB:
+                try {
+                    return mbox.index.existsInContacts(Collections
+                        .singleton(new com.zimbra.common.mime.InternetAddress(senderAddr)));
                 } catch (IOException e) {
                     ZimbraLog.mailbox.error("Failed to lookup contacts", e);
                     return true;

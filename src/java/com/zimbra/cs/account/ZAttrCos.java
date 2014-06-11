@@ -29510,9 +29510,11 @@ public abstract class ZAttrCos extends NamedEntry {
      * users whose domain doesn&#039;t match the recipient&#039;s or
      * zimbraInternalSendersDomain. &quot;ALLNOTINAB&quot; means
      * &quot;ALL&quot; minus users who are in the recipient&#039;s address
-     * book.
+     * book. &quot;INAB&quot; Users/Addresses whose domain doesn&#039;t match
+     * the recipient&#039;s domain or zimbraInternalSendersDomain and which
+     * are present in recipient&#039;s address book.
      *
-     * <p>Valid values: [ALL, ALLNOTINAB]
+     * <p>Valid values: [ALL, INAB, ALLNOTINAB]
      *
      * @return zimbraPrefExternalSendersType, or ZAttrProvisioning.PrefExternalSendersType.ALL if unset and/or has invalid value
      *
@@ -29528,9 +29530,11 @@ public abstract class ZAttrCos extends NamedEntry {
      * users whose domain doesn&#039;t match the recipient&#039;s or
      * zimbraInternalSendersDomain. &quot;ALLNOTINAB&quot; means
      * &quot;ALL&quot; minus users who are in the recipient&#039;s address
-     * book.
+     * book. &quot;INAB&quot; Users/Addresses whose domain doesn&#039;t match
+     * the recipient&#039;s domain or zimbraInternalSendersDomain and which
+     * are present in recipient&#039;s address book.
      *
-     * <p>Valid values: [ALL, ALLNOTINAB]
+     * <p>Valid values: [ALL, INAB, ALLNOTINAB]
      *
      * @return zimbraPrefExternalSendersType, or "ALL" if unset
      *
@@ -29546,9 +29550,11 @@ public abstract class ZAttrCos extends NamedEntry {
      * users whose domain doesn&#039;t match the recipient&#039;s or
      * zimbraInternalSendersDomain. &quot;ALLNOTINAB&quot; means
      * &quot;ALL&quot; minus users who are in the recipient&#039;s address
-     * book.
+     * book. &quot;INAB&quot; Users/Addresses whose domain doesn&#039;t match
+     * the recipient&#039;s domain or zimbraInternalSendersDomain and which
+     * are present in recipient&#039;s address book.
      *
-     * <p>Valid values: [ALL, ALLNOTINAB]
+     * <p>Valid values: [ALL, INAB, ALLNOTINAB]
      *
      * @param zimbraPrefExternalSendersType new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -29567,9 +29573,11 @@ public abstract class ZAttrCos extends NamedEntry {
      * users whose domain doesn&#039;t match the recipient&#039;s or
      * zimbraInternalSendersDomain. &quot;ALLNOTINAB&quot; means
      * &quot;ALL&quot; minus users who are in the recipient&#039;s address
-     * book.
+     * book. &quot;INAB&quot; Users/Addresses whose domain doesn&#039;t match
+     * the recipient&#039;s domain or zimbraInternalSendersDomain and which
+     * are present in recipient&#039;s address book.
      *
-     * <p>Valid values: [ALL, ALLNOTINAB]
+     * <p>Valid values: [ALL, INAB, ALLNOTINAB]
      *
      * @param zimbraPrefExternalSendersType new value
      * @param attrs existing map to populate, or null to create a new map
@@ -29589,9 +29597,11 @@ public abstract class ZAttrCos extends NamedEntry {
      * users whose domain doesn&#039;t match the recipient&#039;s or
      * zimbraInternalSendersDomain. &quot;ALLNOTINAB&quot; means
      * &quot;ALL&quot; minus users who are in the recipient&#039;s address
-     * book.
+     * book. &quot;INAB&quot; Users/Addresses whose domain doesn&#039;t match
+     * the recipient&#039;s domain or zimbraInternalSendersDomain and which
+     * are present in recipient&#039;s address book.
      *
-     * <p>Valid values: [ALL, ALLNOTINAB]
+     * <p>Valid values: [ALL, INAB, ALLNOTINAB]
      *
      * @param zimbraPrefExternalSendersType new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -29610,9 +29620,11 @@ public abstract class ZAttrCos extends NamedEntry {
      * users whose domain doesn&#039;t match the recipient&#039;s or
      * zimbraInternalSendersDomain. &quot;ALLNOTINAB&quot; means
      * &quot;ALL&quot; minus users who are in the recipient&#039;s address
-     * book.
+     * book. &quot;INAB&quot; Users/Addresses whose domain doesn&#039;t match
+     * the recipient&#039;s domain or zimbraInternalSendersDomain and which
+     * are present in recipient&#039;s address book.
      *
-     * <p>Valid values: [ALL, ALLNOTINAB]
+     * <p>Valid values: [ALL, INAB, ALLNOTINAB]
      *
      * @param zimbraPrefExternalSendersType new value
      * @param attrs existing map to populate, or null to create a new map
@@ -29632,9 +29644,11 @@ public abstract class ZAttrCos extends NamedEntry {
      * users whose domain doesn&#039;t match the recipient&#039;s or
      * zimbraInternalSendersDomain. &quot;ALLNOTINAB&quot; means
      * &quot;ALL&quot; minus users who are in the recipient&#039;s address
-     * book.
+     * book. &quot;INAB&quot; Users/Addresses whose domain doesn&#039;t match
+     * the recipient&#039;s domain or zimbraInternalSendersDomain and which
+     * are present in recipient&#039;s address book.
      *
-     * <p>Valid values: [ALL, ALLNOTINAB]
+     * <p>Valid values: [ALL, INAB, ALLNOTINAB]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -29652,9 +29666,11 @@ public abstract class ZAttrCos extends NamedEntry {
      * users whose domain doesn&#039;t match the recipient&#039;s or
      * zimbraInternalSendersDomain. &quot;ALLNOTINAB&quot; means
      * &quot;ALL&quot; minus users who are in the recipient&#039;s address
-     * book.
+     * book. &quot;INAB&quot; Users/Addresses whose domain doesn&#039;t match
+     * the recipient&#039;s domain or zimbraInternalSendersDomain and which
+     * are present in recipient&#039;s address book.
      *
-     * <p>Valid values: [ALL, ALLNOTINAB]
+     * <p>Valid values: [ALL, INAB, ALLNOTINAB]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
