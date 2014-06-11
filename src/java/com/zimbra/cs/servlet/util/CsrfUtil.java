@@ -29,6 +29,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 
+import com.google.common.base.Joiner;
 import com.google.common.net.HttpHeaders;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.service.ServiceException;
@@ -108,9 +109,8 @@ public final class CsrfUtil {
        }
 
        if (ZimbraLog.soap.isDebugEnabled()) {
-           ZimbraLog.soap.debug("Host : " + host + ", Referrer host :" + refHost + ", Allowed Host:"
-               + allowedRefHost + " Soap req is"
-               + (csrfReq ? " not allowed." : " allowed.") );
+           ZimbraLog.soap.debug("Host : %s, Referrer host :%s, Allowed Hosts:[%s] Soap req is %s",
+                   host, refHost, Joiner.on(',').join(allowedRefHostList), (csrfReq ? " not allowed." : " allowed."));
        }
 
        return csrfReq;
