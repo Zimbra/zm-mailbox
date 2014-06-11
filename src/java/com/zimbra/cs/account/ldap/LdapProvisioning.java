@@ -5304,23 +5304,26 @@ public class LdapProvisioning extends LdapProv {
     private void verifyPassword(Account acct, String password, AuthMechanism authMech,
             Map<String, Object> authCtxt)
     throws ServiceException {
-
-        LdapLockoutPolicy lockoutPolicy = new LdapLockoutPolicy(this, acct);
-        try {
+        synchronized (acct) {
+            LdapLockoutPolicy lockoutPolicy = new LdapLockoutPolicy(this, acct);
             if (lockoutPolicy.isLockedOut()) {
+                try {
+                    verifyPasswordInternal(acct, password, authMech, authCtxt);
+                } catch (ServiceException e) {
+                    lockoutPolicy.failedLogin();
+                }
                 throw AuthFailedServiceException.AUTH_FAILED(acct.getName(),
                         AuthMechanism.namePassedIn(authCtxt), "account lockout");
             }
-
-            // attempt to verify the password
-            verifyPasswordInternal(acct, password, authMech, authCtxt);
-
-            lockoutPolicy.successfulLogin();
-        } catch (AccountServiceException e) {
-            // TODO: only consider it failed if exception was due to password-mismatch
-            lockoutPolicy.failedLogin();
-            // re-throw original exception
-            throw e;
+            try {
+                // attempt to verify the password
+                verifyPasswordInternal(acct, password, authMech, authCtxt);
+                lockoutPolicy.successfulLogin();
+            } catch (AccountServiceException e) {
+                lockoutPolicy.failedLogin();
+                // re-throw original exception
+                throw e;
+            }
         }
     }
 
