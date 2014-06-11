@@ -1352,7 +1352,8 @@ public class ZAttrProvisioning {
 
     public static enum PrefExternalSendersType {
         ALLNOTINAB("ALLNOTINAB"),
-        ALL("ALL");
+        ALL("ALL"),
+        INAB("INAB");
         private String mValue;
         private PrefExternalSendersType(String value) { mValue = value; }
         public String toString() { return mValue; }
@@ -1364,6 +1365,7 @@ public class ZAttrProvisioning {
         }
         public boolean isALLNOTINAB() { return this == ALLNOTINAB;}
         public boolean isALL() { return this == ALL;}
+        public boolean isINAB() { return this == INAB;}
     }
 
     public static enum PrefFileSharingApplication {
@@ -10573,7 +10575,9 @@ public class ZAttrProvisioning {
      * users whose domain doesn&#039;t match the recipient&#039;s or
      * zimbraInternalSendersDomain. &quot;ALLNOTINAB&quot; means
      * &quot;ALL&quot; minus users who are in the recipient&#039;s address
-     * book.
+     * book. &quot;INAB&quot; Users/Addresses whose domain doesn&#039;t match
+     * the recipient&#039;s domain or zimbraInternalSendersDomain and which
+     * are present in recipient&#039;s address book.
      *
      * @since ZCS 8.0.0
      */
