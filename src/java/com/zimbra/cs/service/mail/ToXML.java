@@ -33,7 +33,6 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.mail.MessagingException;
-import javax.mail.internet.ContentDisposition;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimePart;
@@ -61,6 +60,7 @@ import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mailbox.Color;
 import com.zimbra.common.mailbox.ContactConstants;
+import com.zimbra.common.mime.ContentDisposition;
 import com.zimbra.common.mime.ContentType;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.mime.MimeDetect;
