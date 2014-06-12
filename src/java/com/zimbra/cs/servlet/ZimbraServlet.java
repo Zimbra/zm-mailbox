@@ -289,7 +289,12 @@ public class ZimbraServlet extends HttpServlet {
 
     public static void proxyServletRequest(HttpServletRequest req, HttpServletResponse resp, Server server, AuthToken authToken)
     throws IOException, ServiceException {
-        proxyServletRequest(req, resp, server, HttpUtil.getFullRequestURL(req), authToken);
+        String uri = req.getRequestURI();
+        String qs = req.getQueryString();
+        if (qs != null) {
+            uri += '?' + qs;
+        }
+        proxyServletRequest(req, resp, server, uri, authToken);
     }
 
     public static void proxyServletRequest(HttpServletRequest req, HttpServletResponse resp, Server server, String uri, AuthToken authToken)
@@ -300,6 +305,7 @@ public class ZimbraServlet extends HttpServlet {
         }
         HttpMethod method;
         String url = getProxyUrl(req, server, uri);
+        mLog.debug("Proxy URL = %s", url);
         if (req.getMethod().equalsIgnoreCase("GET")) {
             method = new GetMethod(url.toString());
         } else if (req.getMethod().equalsIgnoreCase("POST") || req.getMethod().equalsIgnoreCase("PUT")) {
