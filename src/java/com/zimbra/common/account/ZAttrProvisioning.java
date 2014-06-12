@@ -5580,6 +5580,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureTasksEnabled = "zimbraFeatureTasksEnabled";
 
     /**
+     * Whether to allow a user to access touch client
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1636)
+    public static final String A_zimbraFeatureTouchClientEnabled = "zimbraFeatureTouchClientEnabled";
+
+    /**
      * option to view attachments in html
      */
     @ZAttr(id=312)
