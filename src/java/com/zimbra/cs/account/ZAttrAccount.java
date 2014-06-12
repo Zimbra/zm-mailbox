@@ -16312,6 +16312,78 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Whether to allow a user to access touch client
+     *
+     * @return zimbraFeatureTouchClientEnabled, or false if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1636)
+    public boolean isFeatureTouchClientEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraFeatureTouchClientEnabled, false);
+    }
+
+    /**
+     * Whether to allow a user to access touch client
+     *
+     * @param zimbraFeatureTouchClientEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1636)
+    public void setFeatureTouchClientEnabled(boolean zimbraFeatureTouchClientEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureTouchClientEnabled, zimbraFeatureTouchClientEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to allow a user to access touch client
+     *
+     * @param zimbraFeatureTouchClientEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1636)
+    public Map<String,Object> setFeatureTouchClientEnabled(boolean zimbraFeatureTouchClientEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureTouchClientEnabled, zimbraFeatureTouchClientEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether to allow a user to access touch client
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1636)
+    public void unsetFeatureTouchClientEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureTouchClientEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to allow a user to access touch client
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1636)
+    public Map<String,Object> unsetFeatureTouchClientEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureTouchClientEnabled, "");
+        return attrs;
+    }
+
+    /**
      * option to view attachments in html
      *
      * @return zimbraFeatureViewInHtmlEnabled, or false if unset

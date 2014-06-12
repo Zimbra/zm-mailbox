@@ -8213,4 +8213,10 @@ TODO: delete them permanently from here
   Each server will send it's queue of invalidated tokens to all other servers with frequency configurable by this attribute. See zimbraLogOutFromAllServers for more info on configuring authtoken invalidation on Accounts and Classes of Service. 
   Set to higher value to reduce network chatter. Set to lower value to decrease the window during which a stolen cookie may be reused to access an account.</desc>
 </attr>
+
+<attr id="1636" name="zimbraFeatureTouchClientEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.5.0">
+  <defaultCOSValue>FALSE</defaultCOSValue>
+  <desc>Whether to allow a user to access touch client</desc>
+</attr>
+
 </attrs>
