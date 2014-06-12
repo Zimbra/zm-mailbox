@@ -243,6 +243,7 @@ public final class FilterUtil {
 
     public static final String HEADER_FORWARDED = "X-Zimbra-Forwarded";
     public static final String HEADER_CONTENT_TYPE = "Content-Type";
+    public static final String HEADER_CONTENT_DISPOSITION = "Content-Disposition";
 
     public static void redirect(OperationContext octxt, Mailbox sourceMbox, MimeMessage msg, String destinationAddress)
     throws ServiceException {
@@ -410,7 +411,8 @@ public final class FilterUtil {
                         continue;
                     }
 
-                    if (StringUtil.equal(header.getName(), HEADER_CONTENT_TYPE))  {
+                    if (StringUtil.equal(header.getName(), HEADER_CONTENT_TYPE)
+                        || StringUtil.equal(header.getName(), HEADER_CONTENT_DISPOSITION))  {
                         // Zimbra Mime parser will add the correct Content Type if absent
                         continue;
                     }
