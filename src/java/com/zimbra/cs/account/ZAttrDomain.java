@@ -4279,6 +4279,376 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
+     * API Client ID for accessing with Zimbra Community API
+     *
+     * @return zimbraCommunityAPIClientID, or null if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1637)
+    public String getCommunityAPIClientID() {
+        return getAttr(Provisioning.A_zimbraCommunityAPIClientID, null);
+    }
+
+    /**
+     * API Client ID for accessing with Zimbra Community API
+     *
+     * @param zimbraCommunityAPIClientID new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1637)
+    public void setCommunityAPIClientID(String zimbraCommunityAPIClientID) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCommunityAPIClientID, zimbraCommunityAPIClientID);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * API Client ID for accessing with Zimbra Community API
+     *
+     * @param zimbraCommunityAPIClientID new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1637)
+    public Map<String,Object> setCommunityAPIClientID(String zimbraCommunityAPIClientID, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCommunityAPIClientID, zimbraCommunityAPIClientID);
+        return attrs;
+    }
+
+    /**
+     * API Client ID for accessing with Zimbra Community API
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1637)
+    public void unsetCommunityAPIClientID() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCommunityAPIClientID, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * API Client ID for accessing with Zimbra Community API
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1637)
+    public Map<String,Object> unsetCommunityAPIClientID(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCommunityAPIClientID, "");
+        return attrs;
+    }
+
+    /**
+     * API Client Secret for accessing with Zimbra Community API
+     *
+     * @return zimbraCommunityAPIClientSecret, or null if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1638)
+    public String getCommunityAPIClientSecret() {
+        return getAttr(Provisioning.A_zimbraCommunityAPIClientSecret, null);
+    }
+
+    /**
+     * API Client Secret for accessing with Zimbra Community API
+     *
+     * @param zimbraCommunityAPIClientSecret new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1638)
+    public void setCommunityAPIClientSecret(String zimbraCommunityAPIClientSecret) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCommunityAPIClientSecret, zimbraCommunityAPIClientSecret);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * API Client Secret for accessing with Zimbra Community API
+     *
+     * @param zimbraCommunityAPIClientSecret new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1638)
+    public Map<String,Object> setCommunityAPIClientSecret(String zimbraCommunityAPIClientSecret, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCommunityAPIClientSecret, zimbraCommunityAPIClientSecret);
+        return attrs;
+    }
+
+    /**
+     * API Client Secret for accessing with Zimbra Community API
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1638)
+    public void unsetCommunityAPIClientSecret() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCommunityAPIClientSecret, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * API Client Secret for accessing with Zimbra Community API
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1638)
+    public Map<String,Object> unsetCommunityAPIClientSecret(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCommunityAPIClientSecret, "");
+        return attrs;
+    }
+
+    /**
+     * Base URL where Zimbra Community is deployed. Do not include / symbol
+     * at the end
+     *
+     * @return zimbraCommunityBaseURL, or null if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1640)
+    public String getCommunityBaseURL() {
+        return getAttr(Provisioning.A_zimbraCommunityBaseURL, null);
+    }
+
+    /**
+     * Base URL where Zimbra Community is deployed. Do not include / symbol
+     * at the end
+     *
+     * @param zimbraCommunityBaseURL new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1640)
+    public void setCommunityBaseURL(String zimbraCommunityBaseURL) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCommunityBaseURL, zimbraCommunityBaseURL);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Base URL where Zimbra Community is deployed. Do not include / symbol
+     * at the end
+     *
+     * @param zimbraCommunityBaseURL new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1640)
+    public Map<String,Object> setCommunityBaseURL(String zimbraCommunityBaseURL, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCommunityBaseURL, zimbraCommunityBaseURL);
+        return attrs;
+    }
+
+    /**
+     * Base URL where Zimbra Community is deployed. Do not include / symbol
+     * at the end
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1640)
+    public void unsetCommunityBaseURL() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCommunityBaseURL, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Base URL where Zimbra Community is deployed. Do not include / symbol
+     * at the end
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1640)
+    public Map<String,Object> unsetCommunityBaseURL(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCommunityBaseURL, "");
+        return attrs;
+    }
+
+    /**
+     * URL to be loaded in Zimbra Community tab relative to
+     * zimbraCommunityBaseURL
+     *
+     * @return zimbraCommunityHomeURL, or "/integration/zimbracollaboration" if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1641)
+    public String getCommunityHomeURL() {
+        return getAttr(Provisioning.A_zimbraCommunityHomeURL, "/integration/zimbracollaboration");
+    }
+
+    /**
+     * URL to be loaded in Zimbra Community tab relative to
+     * zimbraCommunityBaseURL
+     *
+     * @param zimbraCommunityHomeURL new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1641)
+    public void setCommunityHomeURL(String zimbraCommunityHomeURL) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCommunityHomeURL, zimbraCommunityHomeURL);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * URL to be loaded in Zimbra Community tab relative to
+     * zimbraCommunityBaseURL
+     *
+     * @param zimbraCommunityHomeURL new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1641)
+    public Map<String,Object> setCommunityHomeURL(String zimbraCommunityHomeURL, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCommunityHomeURL, zimbraCommunityHomeURL);
+        return attrs;
+    }
+
+    /**
+     * URL to be loaded in Zimbra Community tab relative to
+     * zimbraCommunityBaseURL
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1641)
+    public void unsetCommunityHomeURL() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCommunityHomeURL, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * URL to be loaded in Zimbra Community tab relative to
+     * zimbraCommunityBaseURL
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1641)
+    public Map<String,Object> unsetCommunityHomeURL(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCommunityHomeURL, "");
+        return attrs;
+    }
+
+    /**
+     * Account attribute to be used as a username for Zimbra Community
+     *
+     * @return zimbraCommunityUsernameMapping, or "uid" if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1639)
+    public String getCommunityUsernameMapping() {
+        return getAttr(Provisioning.A_zimbraCommunityUsernameMapping, "uid");
+    }
+
+    /**
+     * Account attribute to be used as a username for Zimbra Community
+     *
+     * @param zimbraCommunityUsernameMapping new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1639)
+    public void setCommunityUsernameMapping(String zimbraCommunityUsernameMapping) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCommunityUsernameMapping, zimbraCommunityUsernameMapping);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Account attribute to be used as a username for Zimbra Community
+     *
+     * @param zimbraCommunityUsernameMapping new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1639)
+    public Map<String,Object> setCommunityUsernameMapping(String zimbraCommunityUsernameMapping, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCommunityUsernameMapping, zimbraCommunityUsernameMapping);
+        return attrs;
+    }
+
+    /**
+     * Account attribute to be used as a username for Zimbra Community
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1639)
+    public void unsetCommunityUsernameMapping() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCommunityUsernameMapping, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Account attribute to be used as a username for Zimbra Community
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1639)
+    public Map<String,Object> unsetCommunityUsernameMapping(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCommunityUsernameMapping, "");
+        return attrs;
+    }
+
+    /**
      * time object was created
      *
      * <p>Use getCreateTimestampAsString to access value as a string.

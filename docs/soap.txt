@@ -579,6 +579,7 @@ Setting logoff to "1" will prevent the cookie from being re-used.
    </zimlets>
    <mailURL>{mail-url}</mailURL>+
    <publicURL>{account-base-public-url}</publicURL>
+   [<communityURL>{community-url}</communityURL>]
    <identities>
      <identity name={identity-name} id="...">
        <a name="{name}">{value}</a>
@@ -658,6 +659,7 @@ Setting logoff to "1" will prevent the cookie from being re-used.
    <soapURL>{soap-url}</soapURL>+
    <publicURL>{account-base-public-url}</publicURL>
    [<changePasswordURL>{change-password-url}</changePasswordURL>]
+   [<communityURL>{community-url}</communityURL>]
 </GetAccountInfoResponse>
 
   {account-name} = email address (user@domain)
@@ -678,6 +680,10 @@ Setting logoff to "1" will prevent the cookie from being re-used.
   {account-base-public-url} = base public URL for the requested account
   {change-password-url} = URL to talk to in order to change a password.  Not returned if not configured via domain
                           attribute zimbraChangePasswordURL
+  {community-url} = Zimbra Community URL to load in Community tab. 
+                    The URL points to /api.ashx/v2/oauth/redirect script in Zimbra Community and contains signed GET parameters used by Zimbra Community to authenticate current user.  
+                    This parameter is returned only when zimbraFeatureSocialExternalEnabled is set to TRUE and the following attributes are configured:
+                        zimbraCommunityAPIClientID, zimbraCommunityAPIClientSecret, zimbraCommunityUsernameMapping,zimbraCommunityBaseURL,zimbraCommunityHomeURL  
 
 ----------------------------
 
@@ -3158,7 +3164,7 @@ origHeaders: Specifies list of headers to be copied from the original message to
   Value "*" implies that all headers need to be copied.
 <addressTest>: this test is preferred instead of <headerTest> for headers that contain email addresses. The default
   value of the part attribute is "all" which implies comparison against the full email address.
-<communityRequestsTest>, <communityContentTest>, and <communityConnectionsTest> all check the “X-Zimbra-Community-Notification-Type"
+<communityRequestsTest>, <communityContentTest>, and <communityConnectionsTest> all check the "X-Zimbra-Community-Notification-Type"
 header against predefined groups of values. The groups are:
 
 communityRequestsTest:

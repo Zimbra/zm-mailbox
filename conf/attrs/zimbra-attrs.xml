@@ -8218,5 +8218,21 @@ TODO: delete them permanently from here
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>Whether to allow a user to access touch client</desc>
 </attr>
-
+<attr id="1637" name="zimbraCommunityAPIClientID" type="string" cardinality="single" optionalIn="globalConfig,domain,cos,account" flags="domainInherited,accountCosDomainInherited" since="8.5.0">
+  <desc>API Client ID for accessing with Zimbra Community API</desc>
+</attr>
+<attr id="1638" name="zimbraCommunityAPIClientSecret" type="string" cardinality="single" optionalIn="globalConfig,domain,cos,account" flags="domainInherited,accountCosDomainInherited" since="8.5.0">
+  <desc>API Client Secret for accessing with Zimbra Community API</desc>
+</attr>
+<attr id="1639" name="zimbraCommunityUsernameMapping" type="string" cardinality="single" optionalIn="globalConfig,domain,cos,account" flags="domainInherited,accountCosDomainInherited" since="8.5.0">
+  <desc>Account attribute to be used as a username for Zimbra Community</desc>
+  <globalConfigValue>uid</globalConfigValue>
+</attr>
+<attr id="1640" name="zimbraCommunityBaseURL" type="string" cardinality="single" optionalIn="globalConfig,domain,cos,account" flags="domainInherited,accountCosDomainInherited" since="8.5.0">
+  <desc>Base URL where Zimbra Community is deployed. Do not include / symbol at the end</desc>
+</attr>
+<attr id="1641" name="zimbraCommunityHomeURL" type="string" cardinality="single" optionalIn="globalConfig,domain,cos,account" flags="domainInherited,accountCosDomainInherited" since="8.5.0">
+  <desc>URL to be loaded in Zimbra Community tab relative to zimbraCommunityBaseURL</desc>
+  <globalConfigValue>/integration/zimbracollaboration</globalConfigValue>
+</attr>
 </attrs>
