@@ -32,7 +32,9 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.index.query.ConjQuery;
+import com.zimbra.cs.index.query.InQuery;
 import com.zimbra.cs.index.query.Query;
+import com.zimbra.cs.index.query.Query.Modifier;
 import com.zimbra.cs.index.query.SubQuery;
 import com.zimbra.cs.index.query.parser.QueryParser;
 import com.zimbra.cs.mailbox.CalendarItem;
@@ -181,6 +183,10 @@ public final class ZimbraQuery {
                 nodes.add(subNode);
             }
 
+            public List<Node> getNodes() {
+                return nodes;
+            }
+
             @Override
             public String toString() {
                 StringBuilder buff = bool ? new StringBuilder() : new StringBuilder(" NOT ");
@@ -232,6 +238,23 @@ public final class ZimbraQuery {
             @Override
             Node simplify() {
                 return this;
+            }
+
+            public Query getQuery() {
+                return query;
+            }
+
+            @Override
+            public void invert() {
+                if (query instanceof InQuery) {
+                    if (query.getModifier() == Modifier.MINUS) {
+                        query.setModifier(Modifier.NONE);
+                    } else {
+                        query.setModifier(Modifier.MINUS);
+                    }
+                } else {
+                    super.invert();
+                }
             }
 
             @Override
@@ -578,14 +601,12 @@ public final class ZimbraQuery {
                 // search similar to : 'in:"trash" (inid:565 OR is:local)'
                 // where 565 is the folder ID for a shared folder.  We don't want to end up doing a search for items
                 // that are both in "trash" and NOT in "trash"...
-                for (Query q : clauses) {
-                    if (q.toString().equalsIgnoreCase("Q(IN:Trash)")) {
-                        includeTrash = true;
-                    }
-                    if (q.toString().equalsIgnoreCase("Q(IN:Junk)")) {
+                    if (parseTreeIncludesFolder(parseTree, Mailbox.ID_FOLDER_SPAM)) {
                         includeSpam = true;
                     }
-                }
+                    if (parseTreeIncludesFolder(parseTree, Mailbox.ID_FOLDER_TRASH)) {
+                        includeTrash = true;
+                    }
             }
             if (!includeTrash || !includeSpam) {
                 List<QueryOperation> toAdd = new ArrayList<QueryOperation>();
@@ -698,6 +719,25 @@ public final class ZimbraQuery {
         operation = union.optimize(mailbox);
 
         ZimbraLog.search.debug("COMPILED=%s", operation);
+    }
+
+    private boolean parseTreeIncludesFolder(ZimbraQuery.ParseTree.Node node, int folderId) {
+        if (node instanceof ParseTree.OperatorNode) {
+            for (ParseTree.Node subNode: ((ParseTree.OperatorNode) node).getNodes()) {
+                if (parseTreeIncludesFolder(subNode, folderId)) {
+                    return true;
+                }
+            }
+        } else if (node instanceof ParseTree.ThingNode) {
+            Query query = ((ParseTree.ThingNode) node).getQuery();
+            if (query instanceof InQuery) {
+                Folder folder = ((InQuery) query).getFolder();
+                return folder != null? folder.getId() == folderId && query.getModifier() != Modifier.MINUS: false;
+            } else {
+                return false;
+            }
+        }
+        return false;
     }
 
     public SearchParams getParams() {
