@@ -3804,6 +3804,48 @@ public class ZAttrProvisioning {
     public static final String A_zimbraClusterType = "zimbraClusterType";
 
     /**
+     * API Client ID for accessing with Zimbra Community API
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1637)
+    public static final String A_zimbraCommunityAPIClientID = "zimbraCommunityAPIClientID";
+
+    /**
+     * API Client Secret for accessing with Zimbra Community API
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1638)
+    public static final String A_zimbraCommunityAPIClientSecret = "zimbraCommunityAPIClientSecret";
+
+    /**
+     * Base URL where Zimbra Community is deployed. Do not include / symbol
+     * at the end
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1640)
+    public static final String A_zimbraCommunityBaseURL = "zimbraCommunityBaseURL";
+
+    /**
+     * URL to be loaded in Zimbra Community tab relative to
+     * zimbraCommunityBaseURL
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1641)
+    public static final String A_zimbraCommunityHomeURL = "zimbraCommunityHomeURL";
+
+    /**
+     * Account attribute to be used as a username for Zimbra Community
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1639)
+    public static final String A_zimbraCommunityUsernameMapping = "zimbraCommunityUsernameMapping";
+
+    /**
      * Names of additional components that have been installed
      */
     @ZAttr(id=242)
