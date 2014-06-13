@@ -220,6 +220,8 @@ public final class DebugConfig {
             "defang_style_unwanted_import",
             "@import(\\s)*((\'|\")?(\\s)*(http://|https://)?([^\\s;]*)(\\s)*(\'|\")?(\\s)*;?)");
 
+    public static boolean defang_block_form_same_host_post_req = value("defang_block_form_same_host_post_req", true);
+
 
     public static final boolean disableShareExpirationListener =
             value("debug_disable_share_expiration_listener", false);

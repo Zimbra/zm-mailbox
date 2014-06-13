@@ -1238,8 +1238,6 @@ public final class LC {
     public static final KnownKey ews_service_log_file =
         KnownKey.newKey("/opt/zimbra/log/ews.log");
 
-    public static final KnownKey defang_block_form_same_host_post_req = KnownKey.newKey(true);
-
     static {
         // Automatically set the key name with the variable name.
         for (Field field : LC.class.getFields()) {
