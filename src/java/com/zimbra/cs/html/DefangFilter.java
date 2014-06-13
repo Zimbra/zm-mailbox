@@ -35,7 +35,6 @@ import org.cyberneko.html.filters.DefaultFilter;
 
 import com.google.common.base.Strings;
 import com.zimbra.common.localconfig.DebugConfig;
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.servlet.ZThreadLocal;
@@ -89,7 +88,7 @@ public class DefangFilter extends DefaultFilter {
     private String reqVirtualHost = null;
 
     /** enable same host post request for a form in email */
-    private static boolean sameHostFormPostCheck = LC.defang_block_form_same_host_post_req.booleanValue();
+    private static boolean sameHostFormPostCheck = DebugConfig.defang_block_form_same_host_post_req;
 
     //
     // Constants
