@@ -2,22 +2,18 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
 
 package com.zimbra.soap.account.message;
-
-import com.google.common.base.Objects;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 
 import java.util.List;
 
@@ -27,6 +23,9 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
+import com.google.common.base.Objects;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.soap.json.jackson.annotate.ZimbraJsonAttribute;
 import com.zimbra.soap.json.jackson.annotate.ZimbraKeyValuePairs;
@@ -39,7 +38,7 @@ import com.zimbra.soap.type.NamedValue;
  */
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AccountConstants.E_GET_ACCOUNT_INFO_RESPONSE)
-@XmlType(propOrder = {"name", "attrs", "soapURL", "publicURL", "changePasswordURL"})
+@XmlType(propOrder = {"name", "attrs", "soapURL", "publicURL", "changePasswordURL","communityURL"})
 public class GetAccountInfoResponse {
 
     /**
@@ -91,6 +90,17 @@ public class GetAccountInfoResponse {
     private String changePasswordURL;
 
     /**
+     * @zm-api-field-tag community-url
+     * @zm-api-field-description Zimbra Community URL to load in Community tab.
+                    The URL points to /api.ashx/v2/oauth/redirect script in Zimbra Community and contains signed GET parameters used by Zimbra Community to authenticate current user.
+                    This parameter is returned only when <b>zimbraFeatureSocialExternalEnabled</b> is set to <b>TRUE</b> and the following attributes are configured:
+                        <b>zimbraCommunityAPIClientID</b>, <b>zimbraCommunityAPIClientSecret</b>, <b>zimbraCommunityUsernameMapping</b>,<b>zimbraCommunityBaseURL</b>,<b>zimbraCommunityHomeURL</b>
+     */
+    @XmlElement(name=AccountConstants.E_COMMUNITY_URL /* communityURL */, required=false)
+    @ZimbraJsonAttribute
+    private String communityURL;
+
+    /**
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
@@ -117,6 +127,7 @@ public class GetAccountInfoResponse {
     public void setSoapURL(String soapURL) { this.soapURL = soapURL; }
     public void setPublicURL(String publicURL) { this.publicURL = publicURL; }
     public void setChangePasswordURL(String changePasswordURL) { this.changePasswordURL = changePasswordURL; }
+    public void setCommunityURL(String communityURL) { this.communityURL = communityURL; }
     public String getName() { return name; }
     public List<NamedValue> getAttrs() {
         return attrs;
@@ -131,7 +142,8 @@ public class GetAccountInfoResponse {
             .add("attrs", attrs)
             .add("soapURL", soapURL)
             .add("publicURL", publicURL)
-            .add("changePasswordURL", changePasswordURL);
+            .add("changePasswordURL", changePasswordURL)
+            .add("communityURL", communityURL);
     }
 
     @Override
