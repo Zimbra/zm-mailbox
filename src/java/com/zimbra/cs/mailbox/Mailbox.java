@@ -2810,19 +2810,31 @@ public class Mailbox {
         if (isCachedType(type)) {
             throw MailItem.noSuchItem(id, type);
         }
-
+        boolean virtualConv = false;
+        boolean cachedMsg = true;
+        boolean sameId = true;
         if (id <= -FIRST_USER_ID) {
+            virtualConv = true;
+            ZimbraLog.mailbox.debug("getting virtual conversation");
             // special-case virtual conversations
             if (type != MailItem.Type.CONVERSATION && type != MailItem.Type.UNKNOWN) {
                 throw MailItem.noSuchItem(id, type);
             }
             Message msg = getCachedMessage(Integer.valueOf(-id));
             if (msg == null) {
+                ZimbraLog.mailbox.debug("message not cached");
+                cachedMsg = false;
                 msg = getMessageById(-id);
             }
             if (msg.getConversationId() != id) {
+                ZimbraLog.mailbox.debug("message(%d) conv id(%d) != id(%d), getting parent", msg.getId(), msg.getConversationId(), id);
+                sameId = false;
                 item = msg.getParent();
+                if (item == null) {
+                    ZimbraLog.mailbox.warn("got null parent for message [%s] conv id [%d] != id [%d]", msg, msg.getConversationId(), id);
+                }
             } else {
+                ZimbraLog.mailbox.debug("returning normal virtual conv");
                 item = new VirtualConversation(this, msg);
             }
         } else {
@@ -2830,6 +2842,7 @@ public class Mailbox {
             item = MailItem.getById(this, id, type);
         }
         if (item == null) {
+            ZimbraLog.mailbox.warn("item is null for id [%d] in mailbox [%d]. Virtual conv? [%s] cachedMsg? [%s] sameId? [%s]", id, this.mId, virtualConv, cachedMsg, sameId);
             throw MailItem.noSuchItem(id, type);
         }
         return item;
