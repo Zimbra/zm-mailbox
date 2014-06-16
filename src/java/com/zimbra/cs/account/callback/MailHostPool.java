@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -23,6 +23,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.AttributeCallback;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
 
 public class MailHostPool extends AttributeCallback {
 
@@ -31,20 +32,27 @@ public class MailHostPool extends AttributeCallback {
      */
     @Override
     public void preModify(CallbackContext context, String attrName, Object value,
-            Map attrsToModify, Entry entry) 
+            Map attrsToModify, Entry entry)
     throws ServiceException {
-        
+
         MultiValueMod mod = multiValueMod(attrsToModify, Provisioning.A_zimbraMailHostPool);
-        
+
         if (mod.adding() || mod.replacing()) {
             Provisioning prov = Provisioning.getInstance();
             List<String> pool = mod.values();
             for (String host : pool) {
                 if (host == null || host.equals("")) continue;
-                if (prov.get(Key.ServerBy.id, host) == null) {
+                Server server = prov.get(Key.ServerBy.id, host);
+                if (server == null)
                     throw ServiceException.INVALID_REQUEST(
                             "specified " + Provisioning.A_zimbraMailHostPool +
                             " does not correspond to a valid server: "+host, null);
+                else {
+                    if (!server.hasMailclientService()) {
+                        throw ServiceException.INVALID_REQUEST("specified " + Provisioning.A_zimbraMailHost +
+                                " is not a mailclient server (i.e not running service): "
+                                +host, null);
+                    }
                 }
             }
         }

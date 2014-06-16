@@ -661,6 +661,9 @@
                                             zimbraServiceEnabled ldap
                                             zimbraServiceEnabled mta
                                             zimbraServiceEnabled mailbox
+                                            zimbraServiceEnabled zimbra
+            	                            zimbraServiceEnabled zimbraAdmin
+            	                            zimbraServiceEnabled service
                                             zimbraMailPurgeSleepInterval 0"/>
       </antcall>
 
@@ -1620,7 +1623,10 @@
             ModifyServer ${zimbra.server.hostname} \
             +zimbraServiceEnabled ldap \
             +zimbraServiceEnabled mta \
-            +zimbraServiceEnabled mailbox
+            +zimbraServiceEnabled mailbox \
+        	+zimbraServiceEnabled zimbra \
+        	+zimbraServiceEnabled zimbraAdmin \
+        	+zimbraServiceEnabled service
             ModifyServer ${zimbra.server.hostname} zimbraMailPurgeSleepInterval 0
             cd ${defaultdomain.name} \
             zimbraGalInternalSearchBase ROOT
@@ -2057,7 +2063,10 @@
             ms ${zimbra.alt.hostname} \
                 zimbraServiceEnabled ldap \
                 zimbraServiceEnabled mta \
-                zimbraServiceEnabled mailbox
+                zimbraServiceEnabled mailbox \
+        	    zimbraServiceEnabled zimbra \
+        	    zimbraServiceEnabled zimbraAdmin \
+        	    zimbraServiceEnabled service
             ms ${zimbra.alt.hostname} \
                 zimbraMailPurgeSleepInterval 0 \
                 zimbraRedoLogLogPath redolog-2/redo.log \
