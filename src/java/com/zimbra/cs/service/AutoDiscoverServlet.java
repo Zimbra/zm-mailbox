@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -129,7 +129,7 @@ public class AutoDiscoverServlet extends ZimbraServlet {
                 }
             }
             if (req.isSecure()) {
-                Account acct = authenticate(req, resp);
+                Account acct = authenticate(req, resp, NS_MOBILE);
                 if (acct == null) {
                     return;
                 }
@@ -182,19 +182,7 @@ public class AutoDiscoverServlet extends ZimbraServlet {
             }
         }
 
-        log.debug("Authenticating user");
-        Account acct = authenticate(req, resp);
-        if (acct == null) {
-            return;
-        }
-        log.debug("Authentication finished successfully");
 
-        log.debug("content length: %d, content type: %s", req.getContentLength(), req.getContentType());
-        if (req.getContentLength() == 0 || req.getContentType() == null) {
-            log.warn("No suitable content found in the request");
-            sendError(resp, 600, "No suitable content found in the request");
-            return;
-        }
 
         String email = null;
         String responseSchema = null;
@@ -230,20 +218,28 @@ public class AutoDiscoverServlet extends ZimbraServlet {
         }
 
         //Return an error if the response schema doesn't match ours!
-        String client = req.getHeader("User-Agent");
         if (responseSchema != null && responseSchema.length() > 0) {
-        	
-        	if (!isEwsClient(client) && !responseSchema.equals(NS_MOBILE)) {
-	            log.warn("Requested response schema not available " + responseSchema);
-	            sendError(resp, HttpServletResponse.SC_SERVICE_UNAVAILABLE,
-	                    "Requested response schema not available " + responseSchema);
-	            return;
-        	} else if (isEwsClient(client) && !responseSchema.equals(NS_OUTLOOK)) {
-	            log.warn("Requested response schema not available " + responseSchema);
-	            sendError(resp, HttpServletResponse.SC_SERVICE_UNAVAILABLE,
-	                    "Requested response schema not available " + responseSchema);
-	            return;
-        	}
+
+            if (!(responseSchema.equals(NS_MOBILE) || responseSchema.equals(NS_OUTLOOK))) {
+                log.warn("Requested response schema not available " + responseSchema);
+                sendError(resp, HttpServletResponse.SC_SERVICE_UNAVAILABLE,
+                        "Requested response schema not available " + responseSchema);
+                return;
+            }
+        }
+
+        log.debug("Authenticating user");
+        Account acct = authenticate(req, resp, responseSchema);
+        if (acct == null) {
+            return;
+        }
+        log.debug("Authentication finished successfully");
+
+        log.debug("content length: %d, content type: %s", req.getContentLength(), req.getContentType());
+        if (req.getContentLength() == 0 || req.getContentType() == null) {
+            log.warn("No suitable content found in the request");
+            sendError(resp, 600, "No suitable content found in the request");
+            return;
         }
 
         try {
@@ -262,13 +258,13 @@ public class AutoDiscoverServlet extends ZimbraServlet {
 
         String respDoc = null;
         try {
-            String serviceUrl = getServiceUrl(acct, client);
+            String serviceUrl = getServiceUrl(acct, responseSchema);
             String displayName = acct.getDisplayName() == null ? email : acct.getDisplayName();
             if (displayName.contains("@")) {
                 displayName = displayName.substring(0, displayName.indexOf("@"));
             }
             log.debug("displayName: %s, email: %s, serviceUrl: %s", displayName, email, serviceUrl);
-            if (isEwsClient(client)) {
+            if (isEwsClient(responseSchema)) {
             	respDoc = createResponseDocForEws(displayName, email, serviceUrl, acct);
             } else {
             	respDoc = createResponseDoc(displayName, email, serviceUrl);
@@ -295,7 +291,7 @@ public class AutoDiscoverServlet extends ZimbraServlet {
         log.info("sending autodiscover response...");
     }
 
-    private Account authenticate(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    private Account authenticate(HttpServletRequest req, HttpServletResponse resp, String responseSchema) throws ServletException, IOException {
         //The basic auth header looks like this:
         //Authorization: Basic emltYnJhXFx1c2VyMTp0ZXN0MTIz
         //The base64 encoded credentials can be either <domain>\<user>:<pass> or just <user>:<pass>
@@ -376,20 +372,18 @@ public class AutoDiscoverServlet extends ZimbraServlet {
                 return null;
             }
 
-            String client = req.getHeader("User-Agent");
-            
-            if (isEwsClient(client) && !account.getBooleanAttr(Provisioning.A_zimbraFeatureEwsEnabled, false)) {
+            if (isEwsClient(responseSchema) && !account.getBooleanAttr(Provisioning.A_zimbraFeatureEwsEnabled, false)) {
             	log.info("User account not enabled for ZimbraEWS; user=" + user);
                 sendError(resp, HttpServletResponse.SC_FORBIDDEN, "Account not enabled for ZimbraEWS");
                 return null;
             }
-            
-            if (!isEwsClient(client) && !account.getBooleanAttr(Provisioning.A_zimbraFeatureMobileSyncEnabled, false)) {
+
+            if (!isEwsClient(responseSchema) && !account.getBooleanAttr(Provisioning.A_zimbraFeatureMobileSyncEnabled, false)) {
                 log.info("User account not enabled for ZimbraSync; user=" + user);
                 sendError(resp, HttpServletResponse.SC_FORBIDDEN, "Account not enabled for ZimbraSync");
                 return null;
             }
-            
+
 
             return account;
         } catch (ServiceException x) {
@@ -414,7 +408,7 @@ public class AutoDiscoverServlet extends ZimbraServlet {
 
     private static String getTagValue(String tag, Element element) {
         NodeList nlList = element.getElementsByTagName(tag).item(0).getChildNodes();
-        Node nValue = (Node) nlList.item(0);
+        Node nValue = nlList.item(0);
 
         return nValue.getNodeValue();
     }
@@ -445,22 +439,22 @@ public class AutoDiscoverServlet extends ZimbraServlet {
     //
     //
     //Error Case:
-    //<Autodiscover xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://schemas.microsoft.com/exchange/autodiscover/responseschema/2006"> 
-    //  <Response xmlns="http://schemas.microsoft.com/exchange/autodiscover/mobilesync/responseschema/2006"> 
-    //    <Culture>en:en</Culture> 
-    //    <User> 
-    //      <DisplayName>Demo User One</DisplayName> 
-    //      <EMailAddress>user1@sudipto-mpro.local</EMailAddress> 
-    //    </User> 
-    //    <Action> 
-    //      <Error> 
-    //        <Status>1</Status> 
-    //        <Message>Active Directory currently not available</Message> 
-    //        <DebugData>UserMailbox</DebugData> 
-    //      </Error> 
-    //    </Action> 
-    //  </Response> 
-    //</Autodiscover> 
+    //<Autodiscover xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://schemas.microsoft.com/exchange/autodiscover/responseschema/2006">
+    //  <Response xmlns="http://schemas.microsoft.com/exchange/autodiscover/mobilesync/responseschema/2006">
+    //    <Culture>en:en</Culture>
+    //    <User>
+    //      <DisplayName>Demo User One</DisplayName>
+    //      <EMailAddress>user1@sudipto-mpro.local</EMailAddress>
+    //    </User>
+    //    <Action>
+    //      <Error>
+    //        <Status>1</Status>
+    //        <Message>Active Directory currently not available</Message>
+    //        <DebugData>UserMailbox</DebugData>
+    //      </Error>
+    //    </Action>
+    //  </Response>
+    //</Autodiscover>
     //
     private static String createResponseDoc(String displayName, String email, String serviceUrl) throws Exception {
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
@@ -477,7 +471,7 @@ public class AutoDiscoverServlet extends ZimbraServlet {
         //Add the response element.
         Element response =  xmlDoc.createElementNS(NS_MOBILE, "Response");
         root.appendChild(response);
-        
+
         //Add culture to to response
         Element culture = xmlDoc.createElement("Culture");
         culture.appendChild(xmlDoc.createTextNode("en:en"));
@@ -539,18 +533,18 @@ public class AutoDiscoverServlet extends ZimbraServlet {
         //        return str.toString();
         return "<?xml version=\"1.0\"?>\n" + xml;
     }
-    
-    
+
+
     private static String createResponseDocForEws(String displayName, String email, String serviceUrl, Account acct) throws Exception {
-        
+
     	Provisioning prov = Provisioning.getInstance();
         Server server = prov.getServer(acct);
-        
+
         String cn = server.getCn();
         String name = server.getName();
         String acctId = acct.getId();
 
-    	
+
     	DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         factory.setNamespaceAware(true);
         DocumentBuilder builder = factory.newDocumentBuilder();
@@ -574,12 +568,12 @@ public class AutoDiscoverServlet extends ZimbraServlet {
         Element emailAddr = xmlDoc.createElement("EmailAddress");
         emailAddr.appendChild(xmlDoc.createTextNode(email));
         user.appendChild(emailAddr);
-        
+
         Element depId = xmlDoc.createElement("DeploymentId");
         depId.appendChild(xmlDoc.createTextNode(acctId));
         user.appendChild(depId);
-        
-        
+
+
         response.appendChild(user);
 
         //Action
@@ -588,32 +582,32 @@ public class AutoDiscoverServlet extends ZimbraServlet {
         acctType.appendChild(xmlDoc.createTextNode("email"));
         account.appendChild(acctType);
         response.appendChild(account);
-       
-        
+
+
         Element action = xmlDoc.createElement("Action");
         action.appendChild(xmlDoc.createTextNode("settings"));
         account.appendChild(action);
-        
-        
+
+
         Element protocol = xmlDoc.createElement("Protocol");
         account.appendChild(protocol);
-        
+
         Element type = xmlDoc.createElement("Type");
         type.appendChild(xmlDoc.createTextNode("EXCH"));
         protocol.appendChild(type);
-        
+
         Element ews = xmlDoc.createElement("EwsUrl");
         protocol.appendChild(ews);
         ews.appendChild(xmlDoc.createTextNode(serviceUrl));
-        
+
         Element serverElm = xmlDoc.createElement("Server");
         protocol.appendChild(serverElm);
         serverElm.appendChild(xmlDoc.createTextNode(server.getName()));
-        
+
         Element serverDn = xmlDoc.createElement("ServerDN");
         protocol.appendChild(serverDn);
         serverDn.appendChild(xmlDoc.createTextNode(server.getAttr("zimbraServiceHostname")));
-        
+
 
         TransformerFactory transformerFactory = TransformerFactory.newInstance();
         Transformer transformer = transformerFactory.newTransformer();
@@ -632,21 +626,14 @@ public class AutoDiscoverServlet extends ZimbraServlet {
     public static void main(String[] args) throws Exception {
         System.out.println(createResponseDoc("test user", "b@c.com", "http://mail.com/MS-ActiveSync"));
     }
-    
-    public static boolean isEwsClient(String userAgent) {
+
+    public static boolean isEwsClient(String responseSchema) {
     	boolean ewsClient = false;
-    	if (userAgent == null || userAgent.equals("")) {
-    		return ewsClient;
+    	if (responseSchema.equals(NS_OUTLOOK) ) {
+    	    ewsClient = true;
     	}
-    	
-    	// Mac OS X/10.8.5 (12F45); ExchangeWebServices/3.0.1 (158); Mail/6.6 (1510) --> Native Mac
-    	// MacOutlook/14.10.0.110310 (Intel Mac OS X 10.8.5)
-    	userAgent = userAgent.toLowerCase();
-    	if (userAgent.contains("macoutlook") || userAgent.contains("mac\\.mail") ) {
-    		ewsClient = true;
-    	}
-    	
+
     	return ewsClient;
-    	
+
     }
 }
