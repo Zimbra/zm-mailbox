@@ -374,6 +374,9 @@ public class SoapEngine {
         if (zsc.getVia() != null) {
             ZimbraLog.addViaToContext(zsc.getVia());
         }
+        if (zsc.getSoapRequestId() != null) {
+            ZimbraLog.addSoapIdToContext(zsc.getSoapRequestId());
+        }
 
         logRequest(context, envelope);
 
