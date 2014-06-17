@@ -56,6 +56,7 @@ public final class HeaderConstants {
     public static final String CHANGE_CREATED  = "new";
     public static final String SESSION_MAIL  = "mail";
     public static final String SESSION_ADMIN = "admin";
+    public static final String E_SOAP_ID = "soapId";
 
     private HeaderConstants() {
     }
