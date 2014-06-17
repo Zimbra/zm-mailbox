@@ -2476,22 +2476,25 @@ public class ProxyConfGen
     public static boolean isWorkableConf ()
     {
         boolean webEnabled, mailEnabled, validConf = true;
-        ArrayList<String> webUpstreamServers, zmLookupHandlers;
+        ArrayList<String> webUpstreamServers, webUpstreamClientServers, zmLookupHandlers;
+        ArrayList<String> webSSLUpstreamServers, webSSLUpstreamClientServers;
 
         webEnabled = (Boolean)mConfVars.get("web.enabled").rawValue();
         mailEnabled = (Boolean)mConfVars.get("mail.enabled").rawValue();
 
         webUpstreamServers = (ArrayList<String>) mConfVars.get("web.upstream.:servers").rawValue();
+        webUpstreamClientServers = (ArrayList<String>) mConfVars.get("web.upstream.webclient.:servers").rawValue();
+        webSSLUpstreamServers = (ArrayList<String>) mConfVars.get("web.ssl.upstream.:servers").rawValue();
+        webSSLUpstreamClientServers = (ArrayList<String>) mConfVars.get("web.ssl.upstream.webclient.:servers").rawValue();
         zmLookupHandlers = (ArrayList<String>) mConfVars.get("zmlookup.:handlers").rawValue();
-        //mailRouteHandlers = (ArrayList<String>) mConfVars.get("mail.:auth_http").rawValue();
 
-//        if (mailEnabled && (mailRouteHandlers.size() == 0)) {
-//            mLog.info("Mail is enabled but there are no route lookup handlers (Config will not be written)");
-//            validConf = false;
-//        }
+        if (webEnabled && (webUpstreamServers.size() == 0 || webUpstreamClientServers.size() == 0)) {
+            mLog.info("Web is enabled but there are no HTTP upstream webclient/mailclient servers (Config will not be written)");
+            validConf = false;
+        }
 
-        if (webEnabled && (webUpstreamServers.size() == 0)) {
-            mLog.info("Web is enabled but there are no upstream servers (Config will not be written)");
+        if (webEnabled && (webSSLUpstreamServers.size() == 0 || webSSLUpstreamClientServers.size() == 0)) {
+            mLog.info("Web is enabled but there are no HTTPS upstream webclient/mailclient servers (Config will not be written)");
             validConf = false;
         }
 
