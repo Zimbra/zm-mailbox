@@ -138,6 +138,7 @@ public final class ZimbraSoapContext {
     private String mUserAgent;
     private String mRequestIP;
     private String mVia;
+    private String soapRequestId;
 
     //zdsync: for parsing locally constructed soap requests
     public ZimbraSoapContext(AuthToken authToken, String accountId,
@@ -164,6 +165,7 @@ public final class ZimbraSoapContext {
         mHopCount = hopCount;
 
         mUserAgent = mRequestIP = mVia = null;
+        soapRequestId = null;
     }
 
     /**
@@ -212,6 +214,7 @@ public final class ZimbraSoapContext {
         mUserAgent = zsc.mUserAgent;
         mRequestIP = zsc.mRequestIP;
         mVia = zsc.mVia;
+        soapRequestId = zsc.soapRequestId;
 
         mRawAuthToken = authToken == null? zsc.mRawAuthToken : authToken.toZAuthToken();
         mAuthToken = authToken == null? zsc.mAuthToken : authToken;
@@ -418,6 +421,12 @@ public final class ZimbraSoapContext {
             Element via = ctxt.getOptionalElement(HeaderConstants.E_VIA);
             if (via != null) {
                 mVia = via.getText();
+            }
+            if (this.soapRequestId == null) {
+                Element reqId = ctxt.getOptionalElement(HeaderConstants.E_SOAP_ID);
+                if (null != reqId) {
+                    this.soapRequestId = reqId.getText();
+                }
             }
         }
 
@@ -629,6 +638,9 @@ public final class ZimbraSoapContext {
         ua.addAttribute(HeaderConstants.A_NAME, SoapTransport.DEFAULT_USER_AGENT_NAME);
         ua.addAttribute(HeaderConstants.A_VERSION, BuildInfo.VERSION);
         ctxt.addUniqueElement(HeaderConstants.E_VIA).setText(getNextVia());
+        if (null != soapRequestId) {
+            ctxt.addUniqueElement(HeaderConstants.E_SOAP_ID).setText(soapRequestId);
+        }
         return ctxt;
     }
 
@@ -744,6 +756,14 @@ public final class ZimbraSoapContext {
 
     public String getRequestIP() {
         return mRequestIP;
+    }
+
+    public String getSoapRequestId() {
+        return soapRequestId;
+    }
+
+    public void setSoapRequestId(String soapId) {
+        soapRequestId = soapId;
     }
 
     /**

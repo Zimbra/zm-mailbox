@@ -2,17 +2,21 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
 package com.zimbra.soap;
+
+import java.io.IOException;
+
+import javax.servlet.http.HttpServletRequest;
 
 import com.zimbra.common.account.Key;
 import com.zimbra.common.service.ServiceException;
@@ -28,17 +32,14 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.httpclient.URLUtil;
 
-import javax.servlet.http.HttpServletRequest;
-import java.io.IOException;
-
 /**
  * @since 2005. 3. 3.
  */
 public final class ProxyTarget {
 
-    private Server mServer;
-    private AuthToken mAuthToken;
-    private String mURL;
+    private final Server mServer;
+    private final AuthToken mAuthToken;
+    private final String mURL;
 
     private int mMaxAttempts = 0;
     private long mTimeout = -1;
@@ -136,6 +137,10 @@ public final class ProxyTarget {
                 transport.setTimeout((int) Math.min(mTimeout, Integer.MAX_VALUE));
 
             transport.setResponseProtocol(zsc.getResponseProtocol());
+            if (ZimbraLog.soap.isDebugEnabled()) {
+                ZimbraLog.soap.debug("Proxying request: proxy=%s targetAcctId=%s",
+                        toString(), zsc.getRequestedAccountId());
+            }
             Element response = transport.invokeRaw(envelope);
             Element body = transport.extractBodyElement(response);
             return new Pair<Element, Element>(transport.getZimbraContext(), body);

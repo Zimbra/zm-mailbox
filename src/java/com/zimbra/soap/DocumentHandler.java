@@ -17,6 +17,7 @@ package com.zimbra.soap;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -458,6 +459,12 @@ public abstract class DocumentHandler {
         Provisioning.Reasons reasons = new Provisioning.Reasons();
         if (acctId != null && zsc.getProxyTarget() == null && !isAdminCommand() &&
                 !Provisioning.onLocalServer(getRequestedAccount(zsc), reasons)) {
+            if (null == zsc.getSoapRequestId()) {
+                /* Create an ID to use to follow this proxied request going forward.
+                 * Not 100% guaranteed to be unique but probably good enough */
+                zsc.setSoapRequestId(Integer.toHexString( new Random().nextInt(Integer.MAX_VALUE-1)));
+                ZimbraLog.addSoapIdToContext(zsc.getSoapRequestId());
+            }
             if (zsc.getHopCount() > 2 || (ZimbraLog.soap.isDebugEnabled())) {
                 Account authAcct = getAuthenticatedAccount(zsc);
                 if (authAcct == null) {
@@ -539,6 +546,10 @@ public abstract class DocumentHandler {
             Map<String, Object> contextTarget = new HashMap<String, Object>(context);
             contextTarget.put(SoapEngine.ZIMBRA_ENGINE, engine);
             contextTarget.put(SoapEngine.ZIMBRA_CONTEXT, zsc);
+            if (ZimbraLog.soap.isDebugEnabled()) {
+                ZimbraLog.soap.debug("Proxying request locally: targetServer=%s (id=%s) localHost=%s (id=%s)",
+                        server.getName(), server.getId(), LOCAL_HOST, LOCAL_HOST_ID);
+            }
             response = engine.dispatchRequest(request, contextTarget, zsc);
             if (zsc.getResponseProtocol().isFault(response)) {
                 zsc.getResponseProtocol().updateArgumentsForRemoteFault(response, zsc.getRequestedAccountId());
