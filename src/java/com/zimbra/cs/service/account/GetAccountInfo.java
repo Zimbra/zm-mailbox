@@ -111,19 +111,19 @@ public class GetAccountInfo extends AccountDocumentHandler  {
         if(account.getBooleanAttr(Provisioning.A_zimbraFeatureSocialExternalEnabled, false)) {
             String clientID = account.getAttr(Provisioning.A_zimbraCommunityAPIClientID);
             if(clientID == null) {
-                ZimbraLog.account.error("Zimbra Community client ID is not properly configured. zimbraCommunityAPIClientID cannot be empty.");
+                ZimbraLog.account.debug("Zimbra Community client ID is not properly configured. zimbraCommunityAPIClientID cannot be empty.");
             }
             String clientSecret = account.getAttr(Provisioning.A_zimbraCommunityAPIClientSecret);
             if(clientSecret == null) {
-                ZimbraLog.account.error("Zimbra Community client secret is not properly configured. zimbraCommunityAPIClientSecret cannot be empty.");
+                ZimbraLog.account.debug("Zimbra Community client secret is not properly configured. zimbraCommunityAPIClientSecret cannot be empty.");
             }
             String nameAttribute = account.getAttr(Provisioning.A_zimbraCommunityUsernameMapping);
             if(nameAttribute == null) {
-                ZimbraLog.account.error("Zimbra Community name mapping is not properly configured. zimbraCommunityUsernameMapping cannot be empty");
+                ZimbraLog.account.debug("Zimbra Community name mapping is not properly configured. zimbraCommunityUsernameMapping cannot be empty");
             }
             String socialBaseURL = account.getAttr(Provisioning.A_zimbraCommunityBaseURL);
             if(socialBaseURL == null) {
-                ZimbraLog.account.error("Zimbra Community base URL is not properly configured. zimbraCommunityBaseURL cannot be empty");
+                ZimbraLog.account.debug("Zimbra Community base URL is not properly configured. zimbraCommunityBaseURL cannot be empty");
             } else {
                 if(socialBaseURL.endsWith("/")) { //avoid double slashes
                     socialBaseURL = socialBaseURL.substring(0,socialBaseURL.length() - 1);
@@ -131,7 +131,7 @@ public class GetAccountInfo extends AccountDocumentHandler  {
             }
             String socialTabURL = account.getAttr(Provisioning.A_zimbraCommunityHomeURL);
             if(socialTabURL == null) {
-                ZimbraLog.account.error("Zimbra Community home URL is not properly configured. zimbraCommunityHomeURL cannot be empty");
+                ZimbraLog.account.debug("Zimbra Community home URL is not properly configured. zimbraCommunityHomeURL cannot be empty");
             } else {
                 if(!socialTabURL.startsWith("/")) { //make sure the path is relative
                     socialTabURL = "/".concat(socialTabURL);
