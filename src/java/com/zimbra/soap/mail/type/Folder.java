@@ -36,6 +36,11 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.json.jackson.annotate.ZimbraUniqueElement;
 import com.zimbra.soap.type.ZmBoolean;
 
+/* !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ * Note, if adding XmlElements, make sure ToXML.transferMountpointContents handles them correctly with regard
+ * to uniqueness (or better still, use JAXB there - but that doesn't seem immediately trivial)
+ * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ */
 // Root element name needed to differentiate between types of folder
 @XmlRootElement(name=MailConstants.E_FOLDER /* folder */)
 @XmlType(propOrder = {"metadatas", "acl", "retentionPolicy", "subfolders"})
@@ -276,7 +281,7 @@ public class Folder {
      * @zm-api-field-description Custom metadata
      */
     @XmlElement(name=MailConstants.E_METADATA /* meta */, required=false)
-    private List<MailCustomMetadata> metadatas = Lists.newArrayList();
+    private final List<MailCustomMetadata> metadatas = Lists.newArrayList();
 
     /**
      * @zm-api-field-description ACL for sharing
@@ -293,7 +298,7 @@ public class Folder {
         @XmlElement(name=MailConstants.E_MOUNT /* link */, type=Mountpoint.class),
         @XmlElement(name=MailConstants.E_SEARCH /* search */, type=SearchFolder.class)
     })
-    private List<Folder> subfolders = new ArrayList<Folder>();
+    private final List<Folder> subfolders = new ArrayList<Folder>();
 
     /**
      * @zm-api-field-description Retention policy
