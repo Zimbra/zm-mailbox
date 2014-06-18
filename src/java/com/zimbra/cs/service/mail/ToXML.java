@@ -148,6 +148,7 @@ import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.session.PendingModifications.Change;
+import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.admin.type.DataSourceType;
 import com.zimbra.soap.mail.type.AlarmDataInfo;
 import com.zimbra.soap.mail.type.CalendarReply;
@@ -602,9 +603,11 @@ public final class ToXML {
         // transfer ACL and child folders to the serialized mountpoint from the serialized remote folder
         for (Element child : mptTarget.listElements()) {
             String name = child.getName();
+            // See ZimbraSoap JAXB classes Mountpoint / Folder etc to determine which elements are unique/non-unique
             if (name.equals(MailConstants.E_FOLDER) || name.equals(MailConstants.E_SEARCH) ||
-                    name.equals(MailConstants.E_MOUNT) || name.equals(MailConstants.E_RETENTION_POLICY)) {
-                elem.addElement(child.clone());
+                    name.equals(MailConstants.E_MOUNT) || name.equals(MailConstants.E_RETENTION_POLICY) ||
+                    name.equals(MailConstants.E_METADATA)) {
+                elem.addNonUniqueElement(child.clone());
             } else {
                 elem.addUniqueElement(child.clone());
             }
