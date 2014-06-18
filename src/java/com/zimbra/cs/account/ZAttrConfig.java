@@ -54200,7 +54200,7 @@ public abstract class ZAttrConfig extends Entry {
      */
     @ZAttr(id=1167)
     public String[] getSpamTrashAlias() {
-        String[] value = getMultiAttr(Provisioning.A_zimbraSpamTrashAlias); return value.length > 0 ? value : new String[] {"/Deleted Messages"};
+        String[] value = getMultiAttr(Provisioning.A_zimbraSpamTrashAlias); return value.length > 0 ? value : new String[] {"/Deleted Messages","/Deleted Items"};
     }
 
     /**
