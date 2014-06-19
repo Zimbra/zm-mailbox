@@ -2826,12 +2826,13 @@ public class Mailbox {
                 cachedMsg = false;
                 msg = getMessageById(-id);
             }
+            int convId = msg.getConversationId();
             if (msg.getConversationId() != id) {
                 ZimbraLog.mailbox.debug("message(%d) conv id(%d) != id(%d), getting parent", msg.getId(), msg.getConversationId(), id);
                 sameId = false;
                 item = msg.getParent();
                 if (item == null) {
-                    ZimbraLog.mailbox.warn("got null parent for message [%s] conv id [%d] != id [%d]", msg, msg.getConversationId(), id);
+                    ZimbraLog.mailbox.warn("got null parent for message id [%d] conv id [%d] (before condition [%d]) != id [%d]. equality? [%s:%s] in dumpster? [%s]", msg.getId(), msg.getConversationId(), convId, id, convId == id, msg.getConversationId() == id, msg.inDumpster());
                 }
             } else {
                 ZimbraLog.mailbox.debug("returning normal virtual conv");
