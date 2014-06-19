@@ -280,9 +280,12 @@ public class DBQueryOperation extends QueryOperation {
      * @param op Lucene query operation
      */
     void setLuceneQueryOperation(LuceneQueryOperation op) {
-        assert(luceneOp == null);
         allResultsQuery = false;
-        luceneOp = op;
+        if (luceneOp == null) {
+            luceneOp = op;
+        } else {
+            luceneOp.addClause(op.getQueryString(), op.getQuery(), true);
+        }
     }
 
     public void addItemIdClause(Mailbox mbox, ItemId itemId, boolean truth) {

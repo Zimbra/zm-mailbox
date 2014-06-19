@@ -632,6 +632,14 @@ public final class LuceneQueryOperation extends QueryOperation {
         return queryInfo;
     }
 
+    public String getQueryString() {
+        return queryString;
+    }
+
+    public Query getQuery() {
+        return luceneQuery;
+    }
+
     @Override
     boolean hasSpamTrashSetting() {
         return hasSpamTrashSetting;
