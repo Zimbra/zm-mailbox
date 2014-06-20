@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2008, 2009, 2010, 2011, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -138,24 +138,20 @@ public class CustomLdapDIT extends LdapDIT {
         int idx1 = rdns1.length - 1;
         int idx2 = rdns2.length - 1;
 
-        int shorter;
-
-        if (rdns1.length < rdns2.length)
-            shorter = rdns1.length;
-        else
-            shorter = rdns2.length;
+        int shorter = Math.min(rdns1.length,  rdns2.length);
 
         String commonDn = "";
         for (int i=0; i<shorter; i++, idx1--, idx2--) {
             if (rdns1[idx1].equalsIgnoreCase(rdns2[idx2])) {
-                if (commonDn == null)
+                if (commonDn.isEmpty()) {
                     commonDn = rdns1[idx1];
-                else
+                } else {
                     commonDn = rdns1[idx1] + "," + commonDn;
-            } else
+                }
+            } else {
                 break;
+            }
         }
-
         return commonDn;
     }
 
@@ -390,26 +386,26 @@ public class CustomLdapDIT extends LdapDIT {
         return ZLdapFilterFactory.getInstance().velodromeAllCalendarResourcesByDomain(domain.getName());
     }
 
-
-    /*
-     * Too bad we can't do anything about DL and dynamic groups, because we can't tell
-     * by mail or zimbraNailAlias which one is an alias and which one is the main email.
-     *
-     * The one in default DIT is used for DL, that means for custom DIT the getAllDistrubutionLists
-     * function will return DLs in all domains if there are any (although the broken logic
-     * that DL can only belong to the single default domain kind of restricted, but it will
-     * break once the default domain changed)!
-     *
-     * Just throw UNSUPPORTED for groups.
+    /**
+     * DistributionLists in customDIT do not have the "zimbraMailDeliveryAddress" attribute.
+     * From an earlier comment (when this method threw {@link UnsupportedOperationException})
+     * we can't tell whether the main email is "zimbraMailAlias" or "mail".
+     * This filter will accept the domain in either "zimbraMailAlias" or "mail".
      */
     @Override
     public ZLdapFilter filterDistributionListsByDomain(Domain domain) {
-        throw new UnsupportedOperationException();
+        return ZLdapFilterFactory.getInstance().velodromeAllDistributionListsByDomain(domain.getName());
     }
 
+    /**
+     * DistributionLists in customDIT do not have the "zimbraMailDeliveryAddress" attribute.
+     * From an earlier comment (when this method threw {@link UnsupportedOperationException})
+     * we can't tell whether the main email is "zimbraMailAlias" or "mail".
+     * This filter will accept the domain in either "zimbraMailAlias" or "mail".
+     */
     @Override
     public ZLdapFilter filterGroupsByDomain(Domain domain) {
-        throw new UnsupportedOperationException();
+        return ZLdapFilterFactory.getInstance().velodromeAllGroupsByDomain(domain.getName());
     }
 
 
