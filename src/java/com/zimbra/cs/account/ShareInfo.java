@@ -41,7 +41,6 @@ import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMultipart;
 
 import org.apache.commons.codec.binary.Hex;
-import org.hsqldb.lib.StringUtil;
 
 import com.google.common.base.Strings;
 import com.sun.mail.smtp.SMTPMessage;
@@ -58,6 +57,7 @@ import com.zimbra.common.util.BlobMetaData;
 import com.zimbra.common.util.L10nUtil;
 import com.zimbra.common.util.L10nUtil.MsgKey;
 import com.zimbra.common.util.Pair;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.zmime.ZMimeBodyPart;
 import com.zimbra.common.zmime.ZMimeMultipart;
@@ -766,7 +766,7 @@ public class ShareInfo {
                  return L10nUtil.getMessage(MsgKey.shareNotifBodyGranteeRoleManager, locale);
             }  else if (rights.equals(ACL.rightsToString(ROLE_VIEW))) {
                 return L10nUtil.getMessage(MsgKey.shareNotifBodyGranteeRoleViewer, locale);
-            } else if (StringUtil.isEmpty(sid.getRights())){
+            } else if (StringUtil.isNullOrEmpty(sid.getRights())){
                 return L10nUtil.getMessage(MsgKey.shareNotifBodyGranteeRoleNone, locale);
             } else {
                 return L10nUtil.getMessage(MsgKey.shareNotifBodyGranteeRoleCustom, locale);
