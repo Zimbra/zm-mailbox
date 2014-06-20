@@ -15,10 +15,9 @@
 package com.zimbra.cs.mailbox;
 
 import java.security.SecureRandom;
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.apache.commons.codec.binary.Hex;
 
@@ -328,7 +327,7 @@ public final class ACL {
     }
 
     /** The <tt>List</tt> of all {@link ACL.Grant}s set on an item. */
-    private final List<Grant> mGrants = new ArrayList<Grant>(3);
+    private final List<Grant> mGrants = new CopyOnWriteArrayList<Grant>();
     /** Time when all grants to internal users or groups expire. Value of 0 indicates that they never expire. */
     private long mInternalGrantExpiry = 0;
     /** Time when all grants to guest/external users expire. Value of 0 indicates that they never expire. */
@@ -489,10 +488,10 @@ public final class ACL {
         if (mGrants == null || mGrants.isEmpty())
             return false;
         int count = mGrants.size();
-        for (Iterator<Grant> it = mGrants.iterator(); it.hasNext(); ) {
-            Grant grant = it.next();
-            if (grant.isGrantee(zimbraId))
-                it.remove();
+        for (Grant grant : mGrants) {
+            if (grant.isGrantee(zimbraId)) {
+                mGrants.remove(grant);
+            }
         }
         return (mGrants.size() != count);
     }
