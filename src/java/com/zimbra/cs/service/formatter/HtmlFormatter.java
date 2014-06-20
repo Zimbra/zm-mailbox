@@ -15,10 +15,7 @@
 package com.zimbra.cs.service.formatter;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Enumeration;
-import java.util.List;
 
 import javax.servlet.RequestDispatcher;
 import javax.servlet.Servlet;
@@ -28,14 +25,9 @@ import javax.servlet.ServletException;
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.commons.httpclient.methods.PostMethod;
-import org.apache.commons.httpclient.methods.multipart.MultipartRequestEntity;
-import org.apache.commons.httpclient.methods.multipart.Part;
-import org.apache.commons.httpclient.methods.multipart.StringPart;
-import org.apache.commons.httpclient.params.HttpMethodParams;
 
-import com.zimbra.common.mailbox.Color;
 import com.zimbra.common.httpclient.HttpClientUtil;
+import com.zimbra.common.mailbox.Color;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.HttpUtil;
@@ -198,8 +190,7 @@ public class HtmlFormatter extends Formatter {
             context.req.setAttribute(ATTR_TARGET_ITEM_NAME, context.fakeTarget.getName());
         }
         String mailUrl = PATH_MAIN_CONTEXT;
-        List<String> zimbraServiceInstalled = Arrays.asList(Provisioning.getInstance().getLocalServer().getServiceInstalled());
-        if (WebSplitUtil.isZimbraServiceSplitEnabled(zimbraServiceInstalled)) {
+        if (WebSplitUtil.isZimbraServiceSplitEnabled()) {
             mailUrl = Provisioning.getInstance().getLocalServer().getWebClientURL() + PATH_JSP_REST_PAGE;
             HttpClient httpclient = ZimbraHttpConnectionManager.getInternalHttpConnMgr().getDefaultHttpClient();
             /*
@@ -225,7 +216,7 @@ public class HtmlFormatter extends Formatter {
             sb.append("?");
             while(attributeNames.hasMoreElements())
             {
-                String attrName = (String) attributeNames.nextElement();
+                String attrName = attributeNames.nextElement();
                 String attrValue = context.req.getAttribute(attrName).toString();
                 sb.append(attrName).append("=").append(HttpUtil.urlEscape(attrValue)).append("&");
             }
