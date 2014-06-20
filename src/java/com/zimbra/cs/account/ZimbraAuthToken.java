@@ -282,10 +282,13 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
         } catch (ServiceException e) {
             LOG.error("Unable to fetch server version for the user account", e);
         }
+
         try {
-            if(type != C_TYPE_EXTERNAL_USER) {
-                acct.cleanExpiredTokens(); //house keeping. If we are issuing a new token, clean up old ones.
-                acct.addAuthTokens(String.format("%d|%d|%s", tokenID, this.expires, server_version));
+            if(!type.equalsIgnoreCase(C_TYPE_EXTERNAL_USER)) {
+                if(Provisioning.getInstance().getLocalServer().getLowestSupportedAuthVersion() > 1) {
+                    acct.cleanExpiredTokens(); //house keeping. If we are issuing a new token, clean up old ones.
+                    acct.addAuthTokens(String.format("%d|%d|%s", tokenID, this.expires, server_version));
+                }
             }
         } catch (ServiceException e) {
             LOG.error("unable to register auth token", e);
@@ -481,6 +484,9 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
     @Override
 	public boolean isRegistered() {
 		try {
+		    if(type.equalsIgnoreCase(C_TYPE_EXTERNAL_USER)) {
+		        return true;
+		    }
 			Provisioning prov = Provisioning.getInstance();
 			//support older clients if zimbraLowestSupportedAuthVersion is less than 2
 			Server localServer = Provisioning.getInstance().getLocalServer();

@@ -294,6 +294,22 @@ public class TestCookieReuse extends TestCase {
     	Provisioning.getInstance().getLocalServer().setLowestSupportedAuthVersion(2);
     	Assert.assertFalse("token should not be registered", at.isRegistered());
     }
+
+    @Test
+    public void testChangingSupportedAuthVersion() throws Exception {
+        Provisioning.getInstance().getLocalServer().setLowestSupportedAuthVersion(2);
+        Account a = TestUtil.getAccount(USER_NAME);
+        String[] tokens = a.getAuthTokens();
+        ZimbraAuthToken at1 = new ZimbraAuthToken(a, System.currentTimeMillis() + 10000);
+        String[] tokens2 = a.getAuthTokens();
+        assertEquals("should have one more registered token", tokens.length+1,tokens2.length);
+
+        Provisioning.getInstance().getLocalServer().setLowestSupportedAuthVersion(1);
+        ZimbraAuthToken at2 = new ZimbraAuthToken(a, System.currentTimeMillis() + 10000);
+        String[] tokens3 = a.getAuthTokens();
+        assertEquals("should have the same number of registered tokens as before", tokens2.length,tokens3.length);
+
+    }
     @Test
     public void testClearCookies () throws Exception {
     	Account a = TestUtil.getAccount(USER_NAME);
