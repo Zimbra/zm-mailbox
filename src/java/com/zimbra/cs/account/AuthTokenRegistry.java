@@ -68,7 +68,7 @@ public final class AuthTokenRegistry {
 
                 //send the snapshot to other servers
                 try {
-                    List<Server> mailServers = Provisioning.getInstance().getAllServers(Provisioning.SERVICE_MAILBOX);
+                    List<Server> mailServers = Provisioning.getInstance().getAllMailClientServers();
                     SoapProvisioning soapProv = SoapProvisioning.getAdminInstance();
                     soapProv.soapZimbraAdminAuthenticate();
                     RefreshRegisteredAuthTokensRequest req = new RefreshRegisteredAuthTokensRequest();

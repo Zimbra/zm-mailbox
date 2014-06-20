@@ -4324,7 +4324,7 @@ public class ProvUtil implements HttpDebugListener {
         List<Pair<String, Integer>> entries = new ArrayList<Pair<String, Integer>>();
         if (args.length == 2 && "all".equalsIgnoreCase(args[1])) {
             // Get all mailbox servers.
-            List<Server> servers = prov.getAllServers(Provisioning.SERVICE_MAILBOX);
+            List<Server> servers = prov.getAllMailClientServers();
             for (Server svr : servers) {
                 String host = svr.getAttr(Provisioning.A_zimbraServiceHostname);
                 int port = (int) svr.getLongAttr(Provisioning.A_zimbraAdminPort, serverPort);
@@ -5024,7 +5024,7 @@ public class ProvUtil implements HttpDebugListener {
     private void doPushFreeBusyForDomain(String[] args) throws ServiceException, IOException {
         lookupDomain(args[1]);
         FbCli fbcli = new FbCli();
-        for (Server server : prov.getAllServers(Provisioning.SERVICE_MAILBOX)) {
+        for (Server server : prov.getAllMailClientServers()) {
             console.println("pushing to server " + server.getName());
             fbcli.setServer(server.getName());
             fbcli.pushFreeBusyForDomain(args[1]);

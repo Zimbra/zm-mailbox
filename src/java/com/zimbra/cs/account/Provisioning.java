@@ -1457,6 +1457,57 @@ public abstract class Provisioning extends ZAttrProvisioning {
 
     public abstract List<Server> getAllServers(String service, String clusterId) throws ServiceException;
 
+    public List<Server> getAllWebClientServers() throws ServiceException {
+        List<Server> mailboxservers = getAllServers(Provisioning.SERVICE_MAILBOX);
+        List<Server> webclientservers = getAllServers(Provisioning.SERVICE_WEBCLIENT);
+
+        for (Server server : mailboxservers) {
+            String version = server.getAttr(Provisioning.A_zimbraServerVersion, null);
+            // We get all pre 8.5 servers first (ones which don't have the zimbraServerVersion set)
+            if (version != null) {
+                continue;
+            }
+            // Add it to the list of 8.5+ webclient servers and return this list
+            webclientservers.add(server);
+        }
+
+        return webclientservers;
+    }
+
+    public List<Server> getAllAdminClientServers() throws ServiceException {
+        List<Server> mailboxservers = getAllServers(Provisioning.SERVICE_MAILBOX);
+        List<Server> adminclientservers = getAllServers(Provisioning.SERVICE_ADMINCLIENT);
+
+        for (Server server : mailboxservers) {
+            String version = server.getAttr(Provisioning.A_zimbraServerVersion, null);
+            // We get all pre 8.5 servers first (ones which don't have the zimbraServerVersion set)
+            if (version != null) {
+                continue;
+            }
+            // Add it to the list of 8.5+ adminclient servers and return this list
+            adminclientservers.add(server);
+        }
+
+        return adminclientservers;
+    }
+
+    public List<Server> getAllMailClientServers() throws ServiceException {
+        List<Server> mailboxservers = getAllServers(Provisioning.SERVICE_MAILBOX);
+        List<Server> mailclientservers = getAllServers(Provisioning.SERVICE_MAILCLIENT);
+
+        for (Server server : mailboxservers) {
+            String version = server.getAttr(Provisioning.A_zimbraServerVersion, null);
+            // We get all pre 8.5 servers first (ones which don't have the zimbraServerVersion set)
+            if (version != null) {
+                continue;
+            }
+            // Add it to the list of 8.5+ mailclient servers and return this list
+            mailclientservers.add(server);
+        }
+
+        return mailclientservers;
+    }
+
     public abstract void deleteServer(String zimbraId) throws ServiceException;
 
     /*

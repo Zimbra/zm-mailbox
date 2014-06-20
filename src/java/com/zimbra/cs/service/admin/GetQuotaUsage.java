@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -26,6 +26,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+import com.zimbra.common.account.Key;
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
@@ -38,7 +39,6 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.SearchAccountsOptions;
-import com.zimbra.common.account.Key;
 import com.zimbra.cs.account.SearchAccountsOptions.IncludeType;
 import com.zimbra.cs.account.SearchDirectoryOptions.MakeObjectOpt;
 import com.zimbra.cs.account.SearchDirectoryOptions.SortOpt;
@@ -49,7 +49,6 @@ import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.session.AdminSession;
 import com.zimbra.cs.session.Session;
-
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -57,7 +56,7 @@ public class GetQuotaUsage extends AdminDocumentHandler {
 
     public static final String BY_NAME = "name";
     public static final String BY_ID = "id";
-    
+
     public static final String SORT_PERCENT_USED = "percentUsed";
     public static final String SORT_TOTAL_USED = "totalUsed";
     public static final String SORT_QUOTA_LIMIT = "quotaLimit";
@@ -65,6 +64,7 @@ public class GetQuotaUsage extends AdminDocumentHandler {
     private static final String QUOTA_USAGE_CACHE_KEY = "GetQuotaUsage";
     private static final String QUOTA_USAGE_ALL_SERVERS_CACHE_KEY = "GetQuotaUsageAllServers";
 
+    @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
@@ -83,15 +83,15 @@ public class GetQuotaUsage extends AdminDocumentHandler {
 
         //
         // if we are a domain admin only, restrict to domain
-        // hmm, this SOAP is not domainAuthSufficient, bug? 
+        // hmm, this SOAP is not domainAuthSufficient, bug?
         //
-        // Note: isDomainAdminOnly *always* returns false for pure ACL based AccessManager 
+        // Note: isDomainAdminOnly *always* returns false for pure ACL based AccessManager
         if (isDomainAdminOnly(zsc)) {
             // need a domain, if domain is not specified, use the authed admins own domain.
             if (domain == null)
                 domain = getAuthTokenAccountDomain(zsc).getName();
-            
-            // sanity check 
+
+            // sanity check
             if (domain == null)
                 throw AccountServiceException.INVALID_REQUEST("no domain", null);
         }
@@ -102,7 +102,7 @@ public class GetQuotaUsage extends AdminDocumentHandler {
             if (d == null)
                 throw AccountServiceException.NO_SUCH_DOMAIN(domain);
         }
-        
+
         // if we have a domain, check the domain right getDomainQuotaUsage
         // if we don't have a domain, only allow system admin
         if (d != null)
@@ -158,7 +158,7 @@ public class GetQuotaUsage extends AdminDocumentHandler {
         // don't set any "limit" in the delegated requests
         request.addAttribute(AdminConstants.A_LIMIT, 0);
         request.addAttribute(AdminConstants.A_OFFSET, 0);
-        List<Server> servers = prov.getAllServers(Provisioning.SERVICE_MAILBOX);
+        List<Server> servers = prov.getAllMailClientServers();
         // make number of threads in pool configurable?
         ExecutorService executor = Executors.newFixedThreadPool(10);
         List<Future<List<AccountQuota>>> futures = new LinkedList<Future<List<AccountQuota>>>();
@@ -234,73 +234,74 @@ public class GetQuotaUsage extends AdminDocumentHandler {
     synchronized static QuotaUsageParams getCachedQuotaUsage(AdminSession session, boolean allServers) {
         return (QuotaUsageParams) session.getData(allServers ? QUOTA_USAGE_ALL_SERVERS_CACHE_KEY : QUOTA_USAGE_CACHE_KEY);
     }
-    
+
     synchronized static void setCachedQuotaUsage(AdminSession session, QuotaUsageParams params, boolean allServers) {
         session.setData(allServers ? QUOTA_USAGE_ALL_SERVERS_CACHE_KEY : QUOTA_USAGE_CACHE_KEY, params);
     }
-    
+
     synchronized static void clearCachedQuotaUsage(AdminSession session) {
         session.clearData(QUOTA_USAGE_CACHE_KEY);
         session.clearData(QUOTA_USAGE_ALL_SERVERS_CACHE_KEY);
     }
-    
+
     public static class AccountQuota {
         public String name;
         public String id;
         public long quotaLimit;
-        public long sortQuotaLimit;        
+        public long sortQuotaLimit;
         public long quotaUsed;
-        public float percentQuotaUsed; 
+        public float percentQuotaUsed;
     }
 
-    public class QuotaUsageParams {    
+    public class QuotaUsageParams {
         String domainId;
         String sortBy;
         boolean sortAscending;
 
         List<AccountQuota> mResult;
-        
+
         QuotaUsageParams(Domain d, String sortBy, boolean sortAscending) {
             domainId = (d == null) ? "" : d.getId();
             this.sortBy = (sortBy == null) ? "" : sortBy;
             this.sortAscending = sortAscending;
         }
-        
+
+        @Override
         public boolean equals(Object o) {
             if (!(o instanceof QuotaUsageParams)) return false;
             if (o == this) return true;
-            
-            QuotaUsageParams other = (QuotaUsageParams) o; 
-            return 
+
+            QuotaUsageParams other = (QuotaUsageParams) o;
+            return
                 domainId.equals(other.domainId) &&
                 sortBy.equals(other.sortBy) &&
                 sortAscending == other.sortAscending;
         }
-        
+
         List<AccountQuota> doSearch() throws ServiceException {
             if (mResult != null) return mResult;
 
             ArrayList<AccountQuota> result = new ArrayList<AccountQuota>();
-            
+
             Provisioning prov = Provisioning.getInstance();
-            
+
             SearchAccountsOptions searchOpts = new SearchAccountsOptions();
             searchOpts.setIncludeType(IncludeType.ACCOUNTS_ONLY);
             searchOpts.setMakeObjectOpt(MakeObjectOpt.NO_SECONDARY_DEFAULTS);
             searchOpts.setSortOpt(SortOpt.SORT_ASCENDING);
-            
+
             Domain d = domainId.equals("") ? null : prov.get(Key.DomainBy.id, domainId);
             if (d != null) {
                 searchOpts.setDomain(d);
             }
             List<NamedEntry> accounts = prov.searchAccountsOnServer(Provisioning.getInstance().getLocalServer(), searchOpts);
-            
+
             Map<String, Long> quotaUsed = MailboxManager.getInstance().getMailboxSizes(accounts);
 
             for (Object obj: accounts) {
                 if (!(obj instanceof Account))continue;
                 Account acct = (Account) obj;
-                AccountQuota aq = new AccountQuota();            
+                AccountQuota aq = new AccountQuota();
                 aq.id = acct.getId();
                 aq.name = acct.getName();
                 aq.quotaLimit = AccountUtil.getEffectiveQuota(acct);
@@ -331,10 +332,10 @@ public class GetQuotaUsage extends AdminDocumentHandler {
     }
 
     public class QuotaComparator implements Comparator<AccountQuota> {
-        private boolean sortByTotal;
-        private boolean sortByQuota;
-        private boolean sortByAccount;
-        private boolean sortAscending;
+        private final boolean sortByTotal;
+        private final boolean sortByQuota;
+        private final boolean sortByAccount;
+        private final boolean sortAscending;
 
         public QuotaComparator(boolean sortByTotal, boolean sortByQuota, boolean sortByAccount, boolean sortAscending) {
             this.sortByTotal = sortByTotal;
@@ -361,11 +362,11 @@ public class GetQuotaUsage extends AdminDocumentHandler {
             return sortAscending ? comp : -comp;
         }
     }
-    
+
     @Override
     public void docRights(List<AdminRight> relatedRights, List<String> notes) {
         relatedRights.add(Admin.R_getDomainQuotaUsage);
-        
+
         notes.add("If a domain is specified, need the the domain right " + Admin.R_getDomainQuotaUsage.getName() +
                 ".  If domain is not specified, only system admins are allowed.");
     }
