@@ -230,26 +230,26 @@
   </filter-mapping>
   
   <filter>
-	<filter-name>CsrfFilter</filter-name>
-	<filter-class>com.zimbra.cs.servlet.CsrfFilter</filter-class>
+    <filter-name>CsrfFilter</filter-name>
+    <filter-class>com.zimbra.cs.servlet.CsrfFilter</filter-class>
     <async-supported>true</async-supported>
-	<init-param>
-		<param-name>csrf.req.check</param-name>
-		<param-value>true</param-value>
-	</init-param>
-	<init-param>
-		<!-- A comma separated list like www.abc.com, www.xyz.com -->
-		<param-name>allowed.referrer.host</param-name>
-		<param-value />
-	</init-param>
+    <init-param>
+        <param-name>csrf.req.check</param-name>
+        <param-value>true</param-value>
+    </init-param>
+    <init-param>
+        <!-- A comma separated list like www.abc.com, www.xyz.com -->
+        <param-name>allowed.referrer.host</param-name>
+        <param-value />
+    </init-param>
     </filter>
-	<filter-mapping>
-		<filter-name>CsrfFilter</filter-name>
-		<url-pattern>/soap/*</url-pattern>
-		<url-pattern>/user/*</url-pattern>
-		<url-pattern>/home/*</url-pattern>
-		<url-pattern>/upload</url-pattern>
-	</filter-mapping>
+    <filter-mapping>
+        <filter-name>CsrfFilter</filter-name>
+        <url-pattern>/soap/*</url-pattern>
+        <url-pattern>/user/*</url-pattern>
+        <url-pattern>/home/*</url-pattern>
+        <url-pattern>/upload</url-pattern>
+    </filter-mapping>
 
   <servlet>
     <servlet-name>FirstServlet</servlet-name>
@@ -283,8 +283,8 @@
       <param-value>com.zimbra.cs.service.account.AccountService</param-value>
     </init-param>
     <init-param>
-		<param-name>engine.handler.1</param-name>
-		<param-value>com.zimbra.cs.service.mail.MailService</param-value>
+        <param-name>engine.handler.1</param-name>
+        <param-value>com.zimbra.cs.service.mail.MailService</param-value>
     </init-param>
     <load-on-startup>2</load-on-startup>
   </servlet>
@@ -528,6 +528,19 @@
   </servlet>
 
   <servlet>
+    <servlet-name>ZimletProperties2Javascript</servlet-name>
+    <servlet-class>com.zimbra.cs.zimlet.ZimletProps2JsServlet</servlet-class>
+    <async-supported>true</async-supported>
+    <init-param>
+      <param-name>basename-patterns</param-name>
+      <param-value>
+        /opt/zimbra/zimlets-deployed/${name}/${name},
+        /opt/zimbra/zimlets-deployed/_dev/${name}/${name}
+      </param-value>
+    </init-param>
+  </servlet>
+
+  <servlet>
     <servlet-name>RobotsServlet</servlet-name>
     <servlet-class>com.zimbra.cs.servlet.RobotsServlet</servlet-class>
     <load-on-startup>11</load-on-startup>
@@ -663,6 +676,11 @@
   <servlet-mapping>
     <servlet-name>ZimletResources</servlet-name>
     <url-pattern>/zimlet/*</url-pattern>
+  </servlet-mapping>
+
+  <servlet-mapping>
+    <servlet-name>ZimletProperties2Javascript</servlet-name>
+    <url-pattern>/res/*</url-pattern>
   </servlet-mapping>
 
   <servlet-mapping>

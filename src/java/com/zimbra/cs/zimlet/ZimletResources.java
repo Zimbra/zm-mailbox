@@ -50,7 +50,6 @@ import com.yahoo.platform.yui.compressor.CssCompressor;
 import com.yahoo.platform.yui.compressor.JavaScriptCompressor;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.servlet.DiskCacheServlet;
 
 @SuppressWarnings("serial")
@@ -60,7 +59,7 @@ public class ZimletResources extends DiskCacheServlet {
     // Constants
     //
     private static final String COMPRESSED_EXT = ".zgz";
-    public static final String RESOURCE_PATH = "/res/";
+    private static final String RESOURCE_PATH = "/res/";
 
     private static final String P_DEBUG = "debug";
 
@@ -137,10 +136,7 @@ public class ZimletResources extends DiskCacheServlet {
         String contentType = getContentType(uri);
         String type = contentType.replaceAll("^.*/", "");
         boolean debug = req.getParameter(P_DEBUG) != null;
-        boolean compress =
-            !debug &&
-            supportsGzip && uri.endsWith(COMPRESSED_EXT)
-        ;
+        boolean compress = !debug && supportsGzip && uri.endsWith(COMPRESSED_EXT);
 
         String cacheId = getCacheId(req, type, zimletNames, allZimletNames);
 
@@ -161,16 +157,9 @@ public class ZimletResources extends DiskCacheServlet {
 
             // zimlet messages
             if (type.equals(T_JAVASCRIPT)) {
-                String mailUrl = "/";
-                try {
-                    mailUrl = Provisioning.getInstance().getLocalServer().getMailURL();
-                } catch (Exception e) {
-                    ZimbraLog.zimlet.warn("can't get mailUrl", e);
-                }
                 ServletConfig config = this.getServletConfig();
                 ServletContext baseContext = config.getServletContext();
-                ServletContext clientContext = baseContext.getContext(mailUrl);
-                RequestDispatcher dispatcher = clientContext.getRequestDispatcher(RESOURCE_PATH);
+                RequestDispatcher dispatcher = baseContext.getRequestDispatcher(RESOURCE_PATH);
 
                 // NOTE: We have to return the messages for *all* of the zimlets,
                 // NOTE: not just the enabled ones, because their names and
@@ -179,7 +168,7 @@ public class ZimletResources extends DiskCacheServlet {
                     RequestWrapper wrappedReq = new RequestWrapper(req, RESOURCE_PATH + zimletName);
                     ResponseWrapper wrappedResp = new ResponseWrapper(resp, printer);
                     wrappedReq.setParameter("debug", "1"); // bug 45922: avoid cached messages
-                    dispatcher.include(wrappedReq, wrappedResp);
+                    dispatcher.include(wrappedReq, wrappedResp); //this will activate ZimletProps2JsServlet
                 }
             }
 

@@ -536,6 +536,19 @@
   </servlet>
 
   <servlet>
+    <servlet-name>ZimletProperties2Javascript</servlet-name>
+    <servlet-class>com.zimbra.cs.zimlet.ZimletProps2JsServlet</servlet-class>
+    <async-supported>true</async-supported>
+    <init-param>
+      <param-name>basename-patterns</param-name>
+      <param-value>
+        /opt/zimbra/zimlets-deployed/${name}/${name},
+        /opt/zimbra/zimlets-deployed/_dev/${name}/${name}
+      </param-value>
+    </init-param>
+  </servlet>
+
+  <servlet>
     <servlet-name>RobotsServlet</servlet-name>
     <servlet-class>com.zimbra.cs.servlet.RobotsServlet</servlet-class>
     <load-on-startup>11</load-on-startup>
@@ -673,6 +686,11 @@
   <servlet-mapping>
     <servlet-name>ZimletResources</servlet-name>
     <url-pattern>/zimlet/*</url-pattern>
+  </servlet-mapping>
+
+  <servlet-mapping>
+    <servlet-name>ZimletProperties2Javascript</servlet-name>
+    <url-pattern>/res/*</url-pattern>
   </servlet-mapping>
 
   <servlet-mapping>
