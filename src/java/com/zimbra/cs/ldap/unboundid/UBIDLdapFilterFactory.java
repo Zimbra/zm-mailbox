@@ -1091,6 +1091,12 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
                 Provisioning.A_zimbraMailDeliveryAddress, null, null, "@" + domainName);
     }
 
+    private Filter velodromeMailOrZimbraMailAliasOnDomainFilter(String domainName) {
+        return Filter.createORFilter(
+                Filter.createSubstringFilter( Provisioning.A_mail, null, null, "@" + domainName),
+                Filter.createSubstringFilter(Provisioning.A_zimbraMailAlias, null, null, "@" + domainName));
+    }
+
     @Override
     public ZLdapFilter velodromeAllAccountsByDomain(String domainName) {
         return new UBIDLdapFilter(
@@ -1150,6 +1156,34 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
                         homedOnServerFilter(serverServiceHostname),
                         velodromePrimaryEmailOnDomainFilter(domainName)));
 
+    }
+
+    /**
+     * DistributionLists in customDIT do not have the "zimbraMailDeliveryAddress" attribute.
+     * From an earlier comment in CustomLdapDIT we can't tell whether the main email is "zimbraMailAlias" or "mail".
+     * So, accept either.
+     */
+    @Override
+    public ZLdapFilter velodromeAllDistributionListsByDomain(String domainName) {
+        return new UBIDLdapFilter(
+                FilterId.VELODROME_ALL_DISTRIBUTION_LISTS_BY_DOMAIN,
+                Filter.createANDFilter(
+                        FILTER_ALL_DISTRIBUTION_LISTS,
+                        velodromeMailOrZimbraMailAliasOnDomainFilter (domainName)));
+    }
+
+    /**
+     * DistributionLists in customDIT do not have the "zimbraMailDeliveryAddress" attribute.
+     * From an earlier comment in CustomLdapDIT we can't tell whether the main email is "zimbraMailAlias" or "mail".
+     * So, accept either.
+     */
+    @Override
+    public ZLdapFilter velodromeAllGroupsByDomain(String domainName) {
+        return new UBIDLdapFilter(
+                FilterId.VELODROME_ALL_GROUPS_BY_DOMAIN,
+                Filter.createANDFilter(
+                        FILTER_ALL_GROUPS,
+                        velodromeMailOrZimbraMailAliasOnDomainFilter (domainName)));
     }
 
     @Override

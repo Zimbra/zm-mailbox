@@ -138,7 +138,8 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
         VELODROME_ALL_ACCOUNTS_BY_DOMAIN_AND_SERVER(SINGLETON.velodromeAllAccountsByDomainAndServer("{DOMAIN-NAME}", "{SERVER-SERVICE-HOSTNAME}")),
         VELODROME_ALL_ACCOUNTS_ONLY_BY_DOMAIN_AND_SERVER(SINGLETON.velodromeAllAccountsOnlyByDomainAndServer("{DOMAIN-NAME}", "{SERVER-SERVICE-HOSTNAME}")),
         VELODROME_ALL_CALENDAR_RESOURCES_BY_DOMAIN_AND_SERVER(SINGLETON.velodromeAllCalendarResourcesByDomainAndServer("{DOMAIN-NAME}", "{SERVER-SERVICE-HOSTNAME}")),
-
+        VELODROME_ALL_DISTRIBUTION_LISTS_BY_DOMAIN(SINGLETON.velodromeAllDistributionListsByDomain("{DOMAIN-NAME}")),
+        VELODROME_ALL_GROUPS_BY_DOMAIN(SINGLETON.velodromeAllGroupsByDomain("{DOMAIN-NAME}")),
 
         //
         // =====================================
@@ -478,6 +479,8 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
             String domainName, String serverServiceHostname);
     public abstract ZLdapFilter velodromeAllCalendarResourcesByDomainAndServer(
             String domainName, String serverServiceHostname);
+    public abstract ZLdapFilter velodromeAllDistributionListsByDomain(String domainName);
+    public abstract ZLdapFilter velodromeAllGroupsByDomain(String domainName);
 
 
     /*
