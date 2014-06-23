@@ -636,13 +636,7 @@ the steps describing how to setup environment:
 it in PEM format, save it under mycerts folder as ca.crt (rename existing self signed 
 ca.crt before saving).
 
-- import client certificate into the server keystore:
-
-for dev environment:
-
-keytool -import -keystore /opt/zimbra/jetty/etc/keystore -alias myca -file ca.crt
-
-see section (Import CA certificate) for reference on how to do it in production environment
+- import CA certificate into the server's client ssl truststore; refer section 4 (Importing CA certificate).
 
 - create CACert account for testing, go to http://cacert.org and click on 'Join', fill up 
 form and provide your zimbra email address, in my case it's eugene@zimbra.com. 
