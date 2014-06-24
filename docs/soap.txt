@@ -45,7 +45,7 @@ urn:zimbra  -- top-level namespace for global attributes/elements
   <soap:Header>
     <context xmlns="urn:zimbra">
       [<authToken>...</authToken>]
-      [csrfToken>...</csrToken>]
+      [<csrfToken>...</csrfToken>]
       [<authTokenControl voidOnExpired="1"/>]
       [<session [id="{returned-from-server-in-last-response}" [seq="{highest_notification_received}"] [type="admin"]/>]
       [<account by="name|id">{account-name-or-id}</account>]
@@ -430,6 +430,7 @@ global soap/system errors used with zimbra:Error/Code:
 
  <AuthResponse">
    <authToken>...</authToken>
+   [<csrfToken>...</csrfToken>]
    <lifetime>...</lifetime>
    <session .../>
    <refer>{mail-host}</refer>

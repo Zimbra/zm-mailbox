@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -38,7 +38,6 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AuthToken;
-import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.CsrfTokenKey;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.servlet.util.CsrfUtil;
@@ -50,6 +49,10 @@ import com.zimbra.soap.RequestContext;
  */
 public class CsrfFilter implements Filter {
 
+    /**
+     *
+     */
+    public static final String CSRF_SALT = "CSRF_SALT";
     protected boolean csrfCheckEnabled ;
     protected boolean csrfRefererCheckEnabled;
     protected String[] allowedRefHost = null;
@@ -112,6 +115,7 @@ public class CsrfFilter implements Filter {
 
         HttpServletRequest req = (HttpServletRequest) request;
         HttpServletResponse resp = (HttpServletResponse) response;
+        req.setAttribute(CSRF_SALT, nonceGen.nextInt() + 1);
 
         if (ZimbraLog.misc.isDebugEnabled()) {
              ZimbraLog.misc.debug("CSRF Request URI: " + req.getRequestURI());
@@ -166,48 +170,11 @@ public class CsrfFilter implements Filter {
             reqCtxt.setVirtualHost(host);
             ZThreadLocal.setContext(reqCtxt);
 
-            // // if this is a Auth request, then the Auth token would have been
-            // generated so sent CSRF token with response, we expect it in the next
-            // req.
-            if (req.getAttribute(AUTH_TOKEN) != null) {
-                AuthToken auth = (AuthToken) req.getAttribute(AUTH_TOKEN);
-                if (auth.isCsrfTokenEnabled()) {
-                    generateAndSetCsrfToken(req, resp, true);
-                }
-            }
-
         } finally {
             // Unset the variables set in thread local
             ZThreadLocal.unset();
         }
 
-    }
-
-    /**
-     * @param req
-     * @param resp
-     * @throws ServletException
-     */
-    private void generateAndSetCsrfToken(HttpServletRequest req,
-        HttpServletResponse resp, boolean afterAuth) throws ServletException {
-        AuthToken authToken = null;
-        if (afterAuth) {
-            authToken = (AuthToken) req.getAttribute(AUTH_TOKEN);
-        } else {
-            authToken = CsrfUtil.getAuthTokenFromReq(req);
-        }
-
-        if (authToken != null) {
-            String accountId = authToken.getAccountId();
-            long authTokenExpiration = authToken.getExpires();
-            try {
-                String token = CsrfUtil.generateCsrfToken(accountId,
-                    authTokenExpiration, nonceGen.nextInt() + 1, authToken.getCrumb());
-                resp.setHeader(CSRF_TOKEN, token);
-            } catch (AuthTokenException e) {
-                throw new ServletException("Error generating CSRF token.");
-            }
-        }
     }
 
     /**
@@ -240,12 +207,5 @@ public class CsrfFilter implements Filter {
         return true;
 
     }
-
-
-
-
-
-
-
 
 }

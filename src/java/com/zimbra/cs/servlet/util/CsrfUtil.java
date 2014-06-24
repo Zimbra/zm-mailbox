@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -356,23 +356,30 @@ public final class CsrfUtil {
      * @param i
      * @return
      * @throws AuthTokenException
+     * @throws ServiceException
      * @throws InvalidAlgorithmParameterException
      */
     public static String generateCsrfToken(String accountId, long authTokenExpiration, int tokenSalt,
-        String crumb)  throws AuthTokenException {
+        AuthToken at)  throws  ServiceException {
 
-        StringBuilder encodedBuff = new StringBuilder(64);
-        BlobMetaData.encodeMetaData(C_ID, accountId, encodedBuff);
-        BlobMetaData.encodeMetaData(C_EXP, Long.toString(authTokenExpiration), encodedBuff);
-        BlobMetaData.encodeMetaData(C_SALT_ID, tokenSalt, encodedBuff);
+        try {
+            String crumb = at.getCrumb();
+            StringBuilder encodedBuff = new StringBuilder(64);
+            BlobMetaData.encodeMetaData(C_ID, accountId, encodedBuff);
+            BlobMetaData.encodeMetaData(C_EXP, Long.toString(authTokenExpiration), encodedBuff);
+            BlobMetaData.encodeMetaData(C_SALT_ID, tokenSalt, encodedBuff);
 
 
-        String data = new String(Hex.encodeHex(encodedBuff.toString().getBytes()));
-        CsrfTokenKey key = getCurrentKey();
-        String hmac = ZimbraAuthToken.getHmac(data, key.getKey());
-        String encoded = key.getVersion() + "_" + hmac;
-        storeTokenData(data, accountId, authTokenExpiration, crumb);
-        return encoded;
+            String data = new String(Hex.encodeHex(encodedBuff.toString().getBytes()));
+            CsrfTokenKey key = getCurrentKey();
+            String hmac = ZimbraAuthToken.getHmac(data, key.getKey());
+            String encoded = key.getVersion() + "_" + hmac;
+            storeTokenData(data, accountId, authTokenExpiration, crumb);
+            return encoded;
+        } catch (AuthTokenException e) {
+            throw ServiceException.FAILURE("Error generating Auth Token, "
+                + e.getMessage(), e);
+        }
 
     }
 

@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -35,6 +35,7 @@ import com.zimbra.common.account.ZAttrProvisioning.AutoProvAuthMech;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.HeaderConstants;
 import com.zimbra.common.util.ZimbraCookie;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -51,6 +52,7 @@ import com.zimbra.cs.account.krb5.Krb5Principal;
 import com.zimbra.cs.account.names.NameUtil.EmailAddress;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.servlet.CsrfFilter;
+import com.zimbra.cs.servlet.util.CsrfUtil;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.SkinUtil;
@@ -270,6 +272,17 @@ public class Auth extends AccountDocumentHandler {
 		ZimbraLog.webclient.debug("chooseSkin() returned "+skin );
 		if (skin != null) {
 			response.addElement(AccountConstants.E_SKIN).setText(skin);
+		}
+
+		if (at.isCsrfTokenEnabled()) {
+		    String accountId = at.getAccountId();
+            long authTokenExpiration = at.getExpires();
+            int tokenSalt = (Integer)httpReq.getAttribute(CsrfFilter.CSRF_SALT);
+            String token = CsrfUtil.generateCsrfToken(accountId,
+                authTokenExpiration, tokenSalt, at);
+            Element csrfResponse = response.addUniqueElement(HeaderConstants.E_CSRFTOKEN);
+            csrfResponse.addText(token);
+            httpResp.setHeader(CsrfFilter.CSRF_TOKEN, token);
 		}
 
 		return response;

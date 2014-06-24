@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -142,7 +142,7 @@ public class CsrfUtilTest {
             AuthToken authToken = new ZimbraAuthToken(acct);
 
             String csrfToken = CsrfUtil.generateCsrfToken(acct.getId(),
-                AUTH_TOKEN_EXPR, CSRFTOKEN_SALT, authToken.getCrumb());
+                AUTH_TOKEN_EXPR, CSRFTOKEN_SALT, authToken);
             Pair<String, String> tokenParts = CsrfUtil.parseCsrfToken(csrfToken);
             assertNotNull(tokenParts.getFirst());
             assertNotNull(tokenParts.getSecond());
@@ -161,12 +161,12 @@ public class CsrfUtilTest {
             AuthToken authToken = new ZimbraAuthToken(acct);
 
             String csrfToken1 = CsrfUtil.generateCsrfToken(acct.getId(),
-                AUTH_TOKEN_EXPR, CSRFTOKEN_SALT, authToken.getCrumb());
+                AUTH_TOKEN_EXPR, CSRFTOKEN_SALT, authToken);
             boolean validToken = CsrfUtil.isValidCsrfToken(csrfToken1, authToken);
             assertTrue(validToken);
 
 
-        } catch (ServiceException | AuthTokenException e) {
+        } catch (ServiceException  e) {
             fail("Should not throw exception.");
         }
     }
