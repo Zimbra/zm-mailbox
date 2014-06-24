@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -120,14 +120,19 @@ public final class SearchConv extends Search {
             return response;
 
         } else { // remote
-            Element proxyRequest = zsc.createElement(MailConstants.SEARCH_CONV_REQUEST);
-
-            params.encodeParams(proxyRequest);
-            proxyRequest.addAttribute(MailConstants.A_NEST_MESSAGES, nest);
-            proxyRequest.addAttribute(MailConstants.A_CONV_ID, cid.toString());
-
-
             try {
+                Element proxyRequest = zsc.createElement(MailConstants.SEARCH_CONV_REQUEST);
+                Account target = Provisioning.getInstance().get(AccountBy.id, cid.getAccountId(), zsc.getAuthToken());
+
+                if (target != null) {
+                    params.setInlineRule(params.getInlineRule().toLegacyExpandResults(target.getServer()));
+                }
+
+                params.encodeParams(proxyRequest);
+                proxyRequest.addAttribute(MailConstants.A_NEST_MESSAGES, nest);
+                proxyRequest.addAttribute(MailConstants.A_CONV_ID, cid.toString());
+
+
                 // okay, lets run the search through the query parser -- this has the side-effect of
                 // re-writing the query in a format that is OK to proxy to the other server -- since the
                 // query has an "AND conv:remote-conv-id" part, the query parser will figure out the right
@@ -137,7 +142,6 @@ public final class SearchConv extends Search {
                 proxyRequest.addAttribute(MailConstants.E_QUERY, rewrittenQueryString, Element.Disposition.CONTENT);
 
                 // proxy to remote account
-                Account target = Provisioning.getInstance().get(AccountBy.id, cid.getAccountId(), zsc.getAuthToken());
                 response = proxyRequest(proxyRequest, context, target.getId());
                 return response.detach();
             } catch (SoapFaultException e) {

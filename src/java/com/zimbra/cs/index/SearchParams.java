@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -40,6 +40,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.service.mail.CalendarUtils;
@@ -936,6 +937,34 @@ public final class SearchParams implements Cloneable {
         @Override
         public String toString() {
             return name;
+        }
+
+        private static final Map<String, ExpandResults> LEGACY_MAP = ImmutableMap.<String, ExpandResults>builder()
+                .put(FIRST.name, FIRST).put("1", FIRST)
+                .put(HITS.name, HITS)
+                .put(ALL.name, ALL)
+                .build();
+
+        public ExpandResults toLegacyExpandResults(Server server) {
+            if (server != null && server.getServerVersion() == null) {
+                if (LEGACY_MAP.containsKey(this.name)) {
+                    return this;
+                } else {
+                    //pre 8.5; no way to know which version
+                    //assume HELIX as lowest common - fetch="1|hits|all|{item-id}"
+                    ExpandResults mapped = ALL;
+                    if (this == FIRST_MSG || this == U_OR_FIRST_MSG || this == U1_OR_FIRST_MSG) {
+                        mapped = FIRST;
+                    } else if (this == HITS_OR_FIRST_MSG) {
+                        mapped = HITS;
+                    }
+                    ZimbraLog.search.debug("mapped current ExpandResults %s to %s for legacy server %s", this, mapped, server.getName());
+                    return mapped;
+                }
+            } else {
+                //for now 8.5+ supports the same set of expands; would add code here if 8.6 or 9.0 changes it
+                return this;
+            }
         }
     }
 
