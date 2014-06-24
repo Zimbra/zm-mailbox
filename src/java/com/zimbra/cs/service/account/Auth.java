@@ -120,6 +120,8 @@ public class Auth extends AccountDocumentHandler {
                 }
                 ServletRequest httpReq = (ServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
                 httpReq.setAttribute(CsrfFilter.AUTH_TOKEN, at);
+                boolean csrfSupport = request.getAttributeBool(AccountConstants.A_CSRF_SUPPORT, false);
+                at.setCsrfTokenEnabled(csrfSupport);
                 return doResponse(request, at, zsc, context, authTokenAcct);
             } catch (AuthTokenException e) {
                 throw ServiceException.AUTH_REQUIRED();
@@ -205,9 +207,7 @@ public class Auth extends AccountDocumentHandler {
             ServletRequest httpReq = (ServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
             // For CSRF filter so that token generation can happen
            boolean csrfSupport = request.getAttributeBool(AccountConstants.A_CSRF_SUPPORT, false);
-            if (csrfSupport) {
-                at.setCsrfTokenEnabled(Boolean.TRUE);
-            }
+           at.setCsrfTokenEnabled(csrfSupport);
             httpReq.setAttribute(CsrfFilter.AUTH_TOKEN, at);
             return doResponse(request, at, zsc, context, acct);
         }
