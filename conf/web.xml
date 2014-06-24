@@ -701,7 +701,7 @@
     </description>
     <env-entry-name>zimbraServicesEnabled</env-entry-name>
     <env-entry-type>java.lang.String</env-entry-type>
-    <env-entry-value>%%list VAR:zimbraServiceEnabled ,%%</env-entry-value>
+    <env-entry-value>service,zimbra,zimbraAdmin,zimlet,mailbox</env-entry-value>
   </env-entry>
   
   <!--  additional servlets -->
