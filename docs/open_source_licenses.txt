@@ -40,7 +40,7 @@ SECTION 1: BSD-STYLE, MIT-STYLE, OR SIMILAR STYLE LICENSES
    >>> bouncycastle-1.46
    >>> bouncycastle-zimbra-20110708
    >>> chunkin-nginx-module-0.23rc2
-   >>> curl-7.36.0
+   >>> curl-7.37.0
    >>> cyrus-sasl-zimbra-2.1.26
    >>> datetimepicker-1.0
    >>> dom4j-1.5.2
@@ -64,38 +64,36 @@ SECTION 1: BSD-STYLE, MIT-STYLE, OR SIMILAR STYLE LICENSES
    >>> jython-2.5.2
    >>> jzlib-1.0.7
    >>> keyview-10.13.0.0
-   >>> ldns-1.6.16
    >>> libbsd-0.6.0
    >>> libevent-2.0.21
-   >>> libmemcached-1.0.6
    >>> libpng-1.5.10
    >>> libxml2-2.9.1
    >>> md5.js-2.1
    >>> memcached-1.4.17
    >>> modernizr-2.6.2
-   >>> net-snmp-5.7.2
+   >>> net-snmp-5.7.2.1
    >>> nginx-1.2-zimbra
    >>> nist-sip-1.2
    >>> nviennot-nginx-tcp-keepalive-4d7186d
-   >>> opendkim-2.9.1
+   >>> opendkim-2.9.2
    >>> openldap-2.4.39
    >>> openssl-1.0.1h
    >>> perl-data-uuid-1.219
    >>> perl-geography-countries-2009041301
    >>> perl-locale-maketext-simple-0.21
    >>> perl-mail-spf-2.9.0
-   >>> perl-net-ssleay-1.55
+   >>> perl-net-ssleay-1.64
    >>> perl-socket6-0.25
    >>> perl-termreadkey-2.30.02
    >>> perl-try-tiny-0.19
-   >>> php-5.4.20
+   >>> php-5.4.29
    >>> postfix-logwatch-1.40.01
    >>> sendmail-8.14.8
    >>> slf4j-1.6.4
    >>> spymemcached-2.6
    >>> sqlitejdbc-3.7.5-1
    >>> tnef-1.8.0
-   >>> unbound-1.4.21
+   >>> unbound-1.4.22
    >>> xpp3-1.1.4c
    >>> yui-2.4.2
    >>> zeroclipboard-1.0.7
@@ -233,13 +231,13 @@ SECTION 7: GNU General Public License, V1.0
 SECTION 8: GNU General Public License, V2.0
 
    >>> amavisd-2.9.0
-   >>> clamav-0.98.3
+   >>> clamav-0.98.4
    >>> cluebringer-2.1.0-beta
    >>> innotop-1.9.1
    >>> javax.ws.rs-api-2.0-m10
    >>> libtool-2.2.6b
    >>> libwww-perl-6.05
-   >>> mariadb-10.0.11
+   >>> mariadb-10.0.12
    >>> mysql-connector-java-5.1.29
    >>> perl-archive-tar-1.96
    >>> perl-archive-zip-1.37
@@ -370,7 +368,7 @@ SECTION 8: GNU General Public License, V2.0
 SECTION 9: GNU General Public License, V3.0
 
    >>> libidn-1.24
-   >>> rsync-3.0.9
+   >>> rsync-3.1.1
 
 
 
@@ -862,7 +860,7 @@ NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
->>> curl-7.36.0
+>>> curl-7.37.0
 
 COPYRIGHT AND PERMISSION NOTICE
 
@@ -18245,36 +18243,6 @@ LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE
 OF THIS SOFTWARE.
 
 
->>> ldns-1.6.16
-
-Copyright (c) 2005,2006, NLnetLabs
-All rights reserved.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
-
-    * Redistributions of source code must retain the above copyright notice,
-      this list of conditions and the following disclaimer.
-    * Redistributions in binary form must reproduce the above copyright
-      notice, this list of conditions and the following disclaimer in the
-      documentation and/or other materials provided with the distribution.
-    * Neither the name of NLnetLabs nor the names of its
-      contributors may be used to endorse or promote products derived from this
-      software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
-LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-POSSIBILITY OF SUCH DAMAGE.
-
-
 >>> libbsd-0.6.0
 
 The following 4-clause BSD licenses are only for man pages, specifically
@@ -18834,43 +18802,6 @@ The arc4module is available under the following, sometimes called the
    OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 
->>> libmemcached-1.0.6
-
-Software License Agreement (BSD License)
-
-Copyright (c) 2011, Data Differential (http://datadifferential.com/)
-Copyright (c) 2007-2010, TangentOrg (Brian Aker)
-All rights reserved.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are
-met:
-
-Redistributions of source code must retain the above copyright
-notice, this list of conditions and the following disclaimer.
-
-Redistributions in binary form must reproduce the above
-copyright notice, this list of conditions and the following disclaimer
-in the documentation and/or other materials provided with the
-distribution.
-
-Neither the name of TangentOrg nor the names of its
-contributors may be used to endorse or promote products derived from
-this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-
 >>> libpng-1.5.10
 
 This copy of the libpng notices is provided for your convenience.  In case of
@@ -19177,7 +19108,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 
 
->>> net-snmp-5.7.2
+>>> net-snmp-5.7.2.1
 
 Various copyrights apply to this package, listed in various separate
 parts below.  Please make sure that you read all the parts.
@@ -19693,7 +19624,7 @@ Copyright (C) 2011 Nicolas Viennot <nicolas@viennot.biz>
 This file is subject to the terms and conditions of the MIT License.
 
 
->>> opendkim-2.9.1
+>>> opendkim-2.9.2
 
 Copyright (c) 2009, 2010, 2012, The Trusted Domain Project.
 All rights reserved.
@@ -19733,7 +19664,7 @@ ADDITIONAL LICENSE INFORMATION :
 
 > SENDMAIL OPEN SOURCE LICENSE
 
-opendkim-2.9.1.tar.gz\opendkim-2.9.1.tar\opendkim-2.9.1\LICENSE
+opendkim-2.9.2.tar.gz\opendkim-2.9.2.tar\opendkim-2.9.2\LICENSE
 
 The following license terms and conditions apply to this open source
 software ("Software"), unless a different license is obtained directly
@@ -19814,7 +19745,7 @@ $Revision: 1.1 $ $Date: 2009/07/16 18:43:18 $
 
 > MIT
 
-opendkim-2.9.1.tar.gz\opendkim-2.9.1.tar\opendkim-2.9.1\libopendkim\base32.c
+opendkim-2.9.2.tar.gz\opendkim-2.9.2.tar\opendkim-2.9.2\libopendkim\base32.c
 
 Copyright (c) 2006-2009 Bjorn Andersson <flex@kryo.se>,
 Erik Ekman <yarrick@kryo.se>
@@ -20143,7 +20074,7 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
->>> perl-net-ssleay-1.55
+>>> perl-net-ssleay-1.64
 
 Copyright (c) 1996-2002 Sampo Kellomaki <sampo@iki.fi>
 Copyright (C) 2005 Florian Ragwitz <rafl@debian.org>
@@ -20216,7 +20147,7 @@ This program is free software; you can redistribute
 it and/or modify it under the terms of the MIT license.
 
 
->>> php-5.4.20
+>>> php-5.4.29
 
 The PHP License, version 3.01
 
@@ -20245,7 +20176,7 @@ ADDITIONAL LICENSE INFORMATION:
 
 > BSD style
 
-php-5.4.20.tar.bz2\php-5.4.20.tar\php-5.4.20\Zend\LICENSE
+php-5.4.29.tar.bz2\php-5.4.29.tar\php-5.4.29\Zend\LICENSE
 
 The Zend Engine License, Version 2.00
 Copyright (c) 1999-2006 Zend Technologies Ltd. All rights reserved.
@@ -20269,7 +20200,7 @@ THIS SOFTWARE IS PROVIDED BY ZEND TECHNOLOGIES LTD. ``AS IS'' AND  ANY EXPRESSED
 
 > GPL 2.0
 
-php-5.4.20.tar.bz2\php-5.4.20.tar\php-5.4.20\build\shtool
+php-5.4.29.tar.bz2\php-5.4.29.tar\php-5.4.29\build\shtool
 
 GNU shtool -- The GNU Portable Shell Tool
 Copyright (c) 1994-2008 Ralf S. Engelschall <rse@engelschall.com>
@@ -20290,14 +20221,14 @@ NOTICE: Given that you include this file verbatim into your own source tree, you
 
 > LGPL 2.1
 
-php-5.4.20.tar.bz2\php-5.4.20.tar\php-5.4.20\ext\bcmath\libbcmath\COPYING.LIB
+php-5.4.29.tar.bz2\php-5.4.29.tar\php-5.4.29\ext\bcmath\libbcmath\COPYING.LIB
 
 License: LGPL 2.1
 
 
 > LGPL 2.0
 
-php-5.4.20.tar.bz2\php-5.4.20.tar\php-5.4.20\ext\bcmath\libbcmath\src\add.c
+php-5.4.29.tar.bz2\php-5.4.29.tar\php-5.4.29\ext\bcmath\libbcmath\src\add.c
 
 Copyright (C) 1991, 1992, 1993, 1994, 1997 Free Software Foundation, Inc.
 Copyright (C) 2000 Philip A. Nelson
@@ -20318,7 +20249,7 @@ Bellingham, WA 98226-9062
 
 > MIT
 
-php-5.4.20.tar.bz2\php-5.4.20.tar\php-5.4.20\ext\gd\libgd\ COPYING
+php-5.4.29.tar.bz2\php-5.4.29.tar\php-5.4.29\ext\gd\libgd\ COPYING
 
 Portions copyright 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002 by Cold Spring Harbor Laboratory. Funded under Grant P41-RR02188 by the National Institutes of Health.
  
@@ -20344,7 +20275,7 @@ Although their code does not appear in gd, the authors wish to thank David Kobla
 
 > Public Domain
 
-php-5.4.20.tar.bz2\php-5.4.20.tar\php-5.4.20\ext\sqlite3\libsqlite\sqlite3.h
+php-5.4.29.tar.bz2\php-5.4.29.tar\php-5.4.29\ext\sqlite3\libsqlite\sqlite3.h
 
 2001 September 15
 
@@ -20586,7 +20517,7 @@ in courts and fora located in the State of New York, and you consent to such
 jurisdiction and venue.
 
 
->>> unbound-1.4.21
+>>> unbound-1.4.22
 
 Copyright (c) 2007, NLnet Labs. All rights reserved.
 
@@ -30687,7 +30618,7 @@ A copy of the license is included in the section entitled "GNU
 Free Documentation License".
 
 
->>> clamav-0.98.3
+>>> clamav-0.98.4
 
 Copyright (C)2008 Sourcefire, Inc.
 
@@ -31100,7 +31031,7 @@ COPYRIGHT
 This library is free software; you can redistribute it and/or modify it under the same terms as Perl itself.
 
 
->>> mariadb-10.0.11
+>>> mariadb-10.0.12
 
 
 This is a release of MariaDB.
@@ -34866,7 +34797,7 @@ GNU Libidn is distributed in the hope that it will be useful, but WITHOUT ANY WA
 You should have received copies of the GNU General Public License and the GNU Lesser General Public License along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
->>> rsync-3.0.9
+>>> rsync-3.1.1
 
 Copyright (C) 1992-1995 Andrew Tridgell
 Copyright (C) 2007-2008 Wayne Davison
