@@ -95,4 +95,8 @@ public class ZAuthResult {
     public String getSkin() {
         return data.getSkin();
     }
+
+    public String getCsrfToken() {
+        return data.getCsrfToken();
+    }
 }

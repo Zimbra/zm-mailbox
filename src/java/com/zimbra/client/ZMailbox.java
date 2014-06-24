@@ -267,6 +267,7 @@ public class ZMailbox implements ToZJSONObject {
         private List<String> mAttrs;
         private List<String> mPrefs;
         private String mRequestedSkin;
+        private boolean mCsrfSupported;
         private Map<String, String> mCustomHeaders;
 
         public Options() {
@@ -373,6 +374,9 @@ public class ZMailbox implements ToZJSONObject {
 
         public String getRequestedSkin() { return mRequestedSkin; }
         public Options setRequestedSkin(String skin) { mRequestedSkin = skin;  return this; }
+
+        public boolean getCsrfSupported() { return mCsrfSupported; }
+        public Options setCsrfSupported(boolean csrfSupported) { mCsrfSupported = csrfSupported;  return this; }
 
         public Map<String, String> getCustomHeaders() {
             if (mCustomHeaders == null) {
@@ -605,6 +609,7 @@ public class ZMailbox implements ToZJSONObject {
         auth.setPassword(password);
         auth.setVirtualHost(options.getVirtualHost());
         auth.setRequestedSkin(options.getRequestedSkin());
+//        auth.setCsrfSupported(options.getCsrfSupported());
         addAttrsAndPrefs(auth, options);
 
         AuthResponse authRes = invokeJaxb(auth);
@@ -622,6 +627,7 @@ public class ZMailbox implements ToZJSONObject {
         ZAuthToken zat = options.getAuthToken(); // cannot be null here
         req.setAuthToken(new AuthToken(zat.getValue(), false));
         req.setRequestedSkin(options.getRequestedSkin());
+//        req.setCsrfSupported(options.getCsrfSupported());
         addAttrsAndPrefs(req, options);
 
         AuthResponse res = invokeJaxb(req);
