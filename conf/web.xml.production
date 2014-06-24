@@ -704,6 +704,15 @@
     <url-pattern>/Autodiscover/*</url-pattern>
     <url-pattern>/AutoDiscover/*</url-pattern>
   </servlet-mapping>
+  
+  <env-entry>
+    <description>
+        Zimbra Services Installed on the server.
+    </description>
+    <env-entry-name>zimbraServicesEnabled</env-entry-name>
+    <env-entry-type>java.lang.String</env-entry-type>
+    <env-entry-value>%%list VAR:zimbraServiceEnabled ,%%</env-entry-value>
+  </env-entry>
 
   <!-- HTTPSBEGIN %%comment VAR:zimbraMailMode,-->,https,redirect%%
      <security-constraint>
