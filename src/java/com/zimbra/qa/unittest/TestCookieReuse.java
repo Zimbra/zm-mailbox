@@ -497,7 +497,7 @@ public class TestCookieReuse extends TestCase {
 
 		        Element context = null;
 		        if (generateContextHeader()) {
-		            context = SoapUtil.toCtxt(proto, null);
+		            context = SoapUtil.toCtxt(proto, null, null);
 		            if (noSession) {
 		                SoapUtil.disableNotificationOnCtxt(context);
 		            } else {
