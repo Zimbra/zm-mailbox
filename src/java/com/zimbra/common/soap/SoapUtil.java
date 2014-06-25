@@ -38,6 +38,25 @@ public final class SoapUtil {
      * @param csrfToken
      * @return A new {@code contex} Element in the appropriate markup
      */
+    public static Element toCtxt(SoapProtocol protocol, ZAuthToken authToken) {
+        Element ctxt = protocol.getFactory().createElement(HeaderConstants.CONTEXT);
+        if (authToken != null)
+            authToken.encodeSoapCtxt(ctxt);
+        return ctxt;
+    }
+
+    /**
+     * Creates a SOAP request {@code <context>} {@link com.zimbra.common.soap.Element}.
+     * <p>
+     * All requests except Auth and a few others must specify an auth token. You
+     * must also call {@link #addSessionToCtxt(Element, String)} if you want
+     * change notification; the default is not to create a session.
+     *
+     * @param protocol The markup to use when creating the {@code context}
+     * @param authToken The authorization token for the user
+     * @param csrfToken
+     * @return A new {@code contex} Element in the appropriate markup
+     */
     public static Element toCtxt(SoapProtocol protocol, ZAuthToken authToken, String csrfToken) {
         Element ctxt = protocol.getFactory().createElement(HeaderConstants.CONTEXT);
         if (authToken != null)
