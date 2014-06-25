@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2008, 2009, 2010, 2013 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -35,12 +35,17 @@ public final class SoapUtil {
      *
      * @param protocol The markup to use when creating the {@code context}
      * @param authToken The authorization token for the user
+     * @param csrfToken
      * @return A new {@code contex} Element in the appropriate markup
      */
-    public static Element toCtxt(SoapProtocol protocol, ZAuthToken authToken) {
+    public static Element toCtxt(SoapProtocol protocol, ZAuthToken authToken, String csrfToken) {
         Element ctxt = protocol.getFactory().createElement(HeaderConstants.CONTEXT);
         if (authToken != null)
             authToken.encodeSoapCtxt(ctxt);
+        if (csrfToken != null) {
+           Element csrfElmnt = ctxt.addElement(HeaderConstants.E_CSRFTOKEN);
+           csrfElmnt.addText(csrfToken);
+        }
         return ctxt;
     }
 
@@ -57,7 +62,7 @@ public final class SoapUtil {
      * @see #toCtxt(com.zimbra.common.soap.SoapProtocol, String, boolean)
      */
     public static Element toCtxt(SoapProtocol protocol, ZAuthToken authToken, String sessionId, int sequence) {
-        Element ctxt = toCtxt(protocol, authToken);
+        Element ctxt = toCtxt(protocol, authToken, null);
         return addSessionToCtxt(ctxt, authToken == null ? null : sessionId, sequence);
     }
 
