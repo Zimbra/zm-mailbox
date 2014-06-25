@@ -609,7 +609,7 @@ public class ZMailbox implements ToZJSONObject {
         auth.setPassword(password);
         auth.setVirtualHost(options.getVirtualHost());
         auth.setRequestedSkin(options.getRequestedSkin());
-//        auth.setCsrfSupported(options.getCsrfSupported());
+        auth.setCsrfSupported(options.getCsrfSupported());
         addAttrsAndPrefs(auth, options);
 
         AuthResponse authRes = invokeJaxb(auth);
@@ -627,7 +627,7 @@ public class ZMailbox implements ToZJSONObject {
         ZAuthToken zat = options.getAuthToken(); // cannot be null here
         req.setAuthToken(new AuthToken(zat.getValue(), false));
         req.setRequestedSkin(options.getRequestedSkin());
-//        req.setCsrfSupported(options.getCsrfSupported());
+        req.setCsrfSupported(options.getCsrfSupported());
         addAttrsAndPrefs(req, options);
 
         AuthResponse res = invokeJaxb(req);
