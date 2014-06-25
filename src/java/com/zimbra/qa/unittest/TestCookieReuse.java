@@ -1,19 +1,19 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
- * 
+ *
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
  * You should have received a copy of the GNU General Public License along with this program.
  * If not, see <http://www.gnu.org/licenses/>.
- * 
+ *
  * ***** END LICENSE BLOCK *****
  */
 package com.zimbra.qa.unittest;
@@ -46,13 +46,17 @@ import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.soap.SoapUtil;
 import com.zimbra.common.util.ZimbraHttpConnectionManager;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ZimbraAuthToken;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.soap.JaxbUtil;
+import com.zimbra.soap.account.message.AuthRequest;
+import com.zimbra.soap.account.message.AuthResponse;
 import com.zimbra.soap.account.message.EndSessionRequest;
 import com.zimbra.soap.mail.message.SearchRequest;
 import com.zimbra.soap.mail.message.SearchResponse;
+import com.zimbra.soap.type.AccountSelector;
 import com.zimbra.soap.type.SearchHit;
 
 public class TestCookieReuse extends TestCase {
@@ -269,6 +273,11 @@ public class TestCookieReuse extends TestCase {
         statusCode = HttpClientUtil.executeMethod(eve, get);
         assertEquals("This request should not succeed. Getting status code " + statusCode, HttpStatus.SC_UNAUTHORIZED,statusCode);
     }
+
+    /**
+     * test registering an authtoken
+     * @throws Exception
+     */
     @Test
     public void testTokenRegistration () throws Exception {
     	Account a = TestUtil.getAccount(USER_NAME);
@@ -276,6 +285,10 @@ public class TestCookieReuse extends TestCase {
     	Assert.assertTrue("token should be registered", at.isRegistered());
     }
 
+    /**
+     * test de-registering an authtoken
+     * @throws Exception
+     */
     @Test
     public void testTokenDeregistration () throws Exception {
     	Account a = TestUtil.getAccount(USER_NAME);
@@ -285,6 +298,10 @@ public class TestCookieReuse extends TestCase {
     	Assert.assertFalse("token should not be registered", at.isRegistered());
     }
 
+    /**
+     * test token being deregistered after it is expired
+     * @throws Exception
+     */
     @Test
     public void testTokenExpiredTokenDeregistration() throws Exception {
     	Account a = TestUtil.getAccount(USER_NAME);
@@ -296,6 +313,10 @@ public class TestCookieReuse extends TestCase {
     	Assert.assertTrue("Second token should be registered", at2.isRegistered());
     }
 
+    /**
+     * Test old behavior: tokens appear to be registered even when they are not registered when lowest supported auth version is set to 1
+     * @throws Exception
+     */
     @Test
     public void testOldClientSupport() throws Exception {
     	Account a = TestUtil.getAccount(USER_NAME);
@@ -313,6 +334,11 @@ public class TestCookieReuse extends TestCase {
     	Assert.assertFalse("token should not be registered", at.isRegistered());
     }
 
+    /**
+     * Verify that when zimbraLowestSupportedAuthVersion is set to 2, authtokens get added to LDAP
+     * Verify that when zimbraLowestSupportedAuthVersion is set to 1, authtokens do not get added to LDAP
+     * @throws Exception
+     */
     @Test
     public void testChangingSupportedAuthVersion() throws Exception {
         Provisioning.getInstance().getLocalServer().setLowestSupportedAuthVersion(2);
@@ -328,6 +354,11 @@ public class TestCookieReuse extends TestCase {
         assertEquals("should have the same number of registered tokens as before", tokens2.length,tokens3.length);
 
     }
+
+    /**
+     * Verify that when zimbraForceClearCookies is set to TRUE authtokens get deregistered
+     * @throws Exception
+     */
     @Test
     public void testClearCookies () throws Exception {
     	Account a = TestUtil.getAccount(USER_NAME);
@@ -336,6 +367,104 @@ public class TestCookieReuse extends TestCase {
     	Assert.assertTrue("token should be registered", at.isRegistered());
     	at.deRegister();
     	Assert.assertFalse("token should not be registered", at.isRegistered());
+    }
+
+    /**
+     * Verify that expired authtokens get cleaned up after a new token is created
+     * @throws Exception
+     */
+    @Test
+    public void testAuthTokenCleanup() throws Exception {
+        Account a = TestUtil.getAccount(USER_NAME);
+        String[] tokensPre = a.getAuthTokens();
+        ZimbraAuthToken at1 = new ZimbraAuthToken(a, System.currentTimeMillis() + 1000);
+        assertFalse("token should not be expired yet", at1.isExpired());
+        String[] tokensPost = a.getAuthTokens();
+        assertEquals("should have one more authtoken now", tokensPre.length+1, tokensPost.length);
+        Thread.sleep(2000);
+        assertTrue("token should have expired by now", at1.isExpired());
+
+        //get a new authtoken, this should clean up the expired one
+        ZimbraAuthToken at2 = new ZimbraAuthToken(a, System.currentTimeMillis() + 1000);
+        String[] tokensFinal = a.getAuthTokens();
+        assertEquals("should have the same nunber of authtoken now as before", tokensPost.length, tokensFinal.length);
+    }
+
+    /**
+     * Verify that when an expired authtoken has been removed from LDAP, login still succeeds
+     * @throws Exception
+     */
+    @Test
+    public void testLoginClearAuthTokensException() throws Exception {
+        Account a = TestUtil.getAccount(USER_NAME);
+        ZimbraAuthToken at1 = new ZimbraAuthToken(a, System.currentTimeMillis() + 1000);
+        assertFalse("token should not be expired yet", at1.isExpired());
+        Thread.sleep(2000);
+        assertTrue("token should have expired by now", at1.isExpired());
+
+        //explicitely clean up expired auth tokens
+        String[] tokens = a.getAuthTokens();
+        for(String tk : tokens) {
+            String[] tokenParts = tk.split("\\|");
+            if(tokenParts.length > 0) {
+                String szExpire = tokenParts[1];
+                Long expires = Long.parseLong(szExpire);
+                if(System.currentTimeMillis() > expires) {
+                    a.removeAuthTokens(tk);
+                }
+            }
+        }
+
+        //verify that AuthRequest still works
+        SoapHttpTransport transport = new SoapHttpTransport(TestUtil.getSoapUrl());
+        AccountSelector acctSel = new AccountSelector(com.zimbra.soap.type.AccountBy.name, a.getName());
+        AuthRequest req = new AuthRequest(acctSel, "test123");
+        Element resp = transport.invoke(JaxbUtil.jaxbToElement(req, SoapProtocol.SoapJS.getFactory()));
+        AuthResponse authResp = JaxbUtil.elementToJaxb(resp);
+        String newAuthToken = authResp.getAuthToken();
+        assertNotNull("should have received a new authtoken", newAuthToken);
+        AuthToken at = ZimbraAuthToken.getAuthToken(newAuthToken);
+        assertTrue("new auth token should be registered", at.isRegistered());
+        assertFalse("new auth token should ne be expired yet", at.isExpired());
+    }
+
+    /**
+     * Verify that EndSessionRequest does not clean up expired tokens
+     * @throws Exception
+     */
+    @Test
+    public void testEndSessionNoCleanup() throws Exception {
+        Account a = TestUtil.getAccount(USER_NAME);
+        String[] tokensPre = a.getAuthTokens();
+        ZimbraAuthToken at1 = new ZimbraAuthToken(a, System.currentTimeMillis() + 1000);
+        ZimbraAuthToken at2 = new ZimbraAuthToken(a, System.currentTimeMillis() + 100000);
+        assertFalse("First token should not be expired yet", at1.isExpired());
+        assertFalse("Second token should not be expired", at2.isExpired());
+
+        String[] tokensPost = a.getAuthTokens();
+        assertEquals("should have two more authtoken now", tokensPre.length+2, tokensPost.length);
+        Thread.sleep(2000);
+        assertTrue("First token should have expired by now", at1.isExpired());
+        assertFalse("Second token should not have expired by now", at2.isExpired());
+
+        SoapHttpTransport transport = new SoapHttpTransport(TestUtil.getSoapUrl());
+        EndSessionRequest esr = new EndSessionRequest();
+        transport.setAuthToken(at2.getEncoded());
+        transport.invoke(JaxbUtil.jaxbToElement(esr, SoapProtocol.SoapJS.getFactory()));
+        String[] tokensFinal = a.getAuthTokens();
+        assertEquals("should have one less authtoken after EndSessionRequest", tokensFinal.length,tokensPost.length-1);
+
+        //verify that AuthRequest still works
+        AccountSelector acctSel = new AccountSelector(com.zimbra.soap.type.AccountBy.name, a.getName());
+        AuthRequest req = new AuthRequest(acctSel, "test123");
+        transport.setAuthToken("");
+        Element resp = transport.invoke(JaxbUtil.jaxbToElement(req, SoapProtocol.SoapJS.getFactory()));
+        AuthResponse authResp = JaxbUtil.elementToJaxb(resp);
+        String newAuthToken = authResp.getAuthToken();
+        assertNotNull("should have received a new authtoken", newAuthToken);
+        AuthToken at = ZimbraAuthToken.getAuthToken(newAuthToken);
+        assertTrue("new auth token should be registered", at.isRegistered());
+        assertFalse("new auth token should ne be expired yet", at.isExpired());
     }
 
     /**
