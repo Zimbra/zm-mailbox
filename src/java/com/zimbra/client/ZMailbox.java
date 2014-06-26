@@ -267,7 +267,7 @@ public class ZMailbox implements ToZJSONObject {
         private List<String> mAttrs;
         private List<String> mPrefs;
         private String mRequestedSkin;
-        private boolean mCsrfSupported;
+        private boolean mCsrfSupported; // Used by AuthRequest
         private Map<String, String> mCustomHeaders;
 
         public Options() {
@@ -429,6 +429,7 @@ public class ZMailbox implements ToZJSONObject {
     }
 
     private ZAuthToken mAuthToken;
+    private String mCsrfToken;
     private SoapHttpTransport mTransport;
     private NotifyPreference mNotifyPreference;
     private Map<String, ZTag> mNameToTag;
@@ -509,6 +510,7 @@ public class ZMailbox implements ToZJSONObject {
         if (options.getAuthToken() != null) {
             if (options.getAuthAuthToken()) {
                 mAuthResult = authByAuthToken(options);
+                initCsrfToken(mAuthResult.getCsrfToken());
             }
             initAuthToken(options.getAuthToken());
         } else if (options.getAccount() != null) {
@@ -521,6 +523,7 @@ public class ZMailbox implements ToZJSONObject {
             }
             mAuthResult = authByPassword(options, password);
             initAuthToken(mAuthResult.getAuthToken());
+            initCsrfToken(mAuthResult.getCsrfToken());
         }
         if (options.getTargetAccount() != null) {
             initTargetAccount(options.getTargetAccount(), options.getTargetAccountBy());
@@ -543,6 +546,11 @@ public class ZMailbox implements ToZJSONObject {
     private void initAuthToken(ZAuthToken authToken){
         mAuthToken = authToken;
         mTransport.setAuthToken(mAuthToken);
+    }
+
+    private void initCsrfToken(String csrfToken){
+        mCsrfToken = csrfToken;
+        mTransport.setCsrfToken(mCsrfToken);
     }
 
     private void initPreAuth(Options options) {
@@ -644,6 +652,10 @@ public class ZMailbox implements ToZJSONObject {
         return mAuthToken;
     }
 
+    public String getCsrfToken() {
+        return mCsrfToken;
+    }
+
     /**
      * @param uri URI of server we want to talk to
      * @param timeout timeout for HTTP connection or 0 for no timeout
@@ -669,6 +681,9 @@ public class ZMailbox implements ToZJSONObject {
         }
         if (mAuthToken != null) {
             mTransport.setAuthToken(mAuthToken);
+        }
+        if (mCsrfToken != null) {
+            mTransport.setCsrfToken(mCsrfToken);
         }
         for (Map.Entry<String, String> entry : options.getCustomHeaders().entrySet()) {
             mTransport.getCustomHeaders().put(entry.getKey(), entry.getValue());
