@@ -364,23 +364,38 @@ public final class CsrfUtil {
 
         try {
             String crumb = at.getCrumb();
-            StringBuilder encodedBuff = new StringBuilder(64);
-            BlobMetaData.encodeMetaData(C_ID, accountId, encodedBuff);
-            BlobMetaData.encodeMetaData(C_EXP, Long.toString(authTokenExpiration), encodedBuff);
-            BlobMetaData.encodeMetaData(C_SALT_ID, tokenSalt, encodedBuff);
+            String tokenData = getExistingCsrfTokenForThisAuthToken(accountId, crumb);
+            if (tokenData == null) {
+
+                StringBuilder encodedBuff = new StringBuilder(64);
+                BlobMetaData.encodeMetaData(C_ID, accountId, encodedBuff);
+                BlobMetaData.encodeMetaData(C_EXP, Long.toString(authTokenExpiration), encodedBuff);
+                BlobMetaData.encodeMetaData(C_SALT_ID, tokenSalt, encodedBuff);
 
 
-            String data = new String(Hex.encodeHex(encodedBuff.toString().getBytes()));
+                tokenData = new String(Hex.encodeHex(encodedBuff.toString().getBytes()));
+            }
             CsrfTokenKey key = getCurrentKey();
-            String hmac = ZimbraAuthToken.getHmac(data, key.getKey());
+            String hmac = ZimbraAuthToken.getHmac(tokenData, key.getKey());
             String encoded = key.getVersion() + "_" + hmac;
-            storeTokenData(data, accountId, authTokenExpiration, crumb);
+            storeTokenData(tokenData, accountId, authTokenExpiration, crumb);
             return encoded;
         } catch (AuthTokenException e) {
             throw ServiceException.FAILURE("Error generating Auth Token, "
                 + e.getMessage(), e);
         }
 
+    }
+
+    /**
+     * @param accountId
+     * @param crumb
+     * @return
+     * @throws ServiceException
+     */
+    private static String getExistingCsrfTokenForThisAuthToken(String accountId, String crumb) throws ServiceException {
+        Account account = Provisioning.getInstance().get(AccountBy.id, accountId);
+        return getTokenDataFromLdap(crumb, account);
     }
 
     protected static CsrfTokenKey getCurrentKey() throws AuthTokenException {
@@ -432,10 +447,6 @@ public final class CsrfUtil {
 
 
 
-    public static void main(String args[]) {
-
-        //        CsrfUtil.generateCsrfToken2("9113d573-fec7-4937-9dde-40c9caffd008", System.currentTimeMillis());
-    }
 
 
 
@@ -508,4 +519,17 @@ public final class CsrfUtil {
         }
     }
 
+
+    public static void main(String args[])
+    {
+        try {
+        AuthToken at = ZimbraAuthToken .getAuthToken("0_f66f9e23c3d6ec89c0723375489c729b13b108d9_69643d33363a34313537336365352d303035352d343066362d626235372d6264396238663136663666393b6578703d31333a313430333935303235363538323b747970653d363a7a696d6272613b7469643d31303a313837363638363831333b76657273696f6e3d303a3b637372663d313a313b");
+        String crumb = at.getCrumb();
+        String csrfToken = "0_a00d6f6af20bf183ab63911ab648a7869793158e";
+        boolean result = CsrfUtil.isValidCsrfToken(csrfToken, at);
+        System.out.println(result);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 }

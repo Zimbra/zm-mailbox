@@ -75,6 +75,8 @@ public class Auth extends AccountDocumentHandler {
         AccountBy acctBy = null;
         Account acct = null;
         Element acctEl = request.getOptionalElement(AccountConstants.E_ACCOUNT);
+        boolean csrfSupport = request.getAttributeBool(AccountConstants.A_CSRF_SUPPORT, false);
+
         if (acctEl != null) {
             acctValuePassedIn = acctEl.getText();
             acctValue = acctValuePassedIn;
@@ -120,9 +122,14 @@ public class Auth extends AccountDocumentHandler {
                 }
                 ServletRequest httpReq = (ServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
                 httpReq.setAttribute(CsrfFilter.AUTH_TOKEN, at);
-                boolean csrfSupport = request.getAttributeBool(AccountConstants.A_CSRF_SUPPORT, false);
-                at.setCsrfTokenEnabled(csrfSupport);
-                return doResponse(request, at, zsc, context, authTokenAcct);
+                if (csrfSupport && !at.isCsrfTokenEnabled()) {
+                    // handle case where auth token was originally generated with csrf support
+                    // and now client sends the same auth token but saying csrfSupport is turned off
+                    // in that case do not disable CSRF check for this authToken.
+                    at.setCsrfTokenEnabled(csrfSupport);
+                }
+
+                return doResponse(request, at, zsc, context, authTokenAcct, csrfSupport);
             } catch (AuthTokenException e) {
                 throw ServiceException.AUTH_REQUIRED();
             }
@@ -206,15 +213,19 @@ public class Auth extends AccountDocumentHandler {
             AuthToken at = expires ==  0 ? AuthProvider.getAuthToken(acct) : AuthProvider.getAuthToken(acct, expires);
             ServletRequest httpReq = (ServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
             // For CSRF filter so that token generation can happen
-           boolean csrfSupport = request.getAttributeBool(AccountConstants.A_CSRF_SUPPORT, false);
-           at.setCsrfTokenEnabled(csrfSupport);
+            if (csrfSupport && !at.isCsrfTokenEnabled()) {
+                // handle case where auth token was originally generated with csrf support
+                // and now client sends the same auth token but saying csrfSupport is turned off
+                // in that case do not disable CSRF check for this authToken.
+                at.setCsrfTokenEnabled(csrfSupport);
+            }
             httpReq.setAttribute(CsrfFilter.AUTH_TOKEN, at);
-            return doResponse(request, at, zsc, context, acct);
+            return doResponse(request, at, zsc, context, acct, csrfSupport);
         }
     }
 
     private Element doResponse(Element request, AuthToken at, ZimbraSoapContext zsc,
-            Map<String, Object> context, Account acct)
+            Map<String, Object> context, Account acct, boolean csrfSupport)
     throws ServiceException {
         Element response = zsc.createElement(AccountConstants.AUTH_RESPONSE);
         at.encodeAuthResp(response, false);
@@ -274,7 +285,7 @@ public class Auth extends AccountDocumentHandler {
 			response.addElement(AccountConstants.E_SKIN).setText(skin);
 		}
 
-		if (at.isCsrfTokenEnabled()) {
+		if (csrfSupport) {
 		    String accountId = at.getAccountId();
             long authTokenExpiration = at.getExpires();
             int tokenSalt = (Integer)httpReq.getAttribute(CsrfFilter.CSRF_SALT);
