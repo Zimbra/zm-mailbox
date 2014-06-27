@@ -48,9 +48,6 @@
     <fileset dir="${common.jars.dir}">
         <include name="**/*.jar"/>
     </fileset>
-    <fileset dir="${common.internal.jars.dir}">
-        <include name="**/junit*.jar"/>
-    </fileset>
   </path>
 
   <path id="jaxws.classpath">
