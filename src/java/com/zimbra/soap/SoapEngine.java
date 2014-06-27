@@ -309,9 +309,8 @@ public class SoapEngine {
         if (doCsrfCheck) {
             try {
                 Element contextElmt = soapProto.getHeader(envelope).getElement(HeaderConstants.E_CONTEXT);
-                if (contextElmt != null && contextElmt.getElement(HeaderConstants.E_CSRFTOKEN) != null){
-                    Element csrfTokenElmt = contextElmt.getElement(HeaderConstants.E_CSRFTOKEN);
-                    String csrfToken = csrfTokenElmt.getText();
+                if (contextElmt != null && contextElmt.getAttribute(HeaderConstants.E_CSRFTOKEN) != null){
+                    String csrfToken = contextElmt.getAttribute(HeaderConstants.E_CSRFTOKEN);
                     HttpServletRequest httpReq = (HttpServletRequest) servReq;
                     AuthToken authToken = CsrfUtil.getAuthTokenFromReq(httpReq);
                     if (!CsrfUtil.isValidCsrfToken(csrfToken, authToken)) {
