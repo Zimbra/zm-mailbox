@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2008, 2009, 2010, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -14,12 +14,12 @@
  * If not, see <http://www.gnu.org/licenses/>.
  * ***** END LICENSE BLOCK *****
  */
-
 package com.zimbra.cs.util;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -32,6 +32,9 @@ import com.zimbra.cs.account.Provisioning;
 
 public class SkinUtil {
 
+    private static final String LOAD_SKINS_ON_UI_NODE = "/fromservice/loadskins";
+    private static final String FLUSH_SKINS_ON_UI_NODE = "/fromservice/flushskins";
+
     private static String[] sSkins = null;
 
     // returns all installed skins
@@ -42,38 +45,46 @@ public class SkinUtil {
         return sSkins;
     }
 
-    public synchronized static void flushSkinCache() throws ServiceException {
+    public synchronized static void flushCache() throws ServiceException {
         sSkins = null;
+        if (WebClientServiceUtil.isServerInSplitMode()) {
+            WebClientServiceUtil.sendServiceRequestToEveryUiNode(FLUSH_SKINS_ON_UI_NODE);
+        }
     }
 
     private static String[] loadSkins() throws ServiceException {
 		ZimbraLog.webclient.debug("Loading skins..." );
+        List<String> skins = new ArrayList<String>();
+        if (WebClientServiceUtil.isServerInSplitMode()) {
+            String resp = WebClientServiceUtil.sendServiceRequestToOneUiNode(LOAD_SKINS_ON_UI_NODE);
+            Collections.addAll(skins, resp.split(","));
+        } else {
+            loadSkinsByDiskScan(skins);
+        }
+        String[] sortedSkins = skins.toArray(new String[skins.size()]);
+        Arrays.sort(sortedSkins);
+		ZimbraLog.webclient.debug("Skin loading complete." );
+        return sortedSkins;
+    }
+
+    public static void loadSkinsByDiskScan(List<String> skins) throws ServiceException {
         String skinsDir = LC.skins_directory.value();
         ClassLoader classLoader = ClassLoaderUtil.getClassLoaderByDirectory(skinsDir);
-        if (classLoader == null)
+        if (classLoader == null) {
             throw ServiceException.FAILURE("unable to get class loader for directory " +
-                                           skinsDir + " configured in localconfig key " + LC.skins_directory.key(),
-                                           null);
-
-        List<String> skins = new ArrayList<String>();
-
+                    skinsDir + " configured in localconfig key " + LC.skins_directory.key(), null);
+        }
         File dir = new File(skinsDir);
         File[] files = dir.listFiles();
 
-        if (files != null)  {
-            for (File f: files) {
-				String fname = f.getName();
-				if (!fname.startsWith("_") && new File(f, "manifest.xml").exists()) {
-					skins.add(fname);
-				}
-			}
+        if (files != null) {
+            for (File f : files) {
+                String fname = f.getName();
+                if (!fname.startsWith("_") && new File(f, "manifest.xml").exists()) {
+                    skins.add(fname);
+                }
+            }
         }
-
-        String[] sortedSkins = skins.toArray(new String[skins.size()]);
-        Arrays.sort(sortedSkins);
-
-		ZimbraLog.webclient.debug("Skin loading complete." );
-        return sortedSkins;
     }
 
     public static String[] getSkins(Account acct) throws ServiceException {
@@ -81,14 +92,15 @@ public class SkinUtil {
         Set<String> allowedSkins = getAvailableSkins(acct);
 
         String[] availSkins = null;
-        if (allowedSkins.size() == 0)
+        if (allowedSkins.size() == 0) {
             availSkins = installedSkins;
-        else {
+        } else {
             List<String> skins = new ArrayList<String>();
             // take intersection of the two, loop thru installedSkins because it is sorted
             for (String skin : installedSkins) {
-                if (allowedSkins.contains(skin))
+                if (allowedSkins.contains(skin)) {
                     skins.add(skin);
+                }
             }
             availSkins = skins.toArray(new String[skins.size()]);
         }

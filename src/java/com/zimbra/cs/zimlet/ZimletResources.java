@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2008, 2009, 2010, 2011, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -52,6 +52,7 @@ import com.yahoo.platform.yui.compressor.CssCompressor;
 import com.yahoo.platform.yui.compressor.JavaScriptCompressor;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.servlet.DiskCacheServlet;
 
 @SuppressWarnings("serial")
@@ -105,8 +106,9 @@ public class ZimletResources extends DiskCacheServlet {
     @Override
     public void service(ServletRequest request, ServletResponse response)
             throws IOException, ServletException {
-        if (flushCache(request))
+        if (flushCache(request)) {
             return;
+        }
 
         ZimbraLog.clearContext();
 
@@ -128,8 +130,9 @@ public class ZimletResources extends DiskCacheServlet {
         if (!pathInfo.startsWith(RESOURCE_PATH)) {
             // handle requests for individual files included in zimlet in case dev=1 is set.
             ServletContext targetContext = getServletConfig().getServletContext().getContext("/zimlet");
-            if (targetContext == null)
+            if (targetContext == null) {
                 throw new ServletException("Could not forward the request to zimlet webapp, possible misconfiguration.");
+            }
             RequestDispatcher dispatcher = targetContext.getRequestDispatcher(pathInfo);
             dispatcher.forward(req, resp);
             return;
@@ -159,9 +162,15 @@ public class ZimletResources extends DiskCacheServlet {
 
             // zimlet messages
             if (type.equals(T_JAVASCRIPT)) {
+                String mailUrl = "/";
+                try {
+                    mailUrl = Provisioning.getInstance().getLocalServer().getMailURL();
+                } catch (Exception e) {
+                    ZimbraLog.zimlet.warn("can't get mailUrl", e);
+                }
                 ServletConfig config = this.getServletConfig();
                 ServletContext baseContext = config.getServletContext();
-                RequestDispatcher dispatcher = baseContext.getRequestDispatcher(RESOURCE_PATH);
+                RequestDispatcher dispatcher = baseContext.getContext(mailUrl).getRequestDispatcher(RESOURCE_PATH);
 
                 // NOTE: We have to return the messages for *all* of the zimlets,
                 // NOTE: not just the enabled ones, because their names and
@@ -175,7 +184,9 @@ public class ZimletResources extends DiskCacheServlet {
             }
 
             // zimlet resources
-            if (ZimbraLog.zimlet.isDebugEnabled()) ZimbraLog.zimlet.debug("DEBUG: generating buffer");
+            if (ZimbraLog.zimlet.isDebugEnabled()) {
+                ZimbraLog.zimlet.debug("DEBUG: generating buffer");
+            }
             generate(zimletNames, type, printer);
             text = writer.toString();
 
@@ -239,7 +250,9 @@ public class ZimletResources extends DiskCacheServlet {
 
                 // store uncompressed file in cache
                 file = createCacheFile(uncompressedCacheId, type);
-                if (ZimbraLog.zimlet.isDebugEnabled()) ZimbraLog.zimlet.debug("DEBUG: buffer file: " + file);
+                if (ZimbraLog.zimlet.isDebugEnabled()) {
+                    ZimbraLog.zimlet.debug("DEBUG: buffer file: " + file);
+                }
                 copy(text, file);
                 putCacheFile(uncompressedCacheId, file);
 
@@ -247,13 +260,17 @@ public class ZimletResources extends DiskCacheServlet {
                 if (compress) {
                     String compressedCacheId = cacheId;
                     File gzfile = createCacheFile(compressedCacheId, type+DiskCacheServlet.EXT_COMPRESSED);
-                    if (ZimbraLog.zimlet.isDebugEnabled()) ZimbraLog.zimlet.debug("DEBUG: buffer file: " + gzfile);
+                    if (ZimbraLog.zimlet.isDebugEnabled()) {
+                        ZimbraLog.zimlet.debug("DEBUG: buffer file: " + gzfile);
+                    }
                     file = compress(file, gzfile);
                     putCacheFile(compressedCacheId, file);
                 }
             }
         } else {
-            if (ZimbraLog.zimlet.isDebugEnabled()) ZimbraLog.zimlet.debug("DEBUG: using previous buffer");
+            if (ZimbraLog.zimlet.isDebugEnabled()) {
+                ZimbraLog.zimlet.debug("DEBUG: using previous buffer");
+            }
         }
 
         // write buffer
@@ -328,20 +345,23 @@ public class ZimletResources extends DiskCacheServlet {
     		resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
     		return;
     	}
-    	resp.setStatus(HttpServletResponse.SC_OK);
-    	resp.setHeader("Expires", "Tue, 24 Jan 2000 17:46:50 GMT");
-    	resp.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
-    	resp.setHeader("Pragma", "no-cache");
+        resp.setStatus(HttpServletResponse.SC_OK);
+        resp.setHeader("Expires", "Tue, 24 Jan 2000 17:46:50 GMT");
+        resp.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
+        resp.setHeader("Pragma", "no-cache");
         String contentType = null;
-    	int dot = file.lastIndexOf('.');
-    	if (dot > 0)
-    	    contentType = TYPES.get(file.substring(dot + 1));
-    	if (contentType == null)
-    	    contentType = sFileTypeMap.getContentType(file);
+        int dot = file.lastIndexOf('.');
+        if (dot > 0) {
+            contentType = TYPES.get(file.substring(dot + 1));
+        }
+        if (contentType == null) {
+            contentType = sFileTypeMap.getContentType(file);
+        }
         ZimbraLog.zimlet.debug("%s: %s", file, contentType);
-    	if (contentType != null)
+        if (contentType != null) {
             resp.setContentType(contentType);
-    	ByteUtil.copy(entry.getContentStream(), true, resp.getOutputStream(), false);
+        }
+        ByteUtil.copy(entry.getContentStream(), true, resp.getOutputStream(), false);
     }
 
     private void generate(Set<String> zimletNames, String type, PrintWriter out)
@@ -368,8 +388,9 @@ public class ZimletResources extends DiskCacheServlet {
                         continue;
                     }
                     ZimletFile.ZimletEntry entry = file.getEntry(f);
-                    if (entry == null)
+                    if (entry == null) {
                         continue;
+                    }
 
                     out.println(commentStart);
                     out.print(commentContinue);
@@ -503,7 +524,9 @@ public class ZimletResources extends DiskCacheServlet {
         }
 
         public void setParameter(String name, String value) {
-            if (this.parameters == null) this.parameters = new HashMap<String,String>();
+            if (this.parameters == null) {
+                this.parameters = new HashMap<String,String>();
+            }
             this.parameters.put(name, value);
         }
         @Override

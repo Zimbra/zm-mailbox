@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -75,11 +75,13 @@ public class ZimletProps2JsServlet extends HttpServlet {
             return dirname;
         }
         String basedir = this.getServletContext().getRealPath("/");
-        if (!basedir.endsWith("/"))
+        if (!basedir.endsWith("/")) {
             basedir += "/";
+        }
         return basedir + dirname;
     }
 
+    @Override
     public void service(ServletRequest req, ServletResponse resp)
             throws IOException, ServletException {
         if (flushCache(req)) {
@@ -88,6 +90,7 @@ public class ZimletProps2JsServlet extends HttpServlet {
         super.service(req, resp);
     }
 
+    @Override
     public void doGet(HttpServletRequest req, HttpServletResponse resp) throws
             IOException, ServletException {
         // get request info
@@ -123,15 +126,17 @@ public class ZimletProps2JsServlet extends HttpServlet {
                 gzos.close();
                 buffer = bos.toByteArray();
             }
-            if (!LC.zimbra_minimize_resources.booleanValue())
+            if (!LC.zimbra_minimize_resources.booleanValue()) {
                 localeBuffers.put(uri, buffer);
+            }
         }
 
         // generate output
         OutputStream out = resp.getOutputStream();
         try {
-            if (uri.endsWith(COMPRESSED_EXT))
+            if (uri.endsWith(COMPRESSED_EXT)) {
                 resp.setHeader("Content-Encoding", "gzip");
+            }
             resp.setContentType("application/x-javascript");
         } catch (Exception e) {
             ZimbraLog.zimlet.error(e.getMessage());
@@ -154,8 +159,9 @@ public class ZimletProps2JsServlet extends HttpServlet {
 
     protected String getRequestURI(HttpServletRequest req) {
         String uri = (String) req.getAttribute(A_REQUEST_URI);
-        if (uri == null)
+        if (uri == null) {
             uri = req.getRequestURI();
+        }
         return uri;
     }
 
@@ -163,10 +169,12 @@ public class ZimletProps2JsServlet extends HttpServlet {
         List<String> list = new LinkedList<String>();
         String patterns = (String) req.getAttribute(A_BASENAME_PATTERNS);
 
-        if (patterns == null)
+        if (patterns == null) {
             patterns = this.getInitParameter(P_BASENAME_PATTERNS);
-        if (patterns == null)
+        }
+        if (patterns == null) {
             patterns = "WEB-INF/classes/${dir}/${name}";
+        }
         list.add(patterns);
         return list;
     }
@@ -192,20 +200,11 @@ public class ZimletProps2JsServlet extends HttpServlet {
         return req.getLocale();
     }
 
-    private String getCommentSafeString(String st) {
-        return st.replaceAll("<", "") //make sure you can't start a "script" tag within the comment cuz genius IE supposedly exectutes it
-        .replaceAll("\n", ""); //make sure no newline can be injected to start a malicious script too
-
-    }
-
     protected byte[] getBuffer(HttpServletRequest req,
             Locale locale, String uri) throws IOException {
         BufferStream bos = new BufferStream(24 * 1024);
         DataOutputStream out = new DataOutputStream(bos);
-        String sanitizedLocale = locale.toString()
-                .replaceAll("<", "") //make sure you can't start a "script" tag within the comment cuz genius IE supposedly exectutes it
-                .replaceAll("\n", ""); //make sure no newline can be injected to start a malicious script too
-        out.writeBytes("// Locale: " + getCommentSafeString(locale.toString()) + '\n');
+        out.writeBytes("// Locale: " + Props2Js.getCommentSafeString(locale.toString()) + '\n');
 
         // tokenize the list of patterns
         List<String> patternsList = this.getBasenamePatternsList(req);
@@ -263,7 +262,7 @@ public class ZimletProps2JsServlet extends HttpServlet {
             String basedir, String dirname, String classname) throws IOException {
         String basename = basedir + classname;
 
-        out.writeBytes("// Basename: " + getCommentSafeString(basename) + '\n');
+        out.writeBytes("// Basename: " + Props2Js.getCommentSafeString(basename) + '\n');
         for (List<String> basenames : basenamePatterns) {
             try {
                 ClassLoader parentLoader = this.getClass().getClassLoader();
@@ -276,8 +275,9 @@ public class ZimletProps2JsServlet extends HttpServlet {
                     @Override
                     public List<Locale> getCandidateLocales(String baseName, Locale locale)
                     {
-                        if (baseName == null)
+                        if (baseName == null) {
                             throw new NullPointerException();
+                        }
                         if (locale.equals(new Locale("zh", "HK")) || locale.equals(new Locale("zh", "CN")) || locale.equals(new Locale("zh", "TW")))
                         {
                             return Arrays.asList(
@@ -324,6 +324,7 @@ public class ZimletProps2JsServlet extends HttpServlet {
             return files;
         }
 
+        @Override
         public InputStream getResourceAsStream(String rname) {
             String filename = rname.replaceAll("^.*/", "");
             Matcher matcher = RE_LOCALE.matcher(filename);
@@ -348,8 +349,9 @@ public class ZimletProps2JsServlet extends HttpServlet {
 
         private static String replaceSystemProps(String s) {
             Matcher matcher = RE_SYSPROP.matcher(s);
-            if (!matcher.find())
+            if (!matcher.find()) {
                 return s;
+            }
             StringBuilder str = new StringBuilder();
             int index = 0;
             do {

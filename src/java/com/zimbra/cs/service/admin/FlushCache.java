@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -16,6 +16,7 @@
  */
 package com.zimbra.cs.service.admin;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -31,7 +32,7 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.Element.XMLElement;
 import com.zimbra.common.soap.SoapHttpTransport;
-import com.zimbra.common.util.L10nUtil;
+import com.zimbra.common.util.FileUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.CacheExtension;
 import com.zimbra.cs.account.Provisioning;
@@ -43,6 +44,8 @@ import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.gal.GalGroup;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.util.SkinUtil;
+import com.zimbra.cs.util.WebClientL10nUtil;
+import com.zimbra.cs.util.WebClientServiceUtil;
 import com.zimbra.soap.SoapServlet;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.admin.type.CacheEntryType;
@@ -50,6 +53,9 @@ import com.zimbra.soap.admin.type.CacheEntryType;
 public class FlushCache extends AdminDocumentHandler {
 
     public static final String FLUSH_CACHE = "flushCache";
+    public static final String RES_AJXMSG_JS = "/res/AjxMsg.js";
+    public static final String JS_SKIN_JS = "/js/skin.js";
+    private static final String ZIMLET_CACHE_DIR = "/opt/zimbra/jetty/work/resource-cache/zimletres/latest";
 
     /**
      * must be careful and only allow deletes domain admin has access to
@@ -83,18 +89,20 @@ public class FlushCache extends AdminDocumentHandler {
                 if (cacheType == null) {
                     // see if it is a registered extension
                     CacheExtension ce = CacheExtension.getHandler(type);
-                    if (ce != null)
+                    if (ce != null) {
                         ce.flushCache();
-                    else
+                    } else {
                         throw e;
+                    }
                 } else {
                     throw e;
                 }
             }
         }
 
-        if (allServers)
+        if (allServers) {
             flushCacheOnAllServers(zsc, request);
+        }
 
         Element response = zsc.createElement(AdminConstants.FLUSH_CACHE_RESPONSE);
         return response;
@@ -115,22 +123,37 @@ public class FlushCache extends AdminDocumentHandler {
 				GalGroup.flushCache(getCacheEntries(eCache));
 				break;
 			case uistrings:
-				FlushCache.sendFlushRequest(context, mailURL, "/res/AjxMsg.js");
-				FlushCache.sendFlushRequest(context, "/zimbraAdmin", "/res/AjxMsg.js");
+                if (WebClientServiceUtil.isServerInSplitMode()) {
+                    WebClientServiceUtil.flushUistringsCache();
+                } else {
+                    FlushCache.sendFlushRequest(context, mailURL, RES_AJXMSG_JS);
+                    FlushCache.sendFlushRequest(context, "/zimbraAdmin", RES_AJXMSG_JS);
+                }
 				break;
 			case skin:
-				SkinUtil.flushSkinCache();
-				FlushCache.sendFlushRequest(context, mailURL, "/js/skin.js");
+                SkinUtil.flushCache();
+                if (!WebClientServiceUtil.isServerInSplitMode()) {
+                    FlushCache.sendFlushRequest(context, mailURL, JS_SKIN_JS);
+                }
 				break;
 			case locale:
-				L10nUtil.flushLocaleCache();
+                WebClientL10nUtil.flushCache();
 				break;
 			case license:
 				flushLdapCache(CacheEntryType.config, eCache); // refresh global config for parsed license
 				Provisioning.getInstance().refreshValidators(); // refresh other bits of cached license data
 				break;
 			case zimlet:
-				FlushCache.sendFlushRequest(context, "/service", "/zimlet/res/all.js");
+                if (WebClientServiceUtil.isServerInSplitMode()) {
+                    try {
+                        File file = new File(ZIMLET_CACHE_DIR);
+                        FileUtil.deleteDirContents(file);
+                    } catch (IOException e) {
+                        ZimbraLog.misc.warn("failed to flush zimlet cache", e);
+                    }
+                } else {
+                    FlushCache.sendFlushRequest(context, "/service", "/zimlet/res/all.js");
+                }
 				// fall through to also flush ldap entries
 			default:
 				flushLdapCache(cacheType, eCache);
@@ -208,8 +231,9 @@ public class FlushCache extends AdminDocumentHandler {
 
         for (Server server : prov.getAllMailClientServers()) {
 
-            if (localServerId.equals(server.getId()))
+            if (localServerId.equals(server.getId())) {
                 continue;
+            }
 
             ZimbraLog.misc.debug("Flushing cache on server: " + server.getName());
 

@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -27,11 +27,13 @@ import com.zimbra.cs.util.SkinUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class GetAllSkins extends AdminDocumentHandler {
+
+    @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
 
         String[] allSkins = SkinUtil.getAllSkins();
-            
+
         Element response = zsc.createElement(AdminConstants.GET_ALL_SKINS_RESPONSE);
         for (String skin : allSkins) {
             Element eSkin = response.addElement(AdminConstants.E_SKIN);
@@ -39,7 +41,7 @@ public class GetAllSkins extends AdminDocumentHandler {
         }
         return response;
     }
-    
+
     @Override
     public void docRights(List<AdminRight> relatedRights, List<String> notes) {
         notes.add(AdminRightCheckPoint.Notes.ALLOW_ALL_ADMINS);
