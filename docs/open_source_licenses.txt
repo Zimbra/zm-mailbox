@@ -86,7 +86,7 @@ SECTION 1: BSD-STYLE, MIT-STYLE, OR SIMILAR STYLE LICENSES
    >>> perl-socket6-0.25
    >>> perl-termreadkey-2.30.02
    >>> perl-try-tiny-0.19
-   >>> php-5.4.29
+   >>> php-5.4.30
    >>> postfix-logwatch-1.40.01
    >>> sendmail-8.14.8
    >>> slf4j-1.6.4
@@ -20147,7 +20147,7 @@ This program is free software; you can redistribute
 it and/or modify it under the terms of the MIT license.
 
 
->>> php-5.4.29
+>>> php-5.4.30
 
 The PHP License, version 3.01
 
@@ -20176,7 +20176,7 @@ ADDITIONAL LICENSE INFORMATION:
 
 > BSD style
 
-php-5.4.29.tar.bz2\php-5.4.29.tar\php-5.4.29\Zend\LICENSE
+php-5.4.30.tar.bz2\php-5.4.30.tar\php-5.4.30\Zend\LICENSE
 
 The Zend Engine License, Version 2.00
 Copyright (c) 1999-2006 Zend Technologies Ltd. All rights reserved.
@@ -20200,7 +20200,7 @@ THIS SOFTWARE IS PROVIDED BY ZEND TECHNOLOGIES LTD. ``AS IS'' AND  ANY EXPRESSED
 
 > GPL 2.0
 
-php-5.4.29.tar.bz2\php-5.4.29.tar\php-5.4.29\build\shtool
+php-5.4.30.tar.bz2\php-5.4.30.tar\php-5.4.30\build\shtool
 
 GNU shtool -- The GNU Portable Shell Tool
 Copyright (c) 1994-2008 Ralf S. Engelschall <rse@engelschall.com>
@@ -20221,14 +20221,14 @@ NOTICE: Given that you include this file verbatim into your own source tree, you
 
 > LGPL 2.1
 
-php-5.4.29.tar.bz2\php-5.4.29.tar\php-5.4.29\ext\bcmath\libbcmath\COPYING.LIB
+php-5.4.30.tar.bz2\php-5.4.30.tar\php-5.4.30\ext\bcmath\libbcmath\COPYING.LIB
 
 License: LGPL 2.1
 
 
 > LGPL 2.0
 
-php-5.4.29.tar.bz2\php-5.4.29.tar\php-5.4.29\ext\bcmath\libbcmath\src\add.c
+php-5.4.30.tar.bz2\php-5.4.30.tar\php-5.4.30\ext\bcmath\libbcmath\src\add.c
 
 Copyright (C) 1991, 1992, 1993, 1994, 1997 Free Software Foundation, Inc.
 Copyright (C) 2000 Philip A. Nelson
@@ -20249,7 +20249,7 @@ Bellingham, WA 98226-9062
 
 > MIT
 
-php-5.4.29.tar.bz2\php-5.4.29.tar\php-5.4.29\ext\gd\libgd\ COPYING
+php-5.4.30.tar.bz2\php-5.4.30.tar\php-5.4.30\ext\gd\libgd\ COPYING
 
 Portions copyright 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002 by Cold Spring Harbor Laboratory. Funded under Grant P41-RR02188 by the National Institutes of Health.
  
@@ -20275,7 +20275,7 @@ Although their code does not appear in gd, the authors wish to thank David Kobla
 
 > Public Domain
 
-php-5.4.29.tar.bz2\php-5.4.29.tar\php-5.4.29\ext\sqlite3\libsqlite\sqlite3.h
+php-5.4.30.tar.bz2\php-5.4.30.tar\php-5.4.30\ext\sqlite3\libsqlite\sqlite3.h
 
 2001 September 15
 
