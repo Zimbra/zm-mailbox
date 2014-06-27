@@ -23,9 +23,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.text.MessageFormat;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -267,7 +265,6 @@ public class L10nUtil {
         // add other messages in the future...
     }
 
-
     public static final String MSG_FILE_BASENAME = "ZsMsg";
     public static final String L10N_MSG_FILE_BASENAME = "L10nMsg";
     public static final String MSG_RIGHTS_FILE_BASENAME = "ZsMsgRights";
@@ -425,10 +422,10 @@ public class L10nUtil {
         return messages;
     }
 
-    static class MatchingPropertiesFilter implements FilenameFilter {
+    public static class MatchingPropertiesFilter implements FilenameFilter {
         private final String[] prefixes;
 
-        MatchingPropertiesFilter(Object[] basenames) {
+        public MatchingPropertiesFilter(Object[] basenames) {
             prefixes = new String[basenames.length * 2];
             int i = 0;
             for (Object basename : basenames) {
@@ -454,7 +451,7 @@ public class L10nUtil {
     /** Returns the locale corresponding to the given properties file.
      *  Note that a filename like <tt>ZmMsg.properties</tt> will return
      *  <tt>null</tt>, <u>not</u> <tt>en_US</tt>. */
-    static Locale getLocaleForPropertiesFile(File file, boolean debug) {
+    public static Locale getLocaleForPropertiesFile(File file, boolean debug) {
         String[] localeParts = file.getName().split("\\.")[0].split("_");
         if (localeParts.length == 2) {
             if (debug) {
@@ -504,182 +501,4 @@ public class L10nUtil {
         return lc;
     }
 
-    private static class LocaleComparatorByDisplayName implements Comparator<Locale> {
-        private final Locale mInLocale;
-        LocaleComparatorByDisplayName(Locale inLocale) {
-            mInLocale = inLocale;
-        }
-
-        @Override
-        public int compare(Locale a, Locale b) {
-            String da = a.getDisplayName(mInLocale);
-            String db = b.getDisplayName(mInLocale);
-            return da.compareTo(db);
-        }
-    }
-
-    /**
-     * Return all known locales sorted by their US English display name.
-     * @return
-     */
-    public static Locale[] getAllLocalesSorted() {
-        Locale[] locales = Locale.getAvailableLocales();
-        Arrays.sort(locales, new LocaleComparatorByDisplayName(Locale.US));
-        return locales;
-    }
-
-    /**
-     * Return all localized(i.e. translated) locales sorted by their inLocale display name
-     * @return
-     */
-    public static Locale[] getLocalesSorted(Locale inLocale) {
-        return LocalizedClientLocales.getLocales(inLocale);
-    }
-
-    public static void flushLocaleCache() {
-        if (ZimbraLog.misc.isDebugEnabled()) {
-            ZimbraLog.misc.debug("L10nUtil: flushing locale cache");
-        }
-        LocalizedClientLocales.flushCache();
-    }
-
-    private static class LocalizedClientLocales {
-        enum ClientResource {
-            // I18nMsg,  // generated, all locales are there, so we don't count this resource
-            AjxMsg,
-            ZMsg,
-            ZaMsg,
-            ZhMsg,
-            ZmMsg
-        }
-
-        // set of localized(translated) locales
-        static Set<Locale> sLocalizedLocales = null;
-
-        // we cache the sorted list per display locale to avoid the array copy
-        // and sorting each time for a GetLocale request
-        static Map<Locale, Locale[]> sLocalizedLocalesSorted = null;
-
-        /*
-         * load only those supported by JAVA
-         */
-        private static void loadBundlesByJavaLocal(Set<Locale> locales, String msgsDir) {
-            ClassLoader classLoader = getClassLoader(msgsDir);
-            Locale[] allLocales = Locale.getAvailableLocales();
-
-            for (Locale locale : allLocales) {
-                for (ClientResource clientRes : ClientResource.values()) {
-                    try {
-                        ResourceBundle rb = ResourceBundle.getBundle(clientRes.name(), locale, classLoader);
-                        Locale rbLocale = rb.getLocale();
-                        if (rbLocale.equals(locale)) {
-                            /*
-                             * found a resource for the locale, a locale is considered "installed" as long as
-                             * any of its resource (the list in ClientResource) is present
-                             */
-                            ZimbraLog.misc.info("Adding locale " + locale.toString());
-                            locales.add(locale);
-                            break;
-                        }
-                    } catch (MissingResourceException e) {
-                    }
-                }
-            }
-        }
-
-        /*
-         * scan disk
-         */
-        private static void loadBundlesByDiskScan(Set<Locale> locales, String msgsDir) {
-            File dir = new File(msgsDir);
-            if (!dir.exists()) {
-                ZimbraLog.misc.info("message directory does not exist:" + msgsDir);
-                return;
-            }
-            if (!dir.isDirectory()) {
-                ZimbraLog.misc.info("message directory is not a directory:" + msgsDir);
-                return;
-            }
-
-            for (File file : dir.listFiles(new MatchingPropertiesFilter(ClientResource.values()))) {
-                ZimbraLog.misc.debug("loadBundlesByDiskScan processing file: " + file.getName());
-                Locale locale = getLocaleForPropertiesFile(file, true);
-                if (locale != null && !locales.contains(locale)) {
-                    ZimbraLog.misc.info("Adding locale " + locale);
-                    locales.add(locale);
-                }
-            }
-        }
-
-        private static void loadBundles() {
-            sLocalizedLocales = new HashSet<Locale>();
-
-            // String msgsDir = "/opt/zimbra/jetty/webapps/zimbra/WEB-INF/classes/messages";
-            String msgsDir = LC.localized_client_msgs_directory.value();
-            ZimbraLog.misc.info("Scanning installed locales from " + msgsDir);
-
-            // the en_US locale is always available
-            ZimbraLog.misc.info("Adding locale " + Locale.US.toString() + " (always added)");
-            sLocalizedLocales.add(Locale.US);
-
-            // loadBundlesByJavaLocal(sLocalizedLocales, msgsDir);
-            loadBundlesByDiskScan(sLocalizedLocales, msgsDir);
-
-            /*
-             * UI displays locales with country in sub menus.
-             *
-             * E.g. if there are:
-             *      id: "zh_CN", name: "Chinese (China)"
-             *      id: "zh_HK", name: "Chinese (Hong Kong)"
-             *
-             *      then the menu looks like:
-             *          Chinese
-             *                   Chinese (China)
-             *                   Chinese (Hong Kong)
-             *
-             *      UI relies on the presence of a "language only" entry
-             *      for the top level label "Chinese".
-             *      i.e. id: "zh", name: "Chinese"
-             *
-             *      Thus we need to add a "language only" pseudo entry for locales that have
-             *      a country part but the "language only" entry is not already there.
-             */
-            Set<Locale> pseudoLocales = new HashSet<Locale>();
-            for (Locale lc : sLocalizedLocales) {
-                String language = lc.getLanguage();
-                Locale lcLang = new Locale(language);
-                if (!sLocalizedLocales.contains(lcLang) && !pseudoLocales.contains(lcLang)) {
-                    ZimbraLog.misc.info("Adding locale " + lcLang.toString() + " (pseudo)");
-                    pseudoLocales.add(lcLang);
-                }
-            }
-            if (pseudoLocales.size() > 0) {
-                sLocalizedLocales = SetUtil.union(sLocalizedLocales, pseudoLocales);
-            }
-        }
-
-        public synchronized static Locale[] getLocales(Locale inLocale) {
-            if (sLocalizedLocales == null)
-                loadBundles();
-
-            Locale[] sortedLocales = null;
-            if (sLocalizedLocalesSorted == null)
-                sLocalizedLocalesSorted = new HashMap<Locale, Locale[]>();
-            else
-                sortedLocales = sLocalizedLocalesSorted.get(inLocale);
-
-            if (sortedLocales == null) {
-                // cache the sorted list per display locale
-                sortedLocales = sLocalizedLocales.toArray(new Locale[sLocalizedLocales.size()]);
-                Arrays.sort(sortedLocales, new LocaleComparatorByDisplayName(inLocale));
-                sLocalizedLocalesSorted.put(inLocale, sortedLocales);
-            }
-            return sortedLocales;
-        }
-
-        public synchronized static void flushCache() {
-            sLocalizedLocales = null;
-            sLocalizedLocalesSorted = null;
-        }
-    }
 }
