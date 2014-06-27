@@ -548,7 +548,7 @@ public class ZMailbox implements ToZJSONObject {
         mTransport.setAuthToken(mAuthToken);
     }
 
-    private void initCsrfToken(String csrfToken){
+    public void initCsrfToken(String csrfToken){
         mCsrfToken = csrfToken;
         mTransport.setCsrfToken(mCsrfToken);
     }
