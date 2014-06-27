@@ -1087,8 +1087,8 @@
         <include name="commons-logging.jar"/>
         <include name="commons-collections*.jar"/>
         <include name="icu4j-*.jar"/>
-		<include name="commons-pool*.jar"/>
-		<include name="concurrentlinkedhashmap-lru*.jar"/>
+        <include name="commons-pool*.jar"/>
+        <include name="concurrentlinkedhashmap-lru*.jar"/>
         <include name="yuicompressor*jar"/>
         <include name="dom4j*.jar"/>
         <include name="ganymed-ssh2*.jar"/>
@@ -1109,8 +1109,6 @@
         <include name="guava*.jar"/>
         <include name="log4j-*.jar"/>
         <include name="apache-log4j-extras-*.jar"/>
-      </fileset>
-      <fileset dir="${common.internal.jars.dir}">
         <include name="junit*.jar"/>
       </fileset>
     </copy>
