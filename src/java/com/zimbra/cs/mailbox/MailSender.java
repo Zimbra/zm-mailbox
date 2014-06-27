@@ -718,7 +718,7 @@ public class MailSender {
 
                 AuthToken authToken = null;
                 if (octxt != null) {
-                    authToken = octxt.getAuthToken(false);
+                    authToken = AuthToken.getCsrfUnsecuredAuthToken(octxt.getAuthToken(false));
                 }
                 if (authToken == null) {
                     authToken = AuthProvider.getAuthToken(authuser, isAdminRequest);

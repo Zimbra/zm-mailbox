@@ -228,7 +228,7 @@ public final class FilterUtil {
         AuthToken authToken = null;
         OperationContext opCtxt = localMbox.getOperationContext();
         if (opCtxt != null) {
-            authToken = opCtxt.getAuthToken();
+            authToken = AuthToken.getCsrfUnsecuredAuthToken(opCtxt.getAuthToken());
         }
         if (authToken == null) {
             authToken = AuthProvider.getAuthToken(localMbox.getAccount());

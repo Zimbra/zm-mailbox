@@ -5612,7 +5612,8 @@ public class Mailbox {
                             }
                         }
                         Options options = new Options();
-                        options.setAuthToken(getAuthToken(octxt).toZAuthToken());
+                        AuthToken authToken = AuthToken.getCsrfUnsecuredAuthToken(getAuthToken(octxt));
+                        options.setAuthToken(authToken.toZAuthToken());
                         options.setTargetAccount(orgAccount.getName());
                         options.setTargetAccountBy(AccountBy.name);
                         options.setUri(uri);
@@ -5631,7 +5632,8 @@ public class Mailbox {
             boolean includeInvites, boolean includeContent)
     throws ServiceException {
         Options options = new Options();
-        options.setAuthToken(getAuthToken(getOperationContext()).toZAuthToken());
+        AuthToken authToken = AuthToken.getCsrfUnsecuredAuthToken(getAuthToken(getOperationContext()));
+        options.setAuthToken(authToken.toZAuthToken());
         options.setTargetAccount(getAccount().getName());
         options.setTargetAccountBy(AccountBy.name);
         options.setUri(AccountUtil.getSoapUri(ownerAccount));
@@ -8284,7 +8286,7 @@ public class Mailbox {
 
         // Look up remote folder by UUID to discover the new numeric id.
         Account shareOwner = Provisioning.getInstance().get(Key.AccountBy.id, shloc.getShareOwnerAccountId());
-        AuthToken at = octxt.getAuthToken();
+        AuthToken at = AuthToken.getCsrfUnsecuredAuthToken(octxt.getAuthToken());
         String pxyAuthToken = Provisioning.onLocalServer(shareOwner) ? null : at.getProxyAuthToken();
         ZAuthToken zat = null;
         if (pxyAuthToken == null) {

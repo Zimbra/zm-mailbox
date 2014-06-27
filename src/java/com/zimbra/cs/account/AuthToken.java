@@ -58,6 +58,22 @@ public abstract class AuthToken {
         return authToken.isAdmin() || authToken.isDomainAdmin() || authToken.isDelegatedAdmin();
     }
 
+    /**
+     * Returns an auth token that does not require a csrf token along with it for successful auth.
+     *
+     * This utility method is useful when a mailbox server wants to make a request to a server
+     * running within the same system using the auth token inside an op/soap context.
+     *
+     * @param authToken
+     * @return
+     */
+    public static AuthToken getCsrfUnsecuredAuthToken(AuthToken authToken) {
+        if (authToken.isCsrfTokenEnabled()) {
+            authToken.setCsrfTokenEnabled(false);
+        }
+        return authToken;
+    }
+
     @Override
     public abstract String toString();
 

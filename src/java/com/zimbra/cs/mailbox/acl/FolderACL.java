@@ -278,7 +278,7 @@ public class FolderACL {
 
         AuthToken authToken = null;
         if (mOctxt != null)
-            authToken = mOctxt.getAuthToken();
+            authToken = AuthToken.getCsrfUnsecuredAuthToken(mOctxt.getAuthToken());
         if (authToken == null)
             authToken = AuthProvider.getAuthToken(GuestAccount.ANONYMOUS_ACCT);
         transport.setAuthToken(authToken.toZAuthToken());

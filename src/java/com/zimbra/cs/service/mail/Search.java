@@ -38,6 +38,7 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.index.MessageHit;
@@ -437,8 +438,9 @@ public class Search extends MailDocumentHandler  {
         req.addAttribute(MailConstants.E_QUERY, queryStr.toString(), Element.Disposition.CONTENT);
 
         Account target = Provisioning.getInstance().get(Key.AccountBy.id, nominalTargetAcctId);
-        String pxyAuthToken = zsc.getAuthToken().getProxyAuthToken();
-        ZAuthToken zat = pxyAuthToken == null ? zsc.getRawAuthToken() : new ZAuthToken(pxyAuthToken);
+        AuthToken authToken = AuthToken.getCsrfUnsecuredAuthToken(zsc.getAuthToken());
+        String pxyAuthToken = authToken.getProxyAuthToken();
+        ZAuthToken zat = pxyAuthToken == null ? authToken.toZAuthToken() : new ZAuthToken(pxyAuthToken);
         ZMailbox.Options zoptions = new ZMailbox.Options(zat, AccountUtil.getSoapUri(target));
         zoptions.setTargetAccount(nominalTargetAcctId);
         zoptions.setTargetAccountBy(AccountBy.id);

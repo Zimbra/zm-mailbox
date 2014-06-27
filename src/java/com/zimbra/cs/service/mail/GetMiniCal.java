@@ -266,7 +266,8 @@ public class GetMiniCal extends CalendarRequest {
             Account target = Provisioning.getInstance().get(Key.AccountBy.id, remoteAccountId);
             if (target == null)
                 throw AccountServiceException.NO_SUCH_ACCOUNT(remoteAccountId);
-            ZMailbox.Options zoptions = new ZMailbox.Options(zsc.getAuthToken().toZAuthToken(), AccountUtil.getSoapUri(target));
+            AuthToken authToken = AuthToken.getCsrfUnsecuredAuthToken(zsc.getAuthToken());
+            ZMailbox.Options zoptions = new ZMailbox.Options(authToken.toZAuthToken(), AccountUtil.getSoapUri(target));
             zoptions.setTargetAccount(remoteAccountId);
             zoptions.setTargetAccountBy(AccountBy.id);
             zoptions.setNoSession(true);

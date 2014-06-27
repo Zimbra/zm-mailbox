@@ -618,7 +618,8 @@ public class ContactGroup {
                     emailAddrs = genDerefedEmailAddrs(ownerAcct, contact);
                 }
             } else {
-                Element eContact = fetchRemoteContact(octxt.getAuthToken(), ownerAcct, itemId, proxyProtocol);
+                AuthToken authToken = AuthToken.getCsrfUnsecuredAuthToken(octxt.getAuthToken());
+                Element eContact = fetchRemoteContact(authToken, ownerAcct, itemId, proxyProtocol);
                 if (eContact != null) {
                     obj = eContact;
                     key = genDerefedKey(eContact);

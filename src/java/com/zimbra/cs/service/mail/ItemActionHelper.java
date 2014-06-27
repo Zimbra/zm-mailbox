@@ -505,7 +505,7 @@ public class ItemActionHelper {
         AuthToken authToken = null;
 
         if (mOpCtxt != null)
-            authToken = mOpCtxt.getAuthToken();
+            authToken = AuthToken.getCsrfUnsecuredAuthToken(mOpCtxt.getAuthToken());
 
         if (authToken == null)
             authToken = AuthProvider.getAuthToken(mAuthenticatedAccount);

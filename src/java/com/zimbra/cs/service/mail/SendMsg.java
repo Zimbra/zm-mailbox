@@ -356,7 +356,7 @@ public final class SendMsg extends MailDocumentHandler {
                 ownerMbox.delete(octxt, iidDraft.getId(), MailItem.Type.MESSAGE);
             } else {
                 Account target = Provisioning.getInstance().get(Key.AccountBy.id, iidDraft.getAccountId());
-                AuthToken at = zsc.getAuthToken();
+                AuthToken at = AuthToken.getCsrfUnsecuredAuthToken(zsc.getAuthToken());
                 ZAuthToken zat = at.getProxyAuthToken() == null ? at.toZAuthToken() : new ZAuthToken(at.getProxyAuthToken());
                 ZMailbox.Options zoptions = new ZMailbox.Options(zat, AccountUtil.getSoapUri(target));
                 zoptions.setNoSession(true);

@@ -453,7 +453,7 @@ public class SendInviteReply extends CalendarRequest {
     throws ServiceException {
         AuthToken authToken = null;
         if (octxt != null)
-            authToken = octxt.getAuthToken();
+            authToken = AuthToken.getCsrfUnsecuredAuthToken(octxt.getAuthToken());
         if (authToken == null)
             authToken = AuthProvider.getAuthToken(authAcct);
         String pxyAuthToken = authToken.getProxyAuthToken();

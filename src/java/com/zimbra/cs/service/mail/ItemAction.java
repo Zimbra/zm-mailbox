@@ -276,7 +276,7 @@ public class ItemAction extends MailDocumentHandler {
                 }
             } else {
                 if (zat == null) {
-                    AuthToken at = zsc.getAuthToken();
+                    AuthToken at = AuthToken.getCsrfUnsecuredAuthToken(zsc.getAuthToken());
                     String pxyAuthToken = at.getProxyAuthToken();
                     zat = pxyAuthToken == null ? at.toZAuthToken() : new ZAuthToken(pxyAuthToken);
                 }
