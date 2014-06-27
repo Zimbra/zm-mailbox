@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -48,6 +48,7 @@ import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ZimbraAuthToken;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.account.message.AuthRequest;
 import com.zimbra.soap.account.message.AuthResponse;
@@ -294,6 +295,19 @@ public class TestCookieReuse extends TestCase {
     	Assert.assertTrue("token should be registered", at.isRegistered());
     	at.deRegister();
     	Assert.assertFalse("token should not be registered", at.isRegistered());
+    }
+
+
+    /**
+     * test de-registering an admin authtoken
+     * @throws Exception
+     */
+    @Test
+    public void testAdminTokenDeregistration () throws Exception {
+        AuthToken at = AuthProvider.getAdminAuthToken();
+        Assert.assertTrue("token should be registered", at.isRegistered());
+        at.deRegister();
+        Assert.assertFalse("token should not be registered", at.isRegistered());
     }
 
     /**
