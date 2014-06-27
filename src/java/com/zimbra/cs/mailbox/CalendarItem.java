@@ -1383,6 +1383,15 @@ public abstract class CalendarItem extends MailItem {
         return defInv;
     }
 
+    public Invite getInviteByMailItem(int mailItemId) {
+        for (Invite cur : mInvites) {
+            if(cur.getMailItemId() == mailItemId) {
+                return cur;
+            }
+        }
+        return null;
+    }
+
     public Invite getDefaultInviteOrNull() {
         Invite first = null;
         for (Invite cur : mInvites) {
