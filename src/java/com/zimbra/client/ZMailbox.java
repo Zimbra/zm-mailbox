@@ -291,6 +291,13 @@ public class ZMailbox implements ToZJSONObject {
             setUri(uri);
         }
 
+        public Options(ZAuthToken authToken, String uri, boolean forceAuth, boolean csrfSupported) {
+            mAuthToken = authToken;
+            mAuthAuthToken = forceAuth;
+            mCsrfSupported = csrfSupported;
+            setUri(uri);
+        }
+
         public String getClientIp() { return mClientIp; }
         public Options setClientIp(String clientIp) { mClientIp = clientIp;  return this; }
 
@@ -484,8 +491,8 @@ public class ZMailbox implements ToZJSONObject {
         return new ZMailbox(new Options(authToken, uri));
     }
 
-    public static ZMailbox getByAuthToken(ZAuthToken authToken, String uri) throws ServiceException {
-        return new ZMailbox(new Options(authToken, uri));
+    public static ZMailbox getByAuthToken(ZAuthToken authToken, String uri, boolean forceAuth, boolean csrfSupported) throws ServiceException {
+        return new ZMailbox(new Options(authToken, uri, forceAuth, csrfSupported));
     }
 
     public ZMailbox(Options options) throws ServiceException {
