@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -53,8 +53,6 @@ public class CsrfFilter implements Filter {
      *
      */
     public static final String CSRF_SALT = "CSRF_SALT";
-    protected boolean csrfCheckEnabled ;
-    protected boolean csrfRefererCheckEnabled;
     protected String[] allowedRefHost = null;
     public static final String CSRF_TOKEN = "X-Zimbra-Csrf-Token";
     public static final String AUTH_TOKEN = "AuthToken";
@@ -73,16 +71,11 @@ public class CsrfFilter implements Filter {
         // Initialize the parameters related to CSRF check
         Provisioning prov = Provisioning.getInstance();
         try {
-            this.csrfCheckEnabled = prov.getConfig().isCsrfTokenCheckEnabled();
-            this.csrfRefererCheckEnabled = prov.getConfig().isCsrfRefererCheckEnabled();
             this.allowedRefHost = prov.getConfig().getCsrfAllowedRefererHosts();
             nonceGen = new Random();
             CsrfTokenKey.getCurrentKey();
             ZimbraLog.misc.info("CSRF filter was initialized : "
-            + "CSRFcheck enabled: " +  this.csrfCheckEnabled
-            + "CSRF referer check enabled: " +  this.csrfRefererCheckEnabled
-            + ", CSRFAllowedRefHost: " +  this.allowedRefHost
-            + ", CSRFTokenValidity " +  this.maxCsrfTokenValidityInMs + "ms.");
+            + ", CSRFAllowedRefHost: " +  this.allowedRefHost);
         } catch (ServiceException e) {
             throw new ServletException("Error initializing CSRF filter"
                 + e.getMessage());
@@ -121,6 +114,24 @@ public class CsrfFilter implements Filter {
              ZimbraLog.misc.debug("CSRF Request URI: " + req.getRequestURI());
         }
 
+        boolean csrfCheckEnabled = Boolean.FALSE;
+        boolean csrfRefererCheckEnabled = Boolean.FALSE;
+        Provisioning prov = Provisioning.getInstance();
+        try {
+            csrfCheckEnabled = prov.getConfig().isCsrfTokenCheckEnabled();
+            csrfRefererCheckEnabled = prov.getConfig().isCsrfRefererCheckEnabled();
+        } catch (ServiceException e) {
+            ZimbraLog.misc.info("Error in CSRF filter." + e.getMessage(), e);
+        }
+
+        if (ZimbraLog.misc.isDebugEnabled()) {
+            ZimbraLog.misc.debug("CSRF filter was initialized : "
+            + "CSRFcheck enabled: " +  csrfCheckEnabled
+            + "CSRF referer check enabled: " +  csrfRefererCheckEnabled
+            + ", CSRFAllowedRefHost: " +  this.allowedRefHost
+            + ", CSRFTokenValidity " +  this.maxCsrfTokenValidityInMs + "ms.");
+        }
+
         if (ZimbraLog.misc.isTraceEnabled()) {
             Enumeration<String> hdrNames = req.getHeaderNames();
             ZimbraLog.misc.trace("Soap request headers.");
@@ -133,7 +144,7 @@ public class CsrfFilter implements Filter {
             }
         }
 
-        if (this.csrfRefererCheckEnabled) {
+        if (csrfRefererCheckEnabled) {
             if (!allowReqBasedOnRefererHeaderCheck(req)) {
                 ZimbraLog.misc.info("CSRF referer check failed");
                 resp.sendError(HttpServletResponse.SC_FORBIDDEN);
@@ -141,9 +152,11 @@ public class CsrfFilter implements Filter {
             }
         }
 
-        if (!this.csrfCheckEnabled) {
+        if (!csrfCheckEnabled) {
+            req.setAttribute(Provisioning.A_zimbraCsrfTokenCheckEnabled, Boolean.FALSE);
             chain.doFilter(req, resp);
         } else {
+            req.setAttribute(Provisioning.A_zimbraCsrfTokenCheckEnabled, Boolean.TRUE);
             AuthToken authToken = CsrfUtil.getAuthTokenFromReq(req);
             if (CsrfUtil.doCsrfCheck(req, authToken)) {
                 if (CsrfUtil.isCsrfTokenCreated(authToken)) {
@@ -153,13 +166,6 @@ public class CsrfFilter implements Filter {
                 }
             }
             chain.doFilter(req, resp);
-            if (req.getAttribute(CSRF_TOKEN_VALID) != null) {
-                boolean validToken = (Boolean) req.getAttribute(CSRF_TOKEN_VALID);
-                if (!validToken) {
-                    resp.sendError(HttpServletResponse.SC_FORBIDDEN);
-                    return;
-                }
-            }
         }
 
         try {

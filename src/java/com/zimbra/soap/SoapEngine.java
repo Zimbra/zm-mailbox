@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -291,7 +291,7 @@ public class SoapEngine {
      * @return an XmlObject which is a SoapEnvelope containing the response
      * @throws CsrfTokenException if CSRF token validation fails
      */
-    private Element dispatch(String path, Element envelope, Map<String, Object> context) throws CsrfTokenException {
+    private Element dispatch(String path, Element envelope, Map<String, Object> context) {
         SoapProtocol soapProto = SoapProtocol.determineProtocol(envelope);
         if (soapProto == null) {
             // FIXME: have to pick 1.1 or 1.2 since we can't parse any
@@ -305,6 +305,10 @@ public class SoapEngine {
         boolean doCsrfCheck = false;
         if (servReq.getAttribute(CsrfFilter.CSRF_TOKEN_CHECK) != null) {
             doCsrfCheck =  (Boolean) servReq.getAttribute(CsrfFilter.CSRF_TOKEN_CHECK);
+            if (soapProto.getBodyElement(envelope).getOptionalElement("AuthRequest") != null) {
+                // this is a Auth request, no CSRF validation happens
+                doCsrfCheck = false;
+            }
         }
         if (doCsrfCheck) {
             try {
@@ -314,14 +318,17 @@ public class SoapEngine {
                     HttpServletRequest httpReq = (HttpServletRequest) servReq;
                     AuthToken authToken = CsrfUtil.getAuthTokenFromReq(httpReq);
                     if (!CsrfUtil.isValidCsrfToken(csrfToken, authToken)) {
-                        throw new CsrfTokenException("Csrf Token is invalid");
+                        LOG.debug("CSRF token validation failed for account. "
+                            + authToken + ", Auth token is CSRF enabled: " + authToken.isCsrfTokenEnabled()
+                            + "CSRF token is: " + csrfToken);
+                        return soapFaultEnv(soapProto, "cannot dispatch request", ServiceException.AUTH_REQUIRED());
                     }
                 }
             } catch (ServiceException e) {
                 // we came here which implies clients supports CSRF authorization
                 // and CSRF token is generated
-                throw new CsrfTokenException("Did not find CSRF token in the request sent by  client."
-                    + "The client has indicated that is supports CSRF tokens.");
+                LOG.debug("Error during CSRF validation.", e);
+                return soapProto.soapFault(e);
             }
         }
 
