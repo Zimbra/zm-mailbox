@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -156,11 +156,30 @@ public class JaxbToElementTest {
         return getInfoRespJaxb;
     }
 
+    /**
+     * Bored with re-removing license block from test comparison XML - so make test tolerant to it.
+     */
+    public static String stripXmlCommentsOut(String str) throws IOException {
+        int commentIndex = str.indexOf("<!--");
+        if (commentIndex == -1) {
+            return str;
+        }
+        StringBuilder sb = new StringBuilder();
+        sb.append(str.substring(0, commentIndex));
+        str = str.substring(commentIndex + 4);
+        int endCommentIndex = str.indexOf("-->");
+        if (endCommentIndex != -1) {
+            sb.append(str.substring(endCommentIndex + 4));
+        }
+        return stripXmlCommentsOut(sb.toString());
+    }
+
     public static String getTestInfoResponseXml() throws IOException {
         if (getInfoResponseXml == null) {
             InputStream is = JaxbToElementTest.class.getResourceAsStream(
                     "GetInfoResponse.xml");
             getInfoResponseXml = streamToString(is, Charsets.UTF_8);
+            getInfoResponseXml = stripXmlCommentsOut(getInfoResponseXml);
         }
         return getInfoResponseXml;
     }

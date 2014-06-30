@@ -67,10 +67,10 @@
     <fileset dir="${common.jars.dir}">
         <include name="**/guava*.jar"/>
         <include name="**/log4j*.jar"/>
-    </fileset> 
-    <fileset dir="${common.internal.jars.dir}">
         <include name="**/junit*.jar"/>
-    </fileset>
+        <exclude name="**/junit*-src.jar"/>
+        <exclude name="**/junit*-javadoc.jar"/>
+    </fileset> 
   </path>
 
   <path id="soapdocs.class.path">
