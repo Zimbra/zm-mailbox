@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -105,7 +105,12 @@ public class AutoDiscoverServlet extends ZimbraServlet {
 	            serviceUrl = URLUtil.getPublicURLForDomain(server, domain, AutoDiscoverServlet.MS_ACTIVESYNC_PATH, true);
 	        }
         } else {
-        	 serviceUrl = URLUtil.getServiceURL(server, AutoDiscoverServlet.EWS_SERVICE_PATH, true);
+
+            if (LC.zimbra_ews_autodiscover_use_service_url.booleanValue()) {
+                serviceUrl = URLUtil.getServiceURL(server, AutoDiscoverServlet.EWS_SERVICE_PATH, true);
+            } else {
+                serviceUrl = URLUtil.getPublicURLForDomain(server, domain, AutoDiscoverServlet.EWS_SERVICE_PATH, true);
+            }
         }
 
         //fix for bug 83212 suppress port number, if default port is used as per the protocol
