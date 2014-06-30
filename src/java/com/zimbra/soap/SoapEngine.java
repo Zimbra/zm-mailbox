@@ -313,7 +313,7 @@ public class SoapEngine {
         if (doCsrfCheck) {
             try {
                 Element contextElmt = soapProto.getHeader(envelope).getElement(HeaderConstants.E_CONTEXT);
-                if (contextElmt != null && contextElmt.getAttribute(HeaderConstants.E_CSRFTOKEN) != null){
+                if (contextElmt != null && contextElmt.getAttribute(HeaderConstants.E_CSRFTOKEN, null) != null){
                     String csrfToken = contextElmt.getAttribute(HeaderConstants.E_CSRFTOKEN);
                     HttpServletRequest httpReq = (HttpServletRequest) servReq;
                     AuthToken authToken = CsrfUtil.getAuthTokenFromReq(httpReq);
