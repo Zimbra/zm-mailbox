@@ -328,7 +328,7 @@ public class SoapEngine {
                 // we came here which implies clients supports CSRF authorization
                 // and CSRF token is generated
                 LOG.debug("Error during CSRF validation.", e);
-                return soapProto.soapFault(e);
+                return soapFaultEnv(soapProto, "cannot dispatch request", ServiceException.AUTH_REQUIRED());
             }
         }
 
