@@ -27,7 +27,7 @@ import com.zimbra.soap.type.AuthTokenControl;
 @XmlType(namespace="urn:zimbra", name="HeaderContext", propOrder = {})
 public class HeaderContext {
     @XmlElement(name="authToken", required=false) private String authToken;
-    @XmlElement(name="sessionId", required=false) private String sessionId;
+    @XmlElement(name="session", required=false) private String sessionId;
     @XmlElement(name="account", required=false) private String account;
     @XmlElement(name="change", required=false) private String change;
     @XmlElement(name="targetServer", required=false) private String targetServer;
