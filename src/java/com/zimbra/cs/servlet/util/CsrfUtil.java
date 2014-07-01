@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -94,7 +94,12 @@ public final class CsrfUtil {
 
 
        if (!StringUtil.isNullOrEmpty(referrer)) {
-           URL refURL = new URL(referrer);
+           URL refURL = null;
+           if (referrer.contains("http") || referrer.contains("https")) {
+               refURL = new URL(referrer);
+           } else {
+               refURL = new URL("http://" + referrer);
+           }
            refHost = refURL.getHost().toLowerCase();
        }
 
@@ -524,7 +529,6 @@ public final class CsrfUtil {
     {
         try {
         AuthToken at = ZimbraAuthToken .getAuthToken("0_f66f9e23c3d6ec89c0723375489c729b13b108d9_69643d33363a34313537336365352d303035352d343066362d626235372d6264396238663136663666393b6578703d31333a313430333935303235363538323b747970653d363a7a696d6272613b7469643d31303a313837363638363831333b76657273696f6e3d303a3b637372663d313a313b");
-        String crumb = at.getCrumb();
         String csrfToken = "0_a00d6f6af20bf183ab63911ab648a7869793158e";
         boolean result = CsrfUtil.isValidCsrfToken(csrfToken, at);
         System.out.println(result);
