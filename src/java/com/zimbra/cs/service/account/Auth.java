@@ -285,7 +285,10 @@ public class Auth extends AccountDocumentHandler {
 			response.addElement(AccountConstants.E_SKIN).setText(skin);
 		}
 
-		boolean csrfCheckEnabled = (Boolean) httpReq.getAttribute(Provisioning.A_zimbraCsrfTokenCheckEnabled);
+		boolean csrfCheckEnabled = false;
+		if ( httpReq.getAttribute(Provisioning.A_zimbraCsrfTokenCheckEnabled) != null) {
+		    csrfCheckEnabled = (Boolean) httpReq.getAttribute(Provisioning.A_zimbraCsrfTokenCheckEnabled);
+		}
 
 		if (csrfSupport && csrfCheckEnabled) {
 		    String accountId = at.getAccountId();
