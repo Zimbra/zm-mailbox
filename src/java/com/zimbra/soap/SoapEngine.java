@@ -313,16 +313,15 @@ public class SoapEngine {
         if (doCsrfCheck) {
             try {
                 Element contextElmt = soapProto.getHeader(envelope).getElement(HeaderConstants.E_CONTEXT);
-                if (contextElmt != null && contextElmt.getAttribute(HeaderConstants.E_CSRFTOKEN, null) != null){
-                    String csrfToken = contextElmt.getAttribute(HeaderConstants.E_CSRFTOKEN);
-                    HttpServletRequest httpReq = (HttpServletRequest) servReq;
-                    AuthToken authToken = CsrfUtil.getAuthTokenFromReq(httpReq);
-                    if (!CsrfUtil.isValidCsrfToken(csrfToken, authToken)) {
-                        LOG.debug("CSRF token validation failed for account. "
-                            + authToken + ", Auth token is CSRF enabled: " + authToken.isCsrfTokenEnabled()
-                            + "CSRF token is: " + csrfToken);
-                        return soapFaultEnv(soapProto, "cannot dispatch request", ServiceException.AUTH_REQUIRED());
-                    }
+                String csrfToken = contextElmt.getAttribute(HeaderConstants.E_CSRFTOKEN);
+                HttpServletRequest httpReq = (HttpServletRequest) servReq;
+                AuthToken authToken = CsrfUtil.getAuthTokenFromReq(httpReq);
+                if (!CsrfUtil.isValidCsrfToken(csrfToken, authToken)) {
+                    LOG.debug("CSRF token validation failed for account. " + authToken
+                        + ", Auth token is CSRF enabled: " + authToken.isCsrfTokenEnabled()
+                        + "CSRF token is: " + csrfToken);
+                    return soapFaultEnv(soapProto, "cannot dispatch request",
+                        ServiceException.AUTH_REQUIRED());
                 }
             } catch (ServiceException e) {
                 // we came here which implies clients supports CSRF authorization
