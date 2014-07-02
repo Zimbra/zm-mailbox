@@ -51,6 +51,8 @@ public class ZFeatures {
 
     public Map<String, Collection<String>> getAttrs() { return mAttrs; }
     
+    public boolean getTouchClient() { return getBool(ZAttrProvisioning.A_zimbraFeatureTouchClientEnabled); }
+
     public boolean getContacts() { return getBool(ZAttrProvisioning.A_zimbraFeatureContactsEnabled); }
 
     public boolean getMail() { return getBool(ZAttrProvisioning.A_zimbraFeatureMailEnabled); }
