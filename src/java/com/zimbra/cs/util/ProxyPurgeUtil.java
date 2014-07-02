@@ -33,6 +33,7 @@ import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.ldap.LdapClient;
 import com.zimbra.cs.ldap.LdapServerType;
 import com.zimbra.cs.ldap.LdapUsage;
+import com.zimbra.cs.ldap.ZLdapContext;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.common.service.ServiceException;
@@ -259,20 +260,25 @@ public class ProxyPurgeUtil
                 // get domain alias from the given the domain
                 // this logic works for for all cases account=addr@<alias domain> or alias-name@<alias domain>
                 if (prov instanceof LdapProvisioning) {
-                    List<String> aliasDomainIds = ((LdapProvisioning) prov).getEmptyAliasDomainIds(LdapClient.getContext(LdapServerType.MASTER, LdapUsage.GET_DOMAIN), d, false);
-                    if (aliasDomainIds != null) {
-                        for (String aliasDomainId : aliasDomainIds) {
-                            String aliasDomain = prov.getDomainById(aliasDomainId).getDomainName();
-                            for (String userName : uids) {
-                                routes.add("route:proto=http;user=" + userName + "@" + aliasDomain);
-                                routes.add("route:proto=imap;user=" + userName + "@" + aliasDomain);
-                                routes.add("route:proto=pop3;user=" + userName + "@" + aliasDomain);
-                                routes.add("route:proto=httpssl;user=" + userName + "@" + aliasDomain);
-                                routes.add("route:proto=imapssl;user=" + userName + "@" + aliasDomain);
-                                routes.add("route:proto=pop3ssl;user=" + userName + "@" + aliasDomain);
-                                routes.add("alias:user=" + userName + ";ip=" + aliasDomain);
+                    ZLdapContext ldpCtx = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.GET_DOMAIN);
+                    try {
+                        List<String> aliasDomainIds = ((LdapProvisioning) prov).getEmptyAliasDomainIds(ldpCtx, d, false);
+                        if (aliasDomainIds != null) {
+                            for (String aliasDomainId : aliasDomainIds) {
+                                String aliasDomain = prov.getDomainById(aliasDomainId).getDomainName();
+                                for (String userName : uids) {
+                                    routes.add("route:proto=http;user=" + userName + "@" + aliasDomain);
+                                    routes.add("route:proto=imap;user=" + userName + "@" + aliasDomain);
+                                    routes.add("route:proto=pop3;user=" + userName + "@" + aliasDomain);
+                                    routes.add("route:proto=httpssl;user=" + userName + "@" + aliasDomain);
+                                    routes.add("route:proto=imapssl;user=" + userName + "@" + aliasDomain);
+                                    routes.add("route:proto=pop3ssl;user=" + userName + "@" + aliasDomain);
+                                    routes.add("alias:user=" + userName + ";ip=" + aliasDomain);
+                                }
                             }
                         }
+                    } finally {
+                        LdapClient.closeContext(ldpCtx);
                     }
                 }
 
