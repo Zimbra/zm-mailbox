@@ -8215,7 +8215,7 @@ TODO: delete them permanently from here
   Set to higher value to reduce network chatter. Set to lower value to decrease the window during which a stolen cookie may be reused to access an account.</desc>
 </attr>
 
-<attr id="1636" name="zimbraFeatureTouchClientEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.5.0">
+<attr id="1636" name="zimbraFeatureTouchClientEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="8.5.0">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>Whether to allow a user to access touch client</desc>
 </attr>
