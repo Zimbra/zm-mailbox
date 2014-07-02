@@ -52,7 +52,6 @@ import com.yahoo.platform.yui.compressor.CssCompressor;
 import com.yahoo.platform.yui.compressor.JavaScriptCompressor;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.servlet.DiskCacheServlet;
 
 @SuppressWarnings("serial")
@@ -162,15 +161,9 @@ public class ZimletResources extends DiskCacheServlet {
 
             // zimlet messages
             if (type.equals(T_JAVASCRIPT)) {
-                String mailUrl = "/";
-                try {
-                    mailUrl = Provisioning.getInstance().getLocalServer().getMailURL();
-                } catch (Exception e) {
-                    ZimbraLog.zimlet.warn("can't get mailUrl", e);
-                }
                 ServletConfig config = this.getServletConfig();
                 ServletContext baseContext = config.getServletContext();
-                RequestDispatcher dispatcher = baseContext.getContext(mailUrl).getRequestDispatcher(RESOURCE_PATH);
+                RequestDispatcher dispatcher = baseContext.getRequestDispatcher(RESOURCE_PATH);
 
                 // NOTE: We have to return the messages for *all* of the zimlets,
                 // NOTE: not just the enabled ones, because their names and
