@@ -49,7 +49,7 @@ public class WebClientServiceUtil {
      * @return true if server is in split mode or LC key debug_local_split is set to true
      */
     public static boolean isServerInSplitMode() {
-        return DebugConfig.debugLocalSplit || WebSplitUtil.isZimbraWebClientSplitEnabled();
+        return DebugConfig.debugLocalSplit || WebSplitUtil.isZimbraServiceSplitEnabled();
     }
 
     /**
