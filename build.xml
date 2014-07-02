@@ -1630,6 +1630,7 @@
             zimbraGalInternalSearchBase ROOT
             mcf zimbraDefaultDomainName ${defaultdomain.name}
             mc default zimbraFeatureIMEnabled FALSE
+            mc default zimbraFeatureTouchClientEnabled TRUE
             ca admin@${defaultdomain.name} test123 \
             zimbraMailHost ${zimbra.server.hostname} \
             cn 'Administrator' displayName 'Administrator' \
