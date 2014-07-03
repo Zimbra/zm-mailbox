@@ -72,7 +72,7 @@ public class AutoDiscoverServlet extends ZimbraServlet {
     private static final String NEGOTIATE = "Negotiate";
 
     private static final String MS_ACTIVESYNC_PATH = "/Microsoft-Server-ActiveSync";
-    private static final String EWS_SERVICE_PATH = "/service/extension/zimbraews/ExchangeServicePort";
+    private static final String EWS_SERVICE_PATH = "/ews/Exchange.asmx";
 
     private static final String NS_MOBILE = "http://schemas.microsoft.com/exchange/autodiscover/mobilesync/responseschema/2006";
     private static final String NS_OUTLOOK = "http://schemas.microsoft.com/exchange/autodiscover/outlook/responseschema/2006a";
@@ -606,15 +606,6 @@ public class AutoDiscoverServlet extends ZimbraServlet {
         Element ews = xmlDoc.createElement("EwsUrl");
         protocol.appendChild(ews);
         ews.appendChild(xmlDoc.createTextNode(serviceUrl));
-
-        Element serverElm = xmlDoc.createElement("Server");
-        protocol.appendChild(serverElm);
-        serverElm.appendChild(xmlDoc.createTextNode(server.getName()));
-
-        Element serverDn = xmlDoc.createElement("ServerDN");
-        protocol.appendChild(serverDn);
-        serverDn.appendChild(xmlDoc.createTextNode(server.getAttr("zimbraServiceHostname")));
-
 
         TransformerFactory transformerFactory = TransformerFactory.newInstance();
         Transformer transformer = transformerFactory.newTransformer();
