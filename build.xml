@@ -1556,28 +1556,28 @@
             var jString = java.lang.String;
 
             var writer =
-                Files.newBufferedWriter(Paths.get("@{file}"),
+                Files.newBufferedWriter(Paths.get("@{file}", []),
                                         StandardCharsets.UTF_8,
-                                        StandardOpenOption.CREATE,
-                                        StandardOpenOption.APPEND);
+                                        [StandardOpenOption.CREATE,
+                                         StandardOpenOption.APPEND]);
 
             // create 500 test accounts
             for (var i = @{from}; i <= @{to}; i++) {
                 i = jInteger(i);
 
                 writer.write("createAccount ");
-                writer.write(jString.format("test%03d@@example.com ", i));
+                writer.write(jString.format("test%03d@@example.com ", [i]));
                 writer.write("test123 displayName 'Test User " + i + "'");
                 writer.write('\n');
 
                 if (i % 100 === 1) {
                     writer.write("grantRight ");
-                    writer.write(jString.format("account test%03d@@example.com ", i));
+                    writer.write(jString.format("account test%03d@@example.com ", [i]));
                     writer.write("usr admin@@example.com -renameAccount");
                     writer.write('\n');
                 } else if (i % 100 === 2) {
                     writer.write("grantRight ");
-                    writer.write(jString.format("account test%03d@@example.com ", i));
+                    writer.write(jString.format("account test%03d@@example.com ", [i]));
                     writer.write("usr admin@@example.com -setAccountPassword");
                     writer.write('\n');
                 }
