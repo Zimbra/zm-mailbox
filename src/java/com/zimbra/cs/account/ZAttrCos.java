@@ -18796,13 +18796,13 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * whether mobile sync notification enabled or not
      *
-     * @return zimbraMobileNotificationEnabled, or true if unset
+     * @return zimbraMobileNotificationEnabled, or false if unset
      *
      * @since ZCS 8.5.0
      */
     @ZAttr(id=1421)
     public boolean isMobileNotificationEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraMobileNotificationEnabled, true);
+        return getBooleanAttr(Provisioning.A_zimbraMobileNotificationEnabled, false);
     }
 
     /**
