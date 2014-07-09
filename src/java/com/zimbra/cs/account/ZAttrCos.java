@@ -23299,6 +23299,167 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
+     * number of times allowed to retry the same sync version before going
+     * into penalty. In general, windows phone should be set to 2, iOS should
+     * be set to 1. example of config values: windows:2, ios:1, android:1,
+     * default:1
+     *
+     * @return zimbraMobileSyncRedoMaxAttempts, or empty array if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1642)
+    public String[] getMobileSyncRedoMaxAttempts() {
+        String[] value = getMultiAttr(Provisioning.A_zimbraMobileSyncRedoMaxAttempts); return value.length > 0 ? value : new String[] {"windows:2","default:1"};
+    }
+
+    /**
+     * number of times allowed to retry the same sync version before going
+     * into penalty. In general, windows phone should be set to 2, iOS should
+     * be set to 1. example of config values: windows:2, ios:1, android:1,
+     * default:1
+     *
+     * @param zimbraMobileSyncRedoMaxAttempts new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1642)
+    public void setMobileSyncRedoMaxAttempts(String[] zimbraMobileSyncRedoMaxAttempts) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileSyncRedoMaxAttempts, zimbraMobileSyncRedoMaxAttempts);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * number of times allowed to retry the same sync version before going
+     * into penalty. In general, windows phone should be set to 2, iOS should
+     * be set to 1. example of config values: windows:2, ios:1, android:1,
+     * default:1
+     *
+     * @param zimbraMobileSyncRedoMaxAttempts new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1642)
+    public Map<String,Object> setMobileSyncRedoMaxAttempts(String[] zimbraMobileSyncRedoMaxAttempts, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileSyncRedoMaxAttempts, zimbraMobileSyncRedoMaxAttempts);
+        return attrs;
+    }
+
+    /**
+     * number of times allowed to retry the same sync version before going
+     * into penalty. In general, windows phone should be set to 2, iOS should
+     * be set to 1. example of config values: windows:2, ios:1, android:1,
+     * default:1
+     *
+     * @param zimbraMobileSyncRedoMaxAttempts new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1642)
+    public void addMobileSyncRedoMaxAttempts(String zimbraMobileSyncRedoMaxAttempts) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraMobileSyncRedoMaxAttempts, zimbraMobileSyncRedoMaxAttempts);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * number of times allowed to retry the same sync version before going
+     * into penalty. In general, windows phone should be set to 2, iOS should
+     * be set to 1. example of config values: windows:2, ios:1, android:1,
+     * default:1
+     *
+     * @param zimbraMobileSyncRedoMaxAttempts new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1642)
+    public Map<String,Object> addMobileSyncRedoMaxAttempts(String zimbraMobileSyncRedoMaxAttempts, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraMobileSyncRedoMaxAttempts, zimbraMobileSyncRedoMaxAttempts);
+        return attrs;
+    }
+
+    /**
+     * number of times allowed to retry the same sync version before going
+     * into penalty. In general, windows phone should be set to 2, iOS should
+     * be set to 1. example of config values: windows:2, ios:1, android:1,
+     * default:1
+     *
+     * @param zimbraMobileSyncRedoMaxAttempts existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1642)
+    public void removeMobileSyncRedoMaxAttempts(String zimbraMobileSyncRedoMaxAttempts) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraMobileSyncRedoMaxAttempts, zimbraMobileSyncRedoMaxAttempts);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * number of times allowed to retry the same sync version before going
+     * into penalty. In general, windows phone should be set to 2, iOS should
+     * be set to 1. example of config values: windows:2, ios:1, android:1,
+     * default:1
+     *
+     * @param zimbraMobileSyncRedoMaxAttempts existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1642)
+    public Map<String,Object> removeMobileSyncRedoMaxAttempts(String zimbraMobileSyncRedoMaxAttempts, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraMobileSyncRedoMaxAttempts, zimbraMobileSyncRedoMaxAttempts);
+        return attrs;
+    }
+
+    /**
+     * number of times allowed to retry the same sync version before going
+     * into penalty. In general, windows phone should be set to 2, iOS should
+     * be set to 1. example of config values: windows:2, ios:1, android:1,
+     * default:1
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1642)
+    public void unsetMobileSyncRedoMaxAttempts() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileSyncRedoMaxAttempts, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * number of times allowed to retry the same sync version before going
+     * into penalty. In general, windows phone should be set to 2, iOS should
+     * be set to 1. example of config values: windows:2, ios:1, android:1,
+     * default:1
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1642)
+    public Map<String,Object> unsetMobileSyncRedoMaxAttempts(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileSyncRedoMaxAttempts, "");
+        return attrs;
+    }
+
+    /**
      * whether to enable tombstone syncing. If disabled, changes of
      * tombstones won&#039;t be synced to device
      *

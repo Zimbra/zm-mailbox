@@ -8236,4 +8236,13 @@ TODO: delete them permanently from here
   <desc>URL to be loaded in Zimbra Community tab relative to zimbraCommunityBaseURL</desc>
   <globalConfigValue>/integration/zimbracollaboration</globalConfigValue>
 </attr>
+
+<attr id="1642" name="zimbraMobileSyncRedoMaxAttempts" type="string" cardinality="multi" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="8.5.0">
+  <defaultCOSValue>windows:2</defaultCOSValue>
+  <defaultCOSValue>default:1</defaultCOSValue>
+  <desc>
+    number of times allowed to retry the same sync version before going into penalty. In general, windows phone should be set to 2, iOS should be set to 1.
+    example of config values: windows:2, ios:1, android:1, default:1
+  </desc>
+</attr>
 </attrs>
