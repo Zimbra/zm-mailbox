@@ -8690,6 +8690,17 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMobileSyncKeyFormatConvertedFolders = "zimbraMobileSyncKeyFormatConvertedFolders";
 
     /**
+     * number of times allowed to retry the same sync version before going
+     * into penalty. In general, windows phone should be set to 2, iOS should
+     * be set to 1. example of config values: windows:2, ios:1, android:1,
+     * default:1
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1642)
+    public static final String A_zimbraMobileSyncRedoMaxAttempts = "zimbraMobileSyncRedoMaxAttempts";
+
+    /**
      * whether to enable tombstone syncing. If disabled, changes of
      * tombstones won&#039;t be synced to device
      *
