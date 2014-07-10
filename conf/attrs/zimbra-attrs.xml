@@ -4029,7 +4029,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <defaultCOSValue>12h</defaultCOSValue>
   <desc>
     The time interval between automated data imports for a Rss data source.
-    If unset or 0, the data source will not be scheduled for automated polling.
+    If explicitly set to 0, the data source will not be scheduled for automated polling.
   </desc>
 </attr>
 
@@ -4299,7 +4299,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <defaultCOSValue>12h</defaultCOSValue>
   <desc>
     The time interval between automated data imports for a remote calendar data source.
-    If unset or 0, the data source will not be scheduled for automated polling.
+    If explicitly set to 0, the data source will not be scheduled for automated polling.
   </desc>
 </attr>
 

@@ -7200,8 +7200,8 @@ public abstract class ZAttrAccount  extends MailTarget {
 
     /**
      * The time interval between automated data imports for a remote calendar
-     * data source. If unset or 0, the data source will not be scheduled for
-     * automated polling. . Must be in valid duration format:
+     * data source. If explicitly set to 0, the data source will not be
+     * scheduled for automated polling. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -7221,8 +7221,8 @@ public abstract class ZAttrAccount  extends MailTarget {
 
     /**
      * The time interval between automated data imports for a remote calendar
-     * data source. If unset or 0, the data source will not be scheduled for
-     * automated polling. . Must be in valid duration format:
+     * data source. If explicitly set to 0, the data source will not be
+     * scheduled for automated polling. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -7238,8 +7238,8 @@ public abstract class ZAttrAccount  extends MailTarget {
 
     /**
      * The time interval between automated data imports for a remote calendar
-     * data source. If unset or 0, the data source will not be scheduled for
-     * automated polling. . Must be in valid duration format:
+     * data source. If explicitly set to 0, the data source will not be
+     * scheduled for automated polling. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -7258,8 +7258,8 @@ public abstract class ZAttrAccount  extends MailTarget {
 
     /**
      * The time interval between automated data imports for a remote calendar
-     * data source. If unset or 0, the data source will not be scheduled for
-     * automated polling. . Must be in valid duration format:
+     * data source. If explicitly set to 0, the data source will not be
+     * scheduled for automated polling. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -7279,8 +7279,8 @@ public abstract class ZAttrAccount  extends MailTarget {
 
     /**
      * The time interval between automated data imports for a remote calendar
-     * data source. If unset or 0, the data source will not be scheduled for
-     * automated polling. . Must be in valid duration format:
+     * data source. If explicitly set to 0, the data source will not be
+     * scheduled for automated polling. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -7298,8 +7298,8 @@ public abstract class ZAttrAccount  extends MailTarget {
 
     /**
      * The time interval between automated data imports for a remote calendar
-     * data source. If unset or 0, the data source will not be scheduled for
-     * automated polling. . Must be in valid duration format:
+     * data source. If explicitly set to 0, the data source will not be
+     * scheduled for automated polling. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -8195,8 +8195,8 @@ public abstract class ZAttrAccount  extends MailTarget {
 
     /**
      * The time interval between automated data imports for a Rss data
-     * source. If unset or 0, the data source will not be scheduled for
-     * automated polling. . Must be in valid duration format:
+     * source. If explicitly set to 0, the data source will not be scheduled
+     * for automated polling. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -8216,8 +8216,8 @@ public abstract class ZAttrAccount  extends MailTarget {
 
     /**
      * The time interval between automated data imports for a Rss data
-     * source. If unset or 0, the data source will not be scheduled for
-     * automated polling. . Must be in valid duration format:
+     * source. If explicitly set to 0, the data source will not be scheduled
+     * for automated polling. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -8233,8 +8233,8 @@ public abstract class ZAttrAccount  extends MailTarget {
 
     /**
      * The time interval between automated data imports for a Rss data
-     * source. If unset or 0, the data source will not be scheduled for
-     * automated polling. . Must be in valid duration format:
+     * source. If explicitly set to 0, the data source will not be scheduled
+     * for automated polling. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -8253,8 +8253,8 @@ public abstract class ZAttrAccount  extends MailTarget {
 
     /**
      * The time interval between automated data imports for a Rss data
-     * source. If unset or 0, the data source will not be scheduled for
-     * automated polling. . Must be in valid duration format:
+     * source. If explicitly set to 0, the data source will not be scheduled
+     * for automated polling. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -8274,8 +8274,8 @@ public abstract class ZAttrAccount  extends MailTarget {
 
     /**
      * The time interval between automated data imports for a Rss data
-     * source. If unset or 0, the data source will not be scheduled for
-     * automated polling. . Must be in valid duration format:
+     * source. If explicitly set to 0, the data source will not be scheduled
+     * for automated polling. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -8293,8 +8293,8 @@ public abstract class ZAttrAccount  extends MailTarget {
 
     /**
      * The time interval between automated data imports for a Rss data
-     * source. If unset or 0, the data source will not be scheduled for
-     * automated polling. . Must be in valid duration format:
+     * source. If explicitly set to 0, the data source will not be scheduled
+     * for automated polling. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
