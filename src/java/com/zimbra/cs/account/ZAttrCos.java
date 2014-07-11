@@ -4217,8 +4217,9 @@ public abstract class ZAttrCos extends NamedEntry {
      * zimbraDataSourcePollingInterval is set on data source, use it 2.
      * otherwise use the zimbraDataSource{Proto}PollingInterval on
      * account/cos 3. if zimbraDataSource{Proto}PollingInterval is not set on
-     * account/cos, use 0, which means no automated polling. . Must be in
-     * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * account/cos, use the attribute&#039;s default if one is specified. See
+     * individual attribute descriptions for defaults. . Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
      * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
      * milliseconds. If time unit is not specified, the default is
      * s(seconds).
@@ -4244,8 +4245,9 @@ public abstract class ZAttrCos extends NamedEntry {
      * zimbraDataSourcePollingInterval is set on data source, use it 2.
      * otherwise use the zimbraDataSource{Proto}PollingInterval on
      * account/cos 3. if zimbraDataSource{Proto}PollingInterval is not set on
-     * account/cos, use 0, which means no automated polling. . Must be in
-     * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * account/cos, use the attribute&#039;s default if one is specified. See
+     * individual attribute descriptions for defaults. . Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
      * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
      * milliseconds. If time unit is not specified, the default is
      * s(seconds).
@@ -4267,8 +4269,9 @@ public abstract class ZAttrCos extends NamedEntry {
      * zimbraDataSourcePollingInterval is set on data source, use it 2.
      * otherwise use the zimbraDataSource{Proto}PollingInterval on
      * account/cos 3. if zimbraDataSource{Proto}PollingInterval is not set on
-     * account/cos, use 0, which means no automated polling. . Must be in
-     * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * account/cos, use the attribute&#039;s default if one is specified. See
+     * individual attribute descriptions for defaults. . Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
      * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
      * milliseconds. If time unit is not specified, the default is
      * s(seconds).
@@ -4293,8 +4296,9 @@ public abstract class ZAttrCos extends NamedEntry {
      * zimbraDataSourcePollingInterval is set on data source, use it 2.
      * otherwise use the zimbraDataSource{Proto}PollingInterval on
      * account/cos 3. if zimbraDataSource{Proto}PollingInterval is not set on
-     * account/cos, use 0, which means no automated polling. . Must be in
-     * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * account/cos, use the attribute&#039;s default if one is specified. See
+     * individual attribute descriptions for defaults. . Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
      * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
      * milliseconds. If time unit is not specified, the default is
      * s(seconds).
@@ -4320,8 +4324,9 @@ public abstract class ZAttrCos extends NamedEntry {
      * zimbraDataSourcePollingInterval is set on data source, use it 2.
      * otherwise use the zimbraDataSource{Proto}PollingInterval on
      * account/cos 3. if zimbraDataSource{Proto}PollingInterval is not set on
-     * account/cos, use 0, which means no automated polling. . Must be in
-     * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * account/cos, use the attribute&#039;s default if one is specified. See
+     * individual attribute descriptions for defaults. . Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
      * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
      * milliseconds. If time unit is not specified, the default is
      * s(seconds).
@@ -4345,8 +4350,9 @@ public abstract class ZAttrCos extends NamedEntry {
      * zimbraDataSourcePollingInterval is set on data source, use it 2.
      * otherwise use the zimbraDataSource{Proto}PollingInterval on
      * account/cos 3. if zimbraDataSource{Proto}PollingInterval is not set on
-     * account/cos, use 0, which means no automated polling. . Must be in
-     * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * account/cos, use the attribute&#039;s default if one is specified. See
+     * individual attribute descriptions for defaults. . Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
      * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
      * milliseconds. If time unit is not specified, the default is
      * s(seconds).
