@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
@@ -58,6 +58,7 @@ import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapProtocol;
+import com.zimbra.common.util.AccessBoundedRegex;
 import com.zimbra.common.util.ArrayUtil;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.DateUtil;
@@ -2035,19 +2036,27 @@ abstract class ImapHandler {
 
         String unescaped = resolved.toUpperCase();
         StringBuffer escaped = new StringBuffer();
+        boolean previousStar = false;        /* use for simple optimization */
+        boolean previousPercent = false;     /* use for simple optimization */
         for (int i = 0; i < unescaped.length(); i++) {
             char c = unescaped.charAt(i);
             // 6.3.8: "The character "*" is a wildcard, and matches zero or more characters at this position.
             //         The character "%" is similar to "*", but it does not match a hierarchy delimiter."
             if (c == '*' && i >= startWildcards) {
-                escaped.append(".*");
+                if (!previousStar) {
+                    escaped.append(".*");
+                }
             } else if (c == '%' && i >= startWildcards) {
-                escaped.append("[^/]*");
+                if (!previousPercent) {
+                    escaped.append("[^/]*");
+                }
             } else if (c > 0x7f || !REGEXP_ESCAPED[c]) {
                 escaped.append(c);
             } else {
                 escaped.append('\\').append(c);
             }
+            previousStar = (c == '*');
+            previousPercent = (c == '%');
         }
         return new Pair<String, Pattern>(resolved, Pattern.compile(escaped.toString()));
     }
@@ -2093,12 +2102,20 @@ abstract class ImapHandler {
         }
     }
 
-    private static boolean pathMatches(SubscribedImapPath path, Pattern pattern) {
-        return pattern.matcher(path.asImapPath().toUpperCase()).matches();
+    private static boolean pathMatches(String path, Pattern pattern)
+    throws ServiceException {
+        return AccessBoundedRegex.matches(path, pattern,
+                Provisioning.getInstance().getConfig().getRegexMaxAccessesWhenMatching());
     }
 
-    private static boolean pathMatches(ImapPath path, Pattern pattern) {
-        return pattern.matcher(path.asImapPath().toUpperCase()).matches();
+    private static boolean pathMatches(SubscribedImapPath path, Pattern pattern)
+    throws ServiceException {
+        return pathMatches(path.asImapPath().toUpperCase(), pattern);
+    }
+
+    private static boolean pathMatches(ImapPath path, Pattern pattern)
+    throws ServiceException {
+        return pathMatches(path.asImapPath().toUpperCase(), pattern);
     }
 
     private String getFolderAttrs(ImapPath path, byte returnOptions, Map<ImapPath, ItemId> paths, Set<String> subscriptions)

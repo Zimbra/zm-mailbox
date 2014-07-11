@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
+ * Copyright (C) 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
@@ -48,6 +48,7 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.InternetAddress;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapProtocol;
+import com.zimbra.common.util.AccessBoundedRegex;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
@@ -1071,6 +1072,11 @@ public final class MailboxIndex {
         return result;
     }
 
+    /* These regexes really shouldn't be complicated - so this value should be way more than enough.
+     * Leaving hard coded.  This is the number of accesses allowed to the underlying CharSequence before
+     * deciding that too much resource has been used.
+     */
+    final private static int MAX_REGEX_ACCESSES = 100000;
     /**
      * Returns all domain names from the index.
      *
@@ -1078,7 +1084,7 @@ public final class MailboxIndex {
      * @param regex matching pattern or null to match everything
      * @return {@link BrowseTerm}s which correspond to all of the domain terms stored in a given field
      */
-    public List<BrowseTerm> getDomains(String field, String regex) throws IOException {
+    public List<BrowseTerm> getDomains(String field, String regex) throws IOException, ServiceException {
         Pattern pattern = Strings.isNullOrEmpty(regex) ? null : Pattern.compile(
                 regex.startsWith("@") ? regex : "@" + regex);
         List<BrowseTerm> result = new ArrayList<BrowseTerm>();
@@ -1093,7 +1099,7 @@ public final class MailboxIndex {
                 String text = term.text();
                 // Domains are tokenized with '@' prefix. Exclude partial domain tokens.
                 if (text.startsWith("@") && text.contains(".")) {
-                    if (pattern == null || pattern.matcher(text).matches()) {
+                    if (pattern == null || AccessBoundedRegex.matches(text, pattern, MAX_REGEX_ACCESSES)) {
                         result.add(new BrowseTerm(text.substring(1), terms.docFreq()));
                     }
                 }
@@ -1110,7 +1116,7 @@ public final class MailboxIndex {
      * @param regex matching pattern or null to match everything
      * @return {@link BrowseTerm}s which correspond to all of the attachment types in the index
      */
-    public List<BrowseTerm> getAttachmentTypes(String regex) throws IOException {
+    public List<BrowseTerm> getAttachmentTypes(String regex) throws IOException, ServiceException {
         Pattern pattern = Strings.isNullOrEmpty(regex) ? null : Pattern.compile(regex);
         List<BrowseTerm> result = new ArrayList<BrowseTerm>();
         IndexSearcher searcher = indexStore.openSearcher();
@@ -1122,7 +1128,7 @@ public final class MailboxIndex {
                     break;
                 }
                 String text = term.text();
-                if (pattern == null || pattern.matcher(text).matches()) {
+                if (pattern == null || AccessBoundedRegex.matches(text, pattern, MAX_REGEX_ACCESSES)) {
                     result.add(new BrowseTerm(text, terms.docFreq()));
                 }
             } while (terms.next());
@@ -1138,7 +1144,7 @@ public final class MailboxIndex {
      * @param regex matching pattern or null to match everything
      * @return {@link BrowseTerm}s which correspond to all of the objects in the index
      */
-    public List<BrowseTerm> getObjects(String regex) throws IOException {
+    public List<BrowseTerm> getObjects(String regex) throws IOException, ServiceException {
         Pattern pattern = Strings.isNullOrEmpty(regex) ? null : Pattern.compile(regex);
         List<BrowseTerm> result = new ArrayList<BrowseTerm>();
         IndexSearcher searcher = indexStore.openSearcher();
@@ -1150,7 +1156,7 @@ public final class MailboxIndex {
                     break;
                 }
                 String text = term.text();
-                if (pattern == null || pattern.matcher(text).matches()) {
+                if (pattern == null || AccessBoundedRegex.matches(text, pattern, MAX_REGEX_ACCESSES)) {
                     result.add(new BrowseTerm(text, terms.docFreq()));
                 }
             } while (terms.next());
