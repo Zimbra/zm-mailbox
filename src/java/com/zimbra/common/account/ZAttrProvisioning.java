@@ -6913,7 +6913,7 @@ public class ZAttrProvisioning {
      * without truncation. It cannot be larger than zimbraMTAMaxMessageSize.
      * 0 means zimbraMTAMaxMessageSize or INTEGER_MAX, whichever is smaller
      *
-     * @since ZCS 8.0.8
+     * @since ZCS 8.0.8,8.5.0
      */
     @ZAttr(id=1596)
     public static final String A_zimbraMobileMaxMessageSize = "zimbraMobileMaxMessageSize";
@@ -7569,7 +7569,7 @@ public class ZAttrProvisioning {
     /**
      * Value for postconf smtpd_client_port_logging. Defaults to no
      *
-     * @since ZCS 8.0.8
+     * @since ZCS 8.0.8,8.5.0
      */
     @ZAttr(id=1588)
     public static final String A_zimbraMtaSmtpdClientPortLogging = "zimbraMtaSmtpdClientPortLogging";
@@ -9883,6 +9883,17 @@ public class ZAttrProvisioning {
     public static final String A_zimbraRedoLogRolloverMinFileAge = "zimbraRedoLogRolloverMinFileAge";
 
     /**
+     * This attribute is used to limit the amount of computation allowed when
+     * matching regex expressions. For example as part of the IMAP LIST
+     * command. Set to a higher value if legitimate IMAP list commands fail
+     * throwing TooManyAccessesToMatchTargetException.
+     *
+     * @since ZCS 8.0.8,8.5.0
+     */
+    @ZAttr(id=1643)
+    public static final String A_zimbraRegexMaxAccessesWhenMatching = "zimbraRegexMaxAccessesWhenMatching";
+
+    /**
      * Path to remote management command to execute on this server
      */
     @ZAttr(id=336)
@@ -9954,7 +9965,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraReverseProxyAuthWaitInterval = "zimbraReverseProxyAuthWaitInterval";
 
     /**
-     * The servers to be included in the proxy lookup hanlders list. Proxy
+     * The servers to be included in the proxy lookup handlers list. Proxy
      * will only use the servers specified here to do the lookup. Leaving
      * empty means using all the servers whose zimbraReverseProxyLookupTarget
      * is TRUE.
