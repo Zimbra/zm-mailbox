@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -29,7 +29,7 @@ import com.zimbra.common.util.StringUtil;
 public abstract class LdapServerConfig {
     private static final String DEFALT_LDAP_PORT = "389";
 
-    protected String ldapURL;  // space separated URLs
+    protected String ldapURLs;  // space separated URLs
     protected String adminBindDN;
     protected String adminBindPassword;
 
@@ -55,7 +55,7 @@ public abstract class LdapServerConfig {
     // Note: If on-checkout health check is enabled, background health check will be
     //       disabled.  If on-checkout health check is disabled, background health check
     //       will be enabled.
-    //       Behavior difference in falling back to the next availble server in the sever set
+    //       Behavior difference in falling back to the next available server in the sever set
     //       for the pool:
     //
     //       on-checkout:
@@ -72,6 +72,13 @@ public abstract class LdapServerConfig {
     //           connection pointing to the bad server - executed before the health check
     //           will fail.   After the health check interval, LDAP ops should all works again
     //           if there is a healthy server in the server set for the connection pool.
+    //
+    //  http://sourceforge.net/p/ldap-sdk/discussion/1001257/thread/a9bc7b98/?limit=25#9b18
+    //
+    //  This option was available before the option to automatically retry operations that fail in a way that
+    //  indicates that the connection is no longer valid, and in many cases it is better to use the retry
+    //  feature because there's no performance penalty unless there is an operation failure, and then it's
+    //  a performance penalty instead of propagating the failure to the caller.
     //
     protected final boolean connPoolHelathCheckOnCheckoutEnabled;
 
@@ -138,9 +145,9 @@ public abstract class LdapServerConfig {
             this.connPoolInitSize = LC.ldap_connect_pool_initsize.intValue();
 
             if (LdapServerType.MASTER == this.serverType) {
-                this.ldapURL = getMasterURL();
+                this.ldapURLs = getMasterURLs();
             } else {
-                this.ldapURL = getReplicaURL();
+                this.ldapURLs = getReplicaURLs();
             }
 
             /*
@@ -160,7 +167,7 @@ public abstract class LdapServerConfig {
 
             this.wantStartTLS = (ldap_starttls_supported && ldap_starttls_required && zimbra_require_interprocess_security);
 
-            this.connType = LdapConnType.getConnType(this.ldapURL, this.wantStartTLS);
+            this.connType = LdapConnType.getConnType(this.ldapURLs, this.wantStartTLS);
         }
 
         @Override
@@ -168,11 +175,11 @@ public abstract class LdapServerConfig {
             return connPoolInitSize;
         }
 
-        private String getReplicaURL() {
-            String replicaURL;
+        private String getReplicaURLs() {
+            String replicaURLs;
 
-            replicaURL = LC.ldap_url.value().trim();
-            if (replicaURL.length() == 0) {
+            replicaURLs = LC.ldap_url.value().trim(); //space separated URLs
+            if (replicaURLs.length() == 0) {
                 String ldapHost = LC.ldap_host.value();
                 String ldapPort = LC.ldap_port.value();
 
@@ -182,19 +189,18 @@ public abstract class LdapServerConfig {
                 if (StringUtil.isNullOrEmpty(ldapPort)) {
                     ldapPort = DEFALT_LDAP_PORT;
                 }
-                replicaURL = "ldap://" + ldapHost + ":" + ldapPort + "/";
+                replicaURLs = "ldap://" + ldapHost + ":" + ldapPort + "/";
             }
 
-            return replicaURL;
+            return replicaURLs;
         }
 
-        private String getMasterURL() {
-            String masterURL = LC.ldap_master_url.value().trim();
-            if (masterURL.length() == 0) {
-                masterURL = getReplicaURL();
+        private String getMasterURLs() {
+            String masterURLs = LC.ldap_master_url.value().trim(); //space separated URLs
+            if (masterURLs.length() == 0) {
+                masterURLs = getReplicaURLs();
             }
-
-            return masterURL;
+            return masterURLs;
         }
     }
 
@@ -237,7 +243,7 @@ public abstract class LdapServerConfig {
                 String bindDn, String bindPassword, Set<String> binaryAttrs, String note) {
             super();
 
-            this.ldapURL = urls;
+            this.ldapURLs = urls;
             this.adminBindDN = bindDn;
             this.adminBindPassword = bindPassword;
             this.wantStartTLS = wantStartTLS;
@@ -248,7 +254,7 @@ public abstract class LdapServerConfig {
 
             this.derefAliasPolicy = LC.ldap_deref_aliases.value();
 
-            this.connType = LdapConnType.getConnType(this.ldapURL, this.wantStartTLS);
+            this.connType = LdapConnType.getConnType(this.ldapURLs, this.wantStartTLS);
         }
 
         /**
@@ -273,7 +279,7 @@ public abstract class LdapServerConfig {
 
             public static String getConnPoolKey(ExternalLdapConfig config) {
                 StringBuilder key = new StringBuilder();
-                key.append(config.ldapURL + DELIMITER);
+                key.append(config.ldapURLs + DELIMITER);
                 key.append(config.connType.toString() + DELIMITER);
                 key.append((config.authMech == null ? "" : config.authMech) + DELIMITER);
                 key.append((config.adminBindDN == null ? "" : config.adminBindDN) + DELIMITER);
@@ -341,7 +347,7 @@ public abstract class LdapServerConfig {
 
     // return space separated URLs
     public String getLdapURL() {
-        return ldapURL;
+        return ldapURLs;
     }
 
     public String getAdminBindDN() {
