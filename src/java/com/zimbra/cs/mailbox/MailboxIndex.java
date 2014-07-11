@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -48,6 +48,7 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.InternetAddress;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapProtocol;
+import com.zimbra.common.util.AccessBoundedRegex;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
@@ -1061,6 +1062,11 @@ public final class MailboxIndex {
         return result;
     }
 
+    /* These regexes really shouldn't be complicated - so this value should be way more than enough.
+     * Leaving hard coded.  This is the number of accesses allowed to the underlying CharSequence before
+     * deciding that too much resource has been used.
+     */
+    final private static int MAX_REGEX_ACCESSES = 100000;
     /**
      * Returns all domain names from the index.
      *
@@ -1068,7 +1074,7 @@ public final class MailboxIndex {
      * @param regex matching pattern or null to match everything
      * @return {@link BrowseTerm}s which correspond to all of the domain terms stored in a given field
      */
-    public List<BrowseTerm> getDomains(String field, String regex) throws IOException {
+    public List<BrowseTerm> getDomains(String field, String regex) throws IOException, ServiceException {
         Pattern pattern = Strings.isNullOrEmpty(regex) ? null : Pattern.compile(
                 regex.startsWith("@") ? regex : "@" + regex);
         List<BrowseTerm> result = new ArrayList<BrowseTerm>();
@@ -1084,7 +1090,7 @@ public final class MailboxIndex {
                 String text = term.getText();
                 // Domains are tokenized with '@' prefix. Exclude partial domain tokens.
                 if (text.startsWith("@") && text.contains(".")) {
-                    if (pattern == null || pattern.matcher(text).matches()) {
+                    if (pattern == null || AccessBoundedRegex.matches(text, pattern, MAX_REGEX_ACCESSES)) {
                         result.add(new BrowseTerm(text.substring(1), term.getFreq()));
                     }
                 }
@@ -1102,7 +1108,7 @@ public final class MailboxIndex {
      * @param regex matching pattern or null to match everything
      * @return {@link BrowseTerm}s which correspond to all of the attachment types in the index
      */
-    public List<BrowseTerm> getAttachmentTypes(String regex) throws IOException {
+    public List<BrowseTerm> getAttachmentTypes(String regex) throws IOException, ServiceException {
         Pattern pattern = Strings.isNullOrEmpty(regex) ? null : Pattern.compile(regex);
         List<BrowseTerm> result = new ArrayList<BrowseTerm>();
         ZimbraIndexSearcher searcher = indexStore.openSearcher();
@@ -1111,7 +1117,7 @@ public final class MailboxIndex {
             values = searcher.getIndexReader().getTermsForField(LuceneFields.L_ATTACHMENTS, "");
             while (values.hasMoreElements()) {
                 BrowseTerm term = values.nextElement();
-                if (pattern == null || pattern.matcher(term.getText()).matches()) {
+                if (pattern == null || AccessBoundedRegex.matches(term.getText(), pattern, MAX_REGEX_ACCESSES)) {
                     result.add(term);
                 }
             }
@@ -1128,7 +1134,7 @@ public final class MailboxIndex {
      * @param regex matching pattern or null to match everything
      * @return {@link BrowseTerm}s which correspond to all of the objects in the index
      */
-    public List<BrowseTerm> getObjects(String regex) throws IOException {
+    public List<BrowseTerm> getObjects(String regex) throws IOException, ServiceException {
         Pattern pattern = Strings.isNullOrEmpty(regex) ? null : Pattern.compile(regex);
         List<BrowseTerm> result = new ArrayList<BrowseTerm>();
         ZimbraIndexSearcher searcher = indexStore.openSearcher();
@@ -1140,7 +1146,7 @@ public final class MailboxIndex {
                 if (term == null) {
                     break;
                 }
-                if (pattern == null || pattern.matcher(term.getText()).matches()) {
+                if (pattern == null || AccessBoundedRegex.matches(term.getText(), pattern, MAX_REGEX_ACCESSES)) {
                     result.add(term);
                 }
             }

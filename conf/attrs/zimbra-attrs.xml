@@ -8245,4 +8245,10 @@ TODO: delete them permanently from here
     example of config values: windows:2, ios:1, android:1, default:1
   </desc>
 </attr>
+<attr id="1643" name="zimbraRegexMaxAccessesWhenMatching" type="integer" cardinality="single" optionalIn="globalConfig" since="8.5.0">
+  <globalConfigValue>1000000</globalConfigValue>
+  <desc>This attribute is used to limit the amount of computation allowed when matching regex expressions.  For example as part of the IMAP LIST command.
+      Set to a higher value if legitimate IMAP list commands fail throwing TooManyAccessesToMatchTargetException.
+  </desc>
+</attr>
 </attrs>
