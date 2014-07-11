@@ -47,3 +47,11 @@ header __FROM_FACEBOOK Return-Path:addr =~ /no-reply\@facebook\.com/i
 meta __FORGED_SENDER (!SPF_PASS && !DKIM_VALID_AU)
 meta FORGED_FACEBOOK_FROM (__FROM_FACEBOOK && __FORGED_SENDER)
 score FORGED_FACEBOOK 5 5 5 5
+
+ifplugin Mail::SpamAssassin::Plugin::MIMEEval
+  if can(Mail::SpamAssassin::Plugin::MIMEEval::has_check_for_ascii_text_illegal)
+    body PP_MIME_FAKE_ASCII_TEXT      eval:check_for_ascii_text_illegal('mime_fake_ascii_text')
+    describe PP_MIME_FAKE_ASCII_TEXT  MIME text/plain claims to be ASCII but isn't
+    score    PP_MIME_FAKE_ASCII_TEXT  1.0
+  endif
+endif
