@@ -61,6 +61,7 @@ public class HtmlFormatter extends Formatter {
 
     private static final String ATTR_INTERNAL_DISPATCH   = "zimbra_internal_dispatch";
     private static final String ATTR_AUTH_TOKEN          = "zimbra_authToken";
+    private static final String ATTR_CSRF_ENABLED        = "zimbra_csrfEnabled";
     private static final String ATTR_TARGET_ACCOUNT_NAME = "zimbra_target_account_name";
     private static final String ATTR_TARGET_ACCOUNT_ID   = "zimbra_target_account_id";
     private static final String ATTR_TARGET_ITEM_ID      = "zimbra_target_item_id";
@@ -151,6 +152,7 @@ public class HtmlFormatter extends Formatter {
         context.req.setAttribute(ATTR_INTERNAL_DISPATCH, "yes");
         context.req.setAttribute(ATTR_REQUEST_URI, uri != null ? uri : context.req.getRequestURI());
         context.req.setAttribute(ATTR_AUTH_TOKEN, authString);
+        context.req.setAttribute(ATTR_CSRF_ENABLED, auth.isCsrfTokenEnabled());
         if (targetAccount != null) {
             context.req.setAttribute(ATTR_TARGET_ACCOUNT_NAME, targetAccount.getName());
             context.req.setAttribute(ATTR_TARGET_ACCOUNT_ID, targetAccount.getId());
