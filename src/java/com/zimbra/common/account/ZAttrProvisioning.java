@@ -11890,6 +11890,17 @@ public class ZAttrProvisioning {
     public static final String A_zimbraRedoLogRolloverMinFileAge = "zimbraRedoLogRolloverMinFileAge";
 
     /**
+     * This attribute is used to limit the amount of computation allowed when
+     * matching regex expressions. For example as part of the IMAP LIST
+     * command. Set to a higher value if legitimate IMAP list commands fail
+     * throwing TooManyAccessesToMatchTargetException.
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1643)
+    public static final String A_zimbraRegexMaxAccessesWhenMatching = "zimbraRegexMaxAccessesWhenMatching";
+
+    /**
      * Path to remote management command to execute on this server
      */
     @ZAttr(id=336)
