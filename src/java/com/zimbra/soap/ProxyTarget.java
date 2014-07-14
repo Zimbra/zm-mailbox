@@ -53,7 +53,7 @@ public final class ProxyTarget {
         if (mServer == null)
             throw AccountServiceException.NO_SUCH_SERVER(serverId);
 
-        mAuthToken = authToken;
+        mAuthToken = AuthToken.getCsrfUnsecuredAuthToken(authToken);
         String url;
         String requestStr = req.getRequestURI();
         String qs = req.getQueryString();
@@ -71,7 +71,9 @@ public final class ProxyTarget {
     }
 
     public ProxyTarget(Server server, AuthToken authToken, String url) {
-        mServer = server;  mAuthToken = authToken;  mURL = url;
+        mServer = server;
+        mAuthToken = AuthToken.getCsrfUnsecuredAuthToken(authToken);
+        mURL = url;
     }
 
     /** Instructs the proxy's underlying {@link SoapHttpTransport} to attempt
