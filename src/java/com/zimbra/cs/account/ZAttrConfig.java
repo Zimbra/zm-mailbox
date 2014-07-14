@@ -47389,9 +47389,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * The servers to be included in the &quot;ews&quot; block in the nginx
-     * web proxy config file. The servers configured here will only affect
-     * the proxy of pre-login requests.
+     * The servers running mailbox with EWS functionality to be included in
+     * the &quot;ews&quot; block in the nginx web proxy config file
      *
      * @return zimbraReverseProxyUpstreamEwsServers, or empty array if unset
      *
@@ -47403,9 +47402,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * The servers to be included in the &quot;ews&quot; block in the nginx
-     * web proxy config file. The servers configured here will only affect
-     * the proxy of pre-login requests.
+     * The servers running mailbox with EWS functionality to be included in
+     * the &quot;ews&quot; block in the nginx web proxy config file
      *
      * @param zimbraReverseProxyUpstreamEwsServers new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -47420,9 +47418,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * The servers to be included in the &quot;ews&quot; block in the nginx
-     * web proxy config file. The servers configured here will only affect
-     * the proxy of pre-login requests.
+     * The servers running mailbox with EWS functionality to be included in
+     * the &quot;ews&quot; block in the nginx web proxy config file
      *
      * @param zimbraReverseProxyUpstreamEwsServers new value
      * @param attrs existing map to populate, or null to create a new map
@@ -47438,9 +47435,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * The servers to be included in the &quot;ews&quot; block in the nginx
-     * web proxy config file. The servers configured here will only affect
-     * the proxy of pre-login requests.
+     * The servers running mailbox with EWS functionality to be included in
+     * the &quot;ews&quot; block in the nginx web proxy config file
      *
      * @param zimbraReverseProxyUpstreamEwsServers new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -47455,9 +47451,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * The servers to be included in the &quot;ews&quot; block in the nginx
-     * web proxy config file. The servers configured here will only affect
-     * the proxy of pre-login requests.
+     * The servers running mailbox with EWS functionality to be included in
+     * the &quot;ews&quot; block in the nginx web proxy config file
      *
      * @param zimbraReverseProxyUpstreamEwsServers new to add to existing values
      * @param attrs existing map to populate, or null to create a new map
@@ -47473,9 +47468,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * The servers to be included in the &quot;ews&quot; block in the nginx
-     * web proxy config file. The servers configured here will only affect
-     * the proxy of pre-login requests.
+     * The servers running mailbox with EWS functionality to be included in
+     * the &quot;ews&quot; block in the nginx web proxy config file
      *
      * @param zimbraReverseProxyUpstreamEwsServers existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -47490,9 +47484,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * The servers to be included in the &quot;ews&quot; block in the nginx
-     * web proxy config file. The servers configured here will only affect
-     * the proxy of pre-login requests.
+     * The servers running mailbox with EWS functionality to be included in
+     * the &quot;ews&quot; block in the nginx web proxy config file
      *
      * @param zimbraReverseProxyUpstreamEwsServers existing value to remove
      * @param attrs existing map to populate, or null to create a new map
@@ -47508,9 +47501,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * The servers to be included in the &quot;ews&quot; block in the nginx
-     * web proxy config file. The servers configured here will only affect
-     * the proxy of pre-login requests.
+     * The servers running mailbox with EWS functionality to be included in
+     * the &quot;ews&quot; block in the nginx web proxy config file
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -47524,9 +47516,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * The servers to be included in the &quot;ews&quot; block in the nginx
-     * web proxy config file. The servers configured here will only affect
-     * the proxy of pre-login requests.
+     * The servers running mailbox with EWS functionality to be included in
+     * the &quot;ews&quot; block in the nginx web proxy config file
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs

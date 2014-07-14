@@ -7993,8 +7993,7 @@ TODO: delete them permanently from here
 </attr>
 
 <attr id="1595" name="zimbraReverseProxyUpstreamEwsServers" type="string" cardinality="multi" optionalIn="server,globalConfig" flags="serverInherited" since="8.5.0">
-  <desc>The servers to be included in the "ews" block in the nginx web proxy config file.
-  The servers configured here will only affect the proxy of pre-login requests.</desc>
+  <desc>The servers running mailbox with EWS functionality to be included in the "ews" block in the nginx web proxy config file</desc>
 </attr>
 
 <attr id="1596" name="zimbraMobileMaxMessageSize" type="integer" min="0" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.0.8, 8.5.0" requiresRestart="mailbox">
