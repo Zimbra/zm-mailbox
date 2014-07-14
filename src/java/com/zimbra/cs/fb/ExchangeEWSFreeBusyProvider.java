@@ -143,7 +143,8 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
         CommandMap.setDefaultCommandMap(mc);
         ZimbraLog.fb.debug("Done Setting MailcapCommandMap handlers");
 
-        URL wsdlUrl = ExchangeService.class.getResource("/Services.wsdl");
+        URL wsdlUrl = ExchangeService.class.getResource("/EWS.wsdl");
+        ZimbraLog.fb.debug("EWS Wsdl URL = %s", wsdlUrl);
         factory = new ExchangeService(wsdlUrl,
                 new QName("http://schemas.microsoft.com/exchange/services/2006/messages",
                     "ExchangeService"));
@@ -902,36 +903,43 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
             return getEmptyList(req);
         }
 
-		for (Request re : req) {
-			String fb = "";
-			int i = 0;
-			for (FreeBusyResponseType attendeeAvailability : results) {
-				if (re.email == attendees.getMailboxData().get(i).getEmail()
-						.getAddress()) {
-					if (ResponseClassType.SUCCESS != attendeeAvailability
-							.getResponseMessage().getResponseClass()) {
-						ZimbraLog.fb
-								.warn("Error in response. continuing to next one");
-						i++;
-						continue;
-					}
-					ZimbraLog.fb.debug("Availability for "
-							+ attendees.getMailboxData().get(i).getEmail()
-									.getAddress()
-							+ " ["
-							+ attendeeAvailability.getFreeBusyView()
-									.getMergedFreeBusy() + "]");
+        for (Request re : req) {
+            String fb = "";
+            int i = 0;
+            for (FreeBusyResponseType attendeeAvailability : results) {
+                if (re.email == attendees.getMailboxData().get(i).getEmail()
+                        .getAddress()) {
+                    if (ResponseClassType.SUCCESS != attendeeAvailability
+                            .getResponseMessage().getResponseClass()) {
+                        ZimbraLog.fb
+                                .warn(attendeeAvailability.getResponseMessage().getMessageText());
+                        ZimbraLog.fb
+                                .warn("Error in response. continuing to next one");
 
-					fb = attendeeAvailability.getFreeBusyView().getMergedFreeBusy();
-					break;
-				}
+                        i++;
+                        continue;
+                    }
+                    ZimbraLog.fb.debug("Availability for "
+                            + attendees.getMailboxData().get(i).getEmail()
+                                    .getAddress()
+                            + " ["
+                            + attendeeAvailability.getFreeBusyView()
+                                    .getMergedFreeBusy() + "]");
 
-				i++;
-			}
+                    fb = attendeeAvailability.getFreeBusyView().getMergedFreeBusy();
+                    if (fb == null) {
+                        ZimbraLog.fb.warn("Merged view Free Busy info not avaiable");
+                        fb = "";  //Avoid NPE.
+                    }
+                    break;
+                }
 
-			ret.add(new ExchangeFreeBusyProvider.ExchangeUserFreeBusy(fb,
-					re.email, FB_INTERVAL, req.get(0).start, req.get(0).end));
-		}
+                i++;
+            }
+
+            ret.add(new ExchangeFreeBusyProvider.ExchangeUserFreeBusy(fb,
+                    re.email, FB_INTERVAL, req.get(0).start, req.get(0).end));
+        }
 
         return ret;
     }
