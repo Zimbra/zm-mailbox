@@ -11896,7 +11896,7 @@ public class ZAttrProvisioning {
      * command. Set to a higher value if legitimate IMAP list commands fail
      * throwing TooManyAccessesToMatchTargetException.
      *
-     * @since ZCS 8.5.0
+     * @since ZCS 8.0.8,8.5.0
      */
     @ZAttr(id=1643)
     public static final String A_zimbraRegexMaxAccessesWhenMatching = "zimbraRegexMaxAccessesWhenMatching";
