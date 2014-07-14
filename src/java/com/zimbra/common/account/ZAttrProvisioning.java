@@ -12528,9 +12528,8 @@ public class ZAttrProvisioning {
     public static final String A_zimbraReverseProxyUpstreamConnectTimeout = "zimbraReverseProxyUpstreamConnectTimeout";
 
     /**
-     * The servers to be included in the &quot;ews&quot; block in the nginx
-     * web proxy config file. The servers configured here will only affect
-     * the proxy of pre-login requests.
+     * The servers running mailbox with EWS functionality to be included in
+     * the &quot;ews&quot; block in the nginx web proxy config file
      *
      * @since ZCS 8.5.0
      */
