@@ -3840,6 +3840,18 @@ public class ZAttrProvisioning {
     public static final String A_zimbraCommunityHomeURL = "zimbraCommunityHomeURL";
 
     /**
+     * User&#039;s ID in Zimbra Community. When user IDs between Zimbra
+     * Collaboraiton and Zimbra Community are not synchronized use this
+     * attrribute to store the user&#039;s Zimbra Community ID. In order for
+     * this attribute to be used for SSO zimbraCommunityUsernameMapping has
+     * to be set to zimbraCommunityID.
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1644)
+    public static final String A_zimbraCommunityID = "zimbraCommunityID";
+
+    /**
      * Account attribute to be used as a username for Zimbra Community
      *
      * @since ZCS 8.5.0
