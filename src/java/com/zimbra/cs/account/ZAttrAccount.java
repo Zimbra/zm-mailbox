@@ -6113,6 +6113,98 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * User&#039;s ID in Zimbra Community. When user IDs between Zimbra
+     * Collaboraiton and Zimbra Community are not synchronized use this
+     * attrribute to store the user&#039;s Zimbra Community ID. In order for
+     * this attribute to be used for SSO zimbraCommunityUsernameMapping has
+     * to be set to zimbraCommunityID.
+     *
+     * @return zimbraCommunityID, or null if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1644)
+    public String getCommunityID() {
+        return getAttr(Provisioning.A_zimbraCommunityID, null);
+    }
+
+    /**
+     * User&#039;s ID in Zimbra Community. When user IDs between Zimbra
+     * Collaboraiton and Zimbra Community are not synchronized use this
+     * attrribute to store the user&#039;s Zimbra Community ID. In order for
+     * this attribute to be used for SSO zimbraCommunityUsernameMapping has
+     * to be set to zimbraCommunityID.
+     *
+     * @param zimbraCommunityID new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1644)
+    public void setCommunityID(String zimbraCommunityID) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCommunityID, zimbraCommunityID);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * User&#039;s ID in Zimbra Community. When user IDs between Zimbra
+     * Collaboraiton and Zimbra Community are not synchronized use this
+     * attrribute to store the user&#039;s Zimbra Community ID. In order for
+     * this attribute to be used for SSO zimbraCommunityUsernameMapping has
+     * to be set to zimbraCommunityID.
+     *
+     * @param zimbraCommunityID new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1644)
+    public Map<String,Object> setCommunityID(String zimbraCommunityID, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCommunityID, zimbraCommunityID);
+        return attrs;
+    }
+
+    /**
+     * User&#039;s ID in Zimbra Community. When user IDs between Zimbra
+     * Collaboraiton and Zimbra Community are not synchronized use this
+     * attrribute to store the user&#039;s Zimbra Community ID. In order for
+     * this attribute to be used for SSO zimbraCommunityUsernameMapping has
+     * to be set to zimbraCommunityID.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1644)
+    public void unsetCommunityID() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCommunityID, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * User&#039;s ID in Zimbra Community. When user IDs between Zimbra
+     * Collaboraiton and Zimbra Community are not synchronized use this
+     * attrribute to store the user&#039;s Zimbra Community ID. In order for
+     * this attribute to be used for SSO zimbraCommunityUsernameMapping has
+     * to be set to zimbraCommunityID.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1644)
+    public Map<String,Object> unsetCommunityID(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCommunityID, "");
+        return attrs;
+    }
+
+    /**
      * Account attribute to be used as a username for Zimbra Community
      *
      * @return zimbraCommunityUsernameMapping, or null if unset

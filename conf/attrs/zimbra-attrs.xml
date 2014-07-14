@@ -8250,4 +8250,8 @@ TODO: delete them permanently from here
       Set to a higher value if legitimate IMAP list commands fail throwing TooManyAccessesToMatchTargetException.
   </desc>
 </attr>
+<attr id="1644" name="zimbraCommunityID" type="string" cardinality="single" optionalIn="account" flags="domainAdminModifiable" since="8.5.0">
+  <desc>User's ID in Zimbra Community. When user IDs between Zimbra Collaboraiton and Zimbra Community are not synchronized use this
+  attrribute to store the user's Zimbra Community ID. In order for this attribute to be used for SSO zimbraCommunityUsernameMapping has to be set to zimbraCommunityID.</desc>
+</attr>
 </attrs>
