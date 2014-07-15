@@ -55,3 +55,5 @@ ifplugin Mail::SpamAssassin::Plugin::MIMEEval
     score    PP_MIME_FAKE_ASCII_TEXT  1.0
   endif
 endif
+
+use_dcc 0
