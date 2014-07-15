@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -167,7 +167,7 @@ public class RightCommand {
                  * <grant type="{grantee-type}" id="{grantee-id}" name="{grantee-name}"
                  *        right="{right-name}" deny="{deny}" canDelegate="{canDelegate}"/>
                  */
-                Element eGrant = parent.addElement(AdminConstants.E_GRANT);
+                Element eGrant = parent.addNonUniqueElement(AdminConstants.E_GRANT);
 
                 RightModifier rightModifier = ace.rightModifier();
                 boolean deny = (rightModifier == RightModifier.RM_DENY);
@@ -184,17 +184,17 @@ public class RightCommand {
                  *   <right [deny="${deny}"] [canDelegate="${canDelegate}"]>{right}</right>
                  * </grant>
                  */
-                Element eTarget = eGrant.addElement(AdminConstants.E_TARGET);
+                Element eTarget = eGrant.addNonUniqueElement(AdminConstants.E_TARGET);
                 eTarget.addAttribute(AdminConstants.A_TYPE, ace.targetType());
                 eTarget.addAttribute(AdminConstants.A_ID, ace.targetId());
                 eTarget.addAttribute(AdminConstants.A_NAME, ace.targetName());
 
-                Element eGrantee = eGrant.addElement(AdminConstants.E_GRANTEE);
+                Element eGrantee = eGrant.addNonUniqueElement(AdminConstants.E_GRANTEE);
                 eGrantee.addAttribute(AdminConstants.A_TYPE, ace.granteeType());
                 eGrantee.addAttribute(AdminConstants.A_ID, ace.granteeId());
                 eGrantee.addAttribute(AdminConstants.A_NAME, ace.granteeName());
 
-                Element eRight = eGrant.addElement(AdminConstants.E_RIGHT);
+                Element eRight = eGrant.addNonUniqueElement(AdminConstants.E_RIGHT);
                 eRight.addAttribute(AdminConstants.A_DENY, deny);
                 eRight.addAttribute(AdminConstants.A_CAN_DELEGATE, canDelegate);
                 eRight.addAttribute(AdminConstants.A_DISINHERIT_SUB_GROUPS, disinheritSubGroups);
@@ -487,14 +487,14 @@ public class RightCommand {
             //
             // grantee
             //
-            Element eGrantee = parent.addElement(AdminConstants.E_GRANTEE);
+            Element eGrantee = parent.addNonUniqueElement(AdminConstants.E_GRANTEE);
             eGrantee.addAttribute(AdminConstants.A_ID, mGranteeId);
             eGrantee.addAttribute(AdminConstants.A_NAME, mGranteeName);
 
             //
             // target
             //
-            Element eTarget = parent.addElement(AdminConstants.E_TARGET);
+            Element eTarget = parent.addNonUniqueElement(AdminConstants.E_TARGET);
             eTarget.addAttribute(AdminConstants.A_TYPE, mTargetType);
             eTarget.addAttribute(AdminConstants.A_ID, mTargetId);
             eTarget.addAttribute(AdminConstants.A_NAME, mTargetName);
@@ -510,7 +510,7 @@ public class RightCommand {
         private void toXML(Element eParent) {
             // preset rights
             for (String r : mPresetRights) {
-                eParent.addElement(AdminConstants.E_RIGHT).addAttribute(AdminConstants.A_N, r);
+                eParent.addNonUniqueElement(AdminConstants.E_RIGHT).addAttribute(AdminConstants.A_N, r);
             }
 
             // setAttrs
@@ -522,13 +522,13 @@ public class RightCommand {
 
         private void toXML(Element parent, String elemName, boolean allAttrs,
                 SortedMap<String, EffectiveAttr> attrs) {
-            Element eAttrs = parent.addElement(elemName);
+            Element eAttrs = parent.addNonUniqueElement(elemName);
             if (allAttrs) {
                 eAttrs.addAttribute(AdminConstants.A_ALL, true);
             }
 
             for (EffectiveAttr ea : attrs.values()) {
-                Element eAttr = eAttrs.addElement(AdminConstants.E_A);
+                Element eAttr = eAttrs.addNonUniqueElement(AdminConstants.E_A);
                 eAttr.addAttribute(AdminConstants.A_N, ea.getAttrName());
 
                 // constraint
@@ -538,9 +538,9 @@ public class RightCommand {
 
                 // default
                 if (!ea.getDefault().isEmpty()) {
-                    Element eDefault = eAttr.addElement(AdminConstants.E_DEFAULT);
+                    Element eDefault = eAttr.addNonUniqueElement(AdminConstants.E_DEFAULT);
                     for (String v : ea.getDefault())
-                        eDefault.addElement(AdminConstants.E_VALUE).setText(v);
+                        eDefault.addNonUniqueElement(AdminConstants.E_VALUE).setText(v);
                 }
 
             }
@@ -827,7 +827,7 @@ public class RightCommand {
             //
             // grantee
             //
-            Element eGrantee = parent.addElement(AdminConstants.E_GRANTEE);
+            Element eGrantee = parent.addNonUniqueElement(AdminConstants.E_GRANTEE);
             eGrantee.addAttribute(AdminConstants.A_TYPE, mGranteeType);
             eGrantee.addAttribute(AdminConstants.A_ID, mGranteeId);
             eGrantee.addAttribute(AdminConstants.A_NAME, mGranteeName);
@@ -839,12 +839,12 @@ public class RightCommand {
                 TargetType targetType = rightsByTargetType.getKey();
                 RightsByTargetType rbtt = rightsByTargetType.getValue();
 
-                Element eTarget = parent.addElement(AdminConstants.E_TARGET);
+                Element eTarget = parent.addNonUniqueElement(AdminConstants.E_TARGET);
                 eTarget.addAttribute(AdminConstants.A_TYPE, targetType.getCode());
 
                 EffectiveRights er = rbtt.all();
                 if (er != null) {
-                    Element eAll = eTarget.addElement(AdminConstants.E_ALL);
+                    Element eAll = eTarget.addNonUniqueElement(AdminConstants.E_ALL);
                     er.toXML(eAll);
                 }
 
@@ -853,24 +853,24 @@ public class RightCommand {
                         (RightCommand.DomainedRightsByTargetType)rbtt;
 
                     for (RightAggregation rightsByDomains : domainedRights.domains()) {
-                        Element eInDomains = eTarget.addElement(AdminConstants.E_IN_DOMAINS);
+                        Element eInDomains = eTarget.addNonUniqueElement(AdminConstants.E_IN_DOMAINS);
                         for (String domain : rightsByDomains.entries()) {
-                            Element eDomain = eInDomains.addElement(AdminConstants.E_DOMAIN);
+                            Element eDomain = eInDomains.addNonUniqueElement(AdminConstants.E_DOMAIN);
                             eDomain.addAttribute(AdminConstants.A_NAME, domain);
                         }
-                        Element eRights = eInDomains.addElement(AdminConstants.E_RIGHTS);
+                        Element eRights = eInDomains.addNonUniqueElement(AdminConstants.E_RIGHTS);
                         er = rightsByDomains.getRights();
                         er.toXML(eRights);
                     }
                 }
 
                 for (RightAggregation rightsByEntries : rbtt.entries()) {
-                    Element eEntries = eTarget.addElement(AdminConstants.E_ENTRIES);
+                    Element eEntries = eTarget.addNonUniqueElement(AdminConstants.E_ENTRIES);
                     for (String entry : rightsByEntries.entries()) {
-                        Element eEntry = eEntries.addElement(AdminConstants.E_ENTRY);
+                        Element eEntry = eEntries.addNonUniqueElement(AdminConstants.E_ENTRY);
                         eEntry.addAttribute(AdminConstants.A_NAME, entry);
                     }
-                    Element eRights = eEntries.addElement(AdminConstants.E_RIGHTS);
+                    Element eRights = eEntries.addNonUniqueElement(AdminConstants.E_RIGHTS);
                     er = rightsByEntries.getRights();
                     er.toXML(eRights);
                 }
@@ -1486,7 +1486,7 @@ public class RightCommand {
 
     public static Element rightToXML(Element parent, Right right, boolean expandAllAtrts,
             Locale locale) throws ServiceException {
-        Element eRight = parent.addElement(AdminConstants.E_RIGHT);
+        Element eRight = parent.addNonUniqueElement(AdminConstants.E_RIGHT);
         eRight.addAttribute(AdminConstants.E_NAME, right.getName());
         eRight.addAttribute(AdminConstants.A_TYPE, right.getRightType().name());
         eRight.addAttribute(AdminConstants.A_TARGET_TYPE, right.getTargetTypeStr());
@@ -1512,12 +1512,12 @@ public class RightCommand {
         */
 
 
-        eRight.addElement(AdminConstants.E_DESC).setText(desc);
+        eRight.addNonUniqueElement(AdminConstants.E_DESC).setText(desc);
 
         if (right.isPresetRight()) {
             // nothing to do here
         } else if (right.isAttrRight()) {
-            Element eAttrs = eRight.addElement(AdminConstants.E_ATTRS);
+            Element eAttrs = eRight.addNonUniqueElement(AdminConstants.E_ATTRS);
             AttrRight attrRight = (AttrRight)right;
 
             if (attrRight.allAttrs()) {
@@ -1526,21 +1526,21 @@ public class RightCommand {
                     Set<String> attrs = attrRight.getAllAttrs();
                     for (String attr : attrs) {
                         if (right.getRightType() != RightType.setAttrs || !HardRules.isForbiddenAttr(attr)) {
-                            eAttrs.addElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, attr);
+                            eAttrs.addNonUniqueElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, attr);
                         }
                     }
 
                 }
             } else {
                 for (String attrName :attrRight.getAttrs()) {
-                    eAttrs.addElement(attrName);
+                    eAttrs.addNonUniqueElement(attrName);
                 }
             }
         } else if (right.isComboRight()) {
-            Element eRights = eRight.addElement(AdminConstants.E_RIGHTS);
+            Element eRights = eRight.addNonUniqueElement(AdminConstants.E_RIGHTS);
             ComboRight comboRight = (ComboRight)right;
             for (Right r : comboRight.getRights()) {
-                Element eNestedRight = eRights.addElement(AdminConstants.E_R);
+                Element eNestedRight = eRights.addNonUniqueElement(AdminConstants.E_R);
                 eNestedRight.addAttribute(AdminConstants.A_N, r.getName());
                 eNestedRight.addAttribute(AdminConstants.A_TYPE, r.getRightType().name());
                 eNestedRight.addAttribute(AdminConstants.A_TARGET_TYPE, r.getTargetTypeStr());
