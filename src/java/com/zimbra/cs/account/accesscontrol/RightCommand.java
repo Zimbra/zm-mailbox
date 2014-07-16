@@ -529,7 +529,8 @@ public class RightCommand {
 
             for (EffectiveAttr ea : attrs.values()) {
                 Element eAttr = eAttrs.addNonUniqueElement(AdminConstants.E_A);
-                eAttr.addAttribute(AdminConstants.A_N, ea.getAttrName());
+                String attrName =  ea.getAttrName();
+                eAttr.addAttribute(AdminConstants.A_N, attrName);
 
                 // constraint
                 AttributeConstraint constraint = ea.getConstraint();
@@ -539,8 +540,11 @@ public class RightCommand {
                 // default
                 if (!ea.getDefault().isEmpty()) {
                     Element eDefault = eAttr.addNonUniqueElement(AdminConstants.E_DEFAULT);
-                    for (String v : ea.getDefault())
-                        eDefault.addNonUniqueElement(AdminConstants.E_VALUE).setText(v);
+                    for (String v : ea.getDefault()) {
+                        Element valueElem = eDefault.addNonUniqueElement(AdminConstants.E_VALUE /* v */);
+                        valueElem.setText(attrName.equalsIgnoreCase(
+                                Provisioning.A_zimbraFreebusyExchangeAuthPassword) ? "VALUE-BLOCKED" : v);
+                    }
                 }
 
             }
