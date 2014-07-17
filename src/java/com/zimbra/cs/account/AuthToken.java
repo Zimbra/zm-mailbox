@@ -107,9 +107,12 @@ public abstract class AuthToken {
 
     public abstract String getCrumb() throws AuthTokenException;
 
-    public abstract boolean isCsrfTokenEnabled();
+    public boolean isCsrfTokenEnabled() {
+        return false;
+    }
 
-    public abstract boolean setCsrfTokenEnabled(boolean csrfEnabled);
+    public void setCsrfTokenEnabled(boolean csrfEnabled) {
+    }
 
     public boolean isDelegatedAuth() {
         return (getAdminAccountId() != null && !getAdminAccountId().equals(""));

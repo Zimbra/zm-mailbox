@@ -267,25 +267,6 @@ public class TestAccessKeyGrant extends TestCase {
             attrs.put(AUTH_H_ATTR, mOwnerId);
             return new ZAuthToken(DUMMY_AUTH_PROVIDER, null, attrs);
         }
-
-        /* (non-Javadoc)
-         * @see com.zimbra.cs.account.AuthToken#isCsrfTokenEnabled()
-         */
-        @Override
-        public boolean isCsrfTokenEnabled() {
-            // TODO Auto-generated method stub
-            return false;
-        }
-
-        /* (non-Javadoc)
-         * @see com.zimbra.cs.account.AuthToken#setCsrfTokenEnabled(boolean)
-         */
-        @Override
-        public boolean setCsrfTokenEnabled(boolean csrfEnabled) {
-            // TODO Auto-generated method stub
-            return false;
-        }
-
     }
 
     /*

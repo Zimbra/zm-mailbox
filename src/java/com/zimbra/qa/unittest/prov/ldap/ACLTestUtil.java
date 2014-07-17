@@ -402,24 +402,6 @@ public class ACLTestUtil {
 		public boolean isRegistered() {
 			return true;
 		}
-
-        /* (non-Javadoc)
-         * @see com.zimbra.cs.account.AuthToken#isCsrfTokenEnabled()
-         */
-        @Override
-        public boolean isCsrfTokenEnabled() {
-            // TODO Auto-generated method stub
-            return false;
-        }
-
-        /* (non-Javadoc)
-         * @see com.zimbra.cs.account.AuthToken#setCsrfTokenEnabled(boolean)
-         */
-        @Override
-        public boolean setCsrfTokenEnabled(boolean csrfEnabled) {
-            // TODO Auto-generated method stub
-            return false;
-        }
     }
 
     static class TestViaGrant extends ViaGrant {
