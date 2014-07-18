@@ -58,7 +58,7 @@ public class ToXML {
 
     static Element encodeAccount(Element parent, Account account, boolean applyCos,
             Set<String> reqAttrs, AttrRightChecker attrRightChecker) {
-        Element acctElem = parent.addElement(AccountConstants.E_ACCOUNT);
+        Element acctElem = parent.addNonUniqueElement(AccountConstants.E_ACCOUNT);
         acctElem.addAttribute(AccountConstants.A_NAME, account.getUnicodeName());
         acctElem.addAttribute(AccountConstants.A_ID, account.getId());
         Map attrs = account.getUnicodeAttrs(applyCos);
@@ -76,7 +76,7 @@ public class ToXML {
 
     static Element encodeCalendarResource(Element parent, CalendarResource resource, boolean applyCos,
             Set<String> reqAttrs, AttrRightChecker attrRightChecker) {
-        Element resElem = parent.addElement(AccountConstants.E_CALENDAR_RESOURCE);
+        Element resElem = parent.addNonUniqueElement(AccountConstants.E_CALENDAR_RESOURCE);
         resElem.addAttribute(AccountConstants.A_NAME, resource.getUnicodeName());
         resElem.addAttribute(AccountConstants.A_ID, resource.getId());
         Map attrs = resource.getUnicodeAttrs(applyCos);
@@ -86,7 +86,7 @@ public class ToXML {
 
     public static Element encodeCalendarResource(Element parent, String id, String name, Map attrs,
             Set<String> reqAttrs, AttrRightChecker attrRightChecker) {
-        Element resElem = parent.addElement(AccountConstants.E_CALENDAR_RESOURCE);
+        Element resElem = parent.addNonUniqueElement(AccountConstants.E_CALENDAR_RESOURCE);
         resElem.addAttribute(AccountConstants.A_NAME, name);
         resElem.addAttribute(AccountConstants.A_ID, id);
         encodeAttrs(resElem, attrs, AccountConstants.A_N, reqAttrs, attrRightChecker);
@@ -114,12 +114,7 @@ public class ToXML {
             if (name.equalsIgnoreCase(Provisioning.A_zimbraDataSourcePassword))
                 continue;
 
-            // Never return password.
-            if (name.equalsIgnoreCase(Provisioning.A_userPassword) ||
-                name.equalsIgnoreCase(Provisioning.A_zimbraFreebusyExchangeAuthPassword) ||
-                name.equalsIgnoreCase(Provisioning.A_zimbraUCPassword)) {
-                value = "VALUE-BLOCKED";
-            }
+            value = Provisioning.sanitizedAttrValue(name, value);
 
             // only returns requested attrs
             if (reqAttrs != null && !reqAttrs.contains(name))
@@ -155,7 +150,7 @@ public class ToXML {
         @Override
         public void visitSingle(Single term) {
             Element parent = mParentStack.peek();
-            Element elem = parent.addElement(AccountConstants.E_ENTRY_SEARCH_FILTER_SINGLECOND);
+            Element elem = parent.addNonUniqueElement(AccountConstants.E_ENTRY_SEARCH_FILTER_SINGLECOND);
             if (mRootElement == null) mRootElement = elem;
             if (term.isNegation())
                 elem.addAttribute(AccountConstants.A_ENTRY_SEARCH_FILTER_NEGATION, true);
@@ -167,7 +162,7 @@ public class ToXML {
         @Override
         public void enterMulti(Multi term) {
             Element parent = mParentStack.peek();
-            Element elem = parent.addElement(AccountConstants.E_ENTRY_SEARCH_FILTER_MULTICOND);
+            Element elem = parent.addNonUniqueElement(AccountConstants.E_ENTRY_SEARCH_FILTER_MULTICOND);
             if (mRootElement == null) mRootElement = elem;
             if (term.isNegation())
                 elem.addAttribute(AccountConstants.A_ENTRY_SEARCH_FILTER_NEGATION, true);
@@ -189,7 +184,7 @@ public class ToXML {
     }
 
     public static Element encodeLocale(Element parent, Locale locale, Locale inLocale) {
-        Element e = parent.addElement(AccountConstants.E_LOCALE);
+        Element e = parent.addNonUniqueElement(AccountConstants.E_LOCALE);
 		String id = locale.toString();
 
 		// name in the locale itself
@@ -208,7 +203,7 @@ public class ToXML {
     }
 
     public static Element encodeIdentity(Element parent, Identity identity) {
-        Element e = parent.addElement(AccountConstants.E_IDENTITY);
+        Element e = parent.addNonUniqueElement(AccountConstants.E_IDENTITY);
         e.addAttribute(AccountConstants.A_NAME, identity.getName());
         e.addAttribute(AccountConstants.A_ID, identity.getId());
         encodeAttrs(e, identity.getUnicodeAttrs(), AccountConstants.A_NAME, null, null);
@@ -216,24 +211,25 @@ public class ToXML {
     }
 
     public static Element encodeSignature(Element parent, Signature signature) {
-        Element e = parent.addElement(AccountConstants.E_SIGNATURE);
+        Element e = parent.addNonUniqueElement(AccountConstants.E_SIGNATURE);
         e.addAttribute(AccountConstants.A_NAME, signature.getName());
         e.addAttribute(AccountConstants.A_ID, signature.getId());
 
         Set<SignatureContent> contents = signature.getContents();
         for (SignatureContent c : contents) {
-            e.addElement(AccountConstants.E_CONTENT).addAttribute(AccountConstants.A_TYPE, c.getMimeType()).addText(c.getContent());
+            e.addNonUniqueElement(AccountConstants.E_CONTENT)
+                .addAttribute(AccountConstants.A_TYPE, c.getMimeType()).addText(c.getContent());
         }
 
         String contactId = signature.getAttr(Provisioning.A_zimbraPrefMailSignatureContactId);
         if (contactId != null)
-            e.addElement(AccountConstants.E_CONTACT_ID).setText(contactId);
+            e.addNonUniqueElement(AccountConstants.E_CONTACT_ID).setText(contactId);
 
         return e;
     }
 
     public static Element encodeDataSource(Element parent, DataSource ds) {
-        Element e = parent.addElement(AccountConstants.E_DATA_SOURCE);
+        Element e = parent.addNonUniqueElement(AccountConstants.E_DATA_SOURCE);
         e.addAttribute(AccountConstants.A_NAME, ds.getName());
         e.addAttribute(AccountConstants.A_ID, ds.getId());
         e.addAttribute(AccountConstants.A_TYPE, ds.getType().name());
@@ -279,7 +275,7 @@ public class ToXML {
     }
 
     public static Element encodeACE(Element parent, ZimbraACE ace) {
-        Element eACE = parent.addElement(AccountConstants.E_ACE)
+        Element eACE = parent.addNonUniqueElement(AccountConstants.E_ACE)
                 .addAttribute(AccountConstants.A_ZIMBRA_ID, ace.getGrantee())
                 .addAttribute(AccountConstants.A_GRANT_TYPE, ace.getGranteeType().getCode())
                 .addAttribute(AccountConstants.A_RIGHT, ace.getRight().getName())

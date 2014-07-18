@@ -542,8 +542,7 @@ public class RightCommand {
                     Element eDefault = eAttr.addNonUniqueElement(AdminConstants.E_DEFAULT);
                     for (String v : ea.getDefault()) {
                         Element valueElem = eDefault.addNonUniqueElement(AdminConstants.E_VALUE /* v */);
-                        valueElem.setText(attrName.equalsIgnoreCase(
-                                Provisioning.A_zimbraFreebusyExchangeAuthPassword) ? "VALUE-BLOCKED" : v);
+                        valueElem.setText(Provisioning.sanitizedAttrValue(attrName, v).toString());
                     }
                 }
 

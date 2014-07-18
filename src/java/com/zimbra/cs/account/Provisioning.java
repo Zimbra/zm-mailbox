@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -364,6 +364,20 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public void restoreAccountAttrs(Account acct, Map<String, ? extends Object> backupAttrs)
     throws ServiceException {
         throw ServiceException.UNSUPPORTED();
+    }
+
+    /**
+     * Replace sensitive strings like passwords with "VALUE-BLOCKED"
+     */
+    public static Object sanitizedAttrValue(String name, Object realValue) {
+        // Never return password.
+        if (name.equalsIgnoreCase(Provisioning.A_userPassword) ||
+            name.equalsIgnoreCase(Provisioning.A_zimbraDataSourcePassword) ||
+            name.equalsIgnoreCase(Provisioning.A_zimbraFreebusyExchangeAuthPassword) ||
+            name.equalsIgnoreCase(Provisioning.A_zimbraUCPassword)) {
+            return "VALUE-BLOCKED";
+        }
+        return realValue;
     }
 
     /**

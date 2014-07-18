@@ -53,7 +53,7 @@ public class ToXML {
     public static Element encodeAccount(Element parent, Account account,
             boolean applyCos, boolean needsExternalIndicator,
             Set<String> reqAttrs, AttrRightChecker attrRightChecker) {
-        Element acctElem = parent.addElement(AccountConstants.E_ACCOUNT);
+        Element acctElem = parent.addNonUniqueElement(AccountConstants.E_ACCOUNT);
         acctElem.addAttribute(AccountConstants.A_NAME, account.getUnicodeName());
         acctElem.addAttribute(AccountConstants.A_ID, account.getId());
 
@@ -80,7 +80,7 @@ public class ToXML {
 
     public static Element encodeCalendarResource(Element parent, CalendarResource resource, boolean applyCos,
             Set<String> reqAttrs, AttrRightChecker attrRightChecker) {
-        Element resElem = parent.addElement(AccountConstants.E_CALENDAR_RESOURCE);
+        Element resElem = parent.addNonUniqueElement(AccountConstants.E_CALENDAR_RESOURCE);
         resElem.addAttribute(AccountConstants.A_NAME, resource.getUnicodeName());
         resElem.addAttribute(AccountConstants.A_ID, resource.getId());
         Map attrs = resource.getUnicodeAttrs(applyCos);
@@ -124,6 +124,8 @@ public class ToXML {
                 continue;
             }
 
+            value = Provisioning.sanitizedAttrValue(name, value);
+
             // only returns requested attrs
             if (reqAttrsLowerCase != null && !reqAttrsLowerCase.contains(name.toLowerCase())) {
                 continue;
@@ -132,13 +134,6 @@ public class ToXML {
             // do not return attrs hidden by protocol
             if (hideAttrs != null && hideAttrs.contains(name)) {
                 continue;
-            }
-
-            // Never return password.
-            if (name.equalsIgnoreCase(Provisioning.A_userPassword) ||
-                name.equalsIgnoreCase(Provisioning.A_zimbraFreebusyExchangeAuthPassword) ||
-                name.equalsIgnoreCase(Provisioning.A_zimbraUCPassword)) {
-                value = "VALUE-BLOCKED";
             }
 
             boolean allowed = attrRightChecker == null ? true : attrRightChecker.allowAttr(name);
@@ -160,7 +155,7 @@ public class ToXML {
     public static void encodeAttr(Element parent, String key, String value, String eltname, String attrname,
             IDNType idnType, boolean allowed) {
 
-        Element e = parent.addElement(eltname);
+        Element e = parent.addNonUniqueElement(eltname);
         e.addAttribute(attrname, key);
 
         if (allowed) {
