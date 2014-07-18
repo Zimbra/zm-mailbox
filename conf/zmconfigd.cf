@@ -124,6 +124,7 @@ SECTION mta DEPENDS amavis
 	POSTCONF max_use				VAR zimbraMtaMaxUse
 	POSTCONF relayhost				VAR zimbraMtaRelayHost
 	POSTCONF smtp_fallback_relay			VAR zimbraMtaFallbackRelayHost
+	POSTCONF smtp_generic_maps			VAR zimbraMtaSmtpGenericMaps
 	POSTCONF smtpd_recipient_restrictions		FILE zmconfigd/smtpd_recipient_restrictions.cf
 	POSTCONF smtpd_relay_restrictions		FILE zmconfigd/smtpd_relay_restrictions.cf
 	POSTCONF smtpd_sender_restrictions		FILE zmconfigd/smtpd_sender_restrictions.cf
