@@ -22683,6 +22683,78 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Value for postconf smtp_generic_maps
+     *
+     * @return zimbraMtaSmtpGenericMaps, or null if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1645)
+    public String getMtaSmtpGenericMaps() {
+        return getAttr(Provisioning.A_zimbraMtaSmtpGenericMaps, null);
+    }
+
+    /**
+     * Value for postconf smtp_generic_maps
+     *
+     * @param zimbraMtaSmtpGenericMaps new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1645)
+    public void setMtaSmtpGenericMaps(String zimbraMtaSmtpGenericMaps) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpGenericMaps, zimbraMtaSmtpGenericMaps);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf smtp_generic_maps
+     *
+     * @param zimbraMtaSmtpGenericMaps new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1645)
+    public Map<String,Object> setMtaSmtpGenericMaps(String zimbraMtaSmtpGenericMaps, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpGenericMaps, zimbraMtaSmtpGenericMaps);
+        return attrs;
+    }
+
+    /**
+     * Value for postconf smtp_generic_maps
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1645)
+    public void unsetMtaSmtpGenericMaps() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpGenericMaps, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf smtp_generic_maps
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1645)
+    public Map<String,Object> unsetMtaSmtpGenericMaps(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpGenericMaps, "");
+        return attrs;
+    }
+
+    /**
      * Value for postconf smtp_helo_name
      *
      * @return zimbraMtaSmtpHeloName, or "$myhostname" if unset
