@@ -9386,6 +9386,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMtaSmtpdVirtualTransport = "zimbraMtaSmtpdVirtualTransport";
 
     /**
+     * Value for postconf smtp_generic_maps
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1645)
+    public static final String A_zimbraMtaSmtpGenericMaps = "zimbraMtaSmtpGenericMaps";
+
+    /**
      * Value for postconf smtp_helo_name
      *
      * @since ZCS 8.5.0
