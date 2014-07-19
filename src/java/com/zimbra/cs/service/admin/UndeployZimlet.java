@@ -54,7 +54,7 @@ public class UndeployZimlet extends AdminDocumentHandler {
 	    
 	    ZimbraSoapContext zsc = getZimbraSoapContext(context);
 		
-		for (Server server : Provisioning.getInstance().getAllServers())
+		for (Server server : Provisioning.getInstance().getAllDeployableZimletServers())
             checkRight(zsc, context, server, Admin.R_deployZimlet);
 		
 	    String name = request.getAttribute(AdminConstants.A_NAME);

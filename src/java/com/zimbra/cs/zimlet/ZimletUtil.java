@@ -1397,11 +1397,10 @@ public class ZimletUtil {
 		}
 
 		public void deployZimlet(String zimlet, byte[] data, DeployListener listener, boolean flushCache) throws ServiceException {
-			List<Server> allServers = mProv.getAllServers();
+			List<Server> allServers = mProv.getAllDeployableZimletServers();
 			for (Server server : allServers) {
-		        boolean hasMailboxService = server.getMultiAttrSet(Provisioning.A_zimbraServiceEnabled).contains("mailbox");
-				if (mRunningInServer && (mProv.getLocalServer().compareTo(server) == 0) ||
-					!hasMailboxService) {
+		        if (mRunningInServer && server.isLocalServer() ||
+		            !server.hasMailClientService()) {
 	                // localhost is already taken care of.
 					ZimbraLog.zimlet.info("Skipping on " + server.getName());
 					continue;
@@ -1412,11 +1411,10 @@ public class ZimletUtil {
 		}
 
 		public void undeployZimlet(String zimlet) throws ServiceException {
-			List<Server> allServers = mProv.getAllServers();
+			List<Server> allServers = mProv.getAllDeployableZimletServers();
 			for (Server server : allServers) {
-		        boolean hasMailboxService = server.getMultiAttrSet(Provisioning.A_zimbraServiceEnabled).contains("mailbox");
-				if (mRunningInServer && (mProv.getLocalServer().compareTo(server) == 0) ||
-					!hasMailboxService)
+				if (mRunningInServer && server.isLocalServer() ||
+				    !server.hasMailClientService())
 					continue;
 				ZimbraLog.zimlet.info("Undeploying on " + server.getName());
 				undeployZimletOnServer(zimlet, server);
@@ -1428,11 +1426,10 @@ public class ZimletUtil {
 				ZimbraLog.zimlet.info("Configure zimlet on " + mProv.getLocalServer().getName());
                 configureZimletOnServer(config, mProv.getLocalServer());
 			} else {
-				List<Server> allServers = mProv.getAllServers();
+				List<Server> allServers = mProv.getAllDeployableZimletServers();
 				for (Server server : allServers) {
-					boolean hasMailboxService = server.getMultiAttrSet(Provisioning.A_zimbraServiceEnabled).contains("mailbox");
-					if (mRunningInServer && (mProv.getLocalServer().compareTo(server) == 0) ||
-						!hasMailboxService)
+					if (mRunningInServer && server.isLocalServer() ||
+					    !server.hasMailClientService())
 						continue;
 					ZimbraLog.zimlet.info("Configure zimlet on " + server.getName());
 					configureZimletOnServer(config, server);

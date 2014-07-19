@@ -1525,6 +1525,19 @@ public abstract class Provisioning extends ZAttrProvisioning {
         return zimletservers;
     }
 
+    public List<Server> getAllDeployableZimletServers() throws ServiceException
+    {
+        List<Server> deployableservers = new ArrayList<Server>();
+
+        for (Server server : getAllZimletServers()) {
+            if (server.isLocalServer() || server.hasMailClientService()) {
+                deployableservers.add(server);
+            }
+        }
+
+        return deployableservers;
+    }
+
     public List<Server> getAllMailClientServers() throws ServiceException {
         List<Server> mailboxservers = getAllServers(Provisioning.SERVICE_MAILBOX);
         List<Server> mailclientservers = getAllServers(Provisioning.SERVICE_MAILCLIENT);

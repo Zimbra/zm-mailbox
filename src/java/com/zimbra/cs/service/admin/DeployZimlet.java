@@ -21,7 +21,6 @@ import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.util.MapUtil;
-
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
@@ -46,7 +45,7 @@ public class DeployZimlet extends AdminDocumentHandler {
 	public static final String sSUCCEEDED = "succeeded";
 	public static final String sFAILED = "failed";
 	
-	private Map mProgressMap;
+	private Map<String, Progress> mProgressMap;
 
 	private static class Progress implements DeployListener {
 	    private static class Status {
@@ -62,11 +61,8 @@ public class DeployZimlet extends AdminDocumentHandler {
 				changeStatus(prov.getLocalServer().getName(), sPENDING);
 				return;
 			}
-			List<Server> servers = prov.getAllServers();
-			for (Server s : servers) {
-			    boolean hasMailboxService = s.getMultiAttrSet(Provisioning.A_zimbraServiceEnabled).contains("mailbox");
-			    if (hasMailboxService)
-			        changeStatus(s.getName(), sPENDING);
+			for (Server s : prov.getAllDeployableZimletServers()) {
+			    changeStatus(s.getName(), sPENDING);
             }
 		}
 		public void markFinished(Server s) {
@@ -162,9 +158,11 @@ public class DeployZimlet extends AdminDocumentHandler {
 		if (action.equals(AdminConstants.A_STATUS)) {
 			// just print the status
 		} else if (action.equals(AdminConstants.A_DEPLOYALL)) {
-		    
-		    for (Server server : Provisioning.getInstance().getAllServers()) {
-		    	checkRight(zsc, context, server, Admin.R_deployZimlet);
+		    List<Server> servers =
+		        Provisioning.getInstance().getAllDeployableZimletServers();
+
+		    for (Server server : servers) {
+		        checkRight(zsc, context, server, Admin.R_deployZimlet);
 		    }
 		        
 			deploy(zsc, aid, zsc.getRawAuthToken(), flushCache, synchronous);
@@ -194,7 +192,7 @@ public class DeployZimlet extends AdminDocumentHandler {
 			throw ServiceException.INVALID_REQUEST("invalid action "+action, null);
 		}
 		Element response = zsc.createElement(AdminConstants.DEPLOY_ZIMLET_RESPONSE);
-		Progress progress = (Progress)mProgressMap.get(aid);
+		Progress progress = mProgressMap.get(aid);
 		if (progress != null)
 			progress.writeResponse(response);
 		return response;
