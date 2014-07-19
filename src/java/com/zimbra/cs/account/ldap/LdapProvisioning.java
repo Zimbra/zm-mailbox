@@ -1388,7 +1388,7 @@ public class LdapProvisioning extends LdapProv {
     private boolean addDefaultMailHost(ZMutableEntry entry, Server server, boolean setMailTransport)
     throws ServiceException {
         String serviceHostname = server.getAttr(Provisioning.A_zimbraServiceHostname);
-        if (server.hasMailclientService() && serviceHostname != null) {
+        if (server.hasMailClientService() && serviceHostname != null) {
             setMailHost(entry,  server, setMailTransport);
             return true;
         }
@@ -1445,7 +1445,7 @@ public class LdapProvisioning extends LdapProv {
             if (s != null) {
                 String mailHost = s.getAttr(Provisioning.A_zimbraServiceHostname);
                 if (mailHost != null) {
-                    if (s.hasMailclientService()) {
+                    if (s.hasMailClientService()) {
                         setMailHost(entry, s, setMailTransport);
                         return mailHost;
                     } else {

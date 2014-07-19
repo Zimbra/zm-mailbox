@@ -1157,6 +1157,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public static final int SO_NO_ACCOUNT_SECONDARY_DEFAULTS = 0x400;  // do not set secondary defaults in makeAccount
     public static final String SERVICE_WEBCLIENT = "zimbra";
     public static final String SERVICE_ADMINCLIENT = "zimbraAdmin";
+    public static final String SERVICE_ZIMLET = "zimlet";
     public static final String SERVICE_MAILCLIENT = "service";
 
     public abstract List<Account> getAllAdminAccounts()  throws ServiceException;
@@ -1505,6 +1506,23 @@ public abstract class Provisioning extends ZAttrProvisioning {
         }
 
         return adminclientservers;
+    }
+
+    public List<Server> getAllZimletServers() throws ServiceException {
+        List<Server> mailboxservers = getAllServers(Provisioning.SERVICE_MAILBOX);
+        List<Server> zimletservers = getAllServers(Provisioning.SERVICE_ZIMLET);
+
+        for (Server server : mailboxservers) {
+            String version = server.getAttr(Provisioning.A_zimbraServerVersion, null);
+            // We get all pre 8.5 servers first (ones which don't have the zimbraServerVersion set)
+            if (version != null) {
+                continue;
+            }
+            // Add it to the list of 8.5+ zimlet servers and return this list
+            zimletservers.add(server);
+        }
+
+        return zimletservers;
     }
 
     public List<Server> getAllMailClientServers() throws ServiceException {

@@ -108,7 +108,7 @@ public class BUG_68831 extends UpgradeOp {
 
             for (Server server: upgradeOp.prov.getAllServers()) {
                 String serviceHostname = server.getServiceHostname();
-                if (server.hasMailclientService() && serviceHostname != null) {
+                if (server.hasMailClientService() && serviceHostname != null) {
                     servers.add(serviceHostname);
                 }
             }

@@ -50,7 +50,7 @@ public class MailHostPool extends AttributeCallback {
                             "specified " + Provisioning.A_zimbraMailHostPool +
                             " does not correspond to a valid server: "+host, null);
                 else {
-                    if (!server.hasMailclientService()) {
+                    if (!server.hasMailClientService()) {
                         throw ServiceException.INVALID_REQUEST("specified " + Provisioning.A_zimbraMailHost +
                                 " is not a mailclient server with service webapp enabled: "
                                 +host, null);
