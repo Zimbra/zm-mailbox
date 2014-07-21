@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -507,7 +507,7 @@ public class ElementTest {
             // Assert.assertEquals("root elem content", "<i/>text", elem.getText());  // this is the case if entity ref expansion was allowed
             Assert.assertEquals("root elem content", "", elem.getText());
         } catch (XmlParseException e) {
-            if (-1 == e.getMessage().indexOf("DOCTYPE is disallowed")) {
+            if (-1 == e.getMessage().indexOf("Document parse failed")) {
                 Assert.fail("Unexpected exception thrown." + e.getMessage());
             }
         } finally {
@@ -528,7 +528,7 @@ public class ElementTest {
         } catch (XmlParseException e) {
             // Before fix to Bug 79719 would get an error like:
             //    parse error: /tmp/not/there/non-existent.xml (No such file or directory)
-            if (-1 == e.getMessage().indexOf("DOCTYPE is disallowed")) {
+            if (-1 == e.getMessage().indexOf("Document parse failed")) {
                 Assert.fail("Unexpected exception thrown." + e.getMessage());
             }
         } finally {
