@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -70,13 +70,6 @@ public class W3cDomUtil {
                     dbf.setFeature("http://xml.org/sax/features/external-general-entities", false);
                     // protect against recursive entity expansion DOS attack and perhaps other things
                     dbf.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
-                    try {
-                        // Default with Java 6 is 100,000 - think 100 would actually be generous for our usage
-                        // However, property does not appear to be recognized on Java 6
-                        dbf.setAttribute("http://apache.org/xml/properties/entity-expansion-limit", new Integer("100"));
-                    } catch (IllegalArgumentException iae) {
-                        ZimbraLog.misc.debug("Setting entity expansion limit not supported %s", iae.getMessage());
-                    }
                     try {
                         dbf.setAttribute("http://apache.org/xml/features/disallow-doctype-decl", true);
                     } catch (IllegalArgumentException iae) {
@@ -188,10 +181,10 @@ public class W3cDomUtil {
         Document doc;
         try {
             doc = jaxbBuilder.parse(is);
-        } catch (SAXException e) {
-            throw XmlParseException.PARSE_ERROR(e.getMessage(), e);
-        } catch (IOException e) {
-            throw XmlParseException.PARSE_ERROR(e.getMessage(), e);
+        } catch (SAXException | IOException e) {
+            /* Bug 93816 log actual problem but throw generic one to avoid information disclosure */
+            logParseProblem(e);
+            throw XmlParseException.PARSE_ERROR();
         }
         return nodeToElement(doc, factory);
     }
@@ -219,10 +212,18 @@ public class W3cDomUtil {
             org.xml.sax.InputSource inStream = new org.xml.sax.InputSource();
             inStream.setCharacterStream(new java.io.StringReader(xml));
             return nodeToElement(jaxbBuilder.parse(inStream), factory);
-        } catch (SAXException e) {
-            throw XmlParseException.PARSE_ERROR(e.getMessage(), e);
-        } catch (IOException e) {
-            throw XmlParseException.PARSE_ERROR(e.getMessage(), e);
+        } catch (SAXException | IOException e) {
+            /* Bug 93816 log actual problem but throw generic one to avoid information disclosure */
+            logParseProblem(e);
+            throw XmlParseException.PARSE_ERROR();
+        }
+    }
+
+    private static void logParseProblem(Exception e) {
+        if (LOG.isDebugEnabled()) {
+            LOG.warn("Problem parsing XML", e);
+        } else {
+            LOG.warn("Problem parsing XML - %s", e.getMessage());
         }
     }
 
