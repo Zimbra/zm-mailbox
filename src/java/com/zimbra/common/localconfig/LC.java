@@ -735,10 +735,17 @@ public final class LC {
 
     public static final KnownKey milter_bind_port = KnownKey.newKey(0);
     public static final KnownKey milter_bind_address = KnownKey.newKey(null);
-    /* milter_max_idle_time should be at least as large as postconf smtp_data_done_timeout, otherwise,
-     * postfix can sit waiting for data to arrive when we have already given up on it.
-     * Even that timeout may only be relevant to individual reads on the socket. */
-    public static final KnownKey milter_max_idle_time = KnownKey.newKey(610);
+    /* postfix 2.11 has 2 timeouts which affect whether to accept a message when DATA is coming slowly from the
+     * remote system.  One is every 300s (smtpd_timeout?) which fires when not data arrives for that time.
+     * The other gets noticed once all data has been read if more than 3600s (ipc_timeout?) has passed since the
+     * connection was initiated and results in '451 4.3.0 Error: queue file write error'
+     * Commands are sent to milter for "mail from" and "rcpt to" entries, then potentially no
+     * further communication is made until all data for the message has been read, so
+     * milter_max_idle_time needs to be long enough for that.  The value of milter_max_idle_time
+     * is to ensure we drop the connection if there is a problem at the MTA end - hence the
+     * default value is slightly longer than the max time the MTA should need.
+     */
+    public static final KnownKey milter_max_idle_time = KnownKey.newKey(3630);
     public static final KnownKey milter_in_process_mode = KnownKey.newKey(false);
     public static final KnownKey milter_write_timeout = KnownKey.newKey(10);
     public static final KnownKey milter_write_chunk_size = KnownKey.newKey(1024);
