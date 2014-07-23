@@ -1371,7 +1371,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Class to use to scan attachments during compose</desc>
 </attr>
 
-<attr id="239" name="zimbraAttachmentsScanURL" type="string" max="256" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+<attr id="239" name="zimbraAttachmentsScanURL" type="string" max="256" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited">
   <desc>Data for class that scans attachments during compose</desc>
 </attr>
 

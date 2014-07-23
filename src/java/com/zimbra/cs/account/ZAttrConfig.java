@@ -3045,11 +3045,11 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Data for class that scans attachments during compose
      *
-     * @return zimbraAttachmentsScanURL, or null if unset
+     * @return zimbraAttachmentsScanURL, or empty array if unset
      */
     @ZAttr(id=239)
-    public String getAttachmentsScanURL() {
-        return getAttr(Provisioning.A_zimbraAttachmentsScanURL, null);
+    public String[] getAttachmentsScanURL() {
+        return getMultiAttr(Provisioning.A_zimbraAttachmentsScanURL);
     }
 
     /**
@@ -3059,7 +3059,7 @@ public abstract class ZAttrConfig extends Entry {
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
     @ZAttr(id=239)
-    public void setAttachmentsScanURL(String zimbraAttachmentsScanURL) throws com.zimbra.common.service.ServiceException {
+    public void setAttachmentsScanURL(String[] zimbraAttachmentsScanURL) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAttachmentsScanURL, zimbraAttachmentsScanURL);
         getProvisioning().modifyAttrs(this, attrs);
@@ -3073,9 +3073,63 @@ public abstract class ZAttrConfig extends Entry {
      * @return populated map to pass into Provisioning.modifyAttrs
      */
     @ZAttr(id=239)
-    public Map<String,Object> setAttachmentsScanURL(String zimbraAttachmentsScanURL, Map<String,Object> attrs) {
+    public Map<String,Object> setAttachmentsScanURL(String[] zimbraAttachmentsScanURL, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAttachmentsScanURL, zimbraAttachmentsScanURL);
+        return attrs;
+    }
+
+    /**
+     * Data for class that scans attachments during compose
+     *
+     * @param zimbraAttachmentsScanURL new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=239)
+    public void addAttachmentsScanURL(String zimbraAttachmentsScanURL) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraAttachmentsScanURL, zimbraAttachmentsScanURL);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Data for class that scans attachments during compose
+     *
+     * @param zimbraAttachmentsScanURL new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=239)
+    public Map<String,Object> addAttachmentsScanURL(String zimbraAttachmentsScanURL, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraAttachmentsScanURL, zimbraAttachmentsScanURL);
+        return attrs;
+    }
+
+    /**
+     * Data for class that scans attachments during compose
+     *
+     * @param zimbraAttachmentsScanURL existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=239)
+    public void removeAttachmentsScanURL(String zimbraAttachmentsScanURL) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraAttachmentsScanURL, zimbraAttachmentsScanURL);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Data for class that scans attachments during compose
+     *
+     * @param zimbraAttachmentsScanURL existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=239)
+    public Map<String,Object> removeAttachmentsScanURL(String zimbraAttachmentsScanURL, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraAttachmentsScanURL, zimbraAttachmentsScanURL);
         return attrs;
     }
 
