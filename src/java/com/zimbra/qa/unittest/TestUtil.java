@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -974,6 +974,26 @@ extends Assert {
         Element auth = new XMLElement(AdminConstants.AUTH_REQUEST);
         auth.addElement(AdminConstants.E_NAME).setText(LC.zimbra_ldap_user.value());
         auth.addElement(AdminConstants.E_PASSWORD).setText(LC.zimbra_ldap_password.value());
+
+        // Authenticate and get auth token
+        Element response = transport.invoke(auth);
+        String authToken = response.getElement(AccountConstants.E_AUTH_TOKEN).getText();
+        transport.setAuthToken(authToken);
+        return transport;
+    }
+
+
+    /**
+     * Returns an authenticated transport for the <tt>zimbra</tt> account.
+     */
+    public static SoapTransport getAdminSoapTransport(String adminName, String adminPassword)
+    throws SoapFaultException, IOException, ServiceException {
+        SoapHttpTransport transport = new SoapHttpTransport(getAdminSoapUrl());
+
+        // Create auth element
+        Element auth = new XMLElement(AdminConstants.AUTH_REQUEST);
+        auth.addElement(AdminConstants.E_NAME).setText(adminName);
+        auth.addElement(AdminConstants.E_PASSWORD).setText(adminPassword);
 
         // Authenticate and get auth token
         Element response = transport.invoke(auth);
