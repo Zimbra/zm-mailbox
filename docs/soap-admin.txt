@@ -582,14 +582,16 @@ Notes:
   </domain>
 </GetDomainInfoResponse>
 
-This call does *not* require an auth token.  It returuns attributes that are pertinent to domain settings
-for cases when the user is not authenticated.  For example, URL to direct the user to upon loggin out or when
-auth token is expired.
+This call does *not* require an auth token; however when called without an auth token only the following attributes required pre-login are returned.
+zimbraSkinLogoURL
+zimbraAdminConsoleLoginURL
+zimbraWebClientLoginURL
+zimbraWebClientLoginURLAllowedUA
+zimbraWebClientLoginURLAllowedIP
 
-If the domain doesn't exist, this call returns an empty body:
+When called without auth token the domain name/ID are not returned instead 'VALUE-BLOCKED' is emitted, regardless of whether the requested domain exists or not.
 
-<GetDomainInfoResponse/>
-
+If the domain does not exist values are returned from the global config object.
 
 {apply-config} = 0|1 (1 is default)
 
