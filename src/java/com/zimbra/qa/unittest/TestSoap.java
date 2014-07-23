@@ -268,9 +268,10 @@ extends TestCase {
             .append("<comment>Missing end tag for body</comment>")
             .append("</SOAO-ENV:Envelope>\n");
         String responseString = doLowLevelRequest(new URL(TestUtil.getSoapUrl() + "/WibbleRequest"), req.toString());
-        assertTrue("Response should be a SOAP 1.1 fault", responseString.startsWith(
-                "<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">" +
-                "<soap:Body><soap:Fault><faultcode>soap:Client</faultcode><faultstring>parse error:"));
+        assertTrue(String.format("Response [%s] should be a SOAP 1.1 fault with faultstring 'Documentparse failed'",
+                responseString),
+                responseString.startsWith("<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">" +
+                "<soap:Body><soap:Fault><faultcode>soap:Client</faultcode><faultstring>Document parse failed"));
     }
 
     @Override
