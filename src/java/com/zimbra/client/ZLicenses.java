@@ -29,6 +29,7 @@ public class ZLicenses {
     private HashMap<String, String> licenseMap = new HashMap<String, String>();
     private final String LICENSE_VOICE = "VOICE";
     private final String LICENSE_SMIME = "SMIME";
+    private final String LICENSE_TOUCHCLIENT = "TOUCHCLIENT";
 
     public ZLicenses(LicenseInfo licenses) {
 
@@ -53,5 +54,9 @@ public class ZLicenses {
 
     public boolean getSmime() {
         return getBool(LICENSE_SMIME);
+    }
+
+    public boolean getTouchClient() {
+        return getBool(LICENSE_TOUCHCLIENT);
     }
 }
