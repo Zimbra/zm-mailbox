@@ -735,7 +735,10 @@ public final class LC {
 
     public static final KnownKey milter_bind_port = KnownKey.newKey(0);
     public static final KnownKey milter_bind_address = KnownKey.newKey(null);
-    public static final KnownKey milter_max_idle_time = KnownKey.newKey(120);
+    /* milter_max_idle_time should be at least as large as postconf smtp_data_done_timeout, otherwise,
+     * postfix can sit waiting for data to arrive when we have already given up on it.
+     * Even that timeout may only be relevant to individual reads on the socket. */
+    public static final KnownKey milter_max_idle_time = KnownKey.newKey(610);
     public static final KnownKey milter_in_process_mode = KnownKey.newKey(false);
     public static final KnownKey milter_write_timeout = KnownKey.newKey(10);
     public static final KnownKey milter_write_chunk_size = KnownKey.newKey(1024);
