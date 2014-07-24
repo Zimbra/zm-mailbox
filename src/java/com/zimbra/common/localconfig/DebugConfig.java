@@ -246,6 +246,8 @@ public final class DebugConfig {
 
     public static final boolean debugLocalSplit = value("debug_local_websplit", false);
 
+    public static final boolean allowUnauthedPing = value("allow_unauthed_ping", false);
+
     private static boolean value(String key, boolean defaultValue) {
         String value = LC.get(key);
         return value.isEmpty() ? defaultValue : Boolean.parseBoolean(value);
