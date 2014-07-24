@@ -23,6 +23,7 @@ package com.zimbra.cs.service.admin;
 import java.util.List;
 import java.util.Map;
 
+import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
@@ -33,6 +34,24 @@ import com.zimbra.soap.admin.message.PingResponse;
  * @author schemers
  */
 public class Ping extends AdminDocumentHandler {
+
+    @Override
+    public boolean needsAuth(Map<String, Object> context) {
+        if (DebugConfig.allowUnauthedPing) {
+            return false;
+        } else {
+            return super.needsAuth(context);
+        }
+    }
+
+    @Override
+    public boolean needsAdminAuth(Map<String, Object> context) {
+        if (DebugConfig.allowUnauthedPing) {
+            return false;
+        } else {
+            return super.needsAdminAuth(context);
+        }
+    }
 
     /* (non-Javadoc)
       * @see com.zimbra.soap.DocumentHandler#handle(org.dom4j.Element, java.util.Map)
