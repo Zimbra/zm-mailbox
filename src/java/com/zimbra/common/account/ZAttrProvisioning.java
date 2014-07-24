@@ -9361,6 +9361,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMtaSmtpdTlsCiphers = "zimbraMtaSmtpdTlsCiphers";
 
     /**
+     * Value for postconf smtpd_tls_exclude_ciphers
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1647)
+    public static final String A_zimbraMtaSmtpdTlsExcludeCiphers = "zimbraMtaSmtpdTlsExcludeCiphers";
+
+    /**
      * Value for postconf smtpd_tls_loglevel. Default is 1. Valid range is
      * 1-4.
      *
@@ -9376,6 +9384,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1516)
     public static final String A_zimbraMtaSmtpdTlsMandatoryCiphers = "zimbraMtaSmtpdTlsMandatoryCiphers";
+
+    /**
+     * Value for postconf smtpd_tls_protocols
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1646)
+    public static final String A_zimbraMtaSmtpdTlsProtocols = "zimbraMtaSmtpdTlsProtocols";
 
     /**
      * Value for postconf virtual_transport
