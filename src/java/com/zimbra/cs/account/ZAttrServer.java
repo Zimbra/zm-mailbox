@@ -25981,6 +25981,78 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Value for postconf smtpd_tls_exclude_ciphers
+     *
+     * @return zimbraMtaSmtpdTlsExcludeCiphers, or null if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1647)
+    public String getMtaSmtpdTlsExcludeCiphers() {
+        return getAttr(Provisioning.A_zimbraMtaSmtpdTlsExcludeCiphers, null);
+    }
+
+    /**
+     * Value for postconf smtpd_tls_exclude_ciphers
+     *
+     * @param zimbraMtaSmtpdTlsExcludeCiphers new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1647)
+    public void setMtaSmtpdTlsExcludeCiphers(String zimbraMtaSmtpdTlsExcludeCiphers) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpdTlsExcludeCiphers, zimbraMtaSmtpdTlsExcludeCiphers);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf smtpd_tls_exclude_ciphers
+     *
+     * @param zimbraMtaSmtpdTlsExcludeCiphers new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1647)
+    public Map<String,Object> setMtaSmtpdTlsExcludeCiphers(String zimbraMtaSmtpdTlsExcludeCiphers, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpdTlsExcludeCiphers, zimbraMtaSmtpdTlsExcludeCiphers);
+        return attrs;
+    }
+
+    /**
+     * Value for postconf smtpd_tls_exclude_ciphers
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1647)
+    public void unsetMtaSmtpdTlsExcludeCiphers() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpdTlsExcludeCiphers, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf smtpd_tls_exclude_ciphers
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1647)
+    public Map<String,Object> unsetMtaSmtpdTlsExcludeCiphers(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpdTlsExcludeCiphers, "");
+        return attrs;
+    }
+
+    /**
      * Value for postconf smtpd_tls_loglevel. Default is 1. Valid range is
      * 1-4.
      *
@@ -26185,6 +26257,78 @@ public abstract class ZAttrServer extends NamedEntry {
     public Map<String,Object> unsetMtaSmtpdTlsMandatoryCiphers(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMtaSmtpdTlsMandatoryCiphers, "");
+        return attrs;
+    }
+
+    /**
+     * Value for postconf smtpd_tls_protocols
+     *
+     * @return zimbraMtaSmtpdTlsProtocols, or null if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1646)
+    public String getMtaSmtpdTlsProtocols() {
+        return getAttr(Provisioning.A_zimbraMtaSmtpdTlsProtocols, null);
+    }
+
+    /**
+     * Value for postconf smtpd_tls_protocols
+     *
+     * @param zimbraMtaSmtpdTlsProtocols new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1646)
+    public void setMtaSmtpdTlsProtocols(String zimbraMtaSmtpdTlsProtocols) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpdTlsProtocols, zimbraMtaSmtpdTlsProtocols);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf smtpd_tls_protocols
+     *
+     * @param zimbraMtaSmtpdTlsProtocols new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1646)
+    public Map<String,Object> setMtaSmtpdTlsProtocols(String zimbraMtaSmtpdTlsProtocols, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpdTlsProtocols, zimbraMtaSmtpdTlsProtocols);
+        return attrs;
+    }
+
+    /**
+     * Value for postconf smtpd_tls_protocols
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1646)
+    public void unsetMtaSmtpdTlsProtocols() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpdTlsProtocols, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf smtpd_tls_protocols
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1646)
+    public Map<String,Object> unsetMtaSmtpdTlsProtocols(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpdTlsProtocols, "");
         return attrs;
     }
 

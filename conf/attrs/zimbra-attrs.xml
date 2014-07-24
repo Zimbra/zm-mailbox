@@ -8268,4 +8268,12 @@ TODO: delete them permanently from here
   <desc>Value for postconf smtp_generic_maps</desc>
 </attr>
 
+<attr id="1646" name="zimbraMtaSmtpdTlsProtocols" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
+  <desc>Value for postconf smtpd_tls_protocols</desc>
+</attr>
+
+<attr id="1647" name="zimbraMtaSmtpdTlsExcludeCiphers" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
+  <desc>Value for postconf smtpd_tls_exclude_ciphers</desc>
+</attr>
+
 </attrs>
