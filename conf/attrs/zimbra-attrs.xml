@@ -8275,5 +8275,8 @@ TODO: delete them permanently from here
 <attr id="1647" name="zimbraMtaSmtpdTlsExcludeCiphers" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
   <desc>Value for postconf smtpd_tls_exclude_ciphers</desc>
 </attr>
+<attr id="1648" name="zimbraExternalAccountProvisioningKey" type="ostring" max="128" immutable="1" cardinality="single" optionalIn="globalConfig" requiresRestart="mailbox" since="8.5.0">
+  <desc>Auth token secret key used for encrypting data/auth token in share URL when created for external users.</desc>
+</attr>
 
 </attrs>

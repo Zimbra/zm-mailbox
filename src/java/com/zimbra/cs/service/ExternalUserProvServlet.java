@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -30,26 +30,26 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import com.google.common.collect.Lists;
-import com.zimbra.common.localconfig.DebugConfig;
-import com.zimbra.common.util.L10nUtil;
-import com.zimbra.common.util.StringUtil;
 import org.apache.commons.codec.binary.Hex;
 
+import com.google.common.collect.Lists;
 import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.client.ZMountpoint;
 import com.zimbra.common.account.ProvisioningConstants;
+import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.BlobMetaData;
+import com.zimbra.common.util.L10nUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
-import com.zimbra.cs.account.AuthTokenKey;
 import com.zimbra.cs.account.Domain;
+import com.zimbra.cs.account.ExtAuthTokenKey;
 import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
@@ -396,7 +396,7 @@ public class ExternalUserProvServlet extends ZimbraServlet {
         grantee.modify(appFeatureAttrs);
     }
 
-    private static Map<Object, Object> validatePrelimToken(String param) throws ServletException {
+    public static Map<Object, Object> validatePrelimToken(String param) throws ServletException {
         int pos = param.indexOf('_');
         if (pos == -1) {
             throw new ServletException("invalid token param");
@@ -410,7 +410,7 @@ public class ExternalUserProvServlet extends ZimbraServlet {
         String data = param.substring(pos2 + 1);
         Map<Object, Object> map;
         try {
-            AuthTokenKey key = AuthTokenKey.getVersion(ver);
+            ExtAuthTokenKey key = ExtAuthTokenKey.getVersion(ver);
             if (key == null) {
                 throw new ServletException("unknown key version");
             }

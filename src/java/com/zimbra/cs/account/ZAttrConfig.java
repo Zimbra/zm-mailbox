@@ -13212,6 +13212,83 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * Auth token secret key used for encrypting data/auth token in share URL
+     * when created for external users.
+     *
+     * @return zimbraExternalAccountProvisioningKey, or null if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1648)
+    public String getExternalAccountProvisioningKey() {
+        return getAttr(Provisioning.A_zimbraExternalAccountProvisioningKey, null);
+    }
+
+    /**
+     * Auth token secret key used for encrypting data/auth token in share URL
+     * when created for external users.
+     *
+     * @param zimbraExternalAccountProvisioningKey new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1648)
+    public void setExternalAccountProvisioningKey(String zimbraExternalAccountProvisioningKey) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraExternalAccountProvisioningKey, zimbraExternalAccountProvisioningKey);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Auth token secret key used for encrypting data/auth token in share URL
+     * when created for external users.
+     *
+     * @param zimbraExternalAccountProvisioningKey new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1648)
+    public Map<String,Object> setExternalAccountProvisioningKey(String zimbraExternalAccountProvisioningKey, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraExternalAccountProvisioningKey, zimbraExternalAccountProvisioningKey);
+        return attrs;
+    }
+
+    /**
+     * Auth token secret key used for encrypting data/auth token in share URL
+     * when created for external users.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1648)
+    public void unsetExternalAccountProvisioningKey() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraExternalAccountProvisioningKey, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Auth token secret key used for encrypting data/auth token in share URL
+     * when created for external users.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1648)
+    public Map<String,Object> unsetExternalAccountProvisioningKey(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraExternalAccountProvisioningKey, "");
+        return attrs;
+    }
+
+    /**
      * Interval between successive executions of the task that: - disables an
      * external virtual account when all its accessible shares have been
      * revoked or expired. - deletes an external virtual account after
