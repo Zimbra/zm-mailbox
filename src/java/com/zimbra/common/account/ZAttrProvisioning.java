@@ -4877,6 +4877,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraExternalAccountLifetimeAfterDisabled = "zimbraExternalAccountLifetimeAfterDisabled";
 
     /**
+     * Auth token secret key used for encrypting data/auth token in share URL
+     * when created for external users.
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1648)
+    public static final String A_zimbraExternalAccountProvisioningKey = "zimbraExternalAccountProvisioningKey";
+
+    /**
      * Interval between successive executions of the task that: - disables an
      * external virtual account when all its accessible shares have been
      * revoked or expired. - deletes an external virtual account after
