@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -25,8 +25,8 @@ import java.io.OutputStream;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.net.URLConnection;
-import java.util.Arrays;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -34,6 +34,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
 import java.util.regex.Matcher;
@@ -50,6 +51,27 @@ import org.apache.commons.httpclient.methods.multipart.MultipartRequestEntity;
 import org.apache.commons.httpclient.methods.multipart.Part;
 import org.apache.commons.httpclient.methods.multipart.PartBase;
 
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.ProvisioningConstants;
+import com.zimbra.common.auth.ZAuthToken;
+import com.zimbra.common.httpclient.HttpClientUtil;
+import com.zimbra.common.localconfig.DebugConfig;
+import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AccountConstants;
+import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.Element.XMLElement;
+import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.soap.SoapHttpTransport;
+import com.zimbra.common.soap.SoapTransport;
+import com.zimbra.common.soap.W3cDomUtil;
+import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.CliUtil;
+import com.zimbra.common.util.FileUtil;
+import com.zimbra.common.util.Pair;
+import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Cos;
@@ -59,19 +81,10 @@ import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.httpclient.URLUtil;
-import com.zimbra.common.account.Key;
-import com.zimbra.common.account.ProvisioningConstants;
-import com.zimbra.common.auth.ZAuthToken;
-import com.zimbra.common.httpclient.HttpClientUtil;
-import com.zimbra.common.localconfig.DebugConfig;
-import com.zimbra.common.localconfig.LC;
-import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.service.admin.FlushCache;
 import com.zimbra.cs.util.BuildInfo;
+import com.zimbra.cs.util.WebClientServiceUtil;
 import com.zimbra.cs.zimlet.ZimletPresence.Presence;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.*;
-import com.zimbra.common.soap.*;
-import com.zimbra.common.soap.Element.XMLElement;
 import com.zimbra.soap.admin.type.CacheEntryType;
 
 /**
@@ -85,16 +98,19 @@ public class ZimletUtil {
 	public static final String ZIMLET_DEV_DIR = "_dev";
 	public static final String ZIMLET_ALLOWED_DOMAINS = "allowedDomains";
 	public static final String ZIMLET_DEFAULT_COS = "default";
+	public static final String PARAM_ZIMLET = "Zimlet";
+	private static final String ZIMLET_CACHE_DIR = "/opt/zimbra/jetty/work/resource-cache/zimletres/latest";
 
 	private static int P_MAX = Integer.MAX_VALUE;
 	private static boolean sZimletsLoaded = false;
 	private static Map<String,ZimletFile> sZimlets = new HashMap<String,ZimletFile>();
-	@SuppressWarnings("unchecked")
-	private static Map<String,Class> sZimletHandlers = new HashMap<String,Class>();
+
+    private static Map<String, Class> sZimletHandlers = new HashMap<String, Class>();
 
 	public static void migrateUserPrefIfNecessary(Account acct) throws ServiceException {
-	    if (!DebugConfig.enableMigrateUserZimletPrefs)
-	        return;
+	    if (!DebugConfig.enableMigrateUserZimletPrefs) {
+            return;
+        }
 
 	    Set<String> wanted = acct.getMultiAttrSet(Provisioning.A_zimbraPrefZimlets);
 	    Set<String> unwanted = acct.getMultiAttrSet(Provisioning.A_zimbraPrefDisabledZimlets);
@@ -104,8 +120,9 @@ public class ZimletUtil {
 	    // if unwanted is not empty: already migrated or user has change it.
 	    boolean needsMigrate = (!wanted.isEmpty()) && unwanted.isEmpty();
 
-	    if (!needsMigrate)
-	        return;
+	    if (!needsMigrate) {
+            return;
+        }
 
 	    ZimletPresence availZimlets = getAvailableZimlets(acct);
 	    Map<String, Object> attrs = new HashMap<String, Object>();
@@ -242,8 +259,9 @@ public class ZimletUtil {
 		for (int i = 0; i < zimlets.length; i++) {
 			try {
 				Zimlet z = prov.getZimlet(zimlets[i]);
-				if (z != null)
-					zlist.add(z);
+				if (z != null) {
+                    zlist.add(z);
+                }
 			} catch (ServiceException se) {
 				// ignore error and continue on
 			    ZimbraLog.zimlet.warn("unable to get zimlet " + zimlets[i], se);
@@ -261,8 +279,9 @@ public class ZimletUtil {
     public static void updateZimletConfig(String zimlet, String config) throws ServiceException {
         Provisioning prov = Provisioning.getInstance();
         Zimlet zim = prov.getZimlet(zimlet);
-		if (zim == null)
+		if (zim == null) {
             throw AccountServiceException.NO_SUCH_ZIMLET(zimlet);
+        }
         Map<String, String> map = new HashMap<String, String>();
         map.put(Provisioning.A_zimbraZimletHandlerConfig, config);
         prov.modifyAttrs(zim, map);
@@ -271,11 +290,13 @@ public class ZimletUtil {
 	public static ZimletConfig getZimletConfig(String zimlet) throws ServiceException {
 		Provisioning prov = Provisioning.getInstance();
 		Zimlet z = prov.getZimlet(zimlet);
-		if (z == null)
-			throw AccountServiceException.NO_SUCH_ZIMLET(zimlet);
+		if (z == null) {
+            throw AccountServiceException.NO_SUCH_ZIMLET(zimlet);
+        }
 		String cf = z.getAttr(Provisioning.A_zimbraZimletHandlerConfig);
-		if (cf == null)
-			return null;
+		if (cf == null) {
+            return null;
+        }
 		try {
 			return new ZimletConfig(cf);
 		} catch (ZimletException e) {
@@ -291,7 +312,6 @@ public class ZimletUtil {
 	 * @param name of the Zimlet
 	 * @return ZimletHandler object
 	 */
-	@SuppressWarnings("unchecked")
 	public static ZimletHandler getHandler(String name) {
 		loadZimlets();
 		Class zh = sZimletHandlers.get(name);
@@ -300,23 +320,33 @@ public class ZimletUtil {
 			if (zf == null) {
 				return null;
 			}
+            URLClassLoader cl = null;
 			try {
 				String clazz = zf.getZimletDescription().getServerExtensionClass();
 				if (clazz != null) {
 					URL[] urls = { zf.toURL() };
-					URLClassLoader cl = new URLClassLoader(urls, ZimletUtil.class.getClassLoader());
+                    cl = new URLClassLoader(urls, ZimletUtil.class.getClassLoader());
 					zh = cl.loadClass(clazz);
 					ZimbraLog.zimlet.info("Loaded class "+zh.getName());
 					sZimletHandlers.put(name, zh);
 				}
 			} catch (Exception e) {
-				ZimbraLog.zimlet.warn("Unable to load zimlet handler for "+name, e);
+                ZimbraLog.zimlet.warn("Unable to load zimlet handler for %s", name, e);
 				return null;
+            } finally {
+                if (cl != null) {
+                    try {
+                        cl.close();
+                    } catch (IOException e) {
+                        ZimbraLog.zimlet.warn("failed to close URLClassLoader", e);
+                    }
+                }
 			}
 		}
 		try {
-			if (zh != null)
-				return (ZimletHandler) zh.newInstance();
+			if (zh != null) {
+                return (ZimletHandler) zh.newInstance();
+            }
 		} catch (Exception e) {
 			ZimbraLog.zimlet.warn("Unable to instantiate zimlet handler for "+name, e);
 		}
@@ -327,8 +357,9 @@ public class ZimletUtil {
 		ZimletFile zf = null;
 		loadZimlets();
 		zf = sZimlets.get(zimlet);
-		if (zf != null)
-			return zf;
+		if (zf != null) {
+            return zf;
+        }
 		return loadDevZimlets().get(zimlet);
 	}
 
@@ -429,11 +460,12 @@ public class ZimletUtil {
         Element zimletContext = entry.addElement(AccountConstants.E_ZIMLET_CONTEXT);
         zimletContext.addAttribute(AccountConstants.A_ZIMLET_BASE_URL, zimletBase);
         if (priority >= 0) {
-        	zimletContext.addAttribute(AccountConstants.A_ZIMLET_PRIORITY, priority);
+            zimletContext.addAttribute(AccountConstants.A_ZIMLET_PRIORITY, priority);
         }
 
-        if (presence == null)
+        if (presence == null) {
             presence = Presence.enabled;
+        }
         zimletContext.addAttribute(AccountConstants.A_ZIMLET_PRESENCE, presence.toString());
 
         try {
@@ -487,8 +519,8 @@ public class ZimletUtil {
 		return attrs;
 	}
 
-	private static String getZimletDir() {
-		return LC.zimlet_directory.value();
+	public static File getZimletRootDir(String zimletName) {
+	    return new File(LC.zimlet_directory.value(), zimletName);
 	}
 
 	public static void flushCache() throws ZimletException {
@@ -500,66 +532,57 @@ public class ZimletUtil {
 		}
 	}
 
+    public static void flushDiskCache(Map<String, Object> context) throws ServiceException {
+        if (WebClientServiceUtil.isServerInSplitMode()) {
+            List<Server> allServers = Provisioning.getInstance().getAllServers();
+            for (Server server : allServers) {
+                if (server.hasMailClientService()) {
+                    FlushCache.flushAllZimlets(context);
+                } else {
+                    WebClientServiceUtil.sendFlushZimletRequestToUiNode(server);
+                }
+            }
+        }
+    }
+
+    public static void flushAllZimletsCache() {
+        try {
+            File file = new File(ZIMLET_CACHE_DIR);
+            FileUtil.deleteDirContents(file);
+        } catch (IOException e) {
+            ZimbraLog.misc.warn("failed to flush zimlet cache", e);
+        }
+    }
+
 	public static interface DeployListener {
 		public void markFinished(Server s);
 		public void markFailed(Server s, Exception e);
 	}
 
-	/**
-	 * Multinode deploy.
-	 *
-	 * @param zf
-	 * @param listener
-	 * @param auth
-	 * @param flushCache
-	 * @throws IOException
-	 * @throws ZimletException
-	 * @throws ServiceException
-	 */
-	public static void deployZimlet(ZimletFile zf, DeployListener listener, ZAuthToken auth) throws IOException, ZimletException, ServiceException {
-		deployZimlet(zf,listener,auth,false);
-	}
-
-	public static void deployZimlet(ZimletFile zf, DeployListener listener, ZAuthToken auth, boolean flushCache) throws IOException, ZimletException, ServiceException {
-		Server localServer = Provisioning.getInstance().getLocalServer();
-		try {
-			deployZimlet(zf);
-			if (flushCache)
-			    flushCache();
-			if (listener != null)
-				listener.markFinished(localServer);
-		} catch (Exception e) {
-			ZimbraLog.zimlet.info("deploy", e);
-			if (listener != null)
-				listener.markFailed(localServer, e);
-		}
-
-		if (auth == null)
-			return;
-
-		// deploy on the rest of the servers
-		byte[] data = zf.toByteArray();
-		ZimletSoapUtil soapUtil = new ZimletSoapUtil(auth);
-		soapUtil.deployZimlet(zf.getName(), data, listener,flushCache);
-	}
+    public static void deployZimletLocally(ZimletFile zf, DeployListener listener) throws IOException, ZimletException, ServiceException {
+        Server localServer = Provisioning.getInstance().getLocalServer();
+        deployZimletLocally(zf);
+        if (listener != null) {
+            listener.markFinished(localServer);
+        }
+    }
 
 	enum Action { INSTALL, UPGRADE, REPAIR };
 
-	/**
-	 *
-	 * Deploys the specified Zimlets.  The following actions are taken.
-	 * 1.  Install the Zimlet files on the machine.
-	 * 2.  Check the LDAP for the Zimlet entry.  If the entry already exists, stop.
-	 * 3.  Install the LDAP entry for the Zimlet.
-	 * 4.  Install Zimlet config.
-	 * 5.  Activate the zimlet on default COS.
-	 * 6.  Enable the Zimlet.
-	 *
-	 * @param zimlet
-	 * @throws IOException
-	 * @throws ZimletException
-	 */
-	public static void deployZimlet(ZimletFile zf) throws IOException, ZimletException, ServiceException {
+    /**
+     * Deploys the specified Zimlet on local server, be it service node or ui node. The following actions are taken.
+     * 1.  Install the Zimlet files on the machine.
+     * 2.  Check the LDAP for the Zimlet entry.  If the entry already exists, stop.
+     * 3.  Install the LDAP entry for the Zimlet.
+     * 4.  Install Zimlet config.
+     * 5.  Activate the zimlet on default COS.
+     * 6.  Enable the Zimlet.
+     *
+     * @param zimlet
+     * @throws IOException
+     * @throws ZimletException
+     */
+	public static void deployZimletLocally(ZimletFile zf) throws IOException, ZimletException, ServiceException {
 		Provisioning prov = Provisioning.getInstance();
 		String zimletName = zf.getZimletName();
 		ZimletDescription zd = zf.getZimletDescription();
@@ -590,7 +613,7 @@ public class ZimletUtil {
 		z = ldapDeploy(zf);
 
 		// install files
-		installZimlet(zf);
+		installZimletLocally(zf);
 
 		if (action == Action.REPAIR) {
 			return;
@@ -623,16 +646,16 @@ public class ZimletUtil {
 		enableZimlet(zimletName);
 	}
 
-	/**
-	 *
-	 * Install the Zimlet file on this machine.
-	 *
-	 * @param zimlet
-	 * @return
-	 * @throws IOException
-	 * @throws ZimletException
-	 */
-	public static void installZimlet(ZimletFile zf) throws IOException, ZimletException {
+    /**
+     *
+     * Install the Zimlet file on this machine.
+     *
+     * @param zimlet
+     * @return
+     * @throws IOException
+     * @throws ZimletException
+     */
+	public static void installZimletLocally(ZimletFile zf) throws IOException, ZimletException {
 		ZimletDescription zd = zf.getZimletDescription();
 		String zimletName = zd.getName();
 		ZimbraLog.zimlet.info("Installing Zimlet " + zimletName + " on this host.");
@@ -644,11 +667,12 @@ public class ZimletUtil {
                                     "WEB-INF" + File.separator +
                                     "lib");
 		// location for the rest of the files
-        File zimlet = new File(getZimletDir() + File.separatorChar + zimletName);
+        File zimlet = getZimletRootDir(zimletName);
 
         zimlet.getParentFile().mkdirs();
-        if (zimlet.exists())
+        if (zimlet.exists()) {
             deleteFile(zimlet);
+        }
 
 		for (ZimletFile.ZimletEntry entry : zf.getAllEntries()) {
 			String fname = entry.getName();
@@ -675,7 +699,7 @@ public class ZimletUtil {
 	 * @throws ZimletException
 	 */
 	public static void ldapDeploy(String zimlet) throws ServiceException, IOException, ZimletException {
-		String zimletRoot = getZimletDir();
+		String zimletRoot = LC.zimlet_directory.value();
 		ZimletFile zf = new ZimletFile(zimletRoot + File.separator + zimlet);
 		ldapDeploy(zf);
 	}
@@ -685,12 +709,14 @@ public class ZimletUtil {
 		String zimletName = zd.getName();
 		Map<String,Object> attrs = descToMap(zd);
 		List <String> targets = zd.getTargets();
-		if(targets != null && targets.size()>0)
-			attrs.put(Provisioning.A_zimbraZimletTarget, targets);
+		if (targets != null && targets.size() > 0) {
+            attrs.put(Provisioning.A_zimbraZimletTarget, targets);
+        }
 
 		String disableZimletUndeploy = zd.getDisableUIUndeploy();
-		if(disableZimletUndeploy != null && disableZimletUndeploy.equalsIgnoreCase("true"))
-			attrs.put(Provisioning.A_zimbraAdminExtDisableUIUndeploy, ProvisioningConstants.TRUE);
+		if (disableZimletUndeploy != null && disableZimletUndeploy.equalsIgnoreCase("true")) {
+            attrs.put(Provisioning.A_zimbraAdminExtDisableUIUndeploy, ProvisioningConstants.TRUE);
+        }
 
 		if (zd.isExtension()) {
 			attrs.put(Provisioning.A_zimbraZimletIsExtension, ProvisioningConstants.TRUE);
@@ -703,10 +729,11 @@ public class ZimletUtil {
 		// add zimlet entry to ldap
 		Provisioning prov = Provisioning.getInstance();
 		Zimlet zim = prov.getZimlet(zimletName);
-		if (zim == null)
-			zim = prov.createZimlet(zimletName, attrs);
-		else
-			prov.modifyAttrs(zim, attrs);
+		if (zim == null) {
+            zim = prov.createZimlet(zimletName, attrs);
+        } else {
+            prov.modifyAttrs(zim, attrs);
+        }
 		return zim;
 	}
 
@@ -733,38 +760,41 @@ public class ZimletUtil {
 	 * @param zimlet
 	 * @throws ZimletException
 	 */
-	public static void uninstallZimlet(String zimlet) throws ServiceException {
+	public static void undeployZimletLocally(String zimlet) throws ServiceException {
 		ZimbraLog.zimlet.info("Uninstalling Zimlet " + zimlet + " from LDAP.");
 		Provisioning prov = Provisioning.getInstance();
-
-		List<Cos> cos = prov.getAllCos();
-		for (Cos c : cos) {
-			try {
-				deactivateZimlet(zimlet, c.getName());
-			} catch (Exception e) {
-				ZimbraLog.zimlet.warn("Error deactiving Zimlet " + zimlet + " in LDAP.", e);
-			}
-		}
-		try {
-			prov.deleteZimlet(zimlet);
-		} catch (ServiceException se) {
-			ZimbraLog.zimlet.warn("Error deleting Zimlet " + zimlet + " in LDAP.", se);
+		Zimlet z = prov.getZimlet(zimlet);
+		if (z != null) {
+		    List<Cos> cos = prov.getAllCos();
+	        for (Cos c : cos) {
+	            try {
+	                deactivateZimlet(zimlet, c.getName());
+	            } catch (Exception e) {
+	                ZimbraLog.zimlet.warn("Error deactiving Zimlet " + zimlet + " in LDAP.", e);
+	            }
+	        }
+	        try {
+	            prov.deleteZimlet(zimlet);
+	        } catch (ServiceException se) {
+                z = prov.getZimlet(zimlet);
+                if (z != null) {
+                    ZimbraLog.zimlet.warn("Error deleting Zimlet " + zimlet + " in LDAP.", se);
+                }
+	        }
 		}
 
 		ZimletFile zf = sZimlets.get(zimlet);
 		if (zf != null) {
-			ZimbraLog.zimlet.info("Deleting Zimlet file "+zf.getFile().getAbsolutePath());
-			deleteFile(zf.getFile());
 			sZimlets.remove(zimlet);
 		}
-	}
-	
-	public static void uninstallFromOtherServers(String zimlet, ZAuthToken auth) throws ServiceException {
-	       if (auth == null)
-	            return;
-	        // undeploy on the rest of the servers
-	        ZimletSoapUtil soapUtil = new ZimletSoapUtil(auth);
-	        soapUtil.undeployZimlet(zimlet);
+        ZimbraLog.zimlet.info("undeploying zimlet %s", zimlet);
+        File zimletDir = ZimletUtil.getZimletRootDir(zimlet);
+        try {
+            FileUtil.deleteDir(zimletDir);
+            ZimbraLog.zimlet.info("zimlet directory %s is deleted", zimletDir.getName());
+        } catch (IOException e) {
+            ZimbraLog.zimlet.warn("error happend when deleting zimlet directory", e);
+        }
 	}
 
 	/**
@@ -779,17 +809,20 @@ public class ZimletUtil {
 		ZimbraLog.zimlet.info("Adding Zimlet " + zimlet + " to COS " + cos);
 		Provisioning prov = Provisioning.getInstance();
 		Cos c = prov.get(Key.CosBy.name, cos);
-		if (c == null)
-			throw ZimletException.CANNOT_ACTIVATE("no such cos " + cos, null);
+		if (c == null) {
+            throw ZimletException.CANNOT_ACTIVATE("no such cos " + cos, null);
+        }
 		Map<String,Object> attrs = new HashMap<String, Object>();
 		attrs.put("+"+Provisioning.A_zimbraZimletAvailableZimlets, zimlet);
 		prov.modifyAttrs(c, attrs);
 		ZimletConfig zc = getZimletConfig(zimlet);
-		if (zc == null)
-			return;
+		if (zc == null) {
+            return;
+        }
 		String allowedDomains = zc.getConfigValue(ZIMLET_ALLOWED_DOMAINS);
-		if (allowedDomains != null)
-			addAllowedDomains(allowedDomains, cos);
+		if (allowedDomains != null) {
+            addAllowedDomains(allowedDomains, cos);
+        }
 	}
 
 	/**
@@ -804,37 +837,46 @@ public class ZimletUtil {
 		ZimbraLog.zimlet.info("Removing Zimlet " + zimlet + " from COS " + cos);
 		Provisioning prov = Provisioning.getInstance();
 		Cos c = prov.get(Key.CosBy.name, cos);
-		if (c == null)
-			throw ZimletException.CANNOT_DEACTIVATE("no such cos " + cos, null);
+		if (c == null) {
+            throw ZimletException.CANNOT_DEACTIVATE("no such cos " + cos, null);
+        }
 		Map<String,Object> attrs = new HashMap<String, Object>();
 		attrs.put("-"+Provisioning.A_zimbraZimletAvailableZimlets, zimlet);
 		prov.modifyAttrs(c, attrs);
 		ZimletConfig zc = getZimletConfig(zimlet);
-		if (zc == null)
-			return;
+		if (zc == null) {
+            return;
+        }
 		String domains = zc.getConfigValue(ZIMLET_ALLOWED_DOMAINS);
-		if (domains == null)
-			return;
+		if (domains == null) {
+            return;
+        }
 		String[] domainArray = domains.toLowerCase().split(",");
 		Set<String> domainsToRemove = new HashSet<String>();
-		for (String d : domainArray)
-			domainsToRemove.add(d);
+		for (String d : domainArray) {
+            domainsToRemove.add(d);
+        }
 		String[] zimlets = getAvailableZimlets(c).getZimletNamesAsArray();
 		for (String z : zimlets) {
-			if (z.equals(zimlet))
-				continue;
+			if (z.equals(zimlet)) {
+                continue;
+            }
 			zc = getZimletConfig(z);
-			if (zc == null)
-				continue;
+			if (zc == null) {
+                continue;
+            }
 			domains = zc.getConfigValue(ZIMLET_ALLOWED_DOMAINS);
-			if (domains == null)
-				continue;
+			if (domains == null) {
+                continue;
+            }
 			domainArray = domains.toLowerCase().split(",");
-			for (String d : domainArray)
-				domainsToRemove.remove(d);
+			for (String d : domainArray) {
+                domainsToRemove.remove(d);
+            }
 		}
-		if (!domainsToRemove.isEmpty())
-			removeAllowedDomains(domainsToRemove, cos);
+		if (!domainsToRemove.isEmpty()) {
+            removeAllowedDomains(domainsToRemove, cos);
+        }
 	}
 
 	/**
@@ -849,16 +891,18 @@ public class ZimletUtil {
 		Provisioning prov = Provisioning.getInstance();
 		try {
 			Zimlet z = prov.getZimlet(zimlet);
-			if (z == null)
-	            throw AccountServiceException.NO_SUCH_ZIMLET(zimlet);
+			if (z == null) {
+                throw AccountServiceException.NO_SUCH_ZIMLET(zimlet);
+            }
             Map<String,String> attr = new HashMap<String,String>();
             attr.put(Provisioning.A_zimbraZimletEnabled, enabled ? ProvisioningConstants.TRUE : ProvisioningConstants.FALSE);
             prov.modifyAttrs(z, attr);
 		} catch (Exception e) {
-			if (enabled)
-				throw ZimletException.CANNOT_ENABLE(zimlet, e);
-			else
-				throw ZimletException.CANNOT_DISABLE(zimlet, e);
+			if (enabled) {
+                throw ZimletException.CANNOT_ENABLE(zimlet, e);
+            } else {
+                throw ZimletException.CANNOT_DISABLE(zimlet, e);
+            }
 		}
 	}
 
@@ -1034,7 +1078,7 @@ public class ZimletUtil {
 	 * @throws IOException
 	 * @throws ZimletException
 	 */
-	public static void installConfig(ZimletConfig zc) throws ServiceException, IOException, ZimletException {
+	private static void installConfig(ZimletConfig zc) throws ServiceException, IOException, ZimletException {
 		String zimletName = zc.getName();
 		ZimbraLog.zimlet.info("Installing Zimlet config for " + zimletName);
 		String configString = zc.toXMLString();
@@ -1044,6 +1088,10 @@ public class ZimletUtil {
 			addAllowedDomains(allowedDomains, "default");  // XXX to default cos for now
 		}
 	}
+
+    public static void installConfig(String config) throws ServiceException, IOException, ZimletException {
+        installConfig(new ZimletConfig(config));
+    }
 
 	public static void addAllowedDomains(String domains, String cosName) throws ServiceException {
 	    Provisioning prov = Provisioning.getInstance();
@@ -1071,10 +1119,6 @@ public class ZimletUtil {
 	    prov.modifyAttrs(cos, newlist);
 	}
 
-	public static void installConfig(String config) throws ServiceException, IOException, ZimletException {
-		installConfig(new ZimletConfig(config));
-	}
-
 	public static void listPriority() throws ServiceException {
 		List<Zimlet> plist = orderZimletsByPriority();
 		System.out.println("Pri\tZimlet");
@@ -1083,13 +1127,13 @@ public class ZimletUtil {
 		}
 	}
 
-
 	public static void setPriority(String zimlet, int priority) throws ServiceException {
 		List<Zimlet> plist = orderZimletsByPriority();
 		Provisioning prov = Provisioning.getInstance();
 		Zimlet z = prov.getZimlet(zimlet);
-		if (z == null)
+		if (z == null) {
             throw AccountServiceException.NO_SUCH_ZIMLET(zimlet);
+        }
 		setPriority(z, priority, plist);
 	}
 
@@ -1142,9 +1186,9 @@ public class ZimletUtil {
 					pString = Integer.toString(priority+2);
 				}
 				Version nextPriority = new Version(pString);
-				if (newPriority.compareTo(nextPriority) < 0)
-					newPriority.increment(nextPriority);
-				else {
+				if (newPriority.compareTo(nextPriority) < 0) {
+                    newPriority.increment(nextPriority);
+                } else {
 					// it really is an error because priorities of two zimlets
 					// shouldn't be the same.  bump the next one down
 					newPriority.increment();
@@ -1175,28 +1219,50 @@ public class ZimletUtil {
 		}
 	}
 
-	public static void deployZimletBySoap(String zimletFile, String adminURL, String uploadURL, boolean synchronous) throws ServiceException, IOException {
+    /**
+     * deploy zimlet to a node by providing adminURL and uploadURL or deploy to all remote nodes
+     */
+    private static void deployZimletRemotely(String zimletFile, String adminURL, String uploadURL, boolean synchronous)
+            throws ServiceException, IOException {
         File zf = new File(zimletFile);
         if (adminURL != null && uploadURL != null) {
             ZimletSoapUtil soapUtil = new ZimletSoapUtil(adminURL, uploadURL, null, null);
             soapUtil.deployZimletOnServer(zf.getName(), ByteUtil.getContent(zf), true);
         } else {
+            //deploy to all servers except local
             ZimletSoapUtil soapUtil = new ZimletSoapUtil();
             soapUtil.mSynchronous = synchronous;
-            soapUtil.deployZimlet(zf.getName(), ByteUtil.getContent(zf), null, true);
+            List<Server> allServers = Provisioning.getInstance().getAllServers();
+            for (Server server : allServers) {
+                if (!server.isLocalServer()) {
+                    soapUtil.deployZimletRemotely(server, zf.getName(), ByteUtil.getContent(zf), null, true);
+                }
+            }
         }
 	}
+
+    private static void undeployZimletRemotely(String zimlet) throws ServiceException {
+        ZimletSoapUtil soapUtil = new ZimletSoapUtil();
+        List<Server> allServers = Provisioning.getInstance().getAllServers();
+        for (Server server : allServers) {
+            if (!server.isLocalServer()) {
+                soapUtil.undeployZimletRemotely(server, zimlet);
+            }
+        }
+    }
 
 	public static void showInfo(String zimlet) throws ServiceException, ZimletException, IOException {
 		Provisioning prov = Provisioning.getInstance();
 		Zimlet z = prov.getZimlet(zimlet);
-		if (z == null)
+		if (z == null) {
             throw AccountServiceException.NO_SUCH_ZIMLET(zimlet);
+        }
 		List<Zimlet> plist = orderZimletsByPriority();
 		int pri = 0;
 		for (Zimlet zp : plist) {
-			if (zp.compareTo(z) == 0)
-				break;
+			if (zp.compareTo(z) == 0) {
+                break;
+            }
 			pri++;
 		}
 		System.out.println("Zimlet "+z.getName());
@@ -1205,17 +1271,20 @@ public class ZimletUtil {
 		System.out.println("        Priority: "+pri);
 		System.out.println("         Enabled: "+(z.isEnabled() ? "true" : "false"));
 		System.out.println("Indexing Enabled: "+(z.isIndexingEnabled() ? "true" : "false"));
-		if (z.isExtension())
-			System.out.println("       Extension: true");
+		if (z.isExtension()) {
+            System.out.println("       Extension: true");
+        }
 		String cosList = null;
 		for (Cos cos : prov.getAllCos()) {
 			for (String zc : getAvailableZimlets(cos).getZimletNamesAsArray()) {
-				if (zc.compareTo(zimlet) != 0)
-					continue;
-				if (cosList == null)
-					cosList = cos.getName();
-				else
-					cosList = cosList + ", " + cos.getName();
+				if (zc.compareTo(zimlet) != 0) {
+                    continue;
+                }
+				if (cosList == null) {
+                    cosList = cos.getName();
+                } else {
+                    cosList = cosList + ", " + cos.getName();
+                }
 				break;
 			}
 		}
@@ -1227,48 +1296,58 @@ public class ZimletUtil {
 		} else {
 			ZimletDescription desc = zf.getZimletDescription();
 			String val = desc.getRegexString();
-			if (val != null)
-				System.out.println("           RegEx: "+val);
+			if (val != null) {
+                System.out.println("           RegEx: "+val);
+            }
 			val = desc.getContentObjectAsXML();
-			if (val != null)
-				System.out.println("  Content Object: "+val);
+			if (val != null) {
+                System.out.println("  Content Object: "+val);
+            }
 			val = desc.getPanelItemAsXML();
-			if (val != null)
-				System.out.println("      Panel Item: "+val);
+			if (val != null) {
+                System.out.println("      Panel Item: "+val);
+            }
 			val = null;
 			for (String script : desc.getScripts()) {
-				if (val == null)
-					val = script;
-				else
-					val = val + ", " + script;
+				if (val == null) {
+                    val = script;
+                } else {
+                    val = val + ", " + script;
+                }
 			}
-			if (val != null)
-				System.out.println("         Scripts: "+val);
+			if (val != null) {
+                System.out.println("         Scripts: "+val);
+            }
 			val = null;
 			for (String css : desc.getStyleSheets()) {
-				if (val == null)
-					val = css;
-				else
-					val = val + ", " + css;
+				if (val == null) {
+                    val = css;
+                } else {
+                    val = val + ", " + css;
+                }
 			}
-			if (val != null)
-				System.out.println("             CSS: "+val);
+			if (val != null) {
+                System.out.println("             CSS: "+val);
+            }
 			val = null;
 			for (String target : desc.getTargets()) {
-				if (val == null)
-					val = target;
-				else
-					val = val + ", " + target;
+				if (val == null) {
+                    val = target;
+                } else {
+                    val = val + ", " + target;
+                }
 			}
-			if (val != null)
-				System.out.println("         Targets: "+val);
+			if (val != null) {
+                System.out.println("         Targets: "+val);
+            }
 		}
 	}
 
 	public static void createZip(String dirName, String descFile) throws IOException {
 		File dir = new File(dirName);
-		if (!dir.exists() || !dir.isDirectory())
-			throw new IOException("directory does not exist: "+dirName);
+		if (!dir.exists() || !dir.isDirectory()) {
+            throw new IOException("directory does not exist: "+dirName);
+        }
 		String target = descFile;
 		boolean found = false;
 		for (String f : dir.list()) {
@@ -1283,21 +1362,24 @@ public class ZimletUtil {
 				break;
 			}
 		}
-		if (!found)
-			throw new IOException("Zimlet description not found, or not named correctly.");
+		if (!found) {
+            throw new IOException("Zimlet description not found, or not named correctly.");
+        }
 		String manifest = "Manifest-Version: 1.0\nZimlet-Description-File: "+target+"\n";
 		JarOutputStream out = new JarOutputStream(new FileOutputStream(target.substring(0, target.length()-4)+".zip"),
 				new Manifest(new ByteArrayInputStream(manifest.getBytes("UTF-8"))));
-		for (File f : dir.listFiles())
-			addZipEntry(out, f, null);
+		for (File f : dir.listFiles()) {
+            addZipEntry(out, f, null);
+        }
 		out.close();
 	}
 
 	private static void addZipEntry(ZipOutputStream out, File file, String path) throws IOException {
 		String name = (path == null) ? file.getName() : path + "/" + file.getName();
 		if (file.isDirectory()) {
-			for (File f : file.listFiles())
-				addZipEntry(out, f, name);
+			for (File f : file.listFiles()) {
+                addZipEntry(out, f, name);
+            }
 			return;
 		}
 		ZipEntry entry = new ZipEntry(name);
@@ -1346,7 +1428,7 @@ public class ZimletUtil {
 		}
 	}
 
-	private static class ZimletSoapUtil {
+    public static class ZimletSoapUtil {
 		private String mUsername;
 		private String mPassword;
 		private String mAttachmentId;
@@ -1354,17 +1436,11 @@ public class ZimletUtil {
 		private String mUploadURL;
 		private ZAuthToken mAuth;
 		private SoapHttpTransport mTransport;
-		private boolean mRunningInServer;
-		private Provisioning mProv;
 		private boolean mSynchronous;
 		private String mStatus;
 
         public ZimletSoapUtil() throws ServiceException {
             initZimletSoapUtil(null, null);
-        }
-
-        public ZimletSoapUtil(String adminURL, String uploadURL) throws ServiceException {
-            this(adminURL, uploadURL, null, null);
         }
 
         public ZimletSoapUtil(String adminURL, String uploadURL, String username, String password) throws ServiceException {
@@ -1377,8 +1453,6 @@ public class ZimletUtil {
             mUsername = username != null ? username : LC.zimbra_ldap_user.value();
             mPassword = password != null ? password : LC.zimbra_ldap_password.value();
             mAuth = null;
-            mRunningInServer = false;
-
             String adminURL = mAdminURL;
             if (adminURL == null) {
                 String server = LC.zimbra_zmprov_default_soap_server.value();
@@ -1387,55 +1461,31 @@ public class ZimletUtil {
             SoapProvisioning sp = new SoapProvisioning();
             sp.soapSetURI(adminURL);
             sp.soapAdminAuthenticate(mUsername, mPassword);
-            mProv = sp;
         }
 
 		public ZimletSoapUtil(ZAuthToken auth) {
 			mAuth = auth;
-			mRunningInServer = true;
-			mProv = Provisioning.getInstance();
 		}
 
-		public void deployZimlet(String zimlet, byte[] data, DeployListener listener, boolean flushCache) throws ServiceException {
-			List<Server> allServers = mProv.getAllDeployableZimletServers();
-			for (Server server : allServers) {
-		        if (mRunningInServer && server.isLocalServer() ||
-		            !server.hasMailClientService()) {
-	                // localhost is already taken care of.
-					ZimbraLog.zimlet.info("Skipping on " + server.getName());
-					continue;
-				}
-				ZimbraLog.zimlet.info("Deploying on " + server.getName());
-				deployZimletOnServer(zimlet, data, server, listener, flushCache);
-			}
+        public void deployZimletRemotely(Server server, String zimlet, byte[] data, DeployListener listener,
+                boolean flushCache) throws ServiceException {
+            if (server.hasMailClientService()) {
+                ZimbraLog.zimlet.info("Deploying on service node %s", server.getName());
+                deployZimletOnServiceNode(zimlet, data, server, listener, flushCache);
+            } else {
+                ZimbraLog.zimlet.info("Deploying on ui node %s", server.getName());
+                deployZimletOnUiNode(zimlet, data, server, listener, flushCache);
+            }
 		}
 
-		public void undeployZimlet(String zimlet) throws ServiceException {
-			List<Server> allServers = mProv.getAllDeployableZimletServers();
-			for (Server server : allServers) {
-				if (mRunningInServer && server.isLocalServer() ||
-				    !server.hasMailClientService())
-					continue;
-				ZimbraLog.zimlet.info("Undeploying on " + server.getName());
-				undeployZimletOnServer(zimlet, server);
-			}
+		public void undeployZimletRemotely(Server server, String zimlet) throws ServiceException {
+            ZimbraLog.zimlet.info("Undeploying on %s", server.getName());
+            if (server.hasMailClientService()) {
+                undeployZimletOnServiceNode(server, zimlet);
+            } else {
+                undeployZimletOnUiNode(server, zimlet);
+            }
 		}
-
-        public void configureZimlet(byte[] config, boolean localInstall) throws ServiceException {
-			if (localInstall) {
-				ZimbraLog.zimlet.info("Configure zimlet on " + mProv.getLocalServer().getName());
-                configureZimletOnServer(config, mProv.getLocalServer());
-			} else {
-				List<Server> allServers = mProv.getAllDeployableZimletServers();
-				for (Server server : allServers) {
-					if (mRunningInServer && server.isLocalServer() ||
-					    !server.hasMailClientService())
-						continue;
-					ZimbraLog.zimlet.info("Configure zimlet on " + server.getName());
-					configureZimletOnServer(config, server);
-				}
-			}
-        }
 
         public void deployZimletOnServer(String zimlet, byte[] data, boolean flushCache) throws ServiceException {
             mTransport = null;
@@ -1447,139 +1497,151 @@ public class ZimletUtil {
                 mAttachmentId = postAttachment(mUploadURL, zimlet, data, url.getHost());
 
                 soapDeployZimlet(flushCache);
-                if (mSynchronous)
-                    ZimbraLog.zimlet.info("Deploy status: " + mStatus);
-                else
-                    ZimbraLog.zimlet.info("Deploy initiated.  Check the server's mailbox.log for the status.");
+                if (mSynchronous) {
+                    ZimbraLog.zimlet.info("Deploy status: %s", mStatus);
+                } else {
+                    ZimbraLog.zimlet.info("Deploy initiated. Check the server's mailbox.log for the status.");
+                }
             } catch (Exception e) {
-                ZimbraLog.zimlet.info("deploy failed on " + mAdminURL, e);
-                if (e instanceof ServiceException)
+                ZimbraLog.zimlet.info("deploy failed on %s", mAdminURL, e);
+                if (e instanceof ServiceException) {
                     throw (ServiceException)e;
-                else
+                } else {
                     throw ServiceException.FAILURE("Unable to deploy Zimlet " + zimlet + " on " + mAdminURL, e);
+                }
             } finally {
-                if (mTransport != null)
+                if (mTransport != null) {
                     mTransport.shutdown();
+                }
             }
         }
 
-		public void deployZimletOnServer(String zimlet, byte[] data, Server server, DeployListener listener, boolean flushCache) throws ServiceException {
+		public void deployZimletOnServiceNode(String zimlet, byte[] data, Server server, DeployListener listener,
+		        boolean flushCache) throws ServiceException {
 			mTransport = null;
 			try {
 				String adminUrl = URLUtil.getAdminURL(server, AdminConstants.ADMIN_SERVICE_URI);
 				mTransport = new SoapHttpTransport(adminUrl);
 
 				// auth if necessary
-				if (mAuth == null)
-					auth();
+				if (mAuth == null) {
+                    auth();
+                }
 				mTransport.setAuthToken(mAuth);
 
 				// upload
 				String uploadUrl = URLUtil.getAdminURL(server, "/service/upload?fmt=raw");
+                ZimbraLog.zimlet.info("post to server %s, data size %d", server.getName(), data.length);
 				mAttachmentId = postAttachment(uploadUrl, zimlet, data, server.getName());
 
 				// deploy
 				soapDeployZimlet(flushCache);
-                if (mSynchronous)
-                    ZimbraLog.zimlet.info("Deploy status: " + mStatus);
-                else
+                if (mSynchronous) {
+                    ZimbraLog.zimlet.info("Deploy status: %s", mStatus);
+                } else {
                     ZimbraLog.zimlet.info("Deploy initiated.  Check the server's mailbox.log for the status.");
-				if (listener != null)
-					listener.markFinished(server);
+                }
+				if (listener != null) {
+                    listener.markFinished(server);
+                }
 			} catch (Exception e) {
-				ZimbraLog.zimlet.info("deploy failed on "+server.getName(), e);
-				if (listener != null)
-					listener.markFailed(server, e);
-				else if (e instanceof ServiceException)
-					throw (ServiceException)e;
-				else
-					throw ServiceException.FAILURE("Unable to deploy Zimlet " + zimlet + " on " + server.getName(), e);
+				ZimbraLog.zimlet.info("deploy failed on service node %s", server.getName(), e);
+				if (listener != null) {
+                    listener.markFailed(server, e);
+                } else if (e instanceof ServiceException) {
+                    throw (ServiceException)e;
+                } else {
+                    throw ServiceException.FAILURE("Unable to deploy Zimlet " + zimlet + " on " + server.getName(), e);
+                }
 			} finally {
-				if (mTransport != null)
-					mTransport.shutdown();
+				if (mTransport != null) {
+                    mTransport.shutdown();
+                }
 			}
+		}
+
+		void deployZimletOnUiNode(String zimlet, byte[] data, Server server, DeployListener listener, boolean flushCache)
+		        throws ServiceException {
+		    try {
+		        WebClientServiceUtil.sendDeployZimletRequestToUiNode(server, zimlet, data);
+                if (mSynchronous) {
+                    ZimbraLog.zimlet.info("Deploy status: %s", mStatus);
+                } else {
+                    ZimbraLog.zimlet.info("Deploy initiated.  Check the server's mailbox.log for the status.");
+                }
+                if (listener != null) {
+                    listener.markFinished(server);
+                }
+		    } catch (Exception e) {
+                ZimbraLog.zimlet.info("deploy failed on ui node %s", server.getName(), e);
+                if (listener != null) {
+                    listener.markFailed(server, e);
+                } else if (e instanceof ServiceException) {
+                    throw (ServiceException) e;
+                } else {
+                    throw ServiceException.FAILURE("Unable to deploy Zimlet " + zimlet + " on " + server.getName(), e);
+                }
+		    }
 		}
 
         private void soapDeployZimlet(boolean flushCache) throws ServiceException, IOException {
             XMLElement req = new XMLElement(AdminConstants.DEPLOY_ZIMLET_REQUEST);
             req.addAttribute(AdminConstants.A_ACTION, AdminConstants.A_DEPLOYLOCAL);
             req.addAttribute(AdminConstants.A_FLUSH, flushCache);
-            if (mSynchronous)
+            if (mSynchronous) {
                 req.addAttribute(AdminConstants.A_SYNCHRONOUS, mSynchronous);
+            }
             req.addElement(MailConstants.E_CONTENT).addAttribute(MailConstants.A_ATTACHMENT_ID, mAttachmentId);
             Element res = mTransport.invoke(req);
-            if (mSynchronous)
+            if (mSynchronous) {
                 mStatus = res.getElement(AdminConstants.E_PROGRESS).getAttribute(AdminConstants.A_STATUS, "");
+            }
         }
 
-		public void undeployZimletOnServer(String zimlet, Server server) throws ServiceException {
+		public void undeployZimletOnServiceNode(Server server, String zimlet) throws ServiceException {
 			mTransport = null;
 			try {
 				String adminUrl = URLUtil.getAdminURL(server, AdminConstants.ADMIN_SERVICE_URI);
 				mTransport = new SoapHttpTransport(adminUrl);
 
 				// auth if necessary
-				if (mAuth == null)
-					auth();
+				if (mAuth == null) {
+                    auth();
+                }
 				mTransport.setAuthToken(mAuth);
-
-				// undeploy
-				soapUndeployZimlet(zimlet);
+	            XMLElement req = new XMLElement(AdminConstants.UNDEPLOY_ZIMLET_REQUEST);
+	            req.addAttribute(AdminConstants.A_ACTION, AdminConstants.A_DEPLOYLOCAL);
+	            req.addAttribute(AdminConstants.A_NAME, zimlet);
+	            mTransport.invoke(req);
 				ZimbraLog.zimlet.info("Undeploy initiated.  (check the servers mailbox.log for the status)");
 			} catch (Exception e) {
-				if (e instanceof ServiceException)
-					throw (ServiceException)e;
-				else
-					throw ServiceException.FAILURE("Unable to undeploy Zimlet " + zimlet + " on " + server.getName(), e);
+				if (e instanceof ServiceException) {
+                    throw (ServiceException)e;
+                } else {
+                    throw ServiceException.FAILURE("Unable to undeploy Zimlet " + zimlet + " on " + server.getName(), e);
+                }
 			} finally {
-				if (mTransport != null)
-					mTransport.shutdown();
+				if (mTransport != null) {
+                    mTransport.shutdown();
+                }
 			}
 		}
 
-        private void soapUndeployZimlet(String name) throws ServiceException, IOException {
-            XMLElement req = new XMLElement(AdminConstants.UNDEPLOY_ZIMLET_REQUEST);
-            req.addAttribute(AdminConstants.A_ACTION, AdminConstants.A_DEPLOYLOCAL);
-            req.addAttribute(AdminConstants.A_NAME, name);
-            mTransport.invoke(req);
-        }
-
-        public void configureZimletOnServer(byte[] config, Server server) throws ServiceException {
-            mTransport = null;
+		public void undeployZimletOnUiNode(Server server, String zimlet) throws ServiceException {
             try {
-                String adminUrl = URLUtil.getAdminURL(server, AdminConstants.ADMIN_SERVICE_URI);
-                mTransport = new SoapHttpTransport(adminUrl);
-
-                // auth if necessary
-                if (mAuth == null)
-                    auth();
-                mTransport.setAuthToken(mAuth);
-
-                // upload
-                String uploadUrl = URLUtil.getAdminURL(server, "/service/upload?fmt=raw");
-                mAttachmentId = postAttachment(uploadUrl, "config.xml", config, server.getName());
-
-                // configure
-                soapConfigureZimlet();
-                ZimbraLog.zimlet.info("Configure initiated.  (check the servers mailbox.log for the status)");
+                WebClientServiceUtil.sendUndeployZimletRequestToUiNode(server, zimlet);
             } catch (Exception e) {
-                if (e instanceof ServiceException)
-                    throw (ServiceException)e;
-                else
-                    throw ServiceException.FAILURE("Unable to configure Zimlet on " + server.getName(), e);
-            } finally {
-                if (mTransport != null)
-                    mTransport.shutdown();
+                ZimbraLog.zimlet.warn("undeployment failed on ui node %s", server.getName(), e);
+                if (e instanceof ServiceException) {
+                    throw (ServiceException) e;
+                } else {
+                    throw ServiceException.FAILURE("Unable to undeploy Zimlet " + zimlet + " on " + server.getName(), e);
+                }
             }
-        }
+		}
 
-        private void soapConfigureZimlet() throws ServiceException, IOException {
-            XMLElement req = new XMLElement(AdminConstants.CONFIGURE_ZIMLET_REQUEST);
-            req.addElement(MailConstants.E_CONTENT).addAttribute(MailConstants.A_ATTACHMENT_ID, mAttachmentId);
-            mTransport.invoke(req);
-        }
-
-	    private String postAttachment(String uploadURL, String name, byte[] data, String domain) throws IOException, ZimletException {
+        private String postAttachment(String uploadURL, String name, byte[] data, String domain)
+                throws IOException, ZimletException {
 	    	String aid = null;
 
 	    	// no need/point to use ZimbraHttpConnectionManager because all callsites
@@ -1598,7 +1660,8 @@ public class ZimletUtil {
 	        }
 
 	    	PostMethod post = new PostMethod(uploadURL);
-	    	post.getParams().setSoTimeout(10000);
+            post.getParams().setSoTimeout((int) TimeUnit.MILLISECONDS.convert(LC.zimlet_deploy_timeout.intValue(),
+                    TimeUnit.SECONDS));
 	    	int statusCode = -1;
 	    	try {
 	    		String contentType = URLConnection.getFileNameMap().getContentTypeFor(name);
@@ -1613,13 +1676,16 @@ public class ZimletUtil {
                     String[] responseParts = response.split(",", 3);
                     if (responseParts.length == 3) {
                         aid = responseParts[2].trim();
-                        if (aid.startsWith("'") || aid.startsWith("\""))
+                        if (aid.startsWith("'") || aid.startsWith("\"")) {
                             aid = aid.substring(1);
-                        if (aid.endsWith("'") || aid.endsWith("\""))
+                        }
+                        if (aid.endsWith("'") || aid.endsWith("\"")) {
                             aid = aid.substring(0, aid.length() - 1);
+                        }
                     }
-                    if (aid == null)
+                    if (aid == null) {
                         throw ZimletException.CANNOT_DEPLOY("Attachment post failed, unexpected response: " + response, null);
+                    }
 	    		} else {
     				throw ZimletException.CANNOT_DEPLOY("Attachment post failed, status=" + statusCode, null);
 	    		}
@@ -1638,6 +1704,7 @@ public class ZimletUtil {
 			// mAuth = resp.getElement(AccountConstants.E_AUTH_TOKEN).getText();
 			mAuth = new ZAuthToken(resp.getElement(AccountConstants.E_AUTH_TOKEN), true);
 		}
+
 		private static class ByteArrayPart extends PartBase {
 			private byte[] mData;
 			private String mName;
@@ -1755,10 +1822,10 @@ public class ZimletUtil {
 	}
 
 	private static void dispatch(String[] args) {
-		boolean localInstall = false;
+		boolean isLocalInstall = false;
 	    try {
 	        if (args[argPos].equals("-l")) {
-	            localInstall = true;
+	            isLocalInstall = true;
 	            argPos++;
 	        }
 	        String adminURL = null;
@@ -1771,8 +1838,9 @@ public class ZimletUtil {
 	            uploadURL = args[++argPos];
 	            argPos++;
 	        }
-	        if (argPos >= args.length)
-	            usage();
+	        if (argPos >= args.length) {
+                usage();
+            }
 
 	        int cmd = lookupCmd(args[argPos++]);
 			switch (cmd) {
@@ -1797,26 +1865,22 @@ public class ZimletUtil {
 			String zimlet = args[argPos++];
 			switch (cmd) {
 			case DEPLOY_ZIMLET:
-			    if (localInstall) {
-			        deployZimlet(new ZimletFile(zimlet));
-			    } else {
-			        boolean synchronous = false;
-			        if (args.length > argPos && args[argPos].equals("sync")) {
-			            synchronous = true;
-			        }
-			        deployZimletBySoap(zimlet, adminURL, uploadURL, synchronous);
+                deployZimletLocally(new ZimletFile(zimlet));
+                if (!isLocalInstall) {
+                    boolean synchronous = false;
+                    if (args.length > argPos && args[argPos].equals("sync")) {
+                        synchronous = true;
+                    }
+                    deployZimletRemotely(zimlet, adminURL, uploadURL, synchronous);
 			    }
 			    break;
 			case INSTALL_ZIMLET:
-				installZimlet(new ZimletFile(zimlet));
+				installZimletLocally(new ZimletFile(zimlet));
 				break;
 			case UNINSTALL_ZIMLET:
-				ZimletSoapUtil su = new ZimletSoapUtil();
-				if (localInstall) {
-					Server localServer = Provisioning.getInstance().getLocalServer();
-					su.undeployZimletOnServer(zimlet, localServer);
-				} else {
-					su.undeployZimlet(zimlet);
+			    undeployZimletLocally(zimlet);
+				if (!isLocalInstall) {
+				    undeployZimletRemotely(zimlet);
 				}
 				break;
 			case LDAP_DEPLOY:
@@ -1848,8 +1912,7 @@ public class ZimletUtil {
 				dumpConfig(zimlet);
 				break;
 			case INSTALL_CONFIG:
-			    ZimletSoapUtil soapUtil = new ZimletSoapUtil();
-			    soapUtil.configureZimlet(ByteUtil.getContent(new File(zimlet)),localInstall);
+                installConfig(new String(ByteUtil.getContent(new File(zimlet))));
 				break;
 			case INFO:
 				showInfo(zimlet);
@@ -1865,15 +1928,16 @@ public class ZimletUtil {
 	        usage();
 		} catch (Exception e) {
 		    e.printStackTrace();
-			if (sQuietMode)
-				ZimbraLog.zimlet.error("Error " + e.getMessage());
-			else
-				ZimbraLog.zimlet.error("Error", e);
+			if (sQuietMode) {
+                ZimbraLog.zimlet.error("Error " + e.getMessage());
+            } else {
+                ZimbraLog.zimlet.error("Error", e);
+            }
 			System.exit(1);
 		}
 	}
 
-	private static boolean sQuietMode = false;
+    private static boolean sQuietMode = false;
 	private static int argPos = 0;
 
 	private static void getOpt(String[] args) {

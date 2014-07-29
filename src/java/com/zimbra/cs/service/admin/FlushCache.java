@@ -46,6 +46,7 @@ import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.util.SkinUtil;
 import com.zimbra.cs.util.WebClientL10nUtil;
 import com.zimbra.cs.util.WebClientServiceUtil;
+import com.zimbra.cs.zimlet.ZimletUtil;
 import com.zimbra.soap.SoapServlet;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.admin.type.CacheEntryType;
@@ -55,7 +56,6 @@ public class FlushCache extends AdminDocumentHandler {
     public static final String FLUSH_CACHE = "flushCache";
     public static final String RES_AJXMSG_JS = "/res/AjxMsg.js";
     public static final String JS_SKIN_JS = "/js/skin.js";
-    private static final String ZIMLET_CACHE_DIR = "/opt/zimbra/jetty/work/resource-cache/zimletres/latest";
 
     /**
      * must be careful and only allow deletes domain admin has access to
@@ -144,21 +144,19 @@ public class FlushCache extends AdminDocumentHandler {
 				Provisioning.getInstance().refreshValidators(); // refresh other bits of cached license data
 				break;
 			case zimlet:
-                if (WebClientServiceUtil.isServerInSplitMode()) {
-                    try {
-                        File file = new File(ZIMLET_CACHE_DIR);
-                        FileUtil.deleteDirContents(file);
-                    } catch (IOException e) {
-                        ZimbraLog.misc.warn("failed to flush zimlet cache", e);
-                    }
-                } else {
-                    FlushCache.sendFlushRequest(context, "/service", "/zimlet/res/all.js");
+			    ZimletUtil.flushDiskCache(context);
+                if (!WebClientServiceUtil.isServerInSplitMode()) {
+                    flushAllZimlets(context);
                 }
 				// fall through to also flush ldap entries
 			default:
 				flushLdapCache(cacheType, eCache);
 		}
 	}
+
+    public static void flushAllZimlets(Map<String, Object> context) {
+        FlushCache.sendFlushRequest(context, "/service", "/zimlet/res/all.js");
+    }
 
     private CacheEntry[] getCacheEntries(Element eCache) throws ServiceException {
         List<Element> eEntries = eCache.listElements(AdminConstants.E_ENTRY);
@@ -180,8 +178,7 @@ public class FlushCache extends AdminDocumentHandler {
         Provisioning.getInstance().flushCache(cacheType, entries);
     }
 
-    static void sendFlushRequest(Map<String,Object> context,
-            String appContext, String resourceUri) {
+    public static void sendFlushRequest(Map<String,Object> context, String appContext, String resourceUri) {
         ServletContext containerContext = (ServletContext)context.get(SoapServlet.SERVLET_CONTEXT);
         if (containerContext == null) {
             if (ZimbraLog.misc.isDebugEnabled()) {

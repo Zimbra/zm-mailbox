@@ -56,7 +56,7 @@ public class SkinUtil {
 		ZimbraLog.webclient.debug("Loading skins..." );
         List<String> skins = new ArrayList<String>();
         if (WebClientServiceUtil.isServerInSplitMode()) {
-            String resp = WebClientServiceUtil.sendServiceRequestToOneUiNode(LOAD_SKINS_ON_UI_NODE);
+            String resp = WebClientServiceUtil.sendServiceRequestToOneRandomUiNode(LOAD_SKINS_ON_UI_NODE);
             Collections.addAll(skins, resp.split(","));
         } else {
             loadSkinsByDiskScan(skins);

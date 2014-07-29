@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -19,8 +19,16 @@ package com.zimbra.cs.service.admin;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
+import com.zimbra.common.auth.ZAuthToken;
+import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.MapUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
@@ -28,15 +36,11 @@ import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.service.FileUploadServlet.Upload;
-import com.zimbra.common.auth.ZAuthToken;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.common.soap.MailConstants;
-import com.zimbra.common.soap.AdminConstants;
-import com.zimbra.common.soap.Element;
+import com.zimbra.cs.util.WebClientServiceUtil;
 import com.zimbra.cs.zimlet.ZimletFile;
 import com.zimbra.cs.zimlet.ZimletUtil;
 import com.zimbra.cs.zimlet.ZimletUtil.DeployListener;
+import com.zimbra.cs.zimlet.ZimletUtil.ZimletSoapUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class DeployZimlet extends AdminDocumentHandler {
@@ -44,7 +48,7 @@ public class DeployZimlet extends AdminDocumentHandler {
 	public static final String sPENDING = "pending";
 	public static final String sSUCCEEDED = "succeeded";
 	public static final String sFAILED = "failed";
-	
+
 	private Map<String, Progress> mProgressMap;
 
 	private static class Progress implements DeployListener {
@@ -53,7 +57,7 @@ public class DeployZimlet extends AdminDocumentHandler {
 	        Exception error;
 	    }
 		private Map<String,Status> mStatus;
-		
+
 		public Progress(boolean allServers) throws ServiceException {
 			mStatus = new HashMap<String,Status>();
 			Provisioning prov = Provisioning.getInstance();
@@ -61,14 +65,16 @@ public class DeployZimlet extends AdminDocumentHandler {
 				changeStatus(prov.getLocalServer().getName(), sPENDING);
 				return;
 			}
-			for (Server s : prov.getAllDeployableZimletServers()) {
+			for (Server s : prov.getAllServers()) {
 			    changeStatus(s.getName(), sPENDING);
             }
 		}
-		public void markFinished(Server s) {
+		@Override
+        public void markFinished(Server s) {
 			changeStatus(s.getName(), sSUCCEEDED);
 		}
-		public void markFailed(Server s, Exception e) {
+		@Override
+        public void markFailed(Server s, Exception e) {
 			changeStatus(s.getName(), sFAILED);
 			mStatus.get(s.getName()).error = e;
 		}
@@ -92,63 +98,81 @@ public class DeployZimlet extends AdminDocumentHandler {
 			}
 		}
 	}
-	
+
 	private static class DeployThread implements Runnable {
+	    final Server server;
 		Upload upload;
 		Progress progress;
 		ZAuthToken auth;
 		boolean flushCache;
-		public DeployThread(Upload up, Progress pr, ZAuthToken au, boolean flush) {
+		boolean isLocal = true;
+
+		public DeployThread(Server server, Upload up, Progress pr, ZAuthToken au, boolean flush) {
+		    this.server = server;
 			upload = up;
 			progress = pr;
-			auth = au;
+			if (au != null) {
+			    auth = au;
+			    isLocal = false;
+			}
 			flushCache = flush;
 		}
-		public void run() {
-			Server s = null;
+
+		@Override
+        public void run() {
 			try {
-				s = Provisioning.getInstance().getLocalServer();
-				ZimletFile zf = new ZimletFile(upload.getName(), upload.getInputStream());
-				ZimletUtil.deployZimlet(zf, progress, auth, flushCache);
+                ZimletFile zf = new ZimletFile(upload.getName(), upload.getInputStream());
+                if (isLocal) {
+                    ZimletUtil.deployZimletLocally(zf, progress);
+                } else {
+                    byte[] data = zf.toByteArray();
+                    ZimletSoapUtil soapUtil = new ZimletSoapUtil(auth);
+                    soapUtil.deployZimletRemotely(server, zf.getName(), data, progress, flushCache);
+				}
 			} catch (Exception e) {
-				ZimbraLog.zimlet.info("deploy", e);
-				if (s != null)
-					progress.markFailed(s, e);
+                if (server != null) {
+                    ZimbraLog.zimlet.warn("failed to deploy zimlet on node %s", server.getName(), e);
+                } else {
+                    ZimbraLog.zimlet.warn("failed to get local server", e);
+                }
+                if (server != null && progress != null) {
+					progress.markFailed(server, e);
+                }
 			} finally {
 				FileUploadServlet.deleteUpload(upload);
 			}
 		}
 	}
-	
+
 	public DeployZimlet() {
 		// keep past 20 zimlet deployment progresses
 		mProgressMap = MapUtil.newLruMap(20);
 	}
-	
-	private void deploy(ZimbraSoapContext lc, String aid, ZAuthToken auth, boolean flushCache, boolean synchronous) throws ServiceException {
+
+	private void deploy(ZimbraSoapContext lc, Server server, String aid, ZAuthToken auth, boolean flushCache,
+	        boolean synchronous) throws ServiceException {
         Upload up = FileUploadServlet.fetchUpload(lc.getAuthtokenAccountId(), aid, lc.getAuthToken());
-        if (up == null)
+        if (up == null) {
             throw MailServiceException.NO_SUCH_UPLOAD(aid);
+        }
 
         Progress pr = new Progress((auth != null));
         mProgressMap.put(aid, pr);
-        Runnable action = new DeployThread(up, pr, auth, flushCache);
+        Runnable action = new DeployThread(server, up, pr, auth, flushCache);
         Thread t = new Thread(action);
         t.start();
         if (synchronous) {
             try {
-                t.join(DEPLOY_TIMEOUT);
+                t.join(TimeUnit.MILLISECONDS.convert(LC.zimlet_deploy_timeout.intValue(), TimeUnit.SECONDS));
             } catch (InterruptedException e) {
                 ZimbraLog.zimlet.warn("error while deploying Zimlet", e);
             }
         }
 	}
-	
-	private static final long DEPLOY_TIMEOUT = 10000;
-	
+
 	@Override
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-	    
+
 	    ZimbraSoapContext zsc = getZimbraSoapContext(context);
 		String action = request.getAttribute(AdminConstants.A_ACTION).toLowerCase();
 		Element content = request.getElement(MailConstants.E_CONTENT);
@@ -158,51 +182,64 @@ public class DeployZimlet extends AdminDocumentHandler {
 		if (action.equals(AdminConstants.A_STATUS)) {
 			// just print the status
 		} else if (action.equals(AdminConstants.A_DEPLOYALL)) {
-		    List<Server> servers =
-		        Provisioning.getInstance().getAllDeployableZimletServers();
-
+		    List<Server> servers = Provisioning.getInstance().getAllServers();
 		    for (Server server : servers) {
-		        checkRight(zsc, context, server, Admin.R_deployZimlet);
+		        try {
+		            checkRight(zsc, context, server, Admin.R_deployZimlet);
+	                if (server.isLocalServer()) {
+	                    deploy(zsc, server, aid, null, false, synchronous);
+	                } else {
+                        ZimbraLog.zimlet.info("deploy on remote node %s", server.getName());
+	                    deploy(zsc, server, aid, zsc.getRawAuthToken(), flushCache, synchronous);
+	                }
+	                if (flushCache) {
+	                    if (ZimbraLog.misc.isDebugEnabled()) {
+	                        ZimbraLog.misc.debug("DeployZimlet: flushing zimlet cache");
+	                    }
+	                    checkRight(zsc, context, Provisioning.getInstance().getLocalServer(), Admin.R_flushCache);
+	                    if (server.hasMailClientService()) {
+	                        FlushCache.flushAllZimlets(context);
+	                    } else {
+	                        WebClientServiceUtil.sendFlushZimletRequestToUiNode(server);
+	                    }
+	                }
+		        } catch (ServiceException e) {
+		            ZimbraLog.zimlet.warn("deploy zimlet failed for node %s", server.getName(), e);
+		        }
 		    }
-		        
-			deploy(zsc, aid, zsc.getRawAuthToken(), flushCache, synchronous);
-			if(flushCache) {
-				if (ZimbraLog.misc.isDebugEnabled()) {
-					ZimbraLog.misc.debug("DeployZimlet: flushing zimlet cache");
-				}				
-				checkRight(zsc, context, Provisioning.getInstance().getLocalServer(), Admin.R_flushCache);
-				FlushCache.sendFlushRequest(context, "/service", "/zimlet/res/all.js");
-			}
-
 		} else if (action.equals(AdminConstants.A_DEPLOYLOCAL)) {
-		    
 		    Server localServer = Provisioning.getInstance().getLocalServer();
 		    checkRight(zsc, context, localServer, Admin.R_deployZimlet);
-		    
-			deploy(zsc, aid, null, false, synchronous);
-			
-			if(flushCache) {
+
+			deploy(zsc, localServer, aid, null, false, synchronous);
+
+            if (flushCache) {
 				if (ZimbraLog.misc.isDebugEnabled()) {
 					ZimbraLog.misc.debug("DeployZimlet: flushing zimlet cache");
-				}								
+				}
 				checkRight(zsc, context, localServer, Admin.R_flushCache);
-				FlushCache.sendFlushRequest(context, "/service", "/zimlet/res/all.js");
+				if (localServer.hasMailClientService()) {
+				    FlushCache.flushAllZimlets(context);
+				} else {
+				    WebClientServiceUtil.sendFlushZimletRequestToUiNode(localServer);
+				}
 			}
 		} else {
 			throw ServiceException.INVALID_REQUEST("invalid action "+action, null);
 		}
 		Element response = zsc.createElement(AdminConstants.DEPLOY_ZIMLET_RESPONSE);
 		Progress progress = mProgressMap.get(aid);
-		if (progress != null)
-			progress.writeResponse(response);
+		if (progress != null) {
+            progress.writeResponse(response);
+        }
 		return response;
 	}
-	
+
 	@Override
 	public void docRights(List<AdminRight> relatedRights, List<String> notes) {
 	    relatedRights.add(Admin.R_deployZimlet);
-	    
-	    notes.add("If deploying on all servers, need the " + Admin.R_deployZimlet.getName() + 
+
+	    notes.add("If deploying on all servers, need the " + Admin.R_deployZimlet.getName() +
 	            " right on all servers or on global grant.  If deploying on local server, need " +
 	            "the " + Admin.R_deployZimlet.getName() + " on the local server.");
     }

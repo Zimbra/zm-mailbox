@@ -117,7 +117,7 @@ public class WebClientL10nUtil {
         locales = new HashSet<Locale>();
 
         if (WebClientServiceUtil.isServerInSplitMode()) {
-            String localesStr = WebClientServiceUtil.sendServiceRequestToOneUiNode(LOAD_LOCALES_ON_UI_NODE);
+            String localesStr = WebClientServiceUtil.sendServiceRequestToOneRandomUiNode(LOAD_LOCALES_ON_UI_NODE);
             for (String str : localesStr.split(",")) {
                 String[] parts = str.split("_");
                 switch (parts.length) {
