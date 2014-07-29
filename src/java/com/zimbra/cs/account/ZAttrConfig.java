@@ -56506,11 +56506,11 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * an email address to send mail to if Zimbra version check detects a new
-     * version. Must be in valid duration format: {digits}{time-unit}.
-     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
-     * seconds, d - days, ms - milliseconds. If time unit is not specified,
-     * the default is s(seconds).
+     * Time interval after which Zimbra version check detects a new version.
+     * Must be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * <p>Use getVersionCheckIntervalAsString to access value as a string.
      *
@@ -56526,11 +56526,11 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * an email address to send mail to if Zimbra version check detects a new
-     * version. Must be in valid duration format: {digits}{time-unit}.
-     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
-     * seconds, d - days, ms - milliseconds. If time unit is not specified,
-     * the default is s(seconds).
+     * Time interval after which Zimbra version check detects a new version.
+     * Must be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @return zimbraVersionCheckInterval, or "1d" if unset
      *
@@ -56542,11 +56542,11 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * an email address to send mail to if Zimbra version check detects a new
-     * version. Must be in valid duration format: {digits}{time-unit}.
-     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
-     * seconds, d - days, ms - milliseconds. If time unit is not specified,
-     * the default is s(seconds).
+     * Time interval after which Zimbra version check detects a new version.
+     * Must be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @param zimbraVersionCheckInterval new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -56561,11 +56561,11 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * an email address to send mail to if Zimbra version check detects a new
-     * version. Must be in valid duration format: {digits}{time-unit}.
-     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
-     * seconds, d - days, ms - milliseconds. If time unit is not specified,
-     * the default is s(seconds).
+     * Time interval after which Zimbra version check detects a new version.
+     * Must be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @param zimbraVersionCheckInterval new value
      * @param attrs existing map to populate, or null to create a new map
@@ -56581,11 +56581,11 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * an email address to send mail to if Zimbra version check detects a new
-     * version. Must be in valid duration format: {digits}{time-unit}.
-     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
-     * seconds, d - days, ms - milliseconds. If time unit is not specified,
-     * the default is s(seconds).
+     * Time interval after which Zimbra version check detects a new version.
+     * Must be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -56599,11 +56599,11 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * an email address to send mail to if Zimbra version check detects a new
-     * version. Must be in valid duration format: {digits}{time-unit}.
-     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
-     * seconds, d - days, ms - milliseconds. If time unit is not specified,
-     * the default is s(seconds).
+     * Time interval after which Zimbra version check detects a new version.
+     * Must be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
