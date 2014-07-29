@@ -13764,11 +13764,11 @@ public class ZAttrProvisioning {
     public static final String A_zimbraVersion = "zimbraVersion";
 
     /**
-     * an email address to send mail to if Zimbra version check detects a new
-     * version. Must be in valid duration format: {digits}{time-unit}.
-     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
-     * seconds, d - days, ms - milliseconds. If time unit is not specified,
-     * the default is s(seconds).
+     * Time interval after which Zimbra version check detects a new version.
+     * Must be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @since ZCS 6.0.2
      */
