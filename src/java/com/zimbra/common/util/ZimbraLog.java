@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -429,7 +429,7 @@ public final class ZimbraLog {
      */
     public static final Log activity = LogFactory.getLog("zimbra.activity");
     /**
-     * the "zimbra.activity" logger. For ACTIVITY-related events
+     * the "zimbra.ews" logger. For EWS-related events
      */
     public static final Log ews = LogFactory.getLog("zimbra.ews");
 
@@ -522,6 +522,7 @@ public final class ZimbraLog {
         descriptions.put(datasource.getCategory(), "Data Source operations");
         descriptions.put(nginxlookup.getCategory(), "Nginx lookup operations");
         descriptions.put(activity.getCategory(), "Document operations");
+        descriptions.put(ews.getCategory(), "EWS operations");
         CATEGORY_DESCRIPTIONS = Collections.unmodifiableMap(descriptions);
     }
 
