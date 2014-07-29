@@ -18,10 +18,10 @@ package com.zimbra.cs.account;
 
 import java.util.HashMap;
 
+import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
 
@@ -54,6 +54,15 @@ public class ZimbraAuthTokenTest {
             ZimbraAuthToken.getAuthToken(encoded);
         }
         System.out.println("Decoded 1000 auth-tokens elapsed=" + (System.currentTimeMillis() - start));
+    }
+    
+    @Test
+    public void testEncodedDifferentOnTokenIDReset() throws Exception {
+        Account a = Provisioning.getInstance().get(AccountBy.name, "user1@example.zimbra.com");
+        ZimbraAuthToken at = new ZimbraAuthToken(a);
+        ZimbraAuthToken clonedAuthToken = at.clone();
+        clonedAuthToken.resetTokenId();
+        Assert.assertFalse(at.getEncoded().equals(clonedAuthToken.getEncoded()));
     }
 
 }

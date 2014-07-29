@@ -20,24 +20,31 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import junit.framework.Assert;
 import junit.framework.TestCase;
 
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.HttpMethod;
+import org.apache.commons.httpclient.NameValuePair;
 import org.apache.commons.httpclient.methods.GetMethod;
+import org.junit.Test;
 
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.PreAuthKey;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
+import com.zimbra.cs.account.ZimbraAuthToken;
 import com.zimbra.cs.ldap.LdapConstants;
 
 public class TestPreAuthServlet extends TestCase {
+    
+    private static String PRE_AUTH_URL = "/service/preauth";
 
     String setUpDomain() throws Exception {
         String domainName = TestUtil.getDomain();
@@ -67,7 +74,7 @@ public class TestPreAuthServlet extends TestCase {
         
         String preAuth = PreAuthKey.computePreAuth(params, preAuthKey);
         
-        StringBuffer url = new StringBuffer("/service/preauth?");
+        StringBuffer url = new StringBuffer(PRE_AUTH_URL + "?");
         url.append("account=" + acctName);
         url.append("&by=" + authBy);
         if (shouldFail) {
@@ -279,6 +286,29 @@ public class TestPreAuthServlet extends TestCase {
         System.out.println("After the test:");
         System.out.println(Provisioning.A_zimbraAccountStatus + ": " + acct.getAttr(Provisioning.A_zimbraAccountStatus));
         System.out.println();
+    }
+    
+    public void testShouldNotAllowPreAuthGetCookieReuse() throws Exception{
+       Account account =  TestUtil.getAccount("user1");
+       AuthToken authToken = new ZimbraAuthToken(account);
+       System.out.println(authToken.isRegistered());
+       HttpClient client = new HttpClient();
+       Server localServer =  Provisioning.getInstance().getLocalServer();
+       String protoHostPort = "http://localhost:" + localServer.getIntAttr(Provisioning.A_zimbraMailPort, 0);
+       String url = protoHostPort + PRE_AUTH_URL;
+       
+       //allow first request
+       HttpMethod method = new GetMethod(url);
+       NameValuePair[] queryStringPairArray = new NameValuePair [] {new NameValuePair("isredirect","1"), 
+           new NameValuePair("authtoken",authToken.getEncoded()) };
+       method.setQueryString(queryStringPairArray);
+       int respCode = HttpClientUtil.executeMethod(client, method);
+       
+       //reject second request
+       method = new GetMethod(url);
+       method.setQueryString(queryStringPairArray);
+       respCode = HttpClientUtil.executeMethod(client, method);
+       Assert.assertEquals(400, respCode);
     }
     
     /**

@@ -46,6 +46,7 @@ import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
+import com.zimbra.cs.account.ZimbraAuthToken;
 import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.account.names.NameUtil.EmailAddress;
 import com.zimbra.cs.httpclient.URLUtil;
@@ -127,11 +128,32 @@ public class PreAuthServlet extends ZimbraServlet {
             }
 
             if (rawAuthToken != null) {
+                if (!authToken.isRegistered()) {
+                    throw new AuthTokenException("authtoken is not registered");
+                }
+                if (authToken.isExpired()) {
+                    throw new AuthTokenException("authtoken is expired registered");
+                }
                 // we've got an auth token in the request:
                 // See if we need a redirect to the correct server
                 boolean isAdmin = authToken != null && AuthToken.isAnyAdmin(authToken);
                 Account acct = prov.get(AccountBy.id, authToken.getAccountId(), authToken);
                 if (isAdmin || !needReferral(acct, referMode, isRedirect)) {
+                    //authtoken in get request is for one time use only. Deregister and generate new one.
+                    if (authToken instanceof ZimbraAuthToken) {
+                        ZimbraAuthToken  oneTimeToken = (ZimbraAuthToken) authToken;
+                        ZimbraAuthToken newZimbraAuthToken = null;
+                        try {
+                            newZimbraAuthToken = oneTimeToken.clone();
+                        } catch (CloneNotSupportedException e) {
+                            throw new ServletException(e);
+                        }
+                        newZimbraAuthToken.resetTokenId();
+                        
+                        oneTimeToken.deRegister();
+                        authToken = newZimbraAuthToken;
+                        ZimbraLog.account.debug("Deregistered the one time preauth token and issuing new one to the user.");
+                    }
                     // no need to redirect to the correct server, just send them off to do business
                     setCookieAndRedirect(req, resp, authToken);
                 } else {

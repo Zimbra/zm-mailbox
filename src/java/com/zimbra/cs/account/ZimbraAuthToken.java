@@ -92,6 +92,7 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
     private Integer tokenID = -1;
     private String server_version;   // version of the mailbox server where this account resides
     private boolean csrfTokenEnabled;
+    
     @Override
     public String toString() {
         return Objects.toStringHelper(this)
@@ -284,18 +285,10 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
         } catch (ServiceException e) {
             LOG.error("Unable to fetch server version for the user account", e);
         }
-
-        try {
-            if(!type.equalsIgnoreCase(C_TYPE_EXTERNAL_USER)) {
-                if(Provisioning.getInstance().getLocalServer().getLowestSupportedAuthVersion() > 1) {
-                    acct.cleanExpiredTokens(); //house keeping. If we are issuing a new token, clean up old ones.
-                    acct.addAuthTokens(String.format("%d|%d|%s", tokenID, this.expires, server_version));
-                }
-            }
-        } catch (ServiceException e) {
-            LOG.error("unable to register auth token", e);
-        }
+        register();
     }
+
+    
 
     public ZimbraAuthToken(String acctId, String externalEmail, String pass, String digest, long expires)  {
         accountId = acctId;
@@ -382,6 +375,21 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
         return authMech;
     }
 
+    
+    private void register() {
+        try {
+            Account acct = Provisioning.getInstance().get(AccountBy.id, accountId);
+            if(!type.equalsIgnoreCase(C_TYPE_EXTERNAL_USER)) {
+                if (Provisioning.getInstance().getLocalServer().getLowestSupportedAuthVersion() > 1) {
+                    acct.cleanExpiredTokens(); //house keeping. If we are issuing a new token, clean up old ones.
+                    acct.addAuthTokens(String.format("%d|%d|%s", tokenID, this.expires, server_version));
+                }
+            }
+        } catch (ServiceException e) {
+            LOG.error("unable to register auth token", e);
+        }
+    }
+    
     //remove the token from LDAP (token will be invalid for cookie-based auth after that
     @Override
     public void deRegister() throws AuthTokenException {
@@ -612,6 +620,19 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
             encoded = null;
         }
     }
+    
+    /**
+     * This method is used to reset tokenID.
+     * One use case is when new authtoken is created by cloning existing authtoken, 
+     * tokenID of newly authtoken is reset to make it unique and all the other properties are 
+     * same as of authtoken from which it is cloned.
+     * Cached encoded string is also reset as the due to change in TokenID.
+     */
+    public void resetTokenId(){
+         tokenID = new Random().nextInt(Integer.MAX_VALUE-1) + 1;
+         encoded = null;
+         this.register();
+    }
 
 
     static class ByteKey implements SecretKey {
@@ -640,8 +661,8 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
     }
 
     @Override
-    public Object clone() throws CloneNotSupportedException {
-        return super.clone();
+    public ZimbraAuthToken clone() throws CloneNotSupportedException {
+        return (ZimbraAuthToken)super.clone();
     }
 
     public static void main(String args[]) throws ServiceException, AuthTokenException {
