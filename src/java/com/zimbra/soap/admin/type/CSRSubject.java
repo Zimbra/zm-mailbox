@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -17,17 +17,18 @@
 
 package com.zimbra.soap.admin.type;
 
-import com.google.common.base.Objects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
+import com.google.common.base.Objects;
 import com.zimbra.common.soap.CertMgrConstants;
+import com.zimbra.soap.base.CertSubjectAttrs;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = {})
-public class CSRSubject {
+public class CSRSubject implements CertSubjectAttrs {
 
     /**
      * @zm-api-field-description C
@@ -74,11 +75,17 @@ public class CSRSubject {
     public void setO(String o) { this.o = o; }
     public void setOu(String ou) { this.ou = ou; }
     public void setCn(String cn) { this.cn = cn; }
+    @Override
     public String getC() { return c; }
+    @Override
     public String getSt() { return st; }
+    @Override
     public String getL() { return l; }
+    @Override
     public String getO() { return o; }
+    @Override
     public String getOu() { return ou; }
+    @Override
     public String getCn() { return cn; }
 
     public Objects.ToStringHelper addToStringInfo(

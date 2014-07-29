@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -16,10 +16,6 @@
  */
 
 package com.zimbra.soap.admin.message;
-
-import com.google.common.base.Objects;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 
 import java.util.Collections;
 import java.util.List;
@@ -31,8 +27,12 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
+import com.google.common.base.Objects;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.CertMgrConstants;
+import com.zimbra.soap.base.CertSubjectAttrs;
 
 /**
  * @zm-api-command-auth-required true
@@ -42,7 +42,7 @@ import com.zimbra.common.soap.CertMgrConstants;
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=CertMgrConstants.E_GEN_CSR_REQUEST)
 @XmlType(propOrder = {"c", "st", "l", "o", "ou", "cn", "subjectAltNames"})
-public class GenCSRRequest {
+public class GenCSRRequest implements CertSubjectAttrs {
 
     /**
      * @zm-api-field-tag server-id
@@ -68,6 +68,13 @@ public class GenCSRRequest {
      */
     @XmlAttribute(name=AdminConstants.A_TYPE /* type */, required=false)
     private String type;
+
+    /**
+     * @zm-api-field-tag digest
+     * @zm-api-field-description digest.  Default value "sha1"
+     */
+    @XmlAttribute(name=CertMgrConstants.E_DIGEST /* digest */, required=false)
+    private String digest;
 
     /**
      * @zm-api-field-tag key-size
@@ -124,7 +131,7 @@ public class GenCSRRequest {
      * be supported
      */
     @XmlElement(name=CertMgrConstants.E_SUBJECT_ALT_NAME /* SubjectAltName */, required=false)
-    private List<String> subjectAltNames = Lists.newArrayList();
+    private final List<String> subjectAltNames = Lists.newArrayList();
 
     /**
      * no-argument constructor wanted by JAXB
@@ -140,6 +147,7 @@ public class GenCSRRequest {
 
     public void setNewCSR(String newCSR) { this.newCSR = newCSR; }
     public void setType(String type) { this.type = type; }
+    public void setDigest(String digest) { this.digest = digest; }
     public void setKeySize(String keySize) { this.keySize = keySize; }
     public void setC(String c) { this.c = c; }
     public void setSt(String st) { this.st = st; }
@@ -161,12 +169,19 @@ public class GenCSRRequest {
     public String getServer() { return server; }
     public String getNewCSR() { return newCSR; }
     public String getType() { return type; }
+    public String getDigest() { return digest; }
     public String getKeySize() { return keySize; }
+    @Override
     public String getC() { return c; }
+    @Override
     public String getSt() { return st; }
+    @Override
     public String getL() { return l; }
+    @Override
     public String getO() { return o; }
+    @Override
     public String getOu() { return ou; }
+    @Override
     public String getCn() { return cn; }
     public List<String> getSubjectAltNames() {
         return Collections.unmodifiableList(subjectAltNames);
@@ -178,6 +193,7 @@ public class GenCSRRequest {
             .add("server", server)
             .add("newCSR", newCSR)
             .add("type", type)
+            .add("digest", digest)
             .add("keySize", keySize)
             .add("c", c)
             .add("st", st)
