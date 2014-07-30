@@ -56,6 +56,7 @@ import com.zimbra.common.soap.Element.JSONElement;
 import com.zimbra.common.soap.Element.XMLElement;
 import com.zimbra.common.soap.HeaderConstants;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.soap.SoapParseException;
 import com.zimbra.common.soap.W3cDomUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.soap.JaxbUtil;
@@ -81,6 +82,7 @@ import com.zimbra.soap.mail.message.ConvActionRequest;
 import com.zimbra.soap.mail.message.DeleteDataSourceRequest;
 import com.zimbra.soap.mail.message.GetContactsRequest;
 import com.zimbra.soap.mail.message.ImportContactsRequest;
+import com.zimbra.soap.mail.message.SearchConvRequest;
 import com.zimbra.soap.mail.message.WaitSetRequest;
 import com.zimbra.soap.mail.type.ActionSelector;
 import com.zimbra.soap.mail.type.ContactActionSelector;
@@ -93,6 +95,7 @@ import com.zimbra.soap.mail.type.Pop3DataSourceNameOrId;
 import com.zimbra.soap.mail.type.RetentionPolicy;
 import com.zimbra.soap.type.KeyValuePair;
 import com.zimbra.soap.type.WaitSetAddSpec;
+import com.zimbra.soap.type.WantRecipsSetting;
 import com.zimbra.soap.util.JaxbElementInfo;
 import com.zimbra.soap.util.JaxbInfo;
 import com.zimbra.soap.util.JaxbNodeInfo;
@@ -256,6 +259,128 @@ public class JaxbToElementTest {
             GetInfoResponse getInfoResp = JaxbUtil.elementToJaxb(getInfoRespElem);
             Assert.assertEquals("Account name", "user1@tarka.local", getInfoResp.getAccountName());
         }
+    }
+
+    private static String searchConvJson =
+        "{\n" +
+        "    \"SearchConvRequest\": {\n" +
+        "      \"includeTagDeleted\": false,\n" +
+        "      \"calExpandInstStart\": -1,\n" +
+        "      \"calExpandInstEnd\": -1,\n" +
+        "      \"query\": \"(((INID:\\\"9bce02cf-9d9a-4d15-b95e-e1495b75770e:2\\\") CONV:\\\"9bce02cf-9d9a-4d15-b95e-e1495b75770e:363\\\" ))\",\n" +
+        "      \"types\": \"message\",\n" +
+        "      \"sortBy\": \"dateDesc\",\n" +
+        "      \"fetch\": \"9bce02cf-9d9a-4d15-b95e-e1495b75770e:446\",\n" +
+        "      \"read\": true,\n" +
+        "      \"max\": 250000,\n" +
+        "      \"html\": true,\n" +
+        "      \"neuter\": true,\n" +
+        /* "      \"recip\": false,\n" + */
+        "%%VALUE%%" +
+        "      \"locale\": [{\n" +
+        "          \"_content\": \"en_US\"\n" +
+        "        }],\n" +
+        "      \"prefetch\": true,\n" +
+        "      \"resultMode\": \"NORMAL\",\n" +
+        "      \"estimateSize\": false,\n" +
+        "      \"field\": \"content:\",\n" +
+        "      \"limit\": 250,\n" +
+        "      \"offset\": 0,\n" +
+        "      \"inDumpster\": false,\n" +
+        "      \"nest\": false,\n" +
+        "      \"cid\": \"9bce02cf-9d9a-4d15-b95e-e1495b75770e:363\",\n" +
+        "      \"_jsns\": \"urn:zimbraMail\"\n" +
+        "    }\n" +
+        "}\n";
+
+    private static String searchConvXml =
+        "<SearchConvRequest\n" +
+        "        includeTagDeleted=\"false\"\n" +
+        "        calExpandInstStart=\"-1\"\n" +
+        "        calExpandInstEnd=\"-1\"\n" +
+        "        types=\"message\"\n" +
+        "        sortBy=\"dateDesc\"\n" +
+        "        fetch=\"9bce02cf-9d9a-4d15-b95e-e1495b75770e:446\"\n" +
+        "        read=\"true\"\n" +
+        "        max=\"250000\"\n" +
+        "        html=\"true\"\n" +
+        "        neuter=\"true\"\n" +
+        "%%VALUE%%" +
+        "        prefetch=\"true\"\n" +
+        "        resultMode=\"NORMAL\"\n" +
+        "        field=\"content:\"\n" +
+        "        limit=\"250\"\n" +
+        "        offset=\"0\"\n" +
+        "        inDumpster=\"false\"\n" +
+        "        nest=\"false\"\n" +
+        "        cid=\"9bce02cf-9d9a-4d15-b95e-e1495b75770e:363\"\n" +
+        "        xmlns=\"urn:zimbraMail\">\n" +
+        "    <query>(((INID:\"9bce02cf-9d9a-4d15-b95e-e1495b75770e:2\") CONV:\"9bce02cf-9d9a-4d15-b95e-e1495b75770e:363\" ))</query>\n" +
+        "    <locale>en_US</locale>\n" +
+        "</SearchConvRequest>\n";
+
+    private static Element getElementForEnvelopedJSON(String json) {
+        Element envelope = null;
+        try {
+            envelope = Element.parseJSON(json);
+        } catch (SoapParseException e) {
+            Assert.fail(String.format("Parse from JSON to Element failed - %s", e.getMessage()));
+        }
+        Assert.assertNotNull("Envelope element from parse from JSON", envelope);
+        Element inner =  envelope.listElements().get(0);
+        Assert.assertNotNull("element inside envelope element from parse from JSON", inner);
+        return inner;
+    }
+
+    private void doJsonSearchConvRecipCheck(String recipValue, WantRecipsSetting expected) throws ServiceException {
+        Element elem = getElementForEnvelopedJSON(searchConvJson.replace("%%VALUE%%", recipValue));
+        SearchConvRequest req = JaxbUtil.elementToJaxb(elem);
+        Assert.assertEquals(String.format("recips:%s should map to %s", recipValue, expected),
+                expected, req.getWantRecipients());
+    }
+
+    private void doXmlSearchConvRecipCheck(String recipValue, WantRecipsSetting expected) throws ServiceException {
+        Element elem = null;
+        String xmlStr = searchConvXml.replace("%%VALUE%%", recipValue);
+        elem = Element.parseXML(xmlStr);
+        SearchConvRequest req = JaxbUtil.elementToJaxb(elem);
+        Assert.assertEquals(String.format("recips=%s should map to %s", recipValue, expected),
+                expected, req.getWantRecipients());
+    }
+
+    private String jsonRecipWithValue(String value) {
+        return String.format("\"recip\": %s,\n", value);
+    }
+
+    private String xmlRecipWithValue(String value) {
+        return String.format("recip=\"%s\"\n", value);
+    }
+
+    @Test
+    public void searchConvJsonToJaxbRecipHandling() throws Exception {
+        doJsonSearchConvRecipCheck(jsonRecipWithValue("false"), WantRecipsSetting.PUT_SENDERS);
+        doJsonSearchConvRecipCheck(jsonRecipWithValue("true"), WantRecipsSetting.PUT_RECIPIENTS);
+        doJsonSearchConvRecipCheck(jsonRecipWithValue("0"), WantRecipsSetting.PUT_SENDERS);
+        doJsonSearchConvRecipCheck(jsonRecipWithValue("1"), WantRecipsSetting.PUT_RECIPIENTS);
+        doJsonSearchConvRecipCheck(jsonRecipWithValue("2"), WantRecipsSetting.PUT_BOTH);
+        doJsonSearchConvRecipCheck(jsonRecipWithValue("\"0\""), WantRecipsSetting.PUT_SENDERS);
+        doJsonSearchConvRecipCheck(jsonRecipWithValue("\"1\""), WantRecipsSetting.PUT_RECIPIENTS);
+        doJsonSearchConvRecipCheck(jsonRecipWithValue("\"2\""), WantRecipsSetting.PUT_BOTH);
+        doJsonSearchConvRecipCheck(jsonRecipWithValue("invalid"), WantRecipsSetting.PUT_SENDERS);
+        doJsonSearchConvRecipCheck(jsonRecipWithValue("3"), WantRecipsSetting.PUT_SENDERS);
+        doJsonSearchConvRecipCheck("", WantRecipsSetting.PUT_SENDERS);
+    }
+
+    @Test
+    public void searchConvXmlToJaxbRecipHandling() throws Exception {
+        doXmlSearchConvRecipCheck(xmlRecipWithValue("false"), WantRecipsSetting.PUT_SENDERS);
+        doXmlSearchConvRecipCheck(xmlRecipWithValue("true"), WantRecipsSetting.PUT_RECIPIENTS);
+        doXmlSearchConvRecipCheck(xmlRecipWithValue("0"), WantRecipsSetting.PUT_SENDERS);
+        doXmlSearchConvRecipCheck(xmlRecipWithValue("1"), WantRecipsSetting.PUT_RECIPIENTS);
+        doXmlSearchConvRecipCheck(xmlRecipWithValue("2"), WantRecipsSetting.PUT_BOTH);
+        doXmlSearchConvRecipCheck(xmlRecipWithValue("invalid"), WantRecipsSetting.PUT_SENDERS);
+        doXmlSearchConvRecipCheck(xmlRecipWithValue("3"), WantRecipsSetting.PUT_SENDERS);
+        doXmlSearchConvRecipCheck("", WantRecipsSetting.PUT_SENDERS);
     }
 
     /**

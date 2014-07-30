@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -36,6 +36,7 @@ import com.zimbra.soap.base.CalTZInfoInterface;
 import com.zimbra.soap.base.SearchParameters;
 import com.zimbra.soap.type.AttributeName;
 import com.zimbra.soap.type.CursorInfo;
+import com.zimbra.soap.type.WantRecipsSetting;
 import com.zimbra.soap.type.ZmBoolean;
 
 /**
@@ -242,7 +243,7 @@ public class SearchMultiMailboxRequest implements SearchParameters {
      * </table>
      */
     @XmlAttribute(name=MailConstants.A_RECIPIENTS /* recip */, required=false)
-    private Integer wantRecipients;
+    private WantRecipsSetting wantRecipients;
 
     /**
      * @zm-api-field-description Prefetch
@@ -378,7 +379,9 @@ public class SearchMultiMailboxRequest implements SearchParameters {
     @Override
     public void setNeuterImages(Boolean neuterImages) { this.neuterImages = ZmBoolean.fromBool(neuterImages); }
     @Override
-    public void setWantRecipients(Integer wantRecipients) { this.wantRecipients = wantRecipients; }
+    public void setWantRecipients(WantRecipsSetting wantRecipients) {
+        this.wantRecipients = WantRecipsSetting.usefulValue(wantRecipients);
+    }
     @Override
     public void setPrefetch(Boolean prefetch) { this.prefetch = ZmBoolean.fromBool(prefetch); }
     @Override
@@ -455,7 +458,7 @@ public class SearchMultiMailboxRequest implements SearchParameters {
     @Override
     public Boolean getNeuterImages() { return ZmBoolean.toBool(neuterImages); }
     @Override
-    public Integer getWantRecipients() { return wantRecipients; }
+    public WantRecipsSetting getWantRecipients() { return WantRecipsSetting.usefulValue(wantRecipients); }
     @Override
     public Boolean getPrefetch() { return ZmBoolean.toBool(prefetch); }
     @Override
