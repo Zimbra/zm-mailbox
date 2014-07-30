@@ -66,7 +66,7 @@ public class TestCollectConfigServletsAccess extends TestCase {
      * Verify that global admin can access servlet at /service/collectconfig/
      * @throws Exception
      */
-    @Test
+  /*  @Test
     public void testConfigGlobalAdmin() throws Exception {
         ZAuthToken at = TestUtil.getAdminSoapTransport().getAuthToken();
         URI servletURI = new URI(getConfigServletUrl());
@@ -81,7 +81,7 @@ public class TestCollectConfigServletsAccess extends TestCase {
         } else {
             assertEquals("This request should succeed. Getting status code " + statusCode, HttpStatus.SC_OK,statusCode);
         }
-    }
+    }*/
 
 
     /**
@@ -105,7 +105,7 @@ public class TestCollectConfigServletsAccess extends TestCase {
      * Verify that global admin can access servlet at /service/collectldapconfig/
      * @throws Exception
      */
-    @Test
+  /*  @Test
     public void testLDAPConfigGlobalAdmin() throws Exception {
         ZAuthToken at = TestUtil.getAdminSoapTransport().getAuthToken();
         URI servletURI = new URI(getLDAPConfigServletUrl());
@@ -120,7 +120,7 @@ public class TestCollectConfigServletsAccess extends TestCase {
         } else {
             assertEquals("This request should succeed. Getting status code " + statusCode, HttpStatus.SC_OK,statusCode);
         }
-    }
+    }*/
 
     /**
      * Verify that delegated admin canNOT access servlet at /service/collectldapconfig/
