@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -150,7 +150,6 @@ import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.session.PendingModifications.Change;
-import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.admin.type.DataSourceType;
 import com.zimbra.soap.mail.type.AlarmDataInfo;
 import com.zimbra.soap.mail.type.CalendarReply;
@@ -158,6 +157,7 @@ import com.zimbra.soap.mail.type.Policy;
 import com.zimbra.soap.mail.type.RetentionPolicy;
 import com.zimbra.soap.mail.type.XParam;
 import com.zimbra.soap.mail.type.XProp;
+import com.zimbra.soap.type.WantRecipsSetting;
 
 /**
  * Class containing static methods for encoding various MailItem-derived objects into XML.
@@ -179,6 +179,16 @@ public final class ToXML {
 
         public int getIntValue() {
             return value;
+        }
+
+        public static OutputParticipants fromJaxb(WantRecipsSetting jaxb) {
+            jaxb = WantRecipsSetting.usefulValue(jaxb);
+            if (WantRecipsSetting.PUT_RECIPIENTS.equals(jaxb)) {
+                return PUT_RECIPIENTS;
+            } else if (WantRecipsSetting.PUT_BOTH.equals(jaxb)) {
+                return PUT_BOTH;
+            }
+            return PUT_SENDERS;
         }
     }
 
