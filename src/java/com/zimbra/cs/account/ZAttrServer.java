@@ -8638,8 +8638,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * the http proxy URL to connect to when making outgoing connections
-     * (Zimlet proxy, RSS/ATOM feeds, etc)
+     * external socks proxy URL to connect to when making outgoing
+     * connections (eg.Zimlet proxy, RSS/ATOM feeds, etc)
      *
      * @return zimbraHttpProxyURL, or empty array if unset
      */
@@ -8649,8 +8649,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * the http proxy URL to connect to when making outgoing connections
-     * (Zimlet proxy, RSS/ATOM feeds, etc)
+     * external socks proxy URL to connect to when making outgoing
+     * connections (eg.Zimlet proxy, RSS/ATOM feeds, etc)
      *
      * @param zimbraHttpProxyURL new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -8663,8 +8663,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * the http proxy URL to connect to when making outgoing connections
-     * (Zimlet proxy, RSS/ATOM feeds, etc)
+     * external socks proxy URL to connect to when making outgoing
+     * connections (eg.Zimlet proxy, RSS/ATOM feeds, etc)
      *
      * @param zimbraHttpProxyURL new value
      * @param attrs existing map to populate, or null to create a new map
@@ -8678,8 +8678,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * the http proxy URL to connect to when making outgoing connections
-     * (Zimlet proxy, RSS/ATOM feeds, etc)
+     * external socks proxy URL to connect to when making outgoing
+     * connections (eg.Zimlet proxy, RSS/ATOM feeds, etc)
      *
      * @param zimbraHttpProxyURL new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -8692,8 +8692,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * the http proxy URL to connect to when making outgoing connections
-     * (Zimlet proxy, RSS/ATOM feeds, etc)
+     * external socks proxy URL to connect to when making outgoing
+     * connections (eg.Zimlet proxy, RSS/ATOM feeds, etc)
      *
      * @param zimbraHttpProxyURL new to add to existing values
      * @param attrs existing map to populate, or null to create a new map
@@ -8707,8 +8707,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * the http proxy URL to connect to when making outgoing connections
-     * (Zimlet proxy, RSS/ATOM feeds, etc)
+     * external socks proxy URL to connect to when making outgoing
+     * connections (eg.Zimlet proxy, RSS/ATOM feeds, etc)
      *
      * @param zimbraHttpProxyURL existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -8721,8 +8721,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * the http proxy URL to connect to when making outgoing connections
-     * (Zimlet proxy, RSS/ATOM feeds, etc)
+     * external socks proxy URL to connect to when making outgoing
+     * connections (eg.Zimlet proxy, RSS/ATOM feeds, etc)
      *
      * @param zimbraHttpProxyURL existing value to remove
      * @param attrs existing map to populate, or null to create a new map
@@ -8736,8 +8736,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * the http proxy URL to connect to when making outgoing connections
-     * (Zimlet proxy, RSS/ATOM feeds, etc)
+     * external socks proxy URL to connect to when making outgoing
+     * connections (eg.Zimlet proxy, RSS/ATOM feeds, etc)
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -8749,8 +8749,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * the http proxy URL to connect to when making outgoing connections
-     * (Zimlet proxy, RSS/ATOM feeds, etc)
+     * external socks proxy URL to connect to when making outgoing
+     * connections (eg.Zimlet proxy, RSS/ATOM feeds, etc)
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
