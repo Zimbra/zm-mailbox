@@ -6586,8 +6586,8 @@ public class ZAttrProvisioning {
     public static final String A_zimbraHttpOutputBufferSize = "zimbraHttpOutputBufferSize";
 
     /**
-     * the http proxy URL to connect to when making outgoing connections
-     * (Zimlet proxy, RSS/ATOM feeds, etc)
+     * external socks proxy URL to connect to when making outgoing
+     * connections (eg.Zimlet proxy, RSS/ATOM feeds, etc)
      */
     @ZAttr(id=388)
     public static final String A_zimbraHttpProxyURL = "zimbraHttpProxyURL";
