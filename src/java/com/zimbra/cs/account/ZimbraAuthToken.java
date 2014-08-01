@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -52,7 +52,7 @@ import com.zimbra.cs.account.auth.AuthMechanism.AuthMech;
  * @since May 30, 2004
  * @author schemers
  */
-public class ZimbraAuthToken extends AuthToken {
+public class ZimbraAuthToken extends AuthToken implements Cloneable {
     private static final String C_ID  = "id";
     // original admin id
     private static final String C_AID  = "aid";
@@ -660,7 +660,10 @@ public class ZimbraAuthToken extends AuthToken {
 
     }
 
-
+    @Override
+    public ZimbraAuthToken clone() throws CloneNotSupportedException {
+        return (ZimbraAuthToken)super.clone();
+    }
 
     public static void main(String args[]) throws ServiceException, AuthTokenException {
         Account a = Provisioning.getInstance().get(AccountBy.name, "user1@example.zimbra.com");
