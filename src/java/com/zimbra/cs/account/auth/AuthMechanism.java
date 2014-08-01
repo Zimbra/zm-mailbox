@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2008, 2009, 2010, 2011, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -24,6 +24,9 @@ import java.util.StringTokenizer;
 
 import javax.security.auth.login.LoginException;
 
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 import com.zimbra.cs.account.Domain;
@@ -32,31 +35,27 @@ import com.zimbra.cs.account.krb5.Krb5Login;
 import com.zimbra.cs.account.krb5.Krb5Principal;
 import com.zimbra.cs.account.ldap.LdapProv;
 import com.zimbra.cs.account.ldap.entry.LdapEntry;
-import com.zimbra.cs.account.auth.AuthContext;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.StringUtil;
-import com.zimbra.common.util.ZimbraLog;
 
 public abstract class AuthMechanism {
-    
+
     public static enum AuthMech {
         /**
          * zimbraAuthMech type of "zimbra" means our own (use userPassword)
          */
         zimbra,
-        
+
         /**
          * zimbraAuthMech type of "ldap" means use configured LDAP attrs
          * (zimbraAuthLdapURL, zimbraAuthLdapBindDn)
          */
         ldap,
-        
+
         /**
          * zimbraAuthMech type of "ad" means use configured LDAP attrs
          * (zimbraAuthLdapURL, zimbraAuthLdapBindDn) for use with ActiveDirectory
          */
         ad,
-        
+
         /**
          * zimbraAuthMech type of "kerberos5" means use kerberos5 authentication.
          * The principal can be obtained by, either:
@@ -66,19 +65,19 @@ public abstract class AuthMechanism {
          *     kerberos5:{principal-name}
          */
         kerberos5,
-        
+
         /**
          * zimbraAuthMech type of "custom:{handler}" means use registered extension
          * of ZimbraCustomAuth.authenticate() method
          * see customauth.txt
          */
         custom;
-        
+
         public static AuthMech fromString(String authMechStr) throws ServiceException {
             if (authMechStr == null) {
                 return null;
             }
-            
+
             try {
                 return AuthMech.valueOf(authMechStr);
             } catch (IllegalArgumentException e) {
@@ -86,23 +85,23 @@ public abstract class AuthMechanism {
             }
         }
     }
-    
+
     protected AuthMech authMech;
-        
+
     protected AuthMechanism(AuthMech authMech) {
         this.authMech = authMech;
     }
-    
-    public static AuthMechanism newInstance(Account acct, Map<String, Object> context) 
+
+    public static AuthMechanism newInstance(Account acct, Map<String, Object> context)
     throws ServiceException {
         String authMechStr = AuthMech.zimbra.name();
-        
-        // bypass domain AuthMech and always use Zimbra auth for external virtual accounts 
-        
+
+        // bypass domain AuthMech and always use Zimbra auth for external virtual accounts
+
         if (!acct.isIsExternalVirtualAccount()) {
             Provisioning prov = Provisioning.getInstance();
             Domain domain = prov.getDomain(acct);
-            
+
             // see if it specifies an alternate auth
             if (domain != null) {
                 String am;
@@ -116,20 +115,20 @@ public abstract class AuthMechanism {
                 } else {
                     am = domain.getAuthMech();
                 }
-                
+
                 if (am != null) {
                     authMechStr = am;
                 }
             }
         }
-        
-        
+
+
         if (authMechStr.startsWith(AuthMech.custom.name() + ":")) {
             return new CustomAuth(AuthMech.custom, authMechStr);
         } else {
             try {
                 AuthMech authMech = AuthMech.fromString(authMechStr);
-                
+
                 switch (authMech) {
                     case zimbra:
                         return new ZimbraAuth(authMech);
@@ -142,16 +141,16 @@ public abstract class AuthMechanism {
             } catch (ServiceException e) {
                 ZimbraLog.account.warn("invalid auth mech", e);
             }
-            
-            ZimbraLog.account.warn("unknown value for " + Provisioning.A_zimbraAuthMech+": " 
+
+            ZimbraLog.account.warn("unknown value for " + Provisioning.A_zimbraAuthMech+": "
                     + authMechStr+", falling back to default mech");
             return new ZimbraAuth(AuthMech.zimbra);
         }
 
     }
-    
-    public static void doZimbraAuth(LdapProv prov, Domain domain, Account acct, String password, 
-            Map<String, Object> authCtxt) 
+
+    public static void doZimbraAuth(LdapProv prov, Domain domain, Account acct, String password,
+            Map<String, Object> authCtxt)
     throws ServiceException {
         ZimbraAuth zimbraAuth = new ZimbraAuth(AuthMech.zimbra);
         zimbraAuth.doAuth(prov, domain, acct, password, authCtxt);
@@ -160,17 +159,17 @@ public abstract class AuthMechanism {
     public boolean isZimbraAuth() {
         return false;
     }
-    
+
     public abstract boolean checkPasswordAging() throws ServiceException;
-    
-    public abstract void doAuth(LdapProv prov, Domain domain, Account acct, String password, 
-            Map<String, Object> authCtxt) 
+
+    public abstract void doAuth(LdapProv prov, Domain domain, Account acct, String password,
+            Map<String, Object> authCtxt)
     throws ServiceException;
 
     public AuthMech getMechanism() {
         return authMech;
     }
-    
+
     public static String namePassedIn(Map<String, Object> authCtxt) {
         String npi;
         if (authCtxt != null) {
@@ -179,51 +178,61 @@ public abstract class AuthMechanism {
                 npi = "";
         } else
             npi = "";
-        return npi;    
+        return npi;
     }
-    
+
     /*
-     * ZimbraAuth 
+     * ZimbraAuth
      */
     public static class ZimbraAuth extends AuthMechanism {
         ZimbraAuth(AuthMech authMech) {
             super(authMech);
         }
-        
+
+        @Override
         public boolean isZimbraAuth() {
             return true;
         }
-        
-        public void doAuth(LdapProv prov, Domain domain, Account acct, String password, 
+
+        @Override
+        public void doAuth(LdapProv prov, Domain domain, Account acct, String password,
                 Map<String, Object> authCtxt) throws ServiceException {
-            
+
             String encodedPassword = acct.getAttr(Provisioning.A_userPassword);
 
             if (encodedPassword == null) {
-                throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), 
+                throw AuthFailedServiceException.AUTH_FAILED(acct.getName(),
                         namePassedIn(authCtxt), "missing "+Provisioning.A_userPassword);
             }
-            
-            if (PasswordUtil.SSHA.isSSHA(encodedPassword)) {
-                if (PasswordUtil.SSHA.verifySSHA(encodedPassword, password)) {
+
+            if (PasswordUtil.SSHA512.isSSHA512(encodedPassword)) {
+                if (PasswordUtil.SSHA512.verifySSHA512(encodedPassword, password)) {
                     return; // good password, RETURN
                 }  else {
-                    throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), 
-                            namePassedIn(authCtxt), "invalid password"); 
+                    throw AuthFailedServiceException.AUTH_FAILED(acct.getName(),
+                            namePassedIn(authCtxt), "invalid password");
                 }
+            } else if (PasswordUtil.SSHA.isSSHA(encodedPassword)) {
+                    if (PasswordUtil.SSHA.verifySSHA(encodedPassword, password)) {
+                        return; // good password, RETURN
+                    }  else {
+                        throw AuthFailedServiceException.AUTH_FAILED(acct.getName(),
+                                namePassedIn(authCtxt), "invalid password");
+                    }
             } else if (acct instanceof LdapEntry) {
-                // not SSHA, authenticate to Zimbra LDAP
+                // not SSHA/SSHA512, authenticate to Zimbra LDAP
                 prov.zimbraLdapAuthenticate(acct, password, authCtxt);
-                return;  // good password, RETURN   
+                return;  // good password, RETURN
             }
-            throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), namePassedIn(authCtxt));       
+            throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), namePassedIn(authCtxt));
         }
-        
+
+        @Override
         public boolean checkPasswordAging() throws ServiceException {
             return true;
         }
     }
-    
+
     /*
      * LdapAuth
      */
@@ -231,17 +240,19 @@ public abstract class AuthMechanism {
         LdapAuth(AuthMech authMech) {
             super(authMech);
         }
-        
-        public void doAuth(LdapProv prov, Domain domain, Account acct, String password, 
+
+        @Override
+        public void doAuth(LdapProv prov, Domain domain, Account acct, String password,
                 Map<String, Object> authCtxt) throws ServiceException {
             prov.externalLdapAuth(domain, authMech, acct, password, authCtxt);
         }
-        
+
+        @Override
         public boolean checkPasswordAging() throws ServiceException {
             return false;
         }
     }
-    
+
     /*
      * Kerberos5Auth
      */
@@ -249,49 +260,51 @@ public abstract class AuthMechanism {
         Kerberos5Auth(AuthMech authMech) {
             super(authMech);
         }
-        
-        public void doAuth(LdapProv prov, Domain domain, Account acct, String password, 
+
+        @Override
+        public void doAuth(LdapProv prov, Domain domain, Account acct, String password,
                 Map<String, Object> authCtxt) throws ServiceException {
             String principal = Krb5Principal.getKrb5Principal(domain, acct);
-            
+
             if (principal == null)
-                throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), 
+                throw AuthFailedServiceException.AUTH_FAILED(acct.getName(),
                         namePassedIn(authCtxt), "cannot obtain principal for " + authMech.name() + " auth");
-            
+
             if (principal != null) {
                 try {
                     Krb5Login.verifyPassword(principal, password);
                 } catch (LoginException e) {
-                    throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), 
+                    throw AuthFailedServiceException.AUTH_FAILED(acct.getName(),
                             namePassedIn(authCtxt) + "(kerberos5 principal: " + principal + ")", e.getMessage(), e);
                 }
             }
         }
-        
+
+        @Override
         public boolean checkPasswordAging() throws ServiceException {
             return false;
         }
     }
-    
+
     /*
      * CustomAuth
      */
     static class CustomAuth extends AuthMechanism {
         private String authMechStr;  // value of the zimbraAuthMech attribute
-        
-        private String mHandlerName = ""; 
+
+        private String mHandlerName = "";
         private ZimbraCustomAuth mHandler;
         List<String> mArgs;
-        
+
         CustomAuth(AuthMech authMech, String authMechStr) {
             super(authMech);
             this.authMechStr = authMechStr;
-         
+
             /*
              * value is in the format of custom:{handler} [arg1 arg2 ...]
              * args can be quoted.  whitespace and empty string in quoted args are preserved
-             * 
-             * e.g. http://blah.com:123    green " ocean blue   "  "" yelllow "" 
+             *
+             * e.g. http://blah.com:123    green " ocean blue   "  "" yelllow ""
              * will be parsed and passed to the custom handler as:
              * [http://blah.com:123]
              * [green]
@@ -299,7 +312,7 @@ public abstract class AuthMechanism {
              * []
              * [yelllow]
              * []
-             * 
+             *
              */
             int handlerNameStart = authMechStr.indexOf(':');
             if (handlerNameStart != -1) {
@@ -310,14 +323,14 @@ public abstract class AuthMechanism {
                     mArgs = parser.parse();
                     if (mArgs.size() == 0)
                         mArgs = null;
-                } else {    
+                } else {
                     mHandlerName = authMechStr.substring(handlerNameStart+1);
                 }
-                
+
                 if (!StringUtil.isNullOrEmpty(mHandlerName))
                     mHandler = ZimbraCustomAuth.getHandler(mHandlerName);
             }
-            
+
             if (ZimbraLog.account.isDebugEnabled()) {
                 StringBuffer sb = null;
                 if (mArgs != null) {
@@ -328,47 +341,49 @@ public abstract class AuthMechanism {
                 ZimbraLog.account.debug("CustomAuth: handlerName=" + mHandlerName + ", args=" + sb);
             }
         }
-        
-        public void doAuth(LdapProv prov, Domain domain, Account acct, String password, 
+
+        @Override
+        public void doAuth(LdapProv prov, Domain domain, Account acct, String password,
                 Map<String, Object> authCtxt) throws ServiceException {
-            
+
             if (mHandler == null)
-                throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), 
-                        namePassedIn(authCtxt), "handler " + mHandlerName + 
+                throw AuthFailedServiceException.AUTH_FAILED(acct.getName(),
+                        namePassedIn(authCtxt), "handler " + mHandlerName +
                         " for custom auth for domain " + domain.getName() + " not found");
-            
+
             try {
                 mHandler.authenticate(acct, password, authCtxt, mArgs);
                 return;
             } catch (Exception e) {
                 if (e instanceof ServiceException) {
                     throw (ServiceException)e;
-                } else {   
+                } else {
                     String msg = e.getMessage();
                     if (StringUtil.isNullOrEmpty(msg))
                         msg = "";
                     else
                         msg = " (" + msg + ")";
                     /*
-                     * include msg in the response, in addition to logs.  This is because custom 
+                     * include msg in the response, in addition to logs.  This is because custom
                      * auth handlers might want to pass the reason back to the client.
-                     */ 
+                     */
                     throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), namePassedIn(authCtxt)+msg, msg, e);
                 }
             }
-            
+
         }
-        
+
+        @Override
         public boolean checkPasswordAging() throws ServiceException {
             if (mHandler == null)
                 throw ServiceException.FAILURE("custom auth handler " + mHandlerName + " not found", null);
             return mHandler.checkPasswordAging();
         }
     }
-    
+
     static class QuotedStringParser {
         private String mInput;
-          
+
         //the parser flips between these two sets of delimiters
         private static final String DELIM_WHITESPACE_AND_QUOTES = " \t\r\n\"";
         private static final String DELIM_QUOTES_ONLY ="\"";
@@ -419,17 +434,17 @@ public abstract class AuthMechanism {
                 return DELIM_WHITESPACE_AND_QUOTES;
         }
     }
-    
+
     public static void main(String[] args) {
         QuotedStringParser parser = new QuotedStringParser( "http://blah.com:123    green \" ocean blue   \"  \"\" yelllow \"\"");
         List<String> tokens = parser.parse();
         int i = 0;
         for (String s : tokens)
             System.out.format("%d [%s]\n", ++i, s);
-        
-        CustomAuth ca = new CustomAuth(AuthMech.custom, 
+
+        CustomAuth ca = new CustomAuth(AuthMech.custom,
                 "custom:sample http://blah.com:123    green \" ocean blue   \"  \"\" yelllow \"\"");
-         
+
     }
 }
 

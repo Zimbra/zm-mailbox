@@ -5387,8 +5387,15 @@ public class LdapProvisioning extends LdapProv {
             int sepIndex = history[i].indexOf(':');
             if (sepIndex != -1)  {
                 String encoded = history[i].substring(sepIndex+1);
-                if (PasswordUtil.SSHA.verifySSHA(encoded, newPassword))
-                    throw AccountServiceException.PASSWORD_RECENTLY_USED();
+                if (PasswordUtil.SSHA.isSSHA(encoded)) {
+                    if (PasswordUtil.SSHA.verifySSHA(encoded, newPassword))
+                        throw AccountServiceException.PASSWORD_RECENTLY_USED();
+                } else if (PasswordUtil.SSHA512.isSSHA512(encoded)) {
+                    if (PasswordUtil.SSHA512.verifySSHA512(encoded, newPassword))
+                        throw AccountServiceException.PASSWORD_RECENTLY_USED();
+                } else {
+                    ZimbraLog.account.debug("password hash neither SSHA nor SSHA512; ignored for password history");
+                }
             }
         }
     }
@@ -5636,7 +5643,7 @@ public class LdapProvisioning extends LdapProv {
 
         if (userPassword == null) {
             checkPasswordStrength(newPassword, null, cos, entry);
-            userPassword = PasswordUtil.SSHA.generateSSHA(newPassword, null);
+            userPassword = PasswordUtil.SSHA512.generateSSHA512(newPassword, null);
         }
         entry.setAttr(Provisioning.A_userPassword, userPassword);
         entry.setAttr(Provisioning.A_zimbraPasswordModifiedTime, DateUtil.toGeneralizedTime(new Date()));
@@ -5683,7 +5690,7 @@ public class LdapProvisioning extends LdapProv {
             return;
         }
 
-        String encodedPassword = PasswordUtil.SSHA.generateSSHA(newPassword, null);
+        String encodedPassword = PasswordUtil.SSHA512.generateSSHA512(newPassword, null);
 
         // unset it so it doesn't take up space...
         if (mustChange)
