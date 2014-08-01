@@ -4141,7 +4141,12 @@ public class ProvUtil implements HttpDebugListener {
         int argIdx = 1;
         if (args[argIdx].equals("-a")) {
             allServers = true;
-            argIdx++;
+            if (args.length > 2) {
+                argIdx++;
+            } else {
+                usage();
+                return;
+            }
         }
         String type = args[argIdx++];
 
