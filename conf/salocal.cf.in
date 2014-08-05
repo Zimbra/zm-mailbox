@@ -54,16 +54,4 @@ ifplugin Mail::SpamAssassin::Plugin::MIMEEval
     describe PP_MIME_FAKE_ASCII_TEXT  MIME text/plain claims to be ASCII but isn't
     score    PP_MIME_FAKE_ASCII_TEXT  1.0
   endif
-
-  if can(Mail::SpamAssassin::Plugin::MIMEEval::has_check_abundant_unicode_ratio)
-    body     PP_TOO_MUCH_UNICODE05      eval:check_abundant_unicode_ratio(0.05)
-    describe PP_TOO_MUCH_UNICODE05      Is text/plain but has many unicode escapes
-    score    PP_TOO_MUCH_UNICODE05      1.0
-
-    body     PP_TOO_MUCH_UNICODE02      eval:check_abundant_unicode_ratio(0.02)
-    describe PP_TOO_MUCH_UNICODE02      Is text/plain but has many unicode escapes
-    score    PP_TOO_MUCH_UNICODE02      0.5
-  endif
 endif
-
-use_dcc 0
