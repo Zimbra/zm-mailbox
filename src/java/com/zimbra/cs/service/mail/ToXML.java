@@ -1234,7 +1234,7 @@ public final class ToXML {
                     }
                 }
             }
-
+            c.addAttribute(MailConstants.A_UNREAD, conv.getUnreadCount());
             c.addAttribute(MailConstants.A_NUM, nondeleted);
             if (count != nondeleted) {
                 c.addAttribute(MailConstants.A_TOTAL_SIZE, count);

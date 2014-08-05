@@ -230,6 +230,9 @@ final class SearchResponse {
         if (msg.isDraft() && msg.getDraftAutoSendTime() != 0) {
             cMsgHit.setAutoSendTime(msg.getDraftAutoSendTime());
         }
+        if(!msg.getFlagString().equalsIgnoreCase("")) {
+            cMsgHit.setFlags(msg.getFlagString());
+        }
         cMsgHit.toElement(el);
         return el;
     }
