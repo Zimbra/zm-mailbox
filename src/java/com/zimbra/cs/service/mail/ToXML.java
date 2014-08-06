@@ -1150,7 +1150,12 @@ public final class ToXML {
             } else {
                 msgsByConv = mbox.getMessagesByConversation(octxt, conv.getId(), SortBy.DATE_DESC, -1, true);
             }
-            c.addAttribute(MailConstants.E_FRAG, msgsByConv.isEmpty() == false ? msgsByConv.get(0).getFragment() : msgHit.getFragment(), Element.Disposition.CONTENT);
+            for (int i = 0; i < msgsByConv.size(); i++) {
+                if(!msgsByConv.get(i).isDraft()){
+                    c.addAttribute(MailConstants.E_FRAG, msgsByConv.isEmpty() == false ? msgsByConv.get(i).getFragment() : msgHit.getFragment(), Element.Disposition.CONTENT);
+                    break;
+                }
+            }
         }
         if (addFirstHitRecips && msgHit != null) {
             addEmails(c, Mime.parseAddressHeader(msgHit.getRecipients()), EmailType.TO);
