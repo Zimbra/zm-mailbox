@@ -3412,15 +3412,15 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 </attr>
 
 <attr id="647" name="zimbraSkinForegroundColor" type="string" max="256" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainInfo,domainAdminModifiable" since="5.0.6">
-  <desc>foreground color for chameleon skin for the domain</desc>
+  <desc>foreground color for serenity skin for the domain</desc>
 </attr>
 
 <attr id="648" name="zimbraSkinBackgroundColor" type="string" max="256" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainInfo,domainAdminModifiable" since="5.0.6">
-  <desc>background color for chameleon skin for the domain</desc>
+  <desc>background color for serenity skin for the domain</desc>
 </attr>
 
 <attr id="649" name="zimbraSkinLogoURL" type="string" max="256" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainInfo,domainAdminModifiable" since="5.0.6">
-  <desc>Logo URL for chameleon skin for the domain</desc>
+  <desc>Logo URL for serenity skin for the domain</desc>
 </attr>
 
 <attr id="650" name="zimbraPrefMarkMsgRead" type="integer" cardinality="single" min="-1" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.6">
@@ -3513,19 +3513,19 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 </attr>
 
 <attr id="668" name="zimbraSkinSecondaryColor" type="string" max="256" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainInfo,domainAdminModifiable" since="5.0.7">
-  <desc>secondary color for chameleon skin for the domain</desc>
+  <desc>secondary color for serenity skin for the domain</desc>
 </attr>
 
 <attr id="669" name="zimbraSkinSelectionColor" type="string" max="256" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainInfo,domainAdminModifiable" since="5.0.7">
-  <desc>selection color for chameleon skin for the domain</desc>
+  <desc>selection color for serenity skin for the domain</desc>
 </attr>
 
 <attr id="670" name="zimbraSkinLogoLoginBanner" type="string" max="256" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainInfo,domainAdminModifiable" since="5.0.7">
-  <desc>logo login banner for chameleon skin for the domain</desc>
+  <desc>logo login banner for serenity skin for the domain</desc>
 </attr>
 
 <attr id="671" name="zimbraSkinLogoAppBanner" type="string" max="256" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainInfo,domainAdminModifiable" since="5.0.7">
-  <desc>logo app banner for chameleon skin for the domain</desc>
+  <desc>logo app banner for serenity skin for the domain</desc>
 </attr>
 
 <attr id="672" name="zimbraMtaSmtpdMilters" type="string" max="1024" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mta" since="5.0.7">
@@ -4207,7 +4207,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 </attr>
 
 <attr id="800" name="zimbraSkinFavicon" type="string" max="256" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainInfo,domainAdminModifiable" since="6.0.0_BETA1">
-  <desc>favicon for chameleon skin for the domain</desc>
+  <desc>favicon for serenity skin for the domain</desc>
 </attr>
 
 <attr id="802" name="zimbraIsAdminGroup" type="boolean" cardinality="single" optionalIn="distributionList,group" since="6.0.0_BETA1" callback="AdminGroup">

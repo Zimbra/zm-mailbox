@@ -52502,7 +52502,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * background color for chameleon skin for the domain
+     * background color for serenity skin for the domain
      *
      * @return zimbraSkinBackgroundColor, or null if unset
      *
@@ -52514,7 +52514,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * background color for chameleon skin for the domain
+     * background color for serenity skin for the domain
      *
      * @param zimbraSkinBackgroundColor new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -52529,7 +52529,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * background color for chameleon skin for the domain
+     * background color for serenity skin for the domain
      *
      * @param zimbraSkinBackgroundColor new value
      * @param attrs existing map to populate, or null to create a new map
@@ -52545,7 +52545,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * background color for chameleon skin for the domain
+     * background color for serenity skin for the domain
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -52559,7 +52559,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * background color for chameleon skin for the domain
+     * background color for serenity skin for the domain
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -52574,7 +52574,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * favicon for chameleon skin for the domain
+     * favicon for serenity skin for the domain
      *
      * @return zimbraSkinFavicon, or null if unset
      *
@@ -52586,7 +52586,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * favicon for chameleon skin for the domain
+     * favicon for serenity skin for the domain
      *
      * @param zimbraSkinFavicon new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -52601,7 +52601,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * favicon for chameleon skin for the domain
+     * favicon for serenity skin for the domain
      *
      * @param zimbraSkinFavicon new value
      * @param attrs existing map to populate, or null to create a new map
@@ -52617,7 +52617,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * favicon for chameleon skin for the domain
+     * favicon for serenity skin for the domain
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -52631,7 +52631,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * favicon for chameleon skin for the domain
+     * favicon for serenity skin for the domain
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -52646,7 +52646,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * foreground color for chameleon skin for the domain
+     * foreground color for serenity skin for the domain
      *
      * @return zimbraSkinForegroundColor, or null if unset
      *
@@ -52658,7 +52658,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * foreground color for chameleon skin for the domain
+     * foreground color for serenity skin for the domain
      *
      * @param zimbraSkinForegroundColor new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -52673,7 +52673,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * foreground color for chameleon skin for the domain
+     * foreground color for serenity skin for the domain
      *
      * @param zimbraSkinForegroundColor new value
      * @param attrs existing map to populate, or null to create a new map
@@ -52689,7 +52689,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * foreground color for chameleon skin for the domain
+     * foreground color for serenity skin for the domain
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -52703,7 +52703,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * foreground color for chameleon skin for the domain
+     * foreground color for serenity skin for the domain
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -52718,7 +52718,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * logo app banner for chameleon skin for the domain
+     * logo app banner for serenity skin for the domain
      *
      * @return zimbraSkinLogoAppBanner, or null if unset
      *
@@ -52730,7 +52730,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * logo app banner for chameleon skin for the domain
+     * logo app banner for serenity skin for the domain
      *
      * @param zimbraSkinLogoAppBanner new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -52745,7 +52745,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * logo app banner for chameleon skin for the domain
+     * logo app banner for serenity skin for the domain
      *
      * @param zimbraSkinLogoAppBanner new value
      * @param attrs existing map to populate, or null to create a new map
@@ -52761,7 +52761,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * logo app banner for chameleon skin for the domain
+     * logo app banner for serenity skin for the domain
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -52775,7 +52775,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * logo app banner for chameleon skin for the domain
+     * logo app banner for serenity skin for the domain
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -52790,7 +52790,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * logo login banner for chameleon skin for the domain
+     * logo login banner for serenity skin for the domain
      *
      * @return zimbraSkinLogoLoginBanner, or null if unset
      *
@@ -52802,7 +52802,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * logo login banner for chameleon skin for the domain
+     * logo login banner for serenity skin for the domain
      *
      * @param zimbraSkinLogoLoginBanner new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -52817,7 +52817,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * logo login banner for chameleon skin for the domain
+     * logo login banner for serenity skin for the domain
      *
      * @param zimbraSkinLogoLoginBanner new value
      * @param attrs existing map to populate, or null to create a new map
@@ -52833,7 +52833,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * logo login banner for chameleon skin for the domain
+     * logo login banner for serenity skin for the domain
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -52847,7 +52847,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * logo login banner for chameleon skin for the domain
+     * logo login banner for serenity skin for the domain
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -52862,7 +52862,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Logo URL for chameleon skin for the domain
+     * Logo URL for serenity skin for the domain
      *
      * @return zimbraSkinLogoURL, or null if unset
      *
@@ -52874,7 +52874,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Logo URL for chameleon skin for the domain
+     * Logo URL for serenity skin for the domain
      *
      * @param zimbraSkinLogoURL new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -52889,7 +52889,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Logo URL for chameleon skin for the domain
+     * Logo URL for serenity skin for the domain
      *
      * @param zimbraSkinLogoURL new value
      * @param attrs existing map to populate, or null to create a new map
@@ -52905,7 +52905,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Logo URL for chameleon skin for the domain
+     * Logo URL for serenity skin for the domain
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -52919,7 +52919,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Logo URL for chameleon skin for the domain
+     * Logo URL for serenity skin for the domain
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -52934,7 +52934,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * secondary color for chameleon skin for the domain
+     * secondary color for serenity skin for the domain
      *
      * @return zimbraSkinSecondaryColor, or null if unset
      *
@@ -52946,7 +52946,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * secondary color for chameleon skin for the domain
+     * secondary color for serenity skin for the domain
      *
      * @param zimbraSkinSecondaryColor new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -52961,7 +52961,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * secondary color for chameleon skin for the domain
+     * secondary color for serenity skin for the domain
      *
      * @param zimbraSkinSecondaryColor new value
      * @param attrs existing map to populate, or null to create a new map
@@ -52977,7 +52977,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * secondary color for chameleon skin for the domain
+     * secondary color for serenity skin for the domain
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -52991,7 +52991,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * secondary color for chameleon skin for the domain
+     * secondary color for serenity skin for the domain
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -53006,7 +53006,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * selection color for chameleon skin for the domain
+     * selection color for serenity skin for the domain
      *
      * @return zimbraSkinSelectionColor, or null if unset
      *
@@ -53018,7 +53018,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * selection color for chameleon skin for the domain
+     * selection color for serenity skin for the domain
      *
      * @param zimbraSkinSelectionColor new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -53033,7 +53033,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * selection color for chameleon skin for the domain
+     * selection color for serenity skin for the domain
      *
      * @param zimbraSkinSelectionColor new value
      * @param attrs existing map to populate, or null to create a new map
@@ -53049,7 +53049,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * selection color for chameleon skin for the domain
+     * selection color for serenity skin for the domain
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -53063,7 +53063,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * selection color for chameleon skin for the domain
+     * selection color for serenity skin for the domain
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
