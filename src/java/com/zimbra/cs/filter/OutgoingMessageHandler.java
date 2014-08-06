@@ -24,12 +24,14 @@ import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.filter.jsieve.ActionFlag;
 import com.zimbra.cs.mailbox.DeliveryOptions;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.OperationContext;
+import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.util.ItemId;
 
@@ -72,7 +74,11 @@ public final class OutgoingMessageHandler implements FilterHandler {
     @Override
     public int getMessageSize() {
         try {
-            return parsedMessage.getMimeMessage().getSize();
+            int size = parsedMessage.getMimeMessage().getSize();
+            if (size == -1) {
+                size = (int) ByteUtil.getDataLength(Mime.getInputStream(parsedMessage.getMimeMessage()));
+            }
+            return size;
         } catch (Exception e) {
             ZimbraLog.filter.warn("Error in determining message size", e);
             return -1;
