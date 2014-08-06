@@ -191,6 +191,10 @@ import com.zimbra.cs.ldap.ZSearchResultEntry;
 import com.zimbra.cs.ldap.ZSearchResultEnumeration;
 import com.zimbra.cs.ldap.ZSearchScope;
 import com.zimbra.cs.ldap.unboundid.InMemoryLdapServer;
+import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mime.MimeTypeInfo;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.zimlet.ZimletException;
@@ -7798,8 +7802,10 @@ public class LdapProvisioning extends LdapProv {
             throw AccountServiceException.NO_SUCH_ACCOUNT(account.getName());
 
         account.setCachedData(DATA_SOURCE_LIST_CACHE_KEY, null);
-
+        Mailbox mbox = Provisioning.onLocalServer(account) ?
+                MailboxManager.getInstance().getMailboxByAccount(account, false) : null;
         ZLdapContext zlc = null;
+        OperationContext octxt = new OperationContext(mbox);
         try {
             zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.DELETE_DATASOURCE);
             DataSource dataSource = getDataSourceById(ldapEntry, dataSourceId, zlc);
@@ -7807,6 +7813,11 @@ public class LdapProvisioning extends LdapProv {
                 throw AccountServiceException.NO_SUCH_DATA_SOURCE(dataSourceId);
             String dn = getDataSourceDn(ldapEntry, dataSource.getName());
             zlc.deleteEntry(dn);
+            if (DataSourceType.gal == dataSource.getType()){
+               if (mbox != null) {
+                   mbox.delete(octxt, dataSource.getFolderId(), MailItem.Type.FOLDER);
+                }
+             }
         } catch (ServiceException e) {
             throw ServiceException.FAILURE("unable to delete data source: "+dataSourceId, e);
         } finally {

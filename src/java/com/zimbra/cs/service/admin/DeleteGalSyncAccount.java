@@ -25,8 +25,11 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.ZAttrProvisioning.AccountStatus;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.soap.ZimbraSoapContext;
 
 import java.util.Collections;
@@ -66,15 +69,20 @@ public class DeleteGalSyncAccount extends AdminDocumentHandler {
 		HashMap<String,Object> attrs = new HashMap<String,Object>();
 		attrs.put(Provisioning.A_zimbraGalAccountId, acctIds);
 		prov.modifyAttrs(domain, attrs);
+		prov.modifyAccountStatus(account, AccountStatus.maintenance.name());
+		Mailbox mbox = Provisioning.onLocalServer(account) ?
+                MailboxManager.getInstance().getMailboxByAccount(account, false) : null;
+        if (mbox != null) {
+            mbox.deleteMailbox();
+        }
 		prov.deleteAccount(id);
-		
-        ZimbraLog.security.info(ZimbraLog.encodeAttrs(
-                new String[] {"cmd", "DeleteGalSyncAccount", "id", id} ));         
+		ZimbraLog.security.info(ZimbraLog.encodeAttrs(
+                new String[] {"cmd", "DeleteGalSyncAccount", "id", id} ));
 
 	    Element response = zsc.createElement(AdminConstants.DELETE_GAL_SYNC_ACCOUNT_RESPONSE);
 	    return response;
 	}
-	
+
     @Override
     public void docRights(List<AdminRight> relatedRights, List<String> notes) {
         relatedRights.add(Admin.R_deleteAccount);
