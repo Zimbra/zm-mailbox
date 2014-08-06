@@ -369,7 +369,7 @@ public final class ParseMimeMessage {
 
             // attachments go into the toplevel "mixed" part
             if (isMultipart && attachElem != null) {
-                handleAttachments(attachElem, mmp, ctxt, null);
+                handleAttachments(attachElem, mmp, ctxt, null, Part.ATTACHMENT);
             }
 
             // <m> attributes: id, f[lags], s[ize], d[ate], cid(conv-id), l(parent folder)
@@ -449,7 +449,7 @@ public final class ParseMimeMessage {
         }
     }
 
-    private static void handleAttachments(Element attachElem, MimeMultipart mmp, ParseMessageContext ctxt, String contentID)
+    private static void handleAttachments(Element attachElem, MimeMultipart mmp, ParseMessageContext ctxt, String contentID, String contentDisposition)
     throws ServiceException, MessagingException, IOException {
         if (contentID != null) {
             contentID = '<' + contentID + '>';
@@ -462,7 +462,7 @@ public final class ParseMimeMessage {
                 if (up == null) {
                     throw MailServiceException.NO_SUCH_UPLOAD(uploadId);
                 }
-                attachUpload(mmp, up, contentID, ctxt, null, null);
+                attachUpload(mmp, up, contentID, ctxt, null, null, contentDisposition);
                 ctxt.out.addUpload(up);
             }
         }
@@ -474,7 +474,7 @@ public final class ParseMimeMessage {
                 if (attachType.equals(MailConstants.E_MIMEPART)) {
                     ItemId iid = new ItemId(elem.getAttribute(MailConstants.A_MESSAGE_ID), ctxt.zsc);
                     String part = elem.getAttribute(MailConstants.A_PART);
-                    attachPart(mmp, iid, part, contentID, ctxt);
+                    attachPart(mmp, iid, part, contentID, ctxt, contentDisposition);
                 } else if (attachType.equals(MailConstants.E_MSG)) {
                     ItemId iid = new ItemId(elem.getAttribute(MailConstants.A_ID), ctxt.zsc);
                     attachMessage(mmp, iid, contentID, ctxt);
@@ -520,7 +520,7 @@ public final class ParseMimeMessage {
 
         Element inline = elem.getOptionalElement(MailConstants.E_ATTACH);
         if (inline != null) {
-            handleAttachments(inline, mmp, ctxt, elem.getAttribute(MailConstants.A_CONTENT_ID, null));
+            handleAttachments(inline, mmp, ctxt, elem.getAttribute(MailConstants.A_CONTENT_ID, null), Part.INLINE);
             return;
         }
 
@@ -622,7 +622,7 @@ public final class ParseMimeMessage {
         }
     }
 
-    private static void attachUpload(MimeMultipart mmp, Upload up, String contentID, ParseMessageContext ctxt, ContentType ctypeOverride, String contentDescription)
+    private static void attachUpload(MimeMultipart mmp, Upload up, String contentID, ParseMessageContext ctxt, ContentType ctypeOverride, String contentDescription, String contentDisposition)
     throws ServiceException, MessagingException {
         // make sure we haven't exceeded the max size
         ctxt.incrementSize("upload " + up.getName(), (long) (up.getSize() * 1.33));
@@ -648,7 +648,12 @@ public final class ParseMimeMessage {
 
         // set headers -- ctypeOverride non-null has magical properties that I'm going to regret tomorrow
         ContentType ctype = ctypeOverride;
-        ContentDisposition cdisp = new ContentDisposition(Part.ATTACHMENT, ctxt.use2231);
+        ContentDisposition cdisp;
+        if (Part.INLINE.equalsIgnoreCase(contentDisposition)){
+            cdisp = new ContentDisposition(Part.INLINE, ctxt.use2231);
+        } else {
+            cdisp = new ContentDisposition(Part.ATTACHMENT, ctxt.use2231);
+        }
         if (ctype == null) {
             ctype = new ContentType(up.getContentType() == null ? MimeConstants.CT_APPLICATION_OCTET_STREAM : up.getContentType());
             ctype.cleanup().setParameter("name", filename);
@@ -674,7 +679,7 @@ public final class ParseMimeMessage {
         try {
             Upload up = UserServlet.getRemoteResourceAsUpload(ctxt.zsc.getAuthToken(), iid, params);
             ctxt.out.addFetch(up);
-            attachUpload(mmp, up, contentID, ctxt, ctypeOverride, null);
+            attachUpload(mmp, up, contentID, ctxt, ctypeOverride, null, "");
             return;
         } catch (IOException ioe) {
             throw ServiceException.FAILURE("can't serialize remote item", ioe);
@@ -795,7 +800,7 @@ public final class ParseMimeMessage {
     }
 
 
-    private static void attachPart(MimeMultipart mmp, ItemId iid, String part, String contentID, ParseMessageContext ctxt)
+    private static void attachPart(MimeMultipart mmp, ItemId iid, String part, String contentID, ParseMessageContext ctxt, String contentDisposition)
     throws IOException, MessagingException, ServiceException {
         if (!iid.isLocal()) {
             Map<String, String> params = new HashMap<String, String>(3);
@@ -828,7 +833,7 @@ public final class ParseMimeMessage {
         Upload up = FileUploadServlet.saveUpload(mp.getInputStream(), filename, contentType, DocumentHandler.getRequestedAccount(ctxt.zsc).getId());
         ctxt.out.addFetch(up);
         String[] contentDesc = mp.getHeader("Content-Description");
-        attachUpload(mmp, up, contentID, ctxt, null, (contentDesc == null || contentDesc.length == 0) ? null : contentDesc[0]);
+        attachUpload(mmp, up, contentID, ctxt, null, (contentDesc == null || contentDesc.length == 0) ? null : contentDesc[0], contentDisposition);
     }
 
 
