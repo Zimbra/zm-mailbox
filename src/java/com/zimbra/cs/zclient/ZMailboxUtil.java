@@ -1989,14 +1989,33 @@ public class ZMailboxUtil implements DebugListener {
     }
 
     private void doCreateFolder(String args[]) throws ServiceException {
-        ZFolder cf = mMbox.createFolder(
-                lookupFolderId(args[0], true),
-                ZMailbox.getBasePath(args[0]),
-                folderViewOpt(),
-                folderColorOpt(),
-                flagsOpt(),
-                urlOpt(false));
-        stdout.println(cf.getId());
+        String path = args[0];
+        if (StringUtil.isNullOrEmpty(path) || "/".equals(path)) {
+            throw ServiceException.FAILURE("null/empty path passed to Mailbox.createFolderPath", null);
+        }
+        if (!path.startsWith("/")) {
+            path = '/' + path;
+        }
+        if (path.endsWith("/") && path.length() > 1) {
+            path = path.substring(0, path.length() - 1);
+        }
+        String[] parts = path.substring(1).split("/");
+        String parentId = lookupFolderId("/", false);
+        for (int i = 0; i < parts.length; i++) {
+            ZFolder cf;
+            cf = mMbox.getFolderByPath(parts[i]);
+            if( cf == null) {
+            cf = mMbox.createFolder(
+                    parentId,
+                    parts[i],
+                    folderViewOpt(),
+                    folderColorOpt(),
+                    flagsOpt(),
+                    urlOpt(false));
+            stdout.println(cf.getId());
+           }
+        parentId = cf.getId();
+        }
     }
 
     private void doCreateSignature(String args[]) throws ServiceException {
