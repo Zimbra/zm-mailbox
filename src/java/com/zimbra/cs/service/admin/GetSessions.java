@@ -161,10 +161,10 @@ public class GetSessions extends AdminDocumentHandler {
                         diff = a.getAccessed() - b.getAccessed();
                         return diff == 0 ? 0 : diff > 0 ? -1 : 1;
                     case createdAsc:
-                        diff = a.getAccessed() - b.getAccessed();
+                        diff = a.getCreated() - b.getCreated();
                         return diff == 0 ? 0 : diff > 0 ? 1 : -1;
                     case createdDesc:
-                        diff = a.getAccessed() - b.getAccessed();
+                        diff = a.getCreated() - b.getCreated();
                         return diff == 0 ? 0 : diff > 0 ? -1 : 1;
                     default:
                         return 0;
