@@ -108,18 +108,22 @@ public class DiscoverRights extends AccountDocumentHandler {
             
             Element eTargets = eParent.addElement(AccountConstants.E_TARGETS);
             eTargets.addAttribute(AccountConstants.A_RIGHT, right.getName());
-            
             for (Entry target : sortedTargets) {
                 TargetType targetType = TargetType.getTargetType(target);
                 Element eTarget = eTargets.addElement(AccountConstants.E_TARGET);
                 eTarget.addAttribute(AccountConstants.A_TYPE, targetType.getCode());
-                
                 if (isDelegatedSendRight) {
                     if (target instanceof Account || target instanceof Group) {
                         String[] addrs = AccountUtil.getAllowedSendAddresses((NamedEntry) target);
+                        NamedEntry entry = (NamedEntry) target;
                         for (String addr : addrs) {
                             Element eEmail = eTarget.addElement(AccountConstants.E_EMAIL);
                             eEmail.addAttribute(AccountConstants.A_ADDR, addr);
+                        }
+                        if (target instanceof Account) {
+                            eTarget.addAttribute(AccountConstants.A_DISPLAY, ((Account) entry).getDisplayName());
+                        } else if (target instanceof Group) {
+                            eTarget.addAttribute(AccountConstants.A_DISPLAY, ((Group) entry).getDisplayName());
                         }
                     } else {
                         throw ServiceException.FAILURE("internal error, target for " +
