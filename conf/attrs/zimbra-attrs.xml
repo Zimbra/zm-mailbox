@@ -8279,4 +8279,9 @@ TODO: delete them permanently from here
   <desc>Auth token secret key used for encrypting data/auth token in share URL when created for external users.</desc>
 </attr>
 
+<attr id="1649" name="zimbraReverseProxyLogToSyslog" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="nginxproxy" since="9.0.0">
+  <globalConfigValue>TRUE</globalConfigValue>
+  <desc>whether nginx proxy should log to syslog</desc>
+</attr>
+
 </attrs>

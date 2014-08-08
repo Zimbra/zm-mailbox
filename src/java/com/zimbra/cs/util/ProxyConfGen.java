@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -469,6 +469,42 @@ class IPv6OnlyEnablerVar extends IPModeEnablerVar {
     public void update() {
         IPMode ipmode = getZimbraIPMode();
         mValue=(ipmode == IPMode.IPV6_ONLY)?true:false;
+    }
+}
+
+class MainLogFileVar extends ProxyConfVar {
+
+    public MainLogFileVar() {
+        super("main.logfile", "zimbraReverseProxyLogToSyslog", "syslog:server=unix:/dev/log,facility=local0,tag=nginx",
+                ProxyConfValueType.STRING, ProxyConfOverride.CONFIG,
+                "Proxy Log file path (based on whether zimbraReverseProxyLogToSyslog is true or false)");
+    }
+
+    @Override
+    public void update() {
+        if (serverSource.getBooleanAttr("zimbraReverseProxyLogToSyslog", true)) {
+            mValue = "syslog:server=unix:/dev/log,facility=local0,tag=nginx";
+        } else {
+            mValue = "/opt/zimbra/log/nginx.log";
+        }
+    }
+}
+
+class WebLogFileVar extends ProxyConfVar {
+
+    public WebLogFileVar() {
+        super("web.logfile", "zimbraReverseProxyLogToSyslog", "syslog:server=unix:/dev/log,facility=local0,tag=nginx,severity=info",
+                ProxyConfValueType.STRING, ProxyConfOverride.CONFIG,
+                "Proxy Access Log file path (based on whether zimbraReverseProxyLogToSyslog is true or false)");
+    }
+
+    @Override
+    public void update() {
+        if (serverSource.getBooleanAttr("zimbraReverseProxyLogToSyslog", true)) {
+            mValue = "syslog:server=unix:/dev/log,facility=local0,tag=nginx,severity=info";
+        } else {
+            mValue = "/opt/zimbra/log/nginx.access.log";
+        }
     }
 }
 
@@ -2200,7 +2236,7 @@ public class ProxyConfGen
         mConfVars.put("main.group", new ProxyConfVar("main.group", null, ZIMBRA_UPSTREAM_NAME, ProxyConfValueType.STRING, ProxyConfOverride.NONE, "The group as which the worker processes will run"));
         mConfVars.put("main.workers", new ProxyConfVar("main.workers", "zimbraReverseProxyWorkerProcesses", new Integer(4), ProxyConfValueType.INTEGER, ProxyConfOverride.SERVER, "Number of worker processes"));
         mConfVars.put("main.pidfile", new ProxyConfVar("main.pidfile", null, mWorkingDir + "/log/nginx.pid", ProxyConfValueType.STRING, ProxyConfOverride.NONE, "PID file path (relative to ${core.workdir})"));
-        mConfVars.put("main.logfile", new ProxyConfVar("main.logfile", null, mWorkingDir + "/log/nginx.log", ProxyConfValueType.STRING, ProxyConfOverride.NONE, "Log file path (relative to ${core.workdir})"));
+        mConfVars.put("main.logfile", new MainLogFileVar());
         mConfVars.put("main.loglevel", new ProxyConfVar("main.loglevel", "zimbraReverseProxyLogLevel", "info", ProxyConfValueType.STRING, ProxyConfOverride.SERVER, "Log level - can be debug|info|notice|warn|error|crit"));
         mConfVars.put("main.connections", new ProxyConfVar("main.connections", "zimbraReverseProxyWorkerConnections", new Integer(10240), ProxyConfValueType.INTEGER, ProxyConfOverride.SERVER, "Maximum number of simultaneous connections per worker process"));
         mConfVars.put("main.krb5keytab", new ProxyConfVar("main.krb5keytab", "krb5_keytab", "/opt/zimbra/conf/krb5.keytab", ProxyConfValueType.STRING, ProxyConfOverride.LOCALCONFIG, "Path to kerberos keytab file used for GSSAPI authentication"));
@@ -2254,7 +2290,7 @@ public class ProxyConfGen
         mConfVars.put("mail.pop3.enabled", new ProxyConfVar("mail.pop3.enabled", "zimbraReverseProxyMailPop3Enabled", true, ProxyConfValueType.ENABLER, ProxyConfOverride.SERVER,"Indicates whether Pop Mail Proxy is enabled"));
         mConfVars.put("mail.pop3s.enabled", new ProxyConfVar("mail.pop3s.enabled", "zimbraReverseProxyMailPop3sEnabled", true, ProxyConfValueType.ENABLER, ProxyConfOverride.SERVER,"Indicates whether Pops Mail Proxy is enabled"));
         mConfVars.put("mail.proxy.ssl", new ProxyConfVar("mail.proxy.ssl", "zimbraReverseProxySSLToUpstreamEnabled", false, ProxyConfValueType.BOOLEAN, ProxyConfOverride.SERVER, "Indicates whether using SSL to connect to upstream mail server"));
-        mConfVars.put("web.logfile", new ProxyConfVar("web.logfile", null, mWorkingDir + "/log/nginx.access.log", ProxyConfValueType.STRING, ProxyConfOverride.NONE, "Access log file path (relative to ${core.workdir})"));
+        mConfVars.put("web.logfile", new WebLogFileVar());
         mConfVars.put("web.mailmode", new ProxyConfVar("web.mailmode", Provisioning.A_zimbraReverseProxyMailMode, "both", ProxyConfValueType.STRING, ProxyConfOverride.SERVER,"Reverse Proxy Mail Mode - can be http|https|both|redirect|mixed"));
         mConfVars.put("web.server_name.default", new ProxyConfVar("web.server_name.default", "zimbra_server_hostname", "localhost", ProxyConfValueType.STRING, ProxyConfOverride.LOCALCONFIG, "The server name for default server config"));
         mConfVars.put("web.upstream.name", new ProxyConfVar("web.upstream.name", null, ZIMBRA_UPSTREAM_NAME, ProxyConfValueType.STRING, ProxyConfOverride.CONFIG,"Symbolic name for HTTP upstream cluster"));

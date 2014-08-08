@@ -32689,6 +32689,78 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * whether nginx proxy should log to syslog
+     *
+     * @return zimbraReverseProxyLogToSyslog, or true if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1649)
+    public boolean isReverseProxyLogToSyslog() {
+        return getBooleanAttr(Provisioning.A_zimbraReverseProxyLogToSyslog, true);
+    }
+
+    /**
+     * whether nginx proxy should log to syslog
+     *
+     * @param zimbraReverseProxyLogToSyslog new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1649)
+    public void setReverseProxyLogToSyslog(boolean zimbraReverseProxyLogToSyslog) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyLogToSyslog, zimbraReverseProxyLogToSyslog ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether nginx proxy should log to syslog
+     *
+     * @param zimbraReverseProxyLogToSyslog new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1649)
+    public Map<String,Object> setReverseProxyLogToSyslog(boolean zimbraReverseProxyLogToSyslog, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyLogToSyslog, zimbraReverseProxyLogToSyslog ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * whether nginx proxy should log to syslog
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1649)
+    public void unsetReverseProxyLogToSyslog() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyLogToSyslog, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether nginx proxy should log to syslog
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1649)
+    public Map<String,Object> unsetReverseProxyLogToSyslog(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyLogToSyslog, "");
+        return attrs;
+    }
+
+    /**
      * whether this server is a reverse proxy lookup target
      *
      * @return zimbraReverseProxyLookupTarget, or false if unset
