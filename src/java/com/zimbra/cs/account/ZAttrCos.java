@@ -38309,6 +38309,83 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
+     * Whether to allow the send message Control-Enter shortcut in the web
+     * client UI
+     *
+     * @return zimbraPrefUseSendMsgShortcut, or true if unset
+     *
+     * @since ZCS 8.6.0,9.0.0
+     */
+    @ZAttr(id=1650)
+    public boolean isPrefUseSendMsgShortcut() {
+        return getBooleanAttr(Provisioning.A_zimbraPrefUseSendMsgShortcut, true);
+    }
+
+    /**
+     * Whether to allow the send message Control-Enter shortcut in the web
+     * client UI
+     *
+     * @param zimbraPrefUseSendMsgShortcut new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.6.0,9.0.0
+     */
+    @ZAttr(id=1650)
+    public void setPrefUseSendMsgShortcut(boolean zimbraPrefUseSendMsgShortcut) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefUseSendMsgShortcut, zimbraPrefUseSendMsgShortcut ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to allow the send message Control-Enter shortcut in the web
+     * client UI
+     *
+     * @param zimbraPrefUseSendMsgShortcut new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.6.0,9.0.0
+     */
+    @ZAttr(id=1650)
+    public Map<String,Object> setPrefUseSendMsgShortcut(boolean zimbraPrefUseSendMsgShortcut, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefUseSendMsgShortcut, zimbraPrefUseSendMsgShortcut ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether to allow the send message Control-Enter shortcut in the web
+     * client UI
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.6.0,9.0.0
+     */
+    @ZAttr(id=1650)
+    public void unsetPrefUseSendMsgShortcut() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefUseSendMsgShortcut, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to allow the send message Control-Enter shortcut in the web
+     * client UI
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.6.0,9.0.0
+     */
+    @ZAttr(id=1650)
+    public Map<String,Object> unsetPrefUseSendMsgShortcut(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefUseSendMsgShortcut, "");
+        return attrs;
+    }
+
+    /**
      * whether list of well known time zones is displayed in calendar UI
      *
      * @return zimbraPrefUseTimeZoneListInCalendar, or false if unset
