@@ -12343,6 +12343,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraReverseProxyLogLevel = "zimbraReverseProxyLogLevel";
 
     /**
+     * whether nginx proxy should log to syslog
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1649)
+    public static final String A_zimbraReverseProxyLogToSyslog = "zimbraReverseProxyLogToSyslog";
+
+    /**
      * whether this server is a reverse proxy lookup target
      */
     @ZAttr(id=504)
