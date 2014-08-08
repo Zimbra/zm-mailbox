@@ -107,6 +107,8 @@ public class GetDomainInfo extends AdminDocumentHandler {
             domain.addAttribute(AdminConstants.A_ID, "VALUE-BLOCKED");
             if (entry != null) {
                 addAttrElementIfNotNull(entry, domain, ZAttrProvisioning.A_zimbraSkinLogoURL);
+                addAttrElementIfNotNull(entry, domain, ZAttrProvisioning.A_zimbraSkinLogoAppBanner);
+                addAttrElementIfNotNull(entry, domain, ZAttrProvisioning.A_zimbraSkinLogoLoginBanner);
                 addAttrElementIfNotNull(entry, domain, ZAttrProvisioning.A_zimbraAdminConsoleLoginURL);
                 addAttrElementIfNotNull(entry, domain, ZAttrProvisioning.A_zimbraWebClientLoginURL);
                 addAttrElementIfNotNull(entry, domain, ZAttrProvisioning.A_zimbraWebClientLoginURLAllowedUA);
