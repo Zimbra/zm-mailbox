@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -47,11 +47,10 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.ScheduledTaskManager;
-import com.zimbra.cs.util.Zimbra;
 
 /**
  * @author zimbra
- * 
+ *
  */
 public class AclPushTest {
 
@@ -101,20 +100,23 @@ public class AclPushTest {
 		Folder folder = mbox.createFolder(null, "shared",
 				new Folder.FolderOptions()
 						.setDefaultView(MailItem.Type.DOCUMENT));
-		
+
 		OperationContext octxt = new OperationContext(owner);
 		Multimap<Integer, Integer> mboxIdToItemIds = null;
-		synchronized (mbox) {
-		mbox.grantAccess(octxt, folder.getId(), grantee.getId(),
-				ACL.GRANTEE_USER, ACL.stringToRights("r"), null);
-		mbox.grantAccess(octxt, folder.getId(), grantee.getId(),
-				ACL.GRANTEE_USER, ACL.stringToRights("rw"), null);
-		
-		mboxIdToItemIds = DbPendingAclPush
-				.getEntries(new Date());
+		mbox.lock.lock();
+		try {
+    		mbox.grantAccess(octxt, folder.getId(), grantee.getId(),
+    				ACL.GRANTEE_USER, ACL.stringToRights("r"), null);
+    		mbox.grantAccess(octxt, folder.getId(), grantee.getId(),
+    				ACL.GRANTEE_USER, ACL.stringToRights("rw"), null);
+
+    		mboxIdToItemIds = DbPendingAclPush
+    				.getEntries(new Date());
+		} finally {
+		    mbox.lock.release();
 		}
 //		assertTrue(mboxIdToItemIds.size() == 1);
-		
+
 		Thread.sleep(1000);
 		mboxIdToItemIds = DbPendingAclPush.getEntries(new Date());
 		assertTrue(mboxIdToItemIds.size() == 0);
@@ -125,35 +127,38 @@ public class AclPushTest {
 
 	@Test
 	public void getAclPushEntriesFolderNameWithSemiColon() throws Exception {
-	
+
 		try {
 		Account owner = Provisioning.getInstance().get(Key.AccountBy.name,
 				"owner@zimbra.com");
 		Account grantee = Provisioning.getInstance().get(Key.AccountBy.name,
 				"principal@zimbra.com");
 		Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(owner);
-	
+
 		Folder folder = mbox.createFolder(null, "shared",
 				new Folder.FolderOptions()
 						.setDefaultView(MailItem.Type.DOCUMENT));
 		Folder folder2 = mbox.createFolder(null, "shared; hello",
 				new Folder.FolderOptions()
 						.setDefaultView(MailItem.Type.DOCUMENT));
-	
+
 		OperationContext octxt = new OperationContext(owner);
 		Multimap<Integer, Integer> mboxIdToItemIds = null;
-		
-		synchronized (mbox) {
-		mbox.grantAccess(octxt, folder.getId(), grantee.getId(),
-				ACL.GRANTEE_USER, ACL.stringToRights("r"), null);
-		mbox.grantAccess(octxt, folder2.getId(), grantee.getId(),
-				ACL.GRANTEE_USER, ACL.stringToRights("rw"), null);
-	
-		mboxIdToItemIds = DbPendingAclPush
-				.getEntries(new Date());
+
+        mbox.lock.lock();
+        try {
+    		mbox.grantAccess(octxt, folder.getId(), grantee.getId(),
+    				ACL.GRANTEE_USER, ACL.stringToRights("r"), null);
+    		mbox.grantAccess(octxt, folder2.getId(), grantee.getId(),
+    				ACL.GRANTEE_USER, ACL.stringToRights("rw"), null);
+
+    		mboxIdToItemIds = DbPendingAclPush
+    				.getEntries(new Date());
+		} finally {
+		    mbox.lock.release();
 		}
 //		assertTrue(mboxIdToItemIds.size() == 2);
-	
+
 		Thread.sleep(1000);
 		mboxIdToItemIds = DbPendingAclPush.getEntries(new Date());
 		assertTrue(mboxIdToItemIds.size() == 0);
@@ -162,5 +167,5 @@ public class AclPushTest {
 		}
 	}
 
-	
+
 }
