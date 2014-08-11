@@ -707,7 +707,7 @@ public final class MailboxIndex {
             ZimbraLog.index.debug("Tokenizing id=%d", id);
             MailItem item = null;
             try {
-                mailbox.beginTransaction("IndexItemList-Fetch", null);
+                mailbox.beginReadTransaction("IndexItemList-Fetch", null);
                 item = mailbox.getItemById(id, MailItem.Type.UNKNOWN, false);
             } catch (MailServiceException.NoSuchItemException e) { // fallback to dumpster
                 try {
@@ -1036,7 +1036,7 @@ public final class MailboxIndex {
         List<DbSearch.Result> result;
         boolean success = false;
         try {
-            mailbox.beginTransaction("search", null);
+            mailbox.beginReadTransaction("search", null);
             result = new DbSearch(mailbox, inDumpster).search(mailbox.getOperationConnection(),
                     constraints, sort, offset, size, fetch);
             if (fetch == DbSearch.FetchMode.MAIL_ITEM) {
