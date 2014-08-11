@@ -251,6 +251,11 @@
         <url-pattern>/upload</url-pattern>
     </filter-mapping>
 
+  <error-page>
+    <error-code>400</error-code>
+    <location>/error/error400.jsp</location>
+  </error-page>
+
   <servlet>
     <servlet-name>FirstServlet</servlet-name>
     <servlet-class>com.zimbra.cs.servlet.FirstServlet</servlet-class>
