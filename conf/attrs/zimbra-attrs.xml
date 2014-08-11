@@ -8279,4 +8279,9 @@ TODO: delete them permanently from here
   <desc>Auth token secret key used for encrypting data/auth token in share URL when created for external users.</desc>
 </attr>
 
+<attr id="1650" name="zimbraPrefUseSendMsgShortcut" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="8.6.0, 9.0.0">
+  <defaultCOSValue>TRUE</defaultCOSValue>
+  <desc>Whether to allow the send message Control-Enter shortcut in the web client UI</desc>
+</attr>
+
 </attrs>
