@@ -11691,6 +11691,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefUseRfc2231 = "zimbraPrefUseRfc2231";
 
     /**
+     * Whether to allow the send message Control-Enter shortcut in the web
+     * client UI
+     *
+     * @since ZCS 8.6.0,9.0.0
+     */
+    @ZAttr(id=1650)
+    public static final String A_zimbraPrefUseSendMsgShortcut = "zimbraPrefUseSendMsgShortcut";
+
+    /**
      * whether list of well known time zones is displayed in calendar UI
      */
     @ZAttr(id=236)
