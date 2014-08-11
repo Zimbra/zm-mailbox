@@ -41,6 +41,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.SoapProtocol;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.GalContact;
@@ -652,6 +653,17 @@ public class ContactAutoComplete {
                     }
                     addEntry(entry, result);
                     ZimbraLog.gal.debug("adding %s", entry.getEmail());
+                    //add alias of the matched one
+                    String alias = getFieldAsString(attrs, ContactConstants.A_email2); //zimbraMailAlias is mapped to email2
+                    if (!StringUtil.isNullOrEmpty(alias)) {
+                        entry = new ContactEntry();
+                        entry.mEmail = alias;
+                        entry.setName(fullName);
+                        entry.mId = id;
+                        entry.mFolderId = folderId;
+                        addEntry(entry, result);
+                        ZimbraLog.gal.debug("adding alias %s", entry.getEmail());
+                    }
                     if (folderId == FOLDER_ID_GAL) {
                         // we've matched the first email address for this
                         // GAL contact.  move onto the next contact.
