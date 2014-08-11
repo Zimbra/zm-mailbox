@@ -19,6 +19,7 @@ package com.zimbra.cs.service.admin;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import com.zimbra.common.auth.ZAuthToken;
@@ -138,8 +139,6 @@ public class DeployZimlet extends AdminDocumentHandler {
                 if (server != null && progress != null) {
 					progress.markFailed(server, e);
                 }
-			} finally {
-				FileUploadServlet.deleteUpload(upload);
 			}
 		}
 	}
@@ -149,24 +148,22 @@ public class DeployZimlet extends AdminDocumentHandler {
 		mProgressMap = MapUtil.newLruMap(20);
 	}
 
-	private void deploy(ZimbraSoapContext lc, Server server, String aid, ZAuthToken auth, boolean flushCache,
-	        boolean synchronous) throws ServiceException {
-        Upload up = FileUploadServlet.fetchUpload(lc.getAuthtokenAccountId(), aid, lc.getAuthToken());
-        if (up == null) {
-            throw MailServiceException.NO_SUCH_UPLOAD(aid);
-        }
-
+	private void deploy(ZimbraSoapContext lc, Server server, Upload upload, String aid, ZAuthToken auth,
+	        boolean flushCache, boolean synchronous, CountDownLatch latch) throws ServiceException {
         Progress pr = new Progress((auth != null));
         mProgressMap.put(aid, pr);
-        Runnable action = new DeployThread(server, up, pr, auth, flushCache);
+        Runnable action = new DeployThread(server, upload, pr, auth, flushCache);
         Thread t = new Thread(action);
         t.start();
-        if (synchronous) {
+        if (!synchronous) {
             try {
                 t.join(TimeUnit.MILLISECONDS.convert(LC.zimlet_deploy_timeout.intValue(), TimeUnit.SECONDS));
             } catch (InterruptedException e) {
                 ZimbraLog.zimlet.warn("error while deploying Zimlet", e);
             }
+        }
+        if (latch != null) {
+            latch.countDown();
         }
 	}
 
@@ -183,36 +180,57 @@ public class DeployZimlet extends AdminDocumentHandler {
 			// just print the status
 		} else if (action.equals(AdminConstants.A_DEPLOYALL)) {
 		    List<Server> servers = Provisioning.getInstance().getAllServers();
-		    for (Server server : servers) {
-		        try {
-		            checkRight(zsc, context, server, Admin.R_deployZimlet);
-	                if (server.isLocalServer()) {
-	                    deploy(zsc, server, aid, null, false, synchronous);
-	                } else {
+	        Upload up = FileUploadServlet.fetchUpload(zsc.getAuthtokenAccountId(), aid, zsc.getAuthToken());
+	        if (up == null) {
+	            throw MailServiceException.NO_SUCH_UPLOAD(aid);
+	        }
+	        CountDownLatch latch = new CountDownLatch(servers.size());
+	        ZimbraLog.zimlet.debug("countdown latch init: %d", latch.getCount());
+            for (Server server : servers) {
+                try {
+                    checkRight(zsc, context, server, Admin.R_deployZimlet);
+                    ZimbraLog.zimlet.debug("countdown latch: %d", latch.getCount());
+                    if (server.isLocalServer()) {
+                        deploy(zsc, server, up, aid, null, false, synchronous, latch);
+                    } else {
                         ZimbraLog.zimlet.info("deploy on remote node %s", server.getName());
-	                    deploy(zsc, server, aid, zsc.getRawAuthToken(), flushCache, synchronous);
-	                }
-	                if (flushCache) {
-	                    if (ZimbraLog.misc.isDebugEnabled()) {
-	                        ZimbraLog.misc.debug("DeployZimlet: flushing zimlet cache");
-	                    }
-	                    checkRight(zsc, context, Provisioning.getInstance().getLocalServer(), Admin.R_flushCache);
-	                    if (server.hasMailClientService()) {
-	                        FlushCache.flushAllZimlets(context);
-	                    } else {
-	                        WebClientServiceUtil.sendFlushZimletRequestToUiNode(server);
-	                    }
-	                }
-		        } catch (ServiceException e) {
-		            ZimbraLog.zimlet.warn("deploy zimlet failed for node %s", server.getName(), e);
-		        }
-		    }
+                        deploy(zsc, server, up, aid, zsc.getRawAuthToken(), flushCache, synchronous, latch);
+                    }
+                    if (flushCache) {
+                        if (ZimbraLog.misc.isDebugEnabled()) {
+                            ZimbraLog.misc.debug("DeployZimlet: flushing zimlet cache");
+                        }
+                        checkRight(zsc, context, Provisioning.getInstance().getLocalServer(), Admin.R_flushCache);
+                        if (server.hasMailClientService()) {
+                            FlushCache.flushAllZimlets(context);
+                        } else {
+                            WebClientServiceUtil.sendFlushZimletRequestToUiNode(server);
+                        }
+                    }
+                } catch (ServiceException e) {
+                    latch.countDown();
+                    ZimbraLog.zimlet.warn("deploy zimlet failed for node %s, coutdown latch %d",
+                            server.getName(), latch.getCount(), e);
+                }
+            }
+            try {
+                latch.await(LC.zimlet_deploy_timeout.intValue() * servers.size(), TimeUnit.SECONDS);
+            } catch (InterruptedException e) {
+                ZimbraLog.zimlet.warn("CountDownLatch failed %d", latch.getCount(), e);
+            }
+            FileUploadServlet.deleteUpload(up);
 		} else if (action.equals(AdminConstants.A_DEPLOYLOCAL)) {
 		    Server localServer = Provisioning.getInstance().getLocalServer();
 		    checkRight(zsc, context, localServer, Admin.R_deployZimlet);
-
-			deploy(zsc, localServer, aid, null, false, synchronous);
-
+            Upload up = FileUploadServlet.fetchUpload(zsc.getAuthtokenAccountId(), aid, zsc.getAuthToken());
+            if (up == null) {
+                throw MailServiceException.NO_SUCH_UPLOAD(aid);
+            }
+            try {
+                deploy(zsc, localServer, up, aid, null, false, synchronous, null);
+            } finally {
+                FileUploadServlet.deleteUpload(up);
+            }
             if (flushCache) {
 				if (ZimbraLog.misc.isDebugEnabled()) {
 					ZimbraLog.misc.debug("DeployZimlet: flushing zimlet cache");

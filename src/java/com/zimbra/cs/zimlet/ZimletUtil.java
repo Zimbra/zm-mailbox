@@ -1539,7 +1539,8 @@ public class ZimletUtil {
                 if (mSynchronous) {
                     ZimbraLog.zimlet.info("Deploy status: %s", mStatus);
                 } else {
-                    ZimbraLog.zimlet.info("Deploy initiated.  Check the server's mailbox.log for the status.");
+                    ZimbraLog.zimlet.info("Deploy initiated. Check the server %s's mailbox.log for the status.",
+                        server.getName());
                 }
 				if (listener != null) {
                     listener.markFinished(server);
@@ -1567,7 +1568,8 @@ public class ZimletUtil {
                 if (mSynchronous) {
                     ZimbraLog.zimlet.info("Deploy status: %s", mStatus);
                 } else {
-                    ZimbraLog.zimlet.info("Deploy initiated.  Check the server's mailbox.log for the status.");
+                    ZimbraLog.zimlet.info("Deploy initiated. Check the server %s's mailbox.log for the status.",
+                        server.getName());
                 }
                 if (listener != null) {
                     listener.markFinished(server);
@@ -1613,7 +1615,8 @@ public class ZimletUtil {
 	            req.addAttribute(AdminConstants.A_ACTION, AdminConstants.A_DEPLOYLOCAL);
 	            req.addAttribute(AdminConstants.A_NAME, zimlet);
 	            mTransport.invoke(req);
-				ZimbraLog.zimlet.info("Undeploy initiated.  (check the servers mailbox.log for the status)");
+				ZimbraLog.zimlet.info("Undeploy initiated. Check the server %s's mailbox.log for the status.",
+                        server.getName());
 			} catch (Exception e) {
 				if (e instanceof ServiceException) {
                     throw (ServiceException)e;
