@@ -21,6 +21,7 @@ import java.util.List;
 import com.unboundid.ldap.protocol.LDAPResponse;
 import com.unboundid.ldap.sdk.Control;
 import com.unboundid.ldap.sdk.Entry;
+import com.unboundid.ldap.sdk.ExtendedRequest;
 import com.unboundid.ldap.sdk.LDAPConnection;
 import com.unboundid.ldap.sdk.LDAPConnectionPool;
 import com.unboundid.ldap.sdk.LDAPException;
@@ -31,6 +32,7 @@ import com.unboundid.ldap.sdk.ResultCode;
 import com.unboundid.ldap.sdk.SearchRequest;
 import com.unboundid.ldap.sdk.SearchResult;
 import com.unboundid.ldap.sdk.SearchResultEntry;
+import com.unboundid.ldap.sdk.extensions.PasswordModifyExtendedRequest;
 import com.unboundid.ldap.sdk.schema.Schema;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
@@ -54,6 +56,7 @@ abstract class UBIDLdapOperation {
     static final ModifyAttrs MODIFY_ATTRS = new ModifyAttrs();
     static final TestAndModifyAttrs TEST_AND_MODIFY_ATTRS = new TestAndModifyAttrs();
     static final ModifyDN MODIFY_DN = new ModifyDN();
+    static final SetPassword SET_PASSWORD = new SetPassword();
     static final GenericOp GENERIC_OP = new GenericOp();
 
     protected void stat(long startTime) {
@@ -492,6 +495,40 @@ abstract class UBIDLdapOperation {
                 }
             }
         }
+    }
+
+    static class SetPassword extends UBIDLdapOperation {
+
+        @Override
+        protected LdapOp getOp() {
+            return LdapOp.SET_PASSWORD;
+        }
+
+        LDAPResult execute(UBIDLdapContext ctx, String dn, String newPassword) throws LDAPException {
+            LDAPResult result = null;
+            long startTime = System.currentTimeMillis();
+            ExtendedRequest req = new PasswordModifyExtendedRequest(dn, null, newPassword);
+            try {
+                result = ctx.getConn().processExtendedOperation(req);
+                stat(startTime);
+                return result;
+            } catch (LDAPException e) {
+                if (ResultCode.SERVER_DOWN == e.getResultCode()) {
+                    result = ctx.getConnectionPool().processExtendedOperation(req);
+                    stat(startTime);
+                    return result;
+                } else {
+                    throw e;
+                }
+            } finally {
+                if (debugEnabled()) {
+                    debug(ctx, startTime, result,
+                            String.format("dn=[%s]", dn));
+                }
+            }
+
+        }
+
     }
 
 
