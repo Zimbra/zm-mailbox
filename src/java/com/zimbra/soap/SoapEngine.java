@@ -301,11 +301,14 @@ public class SoapEngine {
         }
 
         Element doc = soapProto.getBodyElement(envelope);
+        if (doc == null) {
+            return soapFaultEnv(soapProto, "SOAP exception", ServiceException.INVALID_REQUEST("No SOAP body", null));
+        }
         ServletRequest servReq = (ServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
         boolean doCsrfCheck = false;
         if (servReq.getAttribute(CsrfFilter.CSRF_TOKEN_CHECK) != null) {
             doCsrfCheck =  (Boolean) servReq.getAttribute(CsrfFilter.CSRF_TOKEN_CHECK);
-            if (soapProto.getBodyElement(envelope).getOptionalElement("AuthRequest") != null) {
+            if (doc.getName().equals("AuthRequest")) {
                 // this is a Auth request, no CSRF validation happens
                 doCsrfCheck = false;
             }
@@ -329,10 +332,6 @@ public class SoapEngine {
                 LOG.debug("Error during CSRF validation.", e);
                 return soapFaultEnv(soapProto, "cannot dispatch request", ServiceException.AUTH_REQUIRED());
             }
-        }
-
-        if (doc == null) {
-            return soapFaultEnv(soapProto, "SOAP exception", ServiceException.INVALID_REQUEST("No SOAP body", null));
         }
 
         ZimbraSoapContext zsc = null;
