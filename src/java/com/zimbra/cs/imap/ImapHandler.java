@@ -936,7 +936,7 @@ abstract class ImapHandler {
     private QResyncInfo parseQResyncInfo(ImapRequest req) throws ImapParseException {
         QResyncInfo qri = new QResyncInfo();
         req.skipChar('(');
-        qri.uvv = req.parseInteger(req.readNumber());
+        qri.uvv = req.parseLong(req.readNumber());
         req.skipSpace();
         qri.modseq = req.parseInteger(req.readNumber());
         if (req.peekChar() == ' ') {
@@ -2397,7 +2397,8 @@ abstract class ImapHandler {
         StringBuilder data = new StringBuilder("STATUS ").append(path.asUtf7String()).append(" (");
         int empty = data.length();
 
-        int messages, recent, uidnext, uvv, unread, modseq;
+        int messages, recent, uidnext, unread, modseq;
+        long uvv;
         Object mboxobj = path.getOwnerMailbox();
         if (mboxobj instanceof Mailbox) {
             Mailbox mbox = (Mailbox) mboxobj;
@@ -2498,7 +2499,7 @@ abstract class ImapHandler {
                 }
             }
 
-            int uvv = (folderobj instanceof Folder ? ImapFolder.getUIDValidity((Folder) folderobj) : ImapFolder.getUIDValidity((ZFolder) folderobj));
+            long uvv = (folderobj instanceof Folder ? ImapFolder.getUIDValidity((Folder) folderobj) : ImapFolder.getUIDValidity((ZFolder) folderobj));
             if (appendHint != null && uvv > 0) {
                 appendHint.append("[APPENDUID ").append(uvv).append(' ')
                     .append(ImapFolder.encodeSubsequence(createdIds)).append("] ");
@@ -4179,7 +4180,7 @@ abstract class ImapHandler {
             Object mboxobj = path.getOwnerMailbox();
             ItemId iidTarget;
             boolean sameMailbox = false;
-            int uvv;
+            long uvv;
 
             // check target folder permissions before attempting the copy
             if (mboxobj instanceof Mailbox) {

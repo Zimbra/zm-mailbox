@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -70,7 +70,7 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
     private transient ImapFlagCache flags;
 
     private final int folderId;
-    private final int uidValidity;
+    private final long uidValidity;
     private String query;
     private Set<MailItem.Type> typeConstraint = ImapHandler.ITEM_TYPES;
     private final List<ImapMessage> sequence = new ArrayList<ImapMessage>();
@@ -241,7 +241,7 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
 
     /** Returns the folder's IMAP UID validity value.
      * @see #getUIDValidity(Folder) */
-    int getUIDValidity() {
+    long getUIDValidity() {
         return uidValidity;
     }
 
@@ -297,7 +297,7 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
     /** Returns the UID Validity Value for the {@link Folder}.  This is the
      *  folder's <tt>MOD_CONTENT</tt> change sequence number.
      * @see Folder#getSavedSequence() */
-    static int getUIDValidity(Folder folder) {
+    static long getUIDValidity(Folder folder) {
         return Math.max(folder.getSavedSequence(), 1);
     }
 

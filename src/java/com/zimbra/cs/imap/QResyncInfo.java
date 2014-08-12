@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -18,13 +18,13 @@
 package com.zimbra.cs.imap;
 
 public class QResyncInfo {
-    int uvv;
+    long uvv;
     int modseq;
     String knownUIDs;
     String seqMilestones;
     String uidMilestones;
 
-    public void setUvv(int uvv) {
+    public void setUvv(long uvv) {
         this.uvv = uvv;
     }
 
@@ -47,13 +47,13 @@ public class QResyncInfo {
     @Override
     public int hashCode() {
         final int prime = 31;
-        int result = 1;
+        long result = 1;
         result = prime * result + ((knownUIDs == null) ? 0 : knownUIDs.hashCode());
         result = prime * result + modseq;
         result = prime * result + ((seqMilestones == null) ? 0 : seqMilestones.hashCode());
         result = prime * result + ((uidMilestones == null) ? 0 : uidMilestones.hashCode());
         result = prime * result + uvv;
-        return result;
+        return new Long(result).hashCode();
     }
 
     @Override
