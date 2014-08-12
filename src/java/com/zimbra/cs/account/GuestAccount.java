@@ -24,8 +24,11 @@ import java.util.Map;
 public class GuestAccount extends Account {
     private final String digest;     // for guest grantee
     private String accessKey;  // for key grantee
+    
+    /**email address for anonymous account */
+    public static final String EMAIL_ADDRESS_PUBLIC = "public";
 
-    public static final Account ANONYMOUS_ACCT = new GuestAccount("public", null);
+    public static final Account ANONYMOUS_ACCT = new GuestAccount(EMAIL_ADDRESS_PUBLIC, null);
 
     /** The pseudo-GUID signifying "all authenticated and unauthenticated users". */
     public static final String GUID_PUBLIC   = "99999999-9999-9999-9999-999999999999";
@@ -80,7 +83,7 @@ public class GuestAccount extends Account {
 
     @Override
     public boolean isIsExternalVirtualAccount() {
-        return getDigest() != null && getAccessKey() == null;
+        return !EMAIL_ADDRESS_PUBLIC.equals(getName()) && getAccessKey() == null;
     }
 
     @Override
