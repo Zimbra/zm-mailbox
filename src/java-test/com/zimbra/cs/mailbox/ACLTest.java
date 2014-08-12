@@ -26,7 +26,9 @@ import org.junit.Test;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 
 public class ACLTest {
 
@@ -84,4 +86,29 @@ public class ACLTest {
             Assert.fail("regrant has failed");
         }
     }
+    
+    @Test
+	public void testPublicAccess() throws Exception {
+		Account owner = Provisioning.getInstance().get(Key.AccountBy.name,"owner@zimbra.com");
+		owner.setExternalSharingEnabled(false);
+		Account guestUser = GuestAccount.ANONYMOUS_ACCT;
+
+		Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(owner);
+
+		Folder folder = mbox.createFolder(null, "sharedCalender",new Folder.FolderOptions().setDefaultView(MailItem.Type.APPOINTMENT));
+		OperationContext octxt = new OperationContext(owner);
+		mbox.grantAccess(octxt, folder.getId(), guestUser.getId(),ACL.GRANTEE_PUBLIC, ACL.stringToRights("r"), null);
+
+		UnderlyingData underlyingData = new UnderlyingData();
+		underlyingData.setSubject("test subject");
+		underlyingData.folderId = folder.getId();
+		underlyingData.name = "name";
+		underlyingData.type = MailItem.Type.APPOINTMENT.toByte();
+		underlyingData.uuid = owner.getUid();
+		underlyingData.parentId = folder.getId();
+		underlyingData.setBlobDigest("test digest");
+
+		CalendarItem calendarItem = new Appointment(mbox, underlyingData, true);
+		Assert.assertTrue(calendarItem.canAccess(ACL.RIGHT_READ, guestUser,false));
+	}
 }
