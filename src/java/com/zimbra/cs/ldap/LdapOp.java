@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -15,12 +15,12 @@
  * ***** END LICENSE BLOCK *****
  */
 /**
- * 
+ *
  */
 package com.zimbra.cs.ldap;
 
 public enum LdapOp {
-    GET_CONN("get a connection from a connection pool"),  
+    GET_CONN("get a connection from a connection pool"),
     REL_CONN("release a connection back to the connection pool"),
     OPEN_CONN("open a new connection"),
     CLOSE_CONN("close a connection"),
@@ -31,10 +31,11 @@ public enum LdapOp {
     MODIFY_DN("modify DN"),
     MODIFY_ATTRS("modify attributes"),
     SEARCH("search"),
-    TEST_AND_MODIFY_ATTRS("test and modify attributes");
-    
+    TEST_AND_MODIFY_ATTRS("test and modify attributes"),
+    SET_PASSWORD("set password");
+
     private String desc;
-    
+
     private LdapOp(String desc) {
         this.desc = desc;
     }

@@ -524,6 +524,26 @@ public class LdapProvisioning extends LdapProv {
         }
     }
 
+    private void setLdapPassword(Entry entry, ZLdapContext initZlc, String newPassword)
+            throws ServiceException {
+        ZLdapContext zlc = initZlc;
+        try {
+            if (zlc == null) {
+                zlc = LdapClient.getContext(LdapServerType.MASTER,
+                        LdapUsage.SET_PASSWORD);
+            }
+            zlc.setPassword(((LdapEntry)entry).getDN(), newPassword);
+        } catch (ServiceException e) {
+            throw ServiceException.FAILURE("unable to set password: "
+                    + e.getMessage(), e);
+        } finally {
+            refreshEntry(entry, zlc);
+            if (initZlc == null) {
+                LdapClient.closeContext(zlc);
+            }
+        }
+    }
+
     /**
      * reload/refresh the entry from the ***master***.
      */
@@ -1255,7 +1275,7 @@ public class LdapProvisioning extends LdapProv {
 
             entry.setAttr(A_uid, localPart);
 
-            setInitialPassword(cos, entry, password);
+            entry.setAttr(Provisioning.A_zimbraPasswordModifiedTime, DateUtil.toGeneralizedTime(new Date()));
 
             String ucPassword = entry.getAttrString(Provisioning.A_zimbraUCPassword);
             if (ucPassword != null) {
@@ -1278,6 +1298,7 @@ public class LdapProvisioning extends LdapProv {
             AttributeManager.getInstance().postModify(acctAttrs, acct, callbackContext);
             removeExternalAddrsFromAllDynamicGroups(acct.getAllAddrsSet(), zlc);
             validate(ProvisioningValidator.CREATE_ACCOUNT_SUCCEEDED, emailAddress, acct, skipCountingLicenseQuota);
+            setLdapPassword(acct, zlc, password);
             return acct;
         } catch (LdapEntryAlreadyExistException e) {
             throw AccountServiceException.ACCOUNT_EXISTS(emailAddress, dn, e);
@@ -5639,20 +5660,6 @@ public class LdapProvisioning extends LdapProv {
             (ch >=123 && ch <= 126);  // { | } ~
     }
 
-    // called by create account
-    private void setInitialPassword(Cos cos, ZMutableEntry entry, String newPassword)
-    throws ServiceException {
-        String userPassword = entry.getAttrString(Provisioning.A_userPassword);
-        if (userPassword == null && (newPassword == null || "".equals(newPassword))) return;
-
-        if (userPassword == null) {
-            checkPasswordStrength(newPassword, null, cos, entry);
-            userPassword = PasswordUtil.SSHA512.generateSSHA512(newPassword, null);
-        }
-        entry.setAttr(Provisioning.A_userPassword, userPassword);
-        entry.setAttr(Provisioning.A_zimbraPasswordModifiedTime, DateUtil.toGeneralizedTime(new Date()));
-    }
-
     void setPassword(Account acct, String newPassword, boolean enforcePolicy, boolean dryRun)
     throws ServiceException {
 
@@ -5694,13 +5701,10 @@ public class LdapProvisioning extends LdapProv {
             return;
         }
 
-        String encodedPassword = PasswordUtil.SSHA512.generateSSHA512(newPassword, null);
-
         // unset it so it doesn't take up space...
         if (mustChange)
             attrs.put(Provisioning.A_zimbraPasswordMustChange, "");
 
-        attrs.put(Provisioning.A_userPassword, encodedPassword);
         attrs.put(Provisioning.A_zimbraPasswordModifiedTime, DateUtil.toGeneralizedTime(new Date()));
 
         // update the validity value to invalidate auto-standing auth tokens
@@ -5711,6 +5715,7 @@ public class LdapProvisioning extends LdapProv {
         ChangePasswordListener.invokePreModify(acct, newPassword, ctxts, attrs);
 
         try{
+            setLdapPassword(acct, null, newPassword);
             // modify the password
             modifyAttrs(acct, attrs);
         } catch(ServiceException se){
