@@ -105,8 +105,9 @@ public class ACLTest {
 		underlyingData.uuid = owner.getUid();
 		underlyingData.parentId = folder.getId();
 		underlyingData.setBlobDigest("test digest");
+        underlyingData.setFlags(Flag.BITMASK_UNCACHED);
 
-		CalendarItem calendarItem = new Appointment(mbox, underlyingData, true);
+        CalendarItem calendarItem = new Appointment(mbox, underlyingData);
 		Assert.assertTrue(calendarItem.canAccess(ACL.RIGHT_READ, guestUser,false));
 	}
 }
