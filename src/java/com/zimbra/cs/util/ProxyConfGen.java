@@ -551,7 +551,7 @@ class WebUpstreamClientServersVar extends ProxyConfVar {
 
             if (isValidUpstream(server, serverName)) {
                 directives.add(generateServerDirective(server, serverName, portName));
-                mLog.info("Added server to HTTP webclient upstream: " + serverName);
+                mLog.debug("Added server to HTTP webclient upstream: " + serverName);
             }
         }
         mValue = directives;
@@ -594,7 +594,7 @@ class WebSSLUpstreamClientServersVar extends ProxyConfVar {
 
             if (isValidUpstream(server, serverName)) {
                 directives.add(generateServerDirective(server, serverName, portName));
-                mLog.info("Added server to HTTPS webclient upstream: " + serverName);
+                mLog.debug("Added server to HTTPS webclient upstream: " + serverName);
             }
         }
         mValue = directives;
@@ -637,7 +637,7 @@ class WebAdminUpstreamAdminClientServersVar extends ProxyConfVar {
 
             if (isValidUpstream(server, serverName)) {
                 directives.add(generateServerDirective(server, serverName, portName));
-                mLog.info("Added server to HTTPS Admin client upstream: " + serverName);
+                mLog.debug("Added server to HTTPS Admin client upstream: " + serverName);
             }
         }
         mValue = directives;
@@ -825,7 +825,7 @@ abstract class ServersVar extends ProxyConfVar {
                 Server server = mProv.getServerByName(serverName);
                 if (isValidUpstream(server, serverName)) {
                     directives.add(generateServerDirective(server, serverName, portName));
-                    mLog.info("Added server to HTTP upstream: " + serverName);
+                    mLog.debug("Added server to HTTP upstream: " + serverName);
                 }
             }
         } else {
@@ -837,7 +837,7 @@ abstract class ServersVar extends ProxyConfVar {
                         Provisioning.A_zimbraServiceHostname, "");
                 if (isValidUpstream(server, serverName)) {
                     directives.add(generateServerDirective(server, serverName, portName));
-                    mLog.info("Added server to HTTP upstream: " + serverName);
+                    mLog.debug("Added server to HTTP upstream: " + serverName);
                 }
             }
         }
@@ -883,7 +883,7 @@ class WebUpstreamServersVar extends ServersVar {
 
     		if (isValidUpstream(server, serverName)) {
     			directives.add(generateServerDirective(server, serverName, portName));
-    			mLog.info("Added server to HTTP mailstore upstream: " + serverName);
+    			mLog.debug("Added server to HTTP mailstore upstream: " + serverName);
     		}
     	}
     	mValue = directives;
@@ -911,7 +911,7 @@ class WebSSLUpstreamServersVar extends ServersVar {
 
     		if (isValidUpstream(server, serverName)) {
     			directives.add(generateServerDirective(server, serverName, portName));
-    			mLog.info("Added server to HTTPS mailstore upstream: " + serverName);
+    			mLog.debug("Added server to HTTPS mailstore upstream: " + serverName);
     		}
     	}
     	mValue = directives;
@@ -937,7 +937,7 @@ class WebAdminUpstreamServersVar extends ServersVar {
 
 			if (isValidUpstream(server, serverName)) {
 				directives.add(generateServerDirective(server, serverName, portName));
-				mLog.info("Added server to HTTPS Admin mailstore upstream: " + serverName);
+				mLog.debug("Added server to HTTPS Admin mailstore upstream: " + serverName);
 			}
 		}
 		mValue = directives;
@@ -962,7 +962,7 @@ class WebEwsUpstreamServersVar extends ServersVar {
                 Server server = mProv.getServerByName(serverName);
                 if (isValidUpstream(server, serverName)) {
                     directives.add(generateServerDirective(server, serverName, portName));
-                    mLog.info("Added EWS server to HTTP upstream: " + serverName);
+                    mLog.debug("Added EWS server to HTTP upstream: " + serverName);
                 }
             }
         }
@@ -988,7 +988,7 @@ class WebEwsSSLUpstreamServersVar extends ServersVar {
                 Server server = mProv.getServerByName(serverName);
                 if (isValidUpstream(server, serverName)) {
                     directives.add(generateServerDirective(server, serverName, portName));
-                    mLog.info("Added EWS server to HTTPS upstream: " + serverName);
+                    mLog.debug("Added EWS server to HTTPS upstream: " + serverName);
                 }
             }
         }
@@ -1014,7 +1014,7 @@ class WebLoginUpstreamServersVar extends ServersVar {
                 Server server = mProv.getServerByName(serverName);
                 if (isValidUpstream(server, serverName)) {
                     directives.add(generateServerDirective(server, serverName, portName));
-                    mLog.info("Added Login server to HTTP upstream: " + serverName);
+                    mLog.debug("Added Login server to HTTP upstream: " + serverName);
                 }
             }
         }
@@ -1040,7 +1040,7 @@ class WebLoginSSLUpstreamServersVar extends ServersVar {
                 Server server = mProv.getServerByName(serverName);
                 if (isValidUpstream(server, serverName)) {
                     directives.add(generateServerDirective(server, serverName, portName));
-                    mLog.info("Added Login server to HTTPS upstream: " + serverName);
+                    mLog.debug("Added Login server to HTTPS upstream: " + serverName);
                 }
             }
         }
@@ -1630,7 +1630,7 @@ public class ProxyConfGen
         CommandLineParser parser = new GnuParser();
         CommandLine cl = null;
         try {
-            cl = parser.parse(mOptions, args);
+            cl = parser.parse(mOptions, args, false);
         } catch (ParseException pe) {
             usage(pe.getMessage());
             return cl;
@@ -1849,11 +1849,12 @@ public class ProxyConfGen
             String tf = tFile.getAbsolutePath();
             String wf = wFile.getAbsolutePath();
 
-            mLog.info("Expanding template:" + tf + " to file:" + wf);
-
             if (mDryRun) {
+                mLog.info("Would expand template:" + tf + " to file:" + wf);
                 return;
             }
+
+            mLog.info("Expanding template:" + tf + " to file:" + wf);
 
             if (!tFile.exists()) {
                 throw new ProxyConfException("Template file " + tf + " does not exist");
@@ -2513,6 +2514,12 @@ public class ProxyConfGen
             return(exitCode);
         }
 
+        if (cl.getArgs().length > 0) {
+            usage(null);
+            exitCode = 0;
+            return(exitCode);
+        }
+
         if (!isWorkableConf()) {
             mLog.error("Configuration is not valid because no route lookup handlers exist, or because no HTTP/HTTPS upstream servers were found");
             mLog.error("Please ensure that the output of 'zmprov garpu/garpb' returns at least one entry in non-split mode and atleast two if this server is in split-mode (just service or zimbra/zimbraAdmin)");
@@ -2556,13 +2563,14 @@ public class ProxyConfGen
             handleException(se);
             exitCode = 1;
         }
-        if (exitCode == 0) {
-            mLog.info("Proxy configuration files are generated successfully");
-            appendConfGenResultToConf("__SUCCESS__");
-        } else {
-            mLog.info("Proxy configuration files generation is interrupted by errors");
+        if (!mDryRun) {
+            if (exitCode == 0) {
+                mLog.info("Proxy configuration files are generated successfully");
+                appendConfGenResultToConf("__SUCCESS__");
+            } else {
+                mLog.info("Proxy configuration files generation is interrupted by errors");
+            }
         }
-
         return (exitCode);
     }
 
