@@ -1971,6 +1971,60 @@ public class DbMailItem {
         }
     }
 
+    public static List<Integer> getDumpsterItems(Mailbox mbox, int lastSync, int folderId, int maxTrack)
+            throws ServiceException {
+        List<Integer> result = new ArrayList<>();
+        DbConnection conn = mbox.getOperationConnection();
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        try {
+            stmt = conn.prepareStatement("SELECT id, prev_folders FROM " + getMailItemTableName(mbox, true) +
+                        " WHERE " + IN_THIS_MAILBOX_AND + "mod_metadata > ? " +
+                        " ORDER BY id");
+            Db.getInstance().enableStreaming(stmt);
+            int pos = 1;
+            pos = setMailboxId(stmt, mbox, pos);
+            stmt.setLong(pos++, lastSync);
+            rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                int id = rs.getInt(1);
+                String prevFolders = rs.getString(2);
+                if (StringUtil.isNullOrEmpty(prevFolders)) {
+                    continue;
+                }
+                //e.g. "101:2;110:5"
+                String[] mappings = prevFolders.split(";");
+                Map<Integer, Integer> modseq2folders = new HashMap<>();
+                for (String info : mappings) {
+                    String[] meta = info.split(":");
+                    modseq2folders.put(Integer.parseInt(meta[0]), Integer.parseInt(meta[1]));
+                }
+                if (!modseq2folders.containsValue(folderId)) {
+                    continue;
+                }
+                int index = 0;
+                while (index < mappings.length && index < maxTrack) {
+                    String md2id = mappings[index++];
+                    String[] pair = md2id.split(":");
+                    int md = Integer.parseInt(pair[0]);
+                    if (lastSync < md) {
+                        if (folderId == Integer.parseInt(pair[1])) {
+                            result.add(id);
+                            break;
+                        }
+                    }
+                }
+            }
+            return result;
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("reading mail_item_dumpster since modseq: " + lastSync, e);
+        } finally {
+            DbPool.closeResults(rs);
+            DbPool.closeStatement(stmt);
+        }
+    }
+
     private static final String FOLDER_TYPES = "(" +
         MailItem.Type.FOLDER.toByte() + ',' +
         MailItem.Type.SEARCHFOLDER.toByte() + ',' +

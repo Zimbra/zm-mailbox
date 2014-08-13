@@ -3603,6 +3603,23 @@ public class Mailbox {
         }
     }
 
+    public List<Integer> getDumpsterItems(int lastSync, int folderId, int maxTrack) throws ServiceException {
+        lock.lock(false);
+        try {
+            boolean success = false;
+            try {
+                beginReadTransaction("getDumpsterItems", null);
+                List<Integer> items = DbMailItem.getDumpsterItems(this, lastSync, folderId, maxTrack);
+                success = true;
+                return items;
+            } finally {
+                endTransaction(success);
+            }
+        } finally {
+            lock.release();
+        }
+    }
+
     public List<Folder> getModifiedFolders(final int lastSync) throws ServiceException {
         return getModifiedFolders(lastSync, MailItem.Type.UNKNOWN);
     }
