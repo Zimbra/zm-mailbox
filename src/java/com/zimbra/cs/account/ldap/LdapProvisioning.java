@@ -5471,9 +5471,9 @@ public class LdapProvisioning extends LdapProv {
             msg = e.getMessage();
         }
 
-        setPassword(acct, newPassword, enforcePasswordPolicy, false);
-
-        if (msg != null) {
+        if (msg == null) {
+            setPassword(acct, newPassword, enforcePasswordPolicy, false);
+        } else {
             msg = L10nUtil.getMessage(L10nUtil.MsgKey.passwordViolation,
                     acct.getLocale(), acct.getName(), msg);
 
