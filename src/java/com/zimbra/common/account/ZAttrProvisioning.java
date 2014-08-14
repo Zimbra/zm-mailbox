@@ -2641,7 +2641,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraArchiveMailFrom = "zimbraArchiveMailFrom";
 
     /**
-     * block all attachment downloading
+     * block viewing and downloading of all attachments
      */
     @ZAttr(id=115)
     public static final String A_zimbraAttachmentsBlocked = "zimbraAttachmentsBlocked";
