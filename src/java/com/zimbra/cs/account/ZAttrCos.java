@@ -854,7 +854,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * block all attachment downloading
+     * block viewing and downloading of all attachments
      *
      * @return zimbraAttachmentsBlocked, or false if unset
      */
@@ -864,7 +864,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * block all attachment downloading
+     * block viewing and downloading of all attachments
      *
      * @param zimbraAttachmentsBlocked new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -877,7 +877,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * block all attachment downloading
+     * block viewing and downloading of all attachments
      *
      * @param zimbraAttachmentsBlocked new value
      * @param attrs existing map to populate, or null to create a new map
@@ -891,7 +891,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * block all attachment downloading
+     * block viewing and downloading of all attachments
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -903,7 +903,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * block all attachment downloading
+     * block viewing and downloading of all attachments
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
