@@ -84,6 +84,7 @@ SECTION mta DEPENDS amavis
 	VAR zimbraMilterServerBindPort
 	VAR zimbraMtaSmtpdMilters
 	VAR zimbraMtaNonSmtpdMilters
+	LOCAL zimbra_server_hostname
 	if VAR zimbraMtaEnableSmtpdPolicyd
 		POSTCONF policy_time_limit				VAR zimbraMtaPolicyTimeLimit
 	fi
@@ -110,7 +111,6 @@ SECTION mta DEPENDS amavis
 	if SERVICE !cbpolicyd
 		POSTCONF smtpd_end_of_data_restrictions
 	fi
-	LOCAL zimbra_server_hostname
 	REWRITE conf/postfix_header_checks.in conf/postfix_header_checks
 	POSTCONF myhostname		LOCAL zimbra_server_hostname
 	if VAR zimbraMtaMyHostname
@@ -130,7 +130,6 @@ SECTION mta DEPENDS amavis
 	POSTCONF smtpd_sender_restrictions		FILE zmconfigd/smtpd_sender_restrictions.cf
 	POSTCONF smtpd_sender_login_maps		FILE zmconfigd/smtpd_sender_login_maps.cf
 	POSTCONF local_header_rewrite_clients		permit_mynetworks,permit_sasl_authenticated
-
 	POSTCONF alias_maps				VAR zimbraMtaAliasMaps
 	POSTCONF broken_sasl_auth_clients		VAR zimbraMtaBrokenSaslAuthClients
 	POSTCONF bounce_queue_lifetime			VAR zimbraMtaBounceQueueLifetime
@@ -241,9 +240,9 @@ SECTION sasl
 	RESTART mta sasl
 
 SECTION mailbox
-    VAR zimbraIPMode
-    VAR zimbraMailPort
-    VAR zimbraMailSSLPort
+	VAR zimbraIPMode
+	VAR zimbraMailPort
+	VAR zimbraMailSSLPort
 	VAR zimbraLogToSyslog
 	VAR zimbraAdminURL
 	VAR zimbraLmtpBindPort
@@ -274,25 +273,25 @@ SECTION mailbox
 	REWRITE conf/spnego_java_options.in conf/spnego_java_options
 	REWRITE mailboxd/modules/setuid.mod.in mailboxd/modules/setuid.mod
 	REWRITE mailboxd/start.d/setuid.ini.in mailboxd/start.d/setuid.ini	
-    REWRITE mailboxd/etc/krb5.ini.in mailboxd/etc/krb5.ini
-    REWRITE mailboxd/etc/spnego.conf.in mailboxd/etc/spnego.conf
-    REWRITE mailboxd/etc/spnego.properties.in mailboxd/etc/spnego.properties 
-    REWRITE mailboxd/etc/zimlet.web.xml.in mailboxd/webapps/zimlet/WEB-INF/web.xml   
+	REWRITE mailboxd/etc/krb5.ini.in mailboxd/etc/krb5.ini
+	REWRITE mailboxd/etc/spnego.conf.in mailboxd/etc/spnego.conf
+	REWRITE mailboxd/etc/spnego.properties.in mailboxd/etc/spnego.properties 
+	REWRITE mailboxd/etc/zimlet.web.xml.in mailboxd/webapps/zimlet/WEB-INF/web.xml   
 	RESTART mailboxd
     
 SECTION service
-    REWRITE mailboxd/etc/service.web.xml.in mailboxd/webapps/service/WEB-INF/web.xml
-    RESTART mailboxd
+	REWRITE mailboxd/etc/service.web.xml.in mailboxd/webapps/service/WEB-INF/web.xml
+	RESTART mailboxd
     
 SECTION zimbra
-    REWRITE mailboxd/etc/zimbra.web.xml.in mailboxd/webapps/zimbra/WEB-INF/web.xml
-    REWRITE mailboxd/etc/zimbra-jetty-env.xml.in mailboxd/webapps/zimbra/WEB-INF/jetty-env.xml
-    RESTART mailboxd
+	REWRITE mailboxd/etc/zimbra.web.xml.in mailboxd/webapps/zimbra/WEB-INF/web.xml
+	REWRITE mailboxd/etc/zimbra-jetty-env.xml.in mailboxd/webapps/zimbra/WEB-INF/jetty-env.xml
+	RESTART mailboxd
     
 SECTION zimbraAdmin 
-    REWRITE mailboxd/etc/zimbraAdmin.web.xml.in mailboxd/webapps/zimbraAdmin/WEB-INF/web.xml
-    REWRITE mailboxd/etc/zimbraAdmin-jetty-env.xml.in mailboxd/webapps/zimbraAdmin/WEB-INF/jetty-env.xml
-    RESTART mailboxd
+	REWRITE mailboxd/etc/zimbraAdmin.web.xml.in mailboxd/webapps/zimbraAdmin/WEB-INF/web.xml
+	REWRITE mailboxd/etc/zimbraAdmin-jetty-env.xml.in mailboxd/webapps/zimbraAdmin/WEB-INF/jetty-env.xml
+	RESTART mailboxd
 
 SECTION proxy
 	LOCAL ldap_url
