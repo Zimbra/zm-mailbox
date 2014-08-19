@@ -171,7 +171,7 @@ SECTION 4: Common Development and Distribution License, V1.0
 
 SECTION 5: Common Development and Distribution License, V1.1
 
-   >>> jax-ws-2.2.6
+   >>> jax-ws-2.2.8
    >>> jersey-multipart-1.12
 
 
@@ -28742,12 +28742,12 @@ Copyright 2005 Sun Microsystems, Inc. All rights reserved.
 Common Development and Distribution License, V1.1 is applicable to the following component(s).
 
 
->>> jax-ws-2.2.6
+>>> jax-ws-2.2.8
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO INCLUDE THIS SOFTWARE IN THIS DISTRIBUTION UNDER THE CDDL 1.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE CDDL 1.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
 
- Copyright (c) 1997-2010 Oracle and/or its affiliates. All rights reserved.
+ Copyright (c) 1997-2013 Oracle and/or its affiliates. All rights reserved.
 
  The contents of this file are subject to the terms of either the GNU
  General Public License Version 2 only ("GPL") or the Common Development
