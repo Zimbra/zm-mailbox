@@ -82,6 +82,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DataSource;
+import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.IDNUtil;
 import com.zimbra.cs.account.NamedEntry;
@@ -556,7 +557,8 @@ public final class ToXML {
                 return null;
             }
             Server targetServer = prov.getServer(targetAccount);
-            return URLUtil.getServiceURL(targetServer, UserServlet.SERVLET_PATH +
+            Domain targetDomain = prov.getDomain(targetAccount);
+            return URLUtil.getPublicURLForDomain(targetServer, targetDomain, UserServlet.SERVLET_PATH +
                     HttpUtil.urlEscape(UserServlet.getAccountPath(targetAccount) + folderPath) , true);
         } catch (ServiceException e) {
             ZimbraLog.soap.warn("unable to create rest url for mountpoint", e);
