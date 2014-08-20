@@ -46,15 +46,24 @@
     <pathelement location="${common.classes.dir}"/>
     <pathelement location="${build.classes.dir}" />
     <fileset dir="${common.jars.dir}">
-        <include name="**/*.jar"/>
+        <include name="guava*.jar"/>
+        <include name="junit*.jar"/>
+        <include name="jackson*.jar"/>
+        <include name="log4j*.jar"/>
+        <include name="dom4j*.jar"/>
     </fileset>
   </path>
 
   <path id="jaxws.classpath">
-    <fileset dir="${metro.jars.dir}">
-        <include name="**/*.jar"/>
+    <fileset dir="${common.jars.dir}">
+        <include name="jaxb-api*.jar"/>
+        <include name="jaxb-core*.jar"/>
+        <include name="jaxb-impl*.jar"/>
+        <include name="jaxb-jxc*.jar"/>
+        <include name="jaxb-xjc*.jar"/>
+        <include name="jaxws-tools*.jar"/>
     </fileset>
-  </path>
+ </path>
 
   <path id="test.class.path">
     <path refid="class.path"/>
