@@ -79,7 +79,7 @@ import com.zimbra.cs.mailbox.acl.AclPushSerializer;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.JMSession;
-import com.zimbra.soap.mail.message.SendShareNotificationRequest.Action;
+import com.zimbra.soap.mail.message.SendShareNotificationRequest.ShareNotifAction;
 
 
 public class ShareInfo {
@@ -571,7 +571,7 @@ public class ShareInfo {
 
 
         public static MimeMultipart genNotifBody(ShareInfoData sid, String notes,
-                Locale locale, Action action, String externalGroupMember)
+                Locale locale, ShareNotifAction action, String externalGroupMember)
         throws MessagingException, ServiceException {
 
             // Body
@@ -595,12 +595,12 @@ public class ShareInfo {
 
             // TEXT part (add me first!)
             String mimePartText;
-            if (action == Action.revoke) {
+            if (action == ShareNotifAction.revoke) {
                 mimePartText = genRevokePart(sid, locale, false);
-            } else if (action == Action.expire) {
+            } else if (action == ShareNotifAction.expire) {
                 mimePartText = genExpirePart(sid, locale, false);
             } else {
-                mimePartText = genPart(sid, action == Action.edit, notes, extUserShareAcceptUrl, extUserLoginUrl,
+                mimePartText = genPart(sid, action == ShareNotifAction.edit, notes, extUserShareAcceptUrl, extUserLoginUrl,
                         locale, null, false);
             }
             MimeBodyPart textPart = new ZMimeBodyPart();
@@ -608,12 +608,12 @@ public class ShareInfo {
             mmp.addBodyPart(textPart);
 
             // HTML part
-            if (action == Action.revoke) {
+            if (action == ShareNotifAction.revoke) {
                 mimePartText = genRevokePart(sid, locale, true);
-            } else if (action == Action.expire) {
+            } else if (action == ShareNotifAction.expire) {
                 mimePartText = genExpirePart(sid, locale, true);
             } else {
-                mimePartText = genPart(sid, action == Action.edit, notes, extUserShareAcceptUrl, extUserLoginUrl,
+                mimePartText = genPart(sid, action == ShareNotifAction.edit, notes, extUserShareAcceptUrl, extUserLoginUrl,
                         locale, null, true);
             }
             MimeBodyPart htmlPart = new ZMimeBodyPart();
@@ -716,13 +716,13 @@ public class ShareInfo {
                     sid.getOwnerNotifName());
         }
 
-        private static String genXmlPart(ShareInfoData sid, String senderNotes, StringBuilder sb, Action action)
+        private static String genXmlPart(ShareInfoData sid, String senderNotes, StringBuilder sb, ShareNotifAction action)
                 throws ServiceException {
             if (sb == null) {
                 sb = new StringBuilder();
             }
             Element share;
-            if (action == null || action == Action.edit) {
+            if (action == null || action == ShareNotifAction.edit) {
                 share = Element.create(SoapProtocol.Soap12, ShareConstants.SHARE).
                         addAttribute(ShareConstants.A_VERSION, ShareConstants.VERSION).
                         addAttribute(ShareConstants.A_ACTION, action == null ?
@@ -730,7 +730,7 @@ public class ShareInfo {
             } else {
                 share = Element.create(SoapProtocol.Soap12, ShareConstants.REVOKE).
                         addAttribute(ShareConstants.A_VERSION, ShareConstants.VERSION);
-                if (action == Action.expire) {
+                if (action == ShareNotifAction.expire) {
                     share.addAttribute(ShareConstants.A_EXPIRE, true);
                 }
             }
@@ -746,7 +746,7 @@ public class ShareInfo {
             link.addAttribute(ShareConstants.A_ID, sid.getItemId()).
                     addAttribute(ShareConstants.A_NAME, sid.getName()).
                     addAttribute(ShareConstants.A_VIEW, sid.getFolderDefaultView());
-            if (action == null || action == Action.edit) {
+            if (action == null || action == ShareNotifAction.edit) {
                 link.addAttribute(ShareConstants.A_PERM, ACL.rightsToString(sid.getRightsCode()));
             }
             sb.append(share.prettyPrint());

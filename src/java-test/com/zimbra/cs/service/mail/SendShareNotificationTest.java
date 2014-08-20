@@ -62,7 +62,7 @@ public class SendShareNotificationTest extends SendShareNotification {
 
     @Override
     protected MimeMessage generateShareNotification(Account authAccount, Account ownerAccount, ShareInfoData sid,
-            String notes, SendShareNotificationRequest.Action action,
+            String notes, SendShareNotificationRequest.ShareNotifAction action,
             Collection<String> internalRecipients, String externalRecipient)
             throws ServiceException, MessagingException {
         MimeMessage mm = super.generateShareNotification(authAccount, ownerAccount,

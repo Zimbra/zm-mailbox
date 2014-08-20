@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -16,31 +16,36 @@
  */
 package com.zimbra.cs.service.mail;
 
-import com.zimbra.common.util.ZimbraLog;
+import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Ignore;
+import org.junit.Test;
+
 import com.google.common.collect.Maps;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.soap.SoapProtocol;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.filter.RuleManager;
-import com.zimbra.cs.mailbox.*;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.MailboxTestUtil;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.MockHttpServletRequest;
 import com.zimbra.soap.MockSoapEngine;
 import com.zimbra.soap.SoapEngine;
 import com.zimbra.soap.SoapServlet;
 import com.zimbra.soap.ZimbraSoapContext;
-import com.zimbra.common.soap.SoapProtocol;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
 
-import java.net.URL;
-import java.util.HashMap;
-import java.util.Map;
-
+@Ignore("xml string order dependent")
 public class GetFilterRulesTest {
     @BeforeClass
     public static void init() throws Exception {
@@ -96,8 +101,8 @@ public class GetFilterRulesTest {
         expectedSoap += "</filterRules>";
 
         Element rules = response.getOptionalElement(MailConstants.E_FILTER_RULES);
-        //ZimbraLog.filter.info(rules.prettyPrint());
-        //ZimbraLog.filter.info(expectedSoap);
+        ZimbraLog.filter.info(rules.prettyPrint());
+        ZimbraLog.filter.info(expectedSoap);
         Assert.assertEquals(expectedSoap, rules.prettyPrint());
 
     }

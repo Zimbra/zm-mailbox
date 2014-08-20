@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -72,7 +72,7 @@ import com.zimbra.cs.util.Zimbra;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.mail.message.SendShareNotificationRequest;
-import com.zimbra.soap.mail.message.SendShareNotificationRequest.Action;
+import com.zimbra.soap.mail.message.SendShareNotificationRequest.ShareNotifAction;
 import com.zimbra.soap.mail.type.EmailAddrInfo;
 
 public class SendShareNotification extends MailDocumentHandler {
@@ -100,7 +100,7 @@ public class SendShareNotification extends MailDocumentHandler {
 
         // grab notes if there is one
         Element eNotes = request.getOptionalElement(MailConstants.E_NOTES);
-        Action action = Action.fromString(request.getAttribute(MailConstants.A_ACTION, null));
+        ShareNotifAction action = ShareNotifAction.fromString(request.getAttribute(MailConstants.A_ACTION, null));
         String notes = eNotes==null ? null : eNotes.getText();
 
         // send the messages
@@ -550,7 +550,7 @@ public class SendShareNotification extends MailDocumentHandler {
     }
 
     protected MimeMessage generateShareNotification(Account authAccount, Account ownerAccount,
-            ShareInfoData sid, String notes, Action action,
+            ShareInfoData sid, String notes, ShareNotifAction action,
             Collection<String> internlaRecipients, String externalRecipient)
     throws ServiceException, MessagingException {
         Locale locale = authAccount.getLocale();
@@ -634,7 +634,7 @@ public class SendShareNotification extends MailDocumentHandler {
 
     private void sendNotificationEmail(OperationContext octxt, Mailbox mbox,
             Account authAccount, Account ownerAccount,
-            ShareInfoData sid, String notes, Action action,
+            ShareInfoData sid, String notes, ShareNotifAction action,
             Collection<String> internalRecipients, String externalRecipient)
     throws ServiceException, MessagingException  {
         MimeMessage mm = generateShareNotification(authAccount, ownerAccount, sid, notes, action,
@@ -644,7 +644,7 @@ public class SendShareNotification extends MailDocumentHandler {
 
     private void sendNotificationEmailToGroupGrantees(OperationContext octxt, Mailbox mbox,
             Account authAccount, Account ownerAccount, Collection<ShareInfoData> sids,
-            String notes, Action action)
+            String notes, ShareNotifAction action)
     throws ServiceException, MessagingException {
         Provisioning prov = Provisioning.getInstance();
 
@@ -697,7 +697,7 @@ public class SendShareNotification extends MailDocumentHandler {
     private void sendNotificationEmailToGroupExternalMembers(
             OperationContext octxt, Mailbox mbox,
             Account authAccount, Account ownerAccount, ShareInfoData sid,
-            String notes, Action action, Collection<String> extMembers) {
+            String notes, ShareNotifAction action, Collection<String> extMembers) {
         for (String extMember : extMembers) {
             try {
                 sendNotificationEmail(octxt, mbox, authAccount, ownerAccount, sid,
@@ -713,7 +713,7 @@ public class SendShareNotification extends MailDocumentHandler {
     private void sendNotificationEmailToGroupExternalMembersAsync(
             final OperationContext octxt, final Mailbox mbox,
             final Account authAccount, final Account ownerAccount, final ShareInfoData sid,
-            final String notes, final Action action, final Collection<String> extMembers) {
+            final String notes, final ShareNotifAction action, final Collection<String> extMembers) {
         Runnable r = new Runnable() {
             @Override
             public void run() {

@@ -120,7 +120,7 @@ public class ExpireGrantsTask extends ScheduledTask {
             throws ServiceException {
         SendShareNotificationRequest req = new SendShareNotificationRequest();
         req.setEmailAddresses(Sets.newHashSet(new EmailAddrInfo(address)));
-        req.setAction(SendShareNotificationRequest.Action.expire);
+        req.setAction(SendShareNotificationRequest.ShareNotifAction.expire);
         req.setItem(new Id(Integer.toString(itemId)));
         zMbox.invokeJaxb(req);
     }
