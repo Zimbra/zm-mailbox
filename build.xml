@@ -1132,15 +1132,35 @@
 
     <target name="install-thirdparty" depends="install-thirdparty-unix,install-thirdparty-windows" description="Installs third party binaries" />
 
-    <target name="install-thirdparty-unix" description="Installs third party binaries on unix" if="is-unix">
-      <if>
-        <not><available file="${zimbra.home.dir}/java"/></not>
-        <then>
-          <echo message="Creating symbolic link from ${zimbra.home.dir}/java to ${java.home}" />
-          <symlink link="${zimbra.home.dir}/java" resource="${java.home}" />
-        </then>
-      </if>
-
+    <target name="create-java-link">
+        <if>
+          <available file="${zimbra.home.dir}/java"/>
+          <then>
+            <exec executable="${zimbra.home.dir}/java/bin/java" outputproperty="link.java.version">
+              <arg value="-version"/>
+            </exec>
+              
+            <if>
+              <not><contains string="${link.java.version}" substring="1.8"/></not>
+              <then>
+                <echo message="linked java version is not 1.8; replacing"/>
+                <symlink action="delete" link="${zimbra.home.dir}/java"/>
+                <symlink link="${zimbra.home.dir}/java" resource="${java.home}" />
+              </then>
+            </if>
+          </then>
+        </if>
+    	
+    	<if>
+          <not><available file="${zimbra.home.dir}/java"/></not>
+          <then>
+            <echo message="Creating symbolic link from ${zimbra.home.dir}/java to ${java.home}" />
+            <symlink link="${zimbra.home.dir}/java" resource="${java.home}" />
+          </then>
+        </if>
+	</target>
+	
+	<target name="install-thirdparty-unix" depends="create-java-link" description="Installs third party binaries on unix" if="is-unix">
       <if><available file="../ZimbraServer/src/perl/install-thirdparty"/> <!-- Not available for community build. -->
         <then>
           <antcall target="stop-webserver"/>
@@ -1547,43 +1567,49 @@
 
         <sequential>
             <script language="javascript"><![CDATA[
-            importClass(java.nio.charset.StandardCharsets);
-            importClass(java.nio.file.Files);
-            importClass(java.nio.file.Paths);
-            importClass(java.nio.file.StandardOpenOption);
+                load("nashorn:mozilla_compat.js");
+                importClass(java.nio.charset.StandardCharsets);
+                importClass(java.nio.file.Files);
+                importClass(java.nio.file.Paths);
+                importClass(java.nio.file.StandardOpenOption);
 
-            var jInteger = java.lang.Integer;
-            var jString = java.lang.String;
 
-            var writer =
-                Files.newBufferedWriter(Paths.get("@{file}", []),
-                                        StandardCharsets.UTF_8,
-                                        [StandardOpenOption.CREATE,
-                                         StandardOpenOption.APPEND]);
+                var writer =
+                    Files.newBufferedWriter(Paths.get("@{file}", []),
+                                            StandardCharsets.UTF_8,
+                                            [StandardOpenOption.CREATE,
+                                             StandardOpenOption.APPEND]);
 
-            // create 500 test accounts
-            for (var i = @{from}; i <= @{to}; i++) {
-                i = jInteger(i);
-
-                writer.write("createAccount ");
-                writer.write(jString.format("test%03d@@example.com ", [i]));
-                writer.write("test123 displayName 'Test User " + i + "'");
-                writer.write('\n');
-
-                if (i % 100 === 1) {
-                    writer.write("grantRight ");
-                    writer.write(jString.format("account test%03d@@example.com ", [i]));
-                    writer.write("usr admin@@example.com -renameAccount");
+                // create 500 test accounts
+                for (var i = @{from}; i <= @{to}; i++) {
+                    var userNum = i;
+                    if (userNum < 100) {
+                      if (userNum < 10) {
+                        userNum = "00" + userNum;
+                      } else {
+                        userNum = "0" + userNum;
+                      }
+                    }
+                    writer.write("createAccount ");
+                    writer.write(String("test" + userNum + "@@example.com "));
+                    writer.write(String("test123 displayName 'Test User " + userNum + "'"));
                     writer.write('\n');
-                } else if (i % 100 === 2) {
-                    writer.write("grantRight ");
-                    writer.write(jString.format("account test%03d@@example.com ", [i]));
-                    writer.write("usr admin@@example.com -setAccountPassword");
-                    writer.write('\n');
+
+                    if (i % 100 === 1) {
+                        writer.write("grantRight ");
+                        writer.write(String("account test" + userNum + "@@example.com "));
+                        writer.write("usr admin@@example.com -renameAccount");
+                        writer.write('\n');
+                    } else if (i % 100 === 2) {
+                        writer.write("grantRight ");
+                        writer.write(String("account test" + userNum + "@@example.com "));
+                        writer.write("usr admin@@example.com -setAccountPassword");
+                        writer.write('\n');
+                    }
                 }
-            }
 
-            writer.close();
+                writer.close();
+
             ]]>
             </script>
         </sequential>
