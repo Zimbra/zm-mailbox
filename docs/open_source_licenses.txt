@@ -142,7 +142,7 @@ SECTION 2: Apache License, V2.0
    >>> selenium-2.37.0
    >>> smack-3.2.1
    >>> spamassassin-3.4.0
-   >>> spring-framework-3.0.7
+   >>> spring-framework-3.2.10
    >>> stax2-api-3.1.1
    >>> testng-5.12.1
    >>> unoil-4.0.2
@@ -27541,7 +27541,7 @@ limitations under the License.
 License: Apache 2.0
 
 
->>> spring-framework-3.0.7
+>>> spring-framework-3.2.10
 
 /*
  * Copyright 2002-2009 the original author or authors.
