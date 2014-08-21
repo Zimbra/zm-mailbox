@@ -423,6 +423,12 @@ SECTION 16: Common Public License, V1.0
 
 
 
+SECTION 17: Eclipse Public License, V1.0
+
+   >>> aspectjweaver-1.7.4
+
+
+
 APPENDIX. Standard License Files
 
    >>> GNU General Public License, V2.0
@@ -35249,6 +35255,15 @@ License: MPL v2.0
 --------------- SECTION 16: Common Public License, V1.0 ----------
 
 >>> wsdl4j-1.6.3
+
+
+
+--------------- SECTION 16: Eclipse Public License, V1.0 ----------
+
+>>> aspectjweaver-1.7.4
+
+License: EPL V1.0
+
 
 
 =============== APPENDIX. Standard License Files ============== 
