@@ -115,6 +115,7 @@ SECTION 2: Apache License, V2.0
    >>> apache-commons-io-1.4
    >>> apache-commons-logging-1.1.1
    >>> apache-commons-pool-1.6
+   >>> apache-commons-pool2-2.0
    >>> apache-helix-0.6.1
    >>> apache-httpasyncclient-4.0-beta3
    >>> apache-httpcomponents-core-4.2.2
@@ -21421,6 +21422,11 @@ Copyright 2001-2012 The Apache Software Foundation
 
 This product includes software developed by
 The Apache Software Foundation (http://www.apache.org/).
+
+
+>>> apache-commons-pool2-2.0
+
+License: Apache License 2.0
 
 
 >>> apache-helix-0.6.1
