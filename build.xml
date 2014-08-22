@@ -503,6 +503,8 @@
           <include name="${ziputil.jar}"/>
           <include name="${memcached.jar}"/>
           <include name="${db.driver.jar}"/>
+          <include name="aopalliance-*.jar"/>
+	      <include name="aspectjweaver-*.jar"/>
           <include name="mysql-connector-java-*.jar"/>
           <include name="javamail-1.4.5.jar"/>
           <include name="zimbra-native.jar"/>
@@ -560,6 +562,8 @@
           <include name="*jsieve*.jar"/>
           <include name="lucene*.jar"/>
           <include name="ant-tar*.jar"/>
+          <include name="aopalliance-*.jar"/>
+          <include name="aspectjweaver-*.jar"/>
           <include name="mina-*.jar"/>
           <include name="ews*.jar"/>
           <include name="cassandra-*.jar"/>
@@ -575,7 +579,6 @@
           <include name="hbase-*.jar"/>
           <include name="ehcache-*.jar"/>
           <include name="jersey-*.jar"/>
-          <include name="asm-*.jar"/>
           <include name="jsr*.jar"/>
           <include name="cxf-*.jar"/>
           <include name="javax.ws.rs-api-*.jar"/>
