@@ -32,6 +32,7 @@ PART 1. APPLICATION LAYER
 
 SECTION 1: BSD-STYLE, MIT-STYLE, OR SIMILAR STYLE LICENSES
 
+   >>> aopalliance-1.0
    >>> altermime-0.3-20100505
    >>> amavis-logwatch-1.51.03pre4
    >>> ant-contrib-1.0b1
@@ -484,6 +485,13 @@ APPENDIX. Standard License Files
 --------------- SECTION 1:  BSD-STYLE, MIT-STYLE, OR SIMILAR STYLE LICENSES ----------
 
 BSD-STYLE, MIT-STYLE, OR SIMILAR STYLE LICENSES are applicable to the following component(s).
+
+
+>>> aopalliance-1.0
+
+The AOP Alliance project is a joint open-source project between several software engineering people who are interested in AOP and Java.
+
+LICENCE: all the source code provided by AOP Alliance is Public Domain. 
 
 
 >>> altermime-0.3-20100505
