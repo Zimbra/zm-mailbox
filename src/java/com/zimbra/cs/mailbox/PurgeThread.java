@@ -258,25 +258,19 @@ extends Thread {
     private List<Integer> getMailboxIds() {
         List<Integer> mailboxIds = new ArrayList<Integer>();
 
-        try {
-            // Get sorted list of id's
-            for (int id : MailboxManager.getInstance().getMailboxIds()) {
-                mailboxIds.add(id);
-            }
-            Collections.sort(mailboxIds);
+        // Get sorted list of id's
+        for (int id : MailboxManager.getInstance().getMailboxIds()) {
+            mailboxIds.add(id);
+        }
+        Collections.sort(mailboxIds);
 
-            // Reorder id's so that we start with the one after the last purged
-            int lastId = Config.getInt(Config.KEY_PURGE_LAST_MAILBOX_ID, 0);
-            for (int i = 0; i < mailboxIds.size(); i++) {
-                if (mailboxIds.get(i) > lastId) {
-                    Collections.rotate(mailboxIds, -i);
-                    break;
-                }
+        // Reorder id's so that we start with the one after the last purged
+        int lastId = Config.getInt(Config.KEY_PURGE_LAST_MAILBOX_ID, 0);
+        for (int i = 0; i < mailboxIds.size(); i++) {
+            if (mailboxIds.get(i) > lastId) {
+                Collections.rotate(mailboxIds, -i);
+                break;
             }
-
-        } catch (ServiceException e) {
-            ZimbraLog.purge.warn("Unable to get mailbox id's", e);
-            return Collections.emptyList();
         }
 
         return mailboxIds;

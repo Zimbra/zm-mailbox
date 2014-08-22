@@ -36,7 +36,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
 
-import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.stats.Accumulator;
 import com.zimbra.common.stats.Counter;
 import com.zimbra.common.stats.DeltaCalculator;
@@ -498,11 +497,7 @@ public class ZimbraPerf {
     static int getMailboxCacheSize() {
         long now = System.currentTimeMillis();
         if (now - mailboxCacheSizeTimestamp > Constants.MILLIS_PER_MINUTE) {
-            try {
-                mailboxCacheSize = MailboxManager.getInstance().getCacheSize();
-            } catch (ServiceException e) {
-                ZimbraLog.perf.warn("Unable to determine mailbox cache size.", e);
-            }
+            mailboxCacheSize = MailboxManager.getInstance().getCacheSize();
             mailboxCacheSizeTimestamp = now;
         }
         return mailboxCacheSize;

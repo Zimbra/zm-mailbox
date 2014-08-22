@@ -83,13 +83,7 @@ public final class IndexEditor {
     }
 
     public void reIndexAll() {
-        MailboxManager mmgr;
-        try {
-            mmgr = MailboxManager.getInstance();
-        } catch (ServiceException e) {
-            ZimbraLog.index.error("could not retrieve mailbox manager; aborting reindex", e);
-            return;
-        }
+        MailboxManager mmgr = MailboxManager.getInstance();
         int ids[] = mmgr.getMailboxIds();
         for (int i = 0; i < ids.length; i++) {
             mLog.info("Mailbox "+ids[i]+"\n");

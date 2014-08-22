@@ -59,6 +59,7 @@ import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.store.http.HttpStoreManagerTest.MockHttpStoreManager;
 import com.zimbra.cs.store.http.MockHttpStore;
 import com.zimbra.cs.util.JMSession;
+import com.zimbra.cs.util.Zimbra;
 import com.zimbra.soap.DocumentHandler;
 
 public final class MailboxTestUtil {
@@ -124,6 +125,7 @@ public final class MailboxTestUtil {
         IndexStore.setFactory(LC.zimbra_class_index_store_factory.value());
 
         LC.zimbra_class_store.setDefault(storeManagerClass.getName());
+        Zimbra.startupTest();
         StoreManager.getInstance().startup();
     }
 
@@ -138,6 +140,7 @@ public final class MailboxTestUtil {
         IndexStore.setFactory(LC.zimbra_class_index_store_factory.value());
 
         LC.zimbra_class_store.setDefault(storeManagerClass.getName());
+        Zimbra.startupTest();
         StoreManager.getInstance().startup();
     }
 

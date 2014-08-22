@@ -237,11 +237,7 @@ public final class SomeAccountsWaitSet extends WaitSetBase implements MailboxMan
      */
     @Override
     synchronized HashMap<String, WaitSetAccount> destroy() {
-        try {
-            MailboxManager.getInstance().removeListener(this);
-        } catch (ServiceException e) {
-            ZimbraLog.session.warn("Caught unexpected ServiceException while destroying WaitSet: "+e, e);
-        }
+        MailboxManager.getInstance().removeListener(this);
         cancelExistingCB();
         HashMap<String, WaitSetAccount> toRet = mSessions;
         mSessions = new HashMap<String, WaitSetAccount>();

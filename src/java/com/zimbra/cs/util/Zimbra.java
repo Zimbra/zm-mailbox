@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -24,6 +24,9 @@ import java.util.Timer;
 
 import org.apache.mina.core.buffer.IoBuffer;
 import org.dom4j.DocumentException;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.context.support.AbstractApplicationContext;
 
 import com.zimbra.common.calendar.WellKnownTimeZones;
 import com.zimbra.common.lmtp.SmtpToLmtp;
@@ -63,7 +66,6 @@ import com.zimbra.cs.session.WaitSetMgr;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.zookeeper.CuratorManager;
-import com.zimbra.cs.zookeeper.Service;
 import com.zimbra.znative.Util;
 
 /**
@@ -75,7 +77,7 @@ public final class Zimbra {
     private static boolean sInited = false;
     private static boolean sIsMailboxd = false;
     private static String alwaysOnClusterId = null;
-    private static Service service = null;
+    private static AbstractApplicationContext appContext = null;
 
     /** Sets system properties before the server fully starts up.  Note that
      *  there's a potential race condition if {@link FirstServlet} or another
@@ -144,6 +146,10 @@ public final class Zimbra {
         }
     }
 
+    public static ApplicationContext getAppContext() {
+        return appContext;
+    }
+
     private static void logVersionAndSysInfo() {
         ZimbraLog.misc.info("version=" + BuildInfo.VERSION +
                 " release=" + BuildInfo.RELEASE +
@@ -185,6 +191,18 @@ public final class Zimbra {
         startup(false);
     }
 
+    /** Perform minimum start-up necessary for unit tests */
+    public static void startupTest() throws ServiceException {
+        initAppContext();
+    }
+
+    private static void initAppContext() {
+        AnnotationConfigApplicationContext appContext_ = new AnnotationConfigApplicationContext();
+        appContext_.register(ZimbraConfig.class);
+        appContext_.refresh();
+        appContext = appContext_;
+    }
+
     /**
      * Initialize the various subsystems at server/CLI startup time.
      * @param forMailboxd true if this is the mailboxd process; false for CLI processes
@@ -212,10 +230,13 @@ public final class Zimbra {
 
         checkForClasses();
 
-        ZimbraApplication app = ZimbraApplication.getInstance();
-
         DbPool.startup();
 
+        // Initialize a Spring ApplicationContext. Objects initialized before this point
+        // are not (yet) managed by Spring.
+        initAppContext();
+
+        ZimbraApplication app = ZimbraApplication.getInstance();
         app.initializeZimbraDb(forMailboxd);
 
 
@@ -267,8 +288,6 @@ public final class Zimbra {
         } catch (IOException e) {
             throw ServiceException.FAILURE("Unable to initialize StoreManager.", e);
         }
-
-        MailboxManager.getInstance();
 
         app.startup();
 
