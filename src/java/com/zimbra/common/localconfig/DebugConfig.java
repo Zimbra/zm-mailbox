@@ -247,6 +247,13 @@ public final class DebugConfig {
     public static final boolean debugLocalSplit = value("debug_local_websplit", false);
 
     public static final boolean allowUnauthedPing = value("allow_unauthed_ping", false);
+    
+    /*
+     * Default maximum size of convertd response. This reduces OOME in case of
+     * large response
+     */
+    public static final long convertdMaxResponseSize = value("convertd_max_response_size",
+        (long) 20 * 1024 * 1024);
 
     private static boolean value(String key, boolean defaultValue) {
         String value = LC.get(key);
@@ -257,6 +264,15 @@ public final class DebugConfig {
         String value = LC.get(key);
         try {
             return value.isEmpty() ? defaultValue : Integer.parseInt(value);
+        } catch (Exception e) {
+            return defaultValue;
+        }
+    }
+    
+    private static long value(String key, long defaultValue) {
+        String value = LC.get(key);
+        try {
+            return value.isEmpty() ? defaultValue : Long.parseLong(value);
         } catch (Exception e) {
             return defaultValue;
         }
