@@ -203,7 +203,7 @@ public class ZimbraMemcachedClient {
             client.shutdown();
         }
     }
-
+    
     private static final int DEFAULT_PORT = 11211;
 
     /**
@@ -436,6 +436,37 @@ public class ZimbraMemcachedClient {
                 ZimbraLog.misc.warn("InterruptedException during memcached delete operation", e);
             } catch (ExecutionException e) {
                 ZimbraLog.misc.warn("ExecutionException during memcached delete operation", e);
+            }
+            return success != null && success.booleanValue();
+        } else {
+            return true;
+        }
+    }
+
+    public boolean flush() {
+        return flush(DEFAULT_TIMEOUT, true);
+    }
+    
+    public boolean flush(long timeout, boolean waitForAck) {
+        Boolean success = null;
+        MemcachedClient client;
+        synchronized (this) {
+            client = mMCDClient;
+            if (timeout == DEFAULT_TIMEOUT)
+                timeout = mDefaultTimeout;
+        }
+        if (client == null) return false;
+        Future<Boolean> future = client.flush();
+        if (waitForAck) {
+            try {
+                success = future.get(timeout, TimeUnit.MILLISECONDS);
+            } catch (TimeoutException e) {
+                ZimbraLog.misc.warn("memcached flush timed out after " + timeout + "ms", e);
+                future.cancel(false);
+            } catch (InterruptedException e) {
+                ZimbraLog.misc.warn("InterruptedException during memcached flush operation", e);
+            } catch (ExecutionException e) {
+                ZimbraLog.misc.warn("ExecutionException during memcached flush operation", e);
             }
             return success != null && success.booleanValue();
         } else {
