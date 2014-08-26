@@ -109,7 +109,7 @@ public class SendShareNotificationTest extends SendShareNotification {
         MailboxManager.setInstance(new MailboxManager() {
             @Override
             protected Mailbox instantiateMailbox(MailboxData data) {
-                return new Mailbox(data) {
+                return new Mailbox(this, data) {
                     @Override
                     public MailSender getMailSender() {
                         return new MailSender() {

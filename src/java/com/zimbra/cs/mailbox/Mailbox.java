@@ -565,6 +565,8 @@ public class Mailbox {
         }
     }
 
+    private MailboxManager mailboxManager;
+
     private static class ItemCache {
         private final Map<Integer /* id */, MailItem> mapById;
         private final Map<String /* uuid */, Integer /* id */> uuid2id;
@@ -715,7 +717,8 @@ public class Mailbox {
     private boolean galSyncMailbox = false;
     private volatile boolean requiresWriteLock = true;
 
-    protected Mailbox(MailboxData data) {
+    protected Mailbox(MailboxManager mailboxManager, MailboxData data) {
+    	this.mailboxManager = mailboxManager;
         mId = data.id;
         mData = data;
         mData.lastChangeDate = System.currentTimeMillis();
@@ -723,6 +726,10 @@ public class Mailbox {
         // version init done in open()
         // index init done in open()
         lock = new MailboxLock(data.accountId, this);
+    }
+
+    public MailboxManager getMailboxManager() {
+        return mailboxManager;
     }
 
     public void setGalSyncMailbox(boolean galSyncMailbox) {
@@ -786,7 +793,7 @@ public class Mailbox {
     void migrate(MailboxData mData) throws ServiceException {
         if (mData.version == null) {
             // if we've just initialized() the mailbox, then the version will
-            // be set in the config, but it won't be comitted yet -- and unfortunately
+            // be set in the config, but it won't be committed yet -- and unfortunately
             // getConfig() won't return us the proper value in this case....so just
             // use the local mVersion value if it is already set (that's the case
             // if we are initializing a new mailbox) and otherwise we'll read the
@@ -1706,6 +1713,7 @@ public class Mailbox {
         if (conn != null) {
             setOperationConnection(conn);
         }
+
         if (Zimbra.isAlwaysOn()) {
             // refresh mailbox stats
             MailboxData newData = DbMailbox.getMailboxStats(getOperationConnection(), getId());
@@ -1713,6 +1721,7 @@ public class Mailbox {
                 mData = newData;
             }
         }
+
         boolean needRedo = needRedo(octxt, recorder);
         // have a single, consistent timestamp for anything affected by this
         // operation
@@ -8588,6 +8597,7 @@ public class Mailbox {
         }
     }
 
+    @SuppressWarnings("deprecation")
     public WikiItem createWiki(OperationContext octxt, int folderId, String wikiword, String author, String description, InputStream data)
     throws ServiceException {
         return (WikiItem) createDocument(octxt, folderId, wikiword, WikiItem.WIKI_CONTENT_TYPE, author, description, true, data, MailItem.Type.WIKI);
@@ -8610,6 +8620,7 @@ public class Mailbox {
         }
     }
 
+    @SuppressWarnings("deprecation")
     public Document createDocument(OperationContext octxt, int folderId, ParsedDocument pd, MailItem.Type type,
             int flags)
     throws IOException, ServiceException {
@@ -8866,125 +8877,6 @@ public class Mailbox {
             ZimbraLog.mailbox.warn("db optimize failed for mailbox " + getId() + ": " + e);
         } finally {
             lock.release();
-        }
-    }
-
-    // Coordinate other conflicting operations (such as backup) and shared delivery, delivery of a message to
-    // multiple recipients.  Such operation on a mailbox and shared delivery
-    // are mutually exclusive.  More precisely, the op may not begin
-    // when there is a shared delivery in progress for the mailbox.
-    // Delivery of a shared message to the mailbox must be denied and
-    // deferred when the mailbox is being operated on or has a request
-    // for such op pending.
-    private static class SharedDeliveryCoordinator {
-        public int mNumDelivs;
-        public boolean mSharedDeliveryAllowed;
-
-        public SharedDeliveryCoordinator() {
-            mNumDelivs = 0;
-            mSharedDeliveryAllowed = true;
-        }
-    }
-
-    private final SharedDeliveryCoordinator mSharedDelivCoord = new SharedDeliveryCoordinator();
-
-    /**
-     * Puts mailbox in shared delivery mode.  A shared delivery is delivery of
-     * a message to multiple recipients.  Conflicting op on mailbox is disallowed
-     * while mailbox is in shared delivery mode.  (See bug 2187)
-     * Conversely, a shared delivery may not start on a mailbox that is
-     * currently being operated on or when there is a pending op request.
-     * For example, thread A puts mailbox in shared delivery mode.  Thread B
-     * then tries to backup the mailbox.  Backup cannot start until thread A is
-     * done, but mailbox is immediately put into backup-pending mode.
-     * Thread C then tries to do another shared delivery on the mailbox, but
-     * is not allowed to do so because of thread B's pending backup request.
-     * A thread that calls this method must call endSharedDelivery() after
-     * delivering the message.
-     * @return true if shared delivery may begin; false if shared delivery may
-     *         not begin because of a pending backup request
-     */
-    public boolean beginSharedDelivery() {
-        synchronized (mSharedDelivCoord) {
-            assert(mSharedDelivCoord.mNumDelivs >= 0);
-            if (mSharedDelivCoord.mSharedDeliveryAllowed) {
-                mSharedDelivCoord.mNumDelivs++;
-                if (ZimbraLog.mailbox.isDebugEnabled()) {
-                    ZimbraLog.mailbox.debug("# of shared deliv incr to " + mSharedDelivCoord.mNumDelivs +
-                                " for mailbox " + getId());
-                }
-                return true;
-            } else {
-                // If request for other ops is pending on this mailbox, don't allow
-                // any more shared deliveries from starting.
-                return false;
-            }
-        }
-    }
-
-    /**
-     * @see com.zimbra.cs.mailbox.Mailbox#beginSharedDelivery()
-     */
-    public void endSharedDelivery() {
-        synchronized (mSharedDelivCoord) {
-            mSharedDelivCoord.mNumDelivs--;
-            if (ZimbraLog.mailbox.isDebugEnabled()) {
-                ZimbraLog.mailbox.debug("# of shared deliv decr to " + mSharedDelivCoord.mNumDelivs +
-                            " for mailbox " + getId());
-            }
-            assert(mSharedDelivCoord.mNumDelivs >= 0);
-            if (mSharedDelivCoord.mNumDelivs == 0) {
-                // Wake up any waiting backup thread.
-                mSharedDelivCoord.notifyAll();
-            }
-        }
-    }
-
-    /**
-     * Turns shared delivery on/off.  If turning off, waits until the op can begin,
-     * i.e. until all currently ongoing shared deliveries finish.  A thread
-     * turning shared delivery off must turn it on at the end of the operation, otherwise
-     * no further shared deliveries are possible to the mailbox.
-     * @param onoff
-     */
-    public void setSharedDeliveryAllowed(boolean onoff) {
-        synchronized (mSharedDelivCoord) {
-            if (onoff) {
-                // allow shared delivery
-                mSharedDelivCoord.mSharedDeliveryAllowed = true;
-            } else {
-                // disallow shared delivery
-                mSharedDelivCoord.mSharedDeliveryAllowed = false;
-            }
-            mSharedDelivCoord.notifyAll();
-        }
-    }
-
-    /**
-     * Wait until shared delivery is completed on this mailbox.  Other conflicting ops may begin when
-     * there is no shared delivery in progress.  Call setSharedDeliveryAllowed(false)
-     * before calling this method.
-     *
-     */
-    public void waitUntilSharedDeliveryCompletes() {
-        synchronized (mSharedDelivCoord) {
-            while (mSharedDelivCoord.mNumDelivs > 0) {
-                try {
-                    mSharedDelivCoord.wait(3000);
-                    ZimbraLog.misc.info("wake up from wait for completion of shared delivery; mailbox=" + getId() +
-                                " # of shared deliv=" + mSharedDelivCoord.mNumDelivs);
-                } catch (InterruptedException e) {}
-            }
-        }
-    }
-
-    /**
-     * Tests whether shared delivery is completed on this mailbox.  Other conflicting ops may begin when
-     * there is no shared delivery in progress.
-     */
-    public boolean isSharedDeliveryComplete() {
-        synchronized (mSharedDelivCoord) {
-            return mSharedDelivCoord.mNumDelivs < 1;
         }
     }
 

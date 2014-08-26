@@ -48,7 +48,7 @@ public class DesktopMailboxTest {
             @Override
             protected Mailbox instantiateMailbox(MailboxData data) {
                 //mock the behaviors we need to test in DesktopMailbox
-                return new Mailbox(data) {
+                return new Mailbox(this, data) {
                     @Override
                     protected boolean needRedo(OperationContext octxt, RedoableOp recorder) {
                         return false;

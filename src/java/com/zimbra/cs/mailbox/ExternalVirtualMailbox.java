@@ -23,8 +23,8 @@ import com.zimbra.common.service.ServiceException;
  */
 public class ExternalVirtualMailbox extends Mailbox {
 
-    protected ExternalVirtualMailbox(MailboxData data) {
-        super(data);
+    protected ExternalVirtualMailbox(MailboxManager mailboxManager, MailboxData data) {
+        super(mailboxManager, data);
     }
 
     @Override

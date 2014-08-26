@@ -91,7 +91,7 @@ public class SendMsgTest {
 
         @Override
         protected Mailbox instantiateMailbox(MailboxData data) {
-            return new Mailbox(data) {
+            return new Mailbox(this, data) {
                 @Override
                 public MailSender getMailSender() {
                     return new MailSender() {
@@ -121,7 +121,7 @@ public class SendMsgTest {
 
         @Override
         protected Mailbox instantiateMailbox(MailboxData data) {
-            return new Mailbox(data) {
+            return new Mailbox(this, data) {
                 @Override
                 public MailSender getMailSender() {
                     return new MailSender() {

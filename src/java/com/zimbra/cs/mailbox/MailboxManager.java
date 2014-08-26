@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -27,6 +27,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+
+import javax.annotation.PostConstruct;
+
+import org.springframework.beans.factory.annotation.Autowired;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -138,7 +142,14 @@ public class MailboxManager {
      */
     private MailboxMap cache;
 
-    public MailboxManager() throws ServiceException {
+
+    @Autowired private SharedDeliveryCoordinator sharedDeliveryCoordinator;
+
+    public MailboxManager() {
+    }
+
+    @PostConstruct
+    public void init() throws ServiceException {
         DbConnection conn = null;
         synchronized (this) {
             try {
@@ -536,6 +547,10 @@ public class MailboxManager {
         return count;
     }
 
+    public SharedDeliveryCoordinator getSharedDeliveryCoordinator() {
+        return sharedDeliveryCoordinator;
+    }
+
     /**
      * Returns TRUE if the specified mailbox is in-memory and not in maintenance mode, if false, then caller can assume
      * that one of the {@link Listener} APIs be called for this mailbox at some point in the future, if this mailbox is
@@ -578,11 +593,11 @@ public class MailboxManager {
      * @throws ServiceException may be thrown by sub-classes
      */
     protected Mailbox instantiateMailbox(MailboxData data) throws ServiceException {
-        return new Mailbox(data);
+        return new Mailbox(this, data);
     }
 
     protected Mailbox instantiateExternalVirtualMailbox(MailboxData data) throws ServiceException {
-        return new ExternalVirtualMailbox(data);
+        return new ExternalVirtualMailbox(this, data);
     }
 
     protected synchronized void cacheAccount(String accountId, int mailboxId) {

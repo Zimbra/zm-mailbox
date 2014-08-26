@@ -16,9 +16,14 @@
  */
 package com.zimbra.cs.util;
 
+import java.net.URI;
+import java.net.URISyntaxException;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
+
+import redis.clients.jedis.JedisPool;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
@@ -26,15 +31,56 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.extension.ExtensionUtil;
+import com.zimbra.cs.mailbox.LocalSharedDeliveryCoordinator;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.RedisSharedDeliveryCoordinator;
+import com.zimbra.cs.mailbox.SharedDeliveryCoordinator;
 import com.zimbra.cs.redolog.DefaultRedoLogProvider;
 import com.zimbra.cs.redolog.RedoLogProvider;
 import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.store.file.FileBlobStore;
 
+/**
+ * Singleton factories for Spring Configuration.
+ *
+ * To get a reference to a singleton, use:
+ *
+ * <code>
+ * Zimbra.getAppContext().getBean(myclass);
+ * </code>
+ *
+ * To autowire and initialize an object with Spring that you've constructed yourself:
+ *
+ * <code>
+ * Zimbra.getAppContext().getAutowireCapableBeanFactory().autowireBean(myObject);
+ * Zimbra.getAppContext().getAutowireCapableBeanFactory().initializeBean(myObject, "myObjectName");
+ * </code>
+ */
 @Configuration
 @EnableAspectJAutoProxy
 public class ZimbraConfig {
+
+    public boolean isMemcachedAvailable() {
+        try {
+            Server server = Provisioning.getInstance().getLocalServer();
+            String[] serverList = server.getMultiAttr(Provisioning.A_zimbraMemcachedClientServerList);
+            return serverList.length > 0;
+        } catch (ServiceException e) {
+            ZimbraLog.system.error("Error reading memcached configuration; proceeding as unavailable", e);
+            return false;
+        }
+    }
+
+    public boolean isRedisAvailable() throws ServiceException {
+        // return redisUri() != null;
+        return false; // TODO Placeholder for future Redis support
+    }
+
+    @Bean(name="jedisPool")
+    public JedisPool jedisPoolBean() throws ServiceException {
+        URI uri = redisUri();
+        return new JedisPool(uri.getHost(), uri.getPort());
+    }
 
     @Bean(name="mailboxManager")
 	public MailboxManager mailboxManagerBean() throws ServiceException {
@@ -58,6 +104,14 @@ public class ZimbraConfig {
 		return instance;
 	}
 
+    public URI redisUri() throws ServiceException {
+        try {
+            return new URI("redis://localhost:6379"); // TODO
+        } catch (URISyntaxException e) {
+            throw ServiceException.PARSE_ERROR("Invalid Redis URI", e);
+        }
+    }
+
 	@Bean(name="redologProvider")
     public RedoLogProvider redoLogProviderBean() throws Exception {
         RedoLogProvider instance = null;
@@ -72,6 +126,30 @@ public class ZimbraConfig {
                                  klass.getName());
         }
         instance = (RedoLogProvider) klass.newInstance();
+        return instance;
+    }
+
+    @Bean(name="sharedDeliveryCoordinator")
+    public SharedDeliveryCoordinator sharedDeliveryCoordinatorBean() throws Exception {
+        SharedDeliveryCoordinator instance = null;
+        String className = LC.zimbra_class_shareddeliverycoordinator.value();
+        if (className != null && !className.equals("")) {
+            try {
+                instance = (SharedDeliveryCoordinator) Class.forName(className).newInstance();
+            } catch (ClassNotFoundException e) {
+                instance = (SharedDeliveryCoordinator) ExtensionUtil.findClass(className).newInstance();
+            }
+        }
+        if (instance == null) {
+            if (isRedisAvailable()) {
+                instance = new RedisSharedDeliveryCoordinator();
+//            } else if (isMemcachedAvailable()) {
+//                TODO: Future Memcached-based shared delivery coordination support
+//                instance = new MemcachedSharedDeliveryCoordinator();
+            } else {
+                instance = new LocalSharedDeliveryCoordinator();
+            }
+        }
         return instance;
     }
 

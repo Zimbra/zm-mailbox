@@ -502,7 +502,7 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                     DeliveryAction da = DeliveryAction.deliver;
                     boolean endSharedDelivery = false;
                     if (shared) {
-                        if (mbox.beginSharedDelivery()) {
+                        if (mbox.getMailboxManager().getSharedDeliveryCoordinator().beginSharedDelivery(mbox)) {
                             endSharedDelivery = true;
                         } else {
                             // Skip delivery to mailboxes in backup mode.
@@ -693,7 +693,7 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                     }
                     recipient.setDeliveryStatus(reply);
                     if (shared && rd != null && rd.esd) {
-                        rd.mbox.endSharedDelivery();
+                        rd.mbox.getMailboxManager().getSharedDeliveryCoordinator().endSharedDelivery(rd.mbox);
                         rd.esd = false;
                     }
                 }
@@ -725,7 +725,7 @@ public class ZimbraLmtpBackend implements LmtpBackend {
             if (shared) {
                 for (RecipientDetail rd : rcptMap.values()) {
                     if (rd.esd && rd.mbox != null)
-                        rd.mbox.endSharedDelivery();
+                        rd.mbox.getMailboxManager().getSharedDeliveryCoordinator().endSharedDelivery(rd.mbox);
                 }
             }
         }
