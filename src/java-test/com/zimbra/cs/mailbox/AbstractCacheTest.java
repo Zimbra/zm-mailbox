@@ -15,6 +15,7 @@ package com.zimbra.cs.mailbox;
 
 import java.util.HashMap;
 
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.BeforeClass;
 
@@ -33,6 +34,7 @@ public abstract class AbstractCacheTest {
 
     @Before
     public void setUp() throws Exception {
+        Assume.assumeTrue(isExternalCacheAvailableForTest());
         MailboxTestUtil.clearData();
         MailboxTestUtil.cleanupIndexStore(
                 MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID));

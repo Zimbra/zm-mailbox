@@ -41,10 +41,13 @@ public abstract class AbstractSharedDeliveryCoordinatorTest {
 
     @Before
     public void setUp() throws Exception {
+        Assume.assumeTrue(isExternalCacheAvailableForTest());
         MailboxTestUtil.clearData();
         MailboxTestUtil.cleanupIndexStore(
                 MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID));
-        flushCacheBetweenTests();
+        try {
+            flushCacheBetweenTests();
+        } catch (Exception e) {}
     }
 
     protected abstract void flushCacheBetweenTests() throws Exception;
@@ -54,7 +57,6 @@ public abstract class AbstractSharedDeliveryCoordinatorTest {
     @Test
     public void testInitState() throws Exception {
         SharedDeliveryCoordinator sdc = Zimbra.getAppContext().getBean(SharedDeliveryCoordinator.class);
-
         Assert.assertNotNull(sdc);
 
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
@@ -64,7 +66,6 @@ public abstract class AbstractSharedDeliveryCoordinatorTest {
 
     @Test
     public void testToggleAllowedFlag() throws Exception {
-        Assume.assumeTrue(isExternalCacheAvailableForTest());
         SharedDeliveryCoordinator sdc = Zimbra.getAppContext().getBean(SharedDeliveryCoordinator.class);
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
 
@@ -81,7 +82,6 @@ public abstract class AbstractSharedDeliveryCoordinatorTest {
 
     @Test
     public void testSingleSharedDelivery() throws Exception {
-        Assume.assumeTrue(isExternalCacheAvailableForTest());
         SharedDeliveryCoordinator sdc = Zimbra.getAppContext().getBean(SharedDeliveryCoordinator.class);
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
 
@@ -94,7 +94,6 @@ public abstract class AbstractSharedDeliveryCoordinatorTest {
 
     @Test
     public void testWait() throws Exception {
-        Assume.assumeTrue(isExternalCacheAvailableForTest());
         SharedDeliveryCoordinator sdc = Zimbra.getAppContext().getBean(SharedDeliveryCoordinator.class);
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
 

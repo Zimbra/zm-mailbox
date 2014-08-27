@@ -16,7 +16,6 @@ package com.zimbra.cs.mailbox;
 import java.util.Random;
 
 import org.junit.Assert;
-import org.junit.Assume;
 import org.junit.Test;
 
 import com.zimbra.common.service.ServiceException;
@@ -32,7 +31,6 @@ public abstract class AbstractConversationIdCacheTest extends AbstractCacheTest 
 
     @Test
     public void test() throws Exception {
-        Assume.assumeTrue(isExternalCacheAvailableForTest());
         cache = constructCache();
         Assert.assertNotNull(cache);
 
