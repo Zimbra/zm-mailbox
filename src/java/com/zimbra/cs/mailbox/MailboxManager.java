@@ -142,7 +142,7 @@ public class MailboxManager {
      */
     private MailboxMap cache;
 
-
+    private ConversationIdCache conversationIdCache = new LocalConversationIdCache();
     @Autowired private SharedDeliveryCoordinator sharedDeliveryCoordinator;
 
     public MailboxManager() {
@@ -160,6 +160,10 @@ public class MailboxManager {
                 DbPool.quietClose(conn);
             }
         }
+    }
+
+    public ConversationIdCache getConversationIdCache() {
+        return conversationIdCache;
     }
 
     protected MailboxMap createCache() {

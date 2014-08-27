@@ -707,8 +707,6 @@ public class Mailbox {
     private FolderCache mFolderCache;
     private Map<Object, Tag> mTagCache;
     private SoftReference<ItemCache> mItemCache = new SoftReference<ItemCache>(null);
-    private final Map<String, Integer> mConvHashes = new ConcurrentLinkedHashMap.Builder<String, Integer>()
-                    .maximumWeightedCapacity(MAX_MSGID_CACHE).build();
     private final Map<String, Integer> mSentMessageIDs = new ConcurrentLinkedHashMap.Builder<String, Integer>()
                     .maximumWeightedCapacity(MAX_MSGID_CACHE).build();
 
@@ -4309,7 +4307,7 @@ public class Mailbox {
     Conversation getConversationByHash(String hash) throws ServiceException {
         Conversation conv = null;
 
-        Integer convId = mConvHashes.get(hash);
+        Integer convId = mailboxManager.getConversationIdCache().get(this, hash);
         if (convId != null) {
             conv = getCachedConversation(convId);
         }
@@ -6152,14 +6150,14 @@ public class Mailbox {
         String hash = subjectHash != null ? subjectHash : getHash(conv.getNormalizedSubject());
         conv.open(hash);
         markOtherItemDirty(hash);
-        mConvHashes.put(hash, Integer.valueOf(conv.getId()));
+        mailboxManager.getConversationIdCache().put(this, hash, Integer.valueOf(conv.getId()));
     }
 
     // please keep this package-visible but not public
     void closeConversation(Conversation conv, String subjectHash) throws ServiceException {
         String hash = subjectHash != null ? subjectHash : getHash(conv.getNormalizedSubject());
         conv.close(hash);
-        mConvHashes.remove(hash);
+        mailboxManager.getConversationIdCache().remove(this, hash);
     }
 
     // please keep this package-visible but not public
@@ -9338,7 +9336,7 @@ public class Mailbox {
         }
     }
 
-    private List<Object> rollbackCache(MailboxChange change) {
+    private List<Object> rollbackCache(MailboxChange change) throws ServiceException {
         if (change == null) {
             return null;
         }
@@ -9368,7 +9366,7 @@ public class Mailbox {
                 if (obj instanceof MailboxBlob || obj instanceof Blob) {
                     deletes.add(obj);
                 } else if (obj instanceof String) {
-                    mConvHashes.remove(obj);
+                    mailboxManager.getConversationIdCache().remove(this, (String)obj);
                 }
             }
             return deletes;
