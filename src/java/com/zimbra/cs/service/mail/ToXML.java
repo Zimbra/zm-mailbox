@@ -1138,6 +1138,9 @@ public final class ToXML {
         if (needToOutput(fields, Change.SUBJECT)) {
             c.addAttribute(MailConstants.E_SUBJECT, msgHit != null ? msgHit.getSubject() : conv.getSubject(), Element.Disposition.CONTENT);
         }
+        if (needToOutput(fields, Change.FLAGS | Change.UNREAD)) {
+            c.addAttribute(MailConstants.A_UNREAD, conv.getUnreadCount());
+        }
         List<Message> msgsByConv = null;
         if (fields == NOTIFY_FIELDS && msgHit != null) {
             /*
@@ -1236,7 +1239,7 @@ public final class ToXML {
                     }
                 }
             }
-
+            c.addAttribute(MailConstants.A_UNREAD, conv.getUnreadCount());
             c.addAttribute(MailConstants.A_NUM, nondeleted);
             if (count != nondeleted) {
                 c.addAttribute(MailConstants.A_TOTAL_SIZE, count);

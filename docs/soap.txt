@@ -1621,11 +1621,11 @@ conversation result:
     [<wildcard str="foo*" expanded="1|0"/>]
     [<suggest>{suggested query string}</suggest>]
    </info>]
-  <c id="{conv-id}" tn="{tag-names}" n="{num-msgs}" [total="{all-msgs}"] d="{date}" f="{flags} [mbx="UID"] sf="SORT-FIELD-VALUE">
+  <c id="{conv-id}" tn="{tag-names}" n="{num-msgs}" u="{num-unread-msgs}" [total="{all-msgs}"] d="{date}" f="{flags} [mbx="UID"] sf="SORT-FIELD-VALUE">
     <e ...>*
     <su>{subject}</su>
     <fr>{fragment}</fr>
-    [<m id="MATCHED_MSG_ID">]+
+    [<m id="MATCHED_MSG_ID" f="{flags}">]+
   </c>*
 </SearchResponse>
 
@@ -2847,13 +2847,13 @@ EXAMPLE:
 </SearchRequest>
 
 <SearchResponse hits="2" offset="...">
-   <c id="12344" n="2" d="10023420023" tn="foo,tag2" f="1">
+   <c id="12344" n="2" u="1" d="10023420023" tn="foo,tag2" f="1">
      <e p="Roland Schemers" a="schemers@example.zimbra.com" d="Roland"/>
      <e p="Dan Karp" a="dan@example.zimbra.com" d="Dan"/>
      <su>Speaking of animals</su>
      <fr>I am still looking for my monkey!</fr>
    </c>
-   <c id="456" n="2" d="10023420023" tn="tag2,qux" a="1">
+   <c id="456" n="2" u="1" d="10023420023" tn="tag2,qux" a="1">
      <e p="Roland Schemers" a="schemers@example.zimbra.com" d="Roland"/>
      <e p="Ross Dargahi" a="ross@example.zimbra.com" d="Ross"/>
      <su>phone numbers</su>
