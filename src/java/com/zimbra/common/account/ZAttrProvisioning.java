@@ -1352,6 +1352,26 @@ public class ZAttrProvisioning {
         public boolean isDedupeAll() { return this == dedupeAll;}
     }
 
+    public static enum PrefDelegatedSendSaveTarget {
+        sender("sender"),
+        both("both"),
+        owner("owner"),
+        none("none");
+        private String mValue;
+        private PrefDelegatedSendSaveTarget(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static PrefDelegatedSendSaveTarget fromString(String s) throws ServiceException {
+            for (PrefDelegatedSendSaveTarget value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isSender() { return this == sender;}
+        public boolean isBoth() { return this == both;}
+        public boolean isOwner() { return this == owner;}
+        public boolean isNone() { return this == none;}
+    }
+
     public static enum PrefExternalSendersType {
         ALLNOTINAB("ALLNOTINAB"),
         ALL("ALL"),
@@ -10657,6 +10677,16 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=492)
     public static final String A_zimbraPrefDefaultSignatureId = "zimbraPrefDefaultSignatureId";
+
+    /**
+     * Which mailbox to save messages sent via sendAs/sendOnBehalfOf
+     * delegation to. Only applicable if account has zimbraPrefSaveToSent set
+     * to true
+     *
+     * @since ZCS 8.6.0,9.0.0
+     */
+    @ZAttr(id=1651)
+    public static final String A_zimbraPrefDelegatedSendSaveTarget = "zimbraPrefDelegatedSendSaveTarget";
 
     /**
      * whether meeting invite emails are moved to Trash folder upon
