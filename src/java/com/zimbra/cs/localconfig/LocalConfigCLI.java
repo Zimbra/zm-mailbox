@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -35,10 +35,10 @@ import com.zimbra.common.localconfig.ConfigException;
 import com.zimbra.common.localconfig.ConfigWriter;
 import com.zimbra.common.localconfig.KnownKey;
 import com.zimbra.common.localconfig.LC;
-import com.zimbra.common.localconfig.LocalConfig;
-import com.zimbra.common.localconfig.Logging;
 import com.zimbra.common.localconfig.LC.Reloadable;
 import com.zimbra.common.localconfig.LC.Supported;
+import com.zimbra.common.localconfig.LocalConfig;
+import com.zimbra.common.localconfig.Logging;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.SoapHttpTransport;
@@ -72,7 +72,7 @@ public final class LocalConfigCLI {
                 "Show values for only those keys listed in [args] that have been changed from their defaults.");
         mOptions.addOption("i", "info", false,
                 "Show documentation for keys listed in [args].");
-        mOptions.addOption(null, "all", false, 
+        mOptions.addOption(null, "all", false,
                 "Shows documentation for all keys, including unsupported ones");
         mOptions.addOption("x", "expand", false,
                 "Expand values.");
@@ -90,7 +90,7 @@ public final class LocalConfigCLI {
                 "Send a SOAP request to the server to reload its local config.");
         mOptions.addOption("h", "help", false,
                 "Show this usage information.");
-        
+
     }
 
     /**
@@ -112,6 +112,13 @@ public final class LocalConfigCLI {
         formatter.printHelp("zmlocalconfig [options] [args]",
                 "where [options] are:", displayOptions, "");
         System.exit(0);
+    }
+
+    private void checkNotRoot(String option) {
+        String username = System.getProperty("user.name");
+        if ("root".equalsIgnoreCase(username)) {
+            error("cannot use " + option + " when running as root", null);
+        }
     }
 
     private void error(String errmsg, Exception e) {
@@ -151,7 +158,7 @@ public final class LocalConfigCLI {
             LocalConfig.printDoc(System.out, cl.getArgs(), false);
             return;
         }
-        // info/docs for all keys (hidden option) 
+        // info/docs for all keys (hidden option)
         if (cl.hasOption("all")) {
             checkCompatibleOptions("all", "q", cl);
             LocalConfig.printDoc(System.out, cl.getArgs(), true);
@@ -169,6 +176,7 @@ public final class LocalConfigCLI {
 
         // edit
         if (cl.hasOption("e")) {
+            checkNotRoot("-e");
             checkCompatibleOptions("e", "qfrc", cl);
             String[] av = cl.getArgs();
             if (av == null || av.length == 0) {
@@ -204,6 +212,7 @@ public final class LocalConfigCLI {
 
         // unset
         if (cl.hasOption("u")) {
+            checkNotRoot("-u");
             checkCompatibleOptions("u", "qfc", cl);
             String[] av = cl.getArgs();
             if (av == null || av.length == 0) {
@@ -277,7 +286,7 @@ public final class LocalConfigCLI {
             error("exception occurred when printing", e);
         }
     }
-    
+
     private void loadExtensionLC(String className) {
         try {
             Class<?> lcClass = Class.forName(className);
@@ -293,7 +302,7 @@ public final class LocalConfigCLI {
                             key.setSupported(true);
                         if(field.isAnnotationPresent(Reloadable.class))
                             key.setReloadable(true);
-                    }    
+                    }
                 } catch (Throwable never) {
                     // ignore
                 }
