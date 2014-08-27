@@ -8289,4 +8289,9 @@ TODO: delete them permanently from here
   <desc>Whether to allow the send message Control-Enter shortcut in the web client UI</desc>
 </attr>
 
+<attr id="1651" name="zimbraPrefDelegatedSendSaveTarget" type="enum" value="owner,sender,both,none" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="8.6.0, 9.0.0">
+  <defaultCOSValue>owner</defaultCOSValue>
+  <desc>Which mailbox to save messages sent via sendAs/sendOnBehalfOf delegation to. Only applicable if account has zimbraPrefSaveToSent set to true</desc>
+</attr>
+
 </attrs>

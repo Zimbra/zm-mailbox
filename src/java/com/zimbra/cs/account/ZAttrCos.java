@@ -29854,6 +29854,153 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
+     * Which mailbox to save messages sent via sendAs/sendOnBehalfOf
+     * delegation to. Only applicable if account has zimbraPrefSaveToSent set
+     * to true
+     *
+     * <p>Valid values: [both, sender, owner, none]
+     *
+     * @return zimbraPrefDelegatedSendSaveTarget, or ZAttrProvisioning.PrefDelegatedSendSaveTarget.owner if unset and/or has invalid value
+     *
+     * @since ZCS 8.6.0,9.0.0
+     */
+    @ZAttr(id=1651)
+    public ZAttrProvisioning.PrefDelegatedSendSaveTarget getPrefDelegatedSendSaveTarget() {
+        try { String v = getAttr(Provisioning.A_zimbraPrefDelegatedSendSaveTarget); return v == null ? ZAttrProvisioning.PrefDelegatedSendSaveTarget.owner : ZAttrProvisioning.PrefDelegatedSendSaveTarget.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.PrefDelegatedSendSaveTarget.owner; }
+    }
+
+    /**
+     * Which mailbox to save messages sent via sendAs/sendOnBehalfOf
+     * delegation to. Only applicable if account has zimbraPrefSaveToSent set
+     * to true
+     *
+     * <p>Valid values: [both, sender, owner, none]
+     *
+     * @return zimbraPrefDelegatedSendSaveTarget, or "owner" if unset
+     *
+     * @since ZCS 8.6.0,9.0.0
+     */
+    @ZAttr(id=1651)
+    public String getPrefDelegatedSendSaveTargetAsString() {
+        return getAttr(Provisioning.A_zimbraPrefDelegatedSendSaveTarget, "owner");
+    }
+
+    /**
+     * Which mailbox to save messages sent via sendAs/sendOnBehalfOf
+     * delegation to. Only applicable if account has zimbraPrefSaveToSent set
+     * to true
+     *
+     * <p>Valid values: [both, sender, owner, none]
+     *
+     * @param zimbraPrefDelegatedSendSaveTarget new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.6.0,9.0.0
+     */
+    @ZAttr(id=1651)
+    public void setPrefDelegatedSendSaveTarget(ZAttrProvisioning.PrefDelegatedSendSaveTarget zimbraPrefDelegatedSendSaveTarget) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefDelegatedSendSaveTarget, zimbraPrefDelegatedSendSaveTarget.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Which mailbox to save messages sent via sendAs/sendOnBehalfOf
+     * delegation to. Only applicable if account has zimbraPrefSaveToSent set
+     * to true
+     *
+     * <p>Valid values: [both, sender, owner, none]
+     *
+     * @param zimbraPrefDelegatedSendSaveTarget new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.6.0,9.0.0
+     */
+    @ZAttr(id=1651)
+    public Map<String,Object> setPrefDelegatedSendSaveTarget(ZAttrProvisioning.PrefDelegatedSendSaveTarget zimbraPrefDelegatedSendSaveTarget, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefDelegatedSendSaveTarget, zimbraPrefDelegatedSendSaveTarget.toString());
+        return attrs;
+    }
+
+    /**
+     * Which mailbox to save messages sent via sendAs/sendOnBehalfOf
+     * delegation to. Only applicable if account has zimbraPrefSaveToSent set
+     * to true
+     *
+     * <p>Valid values: [both, sender, owner, none]
+     *
+     * @param zimbraPrefDelegatedSendSaveTarget new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.6.0,9.0.0
+     */
+    @ZAttr(id=1651)
+    public void setPrefDelegatedSendSaveTargetAsString(String zimbraPrefDelegatedSendSaveTarget) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefDelegatedSendSaveTarget, zimbraPrefDelegatedSendSaveTarget);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Which mailbox to save messages sent via sendAs/sendOnBehalfOf
+     * delegation to. Only applicable if account has zimbraPrefSaveToSent set
+     * to true
+     *
+     * <p>Valid values: [both, sender, owner, none]
+     *
+     * @param zimbraPrefDelegatedSendSaveTarget new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.6.0,9.0.0
+     */
+    @ZAttr(id=1651)
+    public Map<String,Object> setPrefDelegatedSendSaveTargetAsString(String zimbraPrefDelegatedSendSaveTarget, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefDelegatedSendSaveTarget, zimbraPrefDelegatedSendSaveTarget);
+        return attrs;
+    }
+
+    /**
+     * Which mailbox to save messages sent via sendAs/sendOnBehalfOf
+     * delegation to. Only applicable if account has zimbraPrefSaveToSent set
+     * to true
+     *
+     * <p>Valid values: [both, sender, owner, none]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.6.0,9.0.0
+     */
+    @ZAttr(id=1651)
+    public void unsetPrefDelegatedSendSaveTarget() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefDelegatedSendSaveTarget, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Which mailbox to save messages sent via sendAs/sendOnBehalfOf
+     * delegation to. Only applicable if account has zimbraPrefSaveToSent set
+     * to true
+     *
+     * <p>Valid values: [both, sender, owner, none]
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.6.0,9.0.0
+     */
+    @ZAttr(id=1651)
+    public Map<String,Object> unsetPrefDelegatedSendSaveTarget(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefDelegatedSendSaveTarget, "");
+        return attrs;
+    }
+
+    /**
      * whether meeting invite emails are moved to Trash folder upon
      * accept/decline
      *
