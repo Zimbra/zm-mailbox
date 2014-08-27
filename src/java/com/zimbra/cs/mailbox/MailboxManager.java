@@ -188,7 +188,9 @@ public class MailboxManager {
     }
 
     @VisibleForTesting
-    public static void setInstance(MailboxManager mmgr) {
+    public static void setInstance(MailboxManager mmgr) throws ServiceException {
+        Zimbra.getAppContext().getAutowireCapableBeanFactory().autowireBean(mmgr);
+        Zimbra.getAppContext().getAutowireCapableBeanFactory().initializeBean(mmgr, "mailboxManager");
         sInstance = mmgr;
     }
 
