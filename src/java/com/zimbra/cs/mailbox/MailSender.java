@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -47,6 +47,7 @@ import com.google.common.base.Strings;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.ZAttrProvisioning.PrefDelegatedSendSaveTarget;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.common.mime.shim.JavaMailInternetHeaders;
@@ -538,7 +539,10 @@ public class MailSender {
             // if requested, save a copy of the message to the Sent Mail folder
             ParsedMessage pm = null;
             ItemId returnItemId = null;
-            if (mSaveToSent) {
+            if (mSaveToSent && (!isDelegatedRequest ||
+                    (isDelegatedRequest &&
+                    (PrefDelegatedSendSaveTarget.sender == acct.getPrefDelegatedSendSaveTarget() ||
+                    PrefDelegatedSendSaveTarget.both == acct.getPrefDelegatedSendSaveTarget())))) {
                 if (mIdentity == null) {
                     mIdentity = Provisioning.getInstance().getDefaultIdentity(authuser);
                 }
@@ -588,7 +592,8 @@ public class MailSender {
             // for delegated sends automatically save a copy to the "From" user's mailbox, unless we've been
             // specifically requested not to do the save (for instance BES does its own save to Sent, so does'nt
             // want it done here).
-            if (allowSaveToSent && hasRecipients && isDelegatedRequest && acct.isPrefSaveToSent()) {
+            if (allowSaveToSent && hasRecipients && isDelegatedRequest && acct.isPrefSaveToSent() &&
+                    (PrefDelegatedSendSaveTarget.owner == acct.getPrefDelegatedSendSaveTarget() || PrefDelegatedSendSaveTarget.both == acct.getPrefDelegatedSendSaveTarget())) {
                 int flags = Flag.BITMASK_UNREAD | Flag.BITMASK_FROM_ME;
                 // save the sent copy using the target's credentials, as the sender doesn't necessarily have write access
                 OperationContext octxtTarget = new OperationContext(acct);
