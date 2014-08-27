@@ -50,6 +50,13 @@ public class ConversationMsgHitInfo {
     private String folderId;
 
     /**
+     * @zm-api-field-tag flags
+     * @zm-api-field-description flags
+     */
+    @XmlAttribute(name=MailConstants.A_FLAGS /* f */, required=false)
+    private String flags;
+
+    /**
      * @zm-api-field-tag auto-send-time
      * @zm-api-field-description Can optionally set autoSendTime to specify the time at which the draft should be
      * automatically sent by the server
@@ -74,15 +81,17 @@ public class ConversationMsgHitInfo {
         hit.setFolderId(fId);
         return hit;
     }
-
+ 
     public void setSize(Long size) { this.size = size; }
     public void setFolderId(String folderId) { this.folderId = folderId; }
+    public void setFlags(String flags) { this.flags = flags; }
     public void setAutoSendTime(Long autoSendTime) {
         this.autoSendTime = autoSendTime;
     }
     public String getId() { return id; }
     public Long getSize() { return size; }
     public String getFolderId() { return folderId; }
+    public String getFlags() { return flags; }
     public Long getAutoSendTime() { return autoSendTime; }
 
     /** Done like this rather than using JAXB for performance reasons */
@@ -93,6 +102,9 @@ public class ConversationMsgHitInfo {
         }
         if (folderId != null) {
             mel.addAttribute(MailConstants.A_FOLDER, folderId);
+        }
+        if (flags != null) {
+            mel.addAttribute(MailConstants.A_FLAGS, flags);
         }
         if (autoSendTime != null) {
             mel.addAttribute(MailConstants.A_AUTO_SEND_TIME, autoSendTime);
@@ -105,6 +117,7 @@ public class ConversationMsgHitInfo {
             .add("id", id)
             .add("size", size)
             .add("folderId", folderId)
+            .add("flags", flags)
             .add("autoSendTime", autoSendTime);
     }
 

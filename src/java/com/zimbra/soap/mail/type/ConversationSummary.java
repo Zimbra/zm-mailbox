@@ -53,6 +53,13 @@ public class ConversationSummary {
     private Integer num;
 
     /**
+     * @zm-api-field-tag num-unread-msgs
+     * @zm-api-field-description Number of unread messages in conversation
+     */
+    @XmlAttribute(name=MailConstants.A_UNREAD /* u */, required=false)
+    private Integer numUnread;
+
+    /**
      * @zm-api-field-tag all-msgs
      * @zm-api-field-description Total number of messages in conversation including those with the IMAP \Deleted flag
      * set
@@ -151,6 +158,7 @@ public class ConversationSummary {
 
     public void setId(String id) { this.id = id; }
     public void setNum(Integer num) { this.num = num; }
+    public void setNumUnread(Integer numUnread) { this.numUnread = numUnread; }
     public void setTotalSize(Integer totalSize) { this.totalSize = totalSize; }
     public void setFlags(String flags) { this.flags = flags; }
     @Deprecated
@@ -188,6 +196,7 @@ public class ConversationSummary {
 
     public String getId() { return id; }
     public Integer getNum() { return num; }
+    public Integer getNumUnread() { return numUnread; }
     public Integer getTotalSize() { return totalSize; }
     public String getFlags() { return flags; }
     public String getTags() { return tags; }
@@ -209,6 +218,7 @@ public class ConversationSummary {
         return helper
             .add("id", id)
             .add("num", num)
+            .add("numUnread", numUnread)
             .add("totalSize", totalSize)
             .add("flags", flags)
             .add("tags", tags)
