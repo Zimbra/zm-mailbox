@@ -2661,7 +2661,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraArchiveMailFrom = "zimbraArchiveMailFrom";
 
     /**
-     * block all attachment downloading
+     * block viewing and downloading of all attachments
      */
     @ZAttr(id=115)
     public static final String A_zimbraAttachmentsBlocked = "zimbraAttachmentsBlocked";
@@ -12382,6 +12382,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraReverseProxyLogLevel = "zimbraReverseProxyLogLevel";
 
     /**
+     * whether nginx proxy should log to syslog
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1649)
+    public static final String A_zimbraReverseProxyLogToSyslog = "zimbraReverseProxyLogToSyslog";
+
+    /**
      * whether this server is a reverse proxy lookup target
      */
     @ZAttr(id=504)
@@ -12996,7 +13004,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraSignatureName = "zimbraSignatureName";
 
     /**
-     * background color for chameleon skin for the domain
+     * background color for serenity skin for the domain
      *
      * @since ZCS 5.0.6
      */
@@ -13004,7 +13012,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraSkinBackgroundColor = "zimbraSkinBackgroundColor";
 
     /**
-     * favicon for chameleon skin for the domain
+     * favicon for serenity skin for the domain
      *
      * @since ZCS 6.0.0_BETA1
      */
@@ -13012,7 +13020,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraSkinFavicon = "zimbraSkinFavicon";
 
     /**
-     * foreground color for chameleon skin for the domain
+     * foreground color for serenity skin for the domain
      *
      * @since ZCS 5.0.6
      */
@@ -13020,7 +13028,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraSkinForegroundColor = "zimbraSkinForegroundColor";
 
     /**
-     * logo app banner for chameleon skin for the domain
+     * logo app banner for serenity skin for the domain
      *
      * @since ZCS 5.0.7
      */
@@ -13028,7 +13036,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraSkinLogoAppBanner = "zimbraSkinLogoAppBanner";
 
     /**
-     * logo login banner for chameleon skin for the domain
+     * logo login banner for serenity skin for the domain
      *
      * @since ZCS 5.0.7
      */
@@ -13036,7 +13044,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraSkinLogoLoginBanner = "zimbraSkinLogoLoginBanner";
 
     /**
-     * Logo URL for chameleon skin for the domain
+     * Logo URL for serenity skin for the domain
      *
      * @since ZCS 5.0.6
      */
@@ -13044,7 +13052,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraSkinLogoURL = "zimbraSkinLogoURL";
 
     /**
-     * secondary color for chameleon skin for the domain
+     * secondary color for serenity skin for the domain
      *
      * @since ZCS 5.0.7
      */
@@ -13052,7 +13060,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraSkinSecondaryColor = "zimbraSkinSecondaryColor";
 
     /**
-     * selection color for chameleon skin for the domain
+     * selection color for serenity skin for the domain
      *
      * @since ZCS 5.0.7
      */
