@@ -25,6 +25,7 @@ import com.zimbra.common.account.ZAttrProvisioning.AutoProvAuthMech;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
@@ -178,8 +179,18 @@ public class PreAuthServlet extends ZimbraServlet {
                     }
                 }
                 
-                if (acct == null)
+                if (acct == null) {
                     throw AuthFailedServiceException.AUTH_FAILED(account, account, "account not found");
+                }
+                
+                String accountStatus = acct.getAccountStatus(prov);
+                if (!Provisioning.ACCOUNT_STATUS_ACTIVE.equalsIgnoreCase(accountStatus)) {
+                    if(Provisioning.ACCOUNT_STATUS_MAINTENANCE.equalsIgnoreCase(accountStatus)) {
+                        throw AccountServiceException.MAINTENANCE_MODE();
+                    } else {
+                        throw AccountServiceException.ACCOUNT_INACTIVE(acct.getName());
+                    }
+                } 
 
                 if (admin) {
                     boolean isDomainAdminAccount = acct.getBooleanAttr(Provisioning.A_zimbraIsDomainAdminAccount, false);

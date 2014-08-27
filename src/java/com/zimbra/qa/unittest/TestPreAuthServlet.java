@@ -18,22 +18,22 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import junit.framework.TestCase;
+
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.methods.GetMethod;
 
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.PreAuthKey;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.common.account.Key;
-import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.ldap.LdapConstants;
-
-import junit.framework.TestCase;
 
 public class TestPreAuthServlet extends TestCase {
 
@@ -107,7 +107,6 @@ public class TestPreAuthServlet extends TestCase {
             System.out.println("respCode=" + respCode);
             System.out.println("statusCode=" + statusCode);
             System.out.println("statusLine=" + statusLine);
-            
             /*
             System.out.println("Headers");
             Header[] respHeaders = method.getResponseHeaders();
@@ -223,20 +222,61 @@ public class TestPreAuthServlet extends TestCase {
             // sleep two seconds
             Thread.sleep(2000);
         }
+    }
+    
+    public void testPreAuthAccountNotActive() throws Exception {
+        String user = "user1";
+        Account acct = TestUtil.getAccount(user);
         
-        /*
-        zimbraPasswordLockoutDuration: 3m
-        zimbraPasswordLockoutEnabled: TRUE
-        zimbraPasswordLockoutFailureLifetime: 1m
-        zimbraPasswordLockoutMaxFailures: 5
-
-        <attr id="378" name="zimbraPasswordLockoutEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
-        <attr id="379" name="zimbraPasswordLockoutDuration" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
-        <attr id="380" name="zimbraPasswordLockoutMaxFailures" type="integer" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
-        <attr id="381" name="zimbraPasswordLockoutFailureLifetime" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
-        <attr id="382" name="zimbraPasswordLockoutLockedTime" type="gentime" cardinality="single" optionalIn="account" flags="domainAdminModifiable">
-        <attr id="383" name="zimbraPasswordLockoutFailureTime" type="gentime" cardinality="multi" optionalIn="account" flags="domainAdminModifiable">
-        */
+        Provisioning prov = Provisioning.getInstance();
+        
+        Map<String, Object> attrs = new HashMap<String, Object>();
+        attrs.put(Provisioning.A_zimbraAccountStatus, "maintenance");
+        prov.modifyAttrs(acct, attrs);
+        
+        System.out.println("Before the test:");
+        System.out.println(Provisioning.A_zimbraAccountStatus + ": " + acct.getAttr(Provisioning.A_zimbraAccountStatus));
+        System.out.println();
+        
+        
+        String preAuthKey = setUpDomain();
+        String preAuthUrl = genPreAuthUrl(preAuthKey, user, false, false);
+        
+        System.out.println("preAuthKey=" + preAuthKey);
+        System.out.println("preAuth=" + preAuthUrl);
+        
+        Server localServer = Provisioning.getInstance().getLocalServer();
+        String protoHostPort = "http://localhost:" + localServer.getIntAttr(Provisioning.A_zimbraMailPort, 0);
+        String url = protoHostPort + preAuthUrl;
+        
+        HttpClient client = new HttpClient();
+        HttpMethod method = new GetMethod(url);
+        try {
+            int respCode = HttpClientUtil.executeMethod(client, method);
+            int statusCode = method.getStatusCode();
+            String statusLine = method.getStatusLine().toString();
+            System.out.println("respCode=" + respCode);
+            System.out.println("statusCode=" + statusCode);
+            System.out.println("statusLine=" + statusLine);
+            assertEquals(400, statusCode);
+           
+            
+        } catch (HttpException e) {
+            throw e;
+        } catch (IOException e) {
+            throw e;
+        } finally {
+            method.releaseConnection();
+        }
+        
+        //revert account status back to active
+        attrs = new HashMap<String, Object>();
+        attrs.put(Provisioning.A_zimbraAccountStatus, "active");
+        prov.modifyAttrs(acct, attrs);
+        
+        System.out.println("After the test:");
+        System.out.println(Provisioning.A_zimbraAccountStatus + ": " + acct.getAttr(Provisioning.A_zimbraAccountStatus));
+        System.out.println();
     }
     
     /**
