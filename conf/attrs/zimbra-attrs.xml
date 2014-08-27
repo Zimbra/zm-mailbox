@@ -823,7 +823,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>contact features</desc>
 </attr>
 
-<attr id="136" name="zimbraFeatureCalendarEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited">
+<attr id="136" name="zimbraFeatureCalendarEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" callback="FeatureCalendarEnabled">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <defaultExternalCOSValue>FALSE</defaultExternalCOSValue>
   <desc>calendar features</desc>
