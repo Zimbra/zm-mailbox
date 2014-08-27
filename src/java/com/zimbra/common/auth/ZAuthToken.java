@@ -40,8 +40,9 @@ public class ZAuthToken {
     private static final String YAHOO_CALENDAR_AUTHTOKEN_TYPE = "YAHOO_CALENDAR_AUTH_PROVIDER";
     private static final String YAHOO_MAIL_AUTHTOKEN_TYPE     = "YAHOO_MAIL_AUTH_PROVIDER";
     
+    private static final String JSESSIONID_COOKIE = "JSESSIONID";
     private static final String AUTHTOKEN_TYPE_COOKIE = "AUTH_TOKEN_TYPE";
-    
+
     private static final String YAHOO_Y_COOKIE = "Y"; 
     private static final String YAHOO_T_COOKIE = "T";
     private static final String YAHOO_ADMIN_COOKIE = "ADMIN_AUTH_KEY";
@@ -204,6 +205,7 @@ public class ZAuthToken {
      */
     public static void clearCookies(HttpServletResponse response) {
         ZimbraCookie.clearCookie(response, ZimbraCookie.COOKIE_ZM_AUTH_TOKEN);
+        ZimbraCookie.clearCookie(response, JSESSIONID_COOKIE);
         ZimbraCookie.clearCookie(response, AUTHTOKEN_TYPE_COOKIE);
         ZimbraCookie.clearCookie(response, YAHOO_T_COOKIE);
         ZimbraCookie.clearCookie(response, YAHOO_Y_COOKIE);
