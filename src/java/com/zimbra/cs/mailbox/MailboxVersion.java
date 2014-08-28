@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2006, 2007, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -17,6 +17,10 @@
 package com.zimbra.cs.mailbox;
 
 import java.util.Iterator;
+
+import org.codehaus.jackson.annotate.JsonCreator;
+import org.codehaus.jackson.annotate.JsonIgnore;
+import org.codehaus.jackson.annotate.JsonProperty;
 
 import com.google.common.base.Splitter;
 import com.zimbra.common.service.ServiceException;
@@ -43,7 +47,8 @@ public final class MailboxVersion {
         minorVer = CURRENT_MINOR;
     }
 
-    public MailboxVersion(short major, short minor) {
+    @JsonCreator
+    public MailboxVersion(@JsonProperty("major") short major, @JsonProperty("minor") short minor) {
         majorVer = major;
         minorVer = minor;
     }
@@ -117,6 +122,7 @@ public final class MailboxVersion {
         return atLeast(b.majorVer, b.minorVer);
     }
 
+    @JsonIgnore
     public boolean isLatest() {
         return majorVer == CURRENT_MAJOR && minorVer == CURRENT_MINOR;
     }

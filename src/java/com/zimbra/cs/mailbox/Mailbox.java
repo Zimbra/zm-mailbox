@@ -279,7 +279,7 @@ public class Mailbox {
 
     public static final String CONF_PREVIOUS_MAILBOX_IDS = "prev_mbox_ids";
 
-    public static final class MailboxData implements Cloneable {
+    public static class MailboxData implements Cloneable {
         public int id;
         public int schemaGroupId;
         public String accountId;
@@ -320,6 +320,46 @@ public class Mailbox {
             mbd.version = version;
             mbd.itemcacheCheckpoint = itemcacheCheckpoint;
             return mbd;
+        }
+
+        public void apply(MailboxChange change) {
+            if (change.sync != null) {
+                this.trackSync = change.sync;
+            }
+            if (change.imap != null) {
+                this.trackImap = change.imap;
+            }
+            if (change.size != MailboxChange.NO_CHANGE) {
+                this.size = change.size;
+            }
+            if (change.itemId != MailboxChange.NO_CHANGE) {
+                this.lastItemId = change.itemId;
+            }
+            if (change.contacts != MailboxChange.NO_CHANGE) {
+                this.contacts = change.contacts;
+            }
+            if (change.changeId != MailboxChange.NO_CHANGE && change.changeId > this.lastChangeId) {
+                this.lastChangeId = change.changeId;
+                this.lastChangeDate = change.timestamp;
+            }
+            if (change.accessed != MailboxChange.NO_CHANGE) {
+                this.lastWriteDate = change.accessed;
+            }
+            if (change.recent != MailboxChange.NO_CHANGE) {
+                this.recentMessages = change.recent;
+            }
+            if (change.config != null) {
+                if (change.config.getSecond() == null) {
+                    if (this.configKeys != null) {
+                        this.configKeys.remove(change.config.getFirst());
+                    }
+                } else {
+                    if (this.configKeys == null) {
+                        this.configKeys = new HashSet<String>(1);
+                    }
+                    this.configKeys.add(change.config.getFirst());
+                }
+            }
         }
     }
 
@@ -721,8 +761,6 @@ public class Mailbox {
         mData = data;
         mData.lastChangeDate = System.currentTimeMillis();
         index = new MailboxIndex(this);
-        // version init done in open()
-        // index init done in open()
         lock = new MailboxLock(data.accountId, this);
     }
 
@@ -1712,17 +1750,25 @@ public class Mailbox {
             setOperationConnection(conn);
         }
 
-        if (Zimbra.isAlwaysOn()) {
-            // refresh mailbox stats
-            MailboxData newData = DbMailbox.getMailboxStats(getOperationConnection(), getId());
+        // refresh mailbox stats - check cache 1st, then DB 2nd
+        MailboxData newData = null;
+        MailboxDataCache mailboxDataCache = mailboxManager.getMailboxDataCache();
+        if (mailboxDataCache != null) {
+            try {
+                newData = mailboxManager.getMailboxDataCache().get(this);
+            } catch (ServiceException e) {
+                ZimbraLog.mailbox.warn("failed reading mailbox stats from cache", e);
+            }
+        }
+        if (newData == null && Zimbra.isAlwaysOn()) {
+            newData = DbMailbox.getMailboxStats(getOperationConnection(), getId());
             if (newData != null) { // Mailbox may have been deleted
                 mData = newData;
             }
         }
 
         boolean needRedo = needRedo(octxt, recorder);
-        // have a single, consistent timestamp for anything affected by this
-        // operation
+        // have a single, consistent timestamp for anything affected by this operation
         currentChange().setTimestamp(time);
         if (recorder != null && needRedo) {
             recorder.start(time);
@@ -9210,7 +9256,6 @@ public class Mailbox {
         if (change == null) {
             return;
         }
-        ChangeNotification notification = null;
 
         // save for notifications (below)
         PendingModifications dirty = null;
@@ -9224,54 +9269,29 @@ public class Mailbox {
         Session source = change.octxt == null ? null : change.octxt.getSession();
         assert (!change.hasChanges() || lock.isWriteLockedByCurrentThread());
 
+        ChangeNotification notification = null;
         try {
-            // the mailbox data has changed, so commit the changes
-            if (change.sync != null) {
-                mData.trackSync = change.sync;
-            }
-            if (change.imap != null) {
-                mData.trackImap = change.imap;
-            }
-            if (change.size != MailboxChange.NO_CHANGE) {
-                mData.size = change.size;
-            }
-            if (change.itemId != MailboxChange.NO_CHANGE) {
-                mData.lastItemId = change.itemId;
-            }
-            if (change.contacts != MailboxChange.NO_CHANGE) {
-                mData.contacts = change.contacts;
-            }
-            if (change.changeId != MailboxChange.NO_CHANGE && change.changeId > mData.lastChangeId) {
-                mData.lastChangeId = change.changeId;
-                mData.lastChangeDate = change.timestamp;
-            }
-            if (change.accessed != MailboxChange.NO_CHANGE) {
-                mData.lastWriteDate = change.accessed;
-            }
-            if (change.recent != MailboxChange.NO_CHANGE) {
-                mData.recentMessages = change.recent;
-            }
-            if (change.config != null) {
-                if (change.config.getSecond() == null) {
-                    if (mData.configKeys != null) {
-                        mData.configKeys.remove(change.config.getFirst());
-                    }
-                } else {
-                    if (mData.configKeys == null) {
-                        mData.configKeys = new HashSet<String>(1);
-                    }
-                    mData.configKeys.add(change.config.getFirst());
+            // the mailbox data has changed, so apply the changes to the local cached copy
+            mData.apply(change);
+
+            // update the shared cache with the latest mailbox data
+            MailboxDataCache mailboxDataCache = mailboxManager.getMailboxDataCache();
+            if (mailboxDataCache != null) {
+                try {
+                    mailboxDataCache.put(this, mData);
+                } catch (ServiceException e) {
+                    ZimbraLog.mailbox.warn("failed updating shared cache with latest mailbox stats", e);
                 }
             }
 
+            // remove cached deleted messages
             if (change.deletes != null && change.deletes.blobs != null) {
-                // remove cached messages
                 for (String digest : change.deletes.blobDigests) {
                     MessageCache.purge(digest);
                 }
             }
 
-            // committed changes, so notify any listeners
+            // notify listeners of committed changes
             if (dirty != null && dirty.hasNotifications()) {
                 try {
                     // try to get a copy of the changeset that *isn't* live
@@ -9291,7 +9311,7 @@ public class Mailbox {
         } finally {
             // keep our MailItem cache at a reasonable size
             trimItemCache();
-            // make sure we're ready for the next change
+            // get ready for the next change
             change.reset();
         }
 
