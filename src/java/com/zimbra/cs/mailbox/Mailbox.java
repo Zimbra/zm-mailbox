@@ -737,7 +737,6 @@ public class Mailbox {
     private static final int MAX_ITEM_CACHE_WITH_LISTENERS = LC.zimbra_mailbox_active_cache.intValue();
     private static final int MAX_ITEM_CACHE_WITHOUT_LISTENERS = LC.zimbra_mailbox_inactive_cache.intValue();
     private static final int MAX_ITEM_CACHE_FOR_GALSYNC_MAILBOX = LC.zimbra_mailbox_galsync_cache.intValue();
-    private static final int MAX_MSGID_CACHE = 10;
 
     private final int mId;
     private MailboxData mData;
@@ -747,8 +746,6 @@ public class Mailbox {
     private FolderCache mFolderCache;
     private Map<Object, Tag> mTagCache;
     private SoftReference<ItemCache> mItemCache = new SoftReference<ItemCache>(null);
-    private final Map<String, Integer> mSentMessageIDs = new ConcurrentLinkedHashMap.Builder<String, Integer>()
-                    .maximumWeightedCapacity(MAX_MSGID_CACHE).build();
 
     private MailboxMaintenance maintenance;
     private volatile boolean open = false;
@@ -5525,7 +5522,7 @@ public class Mailbox {
 
         // if the deduping rules say to drop this duplicated incoming message,
         // .... but only dedupe messages not carrying a calendar part
-        if (mSentMessageIDs.containsKey(msgidHeader)
+        if (mailboxManager.getSentMessageIdCache().get(this, msgidHeader) != null
             && (cpi == null || !CalendarItem.isAcceptableInvite(getAccount(), cpi))) {
             Account acct = getAccount();
             switch (acct.getPrefDedupeMessagesSentToSelf()) {
@@ -5875,9 +5872,9 @@ public class Mailbox {
         // quick check to make sure we don't deliver 5 copies of the same message
         String msgidHeader = pm.getMessageID();
         boolean isSent = ((flags & Flag.BITMASK_FROM_ME) != 0);
-        if (!isRedo && msgidHeader != null && !isSent && mSentMessageIDs.containsKey(msgidHeader)) {
-            Integer sentMsgID = mSentMessageIDs.get(msgidHeader);
-            if (conversationId == ID_AUTO_INCREMENT) {
+        if (!isRedo && msgidHeader != null && !isSent) {
+            Integer sentMsgID = mailboxManager.getSentMessageIdCache().get(this, msgidHeader);
+            if (sentMsgID != null && conversationId == ID_AUTO_INCREMENT) {
                 conversationId = getConversationIdFromReferent(pm.getMimeMessage(), sentMsgID.intValue());
                 ZimbraLog.mailbox.debug("duplicate detected but not deduped (%s); will try to slot into conversation %d",
                         msgidHeader, conversationId);
@@ -6165,7 +6162,7 @@ public class Mailbox {
 
         // step 8: remember the Message-ID header so that we can avoid receiving duplicates
         if (isSent && !isRedo && msgidHeader != null) {
-            mSentMessageIDs.put(msgidHeader, msg.getId());
+            mailboxManager.getSentMessageIdCache().put(this, msgidHeader, msg.getId());
         }
 
         return msg;

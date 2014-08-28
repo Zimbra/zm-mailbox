@@ -35,6 +35,7 @@ public final class MemcachedKeyPrefix {
     public static final String MBOX_DATA                  = "zmMboxData" + DELIMITER;
     public static final String MBOX_FOLDERS_TAGS          = "zmFldrsTags" + DELIMITER;
     public static final String MBOX_MAILITEM              = "zmMailItem" + DELIMITER;
+    public static final String MBOX_SENTMSGID             = "zmSentMsgId" + DELIMITER;
     public static final String MBOX_SHARED_DELIVERY_COORD = "zmMboxSDC" + DELIMITER;
 
     public static final String IMAP                 = "zmImap" + DELIMITER;
