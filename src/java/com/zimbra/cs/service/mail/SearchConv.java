@@ -199,7 +199,7 @@ public final class SearchConv extends Search {
             // the MATCHED entry into the result
             boolean [] expandMsgs = determineExpandedMessages(expand, matched, msgs, conv, offset, size);
             for (int i = offset; i < offset + size; i++) {
-                boolean expandMsg = expandMsgs[i];
+                boolean expandMsg = expandMsgs[i - offset];
                 if (matched[i - offset] != null) {
                     resp.add(matched[i - offset],expandMsg);
                 } else {
