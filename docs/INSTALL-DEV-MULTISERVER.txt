@@ -67,19 +67,17 @@ INSTRUCTIONS:
    probably in other places too.
 
    [primary]% zmlocalconfig -e zimbra_user=$USER
+   % zmprov ms <primarys_hostname> zimbraRemoteManagementUser $USER
+   % zmprov ms <secondarys_hostname> zimbraRemoteManagementUser $USER
    [primary]% /opt/zimbra/bin/zmsshkeygen
+   [primary]% /opt/zimbra/bin/zmupdateauthkeys
    [primary]% cat /opt/zimbra/.ssh/authorized_keys >> $HOME/.ssh/authorized_keys 
 
    [secondary]% zmlocalconfig -e zimbra_user=$USER
    [secondary]% /opt/zimbra/bin/zmsshkeygen
-   [secondary]% cat /opt/zimbra/.ssh/authorized_keys >> $HOME/.ssh/authorized_keys 
-
-   [primary]% /opt/zimbra/bin/zmupdateauthkeys   
-   [secondary]% /opt/zimbra/bin/zmupdateauthkeys   
+   [secondary]% /opt/zimbra/bin/zmupdateauthkeys
+   [secondary]% cat /opt/zimbra/.ssh/authorized_keys >> $HOME/.ssh/authorized_keys       
  
-   % zmprov ms <primarys_hostname> zimbraRemoteManagementUser $USER  
-   % zmprov ms <secondarys_hostname> zimbraRemoteManagementUser $USER     
-
 10) Create Mailboxes on the new server: Use the admin client. (or
     whatever means you want) and create some new users on your second
     box.  When you create users on the secondary box, their names MUST
