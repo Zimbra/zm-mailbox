@@ -112,7 +112,6 @@
     <a n="zimbraFeatureCalendarUpsellURL"/>
     <a n="zimbraFeatureContactsUpsellURL"/>
     <a n="zimbraFeatureDiscardInFiltersEnabled"/>
-    <a n="zimbraFeatureDistributionListFolderEnabled"/>
     <a n="zimbraFeatureMAPIConnectorEnabled"/>
     <a n="zimbraFeatureMailForwardingEnabled"/>
     <a n="zimbraFeatureMailForwardingInFiltersEnabled"/>
@@ -122,7 +121,6 @@
     <a n="zimbraFeatureVoiceUpsellURL"/>
     <a n="zimbraFilterBatchSize"/>
     <a n="zimbraFilterSleepInterval"/>
-    <a n="zimbraForceClearCookies"/>
     <a n="zimbraForeignPrincipal"/>
     <a n="zimbraFreebusyLocalMailboxNotActive"/>
     <a n="zimbraGalSyncAccountBasedAutoCompleteEnabled"/>
@@ -153,15 +151,8 @@
     <a n="zimbraMaxContactsPerPage"/>
     <a n="zimbraMaxMailItemsPerPage"/>
     <a n="zimbraMaxVoiceItemsPerPage"/>
-    <a n="zimbraMobileAttachSkippedItemEnabled"/>
-    <a n="zimbraMobileForceProtocol25"/>
-    <a n="zimbraMobileForceSamsungProtocol25"/>
     <a n="zimbraMobileItemsToTrackPerFolderMaxSize"/>
     <a n="zimbraMobileMetadataMaxSizeEnabled"/>
-    <a n="zimbraMobileNotificationEnabled"/>
-    <a n="zimbraMobileOutlookSyncEnabled"/>
-    <a n="zimbraMobileShareContactEnabled"/>
-    <a n="zimbraMobileSyncKeyFormatConvertedFolders"/>
     <a n="zimbraNewMailNotificationBody"/>
     <a n="zimbraNewMailNotificationFrom"/>
     <a n="zimbraNewMailNotificationSubject"/>
@@ -360,7 +351,6 @@
     <a n="zimbraPrefSortOrder"/>
     <a n="zimbraPrefSpellDictionary"/>
     <a n="zimbraPrefSpellIgnoreAllCaps"/>
-    <a n="zimbraPrefSpellIgnorePattern"/>
     <a n="zimbraPrefSpellIgnoreWord"/>
     <a n="zimbraPrefStandardClientAccessibilityMode"/>
     <a n="zimbraPrefTagTreeOpen"/>
@@ -461,8 +451,6 @@
     <a n="zimbraExternalShareDomainWhitelistEnabled"/>
     <a n="zimbraExternalShareWhitelistDomain"/>
     <a n="zimbraExternalSharingEnabled"/>
-    <a n="zimbraFeatureDistributionListFolderEnabled"/>
-    <a n="zimbraForceClearCookies"/>
     <a n="zimbraFreebusyExchangeServerType"/>
     <a n="zimbraGalAlwaysIncludeLocalCalendarResources"/>
     <a n="zimbraGalSyncMaxConcurrentClients"/>
@@ -485,7 +473,6 @@
     <a n="zimbraPrefSpellIgnoreWord"/>
     <a n="zimbraPrefTimeZoneId"/>
     <a n="zimbraPublicSharingEnabled"/>
-    <a n="zimbraReverseProxyExternalRouteIncludeOriginalAuthusername"/>
     <a n="zimbraReverseProxyUseExternalRoute"/>
     <a n="zimbraReverseProxyUseExternalRouteIfAccountNotExist"/>
     <a n="zimbraSkinBackgroundColor"/>
@@ -585,10 +572,10 @@
       <rights>
         <r n="accessGAL"/>
         <r n="checkDomainMXRecord"/>
-        <r n="countAccount" />
+        <r n="countAccount"/>
         <r n="countAlias" />
-        <r n="countCalendarResource" />
-        <r n="countDistributionList" />
+    	<r n="countCalendarResource" />
+    	<r n="countDistributionList" />
         <r n="createAccount"/>
         <r n="createAlias"/>
         <r n="createCalendarResource"/>
@@ -596,11 +583,11 @@
         <r n="deleteAlias"/>
         <r n="getDomain"/>
         <r n="listDomain"/>
+        <r n="setDomainAdminDomainAttrs"/>
         <r n="listAccount"/>
         <r n="listAlias"/>
         <r n="listCalendarResource"/>
-        <r n="listDistributionList"/>        
-        <r n="setDomainAdminDomainAttrs"/>
+        <r n="listDistributionList"/>      
       </rights>
     </right>
     <right name="domainAdminServerRights" type="combo">
