@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.servlet.RequestDispatcher;
+import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
@@ -111,9 +112,15 @@ public class ExternalUserProvServlet extends ZimbraServlet {
                 } else {
                     resp.addCookie(new Cookie("ZM_PRELIM_AUTH_TOKEN", param));
                     req.setAttribute("extuseremail", extUserEmail);
-                    RequestDispatcher dispatcher =
-                            getServletContext().getContext("/zimbra").getRequestDispatcher("/public/extuserprov.jsp");
-                    dispatcher.forward(req, resp);
+                    ServletContext context = getServletContext().getContext("/zimbra");
+                    if (context != null) {
+                        RequestDispatcher dispatcher = context
+                            .getRequestDispatcher("/public/extuserprov.jsp");
+                        dispatcher.forward(req, resp);
+                    } else {
+                        logger.warn("Could not access servlet context url /zimbra");
+                        throw ServiceException.TEMPORARILY_UNAVAILABLE();
+                    }
                 }
             } else {
                 // create a new mountpoint in the external user's mailbox if not already created
