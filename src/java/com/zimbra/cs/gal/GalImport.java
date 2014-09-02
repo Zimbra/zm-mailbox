@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -35,9 +35,9 @@ import com.zimbra.cs.account.Provisioning.SearchGalResult;
 import com.zimbra.cs.datasource.MailItemImport;
 import com.zimbra.cs.db.DbDataSource;
 import com.zimbra.cs.db.DbDataSource.DataSourceItem;
-import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mime.ParsedContact;
@@ -142,6 +142,7 @@ public class GalImport extends MailItemImport {
         Provisioning.getInstance().searchGal(params);
     }
     private static String[] ZIMBRA_ATTRS = {
+        "zimbraNotes",
         "zimbraAccountCalendarUserType",
         "zimbraCalResType",
         "zimbraCalResLocationDisplayName",
@@ -164,7 +165,7 @@ public class GalImport extends MailItemImport {
             this.force = force;
         }
 
-        private String[] FILE_AS_STR_KEYS = {
+        private final String[] FILE_AS_STR_KEYS = {
             ContactConstants.A_fullName,
             ContactConstants.A_email,
             ContactConstants.A_email2,

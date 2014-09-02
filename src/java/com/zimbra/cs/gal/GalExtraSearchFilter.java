@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -18,19 +18,19 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.Stack;
 
+import com.zimbra.common.account.ZAttrProvisioning;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.account.EntrySearchFilter;
-import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.EntrySearchFilter.AndOr;
 import com.zimbra.cs.account.EntrySearchFilter.Multi;
 import com.zimbra.cs.account.EntrySearchFilter.Operator;
 import com.zimbra.cs.account.EntrySearchFilter.Single;
 import com.zimbra.cs.account.EntrySearchFilter.Term;
 import com.zimbra.cs.account.EntrySearchFilter.Visitor;
-import com.zimbra.cs.account.ldap.LdapEntrySearchFilter.LdapQueryVisitor;
+import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.mailbox.Contact;
 
 public class GalExtraSearchFilter {
@@ -40,13 +40,13 @@ public class GalExtraSearchFilter {
         if (filterElem == null) {
             return null;
         }
-        
+
         Element termElem = filterElem.getOptionalElement(AccountConstants.E_ENTRY_SEARCH_FILTER_MULTICOND);
         if (termElem == null)
             termElem = filterElem.getElement(AccountConstants.E_ENTRY_SEARCH_FILTER_SINGLECOND);
         Term term = GalExtraSearchFilter.parseFilterTermElem(termElem);
         EntrySearchFilter filter = new EntrySearchFilter(term);
-    
+
         return filter;
     }
 
@@ -82,40 +82,43 @@ public class GalExtraSearchFilter {
         }
         return term;
     }
-    
+
     public static abstract class GalExtraQueryCallback implements GalSearchQueryCallback {
         protected EntrySearchFilter filter;
-        
+
         protected GalExtraQueryCallback(EntrySearchFilter filter) {
             this.filter = filter;
         }
-        
+
         /*
          * Return an extra query for GAL sync account search
          */
+        @Override
         public String getMailboxSearchQuery() {
             GalExtraSearchFilter.MailboxQueryVisitor visitor = new GalExtraSearchFilter.MailboxQueryVisitor();
             filter.traverse(visitor);
             String query = visitor.getFilter();
             return (StringUtil.isNullOrEmpty(query) ? null : query);
         }
-        
+
+        @Override
         public abstract String getZimbraLdapSearchQuery();
     }
 
     private static class MailboxQueryVisitor implements Visitor {
-        private Stack<Multi> parentTerms;
-        private StringBuilder query;
-    
+        private final Stack<Multi> parentTerms;
+        private final StringBuilder query;
+
         public MailboxQueryVisitor() {
             parentTerms = new Stack<Multi>();
             query = new StringBuilder();
         }
-    
+
         public String getFilter() {
             return query.toString();
         }
-    
+
+        @Override
         public void visitSingle(Single term) {
             Multi parent = parentTerms.peek();
             if (parent != null && parent.getTerms().size() > 1) {
@@ -127,13 +130,18 @@ public class GalExtraSearchFilter {
                         query.append(" OR ");
                 }
             }
-                
+
             Operator op = term.getOperator();
             boolean negation = term.isNegation();
-    
+
             if (negation) query.append("-");
-    
+
             String attr = term.getLhs();
+            /* Bug 62674 ZWC search term description is stored in LDAP as "description" but for GAL contacts, it is
+             * mapped to VCARD notes. */
+            if (ZAttrProvisioning.A_description.equals(attr)) {
+                attr = "notes";
+            }
             String val = term.getRhs();
             if (op.equals(Operator.has)) {
                 query.append('#').append(attr).append(":(*").append(val).append("*)");
@@ -156,7 +164,8 @@ public class GalExtraSearchFilter {
                 query.append('#').append(attr).append(":(").append(val).append(")");
             }
         }
-    
+
+        @Override
         public void enterMulti(Multi term) {
             parentTerms.push(term);
             if (term.isNegation()) {
@@ -164,7 +173,8 @@ public class GalExtraSearchFilter {
             }
             query.append("(");
         }
-    
+
+        @Override
         public void leaveMulti(Multi term) {
             query.append(')');
             parentTerms.remove(term);
@@ -172,32 +182,32 @@ public class GalExtraSearchFilter {
     }
 
     public static abstract class FilteredGalSearchResultCallback extends GalSearchResultCallback.PassThruGalSearchResultCallback {
-        private Set<String> mAttrs;
-        private EntrySearchFilter mFilter;
-        
+        private final Set<String> mAttrs;
+        private final EntrySearchFilter mFilter;
+
         public FilteredGalSearchResultCallback(GalSearchParams params, EntrySearchFilter filter, Set<String> attrs) {
             super(params);
             mAttrs = attrs;
             mFilter = filter;
         }
-        
+
         protected Set<String> neededAttrs() {
             return mAttrs;
         }
-        
-        // not used any more, we no longer need to filter search result for 
+
+        // not used any more, we no longer need to filter search result for
         // GAL sync account search, because we've supplied an extra search query,
         // and the result should be correct already.
         protected boolean matched(Contact c) {
             GalExtraSearchFilter.FilterVisitor visitor = new GalExtraSearchFilter.FilterVisitor(c);
             return evaluate(visitor);
         }
-        
+
         protected boolean matched(GalContact c) {
             GalExtraSearchFilter.FilterVisitor visitor = new GalExtraSearchFilter.FilterVisitor(c);
             return evaluate(visitor);
         }
-        
+
         private boolean evaluate(GalExtraSearchFilter.FilterVisitor visitor) {
             if (mFilter == null) {
                 return true;
@@ -213,76 +223,78 @@ public class GalExtraSearchFilter {
             // returns a String or String[]
             public Object get(String key);
         }
-        
+
         private static class ContactKV implements KeyValue {
-            
+
             Contact mContact;
-            
+
             private ContactKV(Contact contact) {
                 mContact = contact;
             }
-            
+
+            @Override
             public Object get(String key) {
                 return mContact.get(key);
             }
         }
-        
+
         private static class GalContactKV implements KeyValue {
-            
+
             GalContact mGalContact;
-            
+
             private GalContactKV(GalContact galContact) {
                 mGalContact = galContact;
             }
-            
+
+            @Override
             public Object get(String key) {
                 return mGalContact.getAttrs().get(key);
             }
         }
-        
+
         private static class Result {
             Multi mTerm;
             Boolean mCurResult;
-            
+
             private Result(Multi term) {
                 mTerm = term;
             }
-    
+
             private Result(boolean result) {
                 setResult(result);
             }
-            
+
             Multi getTerm() {
                 return mTerm;
             }
             private Boolean getResult() {
                 return mCurResult;
             }
-            
+
             private void setResult(boolean result) {
                 mCurResult = result;
             }
-            
+
             private void negateResult() {
                 if (mCurResult != null)
                     mCurResult = !mCurResult;
             }
-            
+
         }
-        
+
         KeyValue mContact;
         Stack<Result> mParentResult;
-        
+
         private FilterVisitor(Contact contact) {
             mContact = new ContactKV(contact);
             mParentResult = new Stack<Result>();
         }
-        
+
         private FilterVisitor(GalContact galContact) {
             mContact = new GalContactKV(galContact);
             mParentResult = new Stack<Result>();
         }
-        
+
         public boolean getResult() {
             // there should one and only one item in the stack
             return mParentResult.pop().getResult().booleanValue();
@@ -291,7 +303,7 @@ public class GalExtraSearchFilter {
         public void enterMulti(Multi term) {
             mParentResult.push(new Result(term));
         }
-    
+
         @Override
         public void leaveMulti(Multi term) {
             // we must have a result by now
@@ -299,7 +311,7 @@ public class GalExtraSearchFilter {
             if (thisTerm.getTerm().isNegation()) {
                 thisTerm.negateResult();
             }
-                
+
             // propagate this Term's result to its parent if there is one
             if (!mParentResult.empty()) {
                 // have a parent
@@ -315,7 +327,7 @@ public class GalExtraSearchFilter {
                 mParentResult.push(thisTerm);
             }
         }
-    
+
         @Override
         public void visitSingle(Single term) {
             if (!mParentResult.empty()) {
@@ -327,18 +339,18 @@ public class GalExtraSearchFilter {
                     (parentResult == Boolean.FALSE && !parent.getTerm().isAnd())) {
                     parent.setResult(evaluate(term));
                 }
-                // short-circuit it, no need to evaluate this single term, 
+                // short-circuit it, no need to evaluate this single term,
                 // since it cannot affect the final result if we are here
             } else {
-                // no parent, we are the only Term, evaluate and 
+                // no parent, we are the only Term, evaluate and
                 // remember the result (push to the stack)
                 mParentResult.push(new Result(evaluate(term)));
             }
         }
-        
+
         private boolean evaluate(Single term) {
             String opAttr = term.getLhs();
-            
+
             Object value = mContact.get(opAttr);
             if (value instanceof String[]) {
                 for (String v : (String[])value) {
@@ -352,12 +364,12 @@ public class GalExtraSearchFilter {
                 return false;
             }
         }
-        
+
         private boolean shouldInclude(Single term, String value) {
             Operator op = term.getOperator();
             String opVal = term.getRhs();
             boolean result = true;
-            
+
             if (op.equals(Operator.has)) {
                 result = (value == null) ? false : value.toLowerCase().contains(opVal.toLowerCase());
             } else if (op.equals(Operator.eq)) {
@@ -376,8 +388,8 @@ public class GalExtraSearchFilter {
                 // fallback to EQUALS
                 result = (value == null) ? false : value.toLowerCase().equals(opVal.toLowerCase());
             }
-    
-            if (term.isNegation()) 
+
+            if (term.isNegation())
                 return !result;
             else
                 return result;
