@@ -1,17 +1,15 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2007, 2008, 2009, 2010, 2013, 2014 Zimbra, Inc.
- *
- * This program is free software: you can redistribute it and/or modify it under
- * the terms of the GNU General Public License as published by the Free Software Foundation,
- * version 2 of the License.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
- * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * See the GNU General Public License for more details.
- * You should have received a copy of the GNU General Public License along with this program.
- * If not, see <http://www.gnu.org/licenses/>.
+ * Copyright (C) 2007, 2008, 2009, 2010, 2012, 2013 Zimbra Software, LLC.
+ * 
+ * The contents of this file are subject to the Zimbra Public License
+ * Version 1.4 ("License"); you may not use this file except in
+ * compliance with the License.  You may obtain a copy of the License at
+ * http://www.zimbra.com/license.
+ * 
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
 package com.zimbra.common.soap;
@@ -35,36 +33,12 @@ public final class SoapUtil {
      *
      * @param protocol The markup to use when creating the {@code context}
      * @param authToken The authorization token for the user
-     * @param csrfToken
      * @return A new {@code contex} Element in the appropriate markup
      */
     public static Element toCtxt(SoapProtocol protocol, ZAuthToken authToken) {
         Element ctxt = protocol.getFactory().createElement(HeaderConstants.CONTEXT);
         if (authToken != null)
             authToken.encodeSoapCtxt(ctxt);
-        return ctxt;
-    }
-
-    /**
-     * Creates a SOAP request {@code <context>} {@link com.zimbra.common.soap.Element}.
-     * <p>
-     * All requests except Auth and a few others must specify an auth token. You
-     * must also call {@link #addSessionToCtxt(Element, String)} if you want
-     * change notification; the default is not to create a session.
-     *
-     * @param protocol The markup to use when creating the {@code context}
-     * @param authToken The authorization token for the user
-     * @param csrfToken
-     * @return A new {@code contex} Element in the appropriate markup
-     */
-    public static Element toCtxt(SoapProtocol protocol, ZAuthToken authToken, String csrfToken) {
-        Element ctxt = protocol.getFactory().createElement(HeaderConstants.CONTEXT);
-        if (authToken != null)
-            authToken.encodeSoapCtxt(ctxt);
-        if (csrfToken != null) {
-           Element csrfElmnt = ctxt.addElement(HeaderConstants.E_CSRFTOKEN);
-           csrfElmnt.addText(csrfToken);
-        }
         return ctxt;
     }
 
@@ -81,7 +55,7 @@ public final class SoapUtil {
      * @see #toCtxt(com.zimbra.common.soap.SoapProtocol, String, boolean)
      */
     public static Element toCtxt(SoapProtocol protocol, ZAuthToken authToken, String sessionId, int sequence) {
-        Element ctxt = toCtxt(protocol, authToken, null);
+        Element ctxt = toCtxt(protocol, authToken);
         return addSessionToCtxt(ctxt, authToken == null ? null : sessionId, sequence);
     }
 
@@ -118,7 +92,7 @@ public final class SoapUtil {
         Element eSession = ctxt.addUniqueElement(HeaderConstants.E_SESSION);
         if (sessionId != null && !sessionId.trim().equals("")) {
             // be backwards-compatible for sanity-preservation purposes
-            for (Element elt : Arrays.asList(eSession, ctxt.addUniqueElement(HeaderConstants.E_SESSION_ID))) {
+            for (Element elt : Arrays.asList(eSession, ctxt.addUniqueElement("sessionId"))) {
                 elt.addAttribute(HeaderConstants.A_ID, sessionId);
                 if (sequence > 0)
                     elt.addAttribute(HeaderConstants.A_SEQNO, sequence);

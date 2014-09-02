@@ -1,17 +1,15 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2013, 2014 Zimbra, Inc.
- * 
- * This program is free software: you can redistribute it and/or modify it under
- * the terms of the GNU General Public License as published by the Free Software Foundation,
- * version 2 of the License.
- * 
- * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
- * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * See the GNU General Public License for more details.
- * You should have received a copy of the GNU General Public License along with this program.
- * If not, see <http://www.gnu.org/licenses/>.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
+ *
+ * The contents of this file are subject to the Zimbra Public License
+ * Version 1.4 ("License"); you may not use this file except in
+ * compliance with the License.  You may obtain a copy of the License at
+ * http://www.zimbra.com/license.
+ *
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
 package com.zimbra.common.calendar;
@@ -94,10 +92,6 @@ public class ZCalendar {
         X_ALT_DESC,
 
         X_MICROSOFT_CDO_ALLDAYEVENT, X_MICROSOFT_CDO_INTENDEDSTATUS, X_MICROSOFT_DISALLOW_COUNTER,
-
-        // Used with ATTACH according to http://msdn.microsoft.com/en-us/library/ee124339%28v=exchg.80%29.aspx
-        X_FILENAME,
-        X_APPLE_FILENAME, // Used with ATTACH in Apple Calendar
 
         // ZCO Custom values
         X_ZIMBRA_STATUS, X_ZIMBRA_STATUS_WAITING, X_ZIMBRA_STATUS_DEFERRED,
@@ -232,12 +226,6 @@ public class ZCalendar {
                         comp.addProperty(altDescProp);
                     }
                 }
-            }
-        }
-
-        public void removeInlineIcalAttachments() {
-            for (ZComponent compo : getComponents()) {
-                compo.removeInlineIcalAttachments();
             }
         }
 
@@ -376,21 +364,6 @@ public class ZCalendar {
             }
             return null;
         }
-
-        public void removeInlineIcalAttachments() {
-            Iterator<ZProperty> propIter = getPropertyIterator();
-            while (propIter.hasNext()) {
-                ZProperty prop = propIter.next();
-                if (!ICalTok.ATTACH.equals(prop.getToken())) {
-                    continue;
-                }
-                ZParameter valueType = prop.getParameter(ICalTok.VALUE);
-                if ((valueType != null) && (valueType.getValue().equals("BINARY"))) {
-                    propIter.remove();
-                }
-            }
-        }
-
     }
 
     // these are the characters that MUST be escaped: , ; " \n and \ -- note that \
@@ -897,11 +870,10 @@ public class ZCalendar {
         @Override
         public void propertyValue(String value) throws ParserException {
             ICalTok token = mCurProperty.getToken();
-            if (ICalTok.CATEGORIES.equals(token) || ICalTok.RESOURCES.equals(token) || ICalTok.FREEBUSY.equals(token)) {
+            if (ICalTok.CATEGORIES.equals(token) || ICalTok.RESOURCES.equals(token) || ICalTok.FREEBUSY.equals(token))
                 mCurProperty.setValueList(parseCommaSepText(value));
-            } else {
-                mCurProperty.setValue(unescape(null == value ? value : value.trim())); //be forgiving for leading and trailing spaces in property values
-            }
+            else
+                mCurProperty.setValue(unescape(value));
             if (mComponents.size() == 0) {
                 if (ICalTok.VERSION.equals(mCurProperty.getToken())) {
                     if (sObsoleteVcalVersion.equals(value))

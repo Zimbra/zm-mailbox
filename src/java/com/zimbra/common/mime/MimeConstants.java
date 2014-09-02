@@ -1,17 +1,15 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
+ * Copyright (C) 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
  * 
- * This program is free software: you can redistribute it and/or modify it under
- * the terms of the GNU General Public License as published by the Free Software Foundation,
- * version 2 of the License.
+ * The contents of this file are subject to the Zimbra Public License
+ * Version 1.4 ("License"); you may not use this file except in
+ * compliance with the License.  You may obtain a copy of the License at
+ * http://www.zimbra.com/license.
  * 
- * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
- * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * See the GNU General Public License for more details.
- * You should have received a copy of the GNU General Public License along with this program.
- * If not, see <http://www.gnu.org/licenses/>.
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
 package com.zimbra.common.mime;
@@ -29,10 +27,8 @@ public class MimeConstants {
     public static final String CT_TEXT_VCARD_LEGACY = "text/x-vcard";
     public static final String CT_TEXT_VCARD_LEGACY2 = "text/directory";
     public static final String CT_TEXT_XML = "text/xml";
-    public static final String CT_TEXT_RFC822_HEADERS = "text/rfc822-headers";
     public static final String CT_TEXT_XML_LEGACY = "application/xml";
     public static final String CT_MESSAGE_RFC822 = "message/rfc822";
-    public static final String CT_MESSAGE_DELIVERY_STATUS = "message/delivery-status";
     public static final String CT_APPLICATION_BINARY = "application/binary";
     public static final String CT_APPLICATION_JSON = "application/json";
     public static final String CT_APPLICATION_MSWORD = "application/msword";
@@ -74,7 +70,6 @@ public class MimeConstants {
     public static final String CT_XML_WILD = "xml/.*";
     public static final String CT_DEFAULT = CT_TEXT_PLAIN;
     public static final String CT_APPLEFILE = "application/applefile";
-    public static final String CT_APPLICATION_ZIP = "application/zip";
 
     // encodings
     public static final String ET_7BIT = "7bit";

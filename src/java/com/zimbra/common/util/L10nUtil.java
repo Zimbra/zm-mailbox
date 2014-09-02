@@ -1,17 +1,15 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
- * This program is free software: you can redistribute it and/or modify it under
- * the terms of the GNU General Public License as published by the Free Software Foundation,
- * version 2 of the License.
- * 
- * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
- * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * See the GNU General Public License for more details.
- * You should have received a copy of the GNU General Public License along with this program.
- * If not, see <http://www.gnu.org/licenses/>.
+ * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
+ *
+ * The contents of this file are subject to the Zimbra Public License
+ * Version 1.4 ("License"); you may not use this file except in
+ * compliance with the License.  You may obtain a copy of the License at
+ * http://www.zimbra.com/license.
+ *
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
 
@@ -23,7 +21,9 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.text.MessageFormat;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -143,7 +143,6 @@ public class L10nUtil {
         shareNotifBodyGranteeRoleManager,
         shareNotifBodyGranteeRoleAdmin,
         shareNotifBodyGranteeRoleNone,
-        shareNotifBodyGranteeRoleCustom,
 
         shareNotifBodyFolderDesc,
         shareNotifBodyExternalShareText,
@@ -243,20 +242,6 @@ public class L10nUtil {
         domainAggrQuotaWarnMsgSubject,
         domainAggrQuotaWarnMsgBody,
 
-        // mobile notification
-        mobile_notification_skip_item_subject,
-        mobile_notification_skip_item_message,
-        mobile_notification_skip_item_reason_cannot_permit,
-        mobile_notification_skip_item_reason_choke_device,
-        mobile_notification_skip_item_reason_other,
-        mobile_notification_skip_item_attachment_name,
-
-        mobile_partial_failure_report_subject,
-        mobile_partial_failure_report_message,
-        mobile_send_failure_report_subject,
-        mobile_send_failure_report_message,
-
-        //TODO remove octopus
         octopus_share_notification_email_subject,
         octopus_share_notification_email_message,
         octopus_share_notification_email_accept,
@@ -264,6 +249,7 @@ public class L10nUtil {
         octopus_share_notification_email_bodyFolderDesc
         // add other messages in the future...
     }
+
 
     public static final String MSG_FILE_BASENAME = "ZsMsg";
     public static final String L10N_MSG_FILE_BASENAME = "L10nMsg";
@@ -422,10 +408,10 @@ public class L10nUtil {
         return messages;
     }
 
-    public static class MatchingPropertiesFilter implements FilenameFilter {
+    static class MatchingPropertiesFilter implements FilenameFilter {
         private final String[] prefixes;
 
-        public MatchingPropertiesFilter(Object[] basenames) {
+        MatchingPropertiesFilter(Object[] basenames) {
             prefixes = new String[basenames.length * 2];
             int i = 0;
             for (Object basename : basenames) {
@@ -451,7 +437,7 @@ public class L10nUtil {
     /** Returns the locale corresponding to the given properties file.
      *  Note that a filename like <tt>ZmMsg.properties</tt> will return
      *  <tt>null</tt>, <u>not</u> <tt>en_US</tt>. */
-    public static Locale getLocaleForPropertiesFile(File file, boolean debug) {
+    static Locale getLocaleForPropertiesFile(File file, boolean debug) {
         String[] localeParts = file.getName().split("\\.")[0].split("_");
         if (localeParts.length == 2) {
             if (debug) {
@@ -501,4 +487,182 @@ public class L10nUtil {
         return lc;
     }
 
+    private static class LocaleComparatorByDisplayName implements Comparator<Locale> {
+        private final Locale mInLocale;
+        LocaleComparatorByDisplayName(Locale inLocale) {
+            mInLocale = inLocale;
+        }
+
+        @Override
+        public int compare(Locale a, Locale b) {
+            String da = a.getDisplayName(mInLocale);
+            String db = b.getDisplayName(mInLocale);
+            return da.compareTo(db);
+        }
+    }
+
+    /**
+     * Return all known locales sorted by their US English display name.
+     * @return
+     */
+    public static Locale[] getAllLocalesSorted() {
+        Locale[] locales = Locale.getAvailableLocales();
+        Arrays.sort(locales, new LocaleComparatorByDisplayName(Locale.US));
+        return locales;
+    }
+
+    /**
+     * Return all localized(i.e. translated) locales sorted by their inLocale display name
+     * @return
+     */
+    public static Locale[] getLocalesSorted(Locale inLocale) {
+        return LocalizedClientLocales.getLocales(inLocale);
+    }
+
+    public static void flushLocaleCache() {
+        if (ZimbraLog.misc.isDebugEnabled()) {
+            ZimbraLog.misc.debug("L10nUtil: flushing locale cache");
+        }
+        LocalizedClientLocales.flushCache();
+    }
+
+    private static class LocalizedClientLocales {
+        enum ClientResource {
+            // I18nMsg,  // generated, all locales are there, so we don't count this resource
+            AjxMsg,
+            ZMsg,
+            ZaMsg,
+            ZhMsg,
+            ZmMsg
+        }
+
+        // set of localized(translated) locales
+        static Set<Locale> sLocalizedLocales = null;
+
+        // we cache the sorted list per display locale to avoid the array copy
+        // and sorting each time for a GetLocale request
+        static Map<Locale, Locale[]> sLocalizedLocalesSorted = null;
+
+        /*
+         * load only those supported by JAVA
+         */
+        private static void loadBundlesByJavaLocal(Set<Locale> locales, String msgsDir) {
+            ClassLoader classLoader = getClassLoader(msgsDir);
+            Locale[] allLocales = Locale.getAvailableLocales();
+
+            for (Locale locale : allLocales) {
+                for (ClientResource clientRes : ClientResource.values()) {
+                    try {
+                        ResourceBundle rb = ResourceBundle.getBundle(clientRes.name(), locale, classLoader);
+                        Locale rbLocale = rb.getLocale();
+                        if (rbLocale.equals(locale)) {
+                            /*
+                             * found a resource for the locale, a locale is considered "installed" as long as
+                             * any of its resource (the list in ClientResource) is present
+                             */
+                            ZimbraLog.misc.info("Adding locale " + locale.toString());
+                            locales.add(locale);
+                            break;
+                        }
+                    } catch (MissingResourceException e) {
+                    }
+                }
+            }
+        }
+
+        /*
+         * scan disk
+         */
+        private static void loadBundlesByDiskScan(Set<Locale> locales, String msgsDir) {
+            File dir = new File(msgsDir);
+            if (!dir.exists()) {
+                ZimbraLog.misc.info("message directory does not exist:" + msgsDir);
+                return;
+            }
+            if (!dir.isDirectory()) {
+                ZimbraLog.misc.info("message directory is not a directory:" + msgsDir);
+                return;
+            }
+
+            for (File file : dir.listFiles(new MatchingPropertiesFilter(ClientResource.values()))) {
+                ZimbraLog.misc.debug("loadBundlesByDiskScan processing file: " + file.getName());
+                Locale locale = getLocaleForPropertiesFile(file, true);
+                if (locale != null && !locales.contains(locale)) {
+                    ZimbraLog.misc.info("Adding locale " + locale);
+                    locales.add(locale);
+                }
+            }
+        }
+
+        private static void loadBundles() {
+            sLocalizedLocales = new HashSet<Locale>();
+
+            // String msgsDir = "/opt/zimbra/jetty/webapps/zimbra/WEB-INF/classes/messages";
+            String msgsDir = LC.localized_client_msgs_directory.value();
+            ZimbraLog.misc.info("Scanning installed locales from " + msgsDir);
+
+            // the en_US locale is always available
+            ZimbraLog.misc.info("Adding locale " + Locale.US.toString() + " (always added)");
+            sLocalizedLocales.add(Locale.US);
+
+            // loadBundlesByJavaLocal(sLocalizedLocales, msgsDir);
+            loadBundlesByDiskScan(sLocalizedLocales, msgsDir);
+
+            /*
+             * UI displays locales with country in sub menus.
+             *
+             * E.g. if there are:
+             *      id: "zh_CN", name: "Chinese (China)"
+             *      id: "zh_HK", name: "Chinese (Hong Kong)"
+             *
+             *      then the menu looks like:
+             *          Chinese
+             *                   Chinese (China)
+             *                   Chinese (Hong Kong)
+             *
+             *      UI relies on the presence of a "language only" entry
+             *      for the top level label "Chinese".
+             *      i.e. id: "zh", name: "Chinese"
+             *
+             *      Thus we need to add a "language only" pseudo entry for locales that have
+             *      a country part but the "language only" entry is not already there.
+             */
+            Set<Locale> pseudoLocales = new HashSet<Locale>();
+            for (Locale lc : sLocalizedLocales) {
+                String language = lc.getLanguage();
+                Locale lcLang = new Locale(language);
+                if (!sLocalizedLocales.contains(lcLang) && !pseudoLocales.contains(lcLang)) {
+                    ZimbraLog.misc.info("Adding locale " + lcLang.toString() + " (pseudo)");
+                    pseudoLocales.add(lcLang);
+                }
+            }
+            if (pseudoLocales.size() > 0) {
+                sLocalizedLocales = SetUtil.union(sLocalizedLocales, pseudoLocales);
+            }
+        }
+
+        public synchronized static Locale[] getLocales(Locale inLocale) {
+            if (sLocalizedLocales == null)
+                loadBundles();
+
+            Locale[] sortedLocales = null;
+            if (sLocalizedLocalesSorted == null)
+                sLocalizedLocalesSorted = new HashMap<Locale, Locale[]>();
+            else
+                sortedLocales = sLocalizedLocalesSorted.get(inLocale);
+
+            if (sortedLocales == null) {
+                // cache the sorted list per display locale
+                sortedLocales = sLocalizedLocales.toArray(new Locale[sLocalizedLocales.size()]);
+                Arrays.sort(sortedLocales, new LocaleComparatorByDisplayName(inLocale));
+                sLocalizedLocalesSorted.put(inLocale, sortedLocales);
+            }
+            return sortedLocales;
+        }
+
+        public synchronized static void flushCache() {
+            sLocalizedLocales = null;
+            sLocalizedLocalesSorted = null;
+        }
+    }
 }

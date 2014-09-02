@@ -1,17 +1,15 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- *
- * This program is free software: you can redistribute it and/or modify it under
- * the terms of the GNU General Public License as published by the Free Software Foundation,
- * version 2 of the License.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
- * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * See the GNU General Public License for more details.
- * You should have received a copy of the GNU General Public License along with this program.
- * If not, see <http://www.gnu.org/licenses/>.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
+ * 
+ * The contents of this file are subject to the Zimbra Public License
+ * Version 1.4 ("License"); you may not use this file except in
+ * compliance with the License.  You may obtain a copy of the License at
+ * http://www.zimbra.com/license.
+ * 
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
 package com.zimbra.common.localconfig;
@@ -182,11 +180,6 @@ public final class DebugConfig {
     public static final boolean caldavAllowAttendeeForOrganizer =
             value("debug_caldav_allow_attendee_for_organizer", false);
 
-    /** TODO: Replace with a Config key when caldav-auto-schedule fully working in a way similar to how
-                    Provisioning.A_zimbraCalendarCalDavDisableScheduling is treated */
-    public static final boolean enableExperimentalCaldavAutoSchedule =
-            value("debug_caldav_enable_experimental_caldav_auto_schedule", false);
-
     public static boolean certAuthCaptureClientCertificate =
         value("debug_certauth_capture_client_certificate", false);
 
@@ -195,35 +188,6 @@ public final class DebugConfig {
 
     public static boolean useInMemoryLdapServer =
         value("debug_use_in_memory_ldap_server", false);
-
-    public static final String defangStyleUnwantedFunc = value(
-            "defang_style_unwanted_func",
-            "[\\S&&[^:]]+(?<!(rgb|and|not|media|,))\\s*\\(.*\\)");
-    public static final String defangValidExtUrl = value(
-            "defang_valid_ext_url",
-            "^(https?://[\\w-].*|mailto:.*|notes:.*|smb:.*|ftp:.*|gopher:.*|news:.*|tel:.*|callto:.*|webcal:.*|feed:.*:|file:.*|#.+)");
-    public static final String defangValidImgFile = value(
-            "defang_valid_img_file", "\\.(jpg|jpeg|png|gif)((\\?)?)");
-    public static final String defangValidIntImg = value(
-            "defang_valid_int_img", "^data:image/|^cid:");
-
-    public static final String defangValidConvertdFile = value(
-            "defang_valid_convertd_file",
-            "^index\\..*\\..*\\.(jpg|jpeg|png|gif)$");
-    public static final String defangComment = value("defang_comment",
-            "/\\*.*?\\*/");
-    public static final String defangAvJsEntity = value("defang_av_js_entity",
-            "&\\{[^}]*\\}");
-    public static final String defangAvScriptTag = value("defang_av_script_tag",
-            "</?script/?>");
-    public static final String defangAvJavascript = value("defang_av_javascript",
-            "^\\s*javascript:");
-    public static final String defangStyleUnwantedImport = value(
-            "defang_style_unwanted_import",
-            "@import(\\s)*((\'|\")?(\\s)*(http://|https://)?([^\\s;]*)(\\s)*(\'|\")?(\\s)*;?)");
-
-    public static boolean defang_block_form_same_host_post_req = value("defang_block_form_same_host_post_req", true);
-
 
     public static final boolean disableShareExpirationListener =
             value("debug_disable_share_expiration_listener", false);
@@ -236,24 +200,13 @@ public final class DebugConfig {
 
     public static final int sendGroupShareNotificationSynchronouslyThreshold =
         value("send_group_share_notification_synchronously_threshold", 20);
-
-    //bug 90468: interval in ms for forced folder recalc. default to 0/never
-    public static final int visibileFolderRecalcInterval =
-         value("visible_folder_recal_interval", 0);
-
-    public static final boolean debugMailboxLock =
-            value("debug_mailbox_lock", false);
-
-    public static final boolean debugLocalSplit = value("debug_local_websplit", false);
-
-    public static final boolean allowUnauthedPing = value("allow_unauthed_ping", false);
     
     /*
      * Default maximum size of convertd response. This reduces OOME in case of
      * large response
      */
     public static final long convertdMaxResponseSize = value("convertd_max_response_size",
-        (long) 20 * 1024 * 1024);
+                                                             (long) 20 * 1024 * 1024);
 
     private static boolean value(String key, boolean defaultValue) {
         String value = LC.get(key);
@@ -273,15 +226,6 @@ public final class DebugConfig {
         String value = LC.get(key);
         try {
             return value.isEmpty() ? defaultValue : Long.parseLong(value);
-        } catch (Exception e) {
-            return defaultValue;
-        }
-    }
-
-    private static String value(String key, String defaultValue) {
-        String value = LC.get(key);
-        try {
-            return value.isEmpty() ? defaultValue : value;
         } catch (Exception e) {
             return defaultValue;
         }

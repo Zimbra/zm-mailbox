@@ -1,17 +1,15 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
+ * Copyright (C) 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
  * 
- * This program is free software: you can redistribute it and/or modify it under
- * the terms of the GNU General Public License as published by the Free Software Foundation,
- * version 2 of the License.
+ * The contents of this file are subject to the Zimbra Public License
+ * Version 1.4 ("License"); you may not use this file except in
+ * compliance with the License.  You may obtain a copy of the License at
+ * http://www.zimbra.com/license.
  * 
- * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
- * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * See the GNU General Public License for more details.
- * You should have received a copy of the GNU General Public License along with this program.
- * If not, see <http://www.gnu.org/licenses/>.
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
 package com.zimbra.common.util;
@@ -26,18 +24,18 @@ public class ZimbraCookie {
 
     public static final String COOKIE_ZM_AUTH_TOKEN       = "ZM_AUTH_TOKEN";
     public static final String COOKIE_ZM_ADMIN_AUTH_TOKEN = "ZM_ADMIN_AUTH_TOKEN";
-
+    
     public static String PATH_ROOT = "/";
 
     public static String authTokenCookieName(boolean isAdminReq) {
-        return isAdminReq?
-                COOKIE_ZM_ADMIN_AUTH_TOKEN :
+        return isAdminReq? 
+                COOKIE_ZM_ADMIN_AUTH_TOKEN : 
                 COOKIE_ZM_AUTH_TOKEN;
     }
-
+    
     /**
      * set cookie domain and path for the cookie going back to the browser
-     *
+     * 
      * @param cookie
      * @param path
      */
@@ -45,20 +43,20 @@ public class ZimbraCookie {
         if (LC.zimbra_authtoken_cookie_domain.value().length() > 0) {
             cookie.setDomain(LC.zimbra_authtoken_cookie_domain.value());
         }
-
+        
         cookie.setPath(path);
     }
-
+    
     public static boolean secureCookie(HttpServletRequest request) {
         return "https".equalsIgnoreCase(request.getScheme());
     }
-
-    public static void addHttpOnlyCookie(HttpServletResponse response, String name, String value,
+    
+    public static void addHttpOnlyCookie(HttpServletResponse response, String name, String value, 
             String path, Integer maxAge, boolean secure) {
         addCookie(response, name, value, path, maxAge, true, secure);
     }
-
-    private static void addCookie(HttpServletResponse response, String name, String value,
+    
+    private static void addCookie(HttpServletResponse response, String name, String value, 
             String path, Integer maxAge, boolean httpOnly, boolean secure) {
         Cookie cookie = new Cookie(name, value);
 
@@ -70,9 +68,18 @@ public class ZimbraCookie {
         ZimbraCookie.setAuthTokenCookieDomainPath(cookie, ZimbraCookie.PATH_ROOT);
 
         cookie.setSecure(secure);
-
+        
         if (httpOnly) {
-            cookie.setHttpOnly(httpOnly);
+            /*
+             * jetty specific workaround before Servlet-3.0 is supported in jetty.
+             * see https://bugzilla.zimbra.com/show_bug.cgi?id=67078#c2
+             * 
+             * When we upgrade to jetty-8 and Servlet-3.0 is supporte in jettyd, 
+             * change the following line to:
+             * cookie.setHttpOnly(boolean isHttpOnly)
+             */
+            // jetty 7.6 https://bugs.eclipse.org/bugs/show_bug.cgi?id=364657
+            cookie.setComment("__HTTP_ONLY__");
         }
 
         response.addCookie(cookie);

@@ -1,17 +1,15 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
  *
- * This program is free software: you can redistribute it and/or modify it under
- * the terms of the GNU General Public License as published by the Free Software Foundation,
- * version 2 of the License.
+ * The contents of this file are subject to the Zimbra Public License
+ * Version 1.4 ("License"); you may not use this file except in
+ * compliance with the License.  You may obtain a copy of the License at
+ * http://www.zimbra.com/license.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
- * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * See the GNU General Public License for more details.
- * You should have received a copy of the GNU General Public License along with this program.
- * If not, see <http://www.gnu.org/licenses/>.
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
 package com.zimbra.common.util;
@@ -142,14 +140,9 @@ public final class ZimbraLog {
     public static final Log searchstat = LogFactory.getLog("zimbra.searchstat");
 
     /**
-     * The "zimbra.searchstat" logger.  For logging statistics about what kinds of searches are run
+     * Fhe "zimbra.searchstat" logger.  For logging statistics about what kinds of searches are run
      */
     public static final Log searchstats = LogFactory.getLog("zimbra.searchstats");
-
-    /**
-     * The "zimbra.elasticsearch" logger.  For logging interactions with Elasticsearch
-     */
-    public static final Log elasticsearch = LogFactory.getLog("zimbra.elasticsearch");
 
     /**
      * the "zimbra.redolog" logger. For redolog-releated events.
@@ -428,10 +421,6 @@ public final class ZimbraLog {
      * the "zimbra.activity" logger. For ACTIVITY-related events
      */
     public static final Log activity = LogFactory.getLog("zimbra.activity");
-    /**
-     * the "zimbra.ews" logger. For EWS-related events
-     */
-    public static final Log ews = LogFactory.getLog("zimbra.ews");
 
 
     /**
@@ -522,7 +511,6 @@ public final class ZimbraLog {
         descriptions.put(datasource.getCategory(), "Data Source operations");
         descriptions.put(nginxlookup.getCategory(), "Nginx lookup operations");
         descriptions.put(activity.getCategory(), "Document operations");
-        descriptions.put(ews.getCategory(), "EWS operations");
         CATEGORY_DESCRIPTIONS = Collections.unmodifiableMap(descriptions);
     }
 

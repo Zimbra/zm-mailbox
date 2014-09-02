@@ -1,17 +1,15 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
+ * Copyright (C) 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
  * 
- * This program is free software: you can redistribute it and/or modify it under
- * the terms of the GNU General Public License as published by the Free Software Foundation,
- * version 2 of the License.
+ * The contents of this file are subject to the Zimbra Public License
+ * Version 1.4 ("License"); you may not use this file except in
+ * compliance with the License.  You may obtain a copy of the License at
+ * http://www.zimbra.com/license.
  * 
- * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
- * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * See the GNU General Public License for more details.
- * You should have received a copy of the GNU General Public License along with this program.
- * If not, see <http://www.gnu.org/licenses/>.
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
 
@@ -151,17 +149,13 @@ public final class ContactConstants {
     public static final String A_vCardURL    = "vcardURL";
     public static final String A_vCardXProps = "vcardXProps";
 
-
     public static final String TYPE_GROUP = "group";
-
+    
     // move to ZimbraSoap?
     public static final String GROUP_MEMBER_TYPE_CONTACT_REF = "C";
     public static final String GROUP_MEMBER_TYPE_GAL_REF = "G";
     public static final String GROUP_MEMBER_TYPE_INLINE = "I";
-
-    //outlook contact attributes besides the standard zimbra ones
-
-
+    
     /**
      * "well known attrs". keep in sync with ContactConstants.A_* above.
      */
@@ -257,9 +251,7 @@ public final class ContactConstants {
         otherCustom4,
         vCardUID,
         vCardXProps,
-        zimbraId,
-        outlookProps;
-
+        zimbraId;
 
         public static Attr fromString(String s) throws ServiceException {
             try {

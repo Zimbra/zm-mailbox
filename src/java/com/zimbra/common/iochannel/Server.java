@@ -1,17 +1,15 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2012, 2013, 2014 Zimbra, Inc.
+ * Copyright (C) 2012, 2013 Zimbra Software, LLC.
  * 
- * This program is free software: you can redistribute it and/or modify it under
- * the terms of the GNU General Public License as published by the Free Software Foundation,
- * version 2 of the License.
+ * The contents of this file are subject to the Zimbra Public License
+ * Version 1.4 ("License"); you may not use this file except in
+ * compliance with the License.  You may obtain a copy of the License at
+ * http://www.zimbra.com/license.
  * 
- * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
- * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * See the GNU General Public License for more details.
- * You should have received a copy of the GNU General Public License along with this program.
- * If not, see <http://www.gnu.org/licenses/>.
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
 package com.zimbra.common.iochannel;
@@ -165,59 +163,17 @@ public class Server implements Runnable {
                         } else if (key.isReadable()) {
                             SocketChannel channel = (SocketChannel)key.channel();
                             ByteBuffer buffer = (ByteBuffer)key.attachment();
-                            log.debug("buffer remaining %d", buffer.remaining());
                             int bytesRead = channel.read(buffer);
                             log.debug("server:reading %d bytes from %d", bytesRead, channel.socket().getPort());
                             if (bytesRead == -1) {
                                 log.debug("server:EOF 0");
                                 throw IOChannelException.ChannelClosed(channel.toString());
-                            } else {
-                                int pos = buffer.position();
-                                while (pos >= 20) {
-                                    int magic = buffer.getInt(0);
-                                    long headerLen = buffer.getLong(4);
-                                    long bodyLen = buffer.getLong(12);
-                                    if (magic != Packet.magic) {
-                                        log.debug("server: magic mismatch %d, ignoring the data", magic);
-                                        buffer.clear();
-                                        break;
-                                    }
-                                    long packetLen = headerLen + bodyLen + 20;
-                                    log.debug("server:pos=%d packetLen=%d", pos, packetLen);
-                                    if (pos >= packetLen) {
-                                        buffer.position((int)packetLen);
-                                        ByteBuffer newBuffer = buffer.slice();
-                                        newBuffer.position((int) (pos - packetLen));
-                                        // attach the new buffer
-                                        key.attach(newBuffer);
-                                        // process current packet
-                                        buffer.flip();
-                                        buffer.position((int)packetLen);
-                                        checkBuffer(buffer);
-                                        buffer = newBuffer;
-                                        pos = buffer.position();
-                                        continue;
-                                    } else {
-                                        break;
-                                    }
-                                }
-                                if (buffer.limit() == buffer.position()) {
-                                    //increase the buffer size
-                                    ByteBuffer buf = ByteBuffer.allocate(Math.max(2 * buffer.limit(), Packet.maxMessageSize));
-                                    key.attach(buf);
-                                    if (buffer.position() > 0) {
-                                        byte[] data = new byte[buffer.position()];
-                                        buffer.flip();
-                                        buffer.get(data);
-                                        buf.put(data);
-                                    }
-                                }
                             }
+                            checkBuffer(buffer);
                         }
                     }
                 }
             } catch (IOChannelException e) {
-                log.warn("exception while retrieving the message", e);
                 switch (e.getCode()) {
                 case ChannelClosed:
                     try {
@@ -234,7 +190,7 @@ public class Server implements Runnable {
             } catch (ClosedSelectorException ignore) {
                 // ignore since we are shutting down
             } catch (Throwable e) {
-                log.warn("exception while retrieving the message", e);
+                log.warn(e);
                 if (e instanceof OutOfMemoryError) {
                     break;
                 }
@@ -244,7 +200,6 @@ public class Server implements Runnable {
     }
 
     private void checkBuffer(ByteBuffer buffer) throws IOChannelException {
-        log.debug("server:checking buffer" + buffer.toString());
         Packet p = Packet.fromBuffer(buffer);
         while (p != null) {
             try {

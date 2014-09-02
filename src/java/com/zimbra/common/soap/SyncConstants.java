@@ -1,17 +1,15 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011, 2013, 2014 Zimbra, Inc.
+ * Copyright (C) 2011, 2012, 2013 Zimbra Software, LLC.
  * 
- * This program is free software: you can redistribute it and/or modify it under
- * the terms of the GNU General Public License as published by the Free Software Foundation,
- * version 2 of the License.
+ * The contents of this file are subject to the Zimbra Public License
+ * Version 1.4 ("License"); you may not use this file except in
+ * compliance with the License.  You may obtain a copy of the License at
+ * http://www.zimbra.com/license.
  * 
- * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
- * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * See the GNU General Public License for more details.
- * You should have received a copy of the GNU General Public License along with this program.
- * If not, see <http://www.gnu.org/licenses/>.
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
 package com.zimbra.common.soap;
@@ -58,9 +56,6 @@ public final class SyncConstants {
     public static final String E_REMOTE_WIPE_ACK_TIME = "remoteWipeAckTime";
     public static final String E_RECOVERY_PASSWORD = "recoveryPassword";
     public static final String E_LAST_USED_DATE = "lastUsedDate";
-    public static final String E_FOLDER = "folder";
-    public static final String E_SYNCSTATE = "syncState";
-    public static final String E_ITEMS = "item";
 
     public static final String A_ID = "id";
     public static final String A_TYPE = "type";
@@ -72,6 +67,4 @@ public final class SyncConstants {
     public static final String A_OS = "os";
     public static final String A_OSLANGUAGE = "os_language";
     public static final String A_PHONENUMBER = "phone_number";
-    public static final String A_CLASS = "class";
-    public static final String A_SHOWITEM = "showItems";
 }

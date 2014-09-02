@@ -1,17 +1,15 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- *
- * This program is free software: you can redistribute it and/or modify it under
- * the terms of the GNU General Public License as published by the Free Software Foundation,
- * version 2 of the License.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
- * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * See the GNU General Public License for more details.
- * You should have received a copy of the GNU General Public License along with this program.
- * If not, see <http://www.gnu.org/licenses/>.
+ * Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
+ * 
+ * The contents of this file are subject to the Zimbra Public License
+ * Version 1.4 ("License"); you may not use this file except in
+ * compliance with the License.  You may obtain a copy of the License at
+ * http://www.zimbra.com/license.
+ * 
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
 package com.zimbra.common.soap;
@@ -34,8 +32,6 @@ public final class HeaderConstants {
     public static final String E_NO_NOTIFY  = "nonotify";
     public static final String E_NO_SESSION = "nosession";
     public static final String E_SESSION    = "session";
-    @Deprecated
-    public static final String E_SESSION_ID    = "sessionId";
     public static final String A_ACCOUNT_ID = "acct";
     public static final String A_ID         = "id";
     public static final String A_PROXIED    = "proxy";
@@ -60,7 +56,6 @@ public final class HeaderConstants {
     public static final String CHANGE_CREATED  = "new";
     public static final String SESSION_MAIL  = "mail";
     public static final String SESSION_ADMIN = "admin";
-    public static final String E_CSRFTOKEN = "csrfToken";
     public static final String E_SOAP_ID = "soapId";
 
     private HeaderConstants() {

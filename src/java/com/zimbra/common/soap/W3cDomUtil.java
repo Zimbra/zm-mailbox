@@ -1,17 +1,15 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2012, 2013, 2014 Zimbra, Inc.
+ * Copyright (C) 2012, 2013 Zimbra Software, LLC.
  *
- * This program is free software: you can redistribute it and/or modify it under
- * the terms of the GNU General Public License as published by the Free Software Foundation,
- * version 2 of the License.
+ * The contents of this file are subject to the Zimbra Public License
+ * Version 1.4 ("License"); you may not use this file except in
+ * compliance with the License.  You may obtain a copy of the License at
+ * http://www.zimbra.com/license.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
- * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * See the GNU General Public License for more details.
- * You should have received a copy of the GNU General Public License along with this program.
- * If not, see <http://www.gnu.org/licenses/>.
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
 
@@ -70,6 +68,13 @@ public class W3cDomUtil {
                     dbf.setFeature("http://xml.org/sax/features/external-general-entities", false);
                     // protect against recursive entity expansion DOS attack and perhaps other things
                     dbf.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+                    try {
+                        // Default with Java 6 is 100,000 - think 100 would actually be generous for our usage
+                        // However, property does not appear to be recognized on Java 6
+                        dbf.setAttribute("http://apache.org/xml/properties/entity-expansion-limit", new Integer("100"));
+                    } catch (IllegalArgumentException iae) {
+                        ZimbraLog.misc.debug("Setting entity expansion limit not supported %s", iae.getMessage());
+                    }
                     try {
                         dbf.setAttribute("http://apache.org/xml/features/disallow-doctype-decl", true);
                     } catch (IllegalArgumentException iae) {
@@ -175,7 +180,17 @@ public class W3cDomUtil {
      */
     public static Element parseXML(InputStream is, ElementFactory factory)
     throws XmlParseException {
-        Document doc = parseXMLToDoc(is);
+        javax.xml.parsers.DocumentBuilder jaxbBuilder = getBuilder();
+        jaxbBuilder.reset();
+        jaxbBuilder.setErrorHandler(new JAXPErrorHandler());
+        Document doc;
+        try {
+            doc = jaxbBuilder.parse(is);
+        } catch (SAXException e) {
+            throw XmlParseException.PARSE_ERROR(e.getMessage(), e);
+        } catch (IOException e) {
+            throw XmlParseException.PARSE_ERROR(e.getMessage(), e);
+        }
         return nodeToElement(doc, factory);
     }
 
@@ -195,45 +210,17 @@ public class W3cDomUtil {
      */
     public static Element parseXML(String xml, ElementFactory factory)
     throws XmlParseException {
-        Document doc = parseXMLToDoc(xml);
-        return nodeToElement(doc, factory);
-    }
-
-    public static Document parseXMLToDoc(String xml)
-    throws XmlParseException {
         javax.xml.parsers.DocumentBuilder jaxbBuilder = getBuilder();
         jaxbBuilder.reset();
         jaxbBuilder.setErrorHandler(new JAXPErrorHandler());
         try {
             org.xml.sax.InputSource inStream = new org.xml.sax.InputSource();
             inStream.setCharacterStream(new java.io.StringReader(xml));
-            return jaxbBuilder.parse(inStream);
-        } catch (SAXException | IOException e) {
-            /* Bug 93816 log actual problem but throw generic one to avoid information disclosure */
-            logParseProblem(e);
-            throw XmlParseException.PARSE_ERROR();
-        }
-    }
-
-    public static Document parseXMLToDoc(InputStream is)
-    throws XmlParseException {
-        javax.xml.parsers.DocumentBuilder jaxbBuilder = getBuilder();
-        jaxbBuilder.reset();
-        jaxbBuilder.setErrorHandler(new JAXPErrorHandler());
-        try {
-            return jaxbBuilder.parse(is);
-        } catch (SAXException | IOException e) {
-            /* Bug 93816 log actual problem but throw generic one to avoid information disclosure */
-            logParseProblem(e);
-            throw XmlParseException.PARSE_ERROR();
-        }
-    }
-
-    private static void logParseProblem(Exception e) {
-        if (LOG.isDebugEnabled()) {
-            LOG.warn("Problem parsing XML", e);
-        } else {
-            LOG.warn("Problem parsing XML - %s", e.getMessage());
+            return nodeToElement(jaxbBuilder.parse(inStream), factory);
+        } catch (SAXException e) {
+            throw XmlParseException.PARSE_ERROR(e.getMessage(), e);
+        } catch (IOException e) {
+            throw XmlParseException.PARSE_ERROR(e.getMessage(), e);
         }
     }
 

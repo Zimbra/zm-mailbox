@@ -1,17 +1,15 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
+ * Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
  * 
- * This program is free software: you can redistribute it and/or modify it under
- * the terms of the GNU General Public License as published by the Free Software Foundation,
- * version 2 of the License.
+ * The contents of this file are subject to the Zimbra Public License
+ * Version 1.4 ("License"); you may not use this file except in
+ * compliance with the License.  You may obtain a copy of the License at
+ * http://www.zimbra.com/license.
  * 
- * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
- * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * See the GNU General Public License for more details.
- * You should have received a copy of the GNU General Public License along with this program.
- * If not, see <http://www.gnu.org/licenses/>.
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
 package com.zimbra.common.soap;
@@ -577,7 +575,6 @@ public final class MailConstants {
     // Filter rules constants
     public static final String E_FILTER_RULES = "filterRules";
     public static final String E_FILTER_RULE = "filterRule";
-    public static final String E_NESTED_RULE = "nestedRule";
     public static final String E_FILTER_TESTS = "filterTests";
 
     public static final String E_HEADER_TEST = "headerTest";
@@ -605,9 +602,6 @@ public final class MailConstants {
     public static final String E_METHOD = "method";
     public static final String E_IMPORTANCE_TEST = "importanceTest";
     public static final String E_FLAGGED_TEST = "flaggedTest";
-    public static final String E_COMMUNITY_REQUESTS_TEST = "communityRequestsTest";
-    public static final String E_COMMUNITY_CONTENT_TEST = "communityContentTest";
-    public static final String E_COMMUNITY_CONNECTIONS_TEST = "communityConnectionsTest";
 
     public static final String E_FILTER_ACTIONS = "filterActions";
     public static final String E_ACTION_KEEP = "actionKeep";
@@ -729,7 +723,6 @@ public final class MailConstants {
     public static final String A_CAL_EXPAND_INST_START = "calExpandInstStart";
     public static final String A_CAL_EXPAND_INST_END = "calExpandInstEnd";
     public static final String A_RESULT_MODE = "resultMode";
-    public static final String A_FULL_CONVERSATION = "fullConversation";
     public static final String A_PREFETCH = "prefetch";
     public static final String A_VERBOSE = "verbose";
     public static final String A_CSVFORMAT = "csvfmt";
@@ -742,8 +735,6 @@ public final class MailConstants {
     public static final String A_MAX_MEMBERS = "maxMembers";
     public static final String A_TOO_MANY_MEMBERS = "tooManyMembers";
     public static final String A_ACTIVESYNC_DISABLED = "activesyncdisabled";
-    public static final String A_WEB_OFFLINE_SYNC_DAYS = "webOfflineSyncDays";
-    public static final String A_NUM_DAYS = "numDays";
 
     // contact group
     public static final String E_CONTACT_GROUP_MEMBER = "m";
@@ -764,7 +755,7 @@ public final class MailConstants {
     public static final String A_PART = "part";
     public static final String A_BODY = "body";
     public static final String A_CONTENT_TYPE = "ct";
-    public static final String A_CONTENT_DISPOSITION = "cd";
+    public static final String A_CONTENT_DISPOSTION = "cd";
     public static final String A_CONTENT_DESCRIPTION = "cde";
     public static final String A_CONTENT_ID = "ci";
     public static final String A_CONTENT_LOCATION = "cl";
@@ -1104,6 +1095,7 @@ public final class MailConstants {
     public static final String A_DS_DEFAULT_SIGNATURE = "defaultSignature";
     public static final String A_DS_FORWARD_REPLY_SIGNATURE = "forwardReplySignature";
     public static final String A_DS_FROM_DISPLAY = "fromDisplay";
+    public static final String A_DS_FROM_ADDRESS = "fromAddress";
     public static final String A_DS_REPLYTO_ADDRESS = "replyToAddress";
     public static final String A_DS_REPLYTO_DISPLAY = "replyToDisplay";
     public static final String A_DS_IMPORT_CLASS = "importClass";

@@ -1,17 +1,15 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
+ * Copyright (C) 2010, 2011, 2012, 2013 Zimbra Software, LLC.
  *
- * This program is free software: you can redistribute it and/or modify it under
- * the terms of the GNU General Public License as published by the Free Software Foundation,
- * version 2 of the License.
+ * The contents of this file are subject to the Zimbra Public License
+ * Version 1.4 ("License"); you may not use this file except in
+ * compliance with the License.  You may obtain a copy of the License at
+ * http://www.zimbra.com/license.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
- * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * See the GNU General Public License for more details.
- * You should have received a copy of the GNU General Public License along with this program.
- * If not, see <http://www.gnu.org/licenses/>.
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
 package com.zimbra.common.soap;
@@ -507,7 +505,7 @@ public class ElementTest {
             // Assert.assertEquals("root elem content", "<i/>text", elem.getText());  // this is the case if entity ref expansion was allowed
             Assert.assertEquals("root elem content", "", elem.getText());
         } catch (XmlParseException e) {
-            if (-1 == e.getMessage().indexOf("Document parse failed")) {
+            if (-1 == e.getMessage().indexOf("DOCTYPE is disallowed")) {
                 Assert.fail("Unexpected exception thrown." + e.getMessage());
             }
         } finally {
@@ -528,7 +526,7 @@ public class ElementTest {
         } catch (XmlParseException e) {
             // Before fix to Bug 79719 would get an error like:
             //    parse error: /tmp/not/there/non-existent.xml (No such file or directory)
-            if (-1 == e.getMessage().indexOf("Document parse failed")) {
+            if (-1 == e.getMessage().indexOf("DOCTYPE is disallowed")) {
                 Assert.fail("Unexpected exception thrown." + e.getMessage());
             }
         } finally {

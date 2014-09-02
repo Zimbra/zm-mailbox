@@ -1,17 +1,15 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- *
- * This program is free software: you can redistribute it and/or modify it under
- * the terms of the GNU General Public License as published by the Free Software Foundation,
- * version 2 of the License.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
- * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * See the GNU General Public License for more details.
- * You should have received a copy of the GNU General Public License along with this program.
- * If not, see <http://www.gnu.org/licenses/>.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
+ * 
+ * The contents of this file are subject to the Zimbra Public License
+ * Version 1.4 ("License"); you may not use this file except in
+ * compliance with the License.  You may obtain a copy of the License at
+ * http://www.zimbra.com/license.
+ * 
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
 package com.zimbra.common.soap;
@@ -44,7 +42,6 @@ public abstract class SoapTransport {
     private String mUserAgentName;
     private String mUserAgentVersion;
     private DebugListener mDebugListener;
-    private String csrfToken;
 
     public static final String DEFAULT_USER_AGENT_NAME = "ZCS";
     private static String sDefaultUserAgentName = DEFAULT_USER_AGENT_NAME;
@@ -118,9 +115,6 @@ public abstract class SoapTransport {
         mTargetAcctName = acctName;
     }
 
-    public String getTargetAcctName() {
-    	return mTargetAcctName;
-    }
     /**
      * @return Zimbra context (&lt;context xmlns="urn:zimbra"&gt;) from last invoke, if there was one present.
      */
@@ -190,20 +184,6 @@ public abstract class SoapTransport {
     }
 
     /**
-     * @return the csrfToken
-     */
-    public String getCsrfToken() {
-        return csrfToken;
-    }
-
-    /**
-     * @param csrfToken the csrfToken to set
-     */
-    public void setCsrfToken(String csrfToken) {
-        this.csrfToken = csrfToken;
-    }
-
-    /**
      * Sets a {@code via} header value to the current thread context.
      * <p>
      * This is intended to be called by the SOAP engine if the current thread is
@@ -261,7 +241,7 @@ public abstract class SoapTransport {
         return true;
     }
 
-    protected Element generateSoapMessage(Element document, boolean raw, boolean noSession,
+    protected final Element generateSoapMessage(Element document, boolean raw, boolean noSession,
             String requestedAccountId, String changeToken, String tokenType) {
 
         if (raw) {
@@ -286,8 +266,8 @@ public abstract class SoapTransport {
         String targetName = targetId == null ? mTargetAcctName : null;
 
         Element context = null;
-        if (generateContextHeader()) {
-            context = SoapUtil.toCtxt(proto, mAuthToken, this.csrfToken);
+        if (generateContextHeader()) { 
+            context = SoapUtil.toCtxt(proto, mAuthToken);
             if (noSession) {
                 SoapUtil.disableNotificationOnCtxt(context);
             } else {
@@ -299,7 +279,7 @@ public abstract class SoapTransport {
             if (responseProto != proto) {
                 SoapUtil.addResponseProtocolToCtxt(context, responseProto);
             }
-
+    
             String via = viaHolder.get().peek();
             if (via != null) {
                 context.addUniqueElement(HeaderConstants.E_VIA).setText(via);
@@ -341,12 +321,10 @@ public abstract class SoapTransport {
         if (mContext != null) {
             String sid = mContext.getAttribute(HeaderConstants.E_SESSION, null);
             // be backwards-compatible for sanity-preservation purposes
-            if (sid == null) {
-                mContext.getAttribute(HeaderConstants.E_SESSION_ID, null);
-            }
-            if (sid != null) {
+            if (sid == null)
+                mContext.getAttribute("sessionId", null);
+            if (sid != null)
                 mSessionId = sid;
-            }
         }
 
         if (proto.isFault(e)) {

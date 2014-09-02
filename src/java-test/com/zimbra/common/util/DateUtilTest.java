@@ -1,28 +1,26 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011, 2012, 2013, 2014 Zimbra, Inc.
+ * Copyright (C) 2011, 2012, 2013 Zimbra Software, LLC.
  * 
- * This program is free software: you can redistribute it and/or modify it under
- * the terms of the GNU General Public License as published by the Free Software Foundation,
- * version 2 of the License.
+ * The contents of this file are subject to the Zimbra Public License
+ * Version 1.4 ("License"); you may not use this file except in
+ * compliance with the License.  You may obtain a copy of the License at
+ * http://www.zimbra.com/license.
  * 
- * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
- * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * See the GNU General Public License for more details.
- * You should have received a copy of the GNU General Public License along with this program.
- * If not, see <http://www.gnu.org/licenses/>.
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
 
 package com.zimbra.common.util;
 
+import org.junit.Assert;
+
 import java.util.Calendar;
 import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.TimeZone;
 
-import org.junit.Assert;
 import org.junit.Test;
 
 import com.zimbra.common.service.ServiceException;
@@ -274,12 +272,6 @@ public final class DateUtilTest {
     @Test
     public void toImapDateTime() throws Exception {
         Assert.assertEquals("31-Dec-1969 16:00:00 -0800", DateUtil.toImapDateTime(new Date(0L), TimeZone.getTimeZone("US/Pacific")));
-    }
-    
-    public void toRFC1123Date() throws Exception {
-        Calendar cal = new GregorianCalendar(TimeZone.getTimeZone("GMT"));
-        cal.setTimeInMillis(1398412488000L);
-        Assert.assertEquals(DateUtil.toRFC1123Date(cal), "Fri, 25 Apr 2014 07:54:48 GMT");
     }
 
     @Test
