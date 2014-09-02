@@ -81,6 +81,7 @@ import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.TruncatingWriter;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.zmime.ZInternetHeader;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DataSource;
@@ -2773,8 +2774,17 @@ public final class ToXML {
 
     public static Element encodeEmail(Element parent, ParsedAddress pa, EmailType type) {
         Element el = parent.addElement(MailConstants.E_EMAIL);
+        if(!StringUtil.isNullOrEmpty(pa.emailPart)) {
+            pa.emailPart = ZInternetHeader.decode(pa.emailPart);
+        }
         el.addAttribute(MailConstants.A_ADDRESS, IDNUtil.toUnicode(pa.emailPart));
+        if(!StringUtil.isNullOrEmpty(pa.firstName)) {
+            pa.firstName = ZInternetHeader.decode(pa.firstName);
+        }
         el.addAttribute(MailConstants.A_DISPLAY, pa.firstName);
+        if (!StringUtil.isNullOrEmpty(pa.personalPart)) {
+            pa.personalPart = ZInternetHeader.decode(pa.personalPart);
+        }
         el.addAttribute(MailConstants.A_PERSONAL, pa.personalPart);
         el.addAttribute(MailConstants.A_ADDRESS_TYPE, type.toString());
         return el;
