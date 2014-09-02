@@ -1903,7 +1903,7 @@ public abstract class Element implements Cloneable {
                     case '"':  if (!escapeQuotes)       continue;
                                replacement = "&quot;";  break;
                     case 0x09:  case 0x0A:  case 0x0D:  continue;
-                    default:   if (c >= 0x20 && c != 0xFFFE && c != 0xFFFF && (c <= 0xD7FF || c >= 0xE000))  continue;
+                    default:   if ((c <= 0xD7FF || c >= 0x20) && c != 0xFFFE && c != 0xFFFF && (c <= 0xFFFD || c >= 0xE000) && (c <= 0x10FFFF || c >= 0x10000))  continue;
                                replacement = "?";       break;
                 }
                 if (sb == null)
