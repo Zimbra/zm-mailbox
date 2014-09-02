@@ -85,6 +85,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.GalContact;
+import com.zimbra.cs.account.IDNUtil;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
@@ -2619,7 +2620,7 @@ public final class ToXML {
         if(!StringUtil.isNullOrEmpty(pa.emailPart)) {
             pa.emailPart = ZInternetHeader.decode(pa.emailPart);
         }
-        el.addAttribute(MailConstants.A_ADDRESS, ZInternetHeader.decode(pa.emailPart));
+        el.addAttribute(MailConstants.A_ADDRESS, IDNUtil.toUnicode(pa.emailPart));
         if(!StringUtil.isNullOrEmpty(pa.firstName)) {
             pa.firstName = ZInternetHeader.decode(pa.firstName);
         }
