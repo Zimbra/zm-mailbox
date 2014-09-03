@@ -503,8 +503,6 @@
           <include name="${ziputil.jar}"/>
           <include name="${memcached.jar}"/>
           <include name="${db.driver.jar}"/>
-          <include name="aopalliance-*.jar"/>
-	      <include name="aspectjweaver-*.jar"/>
           <include name="mysql-connector-java-*.jar"/>
           <include name="javamail-1.4.5.jar"/>
           <include name="zimbra-native.jar"/>
@@ -520,8 +518,7 @@
           <include name="commons-io*.jar"/>
           <include name="commons-lang-*.jar"/>
           <include name="commons-logging.jar"/>
-          <include name="commons-pool-*.jar"/>
-          <include name="commons-pool2-*.jar"/>
+          <include name="commons-pool*.jar"/>
           <include name="concurrent*.jar"/>
           <include name="yuicompressor*.jar"/>
           <include name="dom4j*.jar"/>
@@ -529,7 +526,6 @@
           <include name="jakarta-oro*.jar"/>
           <include name="jaxen*.jar"/>
           <include name="jcommon*.jar"/>
-          <include name="jedis-*.jar"/>
           <include name="jfreechart*.jar"/>
           <include name="junit*.jar"/>
           <include name="jzlib-1.0.7.jar"/>
@@ -564,12 +560,9 @@
           <include name="*jsieve*.jar"/>
           <include name="lucene*.jar"/>
           <include name="ant-tar*.jar"/>
-          <include name="aopalliance-*.jar"/>
-          <include name="aspectjweaver-*.jar"/>
           <include name="mina-*.jar"/>
           <include name="ews*.jar"/>
           <include name="cassandra-*.jar"/>
-          <include name="commons-pool2-*.jar"/>
           <include name="hector-*.jar"/>
           <include name="zkclient-*.jar"/>
           <include name="zookeeper-*.jar"/>
@@ -581,8 +574,8 @@
           <include name="hadoop-*.jar"/>
           <include name="hbase-*.jar"/>
           <include name="ehcache-*.jar"/>
-          <include name="jedis-*.jar"/>
           <include name="jersey-*.jar"/>
+          <include name="asm-*.jar"/>
           <include name="jsr*.jar"/>
           <include name="cxf-*.jar"/>
           <include name="javax.ws.rs-api-*.jar"/>
@@ -1139,35 +1132,15 @@
 
     <target name="install-thirdparty" depends="install-thirdparty-unix,install-thirdparty-windows" description="Installs third party binaries" />
 
-    <target name="create-java-link">
-        <if>
-          <available file="${zimbra.home.dir}/java"/>
-          <then>
-            <exec executable="${zimbra.home.dir}/java/bin/java" outputproperty="link.java.version">
-              <arg value="-version"/>
-            </exec>
-              
-            <if>
-              <not><contains string="${link.java.version}" substring="1.8"/></not>
-              <then>
-                <echo message="linked java version is not 1.8; replacing"/>
-                <symlink action="delete" link="${zimbra.home.dir}/java"/>
-                <symlink link="${zimbra.home.dir}/java" resource="${java.home}" />
-              </then>
-            </if>
-          </then>
-        </if>
-    	
-    	<if>
-          <not><available file="${zimbra.home.dir}/java"/></not>
-          <then>
-            <echo message="Creating symbolic link from ${zimbra.home.dir}/java to ${java.home}" />
-            <symlink link="${zimbra.home.dir}/java" resource="${java.home}" />
-          </then>
-        </if>
-	</target>
-	
-	<target name="install-thirdparty-unix" depends="create-java-link" description="Installs third party binaries on unix" if="is-unix">
+    <target name="install-thirdparty-unix" description="Installs third party binaries on unix" if="is-unix">
+      <if>
+        <not><available file="${zimbra.home.dir}/java"/></not>
+        <then>
+          <echo message="Creating symbolic link from ${zimbra.home.dir}/java to ${java.home}" />
+          <symlink link="${zimbra.home.dir}/java" resource="${java.home}" />
+        </then>
+      </if>
+
       <if><available file="../ZimbraServer/src/perl/install-thirdparty"/> <!-- Not available for community build. -->
         <then>
           <antcall target="stop-webserver"/>
@@ -1574,49 +1547,43 @@
 
         <sequential>
             <script language="javascript"><![CDATA[
-                load("nashorn:mozilla_compat.js");
-                importClass(java.nio.charset.StandardCharsets);
-                importClass(java.nio.file.Files);
-                importClass(java.nio.file.Paths);
-                importClass(java.nio.file.StandardOpenOption);
+            importClass(java.nio.charset.StandardCharsets);
+            importClass(java.nio.file.Files);
+            importClass(java.nio.file.Paths);
+            importClass(java.nio.file.StandardOpenOption);
 
+            var jInteger = java.lang.Integer;
+            var jString = java.lang.String;
 
-                var writer =
-                    Files.newBufferedWriter(Paths.get("@{file}", []),
-                                            StandardCharsets.UTF_8,
-                                            [StandardOpenOption.CREATE,
-                                             StandardOpenOption.APPEND]);
+            var writer =
+                Files.newBufferedWriter(Paths.get("@{file}", []),
+                                        StandardCharsets.UTF_8,
+                                        [StandardOpenOption.CREATE,
+                                         StandardOpenOption.APPEND]);
 
-                // create 500 test accounts
-                for (var i = @{from}; i <= @{to}; i++) {
-                    var userNum = i;
-                    if (userNum < 100) {
-                      if (userNum < 10) {
-                        userNum = "00" + userNum;
-                      } else {
-                        userNum = "0" + userNum;
-                      }
-                    }
-                    writer.write("createAccount ");
-                    writer.write(String("test" + userNum + "@@example.com "));
-                    writer.write(String("test123 displayName 'Test User " + userNum + "'"));
+            // create 500 test accounts
+            for (var i = @{from}; i <= @{to}; i++) {
+                i = jInteger(i);
+
+                writer.write("createAccount ");
+                writer.write(jString.format("test%03d@@example.com ", [i]));
+                writer.write("test123 displayName 'Test User " + i + "'");
+                writer.write('\n');
+
+                if (i % 100 === 1) {
+                    writer.write("grantRight ");
+                    writer.write(jString.format("account test%03d@@example.com ", [i]));
+                    writer.write("usr admin@@example.com -renameAccount");
                     writer.write('\n');
-
-                    if (i % 100 === 1) {
-                        writer.write("grantRight ");
-                        writer.write(String("account test" + userNum + "@@example.com "));
-                        writer.write("usr admin@@example.com -renameAccount");
-                        writer.write('\n');
-                    } else if (i % 100 === 2) {
-                        writer.write("grantRight ");
-                        writer.write(String("account test" + userNum + "@@example.com "));
-                        writer.write("usr admin@@example.com -setAccountPassword");
-                        writer.write('\n');
-                    }
+                } else if (i % 100 === 2) {
+                    writer.write("grantRight ");
+                    writer.write(jString.format("account test%03d@@example.com ", [i]));
+                    writer.write("usr admin@@example.com -setAccountPassword");
+                    writer.write('\n');
                 }
+            }
 
-                writer.close();
-
+            writer.close();
             ]]>
             </script>
         </sequential>
