@@ -592,8 +592,9 @@ public class MailSender {
             // for delegated sends automatically save a copy to the "From" user's mailbox, unless we've been
             // specifically requested not to do the save (for instance BES does its own save to Sent, so does'nt
             // want it done here).
-            if (allowSaveToSent && hasRecipients && isDelegatedRequest && acct.isPrefSaveToSent() &&
-                    (PrefDelegatedSendSaveTarget.owner == acct.getPrefDelegatedSendSaveTarget() || PrefDelegatedSendSaveTarget.both == acct.getPrefDelegatedSendSaveTarget())) {
+            if (allowSaveToSent && hasRecipients && isDelegatedRequest &&
+                    (PrefDelegatedSendSaveTarget.owner == acct.getPrefDelegatedSendSaveTarget() ||
+                    PrefDelegatedSendSaveTarget.both == acct.getPrefDelegatedSendSaveTarget())) {
                 int flags = Flag.BITMASK_UNREAD | Flag.BITMASK_FROM_ME;
                 // save the sent copy using the target's credentials, as the sender doesn't necessarily have write access
                 OperationContext octxtTarget = new OperationContext(acct);

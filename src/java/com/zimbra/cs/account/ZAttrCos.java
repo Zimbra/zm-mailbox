@@ -11439,7 +11439,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * message social filters enabled in the web client UI
      *
-     * <p>Valid values: [Facebook, LinkedIn, SocialCast, Twitter]
+     * <p>Valid values: [LinkedIn, Twitter, SocialCast, Facebook]
      *
      * @return zimbraFeatureSocialFiltersEnabled, or empty array if unset
      *
@@ -11453,7 +11453,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * message social filters enabled in the web client UI
      *
-     * <p>Valid values: [Facebook, LinkedIn, SocialCast, Twitter]
+     * <p>Valid values: [LinkedIn, Twitter, SocialCast, Facebook]
      *
      * @param zimbraFeatureSocialFiltersEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -11470,7 +11470,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * message social filters enabled in the web client UI
      *
-     * <p>Valid values: [Facebook, LinkedIn, SocialCast, Twitter]
+     * <p>Valid values: [LinkedIn, Twitter, SocialCast, Facebook]
      *
      * @param zimbraFeatureSocialFiltersEnabled new value
      * @param attrs existing map to populate, or null to create a new map
@@ -11488,7 +11488,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * message social filters enabled in the web client UI
      *
-     * <p>Valid values: [Facebook, LinkedIn, SocialCast, Twitter]
+     * <p>Valid values: [LinkedIn, Twitter, SocialCast, Facebook]
      *
      * @param zimbraFeatureSocialFiltersEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -11505,7 +11505,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * message social filters enabled in the web client UI
      *
-     * <p>Valid values: [Facebook, LinkedIn, SocialCast, Twitter]
+     * <p>Valid values: [LinkedIn, Twitter, SocialCast, Facebook]
      *
      * @param zimbraFeatureSocialFiltersEnabled new value
      * @param attrs existing map to populate, or null to create a new map
@@ -11523,7 +11523,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * message social filters enabled in the web client UI
      *
-     * <p>Valid values: [Facebook, LinkedIn, SocialCast, Twitter]
+     * <p>Valid values: [LinkedIn, Twitter, SocialCast, Facebook]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -11539,7 +11539,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * message social filters enabled in the web client UI
      *
-     * <p>Valid values: [Facebook, LinkedIn, SocialCast, Twitter]
+     * <p>Valid values: [LinkedIn, Twitter, SocialCast, Facebook]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -14148,7 +14148,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * auth scheme to use
      *
-     * <p>Valid values: [form, basic]
+     * <p>Valid values: [basic, form]
      *
      * @return zimbraFreebusyExchangeAuthScheme, or null if unset and/or has invalid value
      *
@@ -14162,7 +14162,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * auth scheme to use
      *
-     * <p>Valid values: [form, basic]
+     * <p>Valid values: [basic, form]
      *
      * @return zimbraFreebusyExchangeAuthScheme, or null if unset
      *
@@ -14176,7 +14176,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * auth scheme to use
      *
-     * <p>Valid values: [form, basic]
+     * <p>Valid values: [basic, form]
      *
      * @param zimbraFreebusyExchangeAuthScheme new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -14193,7 +14193,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * auth scheme to use
      *
-     * <p>Valid values: [form, basic]
+     * <p>Valid values: [basic, form]
      *
      * @param zimbraFreebusyExchangeAuthScheme new value
      * @param attrs existing map to populate, or null to create a new map
@@ -14211,7 +14211,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * auth scheme to use
      *
-     * <p>Valid values: [form, basic]
+     * <p>Valid values: [basic, form]
      *
      * @param zimbraFreebusyExchangeAuthScheme new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -14228,7 +14228,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * auth scheme to use
      *
-     * <p>Valid values: [form, basic]
+     * <p>Valid values: [basic, form]
      *
      * @param zimbraFreebusyExchangeAuthScheme new value
      * @param attrs existing map to populate, or null to create a new map
@@ -14246,7 +14246,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * auth scheme to use
      *
-     * <p>Valid values: [form, basic]
+     * <p>Valid values: [basic, form]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -14262,7 +14262,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * auth scheme to use
      *
-     * <p>Valid values: [form, basic]
+     * <p>Valid values: [basic, form]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -17537,7 +17537,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * the further caveat that changes in the normalized subject will break a
      * thread in two.
      *
-     * <p>Valid values: [none, references, strict, subjrefs, subject]
+     * <p>Valid values: [none, subjrefs, references, strict, subject]
      *
      * @return zimbraMailThreadingAlgorithm, or ZAttrProvisioning.MailThreadingAlgorithm.references if unset and/or has invalid value
      *
@@ -17564,7 +17564,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * the further caveat that changes in the normalized subject will break a
      * thread in two.
      *
-     * <p>Valid values: [none, references, strict, subjrefs, subject]
+     * <p>Valid values: [none, subjrefs, references, strict, subject]
      *
      * @return zimbraMailThreadingAlgorithm, or "references" if unset
      *
@@ -17591,7 +17591,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * the further caveat that changes in the normalized subject will break a
      * thread in two.
      *
-     * <p>Valid values: [none, references, strict, subjrefs, subject]
+     * <p>Valid values: [none, subjrefs, references, strict, subject]
      *
      * @param zimbraMailThreadingAlgorithm new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -17621,7 +17621,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * the further caveat that changes in the normalized subject will break a
      * thread in two.
      *
-     * <p>Valid values: [none, references, strict, subjrefs, subject]
+     * <p>Valid values: [none, subjrefs, references, strict, subject]
      *
      * @param zimbraMailThreadingAlgorithm new value
      * @param attrs existing map to populate, or null to create a new map
@@ -17652,7 +17652,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * the further caveat that changes in the normalized subject will break a
      * thread in two.
      *
-     * <p>Valid values: [none, references, strict, subjrefs, subject]
+     * <p>Valid values: [none, subjrefs, references, strict, subject]
      *
      * @param zimbraMailThreadingAlgorithm new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -17682,7 +17682,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * the further caveat that changes in the normalized subject will break a
      * thread in two.
      *
-     * <p>Valid values: [none, references, strict, subjrefs, subject]
+     * <p>Valid values: [none, subjrefs, references, strict, subject]
      *
      * @param zimbraMailThreadingAlgorithm new value
      * @param attrs existing map to populate, or null to create a new map
@@ -17713,7 +17713,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * the further caveat that changes in the normalized subject will break a
      * thread in two.
      *
-     * <p>Valid values: [none, references, strict, subjrefs, subject]
+     * <p>Valid values: [none, subjrefs, references, strict, subject]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -17742,7 +17742,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * the further caveat that changes in the normalized subject will break a
      * thread in two.
      *
-     * <p>Valid values: [none, references, strict, subjrefs, subject]
+     * <p>Valid values: [none, subjrefs, references, strict, subject]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -25954,7 +25954,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * where the reading pane is displayed for briefcase
      *
-     * <p>Valid values: [off, bottom, right]
+     * <p>Valid values: [bottom, off, right]
      *
      * @return zimbraPrefBriefcaseReadingPaneLocation, or ZAttrProvisioning.PrefBriefcaseReadingPaneLocation.right if unset and/or has invalid value
      *
@@ -25968,7 +25968,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * where the reading pane is displayed for briefcase
      *
-     * <p>Valid values: [off, bottom, right]
+     * <p>Valid values: [bottom, off, right]
      *
      * @return zimbraPrefBriefcaseReadingPaneLocation, or "right" if unset
      *
@@ -25982,7 +25982,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * where the reading pane is displayed for briefcase
      *
-     * <p>Valid values: [off, bottom, right]
+     * <p>Valid values: [bottom, off, right]
      *
      * @param zimbraPrefBriefcaseReadingPaneLocation new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -25999,7 +25999,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * where the reading pane is displayed for briefcase
      *
-     * <p>Valid values: [off, bottom, right]
+     * <p>Valid values: [bottom, off, right]
      *
      * @param zimbraPrefBriefcaseReadingPaneLocation new value
      * @param attrs existing map to populate, or null to create a new map
@@ -26017,7 +26017,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * where the reading pane is displayed for briefcase
      *
-     * <p>Valid values: [off, bottom, right]
+     * <p>Valid values: [bottom, off, right]
      *
      * @param zimbraPrefBriefcaseReadingPaneLocation new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -26034,7 +26034,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * where the reading pane is displayed for briefcase
      *
-     * <p>Valid values: [off, bottom, right]
+     * <p>Valid values: [bottom, off, right]
      *
      * @param zimbraPrefBriefcaseReadingPaneLocation new value
      * @param attrs existing map to populate, or null to create a new map
@@ -26052,7 +26052,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * where the reading pane is displayed for briefcase
      *
-     * <p>Valid values: [off, bottom, right]
+     * <p>Valid values: [bottom, off, right]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -26068,7 +26068,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * where the reading pane is displayed for briefcase
      *
-     * <p>Valid values: [off, bottom, right]
+     * <p>Valid values: [bottom, off, right]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -26318,7 +26318,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * restrictions on who to send &quot;invite denied&quot; auto-responses
      * to.
      *
-     * <p>Valid values: [sameDomain, internal, all]
+     * <p>Valid values: [sameDomain, all, internal]
      *
      * @return zimbraPrefCalendarAllowedTargetsForInviteDeniedAutoReply, or ZAttrProvisioning.PrefCalendarAllowedTargetsForInviteDeniedAutoReply.internal if unset and/or has invalid value
      *
@@ -26339,7 +26339,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * restrictions on who to send &quot;invite denied&quot; auto-responses
      * to.
      *
-     * <p>Valid values: [sameDomain, internal, all]
+     * <p>Valid values: [sameDomain, all, internal]
      *
      * @return zimbraPrefCalendarAllowedTargetsForInviteDeniedAutoReply, or "internal" if unset
      *
@@ -26360,7 +26360,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * restrictions on who to send &quot;invite denied&quot; auto-responses
      * to.
      *
-     * <p>Valid values: [sameDomain, internal, all]
+     * <p>Valid values: [sameDomain, all, internal]
      *
      * @param zimbraPrefCalendarAllowedTargetsForInviteDeniedAutoReply new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -26384,7 +26384,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * restrictions on who to send &quot;invite denied&quot; auto-responses
      * to.
      *
-     * <p>Valid values: [sameDomain, internal, all]
+     * <p>Valid values: [sameDomain, all, internal]
      *
      * @param zimbraPrefCalendarAllowedTargetsForInviteDeniedAutoReply new value
      * @param attrs existing map to populate, or null to create a new map
@@ -26409,7 +26409,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * restrictions on who to send &quot;invite denied&quot; auto-responses
      * to.
      *
-     * <p>Valid values: [sameDomain, internal, all]
+     * <p>Valid values: [sameDomain, all, internal]
      *
      * @param zimbraPrefCalendarAllowedTargetsForInviteDeniedAutoReply new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -26433,7 +26433,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * restrictions on who to send &quot;invite denied&quot; auto-responses
      * to.
      *
-     * <p>Valid values: [sameDomain, internal, all]
+     * <p>Valid values: [sameDomain, all, internal]
      *
      * @param zimbraPrefCalendarAllowedTargetsForInviteDeniedAutoReply new value
      * @param attrs existing map to populate, or null to create a new map
@@ -26458,7 +26458,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * restrictions on who to send &quot;invite denied&quot; auto-responses
      * to.
      *
-     * <p>Valid values: [sameDomain, internal, all]
+     * <p>Valid values: [sameDomain, all, internal]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -26481,7 +26481,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * restrictions on who to send &quot;invite denied&quot; auto-responses
      * to.
      *
-     * <p>Valid values: [sameDomain, internal, all]
+     * <p>Valid values: [sameDomain, all, internal]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -27212,7 +27212,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * initial calendar view to use
      *
-     * <p>Valid values: [month, workWeek, list, day, week]
+     * <p>Valid values: [workWeek, week, month, list, day]
      *
      * @return zimbraPrefCalendarInitialView, or ZAttrProvisioning.PrefCalendarInitialView.workWeek if unset and/or has invalid value
      */
@@ -27224,7 +27224,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * initial calendar view to use
      *
-     * <p>Valid values: [month, workWeek, list, day, week]
+     * <p>Valid values: [workWeek, week, month, list, day]
      *
      * @return zimbraPrefCalendarInitialView, or "workWeek" if unset
      */
@@ -27236,7 +27236,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * initial calendar view to use
      *
-     * <p>Valid values: [month, workWeek, list, day, week]
+     * <p>Valid values: [workWeek, week, month, list, day]
      *
      * @param zimbraPrefCalendarInitialView new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -27251,7 +27251,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * initial calendar view to use
      *
-     * <p>Valid values: [month, workWeek, list, day, week]
+     * <p>Valid values: [workWeek, week, month, list, day]
      *
      * @param zimbraPrefCalendarInitialView new value
      * @param attrs existing map to populate, or null to create a new map
@@ -27267,7 +27267,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * initial calendar view to use
      *
-     * <p>Valid values: [month, workWeek, list, day, week]
+     * <p>Valid values: [workWeek, week, month, list, day]
      *
      * @param zimbraPrefCalendarInitialView new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -27282,7 +27282,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * initial calendar view to use
      *
-     * <p>Valid values: [month, workWeek, list, day, week]
+     * <p>Valid values: [workWeek, week, month, list, day]
      *
      * @param zimbraPrefCalendarInitialView new value
      * @param attrs existing map to populate, or null to create a new map
@@ -27298,7 +27298,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * initial calendar view to use
      *
-     * <p>Valid values: [month, workWeek, list, day, week]
+     * <p>Valid values: [workWeek, week, month, list, day]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -27312,7 +27312,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * initial calendar view to use
      *
-     * <p>Valid values: [month, workWeek, list, day, week]
+     * <p>Valid values: [workWeek, week, month, list, day]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -28481,7 +28481,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * user preference of client type
      *
-     * <p>Valid values: [advanced, standard]
+     * <p>Valid values: [standard, advanced]
      *
      * @return zimbraPrefClientType, or ZAttrProvisioning.PrefClientType.advanced if unset and/or has invalid value
      */
@@ -28493,7 +28493,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * user preference of client type
      *
-     * <p>Valid values: [advanced, standard]
+     * <p>Valid values: [standard, advanced]
      *
      * @return zimbraPrefClientType, or "advanced" if unset
      */
@@ -28505,7 +28505,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * user preference of client type
      *
-     * <p>Valid values: [advanced, standard]
+     * <p>Valid values: [standard, advanced]
      *
      * @param zimbraPrefClientType new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -28520,7 +28520,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * user preference of client type
      *
-     * <p>Valid values: [advanced, standard]
+     * <p>Valid values: [standard, advanced]
      *
      * @param zimbraPrefClientType new value
      * @param attrs existing map to populate, or null to create a new map
@@ -28536,7 +28536,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * user preference of client type
      *
-     * <p>Valid values: [advanced, standard]
+     * <p>Valid values: [standard, advanced]
      *
      * @param zimbraPrefClientType new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -28551,7 +28551,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * user preference of client type
      *
-     * <p>Valid values: [advanced, standard]
+     * <p>Valid values: [standard, advanced]
      *
      * @param zimbraPrefClientType new value
      * @param attrs existing map to populate, or null to create a new map
@@ -28567,7 +28567,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * user preference of client type
      *
-     * <p>Valid values: [advanced, standard]
+     * <p>Valid values: [standard, advanced]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -28581,7 +28581,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * user preference of client type
      *
-     * <p>Valid values: [advanced, standard]
+     * <p>Valid values: [standard, advanced]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -28668,7 +28668,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * direction for composing messages in the web client UI
      *
-     * <p>Valid values: [RTL, LTR]
+     * <p>Valid values: [LTR, RTL]
      *
      * @return zimbraPrefComposeDirection, or null if unset and/or has invalid value
      *
@@ -28682,7 +28682,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * direction for composing messages in the web client UI
      *
-     * <p>Valid values: [RTL, LTR]
+     * <p>Valid values: [LTR, RTL]
      *
      * @return zimbraPrefComposeDirection, or null if unset
      *
@@ -28696,7 +28696,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * direction for composing messages in the web client UI
      *
-     * <p>Valid values: [RTL, LTR]
+     * <p>Valid values: [LTR, RTL]
      *
      * @param zimbraPrefComposeDirection new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -28713,7 +28713,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * direction for composing messages in the web client UI
      *
-     * <p>Valid values: [RTL, LTR]
+     * <p>Valid values: [LTR, RTL]
      *
      * @param zimbraPrefComposeDirection new value
      * @param attrs existing map to populate, or null to create a new map
@@ -28731,7 +28731,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * direction for composing messages in the web client UI
      *
-     * <p>Valid values: [RTL, LTR]
+     * <p>Valid values: [LTR, RTL]
      *
      * @param zimbraPrefComposeDirection new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -28748,7 +28748,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * direction for composing messages in the web client UI
      *
-     * <p>Valid values: [RTL, LTR]
+     * <p>Valid values: [LTR, RTL]
      *
      * @param zimbraPrefComposeDirection new value
      * @param attrs existing map to populate, or null to create a new map
@@ -28766,7 +28766,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * direction for composing messages in the web client UI
      *
-     * <p>Valid values: [RTL, LTR]
+     * <p>Valid values: [LTR, RTL]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -28782,7 +28782,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * direction for composing messages in the web client UI
      *
-     * <p>Valid values: [RTL, LTR]
+     * <p>Valid values: [LTR, RTL]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -29330,7 +29330,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * where the message reading pane is displayed in conv view
      *
-     * <p>Valid values: [off, bottom, right]
+     * <p>Valid values: [bottom, off, right]
      *
      * @return zimbraPrefConvReadingPaneLocation, or ZAttrProvisioning.PrefConvReadingPaneLocation.bottom if unset and/or has invalid value
      *
@@ -29344,7 +29344,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * where the message reading pane is displayed in conv view
      *
-     * <p>Valid values: [off, bottom, right]
+     * <p>Valid values: [bottom, off, right]
      *
      * @return zimbraPrefConvReadingPaneLocation, or "bottom" if unset
      *
@@ -29358,7 +29358,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * where the message reading pane is displayed in conv view
      *
-     * <p>Valid values: [off, bottom, right]
+     * <p>Valid values: [bottom, off, right]
      *
      * @param zimbraPrefConvReadingPaneLocation new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -29375,7 +29375,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * where the message reading pane is displayed in conv view
      *
-     * <p>Valid values: [off, bottom, right]
+     * <p>Valid values: [bottom, off, right]
      *
      * @param zimbraPrefConvReadingPaneLocation new value
      * @param attrs existing map to populate, or null to create a new map
@@ -29393,7 +29393,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * where the message reading pane is displayed in conv view
      *
-     * <p>Valid values: [off, bottom, right]
+     * <p>Valid values: [bottom, off, right]
      *
      * @param zimbraPrefConvReadingPaneLocation new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -29410,7 +29410,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * where the message reading pane is displayed in conv view
      *
-     * <p>Valid values: [off, bottom, right]
+     * <p>Valid values: [bottom, off, right]
      *
      * @param zimbraPrefConvReadingPaneLocation new value
      * @param attrs existing map to populate, or null to create a new map
@@ -29428,7 +29428,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * where the message reading pane is displayed in conv view
      *
-     * <p>Valid values: [off, bottom, right]
+     * <p>Valid values: [bottom, off, right]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -29444,7 +29444,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * where the message reading pane is displayed in conv view
      *
-     * <p>Valid values: [off, bottom, right]
+     * <p>Valid values: [bottom, off, right]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -29538,7 +29538,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * order of messages displayed within a conversation
      *
-     * <p>Valid values: [dateAsc, dateDesc]
+     * <p>Valid values: [dateDesc, dateAsc]
      *
      * @return zimbraPrefConversationOrder, or ZAttrProvisioning.PrefConversationOrder.dateDesc if unset and/or has invalid value
      *
@@ -29552,7 +29552,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * order of messages displayed within a conversation
      *
-     * <p>Valid values: [dateAsc, dateDesc]
+     * <p>Valid values: [dateDesc, dateAsc]
      *
      * @return zimbraPrefConversationOrder, or "dateDesc" if unset
      *
@@ -29566,7 +29566,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * order of messages displayed within a conversation
      *
-     * <p>Valid values: [dateAsc, dateDesc]
+     * <p>Valid values: [dateDesc, dateAsc]
      *
      * @param zimbraPrefConversationOrder new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -29583,7 +29583,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * order of messages displayed within a conversation
      *
-     * <p>Valid values: [dateAsc, dateDesc]
+     * <p>Valid values: [dateDesc, dateAsc]
      *
      * @param zimbraPrefConversationOrder new value
      * @param attrs existing map to populate, or null to create a new map
@@ -29601,7 +29601,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * order of messages displayed within a conversation
      *
-     * <p>Valid values: [dateAsc, dateDesc]
+     * <p>Valid values: [dateDesc, dateAsc]
      *
      * @param zimbraPrefConversationOrder new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -29618,7 +29618,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * order of messages displayed within a conversation
      *
-     * <p>Valid values: [dateAsc, dateDesc]
+     * <p>Valid values: [dateDesc, dateAsc]
      *
      * @param zimbraPrefConversationOrder new value
      * @param attrs existing map to populate, or null to create a new map
@@ -29636,7 +29636,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * order of messages displayed within a conversation
      *
-     * <p>Valid values: [dateAsc, dateDesc]
+     * <p>Valid values: [dateDesc, dateAsc]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -29652,7 +29652,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * order of messages displayed within a conversation
      *
-     * <p>Valid values: [dateAsc, dateDesc]
+     * <p>Valid values: [dateDesc, dateAsc]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -29855,10 +29855,9 @@ public abstract class ZAttrCos extends NamedEntry {
 
     /**
      * Which mailbox to save messages sent via sendAs/sendOnBehalfOf
-     * delegation to. Only applicable if account has zimbraPrefSaveToSent set
-     * to true
+     * delegation to.
      *
-     * <p>Valid values: [both, sender, owner, none]
+     * <p>Valid values: [owner, none, sender, both]
      *
      * @return zimbraPrefDelegatedSendSaveTarget, or ZAttrProvisioning.PrefDelegatedSendSaveTarget.owner if unset and/or has invalid value
      *
@@ -29871,10 +29870,9 @@ public abstract class ZAttrCos extends NamedEntry {
 
     /**
      * Which mailbox to save messages sent via sendAs/sendOnBehalfOf
-     * delegation to. Only applicable if account has zimbraPrefSaveToSent set
-     * to true
+     * delegation to.
      *
-     * <p>Valid values: [both, sender, owner, none]
+     * <p>Valid values: [owner, none, sender, both]
      *
      * @return zimbraPrefDelegatedSendSaveTarget, or "owner" if unset
      *
@@ -29887,10 +29885,9 @@ public abstract class ZAttrCos extends NamedEntry {
 
     /**
      * Which mailbox to save messages sent via sendAs/sendOnBehalfOf
-     * delegation to. Only applicable if account has zimbraPrefSaveToSent set
-     * to true
+     * delegation to.
      *
-     * <p>Valid values: [both, sender, owner, none]
+     * <p>Valid values: [owner, none, sender, both]
      *
      * @param zimbraPrefDelegatedSendSaveTarget new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -29906,10 +29903,9 @@ public abstract class ZAttrCos extends NamedEntry {
 
     /**
      * Which mailbox to save messages sent via sendAs/sendOnBehalfOf
-     * delegation to. Only applicable if account has zimbraPrefSaveToSent set
-     * to true
+     * delegation to.
      *
-     * <p>Valid values: [both, sender, owner, none]
+     * <p>Valid values: [owner, none, sender, both]
      *
      * @param zimbraPrefDelegatedSendSaveTarget new value
      * @param attrs existing map to populate, or null to create a new map
@@ -29926,10 +29922,9 @@ public abstract class ZAttrCos extends NamedEntry {
 
     /**
      * Which mailbox to save messages sent via sendAs/sendOnBehalfOf
-     * delegation to. Only applicable if account has zimbraPrefSaveToSent set
-     * to true
+     * delegation to.
      *
-     * <p>Valid values: [both, sender, owner, none]
+     * <p>Valid values: [owner, none, sender, both]
      *
      * @param zimbraPrefDelegatedSendSaveTarget new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -29945,10 +29940,9 @@ public abstract class ZAttrCos extends NamedEntry {
 
     /**
      * Which mailbox to save messages sent via sendAs/sendOnBehalfOf
-     * delegation to. Only applicable if account has zimbraPrefSaveToSent set
-     * to true
+     * delegation to.
      *
-     * <p>Valid values: [both, sender, owner, none]
+     * <p>Valid values: [owner, none, sender, both]
      *
      * @param zimbraPrefDelegatedSendSaveTarget new value
      * @param attrs existing map to populate, or null to create a new map
@@ -29965,10 +29959,9 @@ public abstract class ZAttrCos extends NamedEntry {
 
     /**
      * Which mailbox to save messages sent via sendAs/sendOnBehalfOf
-     * delegation to. Only applicable if account has zimbraPrefSaveToSent set
-     * to true
+     * delegation to.
      *
-     * <p>Valid values: [both, sender, owner, none]
+     * <p>Valid values: [owner, none, sender, both]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -29983,10 +29976,9 @@ public abstract class ZAttrCos extends NamedEntry {
 
     /**
      * Which mailbox to save messages sent via sendAs/sendOnBehalfOf
-     * delegation to. Only applicable if account has zimbraPrefSaveToSent set
-     * to true
+     * delegation to.
      *
-     * <p>Valid values: [both, sender, owner, none]
+     * <p>Valid values: [owner, none, sender, both]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -30272,7 +30264,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * the recipient&#039;s domain or zimbraInternalSendersDomain and which
      * are present in recipient&#039;s address book.
      *
-     * <p>Valid values: [ALL, INAB, ALLNOTINAB]
+     * <p>Valid values: [INAB, ALL, ALLNOTINAB]
      *
      * @return zimbraPrefExternalSendersType, or ZAttrProvisioning.PrefExternalSendersType.ALL if unset and/or has invalid value
      *
@@ -30292,7 +30284,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * the recipient&#039;s domain or zimbraInternalSendersDomain and which
      * are present in recipient&#039;s address book.
      *
-     * <p>Valid values: [ALL, INAB, ALLNOTINAB]
+     * <p>Valid values: [INAB, ALL, ALLNOTINAB]
      *
      * @return zimbraPrefExternalSendersType, or "ALL" if unset
      *
@@ -30312,7 +30304,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * the recipient&#039;s domain or zimbraInternalSendersDomain and which
      * are present in recipient&#039;s address book.
      *
-     * <p>Valid values: [ALL, INAB, ALLNOTINAB]
+     * <p>Valid values: [INAB, ALL, ALLNOTINAB]
      *
      * @param zimbraPrefExternalSendersType new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -30335,7 +30327,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * the recipient&#039;s domain or zimbraInternalSendersDomain and which
      * are present in recipient&#039;s address book.
      *
-     * <p>Valid values: [ALL, INAB, ALLNOTINAB]
+     * <p>Valid values: [INAB, ALL, ALLNOTINAB]
      *
      * @param zimbraPrefExternalSendersType new value
      * @param attrs existing map to populate, or null to create a new map
@@ -30359,7 +30351,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * the recipient&#039;s domain or zimbraInternalSendersDomain and which
      * are present in recipient&#039;s address book.
      *
-     * <p>Valid values: [ALL, INAB, ALLNOTINAB]
+     * <p>Valid values: [INAB, ALL, ALLNOTINAB]
      *
      * @param zimbraPrefExternalSendersType new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -30382,7 +30374,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * the recipient&#039;s domain or zimbraInternalSendersDomain and which
      * are present in recipient&#039;s address book.
      *
-     * <p>Valid values: [ALL, INAB, ALLNOTINAB]
+     * <p>Valid values: [INAB, ALL, ALLNOTINAB]
      *
      * @param zimbraPrefExternalSendersType new value
      * @param attrs existing map to populate, or null to create a new map
@@ -30406,7 +30398,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * the recipient&#039;s domain or zimbraInternalSendersDomain and which
      * are present in recipient&#039;s address book.
      *
-     * <p>Valid values: [ALL, INAB, ALLNOTINAB]
+     * <p>Valid values: [INAB, ALL, ALLNOTINAB]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -30428,7 +30420,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * the recipient&#039;s domain or zimbraInternalSendersDomain and which
      * are present in recipient&#039;s address book.
      *
-     * <p>Valid values: [ALL, INAB, ALLNOTINAB]
+     * <p>Valid values: [INAB, ALL, ALLNOTINAB]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -30866,7 +30858,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * (deprecatedSince 5.0 in identity). The value includeBody has been
      * deprecated since 6.0.6, use includeBodyAndHeaders instead.
      *
-     * <p>Valid values: [includeBodyWithPrefix, includeBodyOnly, includeBodyAndHeaders, includeBody, includeBodyAndHeadersWithPrefix, includeAsAttachment]
+     * <p>Valid values: [includeBodyAndHeaders, includeBody, includeBodyOnly, includeAsAttachment, includeBodyWithPrefix, includeBodyAndHeadersWithPrefix]
      *
      * @return zimbraPrefForwardIncludeOriginalText, or ZAttrProvisioning.PrefForwardIncludeOriginalText.includeBody if unset and/or has invalid value
      */
@@ -30880,7 +30872,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * (deprecatedSince 5.0 in identity). The value includeBody has been
      * deprecated since 6.0.6, use includeBodyAndHeaders instead.
      *
-     * <p>Valid values: [includeBodyWithPrefix, includeBodyOnly, includeBodyAndHeaders, includeBody, includeBodyAndHeadersWithPrefix, includeAsAttachment]
+     * <p>Valid values: [includeBodyAndHeaders, includeBody, includeBodyOnly, includeAsAttachment, includeBodyWithPrefix, includeBodyAndHeadersWithPrefix]
      *
      * @return zimbraPrefForwardIncludeOriginalText, or "includeBody" if unset
      */
@@ -30894,7 +30886,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * (deprecatedSince 5.0 in identity). The value includeBody has been
      * deprecated since 6.0.6, use includeBodyAndHeaders instead.
      *
-     * <p>Valid values: [includeBodyWithPrefix, includeBodyOnly, includeBodyAndHeaders, includeBody, includeBodyAndHeadersWithPrefix, includeAsAttachment]
+     * <p>Valid values: [includeBodyAndHeaders, includeBody, includeBodyOnly, includeAsAttachment, includeBodyWithPrefix, includeBodyAndHeadersWithPrefix]
      *
      * @param zimbraPrefForwardIncludeOriginalText new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -30911,7 +30903,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * (deprecatedSince 5.0 in identity). The value includeBody has been
      * deprecated since 6.0.6, use includeBodyAndHeaders instead.
      *
-     * <p>Valid values: [includeBodyWithPrefix, includeBodyOnly, includeBodyAndHeaders, includeBody, includeBodyAndHeadersWithPrefix, includeAsAttachment]
+     * <p>Valid values: [includeBodyAndHeaders, includeBody, includeBodyOnly, includeAsAttachment, includeBodyWithPrefix, includeBodyAndHeadersWithPrefix]
      *
      * @param zimbraPrefForwardIncludeOriginalText new value
      * @param attrs existing map to populate, or null to create a new map
@@ -30929,7 +30921,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * (deprecatedSince 5.0 in identity). The value includeBody has been
      * deprecated since 6.0.6, use includeBodyAndHeaders instead.
      *
-     * <p>Valid values: [includeBodyWithPrefix, includeBodyOnly, includeBodyAndHeaders, includeBody, includeBodyAndHeadersWithPrefix, includeAsAttachment]
+     * <p>Valid values: [includeBodyAndHeaders, includeBody, includeBodyOnly, includeAsAttachment, includeBodyWithPrefix, includeBodyAndHeadersWithPrefix]
      *
      * @param zimbraPrefForwardIncludeOriginalText new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -30946,7 +30938,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * (deprecatedSince 5.0 in identity). The value includeBody has been
      * deprecated since 6.0.6, use includeBodyAndHeaders instead.
      *
-     * <p>Valid values: [includeBodyWithPrefix, includeBodyOnly, includeBodyAndHeaders, includeBody, includeBodyAndHeadersWithPrefix, includeAsAttachment]
+     * <p>Valid values: [includeBodyAndHeaders, includeBody, includeBodyOnly, includeAsAttachment, includeBodyWithPrefix, includeBodyAndHeadersWithPrefix]
      *
      * @param zimbraPrefForwardIncludeOriginalText new value
      * @param attrs existing map to populate, or null to create a new map
@@ -30964,7 +30956,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * (deprecatedSince 5.0 in identity). The value includeBody has been
      * deprecated since 6.0.6, use includeBodyAndHeaders instead.
      *
-     * <p>Valid values: [includeBodyWithPrefix, includeBodyOnly, includeBodyAndHeaders, includeBody, includeBodyAndHeadersWithPrefix, includeAsAttachment]
+     * <p>Valid values: [includeBodyAndHeaders, includeBody, includeBodyOnly, includeAsAttachment, includeBodyWithPrefix, includeBodyAndHeadersWithPrefix]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -30980,7 +30972,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * (deprecatedSince 5.0 in identity). The value includeBody has been
      * deprecated since 6.0.6, use includeBodyAndHeaders instead.
      *
-     * <p>Valid values: [includeBodyWithPrefix, includeBodyOnly, includeBodyAndHeaders, includeBody, includeBodyAndHeadersWithPrefix, includeAsAttachment]
+     * <p>Valid values: [includeBodyAndHeaders, includeBody, includeBodyOnly, includeAsAttachment, includeBodyWithPrefix, includeBodyAndHeadersWithPrefix]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -30996,7 +30988,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * what format we reply/forward messages in (deprecatedSince 5.0 in
      * identity)
      *
-     * <p>Valid values: [same, html, text]
+     * <p>Valid values: [html, text, same]
      *
      * @return zimbraPrefForwardReplyFormat, or ZAttrProvisioning.PrefForwardReplyFormat.text if unset and/or has invalid value
      */
@@ -31009,7 +31001,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * what format we reply/forward messages in (deprecatedSince 5.0 in
      * identity)
      *
-     * <p>Valid values: [same, html, text]
+     * <p>Valid values: [html, text, same]
      *
      * @return zimbraPrefForwardReplyFormat, or "text" if unset
      */
@@ -31022,7 +31014,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * what format we reply/forward messages in (deprecatedSince 5.0 in
      * identity)
      *
-     * <p>Valid values: [same, html, text]
+     * <p>Valid values: [html, text, same]
      *
      * @param zimbraPrefForwardReplyFormat new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -31038,7 +31030,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * what format we reply/forward messages in (deprecatedSince 5.0 in
      * identity)
      *
-     * <p>Valid values: [same, html, text]
+     * <p>Valid values: [html, text, same]
      *
      * @param zimbraPrefForwardReplyFormat new value
      * @param attrs existing map to populate, or null to create a new map
@@ -31055,7 +31047,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * what format we reply/forward messages in (deprecatedSince 5.0 in
      * identity)
      *
-     * <p>Valid values: [same, html, text]
+     * <p>Valid values: [html, text, same]
      *
      * @param zimbraPrefForwardReplyFormat new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -31071,7 +31063,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * what format we reply/forward messages in (deprecatedSince 5.0 in
      * identity)
      *
-     * <p>Valid values: [same, html, text]
+     * <p>Valid values: [html, text, same]
      *
      * @param zimbraPrefForwardReplyFormat new value
      * @param attrs existing map to populate, or null to create a new map
@@ -31088,7 +31080,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * what format we reply/forward messages in (deprecatedSince 5.0 in
      * identity)
      *
-     * <p>Valid values: [same, html, text]
+     * <p>Valid values: [html, text, same]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -31103,7 +31095,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * what format we reply/forward messages in (deprecatedSince 5.0 in
      * identity)
      *
-     * <p>Valid values: [same, html, text]
+     * <p>Valid values: [html, text, same]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -32235,7 +32227,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * IM idle status
      *
-     * <p>Valid values: [away, xa, offline, invisible]
+     * <p>Valid values: [xa, invisible, offline, away]
      *
      * @return zimbraPrefIMIdleStatus, or ZAttrProvisioning.PrefIMIdleStatus.away if unset and/or has invalid value
      *
@@ -32249,7 +32241,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * IM idle status
      *
-     * <p>Valid values: [away, xa, offline, invisible]
+     * <p>Valid values: [xa, invisible, offline, away]
      *
      * @return zimbraPrefIMIdleStatus, or "away" if unset
      *
@@ -32263,7 +32255,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * IM idle status
      *
-     * <p>Valid values: [away, xa, offline, invisible]
+     * <p>Valid values: [xa, invisible, offline, away]
      *
      * @param zimbraPrefIMIdleStatus new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -32280,7 +32272,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * IM idle status
      *
-     * <p>Valid values: [away, xa, offline, invisible]
+     * <p>Valid values: [xa, invisible, offline, away]
      *
      * @param zimbraPrefIMIdleStatus new value
      * @param attrs existing map to populate, or null to create a new map
@@ -32298,7 +32290,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * IM idle status
      *
-     * <p>Valid values: [away, xa, offline, invisible]
+     * <p>Valid values: [xa, invisible, offline, away]
      *
      * @param zimbraPrefIMIdleStatus new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -32315,7 +32307,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * IM idle status
      *
-     * <p>Valid values: [away, xa, offline, invisible]
+     * <p>Valid values: [xa, invisible, offline, away]
      *
      * @param zimbraPrefIMIdleStatus new value
      * @param attrs existing map to populate, or null to create a new map
@@ -32333,7 +32325,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * IM idle status
      *
-     * <p>Valid values: [away, xa, offline, invisible]
+     * <p>Valid values: [xa, invisible, offline, away]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -32349,7 +32341,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * IM idle status
      *
-     * <p>Valid values: [away, xa, offline, invisible]
+     * <p>Valid values: [xa, invisible, offline, away]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -34410,7 +34402,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * After deleting a message in list, which message should be selected
      *
-     * <p>Valid values: [previous, adaptive, next]
+     * <p>Valid values: [next, previous, adaptive]
      *
      * @return zimbraPrefMailSelectAfterDelete, or ZAttrProvisioning.PrefMailSelectAfterDelete.next if unset and/or has invalid value
      *
@@ -34424,7 +34416,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * After deleting a message in list, which message should be selected
      *
-     * <p>Valid values: [previous, adaptive, next]
+     * <p>Valid values: [next, previous, adaptive]
      *
      * @return zimbraPrefMailSelectAfterDelete, or "next" if unset
      *
@@ -34438,7 +34430,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * After deleting a message in list, which message should be selected
      *
-     * <p>Valid values: [previous, adaptive, next]
+     * <p>Valid values: [next, previous, adaptive]
      *
      * @param zimbraPrefMailSelectAfterDelete new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -34455,7 +34447,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * After deleting a message in list, which message should be selected
      *
-     * <p>Valid values: [previous, adaptive, next]
+     * <p>Valid values: [next, previous, adaptive]
      *
      * @param zimbraPrefMailSelectAfterDelete new value
      * @param attrs existing map to populate, or null to create a new map
@@ -34473,7 +34465,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * After deleting a message in list, which message should be selected
      *
-     * <p>Valid values: [previous, adaptive, next]
+     * <p>Valid values: [next, previous, adaptive]
      *
      * @param zimbraPrefMailSelectAfterDelete new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -34490,7 +34482,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * After deleting a message in list, which message should be selected
      *
-     * <p>Valid values: [previous, adaptive, next]
+     * <p>Valid values: [next, previous, adaptive]
      *
      * @param zimbraPrefMailSelectAfterDelete new value
      * @param attrs existing map to populate, or null to create a new map
@@ -34508,7 +34500,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * After deleting a message in list, which message should be selected
      *
-     * <p>Valid values: [previous, adaptive, next]
+     * <p>Valid values: [next, previous, adaptive]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -34524,7 +34516,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * After deleting a message in list, which message should be selected
      *
-     * <p>Valid values: [previous, adaptive, next]
+     * <p>Valid values: [next, previous, adaptive]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -34673,7 +34665,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * mail signature style outlook|internet (deprecatedSince 5.0 in
      * identity)
      *
-     * <p>Valid values: [internet, outlook]
+     * <p>Valid values: [outlook, internet]
      *
      * @return zimbraPrefMailSignatureStyle, or ZAttrProvisioning.PrefMailSignatureStyle.outlook if unset and/or has invalid value
      */
@@ -34686,7 +34678,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * mail signature style outlook|internet (deprecatedSince 5.0 in
      * identity)
      *
-     * <p>Valid values: [internet, outlook]
+     * <p>Valid values: [outlook, internet]
      *
      * @return zimbraPrefMailSignatureStyle, or "outlook" if unset
      */
@@ -34699,7 +34691,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * mail signature style outlook|internet (deprecatedSince 5.0 in
      * identity)
      *
-     * <p>Valid values: [internet, outlook]
+     * <p>Valid values: [outlook, internet]
      *
      * @param zimbraPrefMailSignatureStyle new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -34715,7 +34707,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * mail signature style outlook|internet (deprecatedSince 5.0 in
      * identity)
      *
-     * <p>Valid values: [internet, outlook]
+     * <p>Valid values: [outlook, internet]
      *
      * @param zimbraPrefMailSignatureStyle new value
      * @param attrs existing map to populate, or null to create a new map
@@ -34732,7 +34724,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * mail signature style outlook|internet (deprecatedSince 5.0 in
      * identity)
      *
-     * <p>Valid values: [internet, outlook]
+     * <p>Valid values: [outlook, internet]
      *
      * @param zimbraPrefMailSignatureStyle new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -34748,7 +34740,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * mail signature style outlook|internet (deprecatedSince 5.0 in
      * identity)
      *
-     * <p>Valid values: [internet, outlook]
+     * <p>Valid values: [outlook, internet]
      *
      * @param zimbraPrefMailSignatureStyle new value
      * @param attrs existing map to populate, or null to create a new map
@@ -34765,7 +34757,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * mail signature style outlook|internet (deprecatedSince 5.0 in
      * identity)
      *
-     * <p>Valid values: [internet, outlook]
+     * <p>Valid values: [outlook, internet]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -34780,7 +34772,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * mail signature style outlook|internet (deprecatedSince 5.0 in
      * identity)
      *
-     * <p>Valid values: [internet, outlook]
+     * <p>Valid values: [outlook, internet]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -35630,7 +35622,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * DELE&#039;ed messages. This is the straightforward POP3
      * implementation.
      *
-     * <p>Valid values: [delete, trash, read, keep]
+     * <p>Valid values: [read, delete, keep, trash]
      *
      * @return zimbraPrefPop3DeleteOption, or ZAttrProvisioning.PrefPop3DeleteOption.delete if unset and/or has invalid value
      *
@@ -35649,7 +35641,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * DELE&#039;ed messages. This is the straightforward POP3
      * implementation.
      *
-     * <p>Valid values: [delete, trash, read, keep]
+     * <p>Valid values: [read, delete, keep, trash]
      *
      * @return zimbraPrefPop3DeleteOption, or "delete" if unset
      *
@@ -35668,7 +35660,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * DELE&#039;ed messages. This is the straightforward POP3
      * implementation.
      *
-     * <p>Valid values: [delete, trash, read, keep]
+     * <p>Valid values: [read, delete, keep, trash]
      *
      * @param zimbraPrefPop3DeleteOption new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -35690,7 +35682,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * DELE&#039;ed messages. This is the straightforward POP3
      * implementation.
      *
-     * <p>Valid values: [delete, trash, read, keep]
+     * <p>Valid values: [read, delete, keep, trash]
      *
      * @param zimbraPrefPop3DeleteOption new value
      * @param attrs existing map to populate, or null to create a new map
@@ -35713,7 +35705,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * DELE&#039;ed messages. This is the straightforward POP3
      * implementation.
      *
-     * <p>Valid values: [delete, trash, read, keep]
+     * <p>Valid values: [read, delete, keep, trash]
      *
      * @param zimbraPrefPop3DeleteOption new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -35735,7 +35727,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * DELE&#039;ed messages. This is the straightforward POP3
      * implementation.
      *
-     * <p>Valid values: [delete, trash, read, keep]
+     * <p>Valid values: [read, delete, keep, trash]
      *
      * @param zimbraPrefPop3DeleteOption new value
      * @param attrs existing map to populate, or null to create a new map
@@ -35758,7 +35750,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * DELE&#039;ed messages. This is the straightforward POP3
      * implementation.
      *
-     * <p>Valid values: [delete, trash, read, keep]
+     * <p>Valid values: [read, delete, keep, trash]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -35779,7 +35771,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * DELE&#039;ed messages. This is the straightforward POP3
      * implementation.
      *
-     * <p>Valid values: [delete, trash, read, keep]
+     * <p>Valid values: [read, delete, keep, trash]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -36059,7 +36051,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * where the message reading pane is displayed in list views
      *
-     * <p>Valid values: [off, bottom, right]
+     * <p>Valid values: [bottom, off, right]
      *
      * @return zimbraPrefReadingPaneLocation, or ZAttrProvisioning.PrefReadingPaneLocation.right if unset and/or has invalid value
      *
@@ -36073,7 +36065,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * where the message reading pane is displayed in list views
      *
-     * <p>Valid values: [off, bottom, right]
+     * <p>Valid values: [bottom, off, right]
      *
      * @return zimbraPrefReadingPaneLocation, or "right" if unset
      *
@@ -36087,7 +36079,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * where the message reading pane is displayed in list views
      *
-     * <p>Valid values: [off, bottom, right]
+     * <p>Valid values: [bottom, off, right]
      *
      * @param zimbraPrefReadingPaneLocation new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -36104,7 +36096,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * where the message reading pane is displayed in list views
      *
-     * <p>Valid values: [off, bottom, right]
+     * <p>Valid values: [bottom, off, right]
      *
      * @param zimbraPrefReadingPaneLocation new value
      * @param attrs existing map to populate, or null to create a new map
@@ -36122,7 +36114,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * where the message reading pane is displayed in list views
      *
-     * <p>Valid values: [off, bottom, right]
+     * <p>Valid values: [bottom, off, right]
      *
      * @param zimbraPrefReadingPaneLocation new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -36139,7 +36131,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * where the message reading pane is displayed in list views
      *
-     * <p>Valid values: [off, bottom, right]
+     * <p>Valid values: [bottom, off, right]
      *
      * @param zimbraPrefReadingPaneLocation new value
      * @param attrs existing map to populate, or null to create a new map
@@ -36157,7 +36149,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * where the message reading pane is displayed in list views
      *
-     * <p>Valid values: [off, bottom, right]
+     * <p>Valid values: [bottom, off, right]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -36173,7 +36165,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * where the message reading pane is displayed in list views
      *
-     * <p>Valid values: [off, bottom, right]
+     * <p>Valid values: [bottom, off, right]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -36192,7 +36184,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * (deprecatedSince 5.0 in identity). The value includeBody has been
      * deprecated since 6.0.6, use includeBodyAndHeaders instead.
      *
-     * <p>Valid values: [includeBodyWithPrefix, includeBodyOnly, includeSmartAndHeadersWithPrefix, includeBody, includeSmartWithPrefix, includeAsAttachment, includeSmart, includeSmartAndHeaders, includeBodyAndHeaders, includeBodyAndHeadersWithPrefix, includeNone]
+     * <p>Valid values: [includeNone, includeBody, includeBodyOnly, includeAsAttachment, includeSmartAndHeaders, includeBodyAndHeaders, includeSmartWithPrefix, includeSmartAndHeadersWithPrefix, includeSmart, includeBodyWithPrefix, includeBodyAndHeadersWithPrefix]
      *
      * @return zimbraPrefReplyIncludeOriginalText, or ZAttrProvisioning.PrefReplyIncludeOriginalText.includeBody if unset and/or has invalid value
      */
@@ -36206,7 +36198,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * (deprecatedSince 5.0 in identity). The value includeBody has been
      * deprecated since 6.0.6, use includeBodyAndHeaders instead.
      *
-     * <p>Valid values: [includeBodyWithPrefix, includeBodyOnly, includeSmartAndHeadersWithPrefix, includeBody, includeSmartWithPrefix, includeAsAttachment, includeSmart, includeSmartAndHeaders, includeBodyAndHeaders, includeBodyAndHeadersWithPrefix, includeNone]
+     * <p>Valid values: [includeNone, includeBody, includeBodyOnly, includeAsAttachment, includeSmartAndHeaders, includeBodyAndHeaders, includeSmartWithPrefix, includeSmartAndHeadersWithPrefix, includeSmart, includeBodyWithPrefix, includeBodyAndHeadersWithPrefix]
      *
      * @return zimbraPrefReplyIncludeOriginalText, or "includeBody" if unset
      */
@@ -36220,7 +36212,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * (deprecatedSince 5.0 in identity). The value includeBody has been
      * deprecated since 6.0.6, use includeBodyAndHeaders instead.
      *
-     * <p>Valid values: [includeBodyWithPrefix, includeBodyOnly, includeSmartAndHeadersWithPrefix, includeBody, includeSmartWithPrefix, includeAsAttachment, includeSmart, includeSmartAndHeaders, includeBodyAndHeaders, includeBodyAndHeadersWithPrefix, includeNone]
+     * <p>Valid values: [includeNone, includeBody, includeBodyOnly, includeAsAttachment, includeSmartAndHeaders, includeBodyAndHeaders, includeSmartWithPrefix, includeSmartAndHeadersWithPrefix, includeSmart, includeBodyWithPrefix, includeBodyAndHeadersWithPrefix]
      *
      * @param zimbraPrefReplyIncludeOriginalText new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -36237,7 +36229,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * (deprecatedSince 5.0 in identity). The value includeBody has been
      * deprecated since 6.0.6, use includeBodyAndHeaders instead.
      *
-     * <p>Valid values: [includeBodyWithPrefix, includeBodyOnly, includeSmartAndHeadersWithPrefix, includeBody, includeSmartWithPrefix, includeAsAttachment, includeSmart, includeSmartAndHeaders, includeBodyAndHeaders, includeBodyAndHeadersWithPrefix, includeNone]
+     * <p>Valid values: [includeNone, includeBody, includeBodyOnly, includeAsAttachment, includeSmartAndHeaders, includeBodyAndHeaders, includeSmartWithPrefix, includeSmartAndHeadersWithPrefix, includeSmart, includeBodyWithPrefix, includeBodyAndHeadersWithPrefix]
      *
      * @param zimbraPrefReplyIncludeOriginalText new value
      * @param attrs existing map to populate, or null to create a new map
@@ -36255,7 +36247,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * (deprecatedSince 5.0 in identity). The value includeBody has been
      * deprecated since 6.0.6, use includeBodyAndHeaders instead.
      *
-     * <p>Valid values: [includeBodyWithPrefix, includeBodyOnly, includeSmartAndHeadersWithPrefix, includeBody, includeSmartWithPrefix, includeAsAttachment, includeSmart, includeSmartAndHeaders, includeBodyAndHeaders, includeBodyAndHeadersWithPrefix, includeNone]
+     * <p>Valid values: [includeNone, includeBody, includeBodyOnly, includeAsAttachment, includeSmartAndHeaders, includeBodyAndHeaders, includeSmartWithPrefix, includeSmartAndHeadersWithPrefix, includeSmart, includeBodyWithPrefix, includeBodyAndHeadersWithPrefix]
      *
      * @param zimbraPrefReplyIncludeOriginalText new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -36272,7 +36264,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * (deprecatedSince 5.0 in identity). The value includeBody has been
      * deprecated since 6.0.6, use includeBodyAndHeaders instead.
      *
-     * <p>Valid values: [includeBodyWithPrefix, includeBodyOnly, includeSmartAndHeadersWithPrefix, includeBody, includeSmartWithPrefix, includeAsAttachment, includeSmart, includeSmartAndHeaders, includeBodyAndHeaders, includeBodyAndHeadersWithPrefix, includeNone]
+     * <p>Valid values: [includeNone, includeBody, includeBodyOnly, includeAsAttachment, includeSmartAndHeaders, includeBodyAndHeaders, includeSmartWithPrefix, includeSmartAndHeadersWithPrefix, includeSmart, includeBodyWithPrefix, includeBodyAndHeadersWithPrefix]
      *
      * @param zimbraPrefReplyIncludeOriginalText new value
      * @param attrs existing map to populate, or null to create a new map
@@ -36290,7 +36282,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * (deprecatedSince 5.0 in identity). The value includeBody has been
      * deprecated since 6.0.6, use includeBodyAndHeaders instead.
      *
-     * <p>Valid values: [includeBodyWithPrefix, includeBodyOnly, includeSmartAndHeadersWithPrefix, includeBody, includeSmartWithPrefix, includeAsAttachment, includeSmart, includeSmartAndHeaders, includeBodyAndHeaders, includeBodyAndHeadersWithPrefix, includeNone]
+     * <p>Valid values: [includeNone, includeBody, includeBodyOnly, includeAsAttachment, includeSmartAndHeaders, includeBodyAndHeaders, includeSmartWithPrefix, includeSmartAndHeadersWithPrefix, includeSmart, includeBodyWithPrefix, includeBodyAndHeadersWithPrefix]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -36306,7 +36298,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * (deprecatedSince 5.0 in identity). The value includeBody has been
      * deprecated since 6.0.6, use includeBodyAndHeaders instead.
      *
-     * <p>Valid values: [includeBodyWithPrefix, includeBodyOnly, includeSmartAndHeadersWithPrefix, includeBody, includeSmartWithPrefix, includeAsAttachment, includeSmart, includeSmartAndHeaders, includeBodyAndHeaders, includeBodyAndHeadersWithPrefix, includeNone]
+     * <p>Valid values: [includeNone, includeBody, includeBodyOnly, includeAsAttachment, includeSmartAndHeaders, includeBodyAndHeaders, includeSmartWithPrefix, includeSmartAndHeadersWithPrefix, includeSmart, includeBodyWithPrefix, includeBodyAndHeadersWithPrefix]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -37822,7 +37814,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * preferred task filtering option in UI
      *
-     * <p>Valid values: [DEFERRED, WAITING, COMPLETED, TODO, INPROGRESS, NOTSTARTED]
+     * <p>Valid values: [WAITING, TODO, COMPLETED, DEFERRED, NOTSTARTED, INPROGRESS]
      *
      * @return zimbraPrefTasksFilterBy, or null if unset and/or has invalid value
      *
@@ -37836,7 +37828,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * preferred task filtering option in UI
      *
-     * <p>Valid values: [DEFERRED, WAITING, COMPLETED, TODO, INPROGRESS, NOTSTARTED]
+     * <p>Valid values: [WAITING, TODO, COMPLETED, DEFERRED, NOTSTARTED, INPROGRESS]
      *
      * @return zimbraPrefTasksFilterBy, or null if unset
      *
@@ -37850,7 +37842,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * preferred task filtering option in UI
      *
-     * <p>Valid values: [DEFERRED, WAITING, COMPLETED, TODO, INPROGRESS, NOTSTARTED]
+     * <p>Valid values: [WAITING, TODO, COMPLETED, DEFERRED, NOTSTARTED, INPROGRESS]
      *
      * @param zimbraPrefTasksFilterBy new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -37867,7 +37859,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * preferred task filtering option in UI
      *
-     * <p>Valid values: [DEFERRED, WAITING, COMPLETED, TODO, INPROGRESS, NOTSTARTED]
+     * <p>Valid values: [WAITING, TODO, COMPLETED, DEFERRED, NOTSTARTED, INPROGRESS]
      *
      * @param zimbraPrefTasksFilterBy new value
      * @param attrs existing map to populate, or null to create a new map
@@ -37885,7 +37877,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * preferred task filtering option in UI
      *
-     * <p>Valid values: [DEFERRED, WAITING, COMPLETED, TODO, INPROGRESS, NOTSTARTED]
+     * <p>Valid values: [WAITING, TODO, COMPLETED, DEFERRED, NOTSTARTED, INPROGRESS]
      *
      * @param zimbraPrefTasksFilterBy new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -37902,7 +37894,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * preferred task filtering option in UI
      *
-     * <p>Valid values: [DEFERRED, WAITING, COMPLETED, TODO, INPROGRESS, NOTSTARTED]
+     * <p>Valid values: [WAITING, TODO, COMPLETED, DEFERRED, NOTSTARTED, INPROGRESS]
      *
      * @param zimbraPrefTasksFilterBy new value
      * @param attrs existing map to populate, or null to create a new map
@@ -37920,7 +37912,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * preferred task filtering option in UI
      *
-     * <p>Valid values: [DEFERRED, WAITING, COMPLETED, TODO, INPROGRESS, NOTSTARTED]
+     * <p>Valid values: [WAITING, TODO, COMPLETED, DEFERRED, NOTSTARTED, INPROGRESS]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -37936,7 +37928,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * preferred task filtering option in UI
      *
-     * <p>Valid values: [DEFERRED, WAITING, COMPLETED, TODO, INPROGRESS, NOTSTARTED]
+     * <p>Valid values: [WAITING, TODO, COMPLETED, DEFERRED, NOTSTARTED, INPROGRESS]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -37953,7 +37945,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * where the reading pane is displayed for tasks
      *
-     * <p>Valid values: [off, bottom, right]
+     * <p>Valid values: [bottom, off, right]
      *
      * @return zimbraPrefTasksReadingPaneLocation, or ZAttrProvisioning.PrefTasksReadingPaneLocation.right if unset and/or has invalid value
      *
@@ -37967,7 +37959,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * where the reading pane is displayed for tasks
      *
-     * <p>Valid values: [off, bottom, right]
+     * <p>Valid values: [bottom, off, right]
      *
      * @return zimbraPrefTasksReadingPaneLocation, or "right" if unset
      *
@@ -37981,7 +37973,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * where the reading pane is displayed for tasks
      *
-     * <p>Valid values: [off, bottom, right]
+     * <p>Valid values: [bottom, off, right]
      *
      * @param zimbraPrefTasksReadingPaneLocation new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -37998,7 +37990,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * where the reading pane is displayed for tasks
      *
-     * <p>Valid values: [off, bottom, right]
+     * <p>Valid values: [bottom, off, right]
      *
      * @param zimbraPrefTasksReadingPaneLocation new value
      * @param attrs existing map to populate, or null to create a new map
@@ -38016,7 +38008,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * where the reading pane is displayed for tasks
      *
-     * <p>Valid values: [off, bottom, right]
+     * <p>Valid values: [bottom, off, right]
      *
      * @param zimbraPrefTasksReadingPaneLocation new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -38033,7 +38025,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * where the reading pane is displayed for tasks
      *
-     * <p>Valid values: [off, bottom, right]
+     * <p>Valid values: [bottom, off, right]
      *
      * @param zimbraPrefTasksReadingPaneLocation new value
      * @param attrs existing map to populate, or null to create a new map
@@ -38051,7 +38043,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * where the reading pane is displayed for tasks
      *
-     * <p>Valid values: [off, bottom, right]
+     * <p>Valid values: [bottom, off, right]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -38067,7 +38059,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * where the reading pane is displayed for tasks
      *
-     * <p>Valid values: [off, bottom, right]
+     * <p>Valid values: [bottom, off, right]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
