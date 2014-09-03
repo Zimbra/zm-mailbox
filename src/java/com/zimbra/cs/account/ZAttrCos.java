@@ -29855,8 +29855,7 @@ public abstract class ZAttrCos extends NamedEntry {
 
     /**
      * Which mailbox to save messages sent via sendAs/sendOnBehalfOf
-     * delegation to. Only applicable if account has zimbraPrefSaveToSent set
-     * to true
+     * delegation to.
      *
      * <p>Valid values: [both, sender, owner, none]
      *
@@ -29871,8 +29870,7 @@ public abstract class ZAttrCos extends NamedEntry {
 
     /**
      * Which mailbox to save messages sent via sendAs/sendOnBehalfOf
-     * delegation to. Only applicable if account has zimbraPrefSaveToSent set
-     * to true
+     * delegation to.
      *
      * <p>Valid values: [both, sender, owner, none]
      *
@@ -29887,8 +29885,7 @@ public abstract class ZAttrCos extends NamedEntry {
 
     /**
      * Which mailbox to save messages sent via sendAs/sendOnBehalfOf
-     * delegation to. Only applicable if account has zimbraPrefSaveToSent set
-     * to true
+     * delegation to.
      *
      * <p>Valid values: [both, sender, owner, none]
      *
@@ -29906,8 +29903,7 @@ public abstract class ZAttrCos extends NamedEntry {
 
     /**
      * Which mailbox to save messages sent via sendAs/sendOnBehalfOf
-     * delegation to. Only applicable if account has zimbraPrefSaveToSent set
-     * to true
+     * delegation to.
      *
      * <p>Valid values: [both, sender, owner, none]
      *
@@ -29926,8 +29922,7 @@ public abstract class ZAttrCos extends NamedEntry {
 
     /**
      * Which mailbox to save messages sent via sendAs/sendOnBehalfOf
-     * delegation to. Only applicable if account has zimbraPrefSaveToSent set
-     * to true
+     * delegation to.
      *
      * <p>Valid values: [both, sender, owner, none]
      *
@@ -29945,8 +29940,7 @@ public abstract class ZAttrCos extends NamedEntry {
 
     /**
      * Which mailbox to save messages sent via sendAs/sendOnBehalfOf
-     * delegation to. Only applicable if account has zimbraPrefSaveToSent set
-     * to true
+     * delegation to.
      *
      * <p>Valid values: [both, sender, owner, none]
      *
@@ -29965,8 +29959,7 @@ public abstract class ZAttrCos extends NamedEntry {
 
     /**
      * Which mailbox to save messages sent via sendAs/sendOnBehalfOf
-     * delegation to. Only applicable if account has zimbraPrefSaveToSent set
-     * to true
+     * delegation to.
      *
      * <p>Valid values: [both, sender, owner, none]
      *
@@ -29983,8 +29976,7 @@ public abstract class ZAttrCos extends NamedEntry {
 
     /**
      * Which mailbox to save messages sent via sendAs/sendOnBehalfOf
-     * delegation to. Only applicable if account has zimbraPrefSaveToSent set
-     * to true
+     * delegation to.
      *
      * <p>Valid values: [both, sender, owner, none]
      *
