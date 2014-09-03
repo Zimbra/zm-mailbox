@@ -10680,8 +10680,7 @@ public class ZAttrProvisioning {
 
     /**
      * Which mailbox to save messages sent via sendAs/sendOnBehalfOf
-     * delegation to. Only applicable if account has zimbraPrefSaveToSent set
-     * to true
+     * delegation to.
      *
      * @since ZCS 8.6.0,9.0.0
      */
