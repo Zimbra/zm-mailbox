@@ -1271,6 +1271,8 @@ public class LdapProvisioning extends LdapProv {
 
             entry.setAttr(A_uid, localPart);
 
+            checkPasswordStrength(password, null, cos, entry);
+
             entry.setAttr(Provisioning.A_zimbraPasswordModifiedTime, DateUtil.toGeneralizedTime(new Date()));
 
             String ucPassword = entry.getAttrString(Provisioning.A_zimbraUCPassword);
