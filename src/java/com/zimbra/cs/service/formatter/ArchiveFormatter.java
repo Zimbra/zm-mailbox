@@ -385,15 +385,21 @@ public abstract class ArchiveFormatter extends Formatter {
      * down to the browser for archive responses, we have to close the socket to tell the browser its done. Since we have to do that..
      * leaving this endpoint without a timeout is safe. If the connection was being reused (ie keep-alive) this could have issues, but its not
      * in this case.
+     * 
+     * 
+     * Implemented for bug 85359
+     * While setting endpoint maxIdleTime removing SelectChannelEndPoint check as the there may be SslEndpoint instance too.
+     * When setting maxIdleTime to 0, idleTimeOut falls back to connector maxIdleTime, so setting it to very high value to avoid timeout issues.
      * @throws IOException
      */
     private void disableJettyTimeout() throws IOException {
         if (LC.zimbra_archive_formatter_disable_timeout.booleanValue()) {
             EndPoint endPoint = AbstractHttpConnection.getCurrentConnection().getEndPoint();
-            if (endPoint instanceof SelectChannelEndPoint) {
-                SelectChannelEndPoint scEndPoint = (SelectChannelEndPoint) endPoint;
-                scEndPoint.setMaxIdleTime(0);
-            }
+            //removing SelectChannelEndPoint check as the there may be SslEndpoint instance too
+            //if (endPoint instanceof SelectChannelEndPoint) {
+                //SelectChannelEndPoint scEndPoint = (SelectChannelEndPoint) endPoint;
+                endPoint.setMaxIdleTime(Integer.MAX_VALUE); 
+            //}
         }
     }
 
