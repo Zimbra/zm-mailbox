@@ -1274,9 +1274,14 @@ public class LdapProvisioning extends LdapProv {
             }
 
             entry.setAttr(A_uid, localPart);
-
-            checkPasswordStrength(password, null, cos, entry);
-
+            String entryPassword = entry.getAttrString(Provisioning.A_userPassword);
+            if (entryPassword != null) {
+                //password is a hash i.e. from autoprov; do not set with modify password
+                password = null;
+            } else {
+                //user entered
+                checkPasswordStrength(password, null, cos, entry);
+            }
             entry.setAttr(Provisioning.A_zimbraPasswordModifiedTime, DateUtil.toGeneralizedTime(new Date()));
 
             String ucPassword = entry.getAttrString(Provisioning.A_zimbraUCPassword);
@@ -1300,7 +1305,9 @@ public class LdapProvisioning extends LdapProv {
             AttributeManager.getInstance().postModify(acctAttrs, acct, callbackContext);
             removeExternalAddrsFromAllDynamicGroups(acct.getAllAddrsSet(), zlc);
             validate(ProvisioningValidator.CREATE_ACCOUNT_SUCCEEDED, emailAddress, acct, skipCountingLicenseQuota);
-            setLdapPassword(acct, zlc, password);
+            if (password != null) {
+                setLdapPassword(acct, zlc, password);
+            }
             return acct;
         } catch (LdapEntryAlreadyExistException e) {
             throw AccountServiceException.ACCOUNT_EXISTS(emailAddress, dn, e);
