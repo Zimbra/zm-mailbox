@@ -1420,7 +1420,7 @@ class TimeInSecVarWrapper extends ProxyConfVar {
  */
 class WebProxyUpstreamTargetVar extends ProxyConfVar {
     public WebProxyUpstreamTargetVar() {
-        super("web.upstream.schema", "zimbraReverseProxySSLToUpstreamEnabled", false, ProxyConfValueType.BOOLEAN,
+        super("web.upstream.schema", "zimbraReverseProxySSLToUpstreamEnabled", true, ProxyConfValueType.BOOLEAN,
                 ProxyConfOverride.SERVER, "The target of proxy_pass for web proxy");
     }
 
@@ -1442,7 +1442,7 @@ class WebProxyUpstreamTargetVar extends ProxyConfVar {
  */
 class WebProxyUpstreamClientTargetVar extends ProxyConfVar {
     public WebProxyUpstreamClientTargetVar() {
-        super("web.upstream.schema", "zimbraReverseProxySSLToUpstreamEnabled", false, ProxyConfValueType.BOOLEAN,
+        super("web.upstream.schema", "zimbraReverseProxySSLToUpstreamEnabled", true, ProxyConfValueType.BOOLEAN,
                 ProxyConfOverride.SERVER, "The target of proxy_pass for web client proxy");
     }
 
@@ -1453,6 +1453,40 @@ class WebProxyUpstreamClientTargetVar extends ProxyConfVar {
             return "http://" + ProxyConfGen.ZIMBRA_UPSTREAM_WEBCLIENT_NAME;
         } else {
             return "https://" + ProxyConfGen.ZIMBRA_SSL_UPSTREAM_WEBCLIENT_NAME;
+        }
+    }
+}
+
+class WebProxyUpstreamLoginTargetVar extends ProxyConfVar {
+    public WebProxyUpstreamLoginTargetVar() {
+        super("web.upstream.schema", "zimbraReverseProxySSLToUpstreamEnabled", true, ProxyConfValueType.BOOLEAN,
+                ProxyConfOverride.SERVER, "The login target of proxy_pass for web proxy");
+    }
+
+    @Override
+    public String format(Object o) throws ProxyConfException {
+        Boolean value = (Boolean)o;
+        if(value == false) {
+            return "http://" + ProxyConfGen.ZIMBRA_UPSTREAM_LOGIN_NAME;
+        } else {
+            return "https://" + ProxyConfGen.ZIMBRA_SSL_UPSTREAM_LOGIN_NAME;
+        }
+    }
+}
+
+class WebProxyUpstreamEwsTargetVar extends ProxyConfVar {
+    public WebProxyUpstreamEwsTargetVar() {
+        super("web.upstream.schema", "zimbraReverseProxySSLToUpstreamEnabled", true, ProxyConfValueType.BOOLEAN,
+                ProxyConfOverride.SERVER, "The ews target of proxy_pass for web proxy");
+    }
+
+    @Override
+    public String format(Object o) throws ProxyConfException {
+        Boolean value = (Boolean)o;
+        if(value == false) {
+            return "http://" + ProxyConfGen.ZIMBRA_UPSTREAM_EWS_NAME;
+        } else {
+            return "https://" + ProxyConfGen.ZIMBRA_SSL_UPSTREAM_EWS_NAME;
         }
     }
 }
@@ -2322,6 +2356,8 @@ public class ProxyConfGen
 	    mConfVars.put("web.login.upstream.name", new ProxyConfVar("web.login.upstream.name", null, ZIMBRA_UPSTREAM_LOGIN_NAME, ProxyConfValueType.STRING, ProxyConfOverride.CONFIG, "Symbolic name for upstream login server cluster"));
 	    mConfVars.put("web.ssl.login.upstream.name", new ProxyConfVar("web.ssl.login.upstream.name", null, ZIMBRA_SSL_UPSTREAM_LOGIN_NAME, ProxyConfValueType.STRING, ProxyConfOverride.CONFIG, "Symbolic name for https upstream login server cluster"));
 	    mConfVars.put("web.login.upstream.url", new ProxyConfVar("web.login.upstream.url", "zimbraMailURL", "/", ProxyConfValueType.STRING, ProxyConfOverride.SERVER, "Zimbra Login URL"));
+	    mConfVars.put("web.upstream.login.target", new WebProxyUpstreamLoginTargetVar());
+	    mConfVars.put("web.upstream.ews.target", new WebProxyUpstreamEwsTargetVar());
     }
 
     /* update the default variable map from the active configuration */
@@ -2564,6 +2600,16 @@ public class ProxyConfGen
             expandTemplate(new File(mTemplateDir, getConfTemplateFileName("web.sso.default")), new File(mConfIncludesDir, getConfFileName("web.sso.default")));
             expandTemplate(new File(mTemplateDir, getConfTemplateFileName("web.admin")), new File(mConfIncludesDir, getConfFileName("web.admin")));
             expandTemplate(new File(mTemplateDir, getConfTemplateFileName("web.admin.default")), new File(mConfIncludesDir, getConfFileName("web.admin.default")));
+            expandTemplate(new File(mTemplateDir, getWebHttpModeConfTemplate("http")), new File(mConfIncludesDir, getWebHttpModeConf("http")));
+            expandTemplate(new File(mTemplateDir, getWebHttpModeConfTemplate("https")), new File(mConfIncludesDir, getWebHttpModeConf("https")));
+            expandTemplate(new File(mTemplateDir, getWebHttpModeConfTemplate("both")), new File(mConfIncludesDir, getWebHttpModeConf("both")));
+            expandTemplate(new File(mTemplateDir, getWebHttpModeConfTemplate("redirect")), new File(mConfIncludesDir, getWebHttpModeConf("redirect")));
+            expandTemplate(new File(mTemplateDir, getWebHttpModeConfTemplate("mixed")), new File(mConfIncludesDir, getWebHttpModeConf("mixed")));
+            expandTemplate(new File(mTemplateDir, getWebHttpSModeConfTemplate("http")), new File(mConfIncludesDir, getWebHttpSModeConf("http")));
+            expandTemplate(new File(mTemplateDir, getWebHttpSModeConfTemplate("https")), new File(mConfIncludesDir, getWebHttpSModeConf("https")));
+            expandTemplate(new File(mTemplateDir, getWebHttpSModeConfTemplate("both")), new File(mConfIncludesDir, getWebHttpSModeConf("both")));
+            expandTemplate(new File(mTemplateDir, getWebHttpSModeConfTemplate("redirect")), new File(mConfIncludesDir, getWebHttpSModeConf("redirect")));
+            expandTemplate(new File(mTemplateDir, getWebHttpSModeConfTemplate("mixed")), new File(mConfIncludesDir, getWebHttpSModeConf("mixed")));
         } catch (ProxyConfException pe) {
             handleException(pe);
             exitCode = 1;
