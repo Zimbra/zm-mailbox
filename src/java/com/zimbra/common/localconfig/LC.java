@@ -769,6 +769,7 @@ public final class LC {
     public static final KnownKey zmconfigd_interval = KnownKey.newKey(60);
     public static final KnownKey zmconfigd_log_level = KnownKey.newKey(3);
     public static final KnownKey zmconfigd_listen_port = KnownKey.newKey(7171);
+    public static final KnownKey zmconfigd_startup_pause = KnownKey.newKey(60);
 
     @Supported
     public static final KnownKey zimbra_mailbox_groups = KnownKey.newKey(100);
