@@ -1278,7 +1278,7 @@ public class LdapProvisioning extends LdapProv {
             if (entryPassword != null) {
                 //password is a hash i.e. from autoprov; do not set with modify password
                 password = null;
-            } else {
+            } else if (password != null) {
                 //user entered
                 checkPasswordStrength(password, null, cos, entry);
             }
