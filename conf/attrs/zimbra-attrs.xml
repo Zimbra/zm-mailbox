@@ -7207,7 +7207,7 @@ TODO: delete them permanently from here
 </attr>
 
 <attr id="1572" name="zimbraMobileForceSamsungProtocol25" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="8.0.7">
-  <defaultCOSValue>TRUE</defaultCOSValue>
+  <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>Whether to force Samsung devices using Active Sync 2.5</desc>
 </attr>
 

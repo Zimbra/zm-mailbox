@@ -23604,13 +23604,13 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * Whether to force Samsung devices using Active Sync 2.5
      *
-     * @return zimbraMobileForceSamsungProtocol25, or true if unset
+     * @return zimbraMobileForceSamsungProtocol25, or false if unset
      *
      * @since ZCS 8.0.7
      */
     @ZAttr(id=1572)
     public boolean isMobileForceSamsungProtocol25() {
-        return getBooleanAttr(Provisioning.A_zimbraMobileForceSamsungProtocol25, true);
+        return getBooleanAttr(Provisioning.A_zimbraMobileForceSamsungProtocol25, false);
     }
 
     /**
