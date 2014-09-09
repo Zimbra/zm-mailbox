@@ -16,8 +16,12 @@
  */
 package com.zimbra.cs.ldap.unboundid;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.net.SocketFactory;
 
@@ -27,6 +31,7 @@ import com.unboundid.ldap.sdk.LDAPException;
 import com.unboundid.ldap.sdk.LDAPURL;
 import com.unboundid.ldap.sdk.ServerSet;
 import com.unboundid.ldap.sdk.SingleServerSet;
+import com.zimbra.common.util.Pair;
 import com.zimbra.cs.ldap.LdapConnType;
 import com.zimbra.cs.ldap.LdapException;
 import com.zimbra.cs.ldap.LdapServerConfig;
@@ -99,7 +104,11 @@ public class LdapServerPool {
         SocketFactory socketFactory =
             LdapConnUtil.getSocketFactory(this.connType, config.sslAllowUntrustedCerts());
 
-        this.serverSet = createServerSet(socketFactory);
+        try {
+            this.serverSet = createServerSet(socketFactory);
+        } catch (UnknownHostException e) {
+            throw LdapException.INVALID_CONFIG(e);
+        }
     }
 
     public List<LDAPURL> getUrls() {
@@ -119,32 +128,69 @@ public class LdapServerPool {
         return serverSet;
     }
 
-    private ServerSet createServerSet(SocketFactory socketFactory) {
+    private ServerSet createServerSet(SocketFactory socketFactory) throws UnknownHostException {
         if (urls.size() == 1) {
             LDAPURL url = urls.get(0);
-            if (socketFactory == null) {
-                return new SingleServerSet(url.getHost(), url.getPort(), connOpts);
+            InetAddress[] addrs = InetAddress.getAllByName(url.getHost());
+            if (addrs.length == 1) {
+                if (socketFactory == null) {
+                    return new SingleServerSet(url.getHost(), url.getPort(), connOpts);
+                } else {
+                    return new SingleServerSet(url.getHost(), url.getPort(), socketFactory, connOpts);
+                }
             } else {
-                return new SingleServerSet(url.getHost(), url.getPort(), socketFactory, connOpts);
+                Set<String> uniqAddr = new HashSet<>();
+                for (int i = 0; i < addrs.length; i++) {
+                    uniqAddr.add(addrs[i].getHostAddress());
+                }
+                if (uniqAddr.size() == 1) {
+                    if (socketFactory == null) {
+                        return new SingleServerSet(url.getHost(), url.getPort(), connOpts);
+                    } else {
+                        return new SingleServerSet(url.getHost(), url.getPort(), socketFactory, connOpts);
+                    }
+                } else {
+                    String[] hosts = new String[uniqAddr.size()];
+                    int[] ports = new int[uniqAddr.size()];
+                    int i = 0;
+                    for (String addr : uniqAddr) {
+                        hosts[i] = addr;
+                        ports[i] = url.getPort();
+                        i++;
+                    }
+                    if (socketFactory == null) {
+                        return new FailoverServerSet(hosts, ports, connOpts);
+                    } else {
+                        return new FailoverServerSet(hosts, ports, socketFactory, connOpts);
+                    }
+                }
             }
         } else {
-            int numUrls = urls.size();
-
-            final String[] hosts = new String[numUrls];
-            final int[]    ports = new int[numUrls];
-
-            for (int i=0; i < numUrls; i++) {
-                LDAPURL url = urls.get(i);
-                hosts[i] = url.getHost();
-                ports[i] = url.getPort();
+            Set<Pair<String, Integer>> hostsAndPorts = new HashSet<>();
+            for (LDAPURL url : urls) {
+                InetAddress[] addrs = InetAddress.getAllByName(url.getHost());
+                if (addrs.length == 1) {
+                    hostsAndPorts.add(new Pair<String, Integer>(url.getHost(), url.getPort()));
+                } else {
+                    for (int i = 0; i < addrs.length; i++) {
+                        hostsAndPorts.add(new Pair<String, Integer>(addrs[i].getHostAddress(), url.getPort()));
+                    }
+                }
             }
-
+            String[] hostsStrs = new String[hostsAndPorts.size()];
+            int[] portsStrs = new int[hostsAndPorts.size()];
+            int i = 0;
+            for (Pair<String, Integer> pair : hostsAndPorts) {
+                hostsStrs[i] = pair.getFirst();
+                portsStrs[i] = pair.getSecond();
+                i++;
+            }
             if (socketFactory == null) {
-                FailoverServerSet serverSet = new FailoverServerSet(hosts, ports, connOpts);
+                FailoverServerSet serverSet = new FailoverServerSet(hostsStrs, portsStrs, connOpts);
                 serverSet.setReOrderOnFailover(true);
                 return serverSet;
             } else {
-                FailoverServerSet serverSet = new FailoverServerSet(hosts, ports, socketFactory, connOpts);
+                FailoverServerSet serverSet = new FailoverServerSet(hostsStrs, portsStrs, socketFactory, connOpts);
                 serverSet.setReOrderOnFailover(true);
                 return serverSet;
             }
