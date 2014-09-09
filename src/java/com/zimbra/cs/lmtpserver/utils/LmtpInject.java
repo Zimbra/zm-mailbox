@@ -69,6 +69,7 @@ public class LmtpInject {
     private long mLastProgressTime;
     private int mLastProgressCount;
     private boolean mQuietMode = false;
+    private boolean mTracingEnabled = false;
     private boolean mVerbose = false;
 
     private volatile long mFileSizeTotal = 0;
@@ -96,6 +97,7 @@ public class LmtpInject {
         mStartTime = mLastProgressTime = 0;
         mLastProgressCount = 0;
         mQuietMode = quietMode;
+        mTracingEnabled = tracingEnabled;
         mVerbose = verbose;
     }
 
@@ -156,6 +158,7 @@ public class LmtpInject {
     int getPort() { return mPort; }
     Protocol getProtocol() { return mProto; }
     boolean isVerbose() { return mVerbose; }
+    boolean isTracingEnabled() { return mTracingEnabled; }
     boolean isQuiet() { return mQuietMode; }
     
     /**
@@ -209,6 +212,7 @@ public class LmtpInject {
             } else {
                 mClient.quiet(true);
             }
+            mClient.trace(mDriver.isTracingEnabled());
         }
 
         public void run() {
