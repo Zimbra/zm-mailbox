@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2007, 2009, 2010, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -19,7 +19,7 @@ package com.zimbra.cs.lmtpserver;
 
 
 public enum LmtpReply {
-    
+
     OK(250, "2.0.0", "OK"),
     SENDER_OK(250, "2.0.0", "Sender OK"),
     RECIPIENT_OK(250, "2.1.5", "Recipient OK"),
@@ -27,16 +27,19 @@ public enum LmtpReply {
     OK_TO_SEND_DATA(354, null, "End data with <CR><LF>.<CR><LF>"),
     USE_RCPT_INSTEAD(252, "2.3.3", "Use RCPT to deliver messages"),
 
-    BYE(221, null, new DetailCB() { protected String detail() { return LmtpConfig.getInstance().getGoodbye(); }}),
-    GREETING(220, null, new DetailCB() { protected String detail() { return LmtpConfig.getInstance().getGreeting(); }}),
-    
+    BYE(221, null, new DetailCB() { @Override
+    protected String detail() { return LmtpConfig.getInstance().getGoodbye(); }}),
+    GREETING(220, null, new DetailCB() { @Override
+    protected String detail() { return LmtpConfig.getInstance().getGreeting(); }}),
+
     SERVICE_DISABLED(421, "4.3.2", "Service not available, closing transmission channel"),
     MAILBOX_DISABLED(450, "4.2.1", "Mailbox disabled, not accepting messages"),
     MAILBOX_NOT_ON_THIS_SERVER(450, "4.2.0", "Mailbox is not on this server"),
     TEMPORARY_FAILURE(451, "4.0.0", "Temporary message delivery failure try again"),
     TEMPORARY_FAILURE_OVER_QUOTA(452, "4.2.2", "Over quota"),
-    TIMEOUT(421, null, new DetailCB() { protected String detail() { return LmtpConfig.getInstance().getDescription() + " Timeout exceeded"; } }),
-    
+    TIMEOUT(421, null, new DetailCB() { @Override
+    protected String detail() { return LmtpConfig.getInstance().getDescription() + " Timeout exceeded"; } }),
+
     NESTED_MAIL_COMMAND(503, "5.5.1", "Nested MAIL command"),
     NO_RECIPIENTS(503, "5.5.1", "No recipients"),
     MISSING_MAIL_TO(503, "5.5.1", "Need MAIL command"),
@@ -49,43 +52,48 @@ public enum LmtpReply {
     NO_SUCH_USER(550, "5.1.1", "No such user here"),
     PERMANENT_FAILURE_OVER_QUOTA(552, "5.2.2", "Over quota"),
     PERMANENT_FAILURE(554, "5.0.0", "Permanent message delivery failure");
-    
-    private int mCode;
-    private String mEnhancedCode;
-    private String mDetail;
-    private DetailCB mDetailCallback;
-    
+
+    private final int mCode;
+    private final String mMessage;
+    private final DetailCB mDetailCallback;
+
     private abstract static class DetailCB {
-	protected abstract String detail();
+        protected abstract String detail();
     }
-    
+
+    private LmtpReply(int code, String enhancedCode, String detail, DetailCB detailCB) {
+        mCode = code;
+        mDetailCallback = detailCB;
+
+        StringBuilder message = new StringBuilder(64);
+        message.append(mCode);
+        if (enhancedCode != null) {
+            message.append(' ').append(enhancedCode);
+        }
+        if (detail != null) {
+            message.append(' ').append(detail);
+        }
+        mMessage = message.toString();
+    }
+
     private LmtpReply(int code, String enhancedCode, String detail) {
-	mCode = code;
-	mEnhancedCode = enhancedCode;
-	mDetail = detail;
+        this(code, enhancedCode, detail, null);
     }
 
     private LmtpReply(int code, String enhancedCode, DetailCB detail) {
-	mCode = code;
-	mEnhancedCode = enhancedCode;
-	mDetailCallback = detail;
+        this(code, enhancedCode, null, detail);
     }
-    
+
+    @Override
     public String toString() {
-	String detail;
-	if (mDetailCallback != null)
-	    detail = mDetailCallback.detail();
-	else
-	    detail = mDetail;
-	if (mEnhancedCode == null) 
-	    return mCode + " " + detail; 
-	else
-	    return mCode + " " + mEnhancedCode + " " + detail;
+        String message = mMessage;
+        if (mDetailCallback != null) {
+            message += ' ' + mDetailCallback.detail();
+        }
+        return message;
     }
 
     public boolean success() {
-	if (mCode > 199 && mCode < 400)
-	    return true;
-	return false;
+        return mCode >= 200 && mCode <= 399;
     }
 }
