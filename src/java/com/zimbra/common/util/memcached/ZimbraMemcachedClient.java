@@ -35,11 +35,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.zip.CRC32;
 
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.BEncoding;
-import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.common.util.BEncoding.BEncodingException;
-
 import net.spy.memcached.BinaryConnectionFactory;
 import net.spy.memcached.CachedData;
 import net.spy.memcached.ConnectionFactory;
@@ -49,9 +44,15 @@ import net.spy.memcached.HashAlgorithm;
 import net.spy.memcached.MemcachedClient;
 import net.spy.memcached.transcoders.Transcoder;
 
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.BEncoding;
+import com.zimbra.common.util.BEncoding.BEncodingException;
+import com.zimbra.common.util.ZimbraLog;
+
 public class ZimbraMemcachedClient {
 
     private class ConnObserver implements ConnectionObserver {
+        @Override
         public void connectionEstablished(SocketAddress sa, int reconnectCount) {
             connected = true;
             if (sa instanceof InetSocketAddress) {
@@ -63,6 +64,7 @@ public class ZimbraMemcachedClient {
             }
         }
 
+        @Override
         public void connectionLost(SocketAddress sa) {
             if (sa instanceof InetSocketAddress) {
                 InetSocketAddress isa = (InetSocketAddress) sa;
@@ -197,11 +199,11 @@ public class ZimbraMemcachedClient {
     private void disconnect(MemcachedClient client, long timeout) {
         boolean drained = client.waitForQueues(timeout, TimeUnit.MILLISECONDS);
         if (!drained)
-            ZimbraLog.misc.warn("Memcached client did not drain queue in " + timeout + "ms");
+            ZimbraLog.misc.warn("Memcached client did not drain queue in %dms", timeout);
         boolean success = client.shutdown(timeout, TimeUnit.MILLISECONDS);
         if (!success) {
-            ZimbraLog.misc.warn("Memcached client did not shutdown gracefully in " + timeout +
-                                "ms; forcing immediate shutdowb");
+            ZimbraLog.misc.warn("Memcached client did not shutdown gracefully in %dms; " +
+                                "forcing immediate shutdown", timeout);
             client.shutdown();
         }
     }
@@ -1003,12 +1005,16 @@ public class ZimbraMemcachedClient {
         private static class TestKey implements MemcachedKey {
             private String mKey;
             public TestKey(String k) { mKey = k; }
+            @Override
             public String getKeyPrefix() { return null; }
+            @Override
             public String getKeyValue() { return mKey; }
         }
 
         private static class IntegerSerializer implements MemcachedSerializer<Integer> {
+            @Override
             public Object serialize(Integer value) throws ServiceException { return value; }
+            @Override
             public Integer deserialize(Object obj) throws ServiceException { return (Integer) obj; }
         }
 
@@ -1036,7 +1042,9 @@ public class ZimbraMemcachedClient {
         }
 
         private static class StringSerializer implements MemcachedSerializer<String> {
+            @Override
             public Object serialize(String value) throws ServiceException { return value; }
+            @Override
             public String deserialize(Object obj) throws ServiceException { return (String) obj; }
         }
 
@@ -1069,9 +1077,11 @@ public class ZimbraMemcachedClient {
         }
 
         private static class BBASerializer implements ByteArraySerializer<ByteArray> {
+            @Override
             public byte[] serialize(ByteArray value) throws ServiceException {
                 return value.getBytes();
             }
+            @Override
             public ByteArray deserialize(byte[] bytes) throws ServiceException {
                 return new ByteArray(bytes);
             }
