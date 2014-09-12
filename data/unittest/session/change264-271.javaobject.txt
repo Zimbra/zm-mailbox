@@ -1,0 +1,6 @@
+These files contain serialized Java PendingModifications objects.
+
+change264.javaobject - user operation: toggle a flag
+change265.javaobject - user operation: toggle a flag, different email
+change266-270.javaobject - user operation: delete an email
+change271.javaobject - user operation: create a task

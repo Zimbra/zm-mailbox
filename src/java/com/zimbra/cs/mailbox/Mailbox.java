@@ -9332,7 +9332,7 @@ public class Mailbox {
                         if (server.isLocalServer()) {
                             continue;
                         }
-                        MailboxNotification ntfn = MailboxNotification.create(getAccountId(), mData.lastChangeId, dirty.getSerializedBytes());
+                        MailboxNotification ntfn = MailboxNotification.create(getAccountId(), mData.lastChangeId, PendingModifications.JavaObjectSerializer.serialize(dirty));
                         MessageChannel.getInstance().sendMessage(server, ntfn);
                     }
                 }
