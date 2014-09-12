@@ -51,6 +51,7 @@
         <include name="jackson*.jar"/>
         <include name="log4j*.jar"/>
         <include name="dom4j*.jar"/>
+        <include name="commons-codec*.jar"/>
     </fileset>
   </path>
 
