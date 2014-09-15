@@ -1,6 +1,6 @@
 open_source_license.txt
 
-Zimbra Windows Components 8.0.7 GA
+Zimbra Windows Components 8.0.8 GA
 
 
 ===========================================================================
@@ -171,4 +171,4 @@ offer to obtain a copy of the Source Files is valid for three
 years from the date you acquired this Software product. Alternatively,
 the Source Files may accompany the Zimbra product.
 
-[ZCSWINDOWS807GAVV051013]
+[ZCSWINDOWS808GAVV051013]

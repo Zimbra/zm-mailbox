@@ -256,7 +256,7 @@ SECTION 8: GNU General Public License, V2.0
    >>> perl-digest-sha1-2.13
    >>> perl-encode-locale-1.03
    >>> perl-extutils-constant-0.23
-   >>> perl-extutils-makemaker-6.78
+   >>> perl-extutils-makemaker-6.88
    >>> perl-extutils-parsexs-3.18
    >>> perl-file-copy-recursive-0.38
    >>> perl-file-grep-0.02
@@ -26888,7 +26888,7 @@ file.
 Copyright  2001, 2002, 2005 Nicholas Clark
 
 
->>> perl-extutils-makemaker-6.78
+>>> perl-extutils-makemaker-6.88
 
 [PLEASE NOTE:  TELLIGENT, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 2.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 2.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
