@@ -769,7 +769,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
         if (mailTarget instanceof Account) {
             return getGroupMembership((Account) mailTarget, adminGroupsOnly);
         } else if (mailTarget instanceof DistributionList) {
-            return getGroupMembership((Account) mailTarget, adminGroupsOnly);
+            return getGroupMembership((DistributionList) mailTarget, adminGroupsOnly);
         }
         return new GroupMembership();
     }

@@ -20,10 +20,12 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccessManager.ViaGrant;
+import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.MailTarget;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.GroupMembership;
 import com.zimbra.cs.account.accesscontrol.PermissionCache.CachedPermission;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
@@ -110,12 +112,22 @@ public class CheckPresetRight extends CheckRight {
         mSeenRight = new SeenRight();
     }
 
+    /**
+     * Includes the grantee target itself if it is a group
+     */
     private GroupMembership getGranteeGroups() throws ServiceException {
         if (mGranteeGroups == null) {
             // get all groups(static and dynamic) the grantee belongs
             // get only admin groups if the right is an admin right
             boolean adminGroupsOnly = !mRightNeeded.isUserRight();
             mGranteeGroups = mProv.getGroupMembership(mGranteeMailTarget, adminGroupsOnly);
+            if (mGranteeMailTarget instanceof DistributionList) {
+                DistributionList dlmt = (DistributionList) mGranteeMailTarget;
+                if (!adminGroupsOnly || dlmt.isIsAdminGroup()) {
+                    mGranteeGroups.append(new Provisioning.MemberOf(
+                            dlmt.getId(), dlmt.isIsAdminGroup(), /* is dynamic group */ false), dlmt.getId());
+                }
+            }
         }
         return mGranteeGroups;
     }
