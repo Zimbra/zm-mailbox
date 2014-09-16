@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -23,6 +23,8 @@ import java.util.Set;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.zimbra.common.localconfig.DebugConfig;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.datasource.DataSourceListener;
 import com.zimbra.cs.fb.FreeBusyProvider;
@@ -32,6 +34,7 @@ import com.zimbra.cs.mailbox.acl.AclPushListener;
 import com.zimbra.cs.mailbox.acl.ShareExpirationListener;
 import com.zimbra.cs.mailbox.alerts.CalItemReminderService;
 import com.zimbra.cs.session.PendingModifications;
+import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.util.ZimbraApplication;
 
 
@@ -101,6 +104,20 @@ public abstract class MailboxListener {
         }
         if (application.supports(ShareExpirationListener.class) && !DebugConfig.disableShareExpirationListener) {
             register(new ShareExpirationListener());
+        }
+        final MailboxPubSubAdapter mailboxPubSubAdapter = Zimbra.getAppContext().getBean(MailboxPubSubAdapter.class);
+        if (mailboxPubSubAdapter != null) {
+            MailboxListener listener = new MailboxListener() {
+                @Override
+                public void notify(ChangeNotification notification) {
+                    try {
+                        mailboxPubSubAdapter.publish(notification);
+                    } catch (ServiceException e) {
+                        ZimbraLog.session.warn("failed publishing ChangeNotification", e);
+                    }
+                }
+            };
+            register(listener);
         }
     }
 

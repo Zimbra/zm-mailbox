@@ -33,6 +33,9 @@ import com.zimbra.cs.account.Server;
 import com.zimbra.cs.extension.ExtensionUtil;
 import com.zimbra.cs.mailbox.LocalSharedDeliveryCoordinator;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.MemcachedSharedDeliveryCoordinator;
+import com.zimbra.cs.mailbox.MailboxPubSubAdapter;
+import com.zimbra.cs.mailbox.RedisMailboxPubSubAdapter;
 import com.zimbra.cs.mailbox.RedisSharedDeliveryCoordinator;
 import com.zimbra.cs.mailbox.SharedDeliveryCoordinator;
 import com.zimbra.cs.redolog.DefaultRedoLogProvider;
@@ -82,7 +85,7 @@ public class ZimbraConfig {
         return new JedisPool(uri.getHost(), uri.getPort());
     }
 
-    @Bean(name="mailboxManager")
+	@Bean(name="mailboxManager")
 	public MailboxManager mailboxManagerBean() throws ServiceException {
 		MailboxManager instance = null;
         String className = LC.zimbra_class_mboxmanager.value();
@@ -104,6 +107,19 @@ public class ZimbraConfig {
 		return instance;
 	}
 
+    /**
+     * Redis or AMQP pub/sub adapter, which is used to coordinate cache invalidations and other
+     * important mailbox data changes across multiple mailstores.
+     */
+    @Bean(name="mailboxPubSubAdapter")
+    public MailboxPubSubAdapter mailboxPubSubAdapter() throws Exception {
+        if (isRedisAvailable()) {
+            return new RedisMailboxPubSubAdapter();
+        } else {
+            return null;
+        }
+    }
+
     public URI redisUri() throws ServiceException {
         try {
             return new URI("redis://localhost:6379"); // TODO
@@ -115,7 +131,7 @@ public class ZimbraConfig {
 	@Bean(name="redologProvider")
     public RedoLogProvider redoLogProviderBean() throws Exception {
         RedoLogProvider instance = null;
-        Class klass = null;
+        Class<?> klass = null;
         Server config = Provisioning.getInstance().getLocalServer();
         String className = config.getAttr(Provisioning.A_zimbraRedoLogProvider);
         if (className != null) {
