@@ -575,8 +575,13 @@ public class Mailbox {
         }
 
         public void remove(Folder folder) {
-            mapById.remove(folder.getId());
-            mapByUuid.remove(folder.getUuid());
+            Folder removed = mapById.remove(folder.getId());
+            if (removed != null) {
+                String uuid = removed.getUuid();
+                if (uuid != null) {
+                    mapByUuid.remove(uuid);
+                }
+            }
         }
 
         public Collection<Folder> values() {
