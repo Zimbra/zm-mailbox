@@ -35,6 +35,7 @@ import org.cyberneko.html.filters.DefaultFilter;
 
 import com.google.common.base.Strings;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.servlet.ZThreadLocal;
 
@@ -54,6 +55,11 @@ import com.zimbra.cs.servlet.ZThreadLocal;
 public class DefangFilter extends DefaultFilter {
 
     /**
+	 *
+	 */
+	private static final int ASCII_DATA_VALUE = 127;
+
+	/**
      * disable all form/input type tags
      */
     private static final boolean ENABLE_INPUT_TAGS = true;
@@ -426,7 +432,12 @@ public class DefangFilter extends DefaultFilter {
     throws XNIException {
         if (mRemovalElementName == null) {
             if (mStyleDepth > 0) {
-                String result = sanitizeStyleValue(text.toString());
+                String result = null;
+                if (!StringUtil.isAsciiString(text.toString())) {
+                    result = extractAndSanitizeAsciiData(text.toString());
+                } else {
+                    result = sanitizeStyleValue(text.toString());
+                }
                 super.characters(new XMLString(result.toCharArray(), 0, result.length()), augs);
             } else {
                 super.characters(text, augs);
@@ -753,5 +764,32 @@ public class DefangFilter extends DefaultFilter {
 
         }
     }
+
+    /**
+     * @param string
+     * @return
+     */
+    private String extractAndSanitizeAsciiData(String data) {
+        char c[] = data.toCharArray();
+        StringBuilder sanitizedStrg = new StringBuilder();
+        StringBuilder asciiData = new StringBuilder();
+        for (int i = 0; i < c.length; ++i) {
+            if (c[i] <= ASCII_DATA_VALUE) {
+                asciiData.append(c[i]);
+
+            } else {
+                String temp = asciiData.toString();
+                if (!StringUtil.isNullOrEmpty(temp)) {
+                    temp = sanitizeStyleValue(temp);
+                    sanitizedStrg.append(temp);
+                    asciiData = new StringBuilder();
+                }
+                sanitizedStrg.append(c[i]);
+            }
+
+        }
+        return sanitizedStrg.toString();
+    }
+
 
 }
