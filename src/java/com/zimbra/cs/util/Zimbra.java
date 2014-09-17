@@ -196,9 +196,18 @@ public final class Zimbra {
         initAppContext();
     }
 
-    private static void initAppContext() {
+    /** Perform minimum start-up necessary for unit tests */
+    public static void startupTest(Class configClass) throws ServiceException {
+        initAppContext(configClass);
+    }
+
+    public static void initAppContext() {
+        initAppContext(ZimbraConfig.class);
+    }
+
+    public static void initAppContext(Class configClass) {
         AnnotationConfigApplicationContext appContext_ = new AnnotationConfigApplicationContext();
-        appContext_.register(ZimbraConfig.class);
+        appContext_.register(configClass);
         appContext_.refresh();
         appContext = appContext_;
     }

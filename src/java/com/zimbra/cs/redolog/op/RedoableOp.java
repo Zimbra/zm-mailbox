@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -28,7 +28,6 @@ import java.io.InputStream;
 import java.io.SequenceInputStream;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -37,7 +36,6 @@ import java.util.Map;
 
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
-
 import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.redolog.RedoCommitCallback;
@@ -203,7 +201,7 @@ public abstract class RedoableOp {
      * operations should be excluded from initial crash recovery and run after
      * startup procedure finishes.  Note this treatment is possible only for
      * independent operations, i.e. no other operation during crash recovery
-     * should depend on having this operation done first. 
+     * should depend on having this operation done first.
      * @return
      */
     public boolean deferCrashRecovery() {
@@ -312,7 +310,7 @@ public abstract class RedoableOp {
     public MailboxOperation getOperation() {
         return mOperation;
     }
-    
+
     /**
      * Repeat the operation.
      */
@@ -422,7 +420,7 @@ public abstract class RedoableOp {
 
     /**
      * Returns the entire redoable op data as an <tt>InputStream</tt>.
-     * Includes the result of {@link #getAdditionalDataStream()}. 
+     * Includes the result of {@link #getAdditionalDataStream()}.
      */
     public InputStream getInputStream() throws IOException {
         synchronized (mSBAVGuard) {
@@ -452,50 +450,8 @@ public abstract class RedoableOp {
     }
 
 
-    private static boolean checkSubclasses() {
-        boolean allGood = true;
-        for (MailboxOperation opcode : EnumSet.allOf(MailboxOperation.class)) {
-            String className = opcode.name();
-            if (className == null) {
-                System.err.println("Invalid redo operation code: " + opcode);
-                allGood = false;
-            } else if (className.compareTo("UNKNOWN") != 0) {
-                Class clz = null;
-                try {
-                    clz = loadOpClass(sPackageName + "." + className);
-                    clz.newInstance();
-                } catch (ClassNotFoundException e) {
-                    // Some classes may not be found depending on which
-                    // optional packages are installed.
-                    System.out.println("Ignoring ClassNotFoundException for redo operation " + className);
-                } catch (InstantiationException e) {
-                    String msg = "Unable to instantiate " + className +
-                    "; Check default constructor is defined.";
-                    System.err.println(msg);
-                    e.printStackTrace(System.err);
-                    allGood = false;
-                } catch (IllegalAccessException e) {
-                    String msg = "IllegalAccessException while instantiating " + className;
-                    System.err.println(msg);
-                    e.printStackTrace(System.err);
-                    allGood = false;
-                }
-            }
-        }
-        return allGood;
-    }
-
     private static Map<String, Class> sOpClassMap = new HashMap<String, Class>();
     private static List<ClassLoader> sOpClassLoaders = new ArrayList<ClassLoader>();
-
-    public static void main(String[] args) {
-        if (!checkSubclasses()) {
-            System.err.println(
-                    "Some RedoableOp subclasses are incomplete.  " +
-                "Hint: Make sure the subclass defines a default constructor.");
-            System.exit(1);
-        }
-    }
 
     /**
      * Register a class loader for instantiating redo op objects.
@@ -528,7 +484,7 @@ public abstract class RedoableOp {
         }
     }
 
-    private synchronized static Class loadOpClass(String className)
+    synchronized static Class loadOpClass(String className)
     throws ClassNotFoundException {
         Class clz = sOpClassMap.get(className);
         if (clz == null) {
