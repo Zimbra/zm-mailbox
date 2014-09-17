@@ -113,6 +113,9 @@ public class GetDomainInfo extends AdminDocumentHandler {
                 addAttrElementIfNotNull(entry, domain, ZAttrProvisioning.A_zimbraWebClientLoginURL);
                 addAttrElementIfNotNull(entry, domain, ZAttrProvisioning.A_zimbraWebClientLoginURLAllowedUA);
                 addAttrElementIfNotNull(entry, domain, ZAttrProvisioning.A_zimbraWebClientLoginURLAllowedIP);
+                addAttrElementIfNotNull(entry, domain, ZAttrProvisioning.A_zimbraWebClientLogoutURL);
+                addAttrElementIfNotNull(entry, domain, ZAttrProvisioning.A_zimbraWebClientLogoutURLAllowedUA);
+                addAttrElementIfNotNull(entry, domain, ZAttrProvisioning.A_zimbraWebClientLogoutURLAllowedIP);
                 addAttrElementIfNotNull(entry, domain, ZAttrProvisioning.A_zimbraWebClientMaxInputBufferLength);
             }
             return;
