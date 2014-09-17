@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010, 2012, 2013, 2014 Zimbra, Inc.
+ * Copyright (C) 2014 Zimbra, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -17,8 +17,16 @@
 package com.zimbra.soap;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.session.RemoteSoapSession;
 import com.zimbra.cs.session.SoapSession;
 
-public interface SoapSessionFactory {
-    public SoapSession getSoapSession(ZimbraSoapContext zsc) throws ServiceException;
+public class DefaultSoapSessionFactory implements SoapSessionFactory {
+
+    public SoapSession getSoapSession(ZimbraSoapContext zsc) throws ServiceException {
+        if (zsc.isAuthUserOnLocalhost()) {
+            return new SoapSession(zsc);
+        } else {
+            return new RemoteSoapSession(zsc);
+        }
+    }
 }

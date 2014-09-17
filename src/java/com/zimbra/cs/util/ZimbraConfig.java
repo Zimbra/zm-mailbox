@@ -33,7 +33,6 @@ import com.zimbra.cs.account.Server;
 import com.zimbra.cs.extension.ExtensionUtil;
 import com.zimbra.cs.mailbox.LocalSharedDeliveryCoordinator;
 import com.zimbra.cs.mailbox.MailboxManager;
-import com.zimbra.cs.mailbox.MemcachedSharedDeliveryCoordinator;
 import com.zimbra.cs.mailbox.MailboxPubSubAdapter;
 import com.zimbra.cs.mailbox.RedisMailboxPubSubAdapter;
 import com.zimbra.cs.mailbox.RedisSharedDeliveryCoordinator;
@@ -42,6 +41,8 @@ import com.zimbra.cs.redolog.DefaultRedoLogProvider;
 import com.zimbra.cs.redolog.RedoLogProvider;
 import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.store.file.FileBlobStore;
+import com.zimbra.soap.DefaultSoapSessionFactory;
+import com.zimbra.soap.SoapSessionFactory;
 
 /**
  * Singleton factories for Spring Configuration.
@@ -165,6 +166,28 @@ public class ZimbraConfig {
             } else {
                 instance = new LocalSharedDeliveryCoordinator();
             }
+        }
+        return instance;
+    }
+
+    @Bean(name="soapSessionFactory")
+    public SoapSessionFactory getInstance() {
+        SoapSessionFactory instance = null;
+        String className = LC.zimbra_class_soapsessionfactory.value();
+        if (className != null && !className.equals("")) {
+            try {
+                try {
+                    instance = (SoapSessionFactory) Class.forName(className).newInstance();
+                } catch (ClassNotFoundException cnfe) {
+                    // ignore and look in extensions
+                    instance = (SoapSessionFactory) ExtensionUtil.findClass(className).newInstance();
+                }
+            } catch (Exception e) {
+                ZimbraLog.account.error("could not instantiate SoapSessionFactory class '" + className + "'; defaulting to SoapSessionFactory", e);
+            }
+        }
+        if (instance == null) {
+            instance = new DefaultSoapSessionFactory();
         }
         return instance;
     }
