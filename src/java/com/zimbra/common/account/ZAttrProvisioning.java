@@ -8816,8 +8816,11 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMtaAuthEnabled = "zimbraMtaAuthEnabled";
 
     /**
-     * Host running SOAP service for use by MTA auth. Setting this sets
-     * zimbraMtaAuthURL via attr callback mechanism.
+     * Deprecated since: 8.6. Formally deprecated in 8.6 but has been unused
+     * since at least 7.0. MTA now uses all servers which have
+     * zimbraMtaAuthTarget set to TRUE. Orig desc: Host running SOAP service
+     * for use by MTA auth. Setting this sets zimbraMtaAuthURL via attr
+     * callback mechanism.
      */
     @ZAttr(id=309)
     public static final String A_zimbraMtaAuthHost = "zimbraMtaAuthHost";
@@ -8829,8 +8832,11 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMtaAuthTarget = "zimbraMtaAuthTarget";
 
     /**
-     * URL at which this MTA (via zimbra saslauthd) should authenticate. Set
-     * by setting zimbraMtaAuthHost.
+     * Deprecated since: 8.6. Formally deprecated in 8.6 but has been unused
+     * since at least 7.0. MTA now uses all servers which have
+     * zimbraMtaAuthTarget set to TRUE. Orig desc: URL at which this MTA (via
+     * zimbra saslauthd) should authenticate. Set by setting
+     * zimbraMtaAuthHost.
      */
     @ZAttr(id=310)
     public static final String A_zimbraMtaAuthURL = "zimbraMtaAuthURL";
