@@ -171,7 +171,7 @@ public class ZimbraConfig {
     }
 
     @Bean(name="soapSessionFactory")
-    public SoapSessionFactory getInstance() {
+    public SoapSessionFactory soapSessionFactoryBean() {
         SoapSessionFactory instance = null;
         String className = LC.zimbra_class_soapsessionfactory.value();
         if (className != null && !className.equals("")) {
