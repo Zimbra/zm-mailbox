@@ -1838,6 +1838,8 @@ returned inline:
 </BrowseResponse>
 
   {browse-by} = domains|attachments|objects
+                where "objects" means objects in message body content recognized by Zimlets via <contentObject>
+                configuration.
   {regex-string} = return only those results which match the specified regular expression
   {max} = return only a maximum number of entries as requested.  If more than {max}
           results exist, the server will return the first {max}, sorted by frequency

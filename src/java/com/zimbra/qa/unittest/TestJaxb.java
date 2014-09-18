@@ -43,6 +43,7 @@ import com.zimbra.client.ZMailbox;
 import com.zimbra.client.ZMessage;
 import com.zimbra.client.ZSearchParams;
 import com.zimbra.common.httpclient.HttpClientUtil;
+import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.SoapProtocol;
@@ -82,9 +83,9 @@ import com.zimbra.soap.type.SearchHit;
 public class TestJaxb extends TestCase {
 
     private static final String USER_NAME = "user1";
-    private static final String ORGANIZER = "user3";
-    private static final String ATTENDEE1 = "user1";
+    private static final String ATTENDEE1 = USER_NAME;
     private static final String ATTENDEE2 = "user2";
+    private static final String ORGANIZER = "user3";
     private static final String NAME_PREFIX = TestJaxb.class.getSimpleName();
 
     private Marshaller marshaller;
@@ -101,7 +102,7 @@ public class TestJaxb extends TestCase {
     }
 
     private void cleanUp() throws Exception {
-        TestUtil.deleteTestData(USER_NAME, NAME_PREFIX);
+        TestUtil.deleteTestData(ORGANIZER, NAME_PREFIX);
         TestUtil.deleteTestData(ATTENDEE1, NAME_PREFIX);
         TestUtil.deleteTestData(ATTENDEE2, NAME_PREFIX);
     }
@@ -421,15 +422,20 @@ public class TestJaxb extends TestCase {
         Assert.assertNotNull("JAXB BrowseResponse datas", datas);
     }
 
+    static String bodyWithObject = "contains http://www.example.com/fun so treat as containing com_zimbra_url object";
     @Test
     public void testBrowseRequestObjects() throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
-        TestUtil.addMessage(mbox, NAME_PREFIX);
+        MessageBuilder mb = new MessageBuilder();
+        String raw = mb.withSubject(NAME_PREFIX).withBody(bodyWithObject)
+                .withContentType(MimeConstants.CT_TEXT_PLAIN).create();
+        TestUtil.addRawMessage(mbox, raw);
         BrowseRequest browseRequest = new BrowseRequest("objects" /* browseBy */, "" /* regex */, 10);
         BrowseResponse browseResponse = doBrowseRequest(browseRequest);
         Assert.assertNotNull("JAXB BrowseResponse object", browseResponse);
         List<BrowseData> datas = browseResponse.getBrowseDatas();
         Assert.assertNotNull("JAXB BrowseResponse datas", datas);
+        Assert.assertTrue("BrowseDatas size should be greater than 1", datas.size() >= 1);
     }
 
     public Element doBadBrowseRequest(BrowseRequest browseRequest) throws Exception {
@@ -459,8 +465,14 @@ public class TestJaxb extends TestCase {
     @Test
     public void testBrowseRequestObjectsBadRegex() throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
-        TestUtil.addMessage(mbox, NAME_PREFIX);
-        BrowseRequest browseRequest = new BrowseRequest("objects" /* browseBy */, BAD_REGEX /* regex */, 10);
+        MessageBuilder mb = new MessageBuilder();
+        String raw = mb.withSubject(NAME_PREFIX).withBody(bodyWithObject)
+                .withContentType(MimeConstants.CT_TEXT_PLAIN).create();
+        TestUtil.addRawMessage(mbox, raw);
+        BrowseRequest browseRequest = new BrowseRequest("objects" /* browseBy */, "" /* regex */, 10);
+        BrowseResponse browseResponse = doBrowseRequest(browseRequest);
+        Assert.assertTrue("BrowseDatas size should be greater than 1", browseResponse.getBrowseDatas().size() >= 1);
+        browseRequest = new BrowseRequest("objects" /* browseBy */, BAD_REGEX /* regex */, 10);
         Element envelope = doBadBrowseRequest(browseRequest);
         Assert.assertNotNull("Envelope", envelope);
         Assert.assertTrue("Error contained in SOAP response",

@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -240,7 +240,9 @@ public abstract class MimeHandler {
         throws MimeHandlerException, ObjectHandlerException, ServiceException {
 
         IndexDocument doc = new IndexDocument(new Document());
-        doc.addMimeType(new MimeTypeTokenStream(getContentType()));
+        try (MimeTypeTokenStream tokenStream = new MimeTypeTokenStream(getContentType())) {
+            doc.addMimeType(tokenStream);
+        }
 
         addFields(doc.toDocument());
         String content = getContent();
@@ -269,10 +271,9 @@ public abstract class MimeHandler {
             return;
         }
 
-        List<?> objects = ObjectHandler.getObjectHandlers();
+        List<ObjectHandler> objects = ObjectHandler.getObjectHandlers();
         StringBuffer l_objects = new StringBuffer();
-        for (Object obj : objects) {
-            ObjectHandler h = (ObjectHandler) obj;
+        for (ObjectHandler h : objects) {
             if (!h.isIndexingEnabled()) {
                 continue;
             }
