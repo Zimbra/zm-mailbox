@@ -1666,12 +1666,14 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>whether to run HTTP or HTTPS or both/mixed mode or redirect mode.  See also related attributes zimbraMailPort and zimbraMailSSLPort</desc>
 </attr>
 
-<attr id="309" name="zimbraMtaAuthHost" type="astring" max="256" callback="MtaAuthHost" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mta">
+<attr id="309" name="zimbraMtaAuthHost" type="astring" max="256" callback="MtaAuthHost" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mta" deprecatedSince="8.6">
   <desc>Host running SOAP service for use by MTA auth.  Setting this sets zimbraMtaAuthURL via attr callback mechanism.</desc>
+  <deprecateDesc>Formally deprecated in 8.6 but has been unused since at least 7.0. MTA now uses all servers which have zimbraMtaAuthTarget set to TRUE</deprecateDesc>
 </attr>
 
-<attr id="310" name="zimbraMtaAuthURL" type="astring" max="256" immutable="1" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mta">
+<attr id="310" name="zimbraMtaAuthURL" type="astring" max="256" immutable="1" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mta" deprecatedSince="8.6">
   <desc>URL at which this MTA (via zimbra saslauthd) should authenticate.  Set by setting zimbraMtaAuthHost.</desc>
+  <deprecateDesc>Formally deprecated in 8.6 but has been unused since at least 7.0. MTA now uses all servers which have zimbraMtaAuthTarget set to TRUE</deprecateDesc>
 </attr>
 
 <attr id="311" name="zimbraMtaMyNetworks" type="astring" max="10240" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mta">
