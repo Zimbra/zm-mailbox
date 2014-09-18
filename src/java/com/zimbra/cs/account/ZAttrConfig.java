@@ -28267,8 +28267,11 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Host running SOAP service for use by MTA auth. Setting this sets
-     * zimbraMtaAuthURL via attr callback mechanism.
+     * Deprecated since: 8.6. Formally deprecated in 8.6 but has been unused
+     * since at least 7.0. MTA now uses all servers which have
+     * zimbraMtaAuthTarget set to TRUE. Orig desc: Host running SOAP service
+     * for use by MTA auth. Setting this sets zimbraMtaAuthURL via attr
+     * callback mechanism.
      *
      * @return zimbraMtaAuthHost, or empty array if unset
      */
@@ -28278,8 +28281,11 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Host running SOAP service for use by MTA auth. Setting this sets
-     * zimbraMtaAuthURL via attr callback mechanism.
+     * Deprecated since: 8.6. Formally deprecated in 8.6 but has been unused
+     * since at least 7.0. MTA now uses all servers which have
+     * zimbraMtaAuthTarget set to TRUE. Orig desc: Host running SOAP service
+     * for use by MTA auth. Setting this sets zimbraMtaAuthURL via attr
+     * callback mechanism.
      *
      * @param zimbraMtaAuthHost new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -28292,8 +28298,11 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Host running SOAP service for use by MTA auth. Setting this sets
-     * zimbraMtaAuthURL via attr callback mechanism.
+     * Deprecated since: 8.6. Formally deprecated in 8.6 but has been unused
+     * since at least 7.0. MTA now uses all servers which have
+     * zimbraMtaAuthTarget set to TRUE. Orig desc: Host running SOAP service
+     * for use by MTA auth. Setting this sets zimbraMtaAuthURL via attr
+     * callback mechanism.
      *
      * @param zimbraMtaAuthHost new value
      * @param attrs existing map to populate, or null to create a new map
@@ -28307,8 +28316,11 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Host running SOAP service for use by MTA auth. Setting this sets
-     * zimbraMtaAuthURL via attr callback mechanism.
+     * Deprecated since: 8.6. Formally deprecated in 8.6 but has been unused
+     * since at least 7.0. MTA now uses all servers which have
+     * zimbraMtaAuthTarget set to TRUE. Orig desc: Host running SOAP service
+     * for use by MTA auth. Setting this sets zimbraMtaAuthURL via attr
+     * callback mechanism.
      *
      * @param zimbraMtaAuthHost new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -28321,8 +28333,11 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Host running SOAP service for use by MTA auth. Setting this sets
-     * zimbraMtaAuthURL via attr callback mechanism.
+     * Deprecated since: 8.6. Formally deprecated in 8.6 but has been unused
+     * since at least 7.0. MTA now uses all servers which have
+     * zimbraMtaAuthTarget set to TRUE. Orig desc: Host running SOAP service
+     * for use by MTA auth. Setting this sets zimbraMtaAuthURL via attr
+     * callback mechanism.
      *
      * @param zimbraMtaAuthHost new to add to existing values
      * @param attrs existing map to populate, or null to create a new map
@@ -28336,8 +28351,11 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Host running SOAP service for use by MTA auth. Setting this sets
-     * zimbraMtaAuthURL via attr callback mechanism.
+     * Deprecated since: 8.6. Formally deprecated in 8.6 but has been unused
+     * since at least 7.0. MTA now uses all servers which have
+     * zimbraMtaAuthTarget set to TRUE. Orig desc: Host running SOAP service
+     * for use by MTA auth. Setting this sets zimbraMtaAuthURL via attr
+     * callback mechanism.
      *
      * @param zimbraMtaAuthHost existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -28350,8 +28368,11 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Host running SOAP service for use by MTA auth. Setting this sets
-     * zimbraMtaAuthURL via attr callback mechanism.
+     * Deprecated since: 8.6. Formally deprecated in 8.6 but has been unused
+     * since at least 7.0. MTA now uses all servers which have
+     * zimbraMtaAuthTarget set to TRUE. Orig desc: Host running SOAP service
+     * for use by MTA auth. Setting this sets zimbraMtaAuthURL via attr
+     * callback mechanism.
      *
      * @param zimbraMtaAuthHost existing value to remove
      * @param attrs existing map to populate, or null to create a new map
@@ -28365,8 +28386,11 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Host running SOAP service for use by MTA auth. Setting this sets
-     * zimbraMtaAuthURL via attr callback mechanism.
+     * Deprecated since: 8.6. Formally deprecated in 8.6 but has been unused
+     * since at least 7.0. MTA now uses all servers which have
+     * zimbraMtaAuthTarget set to TRUE. Orig desc: Host running SOAP service
+     * for use by MTA auth. Setting this sets zimbraMtaAuthURL via attr
+     * callback mechanism.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -28378,8 +28402,11 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Host running SOAP service for use by MTA auth. Setting this sets
-     * zimbraMtaAuthURL via attr callback mechanism.
+     * Deprecated since: 8.6. Formally deprecated in 8.6 but has been unused
+     * since at least 7.0. MTA now uses all servers which have
+     * zimbraMtaAuthTarget set to TRUE. Orig desc: Host running SOAP service
+     * for use by MTA auth. Setting this sets zimbraMtaAuthURL via attr
+     * callback mechanism.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -28454,8 +28481,11 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * URL at which this MTA (via zimbra saslauthd) should authenticate. Set
-     * by setting zimbraMtaAuthHost.
+     * Deprecated since: 8.6. Formally deprecated in 8.6 but has been unused
+     * since at least 7.0. MTA now uses all servers which have
+     * zimbraMtaAuthTarget set to TRUE. Orig desc: URL at which this MTA (via
+     * zimbra saslauthd) should authenticate. Set by setting
+     * zimbraMtaAuthHost.
      *
      * @return zimbraMtaAuthURL, or empty array if unset
      */
@@ -28465,8 +28495,11 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * URL at which this MTA (via zimbra saslauthd) should authenticate. Set
-     * by setting zimbraMtaAuthHost.
+     * Deprecated since: 8.6. Formally deprecated in 8.6 but has been unused
+     * since at least 7.0. MTA now uses all servers which have
+     * zimbraMtaAuthTarget set to TRUE. Orig desc: URL at which this MTA (via
+     * zimbra saslauthd) should authenticate. Set by setting
+     * zimbraMtaAuthHost.
      *
      * @param zimbraMtaAuthURL new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -28479,8 +28512,11 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * URL at which this MTA (via zimbra saslauthd) should authenticate. Set
-     * by setting zimbraMtaAuthHost.
+     * Deprecated since: 8.6. Formally deprecated in 8.6 but has been unused
+     * since at least 7.0. MTA now uses all servers which have
+     * zimbraMtaAuthTarget set to TRUE. Orig desc: URL at which this MTA (via
+     * zimbra saslauthd) should authenticate. Set by setting
+     * zimbraMtaAuthHost.
      *
      * @param zimbraMtaAuthURL new value
      * @param attrs existing map to populate, or null to create a new map
@@ -28494,8 +28530,11 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * URL at which this MTA (via zimbra saslauthd) should authenticate. Set
-     * by setting zimbraMtaAuthHost.
+     * Deprecated since: 8.6. Formally deprecated in 8.6 but has been unused
+     * since at least 7.0. MTA now uses all servers which have
+     * zimbraMtaAuthTarget set to TRUE. Orig desc: URL at which this MTA (via
+     * zimbra saslauthd) should authenticate. Set by setting
+     * zimbraMtaAuthHost.
      *
      * @param zimbraMtaAuthURL new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -28508,8 +28547,11 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * URL at which this MTA (via zimbra saslauthd) should authenticate. Set
-     * by setting zimbraMtaAuthHost.
+     * Deprecated since: 8.6. Formally deprecated in 8.6 but has been unused
+     * since at least 7.0. MTA now uses all servers which have
+     * zimbraMtaAuthTarget set to TRUE. Orig desc: URL at which this MTA (via
+     * zimbra saslauthd) should authenticate. Set by setting
+     * zimbraMtaAuthHost.
      *
      * @param zimbraMtaAuthURL new to add to existing values
      * @param attrs existing map to populate, or null to create a new map
@@ -28523,8 +28565,11 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * URL at which this MTA (via zimbra saslauthd) should authenticate. Set
-     * by setting zimbraMtaAuthHost.
+     * Deprecated since: 8.6. Formally deprecated in 8.6 but has been unused
+     * since at least 7.0. MTA now uses all servers which have
+     * zimbraMtaAuthTarget set to TRUE. Orig desc: URL at which this MTA (via
+     * zimbra saslauthd) should authenticate. Set by setting
+     * zimbraMtaAuthHost.
      *
      * @param zimbraMtaAuthURL existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -28537,8 +28582,11 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * URL at which this MTA (via zimbra saslauthd) should authenticate. Set
-     * by setting zimbraMtaAuthHost.
+     * Deprecated since: 8.6. Formally deprecated in 8.6 but has been unused
+     * since at least 7.0. MTA now uses all servers which have
+     * zimbraMtaAuthTarget set to TRUE. Orig desc: URL at which this MTA (via
+     * zimbra saslauthd) should authenticate. Set by setting
+     * zimbraMtaAuthHost.
      *
      * @param zimbraMtaAuthURL existing value to remove
      * @param attrs existing map to populate, or null to create a new map
@@ -28552,8 +28600,11 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * URL at which this MTA (via zimbra saslauthd) should authenticate. Set
-     * by setting zimbraMtaAuthHost.
+     * Deprecated since: 8.6. Formally deprecated in 8.6 but has been unused
+     * since at least 7.0. MTA now uses all servers which have
+     * zimbraMtaAuthTarget set to TRUE. Orig desc: URL at which this MTA (via
+     * zimbra saslauthd) should authenticate. Set by setting
+     * zimbraMtaAuthHost.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -28565,8 +28616,11 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * URL at which this MTA (via zimbra saslauthd) should authenticate. Set
-     * by setting zimbraMtaAuthHost.
+     * Deprecated since: 8.6. Formally deprecated in 8.6 but has been unused
+     * since at least 7.0. MTA now uses all servers which have
+     * zimbraMtaAuthTarget set to TRUE. Orig desc: URL at which this MTA (via
+     * zimbra saslauthd) should authenticate. Set by setting
+     * zimbraMtaAuthHost.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
