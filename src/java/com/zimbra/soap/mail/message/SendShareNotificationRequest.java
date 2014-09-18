@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013, 2014 Zimbra, Inc.
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -21,17 +21,17 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import com.google.common.base.Objects;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlEnum;
-import javax.xml.bind.annotation.XmlEnumValue;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import com.google.common.base.Objects;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.mail.type.EmailAddrInfo;
@@ -75,7 +75,7 @@ public class SendShareNotificationRequest {
      *   by the system to send notification for a grant expiry.
      */
     @XmlAttribute(name=MailConstants.A_ACTION /* action */, required=false)
-    private ShareNotifAction action;
+    private Action action;
 
     public SendShareNotificationRequest() {
     }
@@ -103,7 +103,7 @@ public class SendShareNotificationRequest {
             .add("item", item)
             .add("email", emailAddresses)
             .add("notes", notes)
-           .add("action", action);
+            .add("action", action);
     }
 
     @Override
@@ -111,40 +111,28 @@ public class SendShareNotificationRequest {
         return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 
-    public ShareNotifAction getAction() {
+    public Action getAction() {
         return action;
     }
 
-    public void setAction(ShareNotifAction action) {
+    public void setAction(Action action) {
         this.action = action;
     }
 
     @XmlEnum
-    public enum ShareNotifAction {
-        @XmlEnumValue("edit") edit("edit"),
-        @XmlEnumValue("revoke") revoke("revoke"),
-        @XmlEnumValue("expire") expire("expire");
-        private final String name;
+    public static enum Action {
+        edit, revoke, expire;
 
-        private ShareNotifAction(String name) {
-            this.name = name;
-        }
-
-        public static ShareNotifAction fromString(String value) throws ServiceException {
+        public static Action fromString(String value) throws ServiceException {
             if (value == null) {
                 return null;
             }
             try {
-                return ShareNotifAction.valueOf(value);
+                return Action.valueOf(value);
             } catch (IllegalArgumentException e) {
                 throw ServiceException.INVALID_REQUEST(
-                        "Invalid value: " + value + ", valid values: " + Arrays.asList(ShareNotifAction.values()), null);
+                        "Invalid value: " + value + ", valid values: " + Arrays.asList(Action.values()), null);
             }
-        }
-
-        @Override
-        public String toString() {
-            return name;
         }
     }
 }

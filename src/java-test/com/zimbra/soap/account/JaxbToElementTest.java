@@ -41,7 +41,6 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.dom4j.QName;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.base.Charsets;
@@ -209,7 +208,6 @@ public class JaxbToElementTest {
     }
 
     @Test
-    @Ignore("element order changes in jdk8?")
     public void jaxBToElementTest() throws Exception {
         for (int cnt = 1; cnt <= iterationNum;cnt++) {
             Element el = JaxbUtil.jaxbToElement(getInfoRespJaxb);
@@ -788,7 +786,6 @@ Caused by: javax.xml.bind.UnmarshalException: Namespace URIs and local names to 
     }
 
     @Test
-    @Ignore("Element order changes in JDK8?")
     public void standalonElementToJaxbTest() throws Exception {
         InputStream is = getClass().getResourceAsStream("retentionPolicy.xml");
         Element elem = Element.parseXML(is);
@@ -803,7 +800,6 @@ Caused by: javax.xml.bind.UnmarshalException: Namespace URIs and local names to 
     }
 
     @Test
-    @Ignore("Element order changes in JDK8?")
     public void IdentityToStringTest () throws Exception {
         com.zimbra.soap.account.type.Identity id =
                 new com.zimbra.soap.account.type.Identity("hello", null);
