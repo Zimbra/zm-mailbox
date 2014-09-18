@@ -41,7 +41,7 @@ SECTION 1: BSD-STYLE, MIT-STYLE, OR SIMILAR STYLE LICENSES
    >>> bouncycastle-1.46
    >>> bouncycastle-zimbra-20110708
    >>> chunkin-nginx-module-0.23rc2
-   >>> curl-7.37.0
+   >>> curl-7.38.0
    >>> cyrus-sasl-zimbra-2.1.26
    >>> dom4j-1.5.2
    >>> ext.ux.touchcalendar-0.1
@@ -77,7 +77,7 @@ SECTION 1: BSD-STYLE, MIT-STYLE, OR SIMILAR STYLE LICENSES
    >>> nist-sip-1.2
    >>> nviennot-nginx-tcp-keepalive-4d7186d
    >>> opendkim-2.9.2
-   >>> openldap-2.4.39
+   >>> openldap-2.4.40
    >>> openssl-1.0.1h
    >>> perl-data-uuid-1.219
    >>> perl-geography-countries-2009041301
@@ -875,7 +875,7 @@ NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
->>> curl-7.37.0
+>>> curl-7.38.0
 
 COPYRIGHT AND PERMISSION NOTICE
 
@@ -19786,7 +19786,7 @@ Portions Copyright (c) 2010-2012, The Trusted Domain Project.
 All rights reserved.
 
 
->>> openldap-2.4.39
+>>> openldap-2.4.40
 
 The OpenLDAP Public License
 Version 2.8, 17 August 2003
