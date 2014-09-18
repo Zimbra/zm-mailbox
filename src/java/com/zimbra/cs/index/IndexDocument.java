@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2009, 2010, 2011, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -21,6 +21,7 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 
 import com.google.common.base.Strings;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.index.analysis.FieldTokenStream;
 import com.zimbra.cs.index.analysis.MimeTypeTokenStream;
 import com.zimbra.cs.index.analysis.RFC822AddressTokenStream;
@@ -197,6 +198,7 @@ public final class IndexDocument {
     }
 
     public void addObjects(String value) {
+        ZimbraLog.index.info("GREN IndexDocument.addObjects(%s)\n%s", value, ZimbraLog.getStackTrace(20));
         document.add(new Field(LuceneFields.L_OBJECTS, value, Field.Store.NO, Field.Index.ANALYZED));
     }
 
