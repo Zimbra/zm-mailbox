@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -47,6 +47,7 @@ import org.codehaus.jackson.map.introspect.JacksonAnnotationIntrospector;
 import org.codehaus.jackson.xc.JaxbAnnotationIntrospector;
 import org.dom4j.QName;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
@@ -1496,6 +1497,7 @@ header="X-Spam-Score"/>
      * How to achieve a wrapped list where no element for the wrapper will appear in the XML if the list is empty.
      */
     @Test
+    @Ignore
     public void wrapperAbsentIfEmpty() throws Exception {
         WrapperAbsentIfEmpty jaxb = new  WrapperAbsentIfEmpty();
         Element jsonJaxbElem = JacksonUtil.jaxbToJSONElement(jaxb);
