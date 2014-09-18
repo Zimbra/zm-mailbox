@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -17,10 +17,6 @@
 
 package com.zimbra.soap.mail.type;
 
-import com.google.common.base.Objects;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-
 import java.util.Collections;
 import java.util.List;
 
@@ -29,6 +25,9 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
+import com.google.common.base.Objects;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.base.AlarmInfoInterface;
 import com.zimbra.soap.base.CalOrganizerInterface;
@@ -59,21 +58,21 @@ implements InviteComponentInterface
      * @zm-api-field-description Categories - for iCalendar CATEGORY properties
      */
     @XmlElement(name=MailConstants.E_CAL_CATEGORY /* category */, required=false)
-    private List<String> categories = Lists.newArrayList();
+    private final List<String> categories = Lists.newArrayList();
 
     /**
      * @zm-api-field-tag invite-comp-comment
      * @zm-api-field-description Comments - for iCalendar COMMENT properties
      */
     @XmlElement(name=MailConstants.E_CAL_COMMENT /* comment */, required=false)
-    private List<String> comments = Lists.newArrayList();
+    private final List<String> comments = Lists.newArrayList();
 
     /**
      * @zm-api-field-tag invite-comp-contact
      * @zm-api-field-description Contacts - for iCalendar CONTACT properties
      */
     @XmlElement(name=MailConstants.E_CAL_CONTACT /* contact */, required=false)
-    private List<String> contacts = Lists.newArrayList();
+    private final List<String> contacts = Lists.newArrayList();
 
     /**
      * @zm-api-field-description for iCalendar GEO property
@@ -85,19 +84,19 @@ implements InviteComponentInterface
      * @zm-api-field-description Attendees
      */
     @XmlElement(name=MailConstants.E_CAL_ATTENDEE /* at */, required=false)
-    private List<CalendarAttendee> attendees = Lists.newArrayList();
+    private final List<CalendarAttendee> attendees = Lists.newArrayList();
 
     /**
      * @zm-api-field-description Alarm information
      */
     @XmlElement(name=MailConstants.E_CAL_ALARM /* alarm */, required=false)
-    private List<AlarmInfo> alarms = Lists.newArrayList();
+    private final List<AlarmInfo> alarms = Lists.newArrayList();
 
     /**
      * @zm-api-field-description iCalender XPROP properties
      */
     @XmlElement(name=MailConstants.E_CAL_XPROP /* xprop */, required=false)
-    private List<XProp> xProps = Lists.newArrayList();
+    private final List<XProp> xProps = Lists.newArrayList();
 
     /**
      * @zm-api-field-tag invite-comp-fragment
@@ -139,12 +138,14 @@ implements InviteComponentInterface
     @XmlElement(name=MailConstants.E_CAL_EXCEPTION_ID /* exceptId */, required=false)
     private ExceptionRecurIdInfo exceptionId;
 
+    // For JSON, wrapped in array because ToXML.encodeDtStart used addElement instead of addUniqueElement :-(
     /**
      * @zm-api-field-description Start date-time (required)
      */
     @XmlElement(name=MailConstants.E_CAL_START_TIME /* s */, required=false)
     private DtTimeInfo dtStart;
 
+    // For JSON, wrapped in array because ToXML.encodeDtEnd used addElement instead of addUniqueElement :-(
     /**
      * @zm-api-field-description End date-time
      */
@@ -157,11 +158,7 @@ implements InviteComponentInterface
     @XmlElement(name=MailConstants.E_CAL_DURATION /* dur */, required=false)
     private DurationInfo duration;
 
-    /**
-     * no-argument constructor wanted by JAXB
-     */
-    protected InviteComponent() {
-        this((String) null, -1, false);
+    public InviteComponent() {
     }
 
     public InviteComponent(String method, int componentNum, boolean rsvp) {

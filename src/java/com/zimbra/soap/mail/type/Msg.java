@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -16,10 +16,6 @@
  */
 
 package com.zimbra.soap.mail.type;
-
-import com.google.common.base.Objects;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 
 import java.util.Collections;
 import java.util.List;
@@ -32,9 +28,12 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.XmlValue;
 
+import com.google.common.base.Objects;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.zimbra.common.soap.MailConstants;
-
 import com.zimbra.soap.json.jackson.annotate.ZimbraJsonAttribute;
+import com.zimbra.soap.json.jackson.annotate.ZimbraUniqueElement;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = {"content", "headers", "mimePart", "attachments", "invite",
@@ -114,18 +113,21 @@ public class Msg {
     /**
      * @zm-api-field-description Mime part information
      */
+    @ZimbraUniqueElement
     @XmlElement(name=MailConstants.E_MIMEPART /* mp */, required=false)
     private MimePartInfo mimePart;
 
     /**
      * @zm-api-field-description Attachments information
      */
+    @ZimbraUniqueElement
     @XmlElement(name=MailConstants.E_ATTACH /* attach */, required=false)
     private AttachmentsInfo attachments;
 
     /**
      * @zm-api-field-description Invite information
      */
+    @ZimbraUniqueElement
     @XmlElement(name=MailConstants.E_INVITE /* inv */, required=false)
     private InvitationInfo invite;
 
@@ -133,7 +135,7 @@ public class Msg {
      * @zm-api-field-description Email address information
      */
     @XmlElement(name=MailConstants.E_EMAIL /* e */, required=false)
-    private List<EmailAddrInfo> emailAddresses = Lists.newArrayList();
+    private final List<EmailAddrInfo> emailAddresses = Lists.newArrayList();
 
     // ParseMimeMessage.parseMimeMsgSoap looks for E_CAL_TZ but does no further processing.
     // CalendarUtils.parseInviteElementCommon looks for timezones in parent element
@@ -141,7 +143,7 @@ public class Msg {
      * @zm-api-field-description Timezones
      */
     @XmlElement(name=MailConstants.E_CAL_TZ /* tz */, required=false)
-    private List<CalTZInfo> timezones = Lists.newArrayList();
+    private final List<CalTZInfo> timezones = Lists.newArrayList();
 
     // ParseMimeMessage.parseMimeMsgSoap looks for E_FRAG but does nothing with it.
     /**
@@ -157,7 +159,7 @@ public class Msg {
      * @zm-api-field-description Other elements
      */
     @XmlAnyElement
-    private List<org.w3c.dom.Element> extraElements = Lists.newArrayList();
+    private final List<org.w3c.dom.Element> extraElements = Lists.newArrayList();
 
     public Msg() {
     }
@@ -188,8 +190,8 @@ public class Msg {
         }
     }
 
-    public void addEmailAddresse(EmailAddrInfo emailAddresse) {
-        this.emailAddresses.add(emailAddresse);
+    public void addEmailAddress(EmailAddrInfo emailAddress) {
+        this.emailAddresses.add(emailAddress);
     }
 
     public void setTimezones(Iterable <CalTZInfo> timezones) {

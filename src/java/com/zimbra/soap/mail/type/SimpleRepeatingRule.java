@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -17,10 +17,6 @@
 
 package com.zimbra.soap.mail.type;
 
-import com.google.common.base.Objects;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-
 import java.util.Collections;
 import java.util.List;
 
@@ -29,6 +25,9 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 
+import com.google.common.base.Objects;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.base.ByDayRuleInterface;
 import com.zimbra.soap.base.ByHourRuleInterface;
@@ -142,7 +141,7 @@ implements RecurRuleBase, SimpleRepeatingRuleInterface {
      * @zm-api-field-description X Name rules
      */
     @XmlElement(name=MailConstants.E_CAL_RULE_XNAME /* rule-x-name */, required=false)
-    private List<XNameRule> xNames = Lists.newArrayList();
+    private final List<XNameRule> xNames = Lists.newArrayList();
 
     /**
      * no-argument constructor wanted by JAXB
@@ -156,8 +155,13 @@ implements RecurRuleBase, SimpleRepeatingRuleInterface {
         this.frequency = frequency;
     }
 
-    @Override
-    public SimpleRepeatingRuleInterface createFromFrequency(String frequency) {
+    public static SimpleRepeatingRule createFromFrequencyAndInterval(String freq, IntervalRule ir) {
+        SimpleRepeatingRule srr = new SimpleRepeatingRule(freq);
+        srr.setInterval(ir);
+        return srr;
+    }
+
+    public static SimpleRepeatingRuleInterface createFromFrequency(String frequency) {
         return new SimpleRepeatingRule(frequency);
     }
 

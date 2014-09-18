@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -17,10 +17,6 @@
 
 package com.zimbra.soap.mail.type;
 
-import com.google.common.base.Objects;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-
 import java.util.Collections;
 import java.util.List;
 
@@ -29,6 +25,9 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElements;
 
+import com.google.common.base.Objects;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.base.RecurRuleBaseInterface;
 import com.zimbra.soap.base.RecurrenceInfoInterface;
@@ -48,9 +47,15 @@ implements RecurRuleBase, RecurrenceInfoInterface {
         @XmlElement(name=MailConstants.E_CAL_DATES /* dates */, type=SingleDates.class),
         @XmlElement(name=MailConstants.E_CAL_RULE /* rule */, type=SimpleRepeatingRule.class)
     })
-    private List<RecurRuleBase> rules = Lists.newArrayList();
+    private final List<RecurRuleBase> rules = Lists.newArrayList();
 
     public RecurrenceInfo() {
+    }
+
+    public static RecurrenceInfo create(RecurRuleBase rule) {
+        RecurrenceInfo ri = new RecurrenceInfo();
+        ri.addRule(rule);
+        return ri;
     }
 
     public void setRules(Iterable <RecurRuleBase> rules) {

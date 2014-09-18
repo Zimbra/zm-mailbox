@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -17,11 +17,11 @@
 
 package com.zimbra.soap.admin.type;
 
-import com.google.common.base.Objects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 
+import com.google.common.base.Objects;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.base.DtTimeInfoInterface;
 
@@ -39,7 +39,7 @@ implements DtTimeInfoInterface {
      *     MM   - 2 digit month
      *     DD   - 2 digit day
      * Optionally:
-     *     'T' the literal char "T" then 
+     *     'T' the literal char "T" then
      *     HH - 2 digit hour (00-23)
      *     MM - 2 digit minute (00-59)
      *     SS - 2 digit second (00-59)
@@ -79,9 +79,14 @@ implements DtTimeInfoInterface {
         this.dateTime = dateTime;
     }
 
-    @Override
-    public DtTimeInfoInterface create(String dateTime) {
+    public static DtTimeInfoInterface create(String dateTime) {
         return new DtTimeInfo(dateTime);
+    }
+
+    public static DtTimeInfo createForDatetimeAndZone(String dt, String tz) {
+        DtTimeInfo dti = new DtTimeInfo(dt);
+        dti.setTimezone(tz);
+        return dti;
     }
 
     @Override
