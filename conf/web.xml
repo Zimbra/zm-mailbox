@@ -87,7 +87,7 @@
     
     <init-param>
      <param-name>Rules</param-name>
-     <param-value>/service:min=1;max=10%, /soap:min=1;max=40%, /zimbra:min=1;max=40%, /zimbraAdmin:min=1</param-value>
+     <param-value>/service:max=10%, /soap:max=40%, /zimbra:max=40%</param-value>
     </init-param>
   </filter>
 

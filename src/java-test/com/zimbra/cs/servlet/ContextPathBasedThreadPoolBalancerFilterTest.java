@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -92,34 +92,15 @@ public class ContextPathBasedThreadPoolBalancerFilterTest {
     }
 
     @Test
-    public void failInitWhenSumOfMinsExceedsMaxPoolSize() throws Exception {
-        final String rules = "/app1:min=10, /app2:min=10";
-        JettyMonitor.setThreadPool(new QueuedThreadPool(18));
-
-        // Mock up a FilterConfig
-        FilterConfig filterConfig = EasyMock.createNiceMock(FilterConfig.class);
-        EasyMock.expect(filterConfig.getInitParameter(ContextPathBasedThreadPoolBalancerFilter.RULES_INIT_PARAM)).andReturn(rules);
-
-        // Perform test (10+10 > 19)
-        EasyMock.replay(filterConfig);
-        ContextPathBasedThreadPoolBalancerFilter filter = new ContextPathBasedThreadPoolBalancerFilter();
-        try {
-            filter.init(filterConfig);
-            Assert.fail("Expected exception during init when sum of minimums exceeds pool max");
-        } catch (ServletException e) {}
-        EasyMock.verify(filterConfig);
-    }
-
-    @Test
     public void successfulInit() throws Exception {
-        final String rules = "/app1:min=10, /app2:min=10";
+        final String rules = "/app1:max=10, /app2:max=10";
         JettyMonitor.setThreadPool(new QueuedThreadPool(20));
 
         // Mock up a FilterConfig
         FilterConfig filterConfig = EasyMock.createNiceMock(FilterConfig.class);
         EasyMock.expect(filterConfig.getInitParameter(ContextPathBasedThreadPoolBalancerFilter.RULES_INIT_PARAM)).andReturn(rules);
 
-        // Success test (10+10 <= 20)
+        // Success test
         EasyMock.replay(filterConfig);
         ContextPathBasedThreadPoolBalancerFilter filter = new ContextPathBasedThreadPoolBalancerFilter();
         filter.init(filterConfig);
@@ -130,7 +111,7 @@ public class ContextPathBasedThreadPoolBalancerFilterTest {
     @Ignore("Does not run reliably due to non-deterministic Jetty thead pool internals")
     @Test
     public void nosuspend() throws Exception {
-        final String rules = "/app1:min=1";
+        final String rules = "/app1:max=1";
         final int THREAD_POOL_SIZE = 2;
 
         QueuedThreadPool queuedThreadPool = new QueuedThreadPool(THREAD_POOL_SIZE, THREAD_POOL_SIZE, 100);
@@ -199,8 +180,8 @@ public class ContextPathBasedThreadPoolBalancerFilterTest {
 
     @Ignore("Does not run reliably due to non-deterministic Jetty thead pool internals")
     @Test
-    public void suspendToEnforceMin() throws Exception {
-        final String rules = "/app1:min=1";
+    public void suspendToEnforceMax() throws Exception {
+        final String rules = "/app1:max=1";
         final int THREAD_POOL_SIZE = 2;
 
         QueuedThreadPool queuedThreadPool = new QueuedThreadPool(THREAD_POOL_SIZE, THREAD_POOL_SIZE, 100);

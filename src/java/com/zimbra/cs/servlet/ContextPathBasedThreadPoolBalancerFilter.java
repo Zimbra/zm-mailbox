@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -67,22 +67,6 @@ public class ContextPathBasedThreadPoolBalancerFilter implements Filter {
         ThreadPool threadPool = JettyMonitor.getThreadPool();
         if (threadPool instanceof QueuedThreadPool) {
             queuedThreadPool = (QueuedThreadPool)threadPool;
-
-            // Ensure context path minimums don't exceed thread pool max
-            int sumOfMins = 0;
-            for (Rules rules: rulesByContextPath.values()) {
-                if (rules.min != null) {
-                    sumOfMins += rules.min;
-                }
-            }
-            if (sumOfMins > queuedThreadPool.getMaxThreads()) {
-                throw new ServletException("Sum of minimum thread pool reservations is " + sumOfMins + ", exceeding thread pool max of " + queuedThreadPool.getMaxThreads());
-            }
-            if (sumOfMins == queuedThreadPool.getMaxThreads()) {
-                ZimbraLog.misc.warn("Sum of minimum thread pool reservations matches thread pool size of "
-                    + sumOfMins + "; not reserving at least 1 thread for other requests not managed by this filter");
-            }
-
             ZimbraLog.misc.info("Thread pool was configured to max=" + queuedThreadPool.getMaxThreads());
         }
     }
@@ -100,7 +84,6 @@ public class ContextPathBasedThreadPoolBalancerFilter implements Filter {
             HttpServletRequest hreq = (HttpServletRequest) request;
             ZimbraServlet.addRemoteIpToLoggingContext(hreq);
             ZimbraServlet.addUAToLoggingContext(hreq);
-            ZimbraLog.misc.warn("Suspending " + continuation);
             ZimbraLog.clearContext();
             continuation.setTimeout(suspendMs);
             continuation.suspend();
@@ -118,7 +101,7 @@ public class ContextPathBasedThreadPoolBalancerFilter implements Filter {
             } else {
                 i.incrementAndGet();
             }
-            ZimbraLog.misc.debug("%s concurrency=%d", contextPath, i.get());
+//            ZimbraLog.misc.debug("%s concurrency=%d", contextPath, i.get());
 
             // Perform default operation
             chain.doFilter(request,response);
@@ -127,7 +110,7 @@ public class ContextPathBasedThreadPoolBalancerFilter implements Filter {
             // Stop tracking request
             AtomicInteger i = activeRequestsByContextPath.get(contextPath);
             i.decrementAndGet();
-            ZimbraLog.misc.debug("%s concurrency=%d", contextPath, i.get());
+//            ZimbraLog.misc.debug("%s concurrency=%d", contextPath, i.get());
         }
     }
 
@@ -147,6 +130,14 @@ public class ContextPathBasedThreadPoolBalancerFilter implements Filter {
         return ""; // avoid null, which is unsupported as a key in the concurrent map
     }
 
+    protected String getLoggableContextPath(String contextPath) {
+        if (contextPath == null || contextPath.isEmpty()) {
+            return "<blank>";
+        } else {
+            return contextPath;
+        }
+    }
+
     /** Determine whether to suspend request based on state of current thread pool */
     protected boolean shouldSuspend(ServletRequest request) {
 
@@ -158,50 +149,33 @@ public class ContextPathBasedThreadPoolBalancerFilter implements Filter {
         // Determine whether request is for one of the context paths this filter is managing QoS for
         String contextPath = getContextPath(request);
 
-        // Determine the state of the thread pool
-        int threads = queuedThreadPool.getThreads();
-        int idleThreads = queuedThreadPool.getIdleThreads();
-        int busyThreads = threads - idleThreads;
-        int roomInPoolForNewThreads = queuedThreadPool.getMaxThreads() - busyThreads;
-
         // Enforce maximums
         Rules rules = rulesByContextPath.get(contextPath);
         if (rules != null) {
-            AtomicInteger count = activeRequestsByContextPath.get(contextPath);
-            if (count != null) {
-                // Enforce max
-                if (rules.max != null) {
-                    if (count.get() > rules.max) {
-                        return true;
-                    }
-                }
-                // Enforce max %
-                if (rules.maxPercent != null) {
-                    if (100 * count.get() / queuedThreadPool.getMaxThreads() > rules.maxPercent) {
-                        return true;
-                    }
-                }
-            }
-        }
 
-        // Enforce minimums
-        int reservationsForOtherContextPaths = 0;
-        for (String str: rulesByContextPath.keySet()) {
-            String contextPath_ = getContextPath(str);
-            if (contextPath.equals(contextPath_)) {
-                continue;
-            }
-            rules = rulesByContextPath.get(str);
-            if (rules.min == null || rules.min.intValue() < 1) {
-                continue;
-            }
-            AtomicInteger count = activeRequestsByContextPath.get(contextPath_);
+            // Determine the state of the thread pool
+            int threads = queuedThreadPool.getThreads();
+            int idleThreads = queuedThreadPool.getIdleThreads();
+            int busyThreads = threads - idleThreads;
+            int roomInPoolForNewThreads = queuedThreadPool.getMaxThreads() - busyThreads;
+            AtomicInteger count = activeRequestsByContextPath.get(contextPath);
             int activeRequestsCount = count == null ? 0 : count.intValue();
-            int reservationsNeeded = Math.max(0, rules.min.intValue() - activeRequestsCount);
-            reservationsForOtherContextPaths += reservationsNeeded;
-        }
-        if (reservationsForOtherContextPaths > roomInPoolForNewThreads) { // don't use >=, since current thread is freed by a suspend
-            return true;
+            ZimbraLog.misc.debug("Servlet (contextPath=%s active=%d), Jetty pool (threads=%d, idle=%d, busy=%d, room=%d)", getLoggableContextPath(contextPath), activeRequestsCount, threads, idleThreads, busyThreads, roomInPoolForNewThreads);
+
+            // Enforce max count
+            if (rules.max != null) {
+                if (activeRequestsCount > rules.max) {
+                    ZimbraLog.misc.info("Suspending for %dms because context path %s is at %d configured max threads", suspendMs, getLoggableContextPath(contextPath), activeRequestsCount);
+                    return true;
+                }
+            }
+            // Enforce max %
+            if (rules.maxPercent != null) {
+                if (100 * activeRequestsCount / queuedThreadPool.getMaxThreads() > rules.maxPercent) {
+                    ZimbraLog.misc.info("Suspending for %dms because context path %s is at %d threads (%d configured max percentage of thread pool size)", suspendMs, getLoggableContextPath(contextPath), activeRequestsCount, rules.maxPercent);
+                    return true;
+                }
+            }
         }
 
         return false;
