@@ -7981,9 +7981,9 @@ TODO: delete them permanently from here
 </attr>
 
 <attr id="1593" name="zimbraHttpContextPathBasedThreadPoolBalancingFilterRules" type="string" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="8.5.0">
-  <globalConfigValue>/service:min=10;max=80%</globalConfigValue>
-  <globalConfigValue>/zimbra:min=10;max=15%</globalConfigValue>
-  <globalConfigValue>/zimbraAdmin:min=10;max=5%</globalConfigValue>
+  <globalConfigValue>/service:max=80%</globalConfigValue>
+  <globalConfigValue>/zimbra:max=15%</globalConfigValue>
+  <globalConfigValue>/zimbraAdmin:max=5%</globalConfigValue>
   <desc>Rules for governing the allocation of threads to various web contexts for the current thread pool. Sample value: /zimbra:min=10;max=40% or /zimbraAdmin:min=5</desc>
 </attr>
 
