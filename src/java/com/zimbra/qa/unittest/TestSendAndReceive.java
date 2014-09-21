@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -29,6 +29,10 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.mail.Address;
+import javax.mail.MessagingException;
+import javax.mail.internet.MimeMessage;
+
 import junit.framework.TestCase;
 
 import com.zimbra.client.ZEmailAddress;
@@ -41,7 +45,10 @@ import com.zimbra.client.ZMessage;
 import com.zimbra.client.ZMessage.ZMimePart;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.MimeConstants;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.SoapFaultException;
+import com.zimbra.common.soap.SoapHttpTransport;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
@@ -49,6 +56,7 @@ import com.zimbra.cs.ldap.LdapConstants;
 import com.zimbra.cs.mailbox.MailSender;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.service.mail.ToXML.EmailType;
 
 public class TestSendAndReceive extends TestCase {
 
@@ -57,14 +65,17 @@ public class TestSendAndReceive extends TestCase {
     private static final String REMOTE_USER_NAME = "user2";
     private static final Pattern PAT_RECEIVED = Pattern.compile("Received: .*from.*LHLO.*");
     private static final Pattern PAT_RETURN_PATH = Pattern.compile("Return-Path: (.*)");
-
     private String mOriginalSmtpSendAddAuthenticatedUser;
     private String mOriginalDomainSmtpPort;
     private String[] mOriginalSmtpHostname;
-
+    public static final String PUBLIC_LIST_HEADER = "X-ZTest-PublicFile";
+    private TestSendMailListener listener;
     @Override
     public void setUp() throws Exception {
         cleanUp();
+        Provisioning.getInstance().getConfig().addCustomMimeHeaderNameAllowed(MailSender.PRE_SEND_HEADER);
+        Provisioning.getInstance().getConfig().addCustomMimeHeaderNameAllowed(PUBLIC_LIST_HEADER);
+        listener = new TestSendMailListener();
         mOriginalSmtpSendAddAuthenticatedUser = TestUtil.getConfigAttr(Provisioning.A_zimbraSmtpSendAddAuthenticatedUser);
         mOriginalDomainSmtpPort = TestUtil.getDomainAttr(USER_NAME, Provisioning.A_zimbraSmtpPort);
         mOriginalSmtpHostname = Provisioning.getInstance().getLocalServer().getSmtpHostname();
@@ -202,7 +213,6 @@ public class TestSendAndReceive extends TestCase {
         msg = TestUtil.waitForMessage(mbox, "in:inbox subject:\"" + subject + "\"");
         assertEquals(mbox.getName(), TestUtil.getHeaderValue(mbox, msg, MailSender.X_AUTHENTICATED_USER));
     }
-
     /**
      * Confirms that domain SMTP settings override server settings (bug 28442).
      */
@@ -302,6 +312,7 @@ public class TestSendAndReceive extends TestCase {
     /**
      * Confirms that we preserve line endings of attached text files (bugs 45858 and 53405).
      */
+
     public void testTextAttachmentLineEnding()
     throws Exception {
         String content = "I used to think that the day would never come,\n" +
@@ -309,6 +320,209 @@ public class TestSendAndReceive extends TestCase {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         verifyTextAttachmentLineEnding(mbox, content, MimeConstants.CT_TEXT_PLAIN);
         verifyTextAttachmentLineEnding(mbox, content, "application/x-shellscript");
+    }
+
+    public void testSendDraftWithData() throws Exception {
+        MailSender.registerPreSendMailListener(listener);
+        ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
+        String subj = "Thorin";
+        String body = "far over the misty mountains cold";
+        String customHeaderValue = "https://zss.server/file2";
+        SoapHttpTransport transport = new SoapHttpTransport(TestUtil.getSoapUrl());
+        transport.setAuthToken(zmbox.getAuthToken());
+
+        //create a draft with a custom mime header
+        Element request = new Element.JSONElement(MailConstants.SAVE_DRAFT_REQUEST);
+        Element el = request.addUniqueElement(MailConstants.E_MSG);
+        el.addAttribute(MailConstants.E_SUBJECT, subj);
+        el.addUniqueElement(MailConstants.E_MIMEPART)
+            .addAttribute(MailConstants.A_CONTENT_TYPE, "text/plain")
+            .addAttribute(MailConstants.E_CONTENT, body);
+        el.addNonUniqueElement(MailConstants.E_EMAIL)
+            .addAttribute(MailConstants.A_ADDRESS_TYPE, EmailType.TO.toString())
+            .addAttribute(MailConstants.A_ADDRESS, TestUtil.addDomainIfNecessary(REMOTE_USER_NAME));
+        el.addNonUniqueElement(MailConstants.E_HEADER)
+            .addAttribute(MailConstants.A_NAME, MailSender.PRE_SEND_HEADER)
+            .setText("custom");
+        el.addNonUniqueElement(MailConstants.E_HEADER)
+            .addAttribute(MailConstants.A_NAME, PUBLIC_LIST_HEADER)
+            .setText(customHeaderValue);
+
+        ZMessage draft = new ZMessage(transport.invoke(request).getElement(MailConstants.E_MSG),zmbox);
+
+        //Send the draft and save to Sent folder
+        request = new Element.JSONElement(MailConstants.SEND_MSG_REQUEST);
+        request.addUniqueElement(MailConstants.E_MSG)
+                .addAttribute(MailConstants.A_DRAFT_ID, draft.getId())
+                    .addAttribute(MailConstants.A_SEND_FROM_DRAFT, true)
+                        .addAttribute(MailConstants.A_NO_SAVE_TO_SENT, false);
+
+        transport.invoke(request);
+
+        assertTrue("Listener was not triggered",listener.isTriggered());
+        assertEquals("listener should ahve been triggered only once", 1,listener.getTriggerCounter());
+        String[] listenersData = listener.getData();
+        assertNotNull("Listener did not get data from custom headers", listenersData);
+        assertTrue("wrong number of elements in custom header data",listenersData.length == 1);
+        assertTrue(String.format("wrong value in custom header: %s",listenersData[0]), customHeaderValue.equalsIgnoreCase(listenersData[0].replace("\"", "")));
+    }
+
+    public void testSendDraftWithCustomDataNoSave() throws Exception {
+        MailSender.registerPreSendMailListener(listener);
+        MailSender.registerPreSendMailListener(listener); //register second time to test that it will be triggered once
+        ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
+        String subj = "Dwalin";
+        String body = "To dungeons deep, and caverns old";
+        String customHeaderValue = "http://zss.server/file1";
+        SoapHttpTransport transport = new SoapHttpTransport(TestUtil.getSoapUrl());
+        transport.setAuthToken(zmbox.getAuthToken());
+
+        //create a draft with a custom mime header
+        Element request = new Element.JSONElement(MailConstants.SAVE_DRAFT_REQUEST);
+        Element el = request.addUniqueElement(MailConstants.E_MSG);
+        el.addAttribute(MailConstants.E_SUBJECT, subj);
+        el.addUniqueElement(MailConstants.E_MIMEPART)
+            .addAttribute(MailConstants.A_CONTENT_TYPE, "text/plain")
+            .addAttribute(MailConstants.E_CONTENT, body);
+        el.addNonUniqueElement(MailConstants.E_EMAIL)
+            .addAttribute(MailConstants.A_ADDRESS_TYPE, EmailType.TO.toString())
+            .addAttribute(MailConstants.A_ADDRESS, TestUtil.addDomainIfNecessary(REMOTE_USER_NAME));
+        el.addNonUniqueElement(MailConstants.E_HEADER)
+            .addAttribute(MailConstants.A_NAME, MailSender.PRE_SEND_HEADER)
+            .setText("custom");
+        el.addNonUniqueElement(MailConstants.E_HEADER)
+            .addAttribute(MailConstants.A_NAME, PUBLIC_LIST_HEADER)
+            .setText(customHeaderValue);
+
+        ZMessage draft = new ZMessage(transport.invoke(request).getElement(MailConstants.E_MSG),zmbox);
+
+        //send the draft but don't save to Sent folder
+        request = new Element.JSONElement(MailConstants.SEND_MSG_REQUEST);
+        request.addUniqueElement(MailConstants.E_MSG).addAttribute(MailConstants.A_DRAFT_ID,  Integer.parseInt(draft.getId()))
+            .addAttribute(MailConstants.A_SEND_FROM_DRAFT, true)
+                .addAttribute(MailConstants.A_NO_SAVE_TO_SENT, true);
+
+        transport.invoke(request);
+
+        assertTrue("Listener was not triggered",listener.isTriggered());
+        assertEquals("listener should ahve been triggered only once", 1,listener.getTriggerCounter());
+        String[] listenersData = listener.getData();
+        assertNotNull("Listener did not get data from custom headers", listenersData);
+        assertTrue("wrong number of elements in custom header data",listenersData.length == 1);
+        assertTrue(String.format("wrong value in custom header: %s",listenersData[0]), customHeaderValue.equalsIgnoreCase(listenersData[0].replace("\"", "")));
+    }
+
+    public void testSendNoDraft() throws Exception {
+        MailSender.registerPreSendMailListener(listener);
+        MailSender.registerPreSendMailListener(listener); //register second time to test that it will be triggered once
+        ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
+        String subj = "Dwalin";
+        String body = "To dungeons deep, and caverns old";
+        String customHeaderValue = "http://zss.server/file1";
+        SoapHttpTransport transport = new SoapHttpTransport(TestUtil.getSoapUrl());
+        transport.setAuthToken(zmbox.getAuthToken());
+
+        //create a draft with a custom mime header
+        Element request = new Element.JSONElement(MailConstants.SEND_MSG_REQUEST);
+        Element el = request.addUniqueElement(MailConstants.E_MSG);
+        el.addAttribute(MailConstants.E_SUBJECT, subj);
+        el.addUniqueElement(MailConstants.E_MIMEPART)
+            .addAttribute(MailConstants.A_CONTENT_TYPE, "text/plain")
+            .addAttribute(MailConstants.E_CONTENT, body);
+        el.addNonUniqueElement(MailConstants.E_EMAIL)
+            .addAttribute(MailConstants.A_ADDRESS_TYPE, EmailType.TO.toString())
+            .addAttribute(MailConstants.A_ADDRESS, TestUtil.addDomainIfNecessary(REMOTE_USER_NAME));
+        el.addNonUniqueElement(MailConstants.E_HEADER)
+            .addAttribute(MailConstants.A_NAME, MailSender.PRE_SEND_HEADER)
+            .setText("custom");
+        el.addNonUniqueElement(MailConstants.E_HEADER)
+            .addAttribute(MailConstants.A_NAME, PUBLIC_LIST_HEADER)
+            .setText(customHeaderValue);
+
+        transport.invoke(request);
+
+        assertTrue("Listener was not triggered",listener.isTriggered());
+        assertEquals("listener should ahve been triggered only once", 1,listener.getTriggerCounter());
+        String[] listenersData = listener.getData();
+        assertNotNull("Listener did not get data from custom headers", listenersData);
+        assertTrue("wrong number of elements in custom header data",listenersData.length == 1);
+        assertTrue("wrong value in custom header", customHeaderValue.equalsIgnoreCase(listenersData[0].replace("\"", "")));
+    }
+
+    public void testMultipleHeaders() throws Exception {
+        MailSender.registerPreSendMailListener(listener);
+        MailSender.registerPreSendMailListener(listener); //register second time to test that it will be triggered once
+        ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
+        String subj = "Dwalin";
+        String body = "To dungeons deep, and caverns old";
+        String customHeaderValue1 = "http://zss.server/file1";
+        String customHeaderValue2 = "http://zss.server/file2";
+        String customHeaderValue3 = "http://zss.server/file3";
+
+        SoapHttpTransport transport = new SoapHttpTransport(TestUtil.getSoapUrl());
+        transport.setAuthToken(zmbox.getAuthToken());
+
+        //create a draft with a custom mime header
+        Element request = new Element.JSONElement(MailConstants.SEND_MSG_REQUEST);
+        Element el = request.addUniqueElement(MailConstants.E_MSG);
+        el.addAttribute(MailConstants.E_SUBJECT, subj);
+        el.addUniqueElement(MailConstants.E_MIMEPART)
+            .addAttribute(MailConstants.A_CONTENT_TYPE, "text/plain")
+            .addAttribute(MailConstants.E_CONTENT, body);
+        el.addNonUniqueElement(MailConstants.E_EMAIL)
+            .addAttribute(MailConstants.A_ADDRESS_TYPE, EmailType.TO.toString())
+            .addAttribute(MailConstants.A_ADDRESS, TestUtil.addDomainIfNecessary(REMOTE_USER_NAME));
+        el.addNonUniqueElement(MailConstants.E_HEADER)
+            .addAttribute(MailConstants.A_NAME, MailSender.PRE_SEND_HEADER)
+            .setText("custom");
+        el.addNonUniqueElement(MailConstants.E_HEADER)
+            .addAttribute(MailConstants.A_NAME, PUBLIC_LIST_HEADER)
+            .setText(customHeaderValue1);
+        el.addNonUniqueElement(MailConstants.E_HEADER)
+            .addAttribute(MailConstants.A_NAME, PUBLIC_LIST_HEADER)
+            .setText(customHeaderValue2);
+        el.addNonUniqueElement(MailConstants.E_HEADER)
+            .addAttribute(MailConstants.A_NAME, PUBLIC_LIST_HEADER)
+            .setText(customHeaderValue3);
+
+        transport.invoke(request);
+
+        assertTrue("Listener was not triggered",listener.isTriggered());
+        assertEquals("listener should ahve been triggered only once", 1,listener.getTriggerCounter());
+        String[] listenersData = listener.getData();
+        assertNotNull("Listener did not get data from custom headers", listenersData);
+        assertEquals("wrong number of elements in custom header data",3,listenersData.length);
+        List<String> valueList = Arrays.asList(listenersData);
+        assertTrue(customHeaderValue1 + " is missing", valueList.contains(String.format("\"%s\"",customHeaderValue1)));
+        assertTrue(customHeaderValue2 + " is missing", valueList.contains(String.format("\"%s\"",customHeaderValue2)));
+        assertTrue(customHeaderValue3 + " is missing", valueList.contains(String.format("\"%s\"",customHeaderValue3)));
+    }
+
+    public void testSendNoHeaders() throws Exception {
+        MailSender.registerPreSendMailListener(listener);
+        ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
+        String subj = "Balin";
+        String body = "We must away ere break of day";
+        TestUtil.sendMessage(zmbox, REMOTE_USER_NAME, subj, body);
+        assertFalse("Listener was not supposed to be triggered",listener.isTriggered());
+    }
+
+    public void testSendDraftNoHeader() throws Exception {
+        MailSender.registerPreSendMailListener(listener);
+        ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
+        String subj = "Thorin";
+        String body = "far over the misty mountains cold";
+        ZOutgoingMessage msg = TestUtil.getOutgoingMessage(REMOTE_USER_NAME, subj, body,null);
+
+        ZMessage draft = zmbox.saveDraft(msg, null, Integer.toString(Mailbox.ID_FOLDER_DRAFTS));
+
+        Element request = new Element.JSONElement(MailConstants.SEND_MSG_REQUEST);
+        request.addUniqueElement(MailConstants.E_MSG).addAttribute(MailConstants.A_DRAFT_ID, draft.getId()).addAttribute(MailConstants.A_SEND_FROM_DRAFT, true);
+        SoapHttpTransport transport = new SoapHttpTransport(TestUtil.getSoapUrl());
+        transport.setAuthToken(zmbox.getAuthToken());
+        transport.invoke(request);
+
+        assertFalse("Listener was not supposed to be triggered",listener.isTriggered());
     }
 
     private void verifyTextAttachmentLineEnding(ZMailbox mbox, String content, String contentType)
@@ -334,6 +548,7 @@ public class TestSendAndReceive extends TestCase {
         assertEquals(content, attachContent);
     }
 
+
     @Override
     public void tearDown() throws Exception {
         cleanUp();
@@ -344,13 +559,57 @@ public class TestSendAndReceive extends TestCase {
 
     private void cleanUp()
     throws Exception {
+        Provisioning.getInstance().getConfig().removeCustomMimeHeaderNameAllowed(MailSender.PRE_SEND_HEADER);
+        Provisioning.getInstance().getConfig().removeCustomMimeHeaderNameAllowed(PUBLIC_LIST_HEADER);
         TestUtil.deleteTestData(USER_NAME, NAME_PREFIX);
         TestUtil.deleteTestData(REMOTE_USER_NAME, NAME_PREFIX);
+        MailSender.unregisterPreSendMailListener(listener);
     }
 
     public static void main(String[] args)
     throws Exception {
         TestUtil.cliSetup();
         TestUtil.runTest(TestSendAndReceive.class);
+    }
+
+    private class TestSendMailListener implements MailSender.PreSendMailListener {
+        private boolean triggered = false;
+        private String[] data = null;
+        private int triggerCounter = 0;
+        public TestSendMailListener() {
+            triggerCounter++;
+        }
+
+        @Override
+        public void handle(Mailbox mbox, Address[] sentAddresses,
+                MimeMessage sentMessage) {
+            ZimbraLog.test.debug("Handling sent mail notification");
+            triggered = true;
+            try {
+                data = sentMessage.getHeader(PUBLIC_LIST_HEADER);
+                if(data == null) {
+                    ZimbraLog.test.error("Could not find " +  PUBLIC_LIST_HEADER);
+                }
+            }  catch (MessagingException e) {
+                ZimbraLog.test.error("failed to extract custom mime header",e);
+            }
+        }
+
+        public String[]  getData() {
+            return data;
+        }
+
+        @Override
+        public String getName() {
+            return TestSendAndReceive.TestSendMailListener.class.getSimpleName();
+        }
+
+        public boolean isTriggered() {
+            return triggered;
+        }
+
+        public int getTriggerCounter() {
+            return triggerCounter;
+        }
     }
 }
