@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -54,6 +54,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.RemoteIP;
 import com.zimbra.common.util.ZimbraHttpConnectionManager;
+import com.zimbra.common.util.ZimbraLog;
 
 public class SoapHttpTransport extends SoapTransport {
     private HttpClient mClient = ZimbraHttpConnectionManager.getInternalHttpConnMgr().getDefaultHttpClient();
@@ -203,9 +204,12 @@ public class SoapHttpTransport extends SoapTransport {
             // the content-type charset will determine encoding used
             // when we set the request body
             method.setRequestHeader("Content-Type", getRequestProtocol().getContentType());
-            if (getClientIp() != null)
+            if (getClientIp() != null) {
                 method.setRequestHeader(RemoteIP.X_ORIGINATING_IP_HEADER, getClientIp());
-
+                if (ZimbraLog.misc.isDebugEnabled()) {
+                    ZimbraLog.misc.debug("set remote IP header [%s] to [%s]", RemoteIP.X_ORIGINATING_IP_HEADER, getClientIp());
+                }
+            }
             Element soapReq = generateSoapMessage(document, raw, noSession, requestedAccountId, changeToken, tokenType);
             String soapMessage = SoapProtocol.toString(soapReq, getPrettyPrint());
             HttpMethodParams params = method.getParams();
@@ -232,11 +236,11 @@ public class SoapHttpTransport extends SoapTransport {
             if (mHostConfig != null && mHostConfig.getUsername() != null && mHostConfig.getPassword() != null) {
                 state.setProxyCredentials(new AuthScope(null, -1), new UsernamePasswordCredentials(mHostConfig.getUsername(), mHostConfig.getPassword()));
             }
-            
+
             if (mHttpDebugListener != null) {
                 mHttpDebugListener.sendSoapMessage(method, soapReq, state);
             }
-            
+
             int responseCode = mClient.executeMethod(mHostConfig, method, state);
             // SOAP allows for "200" on success and "500" on failure;
             //   real server issues will probably be "503" or "404"
