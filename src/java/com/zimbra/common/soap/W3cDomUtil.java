@@ -175,17 +175,7 @@ public class W3cDomUtil {
      */
     public static Element parseXML(InputStream is, ElementFactory factory)
     throws XmlParseException {
-        javax.xml.parsers.DocumentBuilder jaxbBuilder = getBuilder();
-        jaxbBuilder.reset();
-        jaxbBuilder.setErrorHandler(new JAXPErrorHandler());
-        Document doc;
-        try {
-            doc = jaxbBuilder.parse(is);
-        } catch (SAXException | IOException e) {
-            /* Bug 93816 log actual problem but throw generic one to avoid information disclosure */
-            logParseProblem(e);
-            throw XmlParseException.PARSE_ERROR();
-        }
+        Document doc = parseXMLToDoc(is);
         return nodeToElement(doc, factory);
     }
 
@@ -205,13 +195,33 @@ public class W3cDomUtil {
      */
     public static Element parseXML(String xml, ElementFactory factory)
     throws XmlParseException {
+        Document doc = parseXMLToDoc(xml);
+        return nodeToElement(doc, factory);
+    }
+
+    public static Document parseXMLToDoc(String xml)
+    throws XmlParseException {
         javax.xml.parsers.DocumentBuilder jaxbBuilder = getBuilder();
         jaxbBuilder.reset();
         jaxbBuilder.setErrorHandler(new JAXPErrorHandler());
         try {
             org.xml.sax.InputSource inStream = new org.xml.sax.InputSource();
             inStream.setCharacterStream(new java.io.StringReader(xml));
-            return nodeToElement(jaxbBuilder.parse(inStream), factory);
+            return jaxbBuilder.parse(inStream);
+        } catch (SAXException | IOException e) {
+            /* Bug 93816 log actual problem but throw generic one to avoid information disclosure */
+            logParseProblem(e);
+            throw XmlParseException.PARSE_ERROR();
+        }
+    }
+
+    public static Document parseXMLToDoc(InputStream is)
+    throws XmlParseException {
+        javax.xml.parsers.DocumentBuilder jaxbBuilder = getBuilder();
+        jaxbBuilder.reset();
+        jaxbBuilder.setErrorHandler(new JAXPErrorHandler());
+        try {
+            return jaxbBuilder.parse(is);
         } catch (SAXException | IOException e) {
             /* Bug 93816 log actual problem but throw generic one to avoid information disclosure */
             logParseProblem(e);
