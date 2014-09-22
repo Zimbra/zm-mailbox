@@ -4848,6 +4848,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraDumpsterUserVisibleAge = "zimbraDumpsterUserVisibleAge";
 
     /**
+     * EmptyFolderOpTimeout is the time in seconds for which empty folder
+     * operation will wait for the current empty folder operation to complete
+     *
+     * @since ZCS 8.6.0
+     */
+    @ZAttr(id=1652)
+    public static final String A_zimbraEmptyFolderOpTimeout = "zimbraEmptyFolderOpTimeout";
+
+    /**
      * URL for posting error report popped up in WEB client
      *
      * @since ZCS 6.0.5
