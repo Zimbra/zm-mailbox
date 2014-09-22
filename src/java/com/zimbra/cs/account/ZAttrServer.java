@@ -6976,6 +6976,83 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * EmptyFolderOpTimeout is the time in seconds for which empty folder
+     * operation will wait for the current empty folder operation to complete
+     *
+     * @return zimbraEmptyFolderOpTimeout, or 3 if unset
+     *
+     * @since ZCS 8.6.0
+     */
+    @ZAttr(id=1652)
+    public int getEmptyFolderOpTimeout() {
+        return getIntAttr(Provisioning.A_zimbraEmptyFolderOpTimeout, 3);
+    }
+
+    /**
+     * EmptyFolderOpTimeout is the time in seconds for which empty folder
+     * operation will wait for the current empty folder operation to complete
+     *
+     * @param zimbraEmptyFolderOpTimeout new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.6.0
+     */
+    @ZAttr(id=1652)
+    public void setEmptyFolderOpTimeout(int zimbraEmptyFolderOpTimeout) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEmptyFolderOpTimeout, Integer.toString(zimbraEmptyFolderOpTimeout));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * EmptyFolderOpTimeout is the time in seconds for which empty folder
+     * operation will wait for the current empty folder operation to complete
+     *
+     * @param zimbraEmptyFolderOpTimeout new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.6.0
+     */
+    @ZAttr(id=1652)
+    public Map<String,Object> setEmptyFolderOpTimeout(int zimbraEmptyFolderOpTimeout, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEmptyFolderOpTimeout, Integer.toString(zimbraEmptyFolderOpTimeout));
+        return attrs;
+    }
+
+    /**
+     * EmptyFolderOpTimeout is the time in seconds for which empty folder
+     * operation will wait for the current empty folder operation to complete
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.6.0
+     */
+    @ZAttr(id=1652)
+    public void unsetEmptyFolderOpTimeout() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEmptyFolderOpTimeout, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * EmptyFolderOpTimeout is the time in seconds for which empty folder
+     * operation will wait for the current empty folder operation to complete
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.6.0
+     */
+    @ZAttr(id=1652)
+    public Map<String,Object> unsetEmptyFolderOpTimeout(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEmptyFolderOpTimeout, "");
+        return attrs;
+    }
+
+    /**
      * interface address on which zimbra extension server should listen; if
      * empty, binds to all interfaces
      *
