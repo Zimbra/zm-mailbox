@@ -67,12 +67,17 @@ import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.acl.AclPushSerializer;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.util.AccountUtil;
+import com.zimbra.cs.util.WebClientServiceUtil;
 import com.zimbra.soap.mail.message.FolderActionRequest;
 import com.zimbra.soap.mail.type.FolderActionSelector;
 
 public class ExternalUserProvServlet extends ZimbraServlet {
 
     private static final Log logger = LogFactory.getLog(ExternalUserProvServlet.class);
+    private static final String EXT_USER_PROV_ON_UI_NODE = "/fromservice/extuserprov";
+    private static final String PUBLIC_LOGIN_ON_UI_NODE = "/fromservice/publiclogin";
+    public static final String PUBLIC_EXTUSERPROV_JSP = "/public/extuserprov.jsp";
+    public static final String PUBLIC_LOGIN_JSP = "/public/login.jsp";
 
     @Override
     public void init() throws ServletException {
@@ -114,14 +119,18 @@ public class ExternalUserProvServlet extends ZimbraServlet {
                 } else {
                     resp.addCookie(new Cookie("ZM_PRELIM_AUTH_TOKEN", param));
                     req.setAttribute("extuseremail", extUserEmail);
-                    ServletContext context = getServletContext().getContext("/zimbra");
-                    if (context != null) {
-                        RequestDispatcher dispatcher = context
-                            .getRequestDispatcher("/public/extuserprov.jsp");
-                        dispatcher.forward(req, resp);
+                    if (WebClientServiceUtil.isServerInSplitMode()) {
+                        WebClientServiceUtil.sendServiceRequestToOneRandomUiNode(EXT_USER_PROV_ON_UI_NODE);
                     } else {
-                        logger.warn("Could not access servlet context url /zimbra");
-                        throw ServiceException.TEMPORARILY_UNAVAILABLE();
+                        ServletContext context = getServletContext().getContext("/zimbra");
+                        if (context != null) {
+                            RequestDispatcher dispatcher = context
+                                    .getRequestDispatcher(PUBLIC_EXTUSERPROV_JSP);
+                            dispatcher.forward(req, resp);
+                        } else {
+                            logger.warn("Could not access servlet context url /zimbra");
+                            throw ServiceException.TEMPORARILY_UNAVAILABLE();
+                        }
                     }
                 }
             } else {
@@ -203,9 +212,13 @@ public class ExternalUserProvServlet extends ZimbraServlet {
                     setCookieAndRedirect(req, resp, grantee);
                 } else {
                     req.setAttribute("virtualacctdomain", domain.getName());
-                    RequestDispatcher dispatcher =
-                            getServletContext().getContext("/zimbra").getRequestDispatcher("/public/login.jsp");
-                    dispatcher.forward(req, resp);
+                    if (WebClientServiceUtil.isServerInSplitMode()) {
+                        WebClientServiceUtil.sendServiceRequestToOneRandomUiNode(PUBLIC_LOGIN_ON_UI_NODE);
+                    } else {
+                        RequestDispatcher dispatcher =
+                                getServletContext().getContext("/zimbra").getRequestDispatcher(PUBLIC_LOGIN_JSP);
+                        dispatcher.forward(req, resp);
+                    }
                 }
             }
         } catch (ServiceException e) {
