@@ -8291,4 +8291,11 @@ TODO: delete them permanently from here
   <desc>Which mailbox to save messages sent via sendAs/sendOnBehalfOf delegation to.</desc>
 </attr>
 
+<attr id="1652" name="zimbraEmptyFolderOpTimeout" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.6.0">
+  <globalConfigValue>3</globalConfigValue>
+  <desc>
+     EmptyFolderOpTimeout is the time in seconds for which empty folder operation will wait for the current empty folder operation to complete
+  </desc>
+</attr>
+
 </attrs>
