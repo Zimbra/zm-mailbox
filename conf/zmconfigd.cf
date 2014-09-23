@@ -276,7 +276,6 @@ SECTION mailbox
 	REWRITE mailboxd/etc/krb5.ini.in mailboxd/etc/krb5.ini
 	REWRITE mailboxd/etc/spnego.conf.in mailboxd/etc/spnego.conf
 	REWRITE mailboxd/etc/spnego.properties.in mailboxd/etc/spnego.properties 
-	REWRITE mailboxd/etc/zimlet.web.xml.in mailboxd/webapps/zimlet/WEB-INF/web.xml   
 	RESTART mailboxd
     
 SECTION service
@@ -293,6 +292,10 @@ SECTION zimbraAdmin
 	REWRITE mailboxd/etc/zimbraAdmin-jetty-env.xml.in mailboxd/webapps/zimbraAdmin/WEB-INF/jetty-env.xml
 	RESTART mailboxd
 
+SECTION zimbra
+	REWRITE mailboxd/etc/zimlet.web.xml.in mailboxd/webapps/zimlet/WEB-INF/web.xml   
+	RESTART mailboxd
+	
 SECTION proxy
 	LOCAL ldap_url
 	VAR getAllMemcachedServers
