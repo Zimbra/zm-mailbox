@@ -433,7 +433,7 @@ What happens behind the scene in ZCS server:
     After verifying that the browser is sending the correct Negotiate, if it still does not work, 
     turn on the following debug and check Zimrba logs:
      
-    - ADD "-DDEBUG=true -Dsun.security.spnego.debug=all" (note, not replace) to 
+    - ADD "-Dorg.eclipse.jetty.LEVEL=debug -Dsun.security.spnego.debug=all" (note, not replace) to 
       localconfig key spnego_java_options
    
     - add in log4j.properties:

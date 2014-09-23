@@ -32,15 +32,14 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.eclipse.jetty.security.SpnegoLoginService;
-import org.eclipse.jetty.security.LoginService;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 import com.zimbra.cs.service.authenticator.SSOAuthenticator;
-import com.zimbra.cs.service.authenticator.SpnegoAuthenticator;
 import com.zimbra.cs.service.authenticator.SSOAuthenticator.SSOAuthenticatorServiceException;
+import com.zimbra.cs.service.authenticator.SpnegoAuthenticator;
 
 public class SpnegoFilter implements Filter {
     private static final String PARAM_PASS_THRU_ON_FAILURE_URI = "passThruOnFailureUri";
@@ -132,13 +131,12 @@ public class SpnegoFilter implements Filter {
         	ServletContextHandler.Context sContext = (ServletContextHandler.Context)servletContext;
             // get the WebAppContext
             ServletContextHandler contextHandler = (ServletContextHandler) sContext.getContextHandler();
-            LoginService realm = contextHandler.getSecurityHandler().getLoginService();
-            if (realm != null && realm instanceof SpnegoLoginService) {
+            SpnegoLoginService realm = contextHandler.getServer().getBean(SpnegoLoginService.class);
+            if (realm != null) {
                 ZimbraLog.account.debug("Found spnego user realm: [" + realm.getName() + "]");
-                return (SpnegoLoginService)realm;
             }
+            return realm;
         }
-        
         // throw ServiceException.FAILURE("no spnego user realm", null);
         return null;
     }
