@@ -2194,6 +2194,9 @@ public class ZMailbox implements ToZJSONObject {
 
         int statusCode;
         try {
+            if (mCsrfToken != null) {
+                post.setRequestHeader("X-Zimbra-Csrf-Token", mCsrfToken);
+            }
             post.setRequestEntity( new MultipartRequestEntity(parts, post.getParams()) );
             statusCode = HttpClientUtil.executeMethod(client, post);
 
