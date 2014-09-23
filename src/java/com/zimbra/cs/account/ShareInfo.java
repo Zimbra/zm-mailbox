@@ -525,7 +525,7 @@ public class ShareInfo {
                     continue;
                 }
                 AccountStatus status = account.getAccountStatus();
-                if (status != null && status.isClosed()) {
+                if (status != null && !status.isActive()) {
                     continue;
                 }
                 String[] sharedItems = account.getSharedItem();
