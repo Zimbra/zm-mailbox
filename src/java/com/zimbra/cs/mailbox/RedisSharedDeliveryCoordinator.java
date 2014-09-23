@@ -121,27 +121,27 @@ public class RedisSharedDeliveryCoordinator implements SharedDeliveryCoordinator
 
     @Override
     public void waitUntilSharedDeliveryCompletes(Mailbox mbox) throws ServiceException {
-        Jedis jedis = jedisPool.getResource();
         String key = getCountKeyName(mbox);
-        try {
-            while (true) {
+        while (true) {
+            int count;
+            Jedis jedis = jedisPool.getResource();
+            try {
                 String countStr = jedis.get(key);
-                ZimbraLog.mailbox.debug("** waiter got: " + countStr);
-                int count = countStr == null ? 0 : Integer.parseInt(countStr);
+                count = countStr == null ? 0 : Integer.parseInt(countStr);
                 if (count < 1) {
                     break;
                 }
-
-                try {
-                    synchronized (this) {
-                        wait(WAIT_MS);
-                    }
-                    ZimbraLog.misc.info("wake up from wait for completion of shared delivery; mailbox=" + mbox.getId() +
-                                " # of shared deliv=" + count);
-                } catch (InterruptedException e) {}
+            } finally {
+                jedisPool.returnResource(jedis);
             }
-        } finally {
-            jedisPool.returnResource(jedis);
+
+            try {
+                synchronized (this) {
+                    wait(WAIT_MS);
+                }
+                ZimbraLog.misc.info("wake up from wait for completion of shared delivery; mailbox=%d, # of shared deliv=%d",
+                        mbox.getId(), count);
+            } catch (InterruptedException e) {}
         }
     }
 

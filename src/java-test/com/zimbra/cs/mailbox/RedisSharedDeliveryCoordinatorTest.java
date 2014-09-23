@@ -46,11 +46,6 @@ public final class RedisSharedDeliveryCoordinatorTest extends AbstractSharedDeli
     }
 
     protected boolean isExternalCacheAvailableForTest() throws Exception {
-//      TODO: ldap-based provisioning of Redis service is not implemented yet
-//      Server server = Provisioning.getInstance().getLocalServer();
-//      String[] serverList = server.getMultiAttr(Provisioning.A_zimbraMemcachedClientServerList);
-//      return serverList.length > 0;
-
       JedisPool jedisPool = Zimbra.getAppContext().getBean(JedisPool.class);
       try {
           Jedis jedis = jedisPool.getResource();
