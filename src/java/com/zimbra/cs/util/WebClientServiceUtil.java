@@ -18,7 +18,9 @@ package com.zimbra.cs.util;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethod;
@@ -111,6 +113,17 @@ public class WebClientServiceUtil {
      * @throws ServiceException
      */
     public static String sendServiceRequestToOneRandomUiNode(String serviceUrl) throws ServiceException {
+        return sendServiceRequestToOneRandomUiNode(serviceUrl, Collections.<String,String>emptyMap());
+    }
+
+    /**
+     * send service request to one random ui node, keep trying until succeeds.
+     * @param serviceUrl the url that should be matched and handled by ServiceServlet in ZimbraWebClient
+     *        reqHeaders the map of req/rsp attributes that need to be set by the UI node
+     * @return response from ui node in String
+     * @throws ServiceException
+     */
+    public static String sendServiceRequestToOneRandomUiNode(String serviceUrl, Map<String, String> reqHeaders) throws ServiceException {
         List<Server> servers = Provisioning.getInstance().getAllServers(Provisioning.SERVICE_WEBCLIENT);
         if (servers == null || servers.isEmpty()) {
             servers.add(Provisioning.getInstance().getLocalServer());
@@ -127,6 +140,11 @@ public class WebClientServiceUtil {
                     method = new GetMethod(URLUtil.getServiceURL(server, serviceUrl, false));
                     ZimbraLog.misc.debug("connecting to ui node %s", server.getName());
                     method.addRequestHeader(PARAM_AUTHTOKEN, authToken.getEncoded());
+                    // Add all the req headers passed to this function as well
+                    for (Map.Entry<String, String> entry : reqHeaders.entrySet()) {
+                        method.addRequestHeader(entry.getKey(), entry.getValue());
+                        ZimbraLog.misc.debug("adding request header %s=%s", entry.getKey(), entry.getValue());
+                    }
                     int result = HttpClientUtil.executeMethod(client, method);
                     ZimbraLog.misc.debug("resp: %d", result);
                     resp = method.getResponseBodyAsString();
