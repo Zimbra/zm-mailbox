@@ -100,6 +100,7 @@ public class ExternalUserProvServlet extends ZimbraServlet {
             throw new ServletException("request missing param");
         }
         Map<Object, Object> tokenMap = validatePrelimToken(param);
+        Map<String, String> reqHeaders = new HashMap<String, String>();
         String ownerId = (String) tokenMap.get("aid");
         String folderId = (String) tokenMap.get("fid");
         String extUserEmail = (String) tokenMap.get("email");
@@ -117,11 +118,13 @@ public class ExternalUserProvServlet extends ZimbraServlet {
                     // UI will ask the user to set these post provisioning
                     provisionVirtualAccountAndRedirect(req, resp, null, null, ownerId, extUserEmail);
                 } else {
-                    resp.addCookie(new Cookie("ZM_PRELIM_AUTH_TOKEN", param));
-                    req.setAttribute("extuseremail", extUserEmail);
                     if (WebClientServiceUtil.isServerInSplitMode()) {
-                        WebClientServiceUtil.sendServiceRequestToOneRandomUiNode(EXT_USER_PROV_ON_UI_NODE);
+                        reqHeaders.put("extuseremail", extUserEmail);
+                        reqHeaders.put("ZM_PRELIM_AUTH_TOKEN", param);
+                        WebClientServiceUtil.sendServiceRequestToOneRandomUiNode(EXT_USER_PROV_ON_UI_NODE, reqHeaders);
                     } else {
+                        resp.addCookie(new Cookie("ZM_PRELIM_AUTH_TOKEN", param));
+                        req.setAttribute("extuseremail", extUserEmail);
                         ServletContext context = getServletContext().getContext("/zimbra");
                         if (context != null) {
                             RequestDispatcher dispatcher = context
@@ -211,10 +214,11 @@ public class ExternalUserProvServlet extends ZimbraServlet {
                     // provisioned for him
                     setCookieAndRedirect(req, resp, grantee);
                 } else {
-                    req.setAttribute("virtualacctdomain", domain.getName());
                     if (WebClientServiceUtil.isServerInSplitMode()) {
-                        WebClientServiceUtil.sendServiceRequestToOneRandomUiNode(PUBLIC_LOGIN_ON_UI_NODE);
+                        reqHeaders.put("virtualacctdomain", domain.getName());
+                        WebClientServiceUtil.sendServiceRequestToOneRandomUiNode(PUBLIC_LOGIN_ON_UI_NODE, reqHeaders);
                     } else {
+                        req.setAttribute("virtualacctdomain", domain.getName());
                         RequestDispatcher dispatcher =
                                 getServletContext().getContext("/zimbra").getRequestDispatcher(PUBLIC_LOGIN_JSP);
                         dispatcher.forward(req, resp);
