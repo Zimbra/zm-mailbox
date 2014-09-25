@@ -292,7 +292,7 @@ SECTION zimbraAdmin
 	REWRITE mailboxd/etc/zimbraAdmin-jetty-env.xml.in mailboxd/webapps/zimbraAdmin/WEB-INF/jetty-env.xml
 	RESTART mailboxd
 
-SECTION zimbra
+SECTION zimlet
 	REWRITE mailboxd/etc/zimlet.web.xml.in mailboxd/webapps/zimlet/WEB-INF/web.xml   
 	RESTART mailboxd
 	
