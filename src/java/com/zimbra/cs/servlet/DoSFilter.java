@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -27,6 +27,7 @@ import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
+import com.zimbra.cs.server.ServerConfig;
 
 
 public class DoSFilter extends org.eclipse.jetty.servlets.DoSFilter {
@@ -47,9 +48,9 @@ public class DoSFilter extends org.eclipse.jetty.servlets.DoSFilter {
                     ZimbraLog.misc.warn("Invalid hostname: " + server.getServiceHostname(), e);
                 }
             }
-            String[] ips = Provisioning.getInstance().getLocalServer().getHttpThrottleSafeIPs();
-            for (String ip : ips) {
-                addWhitelistAddress(ip);
+            String[] addrs = ServerConfig.getAddrListCsv(Provisioning.getInstance().getLocalServer().getHttpThrottleSafeIPs());
+            for (String addr : addrs) {
+                addWhitelistAddress(addr);
             }
         } catch (ServiceException e) {
             ZimbraLog.misc.warn("Unable to get throttle safe IPs", e);
@@ -58,6 +59,12 @@ public class DoSFilter extends org.eclipse.jetty.servlets.DoSFilter {
         addWhitelistAddress("127.0.0.1");
         addWhitelistAddress("::1");
         ZimbraLog.misc.info("DoSFilter: Configured whitelist IPs = " + getWhitelist());
+    }
+
+    @Override
+    public boolean addWhitelistAddress(String address) {
+        ZimbraLog.misc.debug("added whitelist address [%s]", address);
+        return super.addWhitelistAddress(address);
     }
 
     @Override

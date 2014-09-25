@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -17,6 +17,7 @@ package com.zimbra.cs.server;
 
 import java.net.ServerSocket;
 import java.nio.channels.ServerSocketChannel;
+import java.util.ArrayList;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
@@ -214,12 +215,24 @@ public abstract class ServerConfig {
     }
 
     public String[] getThottleIgnoredHosts() throws ServiceException {
-        return getLocalServer().getMultiAttr(Provisioning.A_zimbraThrottleSafeHosts);
+        return getAddrListCsv(getLocalServer().getMultiAttr(Provisioning.A_zimbraThrottleSafeHosts));
     }
 
     public String[] getThrottleWhitelist() throws ServiceException {
-        return getLocalServer().getMultiAttr(Provisioning.A_zimbraThrottleWhitelist);
+        return getAddrListCsv(getLocalServer().getMultiAttr(Provisioning.A_zimbraThrottleWhitelist));
+
     }
 
+    public static String[] getAddrListCsv(String[] addrCsvs) {
+        ArrayList<String> addrList = new ArrayList<String>(addrCsvs.length);
+        for (String addrCsv : addrCsvs) {
+            if (addrCsv != null && addrCsv.length() > 0) {
+                String[] addrs = addrCsv.split(",");
+                for (String addr : addrs) {
+                    addrList.add(addr);
+                }
+            }
+        }
+        return addrList.toArray(new String[addrList.size()]);
+    }
 }
-
