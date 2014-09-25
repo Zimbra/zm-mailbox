@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -82,7 +82,9 @@ import com.zimbra.cs.ldap.LdapUtil;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.servlet.CsrfFilter;
 import com.zimbra.cs.servlet.ZimbraServlet;
+import com.zimbra.cs.servlet.util.CsrfUtil;
 import com.zimbra.cs.store.BlobInputStream;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.Zimbra;
@@ -329,7 +331,7 @@ public class FileUploadServlet extends ZimbraServlet {
     public static Upload saveUpload(InputStream is, String filename, String contentType, String accountId, boolean limitByFileUploadMaxSize) throws ServiceException, IOException {
         return saveUpload(is, filename, contentType, accountId, getFileUploadMaxSize(limitByFileUploadMaxSize));
     }
-    
+
     public static Upload saveUpload(InputStream is, String filename, String contentType, String accountId, long limit) throws ServiceException, IOException {
         FileItem fi = null;
         boolean success = false;
@@ -462,6 +464,26 @@ public class FileUploadServlet extends ZimbraServlet {
             sendResponse(resp, HttpServletResponse.SC_UNAUTHORIZED, fmt, null, null, null);
             return;
         }
+
+        boolean doCsrfCheck = false;
+        if (req.getAttribute(CsrfFilter.CSRF_TOKEN_CHECK) != null) {
+            doCsrfCheck =  (Boolean) req.getAttribute(CsrfFilter.CSRF_TOKEN_CHECK);
+        }
+
+        if (doCsrfCheck) {
+            String csrfToken = req.getHeader(CsrfFilter.CSRF_TOKEN);
+            if (!CsrfUtil.isValidCsrfToken(csrfToken, at)) {
+                drainRequestStream(req);
+
+                mLog.debug("CSRF token validation failed for account: %s"
+                    + ", Auth token is CSRF enabled:  %s" + "CSRF token is: %s",
+                    at, at.isCsrfTokenEnabled(), csrfToken);
+                sendResponse(resp, HttpServletResponse.SC_UNAUTHORIZED, fmt, null, null, null);
+                return;
+            }
+
+        }
+
 
         try {
             Provisioning prov = Provisioning.getInstance();
@@ -716,7 +738,7 @@ public class FileUploadServlet extends ZimbraServlet {
             mLog.info("Ignoring error that occurred while reading the end of the client request: " + e);
         }
     }
-    
+
     private static long getFileUploadMaxSize(boolean limitByFileUploadMaxSize) {
         // look up the maximum file size for uploads
         long maxSize = DEFAULT_MAX_SIZE;
@@ -745,7 +767,7 @@ public class FileUploadServlet extends ZimbraServlet {
     protected ServletFileUpload getUploader2(boolean limitByFileUploadMaxSize, Account acct) {
     	return getUploader(getFileUploadMaxSize(limitByFileUploadMaxSize));
     }
-    
+
     private static ServletFileUpload getUploader(long maxSize) {
         DiskFileItemFactory dfif = new DiskFileItemFactory();
         dfif.setSizeThreshold(32 * 1024);
