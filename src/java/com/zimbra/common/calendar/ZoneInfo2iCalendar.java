@@ -685,9 +685,13 @@ public class ZoneInfo2iCalendar {
                         continue;
                     // Skip some known non data files: *.tab, *.sh and "factory".
                     String name = file.getName();
-                    if (name.endsWith(".tab") || name.endsWith(".sh") || name.endsWith(".awk") ||
+                    if (name.endsWith(".tab") || name.endsWith(".sh") || name.endsWith(".awk") ||  name.endsWith(".pl") ||
                             (name.startsWith(".") || name.endsWith(".swp")) ||  // ignore editor temporary files
-                            name.equalsIgnoreCase("Makefile") || name.equalsIgnoreCase("README") ||
+                            name.equalsIgnoreCase("CONTRIBUTING") ||
+                            name.equalsIgnoreCase("Makefile") || 
+                            name.equalsIgnoreCase("NEWS") ||
+                            name.equalsIgnoreCase("README") ||
+                            name.equalsIgnoreCase("Theory") ||
                             name.equalsIgnoreCase("factory") ||
                             name.equalsIgnoreCase("leap-seconds.list")) {
                         continue;
