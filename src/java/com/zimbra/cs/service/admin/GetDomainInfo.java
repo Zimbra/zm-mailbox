@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.collect.ImmutableSet;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.ZAttrProvisioning;
 import com.zimbra.common.service.ServiceException;
@@ -35,6 +36,19 @@ import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class GetDomainInfo extends AdminDocumentHandler {
+
+    private static final Set<String> bootstrapInfoAttrs = ImmutableSet.of(
+            ZAttrProvisioning.A_zimbraSkinLogoURL,
+            ZAttrProvisioning.A_zimbraSkinLogoAppBanner,
+            ZAttrProvisioning.A_zimbraSkinLogoLoginBanner,
+            ZAttrProvisioning.A_zimbraAdminConsoleLoginURL,
+            ZAttrProvisioning.A_zimbraWebClientLoginURL,
+            ZAttrProvisioning.A_zimbraWebClientLoginURLAllowedUA,
+            ZAttrProvisioning.A_zimbraWebClientLoginURLAllowedIP,
+            ZAttrProvisioning.A_zimbraWebClientLogoutURL,
+            ZAttrProvisioning.A_zimbraWebClientLogoutURLAllowedUA,
+            ZAttrProvisioning.A_zimbraWebClientLogoutURLAllowedIP,
+            ZAttrProvisioning.A_zimbraWebClientMaxInputBufferLength);
 
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
@@ -93,10 +107,16 @@ public class GetDomainInfo extends AdminDocumentHandler {
         return response;
     }
 
-    private void addAttrElementIfNotNull(Entry entry, Element element, String key) {
-        String value = entry.getAttr(key, null);
-        if (value != null) {
-            element.addNonUniqueElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, key).setText(value);
+    private void addAttrElementIfNotNull(Entry entry, Element element, String key) throws ServiceException {
+        if (AttributeManager.getInstance().isMultiValued(key)) {
+            for (String value : entry.getMultiAttr(key)) {
+                element.addNonUniqueElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, key).setText(value);
+            }
+        } else {
+            String value = entry.getAttr(key, null);
+            if (value != null) {
+                element.addNonUniqueElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, key).setText(value);
+            }
         }
     }
 
@@ -106,17 +126,9 @@ public class GetDomainInfo extends AdminDocumentHandler {
             domain.addAttribute(AdminConstants.A_NAME, "VALUE-BLOCKED");
             domain.addAttribute(AdminConstants.A_ID, "VALUE-BLOCKED");
             if (entry != null) {
-                addAttrElementIfNotNull(entry, domain, ZAttrProvisioning.A_zimbraSkinLogoURL);
-                addAttrElementIfNotNull(entry, domain, ZAttrProvisioning.A_zimbraSkinLogoAppBanner);
-                addAttrElementIfNotNull(entry, domain, ZAttrProvisioning.A_zimbraSkinLogoLoginBanner);
-                addAttrElementIfNotNull(entry, domain, ZAttrProvisioning.A_zimbraAdminConsoleLoginURL);
-                addAttrElementIfNotNull(entry, domain, ZAttrProvisioning.A_zimbraWebClientLoginURL);
-                addAttrElementIfNotNull(entry, domain, ZAttrProvisioning.A_zimbraWebClientLoginURLAllowedUA);
-                addAttrElementIfNotNull(entry, domain, ZAttrProvisioning.A_zimbraWebClientLoginURLAllowedIP);
-                addAttrElementIfNotNull(entry, domain, ZAttrProvisioning.A_zimbraWebClientLogoutURL);
-                addAttrElementIfNotNull(entry, domain, ZAttrProvisioning.A_zimbraWebClientLogoutURLAllowedUA);
-                addAttrElementIfNotNull(entry, domain, ZAttrProvisioning.A_zimbraWebClientLogoutURLAllowedIP);
-                addAttrElementIfNotNull(entry, domain, ZAttrProvisioning.A_zimbraWebClientMaxInputBufferLength);
+                for (String attr : bootstrapInfoAttrs) {
+                    addAttrElementIfNotNull(entry, domain, attr);
+                }
             }
             return;
         }
