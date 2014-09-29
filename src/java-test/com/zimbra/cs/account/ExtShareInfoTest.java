@@ -22,8 +22,8 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.google.common.collect.Maps;
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.L10nUtil;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -46,7 +46,7 @@ public class ExtShareInfoTest {
     public void setUp() throws Exception {
          MailboxTestUtil.initServer();
 
-         LC.localized_msgs_directory.setDefault("conf/msgs");
+         L10nUtil.setMsgClassLoader("conf/msgs");
          Provisioning prov = Provisioning.getInstance();
          Map<String, Object> attrs = Maps.newHashMap();
          attrs.put(Provisioning.A_zimbraId, UUID.randomUUID().toString());
