@@ -83,6 +83,9 @@ public class ZimbraConfig {
 
     @Bean(name="jedisPool")
     public JedisPool jedisPoolBean() throws ServiceException {
+        if (!isRedisAvailable()) {
+            return null;
+        }
         URI uri = redisUri();
         return new JedisPool(uri.getHost(), uri.getPort());
     }
@@ -124,6 +127,9 @@ public class ZimbraConfig {
 
     @Bean(name="qlessClient")
     public QlessClient qlessClient() throws Exception {
+        if (!isRedisAvailable()) {
+            return null;
+        }
         JedisPool jedisPool = jedisPoolBean();
         QlessClient instance = new QlessClient(jedisPool);
         return instance;
