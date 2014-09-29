@@ -9688,4 +9688,37 @@ public class Mailbox {
             endTransaction(success);
         }
     }
+
+    /**
+     * @param octxt
+     * @param i
+     * @param sinceTime
+     * @param unknown
+     * @param object
+     * @return
+     */
+    public Pair<List<Integer>, TypedIdList> getItemsChangedSince(
+        OperationContext octxt,  int sinceDate) throws ServiceException {
+    lock.lock(false);
+    try {
+
+        boolean success = false;
+        try {
+            beginReadTransaction("getModifiedItems", octxt);
+
+            Set<Integer> folderIds = Folder.toId(getAccessibleFolders(ACL.RIGHT_READ));
+            Pair<List<Integer>, TypedIdList> dataList = DbMailItem
+                            .getItemsChangedSinceDate(this, MailItem.Type.UNKNOWN,  sinceDate, folderIds);
+            if (dataList == null) {
+                return null;
+            }
+            success = true;
+            return dataList;
+        } finally {
+            endTransaction(success);
+        }
+    } finally {
+        lock.release();
+    }
+    }
 }
