@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -2656,12 +2656,8 @@ public class DbMailItem {
         if (Mailbox.isCachedType(type)) {
             throw ServiceException.INVALID_REQUEST("folders and tags must be retrieved from cache", null);
         }
-        List<Integer> modified = new ArrayList<Integer>();
-        TypedIdList missed = new TypedIdList();
-
         DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
-        ResultSet rs = null;
         try {
             String typeConstraint = type == MailItem.Type.UNKNOWN ? "type NOT IN " + NON_SYNCABLE_TYPES : typeIn(type);
             String dateConstraint = sinceDate > 0 ? "date > ? AND " : "";
@@ -2678,8 +2674,65 @@ public class DbMailItem {
             if (sinceDate > 0) {
                 stmt.setInt(pos++, sinceDate);
             }
-            rs = stmt.executeQuery();
 
+            return  populateWithResultSetData(visible, stmt);
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("getting items modified since " + lastSync, e);
+        } finally {
+            DbPool.closeStatement(stmt);
+        }
+    }
+
+    public static Pair<List<Integer>, TypedIdList> getItemsChangedSinceDate(Mailbox mbox,
+        MailItem.Type type,  int changeDate, Set<Integer> visible)
+        throws ServiceException {
+        if (Mailbox.isCachedType(type)) {
+            throw ServiceException.INVALID_REQUEST("folders and tags must be retrieved from cache",
+                null);
+        }
+
+        DbConnection conn = mbox.getOperationConnection();
+        PreparedStatement stmt = null;
+        try {
+            String typeConstraint = type == MailItem.Type.UNKNOWN ? "type NOT IN "
+                + NON_SYNCABLE_TYPES : typeIn(type);
+            String dateConstraint = changeDate > 0 ? "change_date > ? AND " : "";
+            stmt = conn.prepareStatement("SELECT id, type, folder_id, uuid" + " FROM "
+                + getMailItemTableName(mbox) + " WHERE " + IN_THIS_MAILBOX_AND
+                + dateConstraint + typeConstraint
+                + " ORDER BY mod_metadata, id");
+            if (type == MailItem.Type.MESSAGE) {
+                Db.getInstance().enableStreaming(stmt);
+            }
+            int pos = 1;
+            pos = setMailboxId(stmt, mbox, pos);
+            if (changeDate > 0) {
+                stmt.setInt(pos++, changeDate);
+            }
+            return populateWithResultSetData(visible, stmt);
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("Getting items modified since " + changeDate, e);
+        } finally {
+            DbPool.closeStatement(stmt);
+        }
+    }
+
+    /**
+     * @param visible
+     * @param modified
+     * @param missed
+     * @param stmt
+     * @return
+     * @throws SQLException
+     * @throws ServiceException
+     */
+    private static Pair<List<Integer>, TypedIdList> populateWithResultSetData(Set<Integer> visible,
+        PreparedStatement stmt) throws SQLException, ServiceException {
+        List<Integer> modified = new ArrayList<Integer>();
+        TypedIdList missed = new TypedIdList();
+        ResultSet rs = null;
+        try {
+            rs = stmt.executeQuery();
             while (rs.next()) {
                 if (visible == null || visible.contains(rs.getInt(3))) {
                     modified.add(rs.getInt(1));
@@ -2687,14 +2740,11 @@ public class DbMailItem {
                     missed.add(MailItem.Type.of(rs.getByte(2)), rs.getInt(1), rs.getString(4));
                 }
             }
-
-            return new Pair<List<Integer>,TypedIdList>(modified, missed);
-        } catch (SQLException e) {
-            throw ServiceException.FAILURE("getting items modified since " + lastSync, e);
-        } finally {
-            DbPool.closeResults(rs);
-            DbPool.closeStatement(stmt);
         }
+        finally {
+            DbPool.closeResults(rs);
+        }
+        return new Pair<List<Integer>,TypedIdList>(modified, missed);
     }
 
     public static void completeConversation(Mailbox mbox, DbConnection conn, UnderlyingData data)
