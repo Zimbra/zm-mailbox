@@ -25,12 +25,12 @@ import redis.clients.jedis.Transaction;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.qless.Client;
 import com.zimbra.qless.Job;
+import com.zimbra.qless.QlessClient;
 import com.zimbra.qless.Queue;
 
 public class RedisQlessSharedDeliveryCoordinator extends RedisSharedDeliveryCoordinator {
-    @Autowired Client qless;
+    @Autowired QlessClient qless;
     Map<String, String> jidByAccountId = new HashMap<>();
 
     /** Constructor */
@@ -44,7 +44,7 @@ public class RedisQlessSharedDeliveryCoordinator extends RedisSharedDeliveryCoor
     protected Job getJob(Mailbox mbox) throws IOException {
         String jid = jidByAccountId.get(mbox.getAccountId());
         if (jid != null) {
-            return qless.jobs(jid);
+            return qless.getJob(jid);
         }
         return null;
     }

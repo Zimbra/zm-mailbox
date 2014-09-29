@@ -41,7 +41,7 @@ import com.zimbra.cs.redolog.DefaultRedoLogProvider;
 import com.zimbra.cs.redolog.RedoLogProvider;
 import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.store.file.FileBlobStore;
-import com.zimbra.qless.Client;
+import com.zimbra.qless.QlessClient;
 import com.zimbra.soap.DefaultSoapSessionFactory;
 import com.zimbra.soap.SoapSessionFactory;
 
@@ -123,9 +123,9 @@ public class ZimbraConfig {
     }
 
     @Bean(name="qlessClient")
-    public Client qlessClient() throws Exception {
+    public QlessClient qlessClient() throws Exception {
         JedisPool jedisPool = jedisPoolBean();
-        Client instance = new Client(jedisPool);
+        QlessClient instance = new QlessClient(jedisPool);
         return instance;
     }
 
