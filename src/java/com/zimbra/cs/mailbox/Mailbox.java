@@ -120,7 +120,6 @@ import com.zimbra.cs.ldap.LdapConstants;
 import com.zimbra.cs.mailbox.CalendarItem.AlarmData;
 import com.zimbra.cs.mailbox.CalendarItem.Callback;
 import com.zimbra.cs.mailbox.CalendarItem.ReplyInfo;
-import com.zimbra.cs.mailbox.FoldersTagsCache.FoldersTags;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata;
 import com.zimbra.cs.mailbox.MailItem.PendingDelete;
 import com.zimbra.cs.mailbox.MailItem.TargetConstraint;
@@ -739,7 +738,7 @@ public class Mailbox {
     // This class handles all the indexing internals for the Mailbox
     public final MailboxIndex index;
     public final MailboxLock lock;
-    
+
     /**
      * Bug: 94985 - Only allow one large empty folder operation to run at a time
      * to reduce the danger of having too many expensive operations running
@@ -2051,7 +2050,7 @@ public class Mailbox {
         requiresWriteLock = true;
         // Remove from memcached cache
         try {
-            FoldersTagsCache.getInstance().purgeMailbox(this);
+            mailboxManager.getFoldersAndTagsCache().remove(this);
         } catch (ServiceException e) {
             ZimbraLog.mailbox.warn("error deleting folders/tags cache from memcached.");
         }
@@ -2062,7 +2061,7 @@ public class Mailbox {
         requiresWriteLock = true;
         // Remove from memcached cache
         try {
-            FoldersTagsCache.getInstance().purgeMailbox(this);
+            mailboxManager.getFoldersAndTagsCache().remove(this);
         } catch (ServiceException e) {
             ZimbraLog.mailbox.warn("error deleting folders/tags cache from memcached.");
         }
@@ -2227,16 +2226,16 @@ public class Mailbox {
             // Load folders and tags from memcached if we can.
             boolean loadedFromMemcached = false;
             if (!initial && !DebugConfig.disableFoldersTagsCache) {
-                FoldersTagsCache ftCache = FoldersTagsCache.getInstance();
-                FoldersTags ftData = ftCache.get(this);
-                if (ftData != null) {
-                    List<Metadata> foldersMeta = ftData.getFolders();
+                FoldersAndTagsCache foldersAndTagsCache = mailboxManager.getFoldersAndTagsCache();
+                FoldersAndTags foldersAndTags = foldersAndTagsCache.get(this);
+                if (foldersAndTags != null) {
+                    List<Metadata> foldersMeta = foldersAndTags.getFolderMetadata();
                     for (Metadata meta : foldersMeta) {
                         MailItem.UnderlyingData ud = new MailItem.UnderlyingData();
                         ud.deserialize(meta);
                         folderData.put(ud, null);
                     }
-                    List<Metadata> tagsMeta = ftData.getTags();
+                    List<Metadata> tagsMeta = foldersAndTags.getTagMetadata();
                     for (Metadata meta : tagsMeta) {
                         MailItem.UnderlyingData ud = new MailItem.UnderlyingData();
                         ud.deserialize(meta);
@@ -2305,7 +2304,7 @@ public class Mailbox {
             }
 
             if (!loadedFromMemcached && !DebugConfig.disableFoldersTagsCache) {
-                cacheFoldersTagsToMemcached();
+                cacheFoldersAndTags();
             }
             if (requiresWriteLock) {
                 requiresWriteLock = false;
@@ -2319,24 +2318,28 @@ public class Mailbox {
         }
     }
 
-    void cacheFoldersTagsToMemcached() throws ServiceException {
+    void cacheFoldersAndTags() throws ServiceException {
         lock.lock();
         try {
-            List<Folder> folderList = new ArrayList<Folder>(mFolderCache.values());
-            List<Tag> tagList = new ArrayList<Tag>();
-            for (Map.Entry<Object, Tag> entry : mTagCache.entrySet()) {
-                // A tag is cached twice, once by its id and once by name.  Dedupe.
-                if (entry.getKey() instanceof String) {
-                    tagList.add(entry.getValue());
-                }
-            }
-            FoldersTags ftData = new FoldersTags(folderList, tagList);
-            FoldersTagsCache ftCache = FoldersTagsCache.getInstance();
-            ftCache.put(this, ftData);
+            FoldersAndTags foldersAndTags = getFoldersAndTags();
+            mailboxManager.getFoldersAndTagsCache().put(this, foldersAndTags);
         } finally {
             lock.release();
         }
     }
+
+    FoldersAndTags getFoldersAndTags() throws ServiceException {
+        List<Folder> folderList = new ArrayList<Folder>(mFolderCache.values());
+        List<Tag> tagList = new ArrayList<Tag>();
+        for (Map.Entry<Object, Tag> entry : mTagCache.entrySet()) {
+            // A tag is cached twice, once by its id and once by name.  Dedupe.
+            if (entry.getKey() instanceof String) {
+                tagList.add(entry.getValue());
+            }
+        }
+        return new FoldersAndTags(folderList, tagList);
+    }
+
 
     public void recalculateFolderAndTagCounts() throws ServiceException {
         boolean success = false;
@@ -9257,7 +9260,7 @@ public class Mailbox {
             }
 
             if (foldersTagsDirty) {
-                cacheFoldersTagsToMemcached();
+                cacheFoldersAndTags();
             }
         }
 

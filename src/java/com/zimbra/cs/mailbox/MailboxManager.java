@@ -145,6 +145,7 @@ public class MailboxManager {
     private ConversationIdCache conversationIdCache = new LocalConversationIdCache();
     private MailboxDataCache mailboxDataCache = new LocalMailboxDataCache();
     private SentMessageIdCache sentMessageIdCache = new LocalSentMessageIdCache();
+    private FoldersAndTagsCache foldersAndTagsCache = new MemcachedFoldersAndTagsCache();
 
     @Autowired private SharedDeliveryCoordinator sharedDeliveryCoordinator;
 
@@ -171,6 +172,10 @@ public class MailboxManager {
 
     public SentMessageIdCache getSentMessageIdCache() {
         return sentMessageIdCache;
+    }
+
+    public FoldersAndTagsCache getFoldersAndTagsCache() {
+        return foldersAndTagsCache;
     }
 
     protected MailboxMap createCache() {
