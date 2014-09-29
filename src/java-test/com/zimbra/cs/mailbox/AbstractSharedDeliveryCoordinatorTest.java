@@ -93,6 +93,24 @@ public abstract class AbstractSharedDeliveryCoordinatorTest {
     }
 
     @Test
+    public void testNestedSharedDelivery() throws Exception {
+        SharedDeliveryCoordinator sdc = Zimbra.getAppContext().getBean(SharedDeliveryCoordinator.class);
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+
+        Assert.assertTrue(sdc.beginSharedDelivery(mbox));
+        Assert.assertEquals(false, sdc.isSharedDeliveryComplete(mbox));
+
+        Assert.assertTrue(sdc.beginSharedDelivery(mbox));
+        Assert.assertEquals(false, sdc.isSharedDeliveryComplete(mbox));
+
+        sdc.endSharedDelivery(mbox);
+        Assert.assertFalse(sdc.isSharedDeliveryComplete(mbox));
+
+        sdc.endSharedDelivery(mbox);
+        Assert.assertTrue(sdc.isSharedDeliveryComplete(mbox));
+    }
+
+    @Test
     public void testWait() throws Exception {
         SharedDeliveryCoordinator sdc = Zimbra.getAppContext().getBean(SharedDeliveryCoordinator.class);
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);

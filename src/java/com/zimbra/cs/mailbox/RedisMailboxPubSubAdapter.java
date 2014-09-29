@@ -117,8 +117,11 @@ public class RedisMailboxPubSubAdapter implements MailboxPubSubAdapter {
     /** Unsubscribe from remote mailbox change notifications */
     @Override
     public void unsubscribe(Session session) {
-        String  key = session.getMailbox().getAccountId();
-        Set<Session> sessions = subscribedSessionsByAccountId.get(key);
+        Mailbox mbox = session.getMailbox();
+        if (mbox == null) {
+            return;
+        }
+        Set<Session> sessions = subscribedSessionsByAccountId.get(mbox.getAccountId());
         if (sessions != null) {
             sessions.remove(session);
         }
@@ -140,7 +143,7 @@ public class RedisMailboxPubSubAdapter implements MailboxPubSubAdapter {
         public Holder(ChangeNotification notification) throws ServiceException, IOException {
             accountId = notification.mailboxAccount.getId();
             changeId = notification.lastChangeId;
-            mailboxOp = notification.op.name();
+            mailboxOp = notification.op == null ? null : notification.op.name();
             senderServerId = Provisioning.getInstance().getLocalServer().getId();
             timestamp = DateUtil.toISO8601(new Date(notification.timestamp));
             contentType = "application/x-java-serialized-object; class=" + PendingModifications.class.getName();

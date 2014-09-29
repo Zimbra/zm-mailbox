@@ -35,12 +35,13 @@ import com.zimbra.cs.mailbox.LocalSharedDeliveryCoordinator;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxPubSubAdapter;
 import com.zimbra.cs.mailbox.RedisMailboxPubSubAdapter;
-import com.zimbra.cs.mailbox.RedisSharedDeliveryCoordinator;
+import com.zimbra.cs.mailbox.RedisQlessSharedDeliveryCoordinator;
 import com.zimbra.cs.mailbox.SharedDeliveryCoordinator;
 import com.zimbra.cs.redolog.DefaultRedoLogProvider;
 import com.zimbra.cs.redolog.RedoLogProvider;
 import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.store.file.FileBlobStore;
+import com.zimbra.qless.Client;
 import com.zimbra.soap.DefaultSoapSessionFactory;
 import com.zimbra.soap.SoapSessionFactory;
 
@@ -121,6 +122,13 @@ public class ZimbraConfig {
         }
     }
 
+    @Bean(name="qlessClient")
+    public Client qlessClient() throws Exception {
+        JedisPool jedisPool = jedisPoolBean();
+        Client instance = new Client(jedisPool);
+        return instance;
+    }
+
     public URI redisUri() throws ServiceException {
         try {
             return new URI("redis://localhost:6379"); // TODO
@@ -159,7 +167,7 @@ public class ZimbraConfig {
         }
         if (instance == null) {
             if (isRedisAvailable()) {
-                instance = new RedisSharedDeliveryCoordinator();
+                instance = new RedisQlessSharedDeliveryCoordinator();
 //            } else if (isMemcachedAvailable()) {
 //                TODO: Future Memcached-based shared delivery coordination support
 //                instance = new MemcachedSharedDeliveryCoordinator();
