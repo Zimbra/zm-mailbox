@@ -29,9 +29,11 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.mail.Address;
 import javax.mail.MessagingException;
@@ -85,6 +87,7 @@ public class MailSender {
 
     public static final String MSGTYPE_REPLY = String.valueOf(Flag.toChar(Flag.ID_REPLIED));
     public static final String MSGTYPE_FORWARD = String.valueOf(Flag.toChar(Flag.ID_FORWARDED));
+    private static Map<String, PreSendMailListener> mPreSendMailListeners = new ConcurrentHashMap<String, PreSendMailListener>();
 
     private Boolean mSaveToSent;
     private Collection<Upload> mUploads;
@@ -625,6 +628,20 @@ public class MailSender {
             if (mDsn != null && mSession != null)
                 mSession.getProperties().setProperty("mail.smtp.dsn.notify", mDsn);
 
+            //notify pre-send mail listeners
+            String[] customheaders = mm.getHeader(PRE_SEND_HEADER);
+            if(customheaders != null && customheaders.length > 0) {
+                ZimbraLog.mailbox.debug("Processing pre-send mail listeners");
+                for(PreSendMailListener listener : mPreSendMailListeners.values()) {
+                    try {
+                        listener.handle(mbox, getRecipients(mm), mm);
+                    } catch (Exception e) {
+                        ZimbraLog.mailbox.error("pre-send mail listener %s failed ", listener.getName(), e);
+                    }
+                }
+                mm.removeHeader(PRE_SEND_HEADER); //no need to keep the header in the message at this point
+            }
+
             // actually send the message via SMTP
             Collection<Address> sentAddresses = sendMessage(mbox, mm, rollbacks);
 
@@ -769,6 +786,7 @@ public class MailSender {
         }
     }
 
+    public static final String PRE_SEND_HEADER = "X-Zimbra-Presend";
     public static final String X_ORIGINATING_IP = "X-Originating-IP";
     private static final String X_MAILER = "X-Mailer";
     public static final String X_AUTHENTICATED_USER = "X-Authenticated-User";
@@ -1243,6 +1261,37 @@ public class MailSender {
 
         public Address[] getValidUnsentAddresses() {
             return mSfe.getValidUnsentAddresses();
+        }
+    }
+
+    public interface PreSendMailListener {
+        void handle(Mailbox mbox, Address[] recipients, MimeMessage mm);
+        String getName();
+    }
+
+    /**
+     * adds a listener to listen on emails being sent
+     * @param listener
+     */
+    public static void registerPreSendMailListener(PreSendMailListener listener) {
+        String name = listener.getName();
+        if (!mPreSendMailListeners.containsKey(name)) {
+            mPreSendMailListeners.put(name, listener);
+            ZimbraLog.extensions.info("registered SendMailListener " + name);
+        }
+    }
+
+    /**
+     * removes a listener that listens for emails being sent
+     * @param listener
+     */
+    public static void unregisterPreSendMailListener(PreSendMailListener listener) {
+        for (Iterator<String> it = mPreSendMailListeners.keySet().iterator(); it.hasNext(); ) {
+            String name = it.next();
+            if (name.equalsIgnoreCase(listener.getName())) {
+                it.remove();
+                ZimbraLog.extensions.info("unregistered SendMailListener " + name);
+            }
         }
     }
 }
