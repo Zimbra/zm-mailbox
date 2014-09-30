@@ -3356,7 +3356,7 @@ public class ProvUtil implements HttpDebugListener {
                     String attrName = n;
                     if (n.charAt(0) == '+' || n.charAt(0) == '-') {
                         attrName = attrName.substring(1);
-                    } else if (safeguarded_attrs.contains(attrName.toLowerCase()) && isMultiValued(attrMgr, attrName)) {
+                    } else if (safeguarded_attrs.contains(attrName.toLowerCase()) && attrMgr.isMultiValued(attrName)) {
                         multiValAttrsToCheck.add(attrName.toLowerCase());
                     }
                     if (needsBinaryIO(attrMgr, attrName) && v.length() > 0) {
@@ -3379,11 +3379,6 @@ public class ProvUtil implements HttpDebugListener {
                 }
 
                 return attrs;
-    }
-
-    private static boolean isMultiValued(AttributeManager attrMgr, String attrName) {
-        AttributeInfo attributeInfo = attrMgr.getAttributeInfo(attrName);
-        return attributeInfo != null && attributeInfo.getCardinality() == AttributeCardinality.multi;
     }
 
     private Map<String, Object> getAttrMap(String[] args, int offset, boolean isCreateCmd)

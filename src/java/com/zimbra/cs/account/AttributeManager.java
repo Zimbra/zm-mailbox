@@ -190,6 +190,11 @@ public class AttributeManager {
         }
     }
 
+    public boolean isMultiValued(String attrName) {
+        AttributeInfo attributeInfo = getAttributeInfo(attrName);
+        return attributeInfo != null && attributeInfo.getCardinality() == AttributeCardinality.multi;
+    }
+
     @VisibleForTesting
     void addAttribute(AttributeInfo info) {
         mAttrs.put(info.mName.toLowerCase(), info);
