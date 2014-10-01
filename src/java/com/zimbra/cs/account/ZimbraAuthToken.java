@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -92,7 +92,7 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
     private Integer tokenID = -1;
     private String server_version;   // version of the mailbox server where this account resides
     private boolean csrfTokenEnabled;
-    
+
     @Override
     public String toString() {
         return Objects.toStringHelper(this)
@@ -288,7 +288,7 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
         register();
     }
 
-    
+
 
     public ZimbraAuthToken(String acctId, String externalEmail, String pass, String digest, long expires)  {
         accountId = acctId;
@@ -375,13 +375,17 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
         return authMech;
     }
 
-    
+
     private void register() {
         try {
             Account acct = Provisioning.getInstance().get(AccountBy.id, accountId);
             if(!type.equalsIgnoreCase(C_TYPE_EXTERNAL_USER)) {
                 if (Provisioning.getInstance().getLocalServer().getLowestSupportedAuthVersion() > 1) {
-                    acct.cleanExpiredTokens(); //house keeping. If we are issuing a new token, clean up old ones.
+                    try {
+                        acct.cleanExpiredTokens(); //house keeping. If we are issuing a new token, clean up old ones.
+                    } catch (ServiceException e) {
+                        LOG.error("unable to de-register auth token", e);
+                    }
                     acct.addAuthTokens(String.format("%d|%d|%s", tokenID, this.expires, server_version));
                 }
             }
@@ -389,7 +393,7 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
             LOG.error("unable to register auth token", e);
         }
     }
-    
+
     //remove the token from LDAP (token will be invalid for cookie-based auth after that
     @Override
     public void deRegister() throws AuthTokenException {
@@ -620,11 +624,11 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
             encoded = null;
         }
     }
-    
+
     /**
      * This method is used to reset tokenID.
-     * One use case is when new authtoken is created by cloning existing authtoken, 
-     * tokenID of newly authtoken is reset to make it unique and all the other properties are 
+     * One use case is when new authtoken is created by cloning existing authtoken,
+     * tokenID of newly authtoken is reset to make it unique and all the other properties are
      * same as of authtoken from which it is cloned.
      * Cached encoded string is also reset as the due to change in TokenID.
      */
