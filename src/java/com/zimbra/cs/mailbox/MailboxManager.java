@@ -48,6 +48,8 @@ import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.index.IndexStore;
 import com.zimbra.cs.mailbox.Mailbox.MailboxData;
+import com.zimbra.cs.mailbox.acl.EffectiveACLCache;
+import com.zimbra.cs.mailbox.acl.MemcachedEffectiveACLCache;
 import com.zimbra.cs.redolog.op.CreateMailbox;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.util.AccountUtil;
@@ -146,6 +148,7 @@ public class MailboxManager {
     private MailboxDataCache mailboxDataCache = new LocalMailboxDataCache();
     private SentMessageIdCache sentMessageIdCache = new LocalSentMessageIdCache();
     private FoldersAndTagsCache foldersAndTagsCache = new MemcachedFoldersAndTagsCache();
+    private EffectiveACLCache effectiveACLCache = new MemcachedEffectiveACLCache();
 
     @Autowired private SharedDeliveryCoordinator sharedDeliveryCoordinator;
 
@@ -176,6 +179,10 @@ public class MailboxManager {
 
     public FoldersAndTagsCache getFoldersAndTagsCache() {
         return foldersAndTagsCache;
+    }
+
+    public EffectiveACLCache getEffectiveACLCache() {
+        return effectiveACLCache;
     }
 
     protected MailboxMap createCache() {

@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2009, 2010, 2011, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -41,6 +41,7 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.cs.util.Zimbra;
 
 /*
  * TODO:
@@ -235,7 +236,8 @@ public class FolderACL {
      * returns null if not in cache
      */
     private ACL getEffectiveACLFromCache() throws ServiceException {
-        return EffectiveACLCache.get(mShareTarget.getAccountId(), mShareTarget.getFolderId());
+        EffectiveACLCache effectiveACLCache = Zimbra.getAppContext().getBean(MailboxManager.class).getEffectiveACLCache();
+        return effectiveACLCache.get(mShareTarget.getAccountId(), mShareTarget.getFolderId());
     }
 
     /*
@@ -258,7 +260,8 @@ public class FolderACL {
 
         // cache the effective folder ACL in memcached - independent of the authed user
         ACL acl = folder.getEffectiveACL();
-        EffectiveACLCache.put(folder.getAccount().getId(), folder.getId(), acl);
+        EffectiveACLCache effectiveACLCache = Zimbra.getAppContext().getBean(MailboxManager.class).getEffectiveACLCache();
+        effectiveACLCache.put(folder.getAccount().getId(), folder.getId(), acl);
 
         // return the effective permission - auth user dependent
         return ownerMbx.getEffectivePermissions(octxt.getAuthenticatedUser(), octxt.isUsingAdminPrivileges(),
