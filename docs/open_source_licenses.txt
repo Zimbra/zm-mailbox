@@ -1,6 +1,6 @@
 open_source_license.txt
 
-Zimbra Collaboration Suite 8.5.0 GA
+Zimbra Collaboration Suite 8.5.0 BETA3
 
 
 ===========================================================================
@@ -32,6 +32,7 @@ PART 1. APPLICATION LAYER
 
 SECTION 1: BSD-STYLE, MIT-STYLE, OR SIMILAR STYLE LICENSES
 
+   >>> aopalliance-1.0
    >>> altermime-0.3-20100505
    >>> amavis-logwatch-1.51.03pre4
    >>> ant-contrib-1.0b1
@@ -58,6 +59,7 @@ SECTION 1: BSD-STYLE, MIT-STYLE, OR SIMILAR STYLE LICENSES
    >>> jce_policy-7
    >>> jdk-1.7.0_55
    >>> jdom-1.1
+   >>> jedis-2.5.2
    >>> jquery-1.8.1
    >>> json-1.0
    >>> jython-2.5.2
@@ -76,7 +78,7 @@ SECTION 1: BSD-STYLE, MIT-STYLE, OR SIMILAR STYLE LICENSES
    >>> nviennot-nginx-tcp-keepalive-4d7186d
    >>> opendkim-2.9.2
    >>> openldap-2.4.40
-   >>> openssl-1.0.1i
+   >>> openssl-1.0.1h
    >>> perl-data-uuid-1.219
    >>> perl-geography-countries-2009041301
    >>> perl-locale-maketext-simple-0.21
@@ -114,6 +116,7 @@ SECTION 2: Apache License, V2.0
    >>> apache-commons-io-1.4
    >>> apache-commons-logging-1.1.1
    >>> apache-commons-pool-1.6
+   >>> apache-commons-pool2-2.0
    >>> apache-helix-0.6.1
    >>> apache-httpasyncclient-4.0-beta3
    >>> apache-httpcomponents-core-4.2.2
@@ -139,10 +142,10 @@ SECTION 2: Apache License, V2.0
    >>> org.apache.mina-2.0.4
    >>> org.openid4java-0.9.5
    >>> ridl-4.0.2
-   >>> selenium-2.37.0
+   >>> selenium-2.43.0
    >>> smack-3.2.1
    >>> spamassassin-3.4.0
-   >>> spring-framework-3.0.7
+   >>> spring-framework-3.2.10
    >>> stax2-api-3.1.1
    >>> testng-5.12.1
    >>> unoil-4.0.2
@@ -171,7 +174,7 @@ SECTION 4: Common Development and Distribution License, V1.0
 
 SECTION 5: Common Development and Distribution License, V1.1
 
-   >>> jax-ws-2.2.6
+   >>> jax-ws-2.2.8
    >>> jersey-multipart-1.12
 
 
@@ -423,6 +426,12 @@ SECTION 16: Common Public License, V1.0
 
 
 
+SECTION 17: Eclipse Public License, V1.0
+
+   >>> aspectjweaver-1.7.4
+
+
+
 APPENDIX. Standard License Files
 
    >>> GNU General Public License, V2.0
@@ -476,6 +485,13 @@ APPENDIX. Standard License Files
 --------------- SECTION 1:  BSD-STYLE, MIT-STYLE, OR SIMILAR STYLE LICENSES ----------
 
 BSD-STYLE, MIT-STYLE, OR SIMILAR STYLE LICENSES are applicable to the following component(s).
+
+
+>>> aopalliance-1.0
+
+The AOP Alliance project is a joint open-source project between several software engineering people who are interested in AOP and Java.
+
+LICENCE: all the source code provided by AOP Alliance is Public Domain. 
 
 
 >>> altermime-0.3-20100505
@@ -17246,6 +17262,32 @@ Copyright (C) 2000-2004 Jason Hunter & Brett McLaughlin.
  on the JDOM Project, please see <http://www.jdom.org/>.
 
 
+>>> jedis-2.5.2
+
+Copyright (c) 2010 Jonathan Leibiusky
+
+Permission is hereby granted, free of charge, to any person
+obtaining a copy of this software and associated documentation
+files (the "Software"), to deal in the Software without
+restriction, including without limitation the rights to use,
+copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the
+Software is furnished to do so, subject to the following
+conditions:
+
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+OTHER DEALINGS IN THE SOFTWARE.
+
+
 >>> jquery-1.8.1
 
 Copyright 2013 jQuery Foundation and other contributors
@@ -19795,7 +19837,7 @@ California, USA.  All Rights Reserved.  Permission to copy and
 distribute verbatim copies of this document is granted.
 
 
->>> openssl-1.0.1i
+>>> openssl-1.0.1h
 
 LICENSE ISSUES
   ==============
@@ -21388,6 +21430,11 @@ Copyright 2001-2012 The Apache Software Foundation
 
 This product includes software developed by
 The Apache Software Foundation (http://www.apache.org/).
+
+
+>>> apache-commons-pool2-2.0
+
+License: Apache License 2.0
 
 
 >>> apache-helix-0.6.1
@@ -27505,7 +27552,7 @@ License : Apache 2.0
 License : Apache 2.0
 
 
->>> selenium-2.37.0
+>>> selenium-2.43.0
 
 Copyright 2008-2009 Web Driver committers
 Copyright 2008-2009 Google Inc.
@@ -27541,7 +27588,7 @@ limitations under the License.
 License: Apache 2.0
 
 
->>> spring-framework-3.0.7
+>>> spring-framework-3.2.10
 
 /*
  * Copyright 2002-2009 the original author or authors.
@@ -28742,12 +28789,12 @@ Copyright 2005 Sun Microsystems, Inc. All rights reserved.
 Common Development and Distribution License, V1.1 is applicable to the following component(s).
 
 
->>> jax-ws-2.2.6
+>>> jax-ws-2.2.8
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO INCLUDE THIS SOFTWARE IN THIS DISTRIBUTION UNDER THE CDDL 1.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE CDDL 1.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
 
- Copyright (c) 1997-2010 Oracle and/or its affiliates. All rights reserved.
+ Copyright (c) 1997-2013 Oracle and/or its affiliates. All rights reserved.
 
  The contents of this file are subject to the terms of either the GNU
  General Public License Version 2 only ("GPL") or the Common Development
@@ -35251,6 +35298,15 @@ License: MPL v2.0
 >>> wsdl4j-1.6.3
 
 
+
+--------------- SECTION 16: Eclipse Public License, V1.0 ----------
+
+>>> aspectjweaver-1.7.4
+
+License: EPL V1.0
+
+
+
 =============== APPENDIX. Standard License Files ============== 
 
 
@@ -41306,4 +41362,4 @@ any resulting litigation.
 
 Last updated 10 Jun 2014
 
-[ZCS850GAVV100614]
+[ZCS850BETA3VV100614]
