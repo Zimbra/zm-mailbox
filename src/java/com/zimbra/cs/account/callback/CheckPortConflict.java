@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -36,39 +36,46 @@ import com.zimbra.cs.account.Server;
 
 public class CheckPortConflict extends AttributeCallback {
 
-    private static final Set<String> sPortAttrs = new HashSet<String>();
+    private static final Set<String> ProxyPortAttrs = new HashSet<String>();
 
     static {
         // TODO: use a flag in zimbra-attrs.xml and generate this map automatically
-        sPortAttrs.add(Provisioning.A_zimbraAdminPort);
-        sPortAttrs.add(Provisioning.A_zimbraAdminProxyPort);
+        ProxyPortAttrs.add(Provisioning.A_zimbraAdminProxyPort);
 
-        sPortAttrs.add(Provisioning.A_zimbraImapBindPort);
-        sPortAttrs.add(Provisioning.A_zimbraImapSSLBindPort);
-        sPortAttrs.add(Provisioning.A_zimbraImapProxyBindPort);
-        sPortAttrs.add(Provisioning.A_zimbraImapSSLProxyBindPort);
+        ProxyPortAttrs.add(Provisioning.A_zimbraImapProxyBindPort);
+        ProxyPortAttrs.add(Provisioning.A_zimbraImapSSLProxyBindPort);
 
-        sPortAttrs.add(Provisioning.A_zimbraLmtpBindPort);
+        ProxyPortAttrs.add(Provisioning.A_zimbraPop3ProxyBindPort);
+        ProxyPortAttrs.add(Provisioning.A_zimbraPop3SSLProxyBindPort);
 
-        sPortAttrs.add(Provisioning.A_zimbraMailPort);
-        sPortAttrs.add(Provisioning.A_zimbraMailSSLPort);
-        sPortAttrs.add(Provisioning.A_zimbraMailSSLClientCertPort);
-
-        sPortAttrs.add(Provisioning.A_zimbraPop3BindPort);
-        sPortAttrs.add(Provisioning.A_zimbraPop3SSLBindPort);
-        sPortAttrs.add(Provisioning.A_zimbraPop3ProxyBindPort);
-        sPortAttrs.add(Provisioning.A_zimbraPop3SSLProxyBindPort);
-
-        sPortAttrs.add(Provisioning.A_zimbraRemoteManagementPort);
-
-        sPortAttrs.add(Provisioning.A_zimbraMemcachedBindPort);
-
-        sPortAttrs.add(Provisioning.A_zimbraMailProxyPort);
-        sPortAttrs.add(Provisioning.A_zimbraMailSSLProxyPort);
-        sPortAttrs.add(Provisioning.A_zimbraMailSSLProxyClientCertPort);
-
-        sPortAttrs.add(Provisioning.A_zimbraMessageChannelPort);
+        ProxyPortAttrs.add(Provisioning.A_zimbraMailProxyPort);
+        ProxyPortAttrs.add(Provisioning.A_zimbraMailSSLProxyPort);
+        ProxyPortAttrs.add(Provisioning.A_zimbraMailSSLProxyClientCertPort);
     }
+
+    private static final Set<String> NonProxyPortAttrs = new HashSet<String>();
+
+    static {
+        // TODO: use a flag in zimbra-attrs.xml and generate this map automatically
+        NonProxyPortAttrs.add(Provisioning.A_zimbraAdminPort);
+
+        NonProxyPortAttrs.add(Provisioning.A_zimbraImapBindPort);
+        NonProxyPortAttrs.add(Provisioning.A_zimbraImapSSLBindPort);
+
+        NonProxyPortAttrs.add(Provisioning.A_zimbraPop3BindPort);
+        NonProxyPortAttrs.add(Provisioning.A_zimbraPop3SSLBindPort);
+
+        NonProxyPortAttrs.add(Provisioning.A_zimbraMailPort);
+        NonProxyPortAttrs.add(Provisioning.A_zimbraMailSSLPort);
+        NonProxyPortAttrs.add(Provisioning.A_zimbraMailSSLClientCertPort);
+
+        NonProxyPortAttrs.add(Provisioning.A_zimbraLmtpBindPort);
+        NonProxyPortAttrs.add(Provisioning.A_zimbraRemoteManagementPort);
+        NonProxyPortAttrs.add(Provisioning.A_zimbraMemcachedBindPort);
+        NonProxyPortAttrs.add(Provisioning.A_zimbraMessageChannelPort);
+    }
+
+    private static Set<String> sPortAttrs = new HashSet<String>(NonProxyPortAttrs);
 
     @Override
     public void preModify(CallbackContext context, String attrName, Object attrValue,
@@ -80,6 +87,9 @@ public class CheckPortConflict extends AttributeCallback {
         if (context.isDoneAndSetIfNot(CheckPortConflict.class)) {
             return;
         }
+
+        // Have sPortAttrs as a union of NonProxyPortAttrs & ProxyPortAttrs
+        sPortAttrs.addAll(ProxyPortAttrs);
 
         // sanity check, zimbra-attrs.xml and the sPortAttrsToCheck map has to be in sync
         if (!sPortAttrs.contains(attrName) ||
@@ -127,7 +137,7 @@ public class CheckPortConflict extends AttributeCallback {
                 }
             }
 
-            if (conflict(ports, newValue)) {
+            if (conflict(server, ports, newValue, attrName)) {
                 String serverInfo = (server == null) ? "" : " on server " + server.getName();
                 throw ServiceException.INVALID_REQUEST("port " + newValue + " conflict between " +
                                                        attrName + " and " + ports.get(newValue) + serverInfo, null);
@@ -160,7 +170,7 @@ public class CheckPortConflict extends AttributeCallback {
             if (mod.setting())
                 newValue = mod.value();
 
-            if (conflict(newDefaults, newValue)) {
+            if (conflict(null, newDefaults, newValue, attrName)) {
                 throw ServiceException.INVALID_REQUEST("port " + newValue + " conflict between " +
                         attrName + " and " + newDefaults.get(newValue) + " on global config", null);
             } else
@@ -190,7 +200,7 @@ public class CheckPortConflict extends AttributeCallback {
             else
                 newValue = curValue;
 
-            if (conflict(ports, newValue)) {
+            if (conflict(server, ports, newValue, attrName)) {
                 String conflictWith = ports.get(newValue);
                 // throw only when the attr is one of the attrs being modified, otherwise, just let it pass.
                 if (configAttrsToModify.containsKey(attrName) || configAttrsToModify.containsKey(conflictWith))
@@ -201,13 +211,20 @@ public class CheckPortConflict extends AttributeCallback {
         }
     }
 
-    private boolean conflict(Map<String, String> ports, String port) {
+    private boolean conflict(Server server, Map<String, String> ports, String port, String attrName) {
 
         if (StringUtil.isNullOrEmpty(port))
             return false;
         else if (port.equals("0"))
             return false;
-        else
+        else if (server != null) {
+            if (ProxyPortAttrs.contains(attrName) && NonProxyPortAttrs.contains(ports.get(port)) && !server.hasMailboxService())
+                return false;
+            else if (NonProxyPortAttrs.contains(attrName) && ProxyPortAttrs.contains(ports.get(port)) && !server.hasProxyService())
+                return false;
+            else
+                return ports.containsKey(port);
+        } else
             return ports.containsKey(port);
     }
 

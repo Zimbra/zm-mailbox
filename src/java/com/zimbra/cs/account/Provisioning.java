@@ -83,6 +83,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public static final String DEFAULT_EXTERNAL_COS_NAME = "defaultExternal";
 
     public static final String SERVICE_MAILBOX   = "mailbox";
+    public static final String SERVICE_PROXY = "proxy";
     public static final String SERVICE_MEMCACHED = "memcached";
 
     /**
