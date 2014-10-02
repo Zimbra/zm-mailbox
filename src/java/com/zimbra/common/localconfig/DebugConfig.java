@@ -236,8 +236,17 @@ public final class DebugConfig {
     public static boolean defang_block_form_same_host_post_req = value("defang_block_form_same_host_post_req", true);
 
 
-    public static final boolean disableShareExpirationListener =
+    private static boolean disableShareExpirationListener =
             value("debug_disable_share_expiration_listener", false);
+
+    public static boolean isDisableShareExpirationListener() {
+        return disableShareExpirationListener;
+    }
+
+    public static void setDisableShareExpirationListener(
+            boolean disableShareExpirationListener) {
+        DebugConfig.disableShareExpirationListener = disableShareExpirationListener;
+    }
 
     public static final boolean skipVirtualAccountRegistrationPage =
             value("skip_virtual_account_registration_page", false);
