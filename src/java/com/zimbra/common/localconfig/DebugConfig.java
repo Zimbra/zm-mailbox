@@ -16,6 +16,8 @@
  */
 package com.zimbra.common.localconfig;
 
+import com.google.common.annotations.VisibleForTesting;
+
 
 /**
  * Various switches to turn features on/off, mainly for measuring the
@@ -131,8 +133,17 @@ public final class DebugConfig {
      * Huge Database (contention and the effects of corruption are issues) and database-per-user (which most DBMSes
      * can't deal with).
      */
-    public static final int numMailboxGroups = disableMailboxGroups ?
+    private static int numMailboxGroups = disableMailboxGroups ?
             Integer.MAX_VALUE : Math.max(LC.zimbra_mailbox_groups.intValue(), 1);
+
+    public static int getNumMailboxGroups() {
+        return numMailboxGroups;
+    }
+
+    @VisibleForTesting
+    public static void setNumMailboxGroup(int numGroups) {
+        numMailboxGroups = numGroups;
+    }
 
     /** If true, more than one server may be sharing the same store and
      *  database install.  In that case, the server must perform extra checks
@@ -247,7 +258,7 @@ public final class DebugConfig {
     public static final boolean debugLocalSplit = value("debug_local_websplit", false);
 
     public static final boolean allowUnauthedPing = value("allow_unauthed_ping", false);
-    
+
     /*
      * Default maximum size of convertd response. This reduces OOME in case of
      * large response
@@ -268,7 +279,7 @@ public final class DebugConfig {
             return defaultValue;
         }
     }
-    
+
     private static long value(String key, long defaultValue) {
         String value = LC.get(key);
         try {
