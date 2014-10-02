@@ -36,6 +36,7 @@ import org.apache.commons.io.FileUtils;
 
 import com.google.common.base.Strings;
 import com.zimbra.common.calendar.ZCalendar.ZVCalendar;
+import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.ContentDisposition;
 import com.zimbra.common.mime.MimeConstants;
@@ -117,6 +118,8 @@ public final class MailboxTestUtil {
     public static void initServer(Class<? extends StoreManager> storeManagerClass, String zimbraServerDir, boolean OctopusInstance) throws Exception {
         initProvisioning(zimbraServerDir);
 
+        LC.zimbra_mailbox_groups.setDefault(1);
+        DebugConfig.setNumMailboxGroup(1);
         LC.zimbra_class_database.setDefault(HSQLDB.class.getName());
         DbPool.startup();
         HSQLDB.createDatabase(zimbraServerDir, OctopusInstance);
@@ -130,7 +133,8 @@ public final class MailboxTestUtil {
 
     public static void initServer(Class<? extends StoreManager> storeManagerClass, String zimbraServerDir) throws Exception {
         initProvisioning(zimbraServerDir);
-
+        LC.zimbra_mailbox_groups.setDefault(1);
+        DebugConfig.setNumMailboxGroup(1);
         LC.zimbra_class_database.setDefault(HSQLDB.class.getName());
         DbPool.startup();
         HSQLDB.createDatabase(zimbraServerDir, false);

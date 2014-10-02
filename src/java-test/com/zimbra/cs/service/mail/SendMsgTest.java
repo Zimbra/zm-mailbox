@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -43,6 +43,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.google.common.collect.Maps;
+import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
@@ -71,7 +72,12 @@ public class SendMsgTest {
 
     @BeforeClass
     public static void init() throws Exception {
+        int i = DebugConfig.getNumMailboxGroups();
+
         MailboxTestUtil.initServer();
+
+        int after = DebugConfig.getNumMailboxGroups();
+        Assert.assertEquals(1, after);
         Provisioning prov = Provisioning.getInstance();
 
         prov.createAccount("test@zimbra.com", "secret", Maps.<String, Object>newHashMap());
@@ -229,7 +235,7 @@ public class SendMsgTest {
 
         Account rcpt = Provisioning.getInstance().getAccountByName("rcpt@zimbra.com");
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(rcpt);
-        
+
         // Configure test timezones.ics file.
         File tzFile = File.createTempFile("timezones-", ".ics");
         BufferedWriter writer= new BufferedWriter(new FileWriter(tzFile));
