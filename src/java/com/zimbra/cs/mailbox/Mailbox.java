@@ -771,7 +771,7 @@ public class Mailbox {
         mData = data;
         mData.lastChangeDate = System.currentTimeMillis();
         index = new MailboxIndex(this);
-        lock = new MailboxLock(data.accountId, this);
+        lock = mailboxManager.getMailboxLockFactory().create(data.accountId, this);
     }
 
     public MailboxManager getMailboxManager() {

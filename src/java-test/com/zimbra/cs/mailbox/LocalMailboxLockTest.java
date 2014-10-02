@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -34,10 +34,10 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Mailbox.FolderNode;
-import com.zimbra.cs.mailbox.MailboxLock.LockFailedException;
+import com.zimbra.cs.mailbox.LocalMailboxLock.LockFailedException;
 import com.zimbra.cs.service.util.ItemId;
 
-public class MailboxLockTest {
+public class LocalMailboxLockTest {
     @BeforeClass
     public static void init() throws Exception {
         MailboxTestUtil.initServer();
@@ -247,7 +247,7 @@ public class MailboxLockTest {
                     //start read thread only after holding mailbox lock
                     readThread.start();
                     //wait until read thread has tried to obtain mailbox lock
-                    while (!mbox.lock.hasQueuedThreads()) {
+                    while (!((LocalMailboxLock)mbox.lock).hasQueuedThreads()) {
                         Thread.sleep(10);
                     }
                     mbox.purge(MailItem.Type.FOLDER);
@@ -356,7 +356,7 @@ public class MailboxLockTest {
         } catch (ServiceException e) {
             Assert.fail();
         }
-        while (mbox.lock.getQueueLength() < LC.zimbra_mailbox_lock_max_waiting_threads.intValue()) {
+        while (((LocalMailboxLock)mbox.lock).getQueueLength() < LC.zimbra_mailbox_lock_max_waiting_threads.intValue()) {
             try {
                 Thread.sleep(100);
             } catch (InterruptedException e) {
@@ -446,7 +446,7 @@ public class MailboxLockTest {
         } catch (ServiceException e) {
             Assert.fail();
         }
-        while (mbox.lock.getQueueLength() < LC.zimbra_mailbox_lock_max_waiting_threads.intValue()) {
+        while (((LocalMailboxLock)mbox.lock).getQueueLength() < LC.zimbra_mailbox_lock_max_waiting_threads.intValue()) {
             try {
                 Thread.sleep(100);
             } catch (InterruptedException e) {
@@ -572,7 +572,7 @@ public class MailboxLockTest {
         } catch (ServiceException e) {
             Assert.fail();
         }
-        while (mbox.lock.getQueueLength() < LC.zimbra_mailbox_lock_max_waiting_threads.intValue()) {
+        while (((LocalMailboxLock)mbox.lock).getQueueLength() < LC.zimbra_mailbox_lock_max_waiting_threads.intValue()) {
             try {
                 Thread.sleep(100);
             } catch (InterruptedException e) {

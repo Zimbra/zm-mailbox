@@ -150,6 +150,7 @@ public class MailboxManager {
     private FoldersAndTagsCache foldersAndTagsCache = new MemcachedFoldersAndTagsCache();
     private EffectiveACLCache effectiveACLCache = new MemcachedEffectiveACLCache();
 
+    @Autowired private MailboxLockFactory mailboxLockFactory;
     @Autowired private SharedDeliveryCoordinator sharedDeliveryCoordinator;
 
     public MailboxManager() {
@@ -575,6 +576,10 @@ public class MailboxManager {
     public MailboxDataCache getMailboxDataCache() {
         return mailboxDataCache;
 	}
+
+    public MailboxLockFactory getMailboxLockFactory() {
+        return mailboxLockFactory;
+    }
 
     public SharedDeliveryCoordinator getSharedDeliveryCoordinator() {
         return sharedDeliveryCoordinator;

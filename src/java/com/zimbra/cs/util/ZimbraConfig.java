@@ -32,6 +32,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.extension.ExtensionUtil;
 import com.zimbra.cs.mailbox.LocalSharedDeliveryCoordinator;
+import com.zimbra.cs.mailbox.MailboxLockFactory;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxPubSubAdapter;
 import com.zimbra.cs.mailbox.RedisMailboxPubSubAdapter;
@@ -90,9 +91,14 @@ public class ZimbraConfig {
         return new JedisPool(uri.getHost(), uri.getPort());
     }
 
-	@Bean(name="mailboxManager")
-	public MailboxManager mailboxManagerBean() throws ServiceException {
-		MailboxManager instance = null;
+    @Bean(name="mailboxLockFactory")
+    public MailboxLockFactory mailboxLockFactoryBean() throws ServiceException {
+        return new MailboxLockFactory();
+    }
+
+    @Bean(name="mailboxManager")
+    public MailboxManager mailboxManagerBean() throws ServiceException {
+        MailboxManager instance = null;
         String className = LC.zimbra_class_mboxmanager.value();
         if (className != null && !className.equals("")) {
             try {
@@ -109,8 +115,8 @@ public class ZimbraConfig {
         if (instance == null) {
             instance = new MailboxManager();
         }
-		return instance;
-	}
+        return instance;
+    }
 
     /**
      * Redis or AMQP pub/sub adapter, which is used to coordinate cache invalidations and other
