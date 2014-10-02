@@ -120,6 +120,7 @@ public final class MailboxTestUtil {
 
         LC.zimbra_mailbox_groups.setDefault(1);
         DebugConfig.setNumMailboxGroup(1);
+        DebugConfig.setDisableShareExpirationListener(true);
         LC.zimbra_class_database.setDefault(HSQLDB.class.getName());
         DbPool.startup();
         HSQLDB.createDatabase(zimbraServerDir, OctopusInstance);
@@ -135,6 +136,7 @@ public final class MailboxTestUtil {
         initProvisioning(zimbraServerDir);
         LC.zimbra_mailbox_groups.setDefault(1);
         DebugConfig.setNumMailboxGroup(1);
+        DebugConfig.setDisableShareExpirationListener(true);
         LC.zimbra_class_database.setDefault(HSQLDB.class.getName());
         DbPool.startup();
         HSQLDB.createDatabase(zimbraServerDir, false);

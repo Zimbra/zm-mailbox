@@ -102,7 +102,7 @@ public abstract class MailboxListener {
         if (application.supports(AclPushListener.class)) {
             register(new AclPushListener());
         }
-        if (application.supports(ShareExpirationListener.class) && !DebugConfig.disableShareExpirationListener) {
+        if (application.supports(ShareExpirationListener.class) && !DebugConfig.isDisableShareExpirationListener()) {
             register(new ShareExpirationListener());
         }
         final MailboxPubSubAdapter mailboxPubSubAdapter = Zimbra.getAppContext().getBean(MailboxPubSubAdapter.class);
