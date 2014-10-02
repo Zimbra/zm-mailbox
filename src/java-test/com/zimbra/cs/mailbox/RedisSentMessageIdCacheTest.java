@@ -13,16 +13,32 @@
  */
 package com.zimbra.cs.mailbox;
 
+import java.util.HashMap;
+
+import org.junit.BeforeClass;
+
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.store.MockStoreManager;
 import com.zimbra.cs.util.Zimbra;
+import com.zimbra.cs.util.ZimbraConfig;
 
 /**
  * Unit test for {@link RedisSentMessageIdCache}.
  */
 public final class RedisSentMessageIdCacheTest extends AbstractSentMessageIdCacheTest {
+
+    @BeforeClass
+    public static void init() throws Exception {
+        LC.zimbra_class_shareddeliverycoordinator.setDefault(RedisQlessSharedDeliveryCoordinator.class.getName());
+        MailboxTestUtil.initServer(MockStoreManager.class, "", RedisOnLocalhostZimbraConfig.class);
+        Provisioning prov = Provisioning.getInstance();
+        prov.createAccount("test@zimbra.com", "secret", new HashMap<String, Object>());
+    }
 
     @Override
     protected SentMessageIdCache constructCache() throws ServiceException {
@@ -33,14 +49,7 @@ public final class RedisSentMessageIdCacheTest extends AbstractSentMessageIdCach
 
     @Override
     protected boolean isExternalCacheAvailableForTest() throws Exception {
-        JedisPool jedisPool = Zimbra.getAppContext().getBean(JedisPool.class);
-        try {
-            Jedis jedis = jedisPool.getResource();
-            jedisPool.returnResource(jedis);
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
+        return Zimbra.getAppContext().getBean(ZimbraConfig.class).isRedisAvailable();
     }
 
     @Override

@@ -13,6 +13,8 @@
  */
 package com.zimbra.cs.mailbox;
 
+import java.util.HashMap;
+
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -21,7 +23,10 @@ import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.store.MockStoreManager;
 import com.zimbra.cs.util.Zimbra;
+import com.zimbra.cs.util.ZimbraConfig;
 
 /**
  * Unit test for {@link RedisSharedDeliveryCoordinator}.
@@ -31,7 +36,9 @@ public final class RedisSharedDeliveryCoordinatorTest extends AbstractSharedDeli
     @BeforeClass
     public static void init() throws Exception {
         LC.zimbra_class_shareddeliverycoordinator.setDefault(RedisSharedDeliveryCoordinator.class.getName());
-        AbstractSharedDeliveryCoordinatorTest.init();
+        MailboxTestUtil.initServer(MockStoreManager.class, "", RedisOnLocalhostZimbraConfig.class);
+        Provisioning prov = Provisioning.getInstance();
+        prov.createAccount("test@zimbra.com", "secret", new HashMap<String, Object>());
     }
 
     @Override
@@ -46,14 +53,7 @@ public final class RedisSharedDeliveryCoordinatorTest extends AbstractSharedDeli
     }
 
     protected boolean isExternalCacheAvailableForTest() throws Exception {
-      JedisPool jedisPool = Zimbra.getAppContext().getBean(JedisPool.class);
-      try {
-          Jedis jedis = jedisPool.getResource();
-          jedisPool.returnResource(jedis);
-          return true;
-      } catch (Exception e) {
-          return false;
-      }
+        return Zimbra.getAppContext().getBean(ZimbraConfig.class).isRedisAvailable();
     }
 
     @Test

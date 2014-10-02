@@ -61,6 +61,7 @@ import com.zimbra.cs.store.http.HttpStoreManagerTest.MockHttpStoreManager;
 import com.zimbra.cs.store.http.MockHttpStore;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.cs.util.Zimbra;
+import com.zimbra.cs.util.ZimbraConfig;
 import com.zimbra.soap.DocumentHandler;
 
 public final class MailboxTestUtil {
@@ -133,6 +134,10 @@ public final class MailboxTestUtil {
     }
 
     public static void initServer(Class<? extends StoreManager> storeManagerClass, String zimbraServerDir) throws Exception {
+        initServer(storeManagerClass, zimbraServerDir, ZimbraConfig.class);
+    }
+
+    public static void initServer(Class<? extends StoreManager> storeManagerClass, String zimbraServerDir, Class configClass) throws Exception {
         initProvisioning(zimbraServerDir);
         LC.zimbra_mailbox_groups.setDefault(1);
         DebugConfig.setNumMailboxGroup(1);
@@ -144,7 +149,7 @@ public final class MailboxTestUtil {
         IndexStore.setFactory(LC.zimbra_class_index_store_factory.value());
 
         LC.zimbra_class_store.setDefault(storeManagerClass.getName());
-        Zimbra.startupTest();
+        Zimbra.startupTest(configClass);
         StoreManager.getInstance().startup();
     }
 

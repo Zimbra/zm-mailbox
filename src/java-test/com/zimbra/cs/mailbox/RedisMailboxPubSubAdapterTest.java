@@ -27,7 +27,9 @@ import redis.clients.jedis.JedisPool;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.RedisMailboxPubSubAdapter.Holder;
+import com.zimbra.cs.store.MockStoreManager;
 import com.zimbra.cs.util.Zimbra;
+import com.zimbra.cs.util.ZimbraConfig;
 
 /**
  * Unit test for {@link RedisMailboxPubSubAdapter}.
@@ -36,7 +38,7 @@ public final class RedisMailboxPubSubAdapterTest {
 
     @BeforeClass
     public static void init() throws Exception {
-        MailboxTestUtil.initServer();
+        MailboxTestUtil.initServer(MockStoreManager.class, "", RedisOnLocalhostZimbraConfig.class);
         Provisioning prov = Provisioning.getInstance();
         prov.createAccount("test@zimbra.com", "secret", new HashMap<String, Object>());
     }
@@ -53,14 +55,7 @@ public final class RedisMailboxPubSubAdapterTest {
     }
 
     protected boolean isExternalCacheAvailableForTest() throws Exception {
-        JedisPool jedisPool = Zimbra.getAppContext().getBean(JedisPool.class);
-        try {
-            Jedis jedis = jedisPool.getResource();
-            jedisPool.returnResource(jedis);
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
+        return Zimbra.getAppContext().getBean(ZimbraConfig.class).isRedisAvailable();
     }
 
     protected void flushCacheBetweenTests() throws Exception {
