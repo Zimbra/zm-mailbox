@@ -18,8 +18,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.zimbra.common.localconfig.LC;
-import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Server;
 import com.zimbra.cs.memcached.MemcachedConnector;
 import com.zimbra.cs.util.Zimbra;
 
@@ -41,9 +39,7 @@ public final class MemcachedSharedDeliveryCoordinatorTest extends AbstractShared
     }
 
     protected boolean isExternalCacheAvailableForTest() throws Exception {
-        Server server = Provisioning.getInstance().getLocalServer();
-        String[] serverList = server.getMultiAttr(Provisioning.A_zimbraMemcachedClientServerList);
-        return serverList.length > 0;
+        return MemcachedConnector.isConnected();
     }
 
     @Test
