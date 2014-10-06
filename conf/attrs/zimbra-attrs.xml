@@ -7224,8 +7224,9 @@ TODO: delete them permanently from here
   <desc>AlwaysOn cluster-id to which this server belongs to. If empty, it's not part of AlwaysOn and is a stand-alone server.</desc>
 </attr>
 
-<attr id="1447" name="zimbraZookeeperClientServerList" type="string" cardinality="multi" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="8.5.0">
-  <desc>list of host:port for zookeeper servers; set to empty value to disable the use of zookeeper</desc>
+<attr id="1447" name="zimbraZookeeperClientServerList" type="string" cardinality="multi" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="8.5.0" deprecatedSince="9.0.0_BETA1">
+  <desc>list of host:port for ZooKeeper servers; set to empty value to disable the use of ZooKeeper.</desc>
+  <deprecateDesc>Multi-server AlwaysOn clusters no longer require ZooKeeper.</deprecateDesc>
 </attr>
 
 <attr id="1448" name="zimbraPrefFontSize" type="string" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.5.0">

@@ -675,8 +675,9 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
     }
 
     /**
-     * list of host:port for zookeeper servers; set to empty value to disable
-     * the use of zookeeper
+     * Deprecated since: 9.0.0_BETA1. Multi-server AlwaysOn clusters no
+     * longer require ZooKeeper.. Orig desc: list of host:port for ZooKeeper
+     * servers; set to empty value to disable the use of ZooKeeper.
      *
      * @return zimbraZookeeperClientServerList, or empty array if unset
      *
@@ -688,8 +689,9 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
     }
 
     /**
-     * list of host:port for zookeeper servers; set to empty value to disable
-     * the use of zookeeper
+     * Deprecated since: 9.0.0_BETA1. Multi-server AlwaysOn clusters no
+     * longer require ZooKeeper.. Orig desc: list of host:port for ZooKeeper
+     * servers; set to empty value to disable the use of ZooKeeper.
      *
      * @param zimbraZookeeperClientServerList new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -704,8 +706,9 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
     }
 
     /**
-     * list of host:port for zookeeper servers; set to empty value to disable
-     * the use of zookeeper
+     * Deprecated since: 9.0.0_BETA1. Multi-server AlwaysOn clusters no
+     * longer require ZooKeeper.. Orig desc: list of host:port for ZooKeeper
+     * servers; set to empty value to disable the use of ZooKeeper.
      *
      * @param zimbraZookeeperClientServerList new value
      * @param attrs existing map to populate, or null to create a new map
@@ -721,8 +724,9 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
     }
 
     /**
-     * list of host:port for zookeeper servers; set to empty value to disable
-     * the use of zookeeper
+     * Deprecated since: 9.0.0_BETA1. Multi-server AlwaysOn clusters no
+     * longer require ZooKeeper.. Orig desc: list of host:port for ZooKeeper
+     * servers; set to empty value to disable the use of ZooKeeper.
      *
      * @param zimbraZookeeperClientServerList new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -737,8 +741,9 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
     }
 
     /**
-     * list of host:port for zookeeper servers; set to empty value to disable
-     * the use of zookeeper
+     * Deprecated since: 9.0.0_BETA1. Multi-server AlwaysOn clusters no
+     * longer require ZooKeeper.. Orig desc: list of host:port for ZooKeeper
+     * servers; set to empty value to disable the use of ZooKeeper.
      *
      * @param zimbraZookeeperClientServerList new to add to existing values
      * @param attrs existing map to populate, or null to create a new map
@@ -754,8 +759,9 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
     }
 
     /**
-     * list of host:port for zookeeper servers; set to empty value to disable
-     * the use of zookeeper
+     * Deprecated since: 9.0.0_BETA1. Multi-server AlwaysOn clusters no
+     * longer require ZooKeeper.. Orig desc: list of host:port for ZooKeeper
+     * servers; set to empty value to disable the use of ZooKeeper.
      *
      * @param zimbraZookeeperClientServerList existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -770,8 +776,9 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
     }
 
     /**
-     * list of host:port for zookeeper servers; set to empty value to disable
-     * the use of zookeeper
+     * Deprecated since: 9.0.0_BETA1. Multi-server AlwaysOn clusters no
+     * longer require ZooKeeper.. Orig desc: list of host:port for ZooKeeper
+     * servers; set to empty value to disable the use of ZooKeeper.
      *
      * @param zimbraZookeeperClientServerList existing value to remove
      * @param attrs existing map to populate, or null to create a new map
@@ -787,8 +794,9 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
     }
 
     /**
-     * list of host:port for zookeeper servers; set to empty value to disable
-     * the use of zookeeper
+     * Deprecated since: 9.0.0_BETA1. Multi-server AlwaysOn clusters no
+     * longer require ZooKeeper.. Orig desc: list of host:port for ZooKeeper
+     * servers; set to empty value to disable the use of ZooKeeper.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -802,8 +810,9 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
     }
 
     /**
-     * list of host:port for zookeeper servers; set to empty value to disable
-     * the use of zookeeper
+     * Deprecated since: 9.0.0_BETA1. Multi-server AlwaysOn clusters no
+     * longer require ZooKeeper.. Orig desc: list of host:port for ZooKeeper
+     * servers; set to empty value to disable the use of ZooKeeper.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs

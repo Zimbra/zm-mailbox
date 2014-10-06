@@ -127,7 +127,6 @@ SECTION 2: Apache License, V2.0
    >>> apache-neethi-3.0.2
    >>> commons-lang-2.6
    >>> concurrentlinkedhashmap-lru-1.3.1
-   >>> curator-2.0.1
    >>> ehcache-core-2.5.1
    >>> google-caja-r4817
    >>> guava-13.0.1
@@ -151,7 +150,6 @@ SECTION 2: Apache License, V2.0
    >>> unoil-4.0.2
    >>> xerces-j-2.9.1
    >>> zkclient-0.1
-   >>> zookeeper-3.4.5
 
 
 
@@ -21569,11 +21567,6 @@ The Apache Software Foundation (http://www.apache.org/).
 License: Apache 2.0
 
 
->>> curator-2.0.1
-
-License: Apache 2.0
-
-
 >>> ehcache-core-2.5.1
 
 Copyright 2003-2010 Terracotta, Inc.
@@ -27728,16 +27721,6 @@ times remain with copyright holders.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-
->>> zookeeper-3.4.5
-
-Apache ZooKeeper
-Copyright 2009-2011 The Apache Software Foundation
-
-This product includes software developed at
-The Apache Software Foundation (http://www.apache.org/).
-
 
 
 --------------- SECTION 3: Artistic License, V2.0 ----------

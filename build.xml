@@ -560,7 +560,6 @@
           <include name="aspectjweaver-*.jar"/>
           <include name="cassandra-*.jar"/>
           <include name="commons-pool2-*.jar"/>
-          <include name="curator-*.jar"/>
           <include name="cxf-*.jar"/>
           <include name="ehcache-*.jar"/>
           <include name="ews*.jar"/>
@@ -590,7 +589,6 @@
 	      <include name="wsdl4j-*.jar"/>
 	      <include name="xmlschema-core-*.jar"/>
           <include name="zkclient-*.jar"/>
-          <include name="zookeeper-*.jar"/>
         </lib>
       	<lib dir="${aux.jars.dir}" includes="*.jar"/>
         <classes dir="${config.dir}" includes="sieveConfig.xml"/>

@@ -16,16 +16,11 @@
  */
 package com.zimbra.cs.mailbox;
 
-import com.zimbra.cs.util.Zimbra;
 
 
 public class MailboxLockFactory {
 
     public MailboxLock create(String accountId, Mailbox mbox) {
-        if (Zimbra.isAlwaysOn()) {
-            return new ZooKeeperMailboxLock(accountId, mbox);
-        } else {
-            return new LocalMailboxLock(accountId, mbox);
-        }
+        return new LocalMailboxLock(accountId, mbox);
     }
 }
