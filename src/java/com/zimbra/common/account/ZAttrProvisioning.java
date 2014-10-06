@@ -1887,6 +1887,26 @@ public class ZAttrProvisioning {
     /**
      */
     @ZAttr(id=-1)
+    public static final String A_amavisAddrExtensionBadHeader = "amavisAddrExtensionBadHeader";
+
+    /**
+     */
+    @ZAttr(id=-1)
+    public static final String A_amavisAddrExtensionBanned = "amavisAddrExtensionBanned";
+
+    /**
+     */
+    @ZAttr(id=-1)
+    public static final String A_amavisAddrExtensionSpam = "amavisAddrExtensionSpam";
+
+    /**
+     */
+    @ZAttr(id=-1)
+    public static final String A_amavisAddrExtensionVirus = "amavisAddrExtensionVirus";
+
+    /**
+     */
+    @ZAttr(id=-1)
     public static final String A_amavisArchiveQuarantineTo = "amavisArchiveQuarantineTo";
 
     /**
@@ -1952,6 +1972,21 @@ public class ZAttrProvisioning {
     /**
      */
     @ZAttr(id=-1)
+    public static final String A_amavisCleanQuarantineTo = "amavisCleanQuarantineTo";
+
+    /**
+     */
+    @ZAttr(id=-1)
+    public static final String A_amavisDisclaimerOptions = "amavisDisclaimerOptions";
+
+    /**
+     */
+    @ZAttr(id=-1)
+    public static final String A_amavisForwardMethod = "amavisForwardMethod";
+
+    /**
+     */
+    @ZAttr(id=-1)
     public static final String A_amavisLocal = "amavisLocal";
 
     /**
@@ -1967,7 +2002,22 @@ public class ZAttrProvisioning {
     /**
      */
     @ZAttr(id=-1)
+    public static final String A_amavisSaUserConf = "amavisSaUserConf";
+
+    /**
+     */
+    @ZAttr(id=-1)
+    public static final String A_amavisSaUserName = "amavisSaUserName";
+
+    /**
+     */
+    @ZAttr(id=-1)
     public static final String A_amavisSpamAdmin = "amavisSpamAdmin";
+
+    /**
+     */
+    @ZAttr(id=-1)
+    public static final String A_amavisSpamDsnCutoffLevel = "amavisSpamDsnCutoffLevel";
 
     /**
      */
@@ -1987,7 +2037,27 @@ public class ZAttrProvisioning {
     /**
      */
     @ZAttr(id=-1)
+    public static final String A_amavisSpamQuarantineCutoffLevel = "amavisSpamQuarantineCutoffLevel";
+
+    /**
+     */
+    @ZAttr(id=-1)
     public static final String A_amavisSpamQuarantineTo = "amavisSpamQuarantineTo";
+
+    /**
+     */
+    @ZAttr(id=-1)
+    public static final String A_amavisSpamSubjectTag = "amavisSpamSubjectTag";
+
+    /**
+     */
+    @ZAttr(id=-1)
+    public static final String A_amavisSpamSubjectTag2 = "amavisSpamSubjectTag2";
+
+    /**
+     */
+    @ZAttr(id=-1)
+    public static final String A_amavisSpamSubjectTag3 = "amavisSpamSubjectTag3";
 
     /**
      */
@@ -1997,7 +2067,22 @@ public class ZAttrProvisioning {
     /**
      */
     @ZAttr(id=-1)
+    public static final String A_amavisSpamTag3Level = "amavisSpamTag3Level";
+
+    /**
+     */
+    @ZAttr(id=-1)
     public static final String A_amavisSpamTagLevel = "amavisSpamTagLevel";
+
+    /**
+     */
+    @ZAttr(id=-1)
+    public static final String A_amavisUncheckedLover = "amavisUncheckedLover";
+
+    /**
+     */
+    @ZAttr(id=-1)
+    public static final String A_amavisUncheckedQuarantineTo = "amavisUncheckedQuarantineTo";
 
     /**
      */
@@ -14305,8 +14390,9 @@ public class ZAttrProvisioning {
     public static final String A_zimbraZimletVersion = "zimbraZimletVersion";
 
     /**
-     * list of host:port for zookeeper servers; set to empty value to disable
-     * the use of zookeeper
+     * Deprecated since: 9.0.0_BETA1. Multi-server AlwaysOn clusters no
+     * longer require ZooKeeper.. Orig desc: list of host:port for ZooKeeper
+     * servers; set to empty value to disable the use of ZooKeeper.
      *
      * @since ZCS 8.5.0
      */
