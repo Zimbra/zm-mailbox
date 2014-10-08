@@ -1638,7 +1638,8 @@ public class ZMailbox implements ToZJSONObject {
     }
 
     /**
-     *
+     * Fetch contacts for a given folder or contacts ids
+     * @param folderid folder id of the contact folder
      * @param ids comma-separated list of contact ids
      * @param attrs limit attrs returns to given list
      * @param sortBy sort results (null for no sorting)
@@ -1646,16 +1647,19 @@ public class ZMailbox implements ToZJSONObject {
      * @return list of contacts
      * @throws ServiceException on error
      */
-    public List<ZContact> getContacts(String ids, ContactSortBy sortBy, boolean sync, List<String> attrs) throws ServiceException {
+    public List<ZContact> getContactsForFolder(String folderid, String ids, ContactSortBy sortBy, boolean sync, List<String> attrs) throws ServiceException {
         Element req = newRequestElement(MailConstants.GET_CONTACTS_REQUEST);
 
+        if (!StringUtil.isNullOrEmpty(folderid)) {
+            req.addAttribute(MailConstants.A_FOLDER, folderid);
+        }
         if (sortBy != null) {
             req.addAttribute(MailConstants.A_SORTBY, sortBy.name());
         }
         if (sync) {
             req.addAttribute(MailConstants.A_SYNC, sync);
         }
-        if (ids != null) {
+        if (!StringUtil.isNullOrEmpty(ids)) {
             req.addElement(MailConstants.E_CONTACT).addAttribute(MailConstants.A_ID, ids);
         }
         if (attrs != null) {
@@ -1668,6 +1672,10 @@ public class ZMailbox implements ToZJSONObject {
             result.add(new ZContact(cn, this));
         }
         return result;
+    }
+
+    public List<ZContact> getContacts(String ids, ContactSortBy sortBy, boolean sync, List<String> attrs) throws ServiceException {
+        return getContactsForFolder(null, ids, sortBy, sync, attrs);
     }
 
     /**
