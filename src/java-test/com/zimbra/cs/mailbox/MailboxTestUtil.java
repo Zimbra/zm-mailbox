@@ -62,6 +62,7 @@ import com.zimbra.cs.store.http.MockHttpStore;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.util.ZimbraConfig;
+import com.zimbra.soap.DefaultSoapSessionFactory;
 import com.zimbra.soap.DocumentHandler;
 
 public final class MailboxTestUtil {
@@ -116,23 +117,6 @@ public final class MailboxTestUtil {
         initServer(storeManagerClass, "");
     }
 
-    public static void initServer(Class<? extends StoreManager> storeManagerClass, String zimbraServerDir, boolean OctopusInstance) throws Exception {
-        initProvisioning(zimbraServerDir);
-
-        LC.zimbra_mailbox_groups.setDefault(1);
-        DebugConfig.setNumMailboxGroup(1);
-        DebugConfig.setDisableShareExpirationListener(true);
-        LC.zimbra_class_database.setDefault(HSQLDB.class.getName());
-        DbPool.startup();
-        HSQLDB.createDatabase(zimbraServerDir, OctopusInstance);
-
-        IndexStore.setFactory(LC.zimbra_class_index_store_factory.value());
-
-        LC.zimbra_class_store.setDefault(storeManagerClass.getName());
-        Zimbra.startupTest();
-        StoreManager.getInstance().startup();
-    }
-
     public static void initServer(Class<? extends StoreManager> storeManagerClass, String zimbraServerDir) throws Exception {
         initServer(storeManagerClass, zimbraServerDir, ZimbraConfig.class);
     }
@@ -149,6 +133,7 @@ public final class MailboxTestUtil {
         IndexStore.setFactory(LC.zimbra_class_index_store_factory.value());
 
         LC.zimbra_class_store.setDefault(storeManagerClass.getName());
+        LC.zimbra_class_soapsessionfactory.setDefault(DefaultSoapSessionFactory.class.getName());
         Zimbra.startupTest(configClass);
         StoreManager.getInstance().startup();
     }
@@ -310,10 +295,10 @@ public final class MailboxTestUtil {
     }
 
     public static Invite generateInvite(Account account, String fragment,
-                ZVCalendar cals) throws Exception {
+            ZVCalendar cals) throws Exception {
 
         List<Invite> invites = Invite.createFromCalendar(account, fragment, cals,
-            true);
+                true);
 
         return invites.get(0);
     }
