@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -35,7 +35,6 @@ import com.zimbra.cs.util.MockTcpServer;
  * @author ysasaki
  */
 public final class ImapProxyTest {
-    private static final int PORT = 9143;
     private MockTcpServer server;
 
     @After
@@ -62,10 +61,10 @@ public final class ImapProxyTest {
             .recvLine() // NOOP
             .reply(Pattern.compile("(.*) NOOP"), "{0} OK NOOP\r\n")
             .sendLine("* BYE server closing connection")
-            .build().start(PORT);
+            .build().start(0);
 
         MockImapHandler handler = new MockImapHandler();
-        ImapProxy proxy = new ImapProxy(new InetSocketAddress(PORT), "test@zimbra.com", "secret", handler);
+        ImapProxy proxy = new ImapProxy(new InetSocketAddress(server.getServerSocket().getLocalPort()), "test@zimbra.com", "secret", handler);
         proxy.proxy("001", "NOOP");
         try {
             proxy.proxy("002", "NOOP");

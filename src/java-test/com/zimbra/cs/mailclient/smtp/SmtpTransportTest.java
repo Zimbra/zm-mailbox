@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -45,7 +45,6 @@ import com.zimbra.cs.util.MockTcpServer;
  * @author ysasaki
  */
 public final class SmtpTransportTest {
-    private static final int PORT = 9025;
     private MockTcpServer server;
 
     @After
@@ -75,11 +74,11 @@ public final class SmtpTransportTest {
             .sendLine("250 OK")
             .recvLine() // QUIT
             .sendLine("221 bye")
-            .build().start(PORT);
+            .build().start(0);
 
         Session session = JMSession.getSession();
         Transport transport = session.getTransport("smtp");
-        transport.connect("localhost", PORT, null, null);
+        transport.connect("localhost", server.getServerSocket().getLocalPort(), null, null);
         String raw = "From: sender@zimbra.com\nTo: rcpt@zimbra.com\nSubject: test\n\ntest";
         MimeMessage msg = new ZMimeMessage(session, new SharedByteArrayInputStream(raw.getBytes(Charsets.ISO_8859_1)));
         transport.sendMessage(msg, msg.getAllRecipients());
@@ -114,12 +113,12 @@ public final class SmtpTransportTest {
             .sendLine("250 OK")
             .recvLine() // QUIT
             .sendLine("221 bye")
-            .build().start(PORT);
+            .build().start(0);
 
         Session session = JMSession.getSession();
         session.getProperties().setProperty("mail.smtp.sendpartial", "true");
         Transport transport = session.getTransport("smtp");
-        transport.connect("localhost", PORT, null, null);
+        transport.connect("localhost", server.getServerSocket().getLocalPort(), null, null);
         String raw = "From: sender@zimbra.com\n" +
             "To: rcpt1@zimbra.com, rcpt2@zimbra.com, rcpt3@zimbra.com\nSubject: test\n\ntest";
         MimeMessage msg = new ZMimeMessage(session, new SharedByteArrayInputStream(raw.getBytes(Charsets.ISO_8859_1)));
@@ -153,11 +152,11 @@ public final class SmtpTransportTest {
             .recvLine() // MAIL FROM
             .sendLine("451 error")
             .recvLine() // QUIT
-            .build().start(PORT);
+            .build().start(0);
 
         Session session = JMSession.getSession();
         Transport transport = session.getTransport("smtp");
-        transport.connect("localhost", PORT, null, null);
+        transport.connect("localhost", server.getServerSocket().getLocalPort(), null, null);
         String raw = "From: sender@zimbra.com\nTo: rcpt@zimbra.com\n" +
             "Subject: test\n\ntest";
         MimeMessage msg = new ZMimeMessage(session, new SharedByteArrayInputStream(raw.getBytes(Charsets.ISO_8859_1)));
@@ -195,12 +194,12 @@ public final class SmtpTransportTest {
             .sendLine("250 OK")
             .recvLine() // QUIT
             .sendLine("221 bye")
-            .build().start(PORT);
+            .build().start(0);
 
         Session session = JMSession.getSession();
         session.getProperties().setProperty("mail.smtp.from", "from@zimbra.com");
         Transport transport = session.getTransport("smtp");
-        transport.connect("localhost", PORT, null, null);
+        transport.connect("localhost", server.getServerSocket().getLocalPort(), null, null);
         String raw = "From: sender@zimbra.com\nTo: rcpt@zimbra.com\nSubject: test\n\ntest";
         MimeMessage msg = new ZMimeMessage(session, new SharedByteArrayInputStream(raw.getBytes(Charsets.ISO_8859_1)));
         transport.sendMessage(msg, msg.getAllRecipients());
@@ -231,12 +230,12 @@ public final class SmtpTransportTest {
             .sendLine("250 OK")
             .recvLine() // QUIT
             .sendLine("221 bye")
-            .build().start(PORT);
+            .build().start(0);
 
         Session session = JMSession.getSession();
         session.getProperties().setProperty("mail.smtp.from", "from@zimbra.com");
         Transport transport = session.getTransport("smtp");
-        transport.connect("localhost", PORT, null, null);
+        transport.connect("localhost", server.getServerSocket().getLocalPort(), null, null);
         String raw = "From: sender@zimbra.com\nTo: rcpt@zimbra.com\nSubject: test\n\ntest";
         SMTPMessage msg = new SMTPMessage(session, new SharedByteArrayInputStream(raw.getBytes(Charsets.ISO_8859_1)));
         msg.setEnvelopeFrom("<>"); // this should override the previously set mail.smtp.from
@@ -268,12 +267,12 @@ public final class SmtpTransportTest {
             .sendLine("250 OK")
             .recvLine() // QUIT
             .sendLine("221 bye")
-            .build().start(PORT);
+            .build().start(0);
 
         Session session = JMSession.getSession();
         session.getProperties().setProperty("mail.smtp.from", "<>");
         Transport transport = session.getTransport("smtp");
-        transport.connect("localhost", PORT, null, null);
+        transport.connect("localhost", server.getServerSocket().getLocalPort(), null, null);
         String raw = "From: sender@zimbra.com\nTo: rcpt@zimbra.com\nSubject: test\n\ntest";
         MimeMessage msg = new ZMimeMessage(session, new SharedByteArrayInputStream(raw.getBytes(Charsets.ISO_8859_1)));
         transport.sendMessage(msg, new Address[] { new InternetAddress("<rcpt@zimbra.com>") });
@@ -311,11 +310,11 @@ public final class SmtpTransportTest {
             .sendLine("250 OK")
             .recvLine() // QUIT
             .sendLine("221 bye")
-            .build().start(PORT);
+            .build().start(0);
 
         Session session = JMSession.getSession();
         Transport transport = session.getTransport("smtp");
-        transport.connect("localhost", PORT, "zimbra", "secret");
+        transport.connect("localhost", server.getServerSocket().getLocalPort(), "zimbra", "secret");
         String raw = "From: sender@zimbra.com\nTo: rcpt@zimbra.com\nSubject: test\n\ntest";
         MimeMessage msg = new ZMimeMessage(session, new SharedByteArrayInputStream(raw.getBytes(Charsets.ISO_8859_1)));
         transport.sendMessage(msg, msg.getAllRecipients());
@@ -352,11 +351,11 @@ public final class SmtpTransportTest {
             .sendLine("250 OK")
             .recvLine() // QUIT
             .sendLine("221 bye")
-            .build().start(PORT);
+            .build().start(0);
 
         Session session = JMSession.getSession();
         Transport transport = session.getTransport("smtp");
-        transport.connect("localhost", PORT, "zimbra", "secret");
+        transport.connect("localhost", server.getServerSocket().getLocalPort(), "zimbra", "secret");
         String raw = "From: sender@zimbra.com\nTo: rcpt@zimbra.com\nSubject: test\n\ntest";
         MimeMessage msg = new ZMimeMessage(session, new SharedByteArrayInputStream(raw.getBytes(Charsets.ISO_8859_1)));
         transport.sendMessage(msg, msg.getAllRecipients());
@@ -378,12 +377,12 @@ public final class SmtpTransportTest {
             .sendLine("220 test ready")
             .recvLine() // EHLO
             .sendLine("250 OK")
-            .build().start(PORT);
+            .build().start(0);
 
         Session session = JMSession.getSession();
         Transport transport = session.getTransport("smtp");
         try {
-            transport.connect("localhost", PORT, "zimbra", "secret");
+            transport.connect("localhost", server.getServerSocket().getLocalPort(), "zimbra", "secret");
             Assert.fail();
         } catch (MessagingException e) {
             Assert.assertEquals("The server doesn't support SMTP-AUTH.", e.getMessage());
@@ -398,12 +397,12 @@ public final class SmtpTransportTest {
             .recvLine() // EHLO
             .sendLine("250-OK")
             .sendLine("250 AUTH NTLM")
-            .build().start(PORT);
+            .build().start(0);
 
         Session session = JMSession.getSession();
         Transport transport = session.getTransport("smtp");
         try {
-            transport.connect("localhost", PORT, "zimbra", "secret");
+            transport.connect("localhost", server.getServerSocket().getLocalPort(), "zimbra", "secret");
             Assert.fail();
         } catch (MessagingException e) {
             Assert.assertEquals("No auth mechanism supported: [NTLM]", e.getMessage());
@@ -426,12 +425,12 @@ public final class SmtpTransportTest {
             .recvLine() // RCPT TO
             .sendLine("550 error")
             .recvLine() // QUIT
-            .build().start(PORT);
+            .build().start(0);
 
         Session session = JMSession.getSession();
         session.getProperties().setProperty("mail.smtp.sendpartial", "true");
         Transport transport = session.getTransport("smtp");
-        transport.connect("localhost", PORT, null, null);
+        transport.connect("localhost", server.getServerSocket().getLocalPort(), null, null);
         String raw = "From: sender@zimbra.com\nTo: rcpt@zimbra.com\nSubject: test\n\ntest";
         MimeMessage msg = new ZMimeMessage(session, new SharedByteArrayInputStream(raw.getBytes(Charsets.ISO_8859_1)));
         try {
@@ -469,11 +468,11 @@ public final class SmtpTransportTest {
             .sendLine("250 OK")
             .recvLine() // QUIT
             .sendLine("221 bye")
-            .build().start(PORT);
+            .build().start(0);
 
         Session session = JMSession.getSession();
         Transport transport = session.getTransport("smtp");
-        transport.connect("localhost", PORT, null, null);
+        transport.connect("localhost", server.getServerSocket().getLocalPort(), null, null);
         String raw = "From: sender@zimbra.com\nTo: rcpt@zimbra.com\nSubject: test\n\n" +
             ".\n" +
             "..\n" +
@@ -510,11 +509,11 @@ public final class SmtpTransportTest {
             .recvLine() // DATA
             .sendLine("451 error")
             .recvLine() // QUIT
-            .build().start(PORT);
+            .build().start(0);
 
         Session session = JMSession.getSession();
         Transport transport = session.getTransport("smtp");
-        transport.connect("localhost", PORT, null, null);
+        transport.connect("localhost", server.getServerSocket().getLocalPort(), null, null);
         String raw = "From: sender@zimbra.com\nTo: rcpt@zimbra.com\nSubject: test\n\ntest";
         MimeMessage msg = new ZMimeMessage(session, new SharedByteArrayInputStream(raw.getBytes(Charsets.ISO_8859_1)));
         try {
@@ -550,11 +549,11 @@ public final class SmtpTransportTest {
             .recvLine() // DATA
             .sendLine("354 OK")
             .swallowUntil("\r\n.\r\n")
-            .build().start(PORT);
+            .build().start(0);
 
         Session session = JMSession.getSession();
         Transport transport = session.getTransport("smtp");
-        transport.connect("localhost", PORT, null, null);
+        transport.connect("localhost", server.getServerSocket().getLocalPort(), null, null);
         String raw = "From: sender@zimbra.com\nTo: rcpt@zimbra.com\nSubject: test\n\ntest";
         MimeMessage msg = new ZMimeMessage(session,
                 new SharedByteArrayInputStream(raw.getBytes(Charsets.ISO_8859_1))) {
@@ -589,12 +588,12 @@ public final class SmtpTransportTest {
             .sendLine("250 OK")
             .recvLine() // RSET
             .sendLine("250 OK")
-            .build().start(PORT);
+            .build().start(0);
 
         Session session = JMSession.getSession();
         SmtpTransport transport = (SmtpTransport) session.getTransport("smtp");
         try {
-            transport.connect("localhost", PORT, null, null);
+            transport.connect("localhost", server.getServerSocket().getLocalPort(), null, null);
             transport.mail("sender@zimbra.com");
             transport.rset();
         } finally {
@@ -623,11 +622,11 @@ public final class SmtpTransportTest {
             .swallowUntil("\r\n.\r\n")
             .sendLine("250 OK")
             .recvLine() // QUIT
-            .build().start(PORT);
+            .build().start(0);
 
         Session session = JMSession.getSession();
         Transport transport = session.getTransport("smtp");
-        transport.connect("localhost", PORT, null, null);
+        transport.connect("localhost", server.getServerSocket().getLocalPort(), null, null);
         String raw = "From: sender@zimbra.com\nTo: rcpt@zimbra.com\nSubject: test\n\ntest";
         MimeMessage msg = new ZMimeMessage(session, new SharedByteArrayInputStream(raw.getBytes(Charsets.ISO_8859_1)));
         transport.sendMessage(msg, msg.getAllRecipients());
@@ -659,11 +658,11 @@ public final class SmtpTransportTest {
             .sendLine("250 OK")
             .recvLine() // QUIT
             .sendLine("221 bye")
-            .build().start(PORT);
+            .build().start(0);
 
         Session session = JMSession.getSession();
         Transport transport = session.getTransport("smtp");
-        transport.connect("localhost", PORT, null, null);
+        transport.connect("localhost", server.getServerSocket().getLocalPort(), null, null);
         String raw = "From: sender@zimbra.com\nTo: rcpt@zimbra.com\nSubject: test\n\ntest";
         MimeMessage msg = new ZMimeMessage(session, new SharedByteArrayInputStream(raw.getBytes(Charsets.ISO_8859_1)));
         transport.sendMessage(msg, msg.getAllRecipients());
