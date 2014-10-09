@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -34,9 +34,6 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.ByteUtil;
 
 public class MockHttpStore {
-    static final int PORT = 7678;
-    static final String URL_PREFIX = "http://localhost:" + PORT + "/store/";
-
     private static ServerSocket ssock;
     private static Map<String, byte[]> blobs = Maps.newHashMap();
 
@@ -44,8 +41,12 @@ public class MockHttpStore {
     private static AtomicBoolean fail = new AtomicBoolean(false);
     private static AtomicBoolean delay = new AtomicBoolean(false);
 
+    public static String getUrlPrefix() {
+        return "http://localhost:" + ssock.getLocalPort() + "/store/";
+    }
+
     public static void startup() throws IOException {
-        final ServerSocket s = ssock = new ServerSocket(PORT);
+        final ServerSocket s = ssock = new ServerSocket(0);
         new Thread() {
             @Override
             public void run() {
@@ -157,7 +158,7 @@ public class MockHttpStore {
 
         blobs.put(filename, ByteUtil.readInput(in, length, length));
         out.write((httpversion + " 201 Created\r\n").getBytes());
-        out.write(("Location: " + URL_PREFIX + filename + "\r\n\r\n").getBytes());
+        out.write(("Location: " + getUrlPrefix() + filename + "\r\n\r\n").getBytes());
     }
 
     private static void doDelete(String httpversion, String filename, OutputStream out) throws IOException {

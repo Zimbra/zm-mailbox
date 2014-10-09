@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -48,17 +48,17 @@ public class HttpStoreManagerTest extends AbstractExternalStoreManagerTest {
     public static class MockHttpStoreManager extends HttpStoreManager {
         @Override
         protected String getGetUrl(Mailbox mbox, String locator) {
-            return MockHttpStore.URL_PREFIX + locator;
+            return MockHttpStore.getUrlPrefix() + locator;
         }
 
         @Override
         protected String getPostUrl(Mailbox mbox) {
-            return MockHttpStore.URL_PREFIX;
+            return MockHttpStore.getUrlPrefix();
         }
 
         @Override
         protected String getDeleteUrl(Mailbox mbox, String locator) {
-            return MockHttpStore.URL_PREFIX + locator;
+            return MockHttpStore.getUrlPrefix() + locator;
         }
 
         @Override
