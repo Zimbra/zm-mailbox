@@ -51,7 +51,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
-import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
 import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.client.ZMailbox.Options;
@@ -388,7 +387,7 @@ public class Mailbox {
         DbConnection conn = null;
         RedoableOp recorder = null;
         List<IndexItemEntry> indexItems = new ArrayList<IndexItemEntry>();
-        ItemCache itemCache = null;
+        LocalItemCache itemCache = null;
         OperationContext octxt = null;
         TargetConstraint tcon = null;
 
@@ -613,128 +612,6 @@ public class Mailbox {
 
     private MailboxManager mailboxManager;
 
-    private static class ItemCache {
-        private final Map<Integer /* id */, MailItem> mapById;
-        private final Map<String /* uuid */, Integer /* id */> uuid2id;
-        private final Mailbox mbox;
-        private boolean isAlwaysOn = false;
-
-        public ItemCache(Mailbox mbox) {
-            mapById = new ConcurrentLinkedHashMap.Builder<Integer, MailItem>().maximumWeightedCapacity(
-                            MAX_ITEM_CACHE_WITH_LISTENERS).build();
-            uuid2id = new ConcurrentHashMap<String, Integer>(MAX_ITEM_CACHE_WITH_LISTENERS);
-            this.mbox = mbox;
-            this.isAlwaysOn = Zimbra.isAlwaysOn();
-        }
-
-        public void put(MailItem item) {
-            if (isAlwaysOn) {
-                try {
-                    MemcachedItemCache.getInstance().put(mbox, item);
-                } catch (ServiceException e) {
-                    ZimbraLog.mailbox.error("error while writing item to cache", e);
-                }
-            } else {
-                int id = item.getId();
-                mapById.put(id, item);
-                String uuid = item.getUuid();
-                if (uuid != null) {
-                    uuid2id.put(uuid, id);
-                }
-            }
-        }
-
-        public MailItem get(int id) {
-            if (isAlwaysOn) {
-                MailItem item = null;
-                try {
-                    item = MemcachedItemCache.getInstance().get(mbox, id);
-                } catch (ServiceException e) {
-                    ZimbraLog.mailbox.error("error while fetching item from cache", e);
-                }
-                return item;
-            } else {
-                return mapById.get(id);
-            }
-        }
-
-        public MailItem get(String uuid) {
-            if (isAlwaysOn) {
-                MailItem item = null;
-                try {
-                    item = MemcachedItemCache.getInstance().get(mbox, uuid);
-                } catch (ServiceException e) {
-                    ZimbraLog.mailbox.error("error while fetching item from cache", e);
-                }
-                return item;
-            } else {
-                // Always fetch item from mapById map to preserve LRU's access time ordering.
-                Integer id = uuid2id.get(uuid);
-                return id != null ? mapById.get(id) : null;
-            }
-        }
-
-        public MailItem remove(MailItem item) {
-            return remove(item.getId());
-        }
-
-        public MailItem remove(int id) {
-            if (isAlwaysOn) {
-                MailItem removed = null;
-                try {
-                    removed = MemcachedItemCache.getInstance().remove(mbox, id);
-                } catch (ServiceException e) {
-                    ZimbraLog.mailbox.error("error while removing item from cache", e);
-                }
-                return removed;
-            } else {
-                MailItem removed = mapById.remove(id);
-                if (removed != null) {
-                    String uuid = removed.getUuid();
-                    if (uuid != null) {
-                        uuid2id.remove(uuid);
-                    }
-                }
-                return removed;
-            }
-        }
-
-        public boolean contains(MailItem item) {
-            if (isAlwaysOn) {
-                try {
-                    return MemcachedItemCache.getInstance().get(mbox, item.getId()) != null;
-                } catch (ServiceException e) {
-                    ZimbraLog.mailbox.error("error while checking item cache", e);
-                    return false;
-                }
-            } else {
-                return mapById.containsKey(item.getId());
-            }
-        }
-
-        public Collection<MailItem> values() {
-            if (isAlwaysOn) {
-                // return empty list
-                return Collections.emptyList();
-            } else {
-                return mapById.values();
-            }
-        }
-
-        public int size() {
-            if (isAlwaysOn) {
-                return 0;
-            } else {
-                return mapById.size();
-            }
-        }
-
-        public void clear() {
-            mapById.clear();
-            uuid2id.clear();
-        }
-    }
-
     // This class handles all the indexing internals for the Mailbox
     public final MailboxIndex index;
     public final MailboxLock lock;
@@ -746,11 +623,6 @@ public class Mailbox {
      */
     private final ReentrantLock emptyFolderOpLock = new ReentrantLock();
 
-    // TODO: figure out correct caching strategy
-    private static final int MAX_ITEM_CACHE_WITH_LISTENERS = LC.zimbra_mailbox_active_cache.intValue();
-    private static final int MAX_ITEM_CACHE_WITHOUT_LISTENERS = LC.zimbra_mailbox_inactive_cache.intValue();
-    private static final int MAX_ITEM_CACHE_FOR_GALSYNC_MAILBOX = LC.zimbra_mailbox_galsync_cache.intValue();
-
     private final int mId;
     private MailboxData mData;
     private final ThreadLocal<MailboxChange> threadChange = new ThreadLocal<MailboxChange>();
@@ -758,7 +630,7 @@ public class Mailbox {
 
     private FolderCache mFolderCache;
     private Map<Object, Tag> mTagCache;
-    private SoftReference<ItemCache> mItemCache = new SoftReference<ItemCache>(null);
+    private SoftReference<LocalItemCache> mItemCache = new SoftReference<LocalItemCache>(null);
 
     private MailboxMaintenance maintenance;
     private volatile boolean open = false;
@@ -1798,10 +1670,10 @@ public class Mailbox {
         }
 
         // keep a hard reference to the item cache to avoid having it GCed during the op
-        ItemCache cache = mItemCache.get();
+        LocalItemCache cache = mItemCache.get();
         if (cache == null) {
-            cache = new ItemCache(this);
-            mItemCache = new SoftReference<ItemCache>(cache);
+            cache = new LocalItemCache();
+            mItemCache = new SoftReference<LocalItemCache>(cache);
             ZimbraLog.cache.debug("created a new MailItem cache for mailbox " + getId());
         }
         currentChange().itemCache = cache;
@@ -1925,7 +1797,7 @@ public class Mailbox {
         }
     }
 
-    private ItemCache getItemCache() throws ServiceException {
+    private LocalItemCache getItemCache() throws ServiceException {
         if (!currentChange().isActive()) {
             throw ServiceException.FAILURE("cannot access item cache outside a transaction active="
                             + currentChange().active + ",depth=" + currentChange().depth, null);
@@ -2743,7 +2615,7 @@ public class Mailbox {
         }
         assert (currentChange().depth == 0);
 
-        ItemCache cache = mItemCache.get();
+        LocalItemCache cache = mItemCache.get();
         FolderCache folders = mFolderCache == null || Collections.disjoint(pms.changedTypes, FOLDER_TYPES) ? mFolderCache
                         : snapshotFolders();
 
@@ -9433,12 +9305,12 @@ public class Mailbox {
 
     private void trimItemCache() {
         try {
-            int sizeTarget = mListeners.isEmpty() ? MAX_ITEM_CACHE_WITHOUT_LISTENERS : MAX_ITEM_CACHE_WITH_LISTENERS;
+            int sizeTarget = mListeners.isEmpty() ? LocalItemCache.MAX_ITEM_CACHE_WITHOUT_LISTENERS : LocalItemCache.MAX_ITEM_CACHE_WITH_LISTENERS;
             if (galSyncMailbox) {
-                sizeTarget = MAX_ITEM_CACHE_FOR_GALSYNC_MAILBOX;
+                sizeTarget = LocalItemCache.MAX_ITEM_CACHE_FOR_GALSYNC_MAILBOX;
             }
 
-            ItemCache cache = currentChange().itemCache;
+            LocalItemCache cache = currentChange().itemCache;
             if (cache == null) {
                 return;
             }
