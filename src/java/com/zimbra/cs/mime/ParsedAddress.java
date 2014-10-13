@@ -43,6 +43,12 @@ public final class ParsedAddress implements Comparable<ParsedAddress> {
     public String suffix;
 
     private boolean parsed = false;
+    /**
+     * Used in parsing the display name of InternetAddress, specially in case of
+     * Japanese locale where the display name is in "LastName FirstName" format.
+     * Bug #91944
+     */
+    private boolean nameFormatLastFirst = false;
 
     public ParsedAddress(String address) {
         InternetAddress ia = new InternetAddress(address);
@@ -70,6 +76,17 @@ public final class ParsedAddress implements Comparable<ParsedAddress> {
         lastName     = node.lastName;
         suffix       = node.suffix;
         parsed       = node.parsed;
+    }
+
+    /**
+     * Specify the display name format of the InternetAddress 
+     * @param addr is the InternetAddress
+     * @param nameFormatLastFirst is True if the display name in InternetAddress 
+     * is in "LastName FirstName" format otherwise false
+     */
+    public ParsedAddress(InternetAddress ia, boolean nameFormatLastFirst) {
+        this.nameFormatLastFirst = nameFormatLastFirst;
+        initialize(ia.getAddress(), ia.getPersonal());
     }
 
     private void initialize(String email, String personal) {
@@ -187,9 +204,7 @@ public final class ParsedAddress implements Comparable<ParsedAddress> {
         if (mstart != mend)   middleName = StringUtil.join(" ", tokens.subList(mstart, mend));
         if (lstart != lend)   lastName   = StringUtil.join(" ", tokens.subList(lstart, lend));
 
-        personalPart = (honorific == null ? "" : honorific + ' ') + firstName +
-                       (middleName == null ? "" : ' ' + middleName) + ' ' + lastName +
-                       personalPart.substring(suffixOffset).replaceAll("\\\\", "");
+        personalPart = personalPart.substring(0, suffixOffset) + personalPart.substring(suffixOffset).replaceAll("\\\\", "");
 
         return true;
     }
@@ -232,10 +247,16 @@ public final class ParsedAddress implements Comparable<ParsedAddress> {
         suffix = readSuffix(tokens, index);
 
         if (hstart != hend)   honorific  = StringUtil.join(" ", tokens.subList(hstart, hend));
-        if (fstart != fend)   firstName  = StringUtil.join(" ", tokens.subList(fstart, fend));
         if (mtokens != null)  middleName = StringUtil.join(" ", mtokens);
-        if (ltokens != null)  lastName   = StringUtil.join(" ", ltokens);
-
+        
+        if (nameFormatLastFirst) {
+            if (fstart != fend)   lastName  = StringUtil.join(" ", tokens.subList(fstart, fend));
+            if (ltokens != null)  firstName   = StringUtil.join(" ", ltokens);
+        } else {
+            if (fstart != fend) firstName = StringUtil.join(" ", tokens.subList(fstart, fend));
+            if (ltokens != null) lastName = StringUtil.join(" ", ltokens);
+        }
+        
         personalPart = personalPart.substring(0, suffixOffset) + personalPart.substring(suffixOffset).replaceAll("\\\\", "");
 
         return true;

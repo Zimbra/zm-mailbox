@@ -535,6 +535,27 @@ public final class MailboxTest {
         contactList = mbox.createAutoContact(null, addrs);
         assertEquals(3, contactList.size());
     }
+    
+    @Test
+    public void createAutoContactTestForDisplayNameFormat() throws Exception {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        Account acct1 = Provisioning.getInstance().get(Key.AccountBy.id, MockProvisioning.DEFAULT_ACCOUNT_ID);
+        
+        Collection<InternetAddress> addrs = new ArrayList<InternetAddress>();
+        addrs.add(new InternetAddress("\"First Last\" <user@email.com>"));        
+        List<Contact> contactList = mbox.createAutoContact(null, addrs);
+        Contact contact = contactList.get(0);
+        assertEquals("First", contact.get("firstName"));
+        assertEquals("Last", contact.get("lastName"));
+        
+        addrs = new ArrayList<InternetAddress>();
+        addrs.add(new InternetAddress("\"Last First\" <user@email.com>"));
+        acct1.setPrefLocale("ja");;
+        contactList = mbox.createAutoContact(new OperationContext(acct1), addrs);
+        contact = contactList.get(0);
+        assertEquals("First", contact.get("firstName"));
+        assertEquals("Last", contact.get("lastName"));
+    }
 
     @Test
     public void getVisibleFolders() throws Exception {
