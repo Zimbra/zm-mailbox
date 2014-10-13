@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -25,11 +25,10 @@ import java.util.Map;
 import javax.mail.Address;
 import javax.mail.MessagingException;
 
-import com.zimbra.common.util.ZimbraLog;
-
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailServiceException;
@@ -43,21 +42,27 @@ import com.zimbra.soap.ZimbraSoapContext;
  * @author tim
  */
 public class CreateCalendarItem extends CalendarRequest {
-    
+
     private static final String[] TARGET_FOLDER_PATH = new String[] { MailConstants.E_MSG, MailConstants.A_FOLDER };
     private static final String[] RESPONSE_ITEM_PATH = new String[] { };
+    @Override
     protected String[] getProxiedIdPath(Element request)     { return TARGET_FOLDER_PATH; }
+    @Override
     protected boolean checkMountpointProxy(Element request)  { return true; }
+    @Override
     protected String[] getResponseItemPath()  { return RESPONSE_ITEM_PATH; }
 
     // very simple: generate a new UID and send a REQUEST
-    protected class CreateCalendarItemInviteParser extends ParseMimeMessage.InviteParser { 
-        public ParseMimeMessage.InviteParserResult parseInviteElement(ZimbraSoapContext lc, OperationContext octxt, Account account, Element inviteElem) throws ServiceException 
+    protected class CreateCalendarItemInviteParser extends ParseMimeMessage.InviteParser {
+        @Override
+        public ParseMimeMessage.InviteParserResult parseInviteElement(ZimbraSoapContext lc, OperationContext octxt, Account account, Element inviteElem) throws ServiceException
         {
-            return CalendarUtils.parseInviteForCreate(account, getItemType(), inviteElem, null, null, false, CalendarUtils.RECUR_ALLOWED);
+            String uid = inviteElem.getAttribute(MailConstants.A_UID, null);
+            return CalendarUtils.parseInviteForCreate(account, getItemType(), inviteElem, null, uid, false, CalendarUtils.RECUR_ALLOWED);
         }
     };
 
+    @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Account acct = getRequestedAccount(zsc);
@@ -84,11 +89,11 @@ public class CreateCalendarItem extends CalendarRequest {
         if (!dat.mInvite.hasRecurId())
             ZimbraLog.calendar.info("<CreateCalendarItem> folderId=%d, subject=\"%s\", UID=%s",
                     iidFolder.getId(), dat.mInvite.isPublic() ? dat.mInvite.getName() : "(private)",
-                    dat.mInvite.getUid());
+                            dat.mInvite.getUid());
         else
             ZimbraLog.calendar.info("<CreateCalendarItem> folderId=%d, subject=\"%s\", UID=%s, recurId=%s",
                     iidFolder.getId(), dat.mInvite.isPublic() ? dat.mInvite.getName() : "(private)",
-                    dat.mInvite.getUid(), dat.mInvite.getRecurId().getDtZ());
+                            dat.mInvite.getUid(), dat.mInvite.getRecurId().getDtZ());
 
         Element response = getResponseElement(zsc);
 
