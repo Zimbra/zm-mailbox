@@ -1121,6 +1121,7 @@
         <include name="log4j-*.jar"/>
         <include name="apache-log4j-extras-*.jar"/>
         <include name="junit*.jar"/>
+        <include name="xml-apis-*.jar"/>
       </fileset>
     </copy>
   	<copy todir="${dist.jetty.dir}/common/lib" file="${native.jarfile}" overwrite="true"/>
