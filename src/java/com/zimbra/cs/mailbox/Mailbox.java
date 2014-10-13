@@ -7491,10 +7491,15 @@ public class Mailbox {
             return Collections.emptyList();
         }
         List<Contact> result = new ArrayList<Contact>(addrs.size());
+        String locale = octxt != null && octxt.getAuthenticatedUser() != null ? octxt.getAuthenticatedUser().getPrefLocale() : null;
+        boolean nameFormatLastFirst = false;
+        if (locale != null && locale.equals("ja")) {
+            nameFormatLastFirst = true;
+        }
         for (InternetAddress addr : addrs) {
             ZimbraLog.mailbox.debug("Auto-adding new contact addr=%s", addr);
             try {
-                result.add(createContact(octxt, new ParsedContact(new ParsedAddress(addr).getAttributes()),
+                result.add(createContact(octxt, new ParsedContact(new ParsedAddress(addr, nameFormatLastFirst).getAttributes()),
                         Mailbox.ID_FOLDER_AUTO_CONTACTS, null));
             } catch (ServiceException e) {
                 if (e.getCode().equals(MailServiceException.TOO_MANY_CONTACTS)) {
