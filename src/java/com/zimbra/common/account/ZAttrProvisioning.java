@@ -8797,6 +8797,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMobilePolicyUnapprovedInROMApplication = "zimbraMobilePolicyUnapprovedInROMApplication";
 
     /**
+     * Whether to permit syncing shared calendar folders
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1653)
+    public static final String A_zimbraMobileShareCalendarEnabled = "zimbraMobileShareCalendarEnabled";
+
+    /**
      * Whether to permit syncing shared contact folders
      *
      * @since ZCS 8.5.0
