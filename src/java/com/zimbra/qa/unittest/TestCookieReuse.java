@@ -38,6 +38,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.Element.JSONElement;
 import com.zimbra.common.soap.Element.XMLElement;
+import com.zimbra.common.soap.HeaderConstants;
 import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.common.soap.SoapHttpTransport;
 import com.zimbra.common.soap.SoapProtocol;
@@ -215,7 +216,7 @@ public class TestCookieReuse extends TestCase {
         assertFalse("this search request should return some conversations", searchHits.isEmpty());
 
 
-        //explicitely end cookie session
+        //explicitly end cookie session
         Account a = TestUtil.getAccount(USER_NAME);
         a.setForceClearCookies(false);
         EndSessionRequest esr = new EndSessionRequest();
@@ -356,11 +357,15 @@ public class TestCookieReuse extends TestCase {
         Provisioning.getInstance().getLocalServer().setLowestSupportedAuthVersion(2);
         Account a = TestUtil.getAccount(USER_NAME);
         String[] tokens = a.getAuthTokens();
+
+        //call constructor to register a token
         ZimbraAuthToken at1 = new ZimbraAuthToken(a, System.currentTimeMillis() + 10000);
         String[] tokens2 = a.getAuthTokens();
         assertEquals("should have one more registered token", tokens.length+1,tokens2.length);
 
         Provisioning.getInstance().getLocalServer().setLowestSupportedAuthVersion(1);
+
+        //call constructor again. Should not register a token at this time
         ZimbraAuthToken at2 = new ZimbraAuthToken(a, System.currentTimeMillis() + 10000);
         String[] tokens3 = a.getAuthTokens();
         assertEquals("should have the same number of registered tokens as before", tokens2.length,tokens3.length);
@@ -414,7 +419,7 @@ public class TestCookieReuse extends TestCase {
         Thread.sleep(2000);
         assertTrue("token should have expired by now", at1.isExpired());
 
-        //explicitely clean up expired auth tokens
+        //explicitly clean up expired auth tokens
         String[] tokens = a.getAuthTokens();
         for(String tk : tokens) {
             String[] tokenParts = tk.split("\\|");
@@ -480,10 +485,93 @@ public class TestCookieReuse extends TestCase {
     }
 
     /**
+     * Verify that a login request bearing a cookie with invalid token will succeed with voidOnExpired header
+     * https://bugzilla.zimbra.com/show_bug.cgi?id=95799
+     */
+    @Test
+    public void testReLogin() throws ServiceException, IOException {
+        //establish legitimate connection
+        TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraForceClearCookies, "FALSE");
+        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        URI uri = mbox.getRestURI("Inbox?fmt=rss");
+        mbox.getHttpClient(uri);
+        ZAuthToken authT = mbox.getAuthToken();
+
+        //create client
+        HttpCookieSoapTransport transport = new HttpCookieSoapTransport(TestUtil.getSoapUrl());
+        transport.setAuthToken(authT);
+        transport.setVoidAuthTokenOnExpired(true);
+
+        //explicitly end cookie session
+        Account a = TestUtil.getAccount(USER_NAME);
+        a.setForceClearCookies(false);
+        EndSessionRequest esr = new EndSessionRequest();
+        esr.setLogOff(true);
+        mbox.invokeJaxb(esr);
+
+        //check that login request succeeds
+        AuthRequest auth = new AuthRequest();
+        AccountSelector account = new AccountSelector(com.zimbra.soap.type.AccountBy.name, USER_NAME);
+        auth.setAccount(account);
+        auth.setPassword("test123");
+        auth.setCsrfSupported(false);
+        Element req = JaxbUtil.jaxbToElement(auth, SoapProtocol.SoapJS.getFactory());
+        Element res = transport.invoke(req);
+        AuthResponse authResp = JaxbUtil.elementToJaxb(res);
+        assertNotNull("auth request should return auth token", authResp.getAuthToken());
+        assertFalse("auth request should return a new auth token", authResp.getAuthToken().equalsIgnoreCase(authT.toString()));
+    }
+
+    /**
+     * Verify that a login request bearing a cookie with invalid token will NOT succeed without voidOnExpired header
+     * https://bugzilla.zimbra.com/show_bug.cgi?id=95799
+     */
+    @Test
+    public void testReLoginFail() throws ServiceException, IOException {
+        //establish legitimate connection
+        TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraForceClearCookies, "FALSE");
+        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        URI uri = mbox.getRestURI("Inbox?fmt=rss");
+        mbox.getHttpClient(uri);
+        ZAuthToken authT = mbox.getAuthToken();
+
+        //create client
+        HttpCookieSoapTransport transport = new HttpCookieSoapTransport(TestUtil.getSoapUrl());
+        transport.setAuthToken(authT);
+        transport.setVoidAuthTokenOnExpired(false);
+
+        //explicitly end cookie session
+        Account a = TestUtil.getAccount(USER_NAME);
+        a.setForceClearCookies(false);
+        EndSessionRequest esr = new EndSessionRequest();
+        esr.setLogOff(true);
+        mbox.invokeJaxb(esr);
+
+        //check that login request succeeds
+        AuthRequest auth = new AuthRequest();
+        AccountSelector account = new AccountSelector(com.zimbra.soap.type.AccountBy.name, USER_NAME);
+        auth.setAccount(account);
+        auth.setPassword("test123");
+        auth.setCsrfSupported(false);
+        try {
+            Element req = JaxbUtil.jaxbToElement(auth, SoapProtocol.SoapJS.getFactory());
+            Element res = transport.invoke(req);
+            AuthResponse authResp = JaxbUtil.elementToJaxb(res);
+        } catch (SoapFaultException ex) {
+            assertEquals("Should be getting 'auth required' exception", ServiceException.AUTH_EXPIRED, ex.getCode());
+        }
+    }
+
+    /**
      * version of SOAP transport that uses HTTP cookies instead of SOAP message header for transporting Auth Token
      * @author gsolovyev
      */
     private class HttpCookieSoapTransport extends SoapHttpTransport {
+        private boolean voidAuthTokenOnExpired = false;
+
+        public void setVoidAuthTokenOnExpired(boolean voidToken) {
+            voidAuthTokenOnExpired = voidToken;
+        }
 
 		public HttpCookieSoapTransport(String uri) {
 			super(uri);
@@ -508,22 +596,26 @@ public class TestCookieReuse extends TestCase {
 		        String targetName = targetId == null ? getTargetAcctName() : null;
 
 		        Element context = null;
-		        if (generateContextHeader()) {
-		            context = SoapUtil.toCtxt(proto, null, null);
-		            if (noSession) {
-		                SoapUtil.disableNotificationOnCtxt(context);
-		            } else {
-		                SoapUtil.addSessionToCtxt(context, getAuthToken() == null ? null : getSessionId(), getMaxNotifySeq());
-		            }
-		            SoapUtil.addTargetAccountToCtxt(context, targetId, targetName);
-		            SoapUtil.addChangeTokenToCtxt(context, changeToken, tokenType);
-		            SoapUtil.addUserAgentToCtxt(context, getUserAgentName(), getUserAgentVersion());
-		            if (responseProto != proto) {
-		                SoapUtil.addResponseProtocolToCtxt(context, responseProto);
-		            }
+	            context = SoapUtil.toCtxt(proto, null, null);
+	            if (noSession) {
+	                SoapUtil.disableNotificationOnCtxt(context);
+	            } else {
+	                SoapUtil.addSessionToCtxt(context, getAuthToken() == null ? null : getSessionId(), getMaxNotifySeq());
+	            }
+	            SoapUtil.addTargetAccountToCtxt(context, targetId, targetName);
+	            SoapUtil.addChangeTokenToCtxt(context, changeToken, tokenType);
+	            SoapUtil.addUserAgentToCtxt(context, getUserAgentName(), getUserAgentVersion());
+	            if (responseProto != proto) {
+	                SoapUtil.addResponseProtocolToCtxt(context, responseProto);
+	            }
 
-		        }
+	            if (voidAuthTokenOnExpired) {
+                    Element eAuthTokenControl = context.addElement(HeaderConstants.E_AUTH_TOKEN_CONTROL);
+                    eAuthTokenControl.addAttribute(HeaderConstants.A_VOID_ON_EXPIRED, true);
+                }
+
 		        Element envelope = proto.soapEnvelope(document, context);
+
 		        return envelope;
 		    }
     }
