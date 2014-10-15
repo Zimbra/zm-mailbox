@@ -16,14 +16,35 @@
  */
 package com.zimbra.cs.mailbox.calendar.cache;
 
+import java.util.concurrent.ConcurrentHashMap;
+
+import com.google.common.annotations.VisibleForTesting;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 
-public interface CalListCache {
+public class LocalCalListCache implements CalListCache {
+    protected ConcurrentHashMap<String, CalList> map = new ConcurrentHashMap<>();
 
-    CalList get(String accountId) throws ServiceException;
+    public LocalCalListCache() {
+    }
 
-    void put(String accountId, CalList calList) throws ServiceException;
+    @VisibleForTesting
+    void flush() {
+        map.clear();
+    }
 
-    void remove(Mailbox mbox) throws ServiceException;
+    @Override
+    public CalList get(String accountId) throws ServiceException{
+        return map.get(accountId);
+    }
+
+    @Override
+    public void put(String accountId, CalList calList) throws ServiceException {
+        map.put(accountId, calList);
+    }
+
+    @Override
+    public void remove(Mailbox mbox) throws ServiceException {
+        map.remove(mbox.getAccountId());
+    }
 }

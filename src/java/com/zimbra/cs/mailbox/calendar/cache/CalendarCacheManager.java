@@ -19,37 +19,48 @@ package com.zimbra.cs.mailbox.calendar.cache;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.util.memcached.ZimbraMemcachedClient;
+import com.zimbra.cs.index.SortBy;
+import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.util.Zimbra;
 
 public class CalendarCacheManager {
 
     // for appointment summary caching (primarily for ZWC)
-    private boolean mSummaryCacheEnabled;
-    private CalSummaryCache mSummaryCache;
+    protected boolean mSummaryCacheEnabled;
+    protected CalSummaryCache mSummaryCache;
 
     // for CalDAV ctag caching
-    private CalListCache mCalListCache;
-    private CtagInfoCache mCtagCache;
-    private CtagResponseCache mCtagResponseCache;
+    protected CalListCache mCalListCache;
+    protected CtagInfoCache mCtagCache;
+    protected CtagResponseCache mCtagResponseCache;
+
 
     private static CalendarCacheManager sInstance = new CalendarCacheManager();
 
     public static CalendarCacheManager getInstance() { return sInstance; }
 
-    private CalendarCacheManager() {
+    @VisibleForTesting
+    public static void setInstance(CalendarCacheManager instance) {sInstance = instance;}
+
+    public CalendarCacheManager() {
         mCtagCache = new CtagInfoCache();
         Zimbra.getAppContext().getAutowireCapableBeanFactory().autowireBean(mCtagCache);
         Zimbra.getAppContext().getAutowireCapableBeanFactory().initializeBean(mCtagCache, "ctagInfoCache");
 
-        mCalListCache = new CalListCache();
+        mCalListCache = new MemcachedCalListCache();
         Zimbra.getAppContext().getAutowireCapableBeanFactory().autowireBean(mCalListCache);
         Zimbra.getAppContext().getAutowireCapableBeanFactory().initializeBean(mCalListCache, "calListCache");
 
@@ -65,16 +76,16 @@ public class CalendarCacheManager {
     public void notifyCommittedChanges(PendingModifications mods, int changeId) {
         if (mSummaryCacheEnabled)
             mSummaryCache.notifyCommittedChanges(mods, changeId);
+        new CalListCacheMailboxListener(mCalListCache).notifyCommittedChanges(mods, changeId);
         if (Zimbra.getAppContext().getBean(ZimbraMemcachedClient.class).isConnected()) {
-            mCalListCache.notifyCommittedChanges(mods, changeId);
             mCtagCache.notifyCommittedChanges(mods, changeId);
         }
     }
 
     public void purgeMailbox(Mailbox mbox) throws ServiceException {
         mSummaryCache.purgeMailbox(mbox);
+        mCalListCache.remove(mbox);
         if (Zimbra.getAppContext().getBean(ZimbraMemcachedClient.class).isConnected()) {
-            mCalListCache.purgeMailbox(mbox);
             mCtagCache.purgeMailbox(mbox);
         }
     }
@@ -84,8 +95,23 @@ public class CalendarCacheManager {
     public CtagResponseCache getCtagResponseCache() { return mCtagResponseCache; }
 
     public AccountCtags getCtags(AccountKey key) throws ServiceException {
-        CalList calList = mCalListCache.get(key);
-        if (calList == null) return null;
+        CalList calList = mCalListCache.get(key.getAccountId());
+        if (calList == null) {
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(key.getAccountId());
+            if (mbox == null) {
+                ZimbraLog.calendar.warn("Invalid account %s during cache lookup", key.getAccountId());
+                return null;
+            }
+            List<Folder> calFolders = mbox.getCalendarFolders(null, SortBy.NONE);
+            Set<Integer> idset = new HashSet<Integer>(calFolders.size());
+            idset.add(Mailbox.ID_FOLDER_INBOX);  // Inbox is always included for scheduling support.
+            for (Folder calFolder : calFolders) {
+                idset.add(calFolder.getId());
+            }
+            calList = new CalList(idset);
+            mCalListCache.put(key.getAccountId(), calList);
+        }
+
         Collection<Integer> calendarIds = calList.getCalendars();
         List<CalendarKey> calKeys = new ArrayList<CalendarKey>(calendarIds.size());
         String accountId = key.getAccountId();
