@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -20,7 +20,10 @@ import java.io.ByteArrayInputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
+import javax.annotation.PostConstruct;
+
 import org.apache.commons.io.output.ByteArrayOutputStream;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import com.google.common.io.Closeables;
 import com.zimbra.common.service.ServiceException;
@@ -28,7 +31,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.util.memcached.MemcachedKey;
 import com.zimbra.common.util.memcached.MemcachedMap;
 import com.zimbra.common.util.memcached.MemcachedSerializer;
-import com.zimbra.cs.memcached.MemcachedConnector;
+import com.zimbra.common.util.memcached.ZimbraMemcachedClient;
 import com.zimbra.cs.memcached.MemcachedKeyPrefix;
 
 /**
@@ -37,9 +40,13 @@ import com.zimbra.cs.memcached.MemcachedKeyPrefix;
  * @author ysasaki
  */
 final class MemcachedImapCache implements ImapSessionManager.Cache {
+    @Autowired protected ZimbraMemcachedClient memcachedClient;
+    protected MemcachedMap<ImapMemcachedKey, ImapFolder> map;
 
-    private MemcachedMap<ImapMemcachedKey, ImapFolder> map = new MemcachedMap<ImapMemcachedKey, ImapFolder>(
-            MemcachedConnector.getClient(), new ImapMemcachedSerializer());
+    @PostConstruct
+    public void init() {
+        map = new MemcachedMap<ImapMemcachedKey, ImapFolder>(memcachedClient, new ImapMemcachedSerializer());
+    }
 
     @Override
     public void put(String key, ImapFolder value) {

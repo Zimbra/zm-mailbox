@@ -236,7 +236,7 @@ public class FolderACL {
      * returns null if not in cache
      */
     private ACL getEffectiveACLFromCache() throws ServiceException {
-        EffectiveACLCache effectiveACLCache = Zimbra.getAppContext().getBean(MailboxManager.class).getEffectiveACLCache();
+        EffectiveACLCache effectiveACLCache = Zimbra.getAppContext().getBean(EffectiveACLCache.class);
         return effectiveACLCache.get(mShareTarget.getAccountId(), mShareTarget.getFolderId());
     }
 
@@ -260,7 +260,7 @@ public class FolderACL {
 
         // cache the effective folder ACL in memcached - independent of the authed user
         ACL acl = folder.getEffectiveACL();
-        EffectiveACLCache effectiveACLCache = Zimbra.getAppContext().getBean(MailboxManager.class).getEffectiveACLCache();
+        EffectiveACLCache effectiveACLCache = Zimbra.getAppContext().getBean(EffectiveACLCache.class);
         effectiveACLCache.put(folder.getAccount().getId(), folder.getId(), acl);
 
         // return the effective permission - auth user dependent

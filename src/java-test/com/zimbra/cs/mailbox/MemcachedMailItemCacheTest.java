@@ -16,11 +16,14 @@
  */
 package com.zimbra.cs.mailbox;
 
+import java.util.HashMap;
+
 import org.junit.BeforeClass;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.memcached.ZimbraMemcachedClient;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.memcached.MemcachedConnector;
+import com.zimbra.cs.store.MockStoreManager;
 import com.zimbra.cs.util.Zimbra;
 
 /**
@@ -28,29 +31,28 @@ import com.zimbra.cs.util.Zimbra;
  */
 public final class MemcachedMailItemCacheTest extends AbstractMailItemCacheTest {
 
+    @BeforeClass
+    public static void init() throws Exception {
+        MailboxTestUtil.initServer(MockStoreManager.class, "", MemcachedOnLocalhostZimbraConfig.class);
+        Provisioning prov = Provisioning.getInstance();
+        prov.createAccount("test@zimbra.com", "secret", new HashMap<String, Object>());
+    }
+
     @Override
     protected MailItemCache constructCache() throws ServiceException {
         MailItemCache cache = new MemcachedMailItemCache();
         Zimbra.getAppContext().getAutowireCapableBeanFactory().autowireBean(cache);
+        Zimbra.getAppContext().getAutowireCapableBeanFactory().initializeBean(cache, "mailItemCache");
         return cache;
-    }
-
-    @BeforeClass
-    public static void init() throws Exception {
-        Provisioning.getInstance().getLocalServer().addMemcachedClientServerList("localhost");
-        Provisioning.getInstance().getLocalServer().setMemcachedClientTimeoutMillis(20);
-        Provisioning.getInstance().getLocalServer().setMemcachedClientExpirySeconds(10);
-        MemcachedConnector.startup();
-        AbstractMailItemCacheTest.init();
     }
 
     @Override
     protected boolean isExternalCacheAvailableForTest() throws Exception {
-        return MemcachedConnector.isConnected();
+        return Zimbra.getAppContext().getBean(ZimbraMemcachedClient.class).isConnected();
     }
 
     @Override
     protected void flushCacheBetweenTests() throws Exception {
-        MemcachedConnector.getClient().flush();
+        Zimbra.getAppContext().getBean(ZimbraMemcachedClient.class).flush();
     }
 }

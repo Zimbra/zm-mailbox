@@ -28,16 +28,22 @@ import redis.clients.jedis.JedisPool;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.util.memcached.ZimbraMemcachedClient;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.extension.ExtensionUtil;
+import com.zimbra.cs.mailbox.FoldersAndTagsCache;
 import com.zimbra.cs.mailbox.LocalSharedDeliveryCoordinator;
 import com.zimbra.cs.mailbox.MailboxLockFactory;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxPubSubAdapter;
+import com.zimbra.cs.mailbox.MemcachedFoldersAndTagsCache;
 import com.zimbra.cs.mailbox.RedisMailboxPubSubAdapter;
 import com.zimbra.cs.mailbox.RedisQlessSharedDeliveryCoordinator;
 import com.zimbra.cs.mailbox.SharedDeliveryCoordinator;
+import com.zimbra.cs.mailbox.acl.EffectiveACLCache;
+import com.zimbra.cs.mailbox.acl.MemcachedEffectiveACLCache;
+import com.zimbra.cs.memcached.ZimbraMemcachedClientConfigurer;
 import com.zimbra.cs.redolog.DefaultRedoLogProvider;
 import com.zimbra.cs.redolog.RedoLogProvider;
 import com.zimbra.cs.store.StoreManager;
@@ -65,6 +71,16 @@ import com.zimbra.soap.SoapSessionFactory;
 @Configuration
 @EnableAspectJAutoProxy
 public class ZimbraConfig {
+
+    @Bean(name="effectiveACLCache")
+    public EffectiveACLCache effectiveACLCacheBean() throws ServiceException {
+        return new MemcachedEffectiveACLCache();
+    }
+
+    @Bean(name="foldersAndTagsCache")
+    public FoldersAndTagsCache foldersAndTagsCacheBean() throws ServiceException {
+        return new MemcachedFoldersAndTagsCache();
+    }
 
     public boolean isMemcachedAvailable() {
         try {
@@ -129,6 +145,16 @@ public class ZimbraConfig {
         } else {
             return null;
         }
+    }
+
+    @Bean(name="memcachedClient")
+    public ZimbraMemcachedClient memcachedClientBean() throws Exception {
+        return new ZimbraMemcachedClient();
+    }
+
+    @Bean(name="memcachedClientConfigurer")
+    public ZimbraMemcachedClientConfigurer memcachedClientConfigurerBean() throws Exception {
+        return new ZimbraMemcachedClientConfigurer();
     }
 
     @Bean(name="qlessClient")

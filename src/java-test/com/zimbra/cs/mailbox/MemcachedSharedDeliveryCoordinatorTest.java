@@ -13,12 +13,16 @@
  */
 package com.zimbra.cs.mailbox;
 
+import java.util.HashMap;
+
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.zimbra.common.localconfig.LC;
-import com.zimbra.cs.memcached.MemcachedConnector;
+import com.zimbra.common.util.memcached.ZimbraMemcachedClient;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.store.MockStoreManager;
 import com.zimbra.cs.util.Zimbra;
 
 /**
@@ -29,17 +33,18 @@ public final class MemcachedSharedDeliveryCoordinatorTest extends AbstractShared
     @BeforeClass
     public static void init() throws Exception {
         LC.zimbra_class_shareddeliverycoordinator.setDefault(MemcachedSharedDeliveryCoordinator.class.getName());
-        AbstractSharedDeliveryCoordinatorTest.init();
-        MemcachedConnector.startup();
+        MailboxTestUtil.initServer(MockStoreManager.class, "", MemcachedOnLocalhostZimbraConfig.class);
+        Provisioning prov = Provisioning.getInstance();
+        prov.createAccount("test@zimbra.com", "secret", new HashMap<String, Object>());
     }
 
     @Override
     protected void flushCacheBetweenTests() throws Exception {
-        MemcachedConnector.getClient().flush();
+        Zimbra.getAppContext().getBean(ZimbraMemcachedClient.class).flush();
     }
 
     protected boolean isExternalCacheAvailableForTest() throws Exception {
-        return MemcachedConnector.isConnected();
+        return Zimbra.getAppContext().getBean(ZimbraMemcachedClient.class).isConnected();
     }
 
     @Test

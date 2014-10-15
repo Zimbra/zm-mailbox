@@ -20,7 +20,6 @@ import org.junit.BeforeClass;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.acl.EffectiveACLCache;
@@ -36,7 +35,6 @@ public final class RedisEffectiveACLCacheTest extends AbstractEffectiveACLCacheT
 
     @BeforeClass
     public static void init() throws Exception {
-        LC.zimbra_class_shareddeliverycoordinator.setDefault(RedisQlessSharedDeliveryCoordinator.class.getName());
         MailboxTestUtil.initServer(MockStoreManager.class, "", RedisOnLocalhostZimbraConfig.class);
         Provisioning prov = Provisioning.getInstance();
         prov.createAccount("test@zimbra.com", "secret", new HashMap<String, Object>());

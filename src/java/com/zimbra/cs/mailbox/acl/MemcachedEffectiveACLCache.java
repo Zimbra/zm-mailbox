@@ -22,6 +22,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import javax.annotation.PostConstruct;
+
+import org.springframework.beans.factory.annotation.Autowired;
+
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.memcached.MemcachedKey;
@@ -34,16 +38,18 @@ import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.MetadataList;
-import com.zimbra.cs.memcached.MemcachedConnector;
 import com.zimbra.cs.memcached.MemcachedKeyPrefix;
 
 public class MemcachedEffectiveACLCache implements EffectiveACLCache {
+    @Autowired protected ZimbraMemcachedClient memcachedClient;
     protected MemcachedMap<EffectiveACLCacheKey, ACL> mMemcachedLookup;
 
     public MemcachedEffectiveACLCache() {
-        ZimbraMemcachedClient memcachedClient = MemcachedConnector.getClient();
-        ACLSerializer serializer = new ACLSerializer();
-        mMemcachedLookup = new MemcachedMap<EffectiveACLCacheKey, ACL>(memcachedClient, serializer);
+    }
+
+    @PostConstruct
+    public void init() {
+        mMemcachedLookup = new MemcachedMap<EffectiveACLCacheKey, ACL>(memcachedClient, new ACLSerializer());
     }
 
     private ACL get(EffectiveACLCacheKey key) throws ServiceException {

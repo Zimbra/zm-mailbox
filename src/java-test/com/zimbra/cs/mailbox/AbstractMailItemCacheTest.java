@@ -100,7 +100,9 @@ public abstract class AbstractMailItemCacheTest extends AbstractCacheTest {
         // Remove all cached items for the 1st mailbox
         try {
             cache.remove(mbox1);
-        } catch (ServiceException e) {}
+        } catch (UnsupportedOperationException e) {
+            Assume.assumeTrue(false); // ignore the rest of the asserts in this method
+        }
 
         // Expect the first account's inbox folder to be gone
         Assert.assertEquals(null, cache.get(mbox1, mbox1.getFolderById(Mailbox.ID_FOLDER_INBOX).getId()));

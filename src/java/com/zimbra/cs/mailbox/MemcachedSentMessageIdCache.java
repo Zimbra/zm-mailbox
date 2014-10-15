@@ -13,20 +13,27 @@ package com.zimbra.cs.mailbox;
  * ***** END LICENSE BLOCK *****
  */
 
+import javax.annotation.PostConstruct;
+
+import org.springframework.beans.factory.annotation.Autowired;
+
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.memcached.MemcachedKey;
 import com.zimbra.common.util.memcached.MemcachedMap;
 import com.zimbra.common.util.memcached.MemcachedSerializer;
 import com.zimbra.common.util.memcached.ZimbraMemcachedClient;
-import com.zimbra.cs.memcached.MemcachedConnector;
 import com.zimbra.cs.memcached.MemcachedKeyPrefix;
 
 public class MemcachedSentMessageIdCache implements SentMessageIdCache {
-    protected final MemcachedMap<SentMessageIdByMsgIdHeaderKey, Integer> sentMessageIdByMsgIdLookup;
+    @Autowired protected ZimbraMemcachedClient memcachedClient;
+    protected MemcachedMap<SentMessageIdByMsgIdHeaderKey, Integer> sentMessageIdByMsgIdLookup;
 
     /** Constructor */
     public MemcachedSentMessageIdCache() {
-        ZimbraMemcachedClient memcachedClient = MemcachedConnector.getClient();
+    }
+
+    @PostConstruct
+    public void init() {
         sentMessageIdByMsgIdLookup = new MemcachedMap<>(memcachedClient, new IntegerSerializer(), false);
     }
 

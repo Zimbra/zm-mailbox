@@ -13,21 +13,27 @@ package com.zimbra.cs.mailbox;
  * ***** END LICENSE BLOCK *****
  */
 
+import javax.annotation.PostConstruct;
+
 import org.codehaus.jackson.map.ObjectMapper;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.memcached.MemcachedKey;
 import com.zimbra.common.util.memcached.MemcachedMap;
 import com.zimbra.common.util.memcached.MemcachedSerializer;
 import com.zimbra.common.util.memcached.ZimbraMemcachedClient;
-import com.zimbra.cs.memcached.MemcachedConnector;
 import com.zimbra.cs.memcached.MemcachedKeyPrefix;
 
 public class MemcachedMailboxDataCache implements MailboxDataCache {
-    MemcachedMap<Key, Mailbox.MailboxData> memcachedLookup;
+    @Autowired protected ZimbraMemcachedClient memcachedClient;
+    protected MemcachedMap<Key, Mailbox.MailboxData> memcachedLookup;
 
     public MemcachedMailboxDataCache() {
-        ZimbraMemcachedClient memcachedClient = MemcachedConnector.getClient();
+    }
+
+    @PostConstruct
+    public void init() {
         memcachedLookup = new MemcachedMap<Key, Mailbox.MailboxData>(memcachedClient, new MailboxDataSerializer(), true);
     }
 

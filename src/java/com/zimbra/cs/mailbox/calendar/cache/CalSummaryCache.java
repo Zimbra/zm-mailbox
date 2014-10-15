@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -31,6 +31,7 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.util.memcached.ZimbraMemcachedClient;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.ACL;
@@ -47,12 +48,12 @@ import com.zimbra.cs.mailbox.acl.FolderACL;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.InviteInfo;
 import com.zimbra.cs.mailbox.util.TagUtil;
-import com.zimbra.cs.memcached.MemcachedConnector;
 import com.zimbra.cs.service.mail.CalendarUtils;
 import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.session.PendingModifications.ModificationKey;
 import com.zimbra.cs.stats.ZimbraPerf;
+import com.zimbra.cs.util.Zimbra;
 
 // TODO: caching remote calendars
 // TODO: TTL instead of last-modified time check, if folder configured that way or remote
@@ -486,6 +487,8 @@ public class CalSummaryCache {
         mLRUCapacity = capacity;
         mSummaryCache = new SummaryLRU(capacity);
         mMemcachedCache = new CalSummaryMemcachedCache();
+        Zimbra.getAppContext().getAutowireCapableBeanFactory().autowireBean(mMemcachedCache);
+        Zimbra.getAppContext().getAutowireCapableBeanFactory().initializeBean(mMemcachedCache, "memcachedCalSummaryCache");
     }
 
     private static enum CacheLevel { Memory, Memcached, File, Miss }
@@ -820,7 +823,7 @@ public class CalSummaryCache {
             }
         }
 
-        if (MemcachedConnector.isConnected()) {
+        if (Zimbra.getAppContext().getBean(ZimbraMemcachedClient.class).isConnected()) {
             mMemcachedCache.notifyCommittedChanges(mods, changeId);
         }
     }
@@ -829,7 +832,7 @@ public class CalSummaryCache {
         synchronized (mSummaryCache) {
             mSummaryCache.removeAccount(mbox.getAccountId());
         }
-        if (MemcachedConnector.isConnected()) {
+        if (Zimbra.getAppContext().getBean(ZimbraMemcachedClient.class).isConnected()) {
             mMemcachedCache.purgeMailbox(mbox);
         }
         FileStore.removeMailbox(mbox.getId());

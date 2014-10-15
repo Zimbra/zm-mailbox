@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -374,10 +374,7 @@ public class TestDistListACL extends TestCase {
     }
 
     public static void main(String[] args) throws ServiceException {
-
         com.zimbra.cs.db.DbPool.startup();
-        com.zimbra.cs.memcached.MemcachedConnector.startup();
-
         CliUtil.toolSetup();
         TestUtil.runTest(TestDistListACL.class);
     }

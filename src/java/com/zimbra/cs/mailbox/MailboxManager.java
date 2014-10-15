@@ -29,6 +29,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -49,7 +50,6 @@ import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.index.IndexStore;
 import com.zimbra.cs.mailbox.Mailbox.MailboxData;
 import com.zimbra.cs.mailbox.acl.EffectiveACLCache;
-import com.zimbra.cs.mailbox.acl.MemcachedEffectiveACLCache;
 import com.zimbra.cs.redolog.op.CreateMailbox;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.util.AccountUtil;
@@ -147,9 +147,9 @@ public class MailboxManager {
     private ConversationIdCache conversationIdCache = new LocalConversationIdCache();
     private MailboxDataCache mailboxDataCache = new LocalMailboxDataCache();
     private SentMessageIdCache sentMessageIdCache = new LocalSentMessageIdCache();
-    private FoldersAndTagsCache foldersAndTagsCache = new MemcachedFoldersAndTagsCache();
-    private EffectiveACLCache effectiveACLCache = new MemcachedEffectiveACLCache();
 
+    @Autowired private FoldersAndTagsCache foldersAndTagsCache;
+    @Autowired private EffectiveACLCache effectiveACLCache;
     @Autowired private MailboxLockFactory mailboxLockFactory;
     @Autowired private SharedDeliveryCoordinator sharedDeliveryCoordinator;
 
@@ -176,14 +176,6 @@ public class MailboxManager {
 
     public SentMessageIdCache getSentMessageIdCache() {
         return sentMessageIdCache;
-    }
-
-    public FoldersAndTagsCache getFoldersAndTagsCache() {
-        return foldersAndTagsCache;
-    }
-
-    public EffectiveACLCache getEffectiveACLCache() {
-        return effectiveACLCache;
     }
 
     protected MailboxMap createCache() {
@@ -224,6 +216,7 @@ public class MailboxManager {
         MailboxIndex.startup();
     }
 
+    @PreDestroy
     public void shutdown() {}
 
     /** Returns the mailbox for the given account.  Creates a new mailbox

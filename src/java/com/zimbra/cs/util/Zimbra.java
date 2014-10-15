@@ -17,6 +17,7 @@
 
 package com.zimbra.cs.util;
 
+import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.security.Security;
@@ -57,7 +58,6 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.PurgeThread;
 import com.zimbra.cs.mailbox.ScheduledTaskManager;
 import com.zimbra.cs.mailbox.acl.AclPushTask;
-import com.zimbra.cs.memcached.MemcachedConnector;
 import com.zimbra.cs.redolog.RedoLogProvider;
 import com.zimbra.cs.server.ServerManager;
 import com.zimbra.cs.servlet.FirstServlet;
@@ -299,9 +299,6 @@ public final class Zimbra {
 
         app.startup();
 
-        if (app.supports(MemcachedConnector.class.getName())) {
-            MemcachedConnector.startup();
-        }
         if (app.supports(EhcacheManager.class.getName())) {
             EhcacheManager.getInstance().startup();
         }
@@ -453,14 +450,9 @@ public final class Zimbra {
             ExtensionUtil.destroyAll();
         }
 
-        if (app.supports(MemcachedConnector.class.getName())) {
-            MemcachedConnector.shutdown();
-        }
         if (app.supports(EhcacheManager.class.getName())) {
             EhcacheManager.getInstance().shutdown();
         }
-
-        MailboxManager.getInstance().shutdown();
 
         if (sIsMailboxd) {
             StoreManager.getInstance().shutdown();
@@ -473,6 +465,14 @@ public final class Zimbra {
         try {
             DbPool.shutdown();
         } catch (Exception ignored) {
+        }
+
+        if (Zimbra.getAppContext() instanceof Closeable) {
+            try {
+                ((Closeable)Zimbra.getAppContext()).close();
+            } catch (IOException e) {
+                throw ServiceException.FAILURE("Failed closing Spring application context", e);
+            }
         }
     }
 

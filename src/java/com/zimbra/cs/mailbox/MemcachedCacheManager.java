@@ -25,6 +25,7 @@ import java.util.Set;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.mailbox.acl.EffectiveACLCache;
 import com.zimbra.cs.mailbox.calendar.cache.CalendarCacheManager;
 import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.PendingModifications.Change;
@@ -35,10 +36,8 @@ public class MemcachedCacheManager extends MailboxListener {
 
     public static void purgeMailbox(Mailbox mbox) throws ServiceException {
         CalendarCacheManager.getInstance().purgeMailbox(mbox);
-
-        MailboxManager mm = Zimbra.getAppContext().getBean(MailboxManager.class);
-        mm.getEffectiveACLCache().remove(mbox);
-        mm.getFoldersAndTagsCache().remove(mbox);
+        Zimbra.getAppContext().getBean(EffectiveACLCache.class).remove(mbox);
+        Zimbra.getAppContext().getBean(FoldersAndTagsCache.class).remove(mbox);
     }
 
     @Override
@@ -82,9 +81,8 @@ public class MemcachedCacheManager extends MailboxListener {
             }
         }
 
-        MailboxManager mm = Zimbra.getAppContext().getBean(MailboxManager.class);
         try {
-            mm.getEffectiveACLCache().remove(keysToInvalidate);
+            Zimbra.getAppContext().getBean(EffectiveACLCache.class).remove(keysToInvalidate);
         } catch (ServiceException e) {
             ZimbraLog.calendar.warn("Unable to notify folder acl cache.  Some cached data may become stale.", e);
         }

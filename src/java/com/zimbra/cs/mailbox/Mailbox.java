@@ -1920,9 +1920,8 @@ public class Mailbox {
     private void clearFolderCache() {
         mFolderCache = null;
         requiresWriteLock = true;
-        // Remove from memcached cache
         try {
-            mailboxManager.getFoldersAndTagsCache().remove(this);
+            Zimbra.getAppContext().getBean(FoldersAndTagsCache.class).remove(this);
         } catch (ServiceException e) {
             ZimbraLog.mailbox.warn("error deleting folders/tags cache from memcached.");
         }
@@ -1931,9 +1930,8 @@ public class Mailbox {
     private void clearTagCache() {
         mTagCache = null;
         requiresWriteLock = true;
-        // Remove from memcached cache
         try {
-            mailboxManager.getFoldersAndTagsCache().remove(this);
+            Zimbra.getAppContext().getBean(FoldersAndTagsCache.class).remove(this);
         } catch (ServiceException e) {
             ZimbraLog.mailbox.warn("error deleting folders/tags cache from memcached.");
         }
@@ -2095,10 +2093,10 @@ public class Mailbox {
             DbMailItem.FolderTagMap tagData = new DbMailItem.FolderTagMap();
             MailboxData stats = null;
 
-            // Load folders and tags from memcached if we can.
-            boolean loadedFromMemcached = false;
+            // Load folders and tags from cache if we can.
+            boolean loadedFromCache = false;
             if (!initial && !DebugConfig.disableFoldersTagsCache) {
-                FoldersAndTagsCache foldersAndTagsCache = mailboxManager.getFoldersAndTagsCache();
+                FoldersAndTagsCache foldersAndTagsCache = Zimbra.getAppContext().getBean(FoldersAndTagsCache.class);
                 FoldersAndTags foldersAndTags = foldersAndTagsCache.get(this);
                 if (foldersAndTags != null) {
                     List<Metadata> foldersMeta = foldersAndTags.getFolderMetadata();
@@ -2113,11 +2111,11 @@ public class Mailbox {
                         ud.deserialize(meta);
                         tagData.put(ud, null);
                     }
-                    loadedFromMemcached = true;
+                    loadedFromCache = true;
                 }
             }
 
-            if (!loadedFromMemcached) {
+            if (!loadedFromCache) {
                 stats = DbMailItem.getFoldersAndTags(this, folderData, tagData, initial);
             }
 
@@ -2175,7 +2173,7 @@ public class Mailbox {
                 }
             }
 
-            if (!loadedFromMemcached && !DebugConfig.disableFoldersTagsCache) {
+            if (!loadedFromCache && !DebugConfig.disableFoldersTagsCache) {
                 cacheFoldersAndTags();
             }
             if (requiresWriteLock) {
@@ -2194,7 +2192,7 @@ public class Mailbox {
         lock.lock();
         try {
             FoldersAndTags foldersAndTags = getFoldersAndTags();
-            mailboxManager.getFoldersAndTagsCache().put(this, foldersAndTags);
+            Zimbra.getAppContext().getBean(FoldersAndTagsCache.class).put(this, foldersAndTags);
         } finally {
             lock.release();
         }

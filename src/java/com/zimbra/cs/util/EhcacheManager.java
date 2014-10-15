@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -25,7 +25,7 @@ import net.sf.ehcache.config.DiskStoreConfiguration;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.memcached.MemcachedConnector;
+import com.zimbra.common.util.memcached.ZimbraMemcachedClient;
 
 /**
  * Ehcache configurator.
@@ -50,7 +50,7 @@ public final class EhcacheManager {
         disk.setPath(LC.zimbra_home.value() + File.separator + "data" + File.separator + "mailboxd");
         conf.addDiskStore(disk);
         conf.addCache(createImapActiveSessionCache());
-        if (MemcachedConnector.isConnected()) {
+        if (Zimbra.getAppContext().getBean(ZimbraMemcachedClient.class).isConnected()) {
             ZimbraLog.imap.info("Using Memcached for inactive session cache");
         } else {
             conf.addCache(createImapInactiveSessionCache());

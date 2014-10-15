@@ -14,23 +14,29 @@ package com.zimbra.cs.mailbox;
  * ***** END LICENSE BLOCK *****
  */
 
+import javax.annotation.PostConstruct;
+
+import org.springframework.beans.factory.annotation.Autowired;
+
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.memcached.MemcachedKey;
 import com.zimbra.common.util.memcached.MemcachedMap;
 import com.zimbra.common.util.memcached.MemcachedSerializer;
 import com.zimbra.common.util.memcached.ZimbraMemcachedClient;
-import com.zimbra.cs.memcached.MemcachedConnector;
 import com.zimbra.cs.memcached.MemcachedKeyPrefix;
 
 public class MemcachedFoldersAndTagsCache implements FoldersAndTagsCache {
-    private MemcachedMap<Key, FoldersAndTags> mMemcachedLookup;
+    @Autowired protected ZimbraMemcachedClient memcachedClient;
+    protected MemcachedMap<Key, FoldersAndTags> mMemcachedLookup;
 
     /** Constructor */
     public MemcachedFoldersAndTagsCache() {
-        ZimbraMemcachedClient memcachedClient = MemcachedConnector.getClient();
-        Serializer serializer = new Serializer();
-        mMemcachedLookup = new MemcachedMap<Key, FoldersAndTags>(memcachedClient, serializer, false);
+    }
+
+    @PostConstruct
+    public void init() {
+        mMemcachedLookup = new MemcachedMap<Key, FoldersAndTags>(memcachedClient, new Serializer(), false);
     }
 
     /** Returns cached list of all folders and tags for a given mailbox */

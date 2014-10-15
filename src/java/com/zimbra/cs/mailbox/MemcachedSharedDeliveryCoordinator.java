@@ -13,7 +13,10 @@ package com.zimbra.cs.mailbox;
  * ***** END LICENSE BLOCK *****
  */
 
+import javax.annotation.PostConstruct;
+
 import org.codehaus.jackson.map.ObjectMapper;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import com.google.common.base.Objects;
 import com.zimbra.common.service.ServiceException;
@@ -22,16 +25,19 @@ import com.zimbra.common.util.memcached.MemcachedMap;
 import com.zimbra.common.util.memcached.MemcachedSerializer;
 import com.zimbra.common.util.memcached.StringBasedMemcachedKey;
 import com.zimbra.common.util.memcached.ZimbraMemcachedClient;
-import com.zimbra.cs.memcached.MemcachedConnector;
 import com.zimbra.cs.memcached.MemcachedKeyPrefix;
 
 public class MemcachedSharedDeliveryCoordinator implements SharedDeliveryCoordinator {
     static final int WAIT_MS = 3000;
-    ZimbraMemcachedClient memcachedClient = MemcachedConnector.getClient();
-    protected final MemcachedMap<StringBasedMemcachedKey, State> stateByAccountIdLookup;
+    @Autowired protected ZimbraMemcachedClient memcachedClient;
+    protected MemcachedMap<StringBasedMemcachedKey, State> stateByAccountIdLookup;
 
     /** Constructor */
     public MemcachedSharedDeliveryCoordinator() {
+    }
+
+    @PostConstruct
+    public void init() {
         stateByAccountIdLookup = new MemcachedMap<>(memcachedClient, new Serializer(), false);
     }
 

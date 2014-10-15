@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2009, 2010, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -21,6 +21,10 @@ import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.annotation.PostConstruct;
+
+import org.springframework.beans.factory.annotation.Autowired;
+
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.memcached.MemcachedKey;
 import com.zimbra.common.util.memcached.MemcachedMap;
@@ -28,23 +32,23 @@ import com.zimbra.common.util.memcached.MemcachedSerializer;
 import com.zimbra.common.util.memcached.ZimbraMemcachedClient;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.memcached.MemcachedKeyPrefix;
-import com.zimbra.cs.memcached.MemcachedConnector;
 
 // for CalDAV
 // caches responses for PROPFIND-ctag requests
 public class CtagResponseCache {
-
-    private MemcachedMap<CtagResponseCacheKey, CtagResponseCacheValue> mMemcachedLookup;
+    @Autowired protected ZimbraMemcachedClient memcachedClient;
+    protected MemcachedMap<CtagResponseCacheKey, CtagResponseCacheValue> mMemcachedLookup;
 
     CtagResponseCache() {
-        ZimbraMemcachedClient memcachedClient = MemcachedConnector.getClient();
-        CtagResponseSerializer serializer = new CtagResponseSerializer();
-        mMemcachedLookup =
-            new MemcachedMap<CtagResponseCacheKey, CtagResponseCacheValue>(memcachedClient, serializer); 
+    }
+
+    @PostConstruct
+    public void init() {
+        mMemcachedLookup = new MemcachedMap<CtagResponseCacheKey, CtagResponseCacheValue>(memcachedClient, new CtagResponseSerializer());
     }
 
     private static class CtagResponseSerializer implements MemcachedSerializer<CtagResponseCacheValue> {
-        
+
         public Object serialize(CtagResponseCacheValue value) throws ServiceException {
             return value.encodeMetadata().toString();
         }
@@ -132,7 +136,7 @@ public class CtagResponseCache {
                 body = new String(mRespBody, "iso-8859-1");  // must use iso-8859-1 to allow all bytes
             } catch (UnsupportedEncodingException e) {
                 throw ServiceException.FAILURE("Unable to encode ctag response body", e);
-            } 
+            }
             meta.put(FN_BODY_LENGTH, mRespBody.length);
             meta.put(FN_RESPONSE_BODY, body);
             meta.put(FN_RAW_LENGTH, mRawLen);

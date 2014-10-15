@@ -34,6 +34,5 @@ public interface MailItemCache {
     public MailItem remove(Mailbox mbox, int itemId) throws ServiceException;
 
     /** Removes all items from the cache */
-    public void remove(Mailbox mbox) throws ServiceException;
+    public void remove(Mailbox mbox) throws ServiceException, UnsupportedOperationException;
 }
-

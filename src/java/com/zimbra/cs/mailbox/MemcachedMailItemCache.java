@@ -16,23 +16,30 @@ package com.zimbra.cs.mailbox;
  * ***** END LICENSE BLOCK *****
  */
 
+import javax.annotation.PostConstruct;
+
+import org.springframework.beans.factory.annotation.Autowired;
+
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.memcached.MemcachedMap;
 import com.zimbra.common.util.memcached.MemcachedSerializer;
 import com.zimbra.common.util.memcached.StringBasedMemcachedKey;
 import com.zimbra.common.util.memcached.ZimbraMemcachedClient;
-import com.zimbra.cs.memcached.MemcachedConnector;
 import com.zimbra.cs.memcached.MemcachedKeyPrefix;
 
 
 public class MemcachedMailItemCache implements MailItemCache {
-    private static MemcachedMailItemCache sTheInstance = new MemcachedMailItemCache();
-    private MemcachedMap<IdKey, Metadata> memcachedLookup;
-    private MemcachedMap<UuidKey, Integer> memcachedUuidLookup;
-    public static MemcachedMailItemCache getInstance() { return sTheInstance; }
+    @Autowired protected ZimbraMemcachedClient memcachedClient;
+//    protected static MemcachedMailItemCache sTheInstance = new MemcachedMailItemCache();
+    protected MemcachedMap<IdKey, Metadata> memcachedLookup;
+    protected MemcachedMap<UuidKey, Integer> memcachedUuidLookup;
+//    public static MemcachedMailItemCache getInstance() { return sTheInstance; }
 
     MemcachedMailItemCache() {
-        ZimbraMemcachedClient memcachedClient = MemcachedConnector.getClient();
+    }
+
+    @PostConstruct
+    public void init() {
         memcachedLookup = new MemcachedMap<IdKey, Metadata>(memcachedClient, new MailItemSerializer(), false);
         memcachedUuidLookup = new MemcachedMap<UuidKey, Integer>(memcachedClient, new IntegerSerializer(), false);
     }
@@ -86,8 +93,9 @@ public class MemcachedMailItemCache implements MailItemCache {
         }
     }
 
-    public void remove(Mailbox mbox) {
-        // nothing to do
+    /** @throws UnsupportedOperationException always */
+    public void remove(Mailbox mbox) throws UnsupportedOperationException {
+        throw new UnsupportedOperationException();
     }
 
 

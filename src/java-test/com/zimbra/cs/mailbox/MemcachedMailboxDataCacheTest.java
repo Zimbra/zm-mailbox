@@ -13,13 +13,17 @@
  */
 package com.zimbra.cs.mailbox;
 
+import java.util.HashMap;
+
+import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.memcached.ZimbraMemcachedClient;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.memcached.MemcachedConnector;
+import com.zimbra.cs.store.MockStoreManager;
 import com.zimbra.cs.util.Zimbra;
 
 /**
@@ -27,38 +31,37 @@ import com.zimbra.cs.util.Zimbra;
  */
 public final class MemcachedMailboxDataCacheTest extends AbstractMailboxDataCacheTest {
 
+    @BeforeClass
+    public static void init() throws Exception {
+        MailboxTestUtil.initServer(MockStoreManager.class, "", MemcachedOnLocalhostZimbraConfig.class);
+        Provisioning prov = Provisioning.getInstance();
+        prov.createAccount("test@zimbra.com", "secret", new HashMap<String, Object>());
+    }
+
     @Override
     protected MailboxDataCache constructCache() throws ServiceException {
         MailboxDataCache cache = new MemcachedMailboxDataCache();
         Zimbra.getAppContext().getAutowireCapableBeanFactory().autowireBean(cache);
+        Zimbra.getAppContext().getAutowireCapableBeanFactory().initializeBean(cache, "mailboxDataCache");
         return cache;
-    }
-
-    @BeforeClass
-    public static void init() throws Exception {
-        Provisioning.getInstance().getLocalServer().addMemcachedClientServerList("localhost");
-        Provisioning.getInstance().getLocalServer().setMemcachedClientTimeoutMillis(20);
-        Provisioning.getInstance().getLocalServer().setMemcachedClientExpirySeconds(10);
-        MemcachedConnector.startup();
-        AbstractCacheTest.init();
     }
 
     @Override
     protected boolean isExternalCacheAvailableForTest() throws Exception {
-        return MemcachedConnector.isConnected();
+        return Zimbra.getAppContext().getBean(ZimbraMemcachedClient.class).isConnected();
     }
 
     @Override
     protected void flushCacheBetweenTests() throws Exception {
-        MemcachedConnector.getClient().flush();
+        Zimbra.getAppContext().getBean(ZimbraMemcachedClient.class).flush();
     }
 
     @Test
     public void testGet() throws Exception {
+        cache = constructCache();
+        Assert.assertNotNull(cache);
         Account acct = Provisioning.getInstance().getAccountByName("test@zimbra.com");
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
-
-        MemcachedMailboxDataCache mailboxDataCache = new MemcachedMailboxDataCache();
-        mailboxDataCache.get(mbox);
+        cache.get(mbox);
     }
 }

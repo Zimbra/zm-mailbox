@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2009, 2010, 2011, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -25,6 +25,14 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import javax.annotation.PostConstruct;
+
+import org.springframework.beans.factory.annotation.Autowired;
+
+import com.zimbra.client.ZFolder;
+import com.zimbra.client.ZMailbox;
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -33,8 +41,6 @@ import com.zimbra.common.util.memcached.MemcachedSerializer;
 import com.zimbra.common.util.memcached.ZimbraMemcachedClient;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.common.account.Key;
-import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
@@ -43,24 +49,23 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Metadata;
-import com.zimbra.cs.memcached.MemcachedConnector;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.session.PendingModifications.ModificationKey;
 import com.zimbra.cs.util.AccountUtil;
-import com.zimbra.client.ZFolder;
-import com.zimbra.client.ZMailbox;
 
 public class CtagInfoCache {
-
-    private MemcachedMap<CalendarKey, CtagInfo> mMemcachedLookup;
+    @Autowired protected ZimbraMemcachedClient memcachedClient;
+    protected MemcachedMap<CalendarKey, CtagInfo> mMemcachedLookup;
 
     CtagInfoCache() {
-        ZimbraMemcachedClient memcachedClient = MemcachedConnector.getClient();
-        CtagInfoSerializer serializer = new CtagInfoSerializer();
-        mMemcachedLookup = new MemcachedMap<CalendarKey, CtagInfo>(memcachedClient, serializer);
+    }
+
+    @PostConstruct
+    public void init() {
+        mMemcachedLookup = new MemcachedMap<CalendarKey, CtagInfo>(memcachedClient, new CtagInfoSerializer());
     }
 
     private static class CtagInfoSerializer implements MemcachedSerializer<CtagInfo> {

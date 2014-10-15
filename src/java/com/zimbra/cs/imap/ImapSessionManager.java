@@ -37,6 +37,7 @@ import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.util.memcached.ZimbraMemcachedClient;
 import com.zimbra.cs.imap.ImapHandler.ImapExtension;
 import com.zimbra.cs.index.SearchParams;
 import com.zimbra.cs.index.SortBy;
@@ -50,7 +51,6 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.SearchFolder;
 import com.zimbra.cs.mailbox.util.TagUtil;
-import com.zimbra.cs.memcached.MemcachedConnector;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.util.EhcacheManager;
 import com.zimbra.cs.util.Zimbra;
@@ -97,10 +97,12 @@ final class ImapSessionManager {
             activeSessionCache = new DiskImapCache();
         }
         //inactive preference order memcache, ehcache, diskcache
-        inactiveSessionCache = MemcachedConnector.isConnected() ?
+        inactiveSessionCache = Zimbra.getAppContext().getBean(ZimbraMemcachedClient.class).isConnected() ?
                 new MemcachedImapCache() : (LC.imap_use_ehcache.booleanValue() ?
                 new EhcacheImapCache(EhcacheManager.IMAP_INACTIVE_SESSION_CACHE, false) :
                 activeSessionCache);
+        Zimbra.getAppContext().getAutowireCapableBeanFactory().autowireBean(inactiveSessionCache);
+        Zimbra.getAppContext().getAutowireCapableBeanFactory().initializeBean(inactiveSessionCache, "inactiveSessionCache");
         Preconditions.checkState(inactiveSessionCache != null);
     }
 
