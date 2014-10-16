@@ -17,6 +17,8 @@
 package com.zimbra.cs.mailbox;
 
 import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 
 import org.junit.Assert;
 import org.junit.Assume;
@@ -87,8 +89,12 @@ public abstract class AbstractMailItemCacheTest extends AbstractCacheTest {
         Assert.assertNotNull(cache);
 
         Provisioning prov = Provisioning.getInstance();
-        Account acct1 = prov.createAccount("test1@zimbra.com", "secret", new HashMap<String, Object>());
-        Account acct2 = prov.createAccount("test2@zimbra.com", "secret", new HashMap<String, Object>());
+        Map<String,Object> attr1 = new HashMap<>();
+        Map<String,Object> attr2 = new HashMap<>();
+        attr1.put(Provisioning.A_zimbraId, new UUID(1L, 0L).toString());
+        attr2.put(Provisioning.A_zimbraId, new UUID(2L, 0L).toString());
+        Account acct1 = prov.createAccount("test1@zimbra.com", "secret", attr1);
+        Account acct2 = prov.createAccount("test2@zimbra.com", "secret", attr2);
 
         Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
         Mailbox mbox2 = MailboxManager.getInstance().getMailboxByAccount(acct2);

@@ -16,8 +16,11 @@
  */
 package com.zimbra.cs.mailbox;
 
+import java.util.HashMap;
+
 import org.junit.Assert;
 import org.junit.Assume;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import redis.clients.jedis.Jedis;
@@ -25,12 +28,21 @@ import redis.clients.jedis.JedisPool;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.MockProvisioning;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.store.MockStoreManager;
 import com.zimbra.cs.util.Zimbra;
 
 /**
  * Unit test for {@link RedisMailItemCache}.
  */
 public final class RedisMailItemCacheTest extends AbstractMailItemCacheTest {
+
+    @BeforeClass
+    public static void init() throws Exception {
+        MailboxTestUtil.initServer(MockStoreManager.class, "", RedisOnLocalhostZimbraConfig.class);
+        Provisioning prov = Provisioning.getInstance();
+        prov.createAccount("test@zimbra.com", "secret", new HashMap<String, Object>());
+    }
 
     @Override
     protected MailItemCache constructCache() throws ServiceException {
