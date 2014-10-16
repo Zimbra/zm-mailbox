@@ -8298,4 +8298,12 @@ TODO: delete them permanently from here
   </desc>
 </attr>
 
+<attr id="1653" name="zimbraReverseProxySSLProtocols" type="string" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited" since="8.6.0">     
+  <globalConfigValue>SSLv3</globalConfigValue>
+  <globalConfigValue>TLSv1</globalConfigValue>
+  <globalConfigValue>TLSv1.1</globalConfigValue> 
+  <globalConfigValue>TLSv1.2</globalConfigValue> 
+  <desc>SSL protocols enabled for the proxy</desc>
+</attr>
+
 </attrs>
