@@ -21,87 +21,33 @@ import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.annotation.PostConstruct;
-
-import org.springframework.beans.factory.annotation.Autowired;
-
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.memcached.MemcachedKey;
-import com.zimbra.common.util.memcached.MemcachedMap;
-import com.zimbra.common.util.memcached.MemcachedSerializer;
-import com.zimbra.common.util.memcached.ZimbraMemcachedClient;
+import com.zimbra.common.util.Triple;
 import com.zimbra.cs.mailbox.Metadata;
-import com.zimbra.cs.memcached.MemcachedKeyPrefix;
 
-// for CalDAV
-// caches responses for PROPFIND-ctag requests
-public class CtagResponseCache {
-    @Autowired protected ZimbraMemcachedClient memcachedClient;
-    protected MemcachedMap<CtagResponseCacheKey, CtagResponseCacheValue> mMemcachedLookup;
+// Cache of responses to PROPFIND-ctag requests. Used for CalDAV.
+public interface CtagResponseCache {
 
-    CtagResponseCache() {
-    }
+    Value get(Key key) throws ServiceException;
 
-    @PostConstruct
-    public void init() {
-        mMemcachedLookup = new MemcachedMap<CtagResponseCacheKey, CtagResponseCacheValue>(memcachedClient, new CtagResponseSerializer());
-    }
+    void put(Key key, Value value) throws ServiceException;
 
-    private static class CtagResponseSerializer implements MemcachedSerializer<CtagResponseCacheValue> {
 
-        public Object serialize(CtagResponseCacheValue value) throws ServiceException {
-            return value.encodeMetadata().toString();
-        }
-
-        public CtagResponseCacheValue deserialize(Object obj) throws ServiceException {
-            Metadata meta = new Metadata((String) obj);
-            return new CtagResponseCacheValue(meta);
+    public static class Key extends Triple<String, String, Integer> {
+        public Key(String accountId, String userAgent, int rootFolderId) {
+            super(accountId, userAgent, rootFolderId);
         }
     }
 
-    // CTAG response cache key is account + client (User-Agent) + root folder
-    public static class CtagResponseCacheKey implements MemcachedKey {
-        private String mAccountId;
-        private String mUserAgent;
-        private int mRootFolderId;
-        private String mKeyVal;
 
-        public CtagResponseCacheKey(String accountId, String userAgent, int rootFolderId) {
-            mAccountId = accountId;
-            mUserAgent = userAgent;
-            mRootFolderId = rootFolderId;
-            mKeyVal = String.format("%s:%s:%d", mAccountId, mUserAgent, mRootFolderId);
-        }
-
-        public String getAccountId() { return mAccountId; }
-        public String getUserAgent() { return mUserAgent; }
-        public int getRootFolderId() { return mRootFolderId; }
-
-        public boolean equals(Object other) {
-            if (other instanceof CtagResponseCacheKey) {
-                CtagResponseCacheKey otherKey = (CtagResponseCacheKey) other;
-                return mKeyVal.equals(otherKey.mKeyVal);
-            }
-            return false;
-        }
-
-        public int hashCode() {
-            return mKeyVal.hashCode();
-        }
-
-        // MemcachedKey interface
-        public String getKeyPrefix() { return MemcachedKeyPrefix.CALDAV_CTAG_RESPONSE; }
-        public String getKeyValue() { return mKeyVal; }
-    }
-
-    public static class CtagResponseCacheValue {
+    public static class Value {
         private byte[] mRespBody;
         private int mRawLen;
         private boolean mGzipped;
         private String mVersion;  // calendar list's version at response cache time
         private Map<Integer /* folder id */, String /* ctag */> mCtags;  // snapshot of ctags at response cache time
 
-        public CtagResponseCacheValue(byte[] respBody, int rawLen, boolean gzipped, String calListVer, Map<Integer, String> ctags) {
+        public Value(byte[] respBody, int rawLen, boolean gzipped, String calListVer, Map<Integer, String> ctags) {
             mRespBody = respBody;
             if (gzipped) {
                 mRawLen = rawLen;
@@ -153,7 +99,7 @@ public class CtagResponseCache {
             return meta;
         }
 
-        CtagResponseCacheValue(Metadata meta) throws ServiceException {
+        Value(Metadata meta) throws ServiceException {
             int bodyLen = (int) meta.getLong(FN_BODY_LENGTH, 0);
             String body = meta.get(FN_RESPONSE_BODY, null);
             if (body == null)
@@ -182,13 +128,5 @@ public class CtagResponseCache {
                 }
             }
         }
-    }
-
-    public CtagResponseCacheValue get(CtagResponseCacheKey key) throws ServiceException {
-        return mMemcachedLookup.get(key);
-    }
-
-    public void put(CtagResponseCacheKey key, CtagResponseCacheValue value) throws ServiceException {
-        mMemcachedLookup.put(key, value);
     }
 }

@@ -91,8 +91,6 @@ import com.zimbra.cs.mailbox.calendar.cache.AccountKey;
 import com.zimbra.cs.mailbox.calendar.cache.CalendarCacheManager;
 import com.zimbra.cs.mailbox.calendar.cache.CtagInfo;
 import com.zimbra.cs.mailbox.calendar.cache.CtagResponseCache;
-import com.zimbra.cs.mailbox.calendar.cache.CtagResponseCache.CtagResponseCacheKey;
-import com.zimbra.cs.mailbox.calendar.cache.CtagResponseCache.CtagResponseCacheValue;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.FileUploadServlet.Upload;
 import com.zimbra.cs.service.util.ItemId;
@@ -406,7 +404,7 @@ public class DavServlet extends ZimbraServlet {
         boolean ctagCacheEnabled = Zimbra.getAppContext().getBean(ZimbraMemcachedClient.class).isConnected();
         boolean gzipAccepted = false;
         boolean cacheThisCtagResponse = false;
-        CtagResponseCacheKey ctagCacheKey = null;
+        CtagResponseCache.Key ctagCacheKey = null;
         String acctVerSnapshot = null;
         Map<Integer /* calendar folder id */, String /* ctag */> ctagsSnapshot = null;
         CtagResponseCache ctagResponseCache = null;
@@ -441,8 +439,8 @@ public class DavServlet extends ZimbraServlet {
                     }
                     if (validRoot) {
                         // Is there a previously cached response?
-                        cache.ctagCacheKey = new CtagResponseCacheKey(targetAcct.getId(), knownUA.toString(), rootFolderId);
-                        CtagResponseCacheValue ctagResponse = cache.ctagResponseCache.get(cache.ctagCacheKey);
+                        cache.ctagCacheKey = new CtagResponseCache.Key(targetAcct.getId(), knownUA.toString(), rootFolderId);
+                        CtagResponseCache.Value ctagResponse = cache.ctagResponseCache.get(cache.ctagCacheKey);
                         if (ctagResponse != null) {
                             // Found a cached response.  Let's check if it's stale.
                             // 1. If calendar list has been updated since, cached response is no good.
@@ -570,7 +568,7 @@ public class DavServlet extends ZimbraServlet {
                 respData = baosGzipped.toByteArray();
             }
 
-            CtagResponseCacheValue ctagCacheVal = new CtagResponseCacheValue(
+            CtagResponseCache.Value ctagCacheVal = new CtagResponseCache.Value(
                     respData, rawLen, responseGzipped, cache.acctVerSnapshot, cache.ctagsSnapshot);
             try {
                 cache.ctagResponseCache.put(cache.ctagCacheKey, ctagCacheVal);

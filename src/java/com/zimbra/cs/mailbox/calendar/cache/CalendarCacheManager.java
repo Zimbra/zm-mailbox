@@ -75,7 +75,9 @@ public class CalendarCacheManager {
         Zimbra.getAppContext().getAutowireCapableBeanFactory().autowireBean(mCalListCache);
         Zimbra.getAppContext().getAutowireCapableBeanFactory().initializeBean(mCalListCache, "calListCache");
 
-        mCtagResponseCache = new CtagResponseCache();
+        mCtagResponseCache = new MemcachedCtagResponseCache();
+        Zimbra.getAppContext().getAutowireCapableBeanFactory().autowireBean(mCtagResponseCache);
+        Zimbra.getAppContext().getAutowireCapableBeanFactory().initializeBean(mCtagResponseCache, "ctagResponseCache");
 
         int summaryLRUSize = 0;
         mSummaryCacheEnabled = LC.calendar_cache_enabled.booleanValue();
