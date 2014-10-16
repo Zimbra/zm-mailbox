@@ -17,15 +17,14 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.util.Zimbra;
 
 /**
- * Unit test for {@link LocalCalListCache}.
+ * Unit test for {@link LocalCtagInfoCache}.
  */
-public final class LocalCalListCacheTest extends AbstractCalListCacheTest {
+public final class LocalCtagInfoCacheTest extends AbstractCtagInfoCacheTest {
 
     @Override
-    protected CalListCache constructCache() throws ServiceException {
-        CalListCache cache = new LocalCalListCache();
+    protected CtagInfoCache constructCache() throws ServiceException {
+        CtagInfoCache cache = new LocalCtagInfoCache();
         Zimbra.getAppContext().getAutowireCapableBeanFactory().autowireBean(cache);
-        Zimbra.getAppContext().getAutowireCapableBeanFactory().initializeBean(cache, "calListCache");
         return cache;
     }
 
@@ -36,6 +35,6 @@ public final class LocalCalListCacheTest extends AbstractCalListCacheTest {
 
     @Override
     protected void flushCacheBetweenTests() throws Exception {
-        ((LocalCalListCache)cache).flush();
+        ((LocalCtagInfoCache)cache).flush();
     }
 }

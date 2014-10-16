@@ -19,21 +19,32 @@ package com.zimbra.cs.mailbox.calendar.cache;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.zimbra.client.ZFolder;
+import com.zimbra.client.ZMailbox;
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.common.util.memcached.ZimbraMemcachedClient;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.service.AuthProvider;
+import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.session.PendingModifications;
+import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.Zimbra;
 
 public class CalendarCacheManager {
@@ -56,7 +67,7 @@ public class CalendarCacheManager {
     public static void setInstance(CalendarCacheManager instance) {sInstance = instance;}
 
     public CalendarCacheManager() {
-        mCtagCache = new CtagInfoCache();
+        mCtagCache = new MemcachedCtagInfoCache();
         Zimbra.getAppContext().getAutowireCapableBeanFactory().autowireBean(mCtagCache);
         Zimbra.getAppContext().getAutowireCapableBeanFactory().initializeBean(mCtagCache, "ctagInfoCache");
 
@@ -74,25 +85,54 @@ public class CalendarCacheManager {
     }
 
     public void notifyCommittedChanges(PendingModifications mods, int changeId) {
-        if (mSummaryCacheEnabled)
+        if (mSummaryCacheEnabled) {
             mSummaryCache.notifyCommittedChanges(mods, changeId);
-        new CalListCacheMailboxListener(mCalListCache).notifyCommittedChanges(mods, changeId);
-        if (Zimbra.getAppContext().getBean(ZimbraMemcachedClient.class).isConnected()) {
-            mCtagCache.notifyCommittedChanges(mods, changeId);
         }
+        new CalListCacheMailboxListener(mCalListCache).notifyCommittedChanges(mods, changeId);
+        new CtagInfoCacheMailboxListener(mCtagCache).notifyCommittedChanges(mods, changeId);
     }
 
     public void purgeMailbox(Mailbox mbox) throws ServiceException {
         mSummaryCache.purgeMailbox(mbox);
         mCalListCache.remove(mbox);
-        if (Zimbra.getAppContext().getBean(ZimbraMemcachedClient.class).isConnected()) {
-            mCtagCache.purgeMailbox(mbox);
-        }
+        mCtagCache.remove(mbox);
     }
 
     CtagInfoCache getCtagCache() { return mCtagCache; }
     public CalSummaryCache getSummaryCache() { return mSummaryCache; }
     public CtagResponseCache getCtagResponseCache() { return mCtagResponseCache; }
+
+    protected CtagInfo getFolder(String accountId, int folderId) throws ServiceException {
+        CtagInfo calInfo = null;
+        Provisioning prov = Provisioning.getInstance();
+        Account acct = prov.get(AccountBy.id, accountId);
+        if (acct == null) {
+            ZimbraLog.calendar.warn("Invalid account %s during cache lookup", accountId);
+            return null;
+        }
+        if (Provisioning.onLocalServer(acct)) {
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
+            Folder folder = mbox.getFolderById(null, folderId);
+            if (folder != null)
+                calInfo = new CtagInfo(folder);
+            else
+                ZimbraLog.calendar.warn("Invalid folder %d in account %s during cache lookup", folderId, accountId);
+        } else {
+            ZAuthToken zat = AuthProvider.getAdminAuthToken().toZAuthToken();
+            ZMailbox.Options zoptions = new ZMailbox.Options(zat, AccountUtil.getSoapUri(acct));
+            zoptions.setNoSession(true);
+            zoptions.setTargetAccount(acct.getId());
+            zoptions.setTargetAccountBy(Key.AccountBy.id);
+            ZMailbox zmbx = ZMailbox.getMailbox(zoptions);
+            ItemId iidFolder = new ItemId(accountId, folderId);
+            ZFolder zfolder = zmbx.getFolderById(iidFolder.toString());
+            if (zfolder != null)
+                calInfo = new CtagInfo(zfolder);
+            else
+                ZimbraLog.calendar.warn("Invalid folder %d in account %s during cache lookup", folderId, accountId);
+        }
+        return calInfo;
+    }
 
     public AccountCtags getCtags(AccountKey key) throws ServiceException {
         CalList calList = mCalListCache.get(key.getAccountId());
@@ -113,12 +153,45 @@ public class CalendarCacheManager {
         }
 
         Collection<Integer> calendarIds = calList.getCalendars();
-        List<CalendarKey> calKeys = new ArrayList<CalendarKey>(calendarIds.size());
+        List<Pair<String,Integer>> calKeys = new ArrayList<>(calendarIds.size());
         String accountId = key.getAccountId();
         for (int calFolderId : calendarIds) {
-            calKeys.add(new CalendarKey(accountId, calFolderId));
+            calKeys.add(new Pair<>(accountId, calFolderId));
         }
-        Map<CalendarKey, CtagInfo> ctagsMap = mCtagCache.getMulti(calKeys);
+
+        Map<Pair<String,Integer>, CtagInfo> ctagsMap = mCtagCache.get(calKeys);
+
+        // Resolve cache misses from DB as necessary, and add missing entries to cache
+        Map<Pair<String,Integer>, CtagInfo> toPut = new HashMap<>();
+        for (Map.Entry<Pair<String,Integer>, CtagInfo> entry : ctagsMap.entrySet()) {
+            Pair<String,Integer> pair = entry.getKey();
+            CtagInfo info = entry.getValue();
+            boolean needToPut = false;
+            if (info == null) {
+                info = getFolder(pair.getFirst(), pair.getSecond());
+                needToPut = true;
+            }
+            if (info != null) {
+                if (info.isMountpoint()) {
+                    // no multi-get for mountpoint resolution
+                    CtagInfo target = mCtagCache.get(info.getRemoteAccount(), info.getRemoteId());
+                    if (target != null) {
+                        // Mountpoint inherits ctag from the target.
+                        String remoteCtag = target.getCtag();
+                        if (!remoteCtag.equals(info.getCtag())) {
+                            info.setCtag(remoteCtag);
+                            needToPut = true;
+                        }
+                    }
+                }
+                if (needToPut) {
+                    toPut.put(pair, info);
+                    entry.setValue(info);
+                }
+            }
+        }
+        mCtagCache.put(toPut);
+
         AccountCtags acctCtags = new AccountCtags(calList, ctagsMap.values());
         return acctCtags;
     }
