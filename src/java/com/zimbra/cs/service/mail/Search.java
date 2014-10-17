@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -63,6 +63,7 @@ import com.zimbra.cs.mailbox.calendar.cache.CalendarItemData;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.util.AccountUtil;
+import com.zimbra.cs.util.Zimbra;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.mail.message.SearchRequest;
@@ -288,7 +289,7 @@ public class Search extends MailDocumentHandler  {
 
         // Look up in calendar cache first.
         if (LC.calendar_cache_enabled.booleanValue()) {
-            CalSummaryCache calCache = CalendarCacheManager.getInstance().getSummaryCache();
+            CalSummaryCache calSummaryCache = Zimbra.getAppContext().getBean(CalendarCacheManager.class).getSummaryCache();
             long rangeStart = params.getCalItemExpandStart();
             long rangeEnd = params.getCalItemExpandEnd();
             for (Iterator<Map.Entry<Server, Map<String, List<Integer>>>> serverIter = groupedByServer.entrySet().iterator();
@@ -308,7 +309,7 @@ public class Search extends MailDocumentHandler  {
                     for (Iterator<Integer> iterFolderId = folderIds.iterator(); iterFolderId.hasNext(); ) {
                         int folderId = iterFolderId.next();
                         try {
-                            CalendarDataResult result = calCache.getCalendarSummary(octxt, acctId, folderId, type,
+                            CalendarDataResult result = calSummaryCache.getCalendarSummary(octxt, acctId, folderId, type,
                                     rangeStart, rangeEnd, true);
                             if (result != null) {
                                 // Found data in cache.

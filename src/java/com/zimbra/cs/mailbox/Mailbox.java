@@ -132,6 +132,7 @@ import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.RecurId;
 import com.zimbra.cs.mailbox.calendar.Util;
 import com.zimbra.cs.mailbox.calendar.ZOrganizer;
+import com.zimbra.cs.mailbox.calendar.cache.CalSummaryCache;
 import com.zimbra.cs.mailbox.calendar.cache.CalSummaryCache.CalendarDataResult;
 import com.zimbra.cs.mailbox.calendar.cache.CalendarCacheManager;
 import com.zimbra.cs.mailbox.calendar.tzfixup.TimeZoneFixupRules;
@@ -2288,7 +2289,8 @@ public class Mailbox {
                     DbMailbox.clearMailboxContent(this);
                     DbMailbox.deleteMailbox(conn, this);
                     DbVolumeBlobs.deleteBlobRef(conn, this);
-                    // Remove all data related to this mailbox from memcached, so the data doesn't
+
+                    // Remove all data related to this mailbox from caches, so the data doesn't
                     // get used by another user later by mistake if/when mailbox id gets reused.
                     MemcachedCacheManager.purgeMailbox(this);
 
@@ -4627,8 +4629,8 @@ public class Mailbox {
                 throw ServiceException.PERM_DENIED("you do not have sufficient permissions on folder "
                                 + folder.getName());
             }
-            return CalendarCacheManager.getInstance().getSummaryCache()
-                            .getCalendarSummary(octxt, getAccountId(), folderId, type, start, end, true);
+            CalSummaryCache calSummaryCache = Zimbra.getAppContext().getBean(CalendarCacheManager.class).getSummaryCache();
+            return calSummaryCache.getCalendarSummary(octxt, getAccountId(), folderId, type, start, end, true);
         } finally {
             lock.release();
         }
@@ -4656,8 +4658,8 @@ public class Mailbox {
                     if (!folder.canAccess(ACL.RIGHT_READ)) {
                         continue;
                     }
-                    CalendarDataResult result = CalendarCacheManager.getInstance().getSummaryCache().
-                        getCalendarSummary(octxt, getAccountId(), folder.getId(), type, start, end, true);
+                    CalSummaryCache calSummaryCache = Zimbra.getAppContext().getBean(CalendarCacheManager.class).getSummaryCache();
+                    CalendarDataResult result = calSummaryCache.getCalendarSummary(octxt, getAccountId(), folder.getId(), type, start, end, true);
                     if (result != null) {
                         list.add(result);
                     }

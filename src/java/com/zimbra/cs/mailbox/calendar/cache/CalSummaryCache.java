@@ -23,6 +23,8 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
+import javax.annotation.PostConstruct;
+
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.calendar.ParsedDateTime;
 import com.zimbra.common.localconfig.LC;
@@ -361,13 +363,17 @@ public class CalSummaryCache {
     }
 
     // LRU cache containing range-limited calendar summary by calendar folder
-    private final LocalCalendarDataCache mLocalCalendarDataCache;
-    private final int mLRUCapacity;
-    private final MemcachedCalendarDataCache mMemcachedCalendarDataCache;
+    protected final int mLRUCapacity;
+    protected LocalCalendarDataCache mLocalCalendarDataCache;
+    protected MemcachedCalendarDataCache mMemcachedCalendarDataCache;
 
     CalSummaryCache(final int capacity) {
         mLRUCapacity = capacity;
-        mLocalCalendarDataCache = new LocalCalendarDataCache(capacity);
+    }
+
+    @PostConstruct
+    public void init() {
+        mLocalCalendarDataCache = new LocalCalendarDataCache(mLRUCapacity);
         Zimbra.getAppContext().getAutowireCapableBeanFactory().autowireBean(mLocalCalendarDataCache);
         Zimbra.getAppContext().getAutowireCapableBeanFactory().initializeBean(mLocalCalendarDataCache, "localCalendarDataCache");
 

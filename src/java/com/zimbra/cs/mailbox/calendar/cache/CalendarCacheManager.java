@@ -25,7 +25,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.google.common.annotations.VisibleForTesting;
+import javax.annotation.PostConstruct;
+
 import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.common.account.Key;
@@ -59,31 +60,32 @@ public class CalendarCacheManager {
     protected CtagResponseCache mCtagResponseCache;
 
 
-    private static CalendarCacheManager sInstance = new CalendarCacheManager();
-
-    public static CalendarCacheManager getInstance() { return sInstance; }
-
-    @VisibleForTesting
-    public static void setInstance(CalendarCacheManager instance) {sInstance = instance;}
-
     public CalendarCacheManager() {
+    }
+
+    @PostConstruct
+    public void init() {
         mCtagCache = new MemcachedCtagInfoCache();
         Zimbra.getAppContext().getAutowireCapableBeanFactory().autowireBean(mCtagCache);
-        Zimbra.getAppContext().getAutowireCapableBeanFactory().initializeBean(mCtagCache, "ctagInfoCache");
 
         mCalListCache = new MemcachedCalListCache();
         Zimbra.getAppContext().getAutowireCapableBeanFactory().autowireBean(mCalListCache);
-        Zimbra.getAppContext().getAutowireCapableBeanFactory().initializeBean(mCalListCache, "calListCache");
 
         mCtagResponseCache = new MemcachedCtagResponseCache();
         Zimbra.getAppContext().getAutowireCapableBeanFactory().autowireBean(mCtagResponseCache);
-        Zimbra.getAppContext().getAutowireCapableBeanFactory().initializeBean(mCtagResponseCache, "ctagResponseCache");
 
         int summaryLRUSize = 0;
         mSummaryCacheEnabled = LC.calendar_cache_enabled.booleanValue();
-        if (mSummaryCacheEnabled)
+        if (mSummaryCacheEnabled) {
             summaryLRUSize = LC.calendar_cache_lru_size.intValue();
+        }
         mSummaryCache = new CalSummaryCache(summaryLRUSize);
+        Zimbra.getAppContext().getAutowireCapableBeanFactory().autowireBean(mSummaryCache);
+
+        Zimbra.getAppContext().getAutowireCapableBeanFactory().initializeBean(mCtagCache, "ctagInfoCache");
+        Zimbra.getAppContext().getAutowireCapableBeanFactory().initializeBean(mCalListCache, "calListCache");
+        Zimbra.getAppContext().getAutowireCapableBeanFactory().initializeBean(mCtagResponseCache, "ctagResponseCache");
+        Zimbra.getAppContext().getAutowireCapableBeanFactory().initializeBean(mSummaryCache, "calSummaryCache");
     }
 
     public void notifyCommittedChanges(PendingModifications mods, int changeId) {

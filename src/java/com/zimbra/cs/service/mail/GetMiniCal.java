@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2008, 2009, 2010, 2011, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -59,6 +59,7 @@ import com.zimbra.cs.mailbox.calendar.cache.CalSummaryCache.CalendarDataResult;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.util.AccountUtil;
+import com.zimbra.cs.util.Zimbra;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.client.ZMailbox.ZGetMiniCalResult;
 import com.zimbra.client.ZMailbox.ZMiniCalError;
@@ -121,7 +122,7 @@ public class GetMiniCal extends CalendarRequest {
 
         // Look up in calendar cache first.
         if (LC.calendar_cache_enabled.booleanValue()) {
-            CalSummaryCache calCache = CalendarCacheManager.getInstance().getSummaryCache();
+            CalSummaryCache calSummaryCache = Zimbra.getAppContext().getBean(CalendarCacheManager.class).getSummaryCache();
             Calendar cal = new GregorianCalendar(tz);
             for (Iterator<Map.Entry<Server, Map<String, List<Integer>>>> serverIter = groupedByServer.entrySet().iterator();
                  serverIter.hasNext(); ) {
@@ -137,7 +138,7 @@ public class GetMiniCal extends CalendarRequest {
                     for (Iterator<Integer> iterFolderId = folderIds.iterator(); iterFolderId.hasNext(); ) {
                         int folderId = iterFolderId.next();
                         try {
-                            CalendarDataResult result = calCache.getCalendarSummary(octxt, acctId, folderId,
+                            CalendarDataResult result = calSummaryCache.getCalendarSummary(octxt, acctId, folderId,
                                     MailItem.Type.APPOINTMENT, rangeStart, rangeEnd, true);
                             if (result != null) {
                                 // Found data in cache.
@@ -233,7 +234,7 @@ public class GetMiniCal extends CalendarRequest {
                 if (partStat == null)
                     partStat = item.getDefaultData().getPartStat();
                 if (IcalXmlStrMap.PARTSTAT_DECLINED.equals(partStat))
-                    continue;   
+                    continue;
                 Long start = inst.getDtStart();
                 if (start != null) {
                     String datestampStart = getDatestamp(cal, start);

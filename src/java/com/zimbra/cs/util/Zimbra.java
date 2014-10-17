@@ -206,9 +206,9 @@ public final class Zimbra {
 
     public static void initAppContext(Class configClass) {
         AnnotationConfigApplicationContext appContext_ = new AnnotationConfigApplicationContext();
+        appContext = appContext_; // required before refresh() below, for @PostConstruct handlers that do their own wiring
         appContext_.register(configClass);
         appContext_.refresh();
-        appContext = appContext_;
     }
 
     /**

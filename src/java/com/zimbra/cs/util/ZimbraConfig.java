@@ -43,6 +43,7 @@ import com.zimbra.cs.mailbox.RedisQlessSharedDeliveryCoordinator;
 import com.zimbra.cs.mailbox.SharedDeliveryCoordinator;
 import com.zimbra.cs.mailbox.acl.EffectiveACLCache;
 import com.zimbra.cs.mailbox.acl.MemcachedEffectiveACLCache;
+import com.zimbra.cs.mailbox.calendar.cache.CalendarCacheManager;
 import com.zimbra.cs.memcached.ZimbraMemcachedClientConfigurer;
 import com.zimbra.cs.redolog.DefaultRedoLogProvider;
 import com.zimbra.cs.redolog.RedoLogProvider;
@@ -71,6 +72,11 @@ import com.zimbra.soap.SoapSessionFactory;
 @Configuration
 @EnableAspectJAutoProxy
 public class ZimbraConfig {
+
+    @Bean(name="calendarCacheManager")
+    public CalendarCacheManager calendarCacheManagerBean() throws ServiceException {
+        return new CalendarCacheManager();
+    }
 
     @Bean(name="effectiveACLCache")
     public EffectiveACLCache effectiveACLCacheBean() throws ServiceException {

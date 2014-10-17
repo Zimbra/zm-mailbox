@@ -35,7 +35,7 @@ import com.zimbra.cs.util.Zimbra;
 public class MemcachedCacheManager extends MailboxListener {
 
     public static void purgeMailbox(Mailbox mbox) throws ServiceException {
-        CalendarCacheManager.getInstance().purgeMailbox(mbox);
+        Zimbra.getAppContext().getBean(CalendarCacheManager.class).purgeMailbox(mbox);
         Zimbra.getAppContext().getBean(EffectiveACLCache.class).remove(mbox);
         Zimbra.getAppContext().getBean(FoldersAndTagsCache.class).remove(mbox);
     }
@@ -48,7 +48,7 @@ public class MemcachedCacheManager extends MailboxListener {
         // Invalidate CalendarCache.
         // We have to notify calendar cache before checking memcached connectedness
         // because a portion of calendar cache is not memcached-based.
-        CalendarCacheManager.getInstance().notifyCommittedChanges(mods, changeId);
+        Zimbra.getAppContext().getBean(CalendarCacheManager.class).notifyCommittedChanges(mods, changeId);
 
         // Invalidate EffectiveACLCache
         Set<Pair<String,Integer>> keysToInvalidate = new HashSet<>();
@@ -84,7 +84,7 @@ public class MemcachedCacheManager extends MailboxListener {
         try {
             Zimbra.getAppContext().getBean(EffectiveACLCache.class).remove(keysToInvalidate);
         } catch (ServiceException e) {
-            ZimbraLog.calendar.warn("Unable to notify folder acl cache.  Some cached data may become stale.", e);
+            ZimbraLog.calendar.warn("Unable to notify EffectiveACLCache. Some cached data may become stale.", e);
         }
     }
 

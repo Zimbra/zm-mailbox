@@ -414,8 +414,9 @@ public class DavServlet extends ZimbraServlet {
         CacheStates cache = new CacheStates();
 
         // Are we running with cache enabled, and is this a cachable CalDAV ctag request?
+        CalendarCacheManager calendarCacheManager = Zimbra.getAppContext().getBean(CalendarCacheManager.class);
         if (cache.ctagCacheEnabled && isCtagRequest(ctxt)) {
-            cache.ctagResponseCache = CalendarCacheManager.getInstance().getCtagResponseCache();
+            cache.ctagResponseCache = calendarCacheManager.getCtagResponseCache();
             cache.gzipAccepted = ctxt.isGzipAccepted();
             String targetUser = ctxt.getUser();
             Account targetAcct = Provisioning.getInstance().get(AccountBy.name, targetUser);
@@ -425,7 +426,7 @@ public class DavServlet extends ZimbraServlet {
             // Use cache only when requesting own account and User-Agent and path are well-defined.
             if (ownAcct && knownUA != null && parentPath != null) {
                 AccountKey accountKey = new AccountKey(targetAcct.getId());
-                AccountCtags allCtagsData = CalendarCacheManager.getInstance().getCtags(accountKey);
+                AccountCtags allCtagsData = calendarCacheManager.getCtags(accountKey);
                 // We can't use cache if it doesn't have data for this user.
                 if (allCtagsData != null) {
                     boolean validRoot = true;
