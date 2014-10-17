@@ -32,18 +32,19 @@ public abstract class AbstractEffectiveACLCacheTest extends AbstractCacheTest {
     public void test() throws Exception {
         cache = constructCache();
         Assert.assertNotNull(cache);
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
 
         // Negative test
-        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-        Assert.assertEquals(null, cache.get(mbox.getAccountId(), Mailbox.ID_FOLDER_INBOX));
+        EffectiveACLCache.Key key = new EffectiveACLCache.Key(mbox.getAccountId(), Mailbox.ID_FOLDER_INBOX);
+        Assert.assertEquals(null, cache.get(key));
 
         // Cache something
         ACL acl = new ACL();
         acl.grantAccess(mbox.getAccountId(), ACL.GRANTEE_USER, ACL.RIGHT_DELETE, "secret", 0L);
-        cache.put(mbox.getAccountId(), Mailbox.ID_FOLDER_INBOX, acl);
+        cache.put(key, acl);
 
         // Positive test
-        ACL acl_ = cache.get(mbox.getAccountId(), Mailbox.ID_FOLDER_INBOX);
+        ACL acl_ = cache.get(key);
         Assert.assertNotNull(acl_);
 
         // Integrity test
@@ -51,6 +52,6 @@ public abstract class AbstractEffectiveACLCacheTest extends AbstractCacheTest {
 
         // Remove and negative test
         cache.remove(mbox);
-        Assert.assertEquals(null, cache.get(mbox.getAccountId(), Mailbox.ID_FOLDER_INBOX));
+        Assert.assertEquals(null, cache.get(key));
     }
 }

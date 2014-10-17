@@ -27,7 +27,6 @@ import javax.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.memcached.MemcachedKey;
 import com.zimbra.common.util.memcached.MemcachedMap;
 import com.zimbra.common.util.memcached.MemcachedSerializer;
@@ -42,38 +41,33 @@ import com.zimbra.cs.memcached.MemcachedKeyPrefix;
 
 public class MemcachedEffectiveACLCache implements EffectiveACLCache {
     @Autowired protected ZimbraMemcachedClient memcachedClient;
-    protected MemcachedMap<EffectiveACLCacheKey, ACL> mMemcachedLookup;
+    protected MemcachedMap<EffectiveACLCacheKey, ACL> memcachedLookup;
 
     public MemcachedEffectiveACLCache() {
     }
 
     @PostConstruct
     public void init() {
-        mMemcachedLookup = new MemcachedMap<EffectiveACLCacheKey, ACL>(memcachedClient, new ACLSerializer());
+        memcachedLookup = new MemcachedMap<EffectiveACLCacheKey, ACL>(memcachedClient, new ACLSerializer());
     }
 
-    private ACL get(EffectiveACLCacheKey key) throws ServiceException {
-        return mMemcachedLookup.get(key);
+    protected EffectiveACLCacheKey key(Key key) {
+        return new EffectiveACLCacheKey(key.getAccountId(), key.getFolderId());
     }
 
-    private void put(EffectiveACLCacheKey key, ACL data) throws ServiceException {
-        mMemcachedLookup.put(key, data);
+    public ACL get(Key key) throws ServiceException {
+        return memcachedLookup.get(key(key));
     }
 
-    public ACL get(String acctId, int folderId) throws ServiceException {
-        EffectiveACLCacheKey key = new EffectiveACLCacheKey(acctId, folderId);
-        return get(key);
-    }
-
-    public void put(String acctId, int folderId, ACL acl) throws ServiceException {
-        EffectiveACLCacheKey key = new EffectiveACLCacheKey(acctId, folderId);
-
+    @Override
+    public void put(Key key, ACL value) throws ServiceException {
         // if no effective ACL, return an empty ACL
-        if (acl == null)
-            acl = new ACL();
-        put(key, acl);
+        if (value == null)
+            value = new ACL();
+        memcachedLookup.put(key(key), value);
     }
 
+    @Override
     public void remove(Mailbox mbox) throws ServiceException {
         String accountId = mbox.getAccountId();
         List<Folder> folders = mbox.getFolderList(null, SortBy.NONE);
@@ -82,15 +76,16 @@ public class MemcachedEffectiveACLCache implements EffectiveACLCache {
             EffectiveACLCacheKey key = new EffectiveACLCacheKey(accountId, folder.getId());
             keys.add(key);
         }
-        mMemcachedLookup.removeMulti(keys);
+        memcachedLookup.removeMulti(keys);
     }
 
-    public void remove(Set<Pair<String, Integer>> keys) throws ServiceException {
+    @Override
+    public void remove(Set<Key> keys) throws ServiceException {
         Set<EffectiveACLCacheKey> keysToInvalidate = new HashSet<EffectiveACLCacheKey>();
-        for (Pair<String, Integer> key: keys) {
-            keysToInvalidate.add(new EffectiveACLCacheKey(key.getFirst(), key.getSecond()));
+        for (Key key: keys) {
+            keysToInvalidate.add(key(key));
         }
-        mMemcachedLookup.removeMulti(keysToInvalidate);
+        memcachedLookup.removeMulti(keysToInvalidate);
     }
 
 

@@ -26,12 +26,24 @@ import com.zimbra.cs.mailbox.Mailbox;
 
 public interface EffectiveACLCache {
 
-    public ACL get(String acctId, int folderId) throws ServiceException;
+    public ACL get(Key key) throws ServiceException;
 
-    public void put(String acctId, int folderId, ACL acl) throws ServiceException;
+    public void put(Key key, ACL acl) throws ServiceException;
 
     public void remove(Mailbox mbox) throws ServiceException;
 
-    /** Remove multiple entries described by the compound key (acctId, folderId) */
-    public void remove(Set<Pair<String,Integer>> keys) throws ServiceException;
+    public void remove(Set<Key> keys) throws ServiceException;
+
+
+    public static class Key extends Pair<String,Integer> {
+        public Key(String accountId, int folderId) {
+            super(accountId, folderId);
+        }
+        public String getAccountId() {
+            return getFirst();
+        }
+        public Integer getFolderId() {
+            return getSecond();
+        }
+    }
 }

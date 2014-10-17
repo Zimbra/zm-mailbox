@@ -23,7 +23,6 @@ import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.Transaction;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.Pair;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Metadata;
@@ -44,15 +43,15 @@ public class RedisEffectiveACLCache implements EffectiveACLCache {
         return MemcachedKeyPrefix.EFFECTIVE_FOLDER_ACL + acctId + ":folders";
     }
 
-    protected static String key(String acctId, int folderId) {
-        return MemcachedKeyPrefix.EFFECTIVE_FOLDER_ACL + acctId + ":" + folderId;
+    protected static String key(Key key) {
+        return MemcachedKeyPrefix.EFFECTIVE_FOLDER_ACL + key.getAccountId() + ":" + key.getFolderId();
     }
 
     @Override
-    public ACL get(String acctId, int folderId) throws ServiceException {
+    public ACL get(Key key) throws ServiceException {
         Jedis jedis = jedisPool.getResource();
         try {
-            String value = jedis.get(key(acctId, folderId));
+            String value = jedis.get(key(key));
             if (value == null) {
                 return null;
             }
@@ -73,16 +72,16 @@ public class RedisEffectiveACLCache implements EffectiveACLCache {
     }
 
     @Override
-    public void put(String acctId, int folderId, ACL acl) throws ServiceException {
+    public void put(Key key, ACL acl) throws ServiceException {
         Jedis jedis = jedisPool.getResource();
         try {
-            String key = key(acctId, folderId);
+            String keyStr = key(key);
             Transaction transaction = jedis.multi();
-            transaction.set(key, acl.encode().toString());
+            transaction.set(keyStr, acl.encode().toString());
             if (expirySecs > -1) {
-                transaction.expire(key, expirySecs);
+                transaction.expire(keyStr, expirySecs);
             }
-            transaction.sadd(key(acctId), Integer.toString(folderId));
+            transaction.sadd(key(key.getAccountId()), Integer.toString(key.getFolderId()));
             transaction.exec();
         } catch (Exception e) {
             throw ServiceException.PARSE_ERROR("failed serializing ACL for cache", e);
@@ -93,12 +92,12 @@ public class RedisEffectiveACLCache implements EffectiveACLCache {
 
     @Override
     public void remove(Mailbox mbox) throws ServiceException {
-        Set<Pair<String, Integer>> keys = new HashSet<>();
+        Set<Key> keys = new HashSet<>();
         Jedis jedis = jedisPool.getResource();
         try {
             Set<String> folderIds = jedis.smembers(key(mbox.getAccountId()));
             for (String folderId: folderIds) {
-                keys.add(new Pair<>(mbox.getAccountId(), new Integer(folderId)));
+                keys.add(new Key(mbox.getAccountId(), new Integer(folderId)));
             }
         } finally {
             jedisPool.returnResource(jedis);
@@ -107,15 +106,14 @@ public class RedisEffectiveACLCache implements EffectiveACLCache {
     }
 
     @Override
-    public void remove(Set<Pair<String, Integer>> keys) throws ServiceException {
+    public void remove(Set<Key> keys) throws ServiceException {
         Jedis jedis = jedisPool.getResource();
         try {
             Transaction transaction = jedis.multi();
-            for (Pair<String, Integer> key: keys) {
-                String acctId = key.getFirst();
-                Integer folderId = key.getSecond();
-                transaction.del(key(acctId, folderId));
-                transaction.srem(key(acctId), folderId.toString());
+            for (Key key: keys) {
+                String keyStr = key(key);
+                transaction.del(keyStr);
+                transaction.srem(key(key.getAccountId()), key.getFolderId().toString());
             }
             transaction.exec();
         } finally {
