@@ -771,6 +771,8 @@ public final class LC {
     public static final KnownKey zmconfigd_listen_port = KnownKey.newKey(7171);
     public static final KnownKey zmconfigd_startup_pause = KnownKey.newKey(60);
 
+    public static final KnownKey zimbra_configrewrite_timeout = KnownKey.newKey(120);
+
     @Supported
     public static final KnownKey zimbra_mailbox_groups = KnownKey.newKey(100);
 
