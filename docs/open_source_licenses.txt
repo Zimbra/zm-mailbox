@@ -4254,14 +4254,14 @@ D. Waiver of Damages. In no event shall Unicode or its licensors be liable for
 
 E.Trademarks & Logos.
    1. The Unicode Word Mark and the Unicode Logo are trademarks of Unicode,
-      Inc.  “The Unicode Consortium” and “Unicode, Inc.” are trade names of
+      Inc.  "The Unicode Consortium" and "Unicode, Inc." are trade names of
       Unicode, Inc.  Use of the information and materials found on this
-      website indicates your acknowledgement of Unicode, Inc.’s exclusive
+      website indicates your acknowledgement of Unicode, Inc.'s exclusive
       worldwide rights in the Unicode Word Mark, the Unicode Logo, and the
       Unicode trade names.
 
-   2. The Unicode Consortium Name and Trademark Usage Policy (“Trademark
-      Policy”) are incorporated herein by reference and you agree to abide by
+   2. The Unicode Consortium Name and Trademark Usage Policy ("Trademark
+      Policy") are incorporated herein by reference and you agree to abide by
       the provisions of the Trademark Policy, which may be changed from time
       to time in the sole discretion of Unicode, Inc.
 
@@ -4284,12 +4284,12 @@ Miscellaneous.
 
    2. Modification by Unicode.  Unicode shall have the right to modify this
       Agreement at any time by posting it to this site. The user may not
-      assign any part of this Agreement without Unicode’s prior written
+      assign any part of this Agreement without Unicode's prior written
       consent.
 
    3. Taxes. The user agrees to pay any taxes arising from access to this
       website or use of the information herein, except for those based on
-      Unicode’s net income.
+      Unicode's net income.
 
    4. Severability.  If any provision of this Agreement is declared invalid or
       unenforceable, the remaining provisions of this Agreement shall remain
@@ -19106,7 +19106,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 >>> modernizr-2.6.2
 
-Copyright (c) 2009–2013
+Copyright (c) 2009-2013
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
