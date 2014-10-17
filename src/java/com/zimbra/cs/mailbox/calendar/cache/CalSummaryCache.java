@@ -18,10 +18,8 @@
 package com.zimbra.cs.mailbox.calendar.cache;
 
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -362,133 +360,20 @@ public class CalSummaryCache {
         sMaxSearchDays = LC.calendar_search_max_days.intValueWithinRange(0, 3660);
     }
 
-    @SuppressWarnings("serial")
-    private static class SummaryLRU extends LinkedHashMap<CalSummaryKey, CalendarData> {
-        private final int mMaxAllowed;
-
-        // map that keeps track of which calendar folders are cached for each account
-        // This map is updated every time a calendar folder is added, removed, or aged out
-        // of the LRU.
-        private final Map<String /* account id */, Set<Integer> /* folder ids */> mAccountFolders;
-
-        private SummaryLRU(int capacity) {
-            super(capacity + 1, 1.0f, true);
-            mMaxAllowed = Math.max(capacity, 1);
-            mAccountFolders = new HashMap<String, Set<Integer>>();
-        }
-
-        @Override
-        public void clear() {
-            super.clear();
-            mAccountFolders.clear();
-        }
-
-        @Override
-        public CalendarData put(CalSummaryKey key, CalendarData value) {
-            CalendarData prevVal = super.put(key, value);
-            if (prevVal == null)
-                registerWithAccount(key);
-            return prevVal;
-        }
-
-        @Override
-        public void putAll(Map<? extends CalSummaryKey, ? extends CalendarData> t) {
-            super.putAll(t);
-            for (CalSummaryKey key : t.keySet()) {
-                registerWithAccount(key);
-            }
-        }
-
-        @Override
-        public CalendarData remove(Object key) {
-            CalendarData prevVal = super.remove(key);
-            if (prevVal != null && key instanceof CalSummaryKey) {
-                CalSummaryKey k = (CalSummaryKey) key;
-                deregisterFromAccount(k);
-            }
-            return prevVal;
-        }
-
-        @Override
-        protected boolean removeEldestEntry(Map.Entry<CalSummaryKey, CalendarData> eldest) {
-            boolean remove = size() > mMaxAllowed;
-            if (remove)
-                deregisterFromAccount(eldest.getKey());
-            return remove;
-        }
-
-        private void registerWithAccount(CalSummaryKey key) {
-            String accountId = key.getAccountId();
-            int folderId = key.getFolderId();
-            Set<Integer> folders = mAccountFolders.get(accountId);
-            if (folders == null) {
-                folders = new HashSet<Integer>();
-                mAccountFolders.put(accountId, folders);
-            }
-            folders.add(folderId);
-        }
-
-        private void deregisterFromAccount(CalSummaryKey key) {
-            String accountId = key.getAccountId();
-            int folderId = key.getFolderId();
-            Set<Integer> folders = mAccountFolders.get(accountId);
-            if (folders != null) {
-                folders.remove(folderId);
-                // If no folders are cached for the account, drop the account entry from the map to save memory.
-                if (folders.isEmpty())
-                    mAccountFolders.remove(accountId);
-            }
-        }
-
-        public static final int FOLDER_NOT_FOUND = -1;
-
-        public int getFolderForItem(String accountId, int itemId) {
-            int retval = FOLDER_NOT_FOUND;
-            Set<Integer> folders = mAccountFolders.get(accountId);
-            if (folders != null) {
-                for (int folderId : folders) {
-                    CalSummaryKey key = new CalSummaryKey(accountId, folderId);
-                    CalendarData calData = get(key);
-                    if (calData != null) {
-                        CalendarItemData ci = calData.getCalendarItemData(itemId);
-                        if (ci != null) {
-                            retval = folderId;
-                            break;
-                        }
-                    }
-                }
-            }
-            return retval;
-        }
-
-        /**
-         * Toss all folders of the account from the LRU.
-         * @param mboxId
-         */
-        public void removeAccount(String accountId) {
-            Set<Integer> folders = mAccountFolders.get(accountId);
-            if (folders != null) {
-                // Get a copy of the folder list to avoid ConcurrentModificationException on mMboxFolders.
-                Integer[] fids = folders.toArray(new Integer[0]);
-                for (int folderId : fids) {
-                    CalSummaryKey key = new CalSummaryKey(accountId, folderId);
-                    remove(key);
-                }
-            }
-        }
-    }
-
     // LRU cache containing range-limited calendar summary by calendar folder
-    private final SummaryLRU mSummaryCache;
+    private final LocalCalendarDataCache mLocalCalendarDataCache;
     private final int mLRUCapacity;
-    private final CalSummaryMemcachedCache mMemcachedCache;
+    private final MemcachedCalendarDataCache mMemcachedCalendarDataCache;
 
     CalSummaryCache(final int capacity) {
         mLRUCapacity = capacity;
-        mSummaryCache = new SummaryLRU(capacity);
-        mMemcachedCache = new CalSummaryMemcachedCache();
-        Zimbra.getAppContext().getAutowireCapableBeanFactory().autowireBean(mMemcachedCache);
-        Zimbra.getAppContext().getAutowireCapableBeanFactory().initializeBean(mMemcachedCache, "memcachedCalSummaryCache");
+        mLocalCalendarDataCache = new LocalCalendarDataCache(capacity);
+        Zimbra.getAppContext().getAutowireCapableBeanFactory().autowireBean(mLocalCalendarDataCache);
+        Zimbra.getAppContext().getAutowireCapableBeanFactory().initializeBean(mLocalCalendarDataCache, "localCalendarDataCache");
+
+        mMemcachedCalendarDataCache = new MemcachedCalendarDataCache();
+        Zimbra.getAppContext().getAutowireCapableBeanFactory().autowireBean(mMemcachedCalendarDataCache);
+        Zimbra.getAppContext().getAutowireCapableBeanFactory().initializeBean(mMemcachedCalendarDataCache, "memcachedCalendarDataCache");
     }
 
     private static enum CacheLevel { Memory, Memcached, File, Miss }
@@ -546,8 +431,8 @@ public class CalSummaryCache {
         result.allowPrivateAccess = (short) (perms & ACL.RIGHT_PRIVATE) == ACL.RIGHT_PRIVATE;
 
         // Look up from memcached.
-        CalSummaryKey key = new CalSummaryKey(targetAcctId, folderId);
-        CalendarData calData = mMemcachedCache.getForRange(key, rangeStart, rangeEnd);
+        CalendarDataCache.Key key = new CalendarDataCache.Key(targetAcctId, folderId);
+        CalendarData calData = getForRange(mMemcachedCalendarDataCache, new CalendarDataCache.Key(key.getAccountId(), key.getFolderId()), rangeStart, rangeEnd);
         if (calData != null) {
             ZimbraPerf.COUNTER_CALENDAR_CACHE_HIT.increment(1);
             ZimbraPerf.COUNTER_CALENDAR_CACHE_MEM_HIT.increment(1);
@@ -578,10 +463,10 @@ public class CalSummaryCache {
         int currentModSeq = folder.getImapMODSEQ();
 
         // Lookup from heap LRU.
-            synchronized (mSummaryCache) {
+            synchronized (mLocalCalendarDataCache) {
                 if (mLRUCapacity > 0) {
-                    calData = mSummaryCache.get(key);
-                    lruSize = mSummaryCache.size();
+                    calData = mLocalCalendarDataCache.get(key);
+                    lruSize = mLocalCalendarDataCache.size();
                 }
             }
             if (calData != null) {
@@ -603,9 +488,9 @@ public class CalSummaryCache {
                     // If data is up to date, add to LRU.
                     if (calData.getModSeq() == currentModSeq) {
                         if (mLRUCapacity > 0) {
-                            synchronized (mSummaryCache) {
-                                mSummaryCache.put(key, calData);
-                                lruSize = mSummaryCache.size();
+                            synchronized (mLocalCalendarDataCache) {
+                                mLocalCalendarDataCache.put(key, calData);
+                                lruSize = mLocalCalendarDataCache.size();
                             }
                         }
                     } else {
@@ -650,10 +535,10 @@ public class CalSummaryCache {
                                                    sRangeMonthFrom, sRangeNumMonths);
             calData = reloadCalendarOverRange(ownerOctxt, mbox, folderId, type,
                     defaultRange.getFirst(), defaultRange.getSecond(), reusableCalData, incrementalUpdate);
-            synchronized (mSummaryCache) {
+            synchronized (mLocalCalendarDataCache) {
                 if (mLRUCapacity > 0) {
-                    mSummaryCache.put(key, calData);
-                    lruSize = mSummaryCache.size();
+                    mLocalCalendarDataCache.put(key, calData);
+                    lruSize = mLocalCalendarDataCache.size();
                 }
             }
             dataFrom = CacheLevel.Miss;
@@ -669,7 +554,7 @@ public class CalSummaryCache {
 
         // Put data in memcached if it didn't come from memcached.
         if (!CacheLevel.Memcached.equals(dataFrom))
-                mMemcachedCache.put(key, calData);
+                mMemcachedCalendarDataCache.put(new CalendarDataCache.Key(key.getAccountId(), key.getFolderId()), calData);
 
         if (rangeStart >= calData.getRangeStart() && rangeEnd <= calData.getRangeEnd()) {
             // Requested range is within cached range.
@@ -714,13 +599,20 @@ public class CalSummaryCache {
         return result;
     }
 
-    private void invalidateSummary(Mailbox mbox, int folderId) {
+    protected CalendarData getForRange(CalendarDataCache cache, CalendarDataCache.Key key, long rangeStart, long rangeEnd) throws ServiceException {
+        CalendarData value = cache.get(key);
+        if (value != null && rangeStart >= value.getRangeStart() && rangeEnd <= value.getRangeEnd())
+            return value.getSubRange(rangeStart, rangeEnd);
+        return null;
+    }
+
+    private void invalidateSummary(Mailbox mbox, int folderId) throws ServiceException {
         if (!LC.calendar_cache_enabled.booleanValue())
             return;
         int mboxId = mbox.getId();
-        CalSummaryKey key = new CalSummaryKey(mbox.getAccountId(), folderId);
-        synchronized (mSummaryCache) {
-            mSummaryCache.remove(key);
+        CalendarDataCache.Key key = new CalendarDataCache.Key(mbox.getAccountId(), folderId);
+        synchronized (mLocalCalendarDataCache) {
+            mLocalCalendarDataCache.remove(key);
         }
         try {
             FileStore.deleteCalendarData(mboxId, folderId);
@@ -729,14 +621,14 @@ public class CalSummaryCache {
         }
     }
 
-    private void invalidateItem(Mailbox mbox, int folderId, int calItemId) {
+    private void invalidateItem(Mailbox mbox, int folderId, int calItemId) throws ServiceException {
         if (!LC.calendar_cache_enabled.booleanValue())
             return;
-        CalSummaryKey key = new CalSummaryKey(mbox.getAccountId(), folderId);
+        CalendarDataCache.Key key = new CalendarDataCache.Key(mbox.getAccountId(), folderId);
         CalendarData calData = null;
-        synchronized (mSummaryCache) {
+        synchronized (mLocalCalendarDataCache) {
             if (mLRUCapacity > 0) {
-                calData = mSummaryCache.get(key);
+                calData = mLocalCalendarDataCache.get(key);
             }
         }
         // Invalidate the item from the calendar.
@@ -755,7 +647,11 @@ public class CalSummaryCache {
                 MailItem item = entry.getValue();
                 if (item instanceof CalendarItem) {
                     int folderId = item.getFolderId();
-                    invalidateItem(item.getMailbox(), folderId, item.getId());
+                    try {
+                        invalidateItem(item.getMailbox(), folderId, item.getId());
+                    } catch (ServiceException e) {
+                        ZimbraLog.calendar.warn("Failed invalidating cache item", e);
+                    }
                 }
             }
         }
@@ -768,17 +664,25 @@ public class CalSummaryCache {
                     Mailbox mbox = item.getMailbox();
                     int folderId = item.getFolderId();
                     int itemId = item.getId();
-                    invalidateItem(mbox, folderId, itemId);
+                    try {
+                        invalidateItem(mbox, folderId, itemId);
+                    } catch (ServiceException e) {
+                        ZimbraLog.calendar.warn("Failed invalidating cache item", e);
+                    }
 
                     // If this is a folder move, invalidate the item from the old folder too.
                     if ((change.why & Change.FOLDER) != 0) {
                         String accountId = mbox.getAccountId();
                         int prevFolderId;
-                        synchronized (mSummaryCache) {
-                            prevFolderId = mSummaryCache.getFolderForItem(accountId, itemId);
+                        synchronized (mLocalCalendarDataCache) {
+                            prevFolderId = mLocalCalendarDataCache.getFolderForItem(accountId, itemId);
                         }
-                        if (prevFolderId != folderId && prevFolderId != SummaryLRU.FOLDER_NOT_FOUND) {
-                            invalidateItem(mbox, prevFolderId, itemId);
+                        if (prevFolderId != folderId && prevFolderId != LocalCalendarDataCache.FOLDER_NOT_FOUND) {
+                            try {
+                                invalidateItem(mbox, prevFolderId, itemId);
+                            } catch (ServiceException e) {
+                                ZimbraLog.calendar.warn("Failed invalidating cache item", e);
+                            }
                         }
                     }
                 }
@@ -812,11 +716,15 @@ public class CalSummaryCache {
                         int itemId = entry.getKey().getItemId();
                         String accountId = mbox.getAccountId();
                         int folderId;
-                        synchronized (mSummaryCache) {
-                            folderId = mSummaryCache.getFolderForItem(accountId, itemId);
+                        synchronized (mLocalCalendarDataCache) {
+                            folderId = mLocalCalendarDataCache.getFolderForItem(accountId, itemId);
                         }
-                        if (folderId != SummaryLRU.FOLDER_NOT_FOUND) {
-                            invalidateItem(mbox, folderId, itemId);
+                        if (folderId != LocalCalendarDataCache.FOLDER_NOT_FOUND) {
+                            try {
+                                invalidateItem(mbox, folderId, itemId);
+                            } catch (ServiceException e) {
+                                ZimbraLog.calendar.warn("Failed invalidating cache item", e);
+                            }
                         }
                     }
                 }
@@ -824,16 +732,16 @@ public class CalSummaryCache {
         }
 
         if (Zimbra.getAppContext().getBean(ZimbraMemcachedClient.class).isConnected()) {
-            mMemcachedCache.notifyCommittedChanges(mods, changeId);
+            new CalendarDataCacheMailboxListener(mMemcachedCalendarDataCache).notifyCommittedChanges(mods, changeId);
         }
     }
 
     void purgeMailbox(Mailbox mbox) throws ServiceException {
-        synchronized (mSummaryCache) {
-            mSummaryCache.removeAccount(mbox.getAccountId());
+        synchronized (mLocalCalendarDataCache) {
+            mLocalCalendarDataCache.removeAccount(mbox.getAccountId());
         }
         if (Zimbra.getAppContext().getBean(ZimbraMemcachedClient.class).isConnected()) {
-            mMemcachedCache.purgeMailbox(mbox);
+            mMemcachedCalendarDataCache.remove(mbox);
         }
         FileStore.removeMailbox(mbox.getId());
     }
