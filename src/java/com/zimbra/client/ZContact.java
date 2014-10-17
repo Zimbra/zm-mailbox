@@ -81,6 +81,7 @@ public class ZContact implements ZItem, ToZJSONObject {
     }
 
     private String mId;
+    private String mRefId;
     private String mFlags;
     private String mFolderId;
     private String mTagIds;
@@ -168,6 +169,7 @@ public class ZContact implements ZItem, ToZJSONObject {
         isDirty = false;
         mMailbox = mailbox;
         mId = e.getAttribute(MailConstants.A_ID);
+        mRefId = e.getAttribute(MailConstants.A_REF);
         mFolderId = e.getAttribute(MailConstants.A_FOLDER, null);
         mFlags = e.getAttribute(MailConstants.A_FLAGS, null);
         mTagIds = e.getAttribute(MailConstants.A_TAGS, null);
@@ -232,6 +234,10 @@ public class ZContact implements ZItem, ToZJSONObject {
     @Override
     public String getUuid() {
         return null;
+    }
+
+    public String getRefId() {
+        return mRefId;
     }
 
     public boolean isGalContact() {
