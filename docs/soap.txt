@@ -967,6 +967,22 @@ import and export of addressbook.
           .
       </ModifyPrefsRequest>
 
+
+The JSON version is different:
+
+  ModifyPrefsRequest: {
+    _attrs: [
+      {
+        prefName1: "prefValue1"
+       },
+      {
+        prefName2: "prefValue2"
+       },
+       ...
+     ],
+    _jsns: "urn:zimbraAccount"
+   }
+
 ---------
 
 <CreateIdentityRequest>
