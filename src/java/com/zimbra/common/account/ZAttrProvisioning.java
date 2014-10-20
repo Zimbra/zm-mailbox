@@ -3330,6 +3330,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraBatchedIndexingSize = "zimbraBatchedIndexingSize";
 
     /**
+     * Factory class for accessing and logging message behaviors. Must be
+     * configured for zimbraFeaturePriorityInboxEnabled to work.
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1654)
+    public static final String A_zimbraBehaviorProviderFactory = "zimbraBehaviorProviderFactory";
+
+    /**
      * alternate location for calendar and task folders
      *
      * @since ZCS 5.0.6
