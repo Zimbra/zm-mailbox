@@ -6105,7 +6105,7 @@ public class Mailbox {
                 // so the next recipient in the multi-recipient case will link
                 // to this blob as opposed to saving its own copy.
                 dctxt.setFirst(false);
-                if(getAccount().isFeaturePriorityInboxEnabled()) {
+                if(getAccount().isFeaturePriorityInboxEnabled() && BehaviorManager.getFactory() != null) {
                     //log RECEIVED event for the message
                     try {
                     	BehaviorManager.getFactory().getBehaviorManager().storeBehavior(new MessageBehavior(getAccountId(),MessageBehavior.BehaviorType.RECIEVED,msg.getId(),msg.getDate(),null));
@@ -6463,7 +6463,7 @@ public class Mailbox {
             setOperationTargetConstraint(tcon);
 
             alterTag(itemIds, type, finfo.toFlag(this), addTag);
-            if(getAccount().isFeaturePriorityInboxEnabled()) {
+            if(getAccount().isFeaturePriorityInboxEnabled() && BehaviorManager.getFactory() != null) {
                 BehaviorManager bm = BehaviorManager.getFactory().getBehaviorManager();
                 for(int itemId : itemIds) {
     	            if(finfo == Flag.FlagInfo.UNREAD && !addTag) {
@@ -7018,7 +7018,7 @@ public class Mailbox {
                     BehaviorManager bm = null;
                     MessageBehavior.BehaviorType bt1 = null;
                     MessageBehavior.BehaviorType bt2 = null;
-                    if(getAccount().isFeaturePriorityInboxEnabled()) {
+                    if(getAccount().isFeaturePriorityInboxEnabled() && BehaviorManager.getFactory() != null) {
                         bm = BehaviorManager.getFactory().getBehaviorManager();
                         bt1 = target.inTrash() && !wasInTrash ? MessageBehavior.BehaviorType.DELETED :
                             ( (!target.inTrash() && wasInTrash) ? MessageBehavior.BehaviorType.UNDELETED : null);

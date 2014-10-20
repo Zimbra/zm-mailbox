@@ -59,8 +59,10 @@ public abstract class BehaviorManager {
         } catch (ClassCastException cce) {
             ZimbraLog.analytics.error("Unable to initialize Behavior Manager for class " + factoryClassName, cce);
         }
-        setFactory(factoryClass);
-        ZimbraLog.analytics.info("Using Behavior Manager %s", factory.getClass().getDeclaringClass().getSimpleName());
+        if(factoryClass != null && factory != null) {
+            setFactory(factoryClass);
+            ZimbraLog.analytics.info("Using Behavior Manager %s", factory.getClass().getDeclaringClass().getSimpleName());
+        }
     }
 
     private static synchronized final void setFactory(Class<? extends Factory> factoryClass) {

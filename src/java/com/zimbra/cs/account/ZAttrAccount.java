@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -15653,7 +15653,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      */
     @ZAttr(id=1271)
     public boolean isFeaturePriorityInboxEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraFeaturePriorityInboxEnabled, true);
+        return getBooleanAttr(Provisioning.A_zimbraFeaturePriorityInboxEnabled, false);
     }
 
     /**
@@ -20287,6 +20287,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @return zimbraId, or null if unset
      */
+    @Override
     @ZAttr(id=1)
     public String getId() {
         return getAttr(Provisioning.A_zimbraId, null);
