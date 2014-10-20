@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -44,6 +44,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.TimeZone;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
@@ -59,7 +60,9 @@ import org.apache.commons.cli.GnuParser;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.commons.lang.StringUtils;
 
+import com.google.common.collect.Lists;
 import com.zimbra.client.ZAce;
 import com.zimbra.client.ZAppointmentHit;
 import com.zimbra.client.ZAutoCompleteMatch;
@@ -121,14 +124,33 @@ import com.zimbra.common.util.HttpUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.zclient.ZClientException;
 import com.zimbra.common.zmime.ZMimeMessage;
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.GuestAccount;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.RightManager;
 import com.zimbra.cs.account.soap.SoapAccountInfo;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.account.soap.SoapProvisioning.DelegateAuthResponse;
+import com.zimbra.cs.analytics.BehaviorManager;
+import com.zimbra.cs.analytics.MessageBehavior;
+import com.zimbra.cs.db.DbPool;
+import com.zimbra.cs.db.DbPool.DbConnection;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mailbox.OperationContext;
+import com.zimbra.cs.ml.Classifier;
+import com.zimbra.cs.ml.ClassifierManager;
+import com.zimbra.cs.ml.ClassifierResult;
+import com.zimbra.cs.ml.InternalLabel;
+import com.zimbra.cs.ml.Label;
+import com.zimbra.cs.ml.MahoutClassifier;
+import com.zimbra.cs.ml.MahoutClassifierResult;
+import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.util.SoapCLI;
+import com.zimbra.qa.unittest.TestUtil;
 import com.zimbra.soap.type.SearchSortBy;
 
 /**
@@ -379,7 +401,20 @@ public class ZMailboxUtil implements DebugListener {
     static Option O_DUMPSTER = new Option(null, "dumpster", false, "search in dumpster");
 
     enum Command {
-        ADD_INCOMING_FILTER_RULE("addFilterRule", "afrl", "{name}  [*active|inactive] [any|*all] {conditions}+ {actions}+", "add incoming filter rule", Category.FILTER,  2, Integer.MAX_VALUE, O_AFTER, O_BEFORE, O_FIRST, O_LAST),
+    	CLASSIFY_MESSAGE_PRIORITY("classifyMessagePriority", "cmp", "{msg-id}", "classify a message given its id using current priority classifier", Category.ACCOUNT, 1, 1),
+    	APPLY_PRIORITY_BY_QUERY("applyPriorityByQuery", "apq", "{query}", "run a search query; the results get run through the priority classifier and, if priority, marked as such in the mailbox", Category.ACCOUNT, 1, 1, O_LIMIT),
+    	TRAINING_DATA_SUMMARY("trainingDataSummary", "tds", "", "output the count of training items by label", Category.ACCOUNT, 0, 0),
+    	TRAIN_CLASSIFIER("trainClassifier", "tcr", "[{percent-validate} {min-accuracy}]", "train the classifier, using the percent validation option to see output", Category.ACCOUNT, 0, 2),
+    	UPDATE_TRAINING_DATA_WITH_MESSAGES("updateTrainingDataWithMessages", "utdm", "{label} {msg-id} [{msg-id}...]", "update the training data set for a given label with one or more message ids", Category.ACCOUNT, 2, Integer.MAX_VALUE),
+    	UPDATE_TRAINING_DATA_WITH_BEHAVIORS("updateTrainingDatatWithBehaviors", "utdb", "[{behavior-window} {window-timeunit}]", "update the training data set using user behavior data for a give time frame", Category.ACCOUNT, 0, 2),
+    	UPDATE_TRAINING_DATA_BY_QUERY("updateTrainingDataByQuery", "utdq", "{label} {query}", "update the training data set for the given label with messages returned by a query", Category.ACCOUNT, 2, 2, O_LIMIT),
+    	CLEAR_TRAINING_DATA("clearTrainingData", "ctd", "[{label}]", "clear the training data from the priority classifier training dat set", Category.ACCOUNT, 0, 1),
+    	LOG_SINGLE_BEHAVIOR("logBehavior","lgbr", "{item-id} {behavior-type} {millis-since-received}", "log a specific behavior for a specific item", Category.ITEM, 3, 3),
+    	LOG_BEHAVIOR_BY_QUERY("logBehaviorByQuery", "lgbrq", "{query} {behavior-type} {millis-since-received}", "Log a specific behavior for all items that match a query", Category.ITEM, 3, 3, O_LIMIT, O_SORT, O_TYPES, O_VERBOSE, O_CURRENT, O_NEXT, O_PREVIOUS, O_DUMPSTER),
+    	//CHAIN_BEHAVIORS("chainBehaviors","chbr", "{item-id} {behavior-type1} {behavior-type2}... {interval1-millis} {interval2-millis}...","Log a chain of behaviors for a specified item. The chain is specified by a sequence of behavior-type arguments with specified intervals between the behaviors. First interval is from the time message was received", Category.ITEM,2,21),
+    	CHAIN_BEHAVIORS_BY_QUERY("chainBehaviorsByQuery","chbrq", "{query} {behavior-type1} {behavior-type2}... {interval1-millis} {interval2-millis}...","Log a chain of behaviors for all items that match a query. The chain is specified by a sequence of behavior-types with specified intervals between the behaviors. First interval is from the time message was received", Category.ITEM,2,21, O_LIMIT),
+    	CLEAR_ACCOUNT_BEHAVIORS("clearBehaviors", "clbr","","remove all behaviors assigned to an account", Category.ACCOUNT,0,0),
+    	ADD_INCOMING_FILTER_RULE("addFilterRule", "afrl", "{name}  [*active|inactive] [any|*all] {conditions}+ {actions}+", "add incoming filter rule", Category.FILTER,  2, Integer.MAX_VALUE, O_AFTER, O_BEFORE, O_FIRST, O_LAST),
         ADD_OUTGOING_FILTER_RULE("addOutgoingFilterRule", "aofrl", "{name}  [*active|inactive] [any|*all] {conditions}+ {actions}+", "add outgoing filter rule", Category.FILTER,  2, Integer.MAX_VALUE, O_AFTER, O_BEFORE, O_FIRST, O_LAST),
         ADD_MESSAGE("addMessage", "am", "{dest-folder-path} {filename-or-dir} [{filename-or-dir} ...]", "add a message to a folder", Category.MESSAGE, 2, Integer.MAX_VALUE, O_TAGS, O_DATE, O_FLAGS, O_NO_VALIDATION),
         ADMIN_AUTHENTICATE("adminAuthenticate", "aa", "{admin-name} {admin-password}", "authenticate as an admin. can only be used by an admin", Category.ADMIN, 2, 2, O_URL),
@@ -1064,6 +1099,42 @@ public class ZMailboxUtil implements DebugListener {
         }
 
         switch(mCommand) {
+        case CLASSIFY_MESSAGE_PRIORITY:
+        	classifyMessage(args);
+        	break;
+        case APPLY_PRIORITY_BY_QUERY:
+        	applyPriorityByQuery(args);
+        	break;
+        case TRAINING_DATA_SUMMARY:
+        	printTrainingDataSummary();
+        	break;
+        case TRAIN_CLASSIFIER:
+        	trainClassifier(args);
+        	break;
+        case UPDATE_TRAINING_DATA_WITH_MESSAGES:
+        	updateTrainingDataByMessages(args);
+        	break;
+        case UPDATE_TRAINING_DATA_WITH_BEHAVIORS:
+        	updateTrainingDataWithBehaviors(args);
+        	break;
+        case UPDATE_TRAINING_DATA_BY_QUERY:
+        	updateTrainingDataByQuery(args);
+        	break;
+        case CLEAR_TRAINING_DATA:
+        	clearTrainingData(args);
+        	break;
+        case CLEAR_ACCOUNT_BEHAVIORS:
+        	BehaviorManager.getFactory().getBehaviorManager().deleteBehaviorStore(mMbox.getAccountInfo(false).getId());
+        	break;
+        case LOG_SINGLE_BEHAVIOR:
+        	logBehaviorForItem(args);
+        	break;
+        case LOG_BEHAVIOR_BY_QUERY:
+        	logBehaviorBySearch(args);
+        	break;
+        case CHAIN_BEHAVIORS_BY_QUERY:
+        	chainBehaviorBySearch(args);
+        	break;
         case AUTO_COMPLETE:
             doAutoComplete(args);
             break;
@@ -1358,7 +1429,155 @@ public class ZMailboxUtil implements DebugListener {
         return ExecuteStatus.OK;
     }
 
-    private final ZEventHandler mTraceHandler = new TraceHandler();
+    private void printTrainingDataSummary() throws ServiceException {
+    	DbPool.startup();
+    	Account account = Provisioning.getInstance().getAccountByName(mAuthAccountName);
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+        mbox.getTrainingSet().outputStats(System.out);
+	}
+
+	private void applyPriorityByQuery(String[] args) throws IOException, ServiceException {
+    	DbPool.startup();
+    	StoreManager.getInstance().startup();
+    	Account account = Provisioning.getInstance().getAccountByName(mAuthAccountName);
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+        String query = args[0];
+        Integer limit = getOptLimit();
+		ZMailbox zmbox = TestUtil.getZMailbox(mAuthAccountName);
+		OperationContext octxt = new OperationContext(mbox);
+		Classifier classifier = ClassifierManager.getClassifier(mbox);
+		boolean hasMore = true;
+		int offset = 0;
+		int numFound = 0;
+		do {
+			ZSearchParams params = new ZSearchParams(query);
+			params.setTypes("message");
+			params.setFetch(Fetch.all);
+			params.setLimit(100);
+			params.setOffset(offset);
+			ZSearchResult searchResult = zmbox.search(params);
+			for (ZSearchHit hit: searchResult.getHits()) {
+				numFound++;
+				if (numFound >= limit) {
+					break;
+				}
+				if (hit instanceof ZMessageHit) {
+					Integer msgId = Integer.valueOf(((ZMessageHit) hit).getMessage().getId());
+					Message msg = mbox.getMessageById(octxt, msgId);
+					ClassifierResult result = classifier.classify(msg);
+					if (result.getLabel() == Label.PRIORITY) {
+						mbox.setPriority(msgId, true, result.getReason(), true);
+					}
+				}
+			}
+			hasMore = searchResult.hasMore();
+			offset += searchResult.getHits().size();
+
+		} while (hasMore && numFound <= limit);
+
+	}
+
+	private void updateTrainingDataByQuery(String[] args) throws ServiceException, IOException {
+    	DbPool.startup();
+    	StoreManager.getInstance().startup();
+    	Account account = Provisioning.getInstance().getAccountByName(mAuthAccountName);
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+        InternalLabel label = InternalLabel.fromString(args[0]);
+        String query = args[1];
+        Integer limit = getOptLimit();
+		ZMailbox zmbox = TestUtil.getZMailbox(mAuthAccountName);
+		DbConnection conn = DbPool.getConnection();
+		boolean hasMore = true;
+		int offset = 0;
+		int numFound = 0;
+		do {
+			ZSearchParams params = new ZSearchParams(query);
+			params.setTypes("message");
+			params.setFetch(Fetch.all);
+			params.setLimit(100);
+			params.setOffset(offset);
+			ZSearchResult searchResult = zmbox.search(params);
+			for (ZSearchHit hit: searchResult.getHits()) {
+				numFound++;
+				if (numFound >= limit) {
+					break;
+				}
+				if (hit instanceof ZMessageHit) {
+					Integer msgId = Integer.valueOf(((ZMessageHit) hit).getMessage().getId());
+					mbox.getTrainingSet().addItem(msgId, label, conn, true);
+				}
+			}
+			hasMore = searchResult.hasMore();
+			offset += searchResult.getHits().size();
+
+		} while (hasMore && numFound <= limit);
+	}
+
+	private void clearTrainingData(String[] args) throws IOException, ServiceException {
+    	DbPool.startup();
+    	StoreManager.getInstance().startup();
+    	Account account = Provisioning.getInstance().getAccountByName(mAuthAccountName);
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+        InternalLabel label;
+        if (args.length == 0) {
+        	label = null;
+        } else {
+        	label = InternalLabel.fromString(args[0]);
+        }
+		ClassifierManager.clearTrainingData(mbox, label);
+	}
+
+	private void trainClassifier(String[] args) throws ServiceException, IOException {
+    	DbPool.startup();
+    	StoreManager.getInstance().startup();
+    	Account account = Provisioning.getInstance().getAccountByName(mAuthAccountName);
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+        if (args.length == 0) {
+        	ClassifierManager.trainAndSave(mbox);
+        } else {
+        	ClassifierManager.trainAndSave(mbox, Float.valueOf(args[0]), Float.valueOf(args[1]));
+        }
+	}
+
+	private void classifyMessage(String[] args) throws ServiceException, IOException {
+    	DbPool.startup();
+    	StoreManager.getInstance().startup();
+    	Account account = Provisioning.getInstance().getAccountByName(mAuthAccountName);
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+        OperationContext octxt = new OperationContext(mbox);
+		Integer msgId = Integer.valueOf(args[0]);
+		MahoutClassifier classifier = ClassifierManager.load(mbox);
+		Message msg = mbox.getMessageById(octxt, msgId);
+		MahoutClassifierResult result = classifier.classify(msg);
+		System.out.println(result.toString());
+
+	}
+
+	private void updateTrainingDataByMessages(String[] args) throws ServiceException, IOException {
+		DbPool.startup();
+    	StoreManager.getInstance().startup();
+    	Account account = Provisioning.getInstance().getAccountByName(mAuthAccountName);
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+        InternalLabel label = InternalLabel.fromString(args[0]);
+		for (int i = 1; i < args.length; i++) {
+			mbox.getTrainingSet().addItem(Integer.parseInt(args[i]), label, DbPool.getConnection(), true);
+		}
+	}
+    private void updateTrainingDataWithBehaviors(String[] args) throws ServiceException, IOException {
+    	DbPool.startup();
+    	StoreManager.getInstance().startup();
+    	Account account = Provisioning.getInstance().getAccountByName(mAuthAccountName);
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+        if (args.length == 0) {
+        	ClassifierManager.updateTrainingSetFromBehaviors(mbox);
+        } else {
+	        Integer horizon = Integer.parseInt(args[0]);
+	        TimeUnit timeUnit = TimeUnit.valueOf(args[1]);
+	        ClassifierManager.updateTrainingSetFromBehaviors(mbox, horizon, timeUnit);
+        }
+    }
+
+	private final ZEventHandler mTraceHandler = new TraceHandler();
 
     private static class TraceHandler extends ZEventHandler {
 
@@ -2096,8 +2315,106 @@ public class ZMailboxUtil implements DebugListener {
         stdout.println(cm.getId());
     }
 
-    private void doEnableSharedReminder(String args[]) throws ServiceException {
+    private void logBehaviorForItem(String[] args)  throws ServiceException {
+    	ZMessage msg = mMbox.getMessageById(id(args[0]));
+    	long receivedDate = msg.getReceivedDate();
+    	if(receivedDate < Integer.MAX_VALUE) {
+    		receivedDate = receivedDate * 1000L;
+    	}
+    	MessageBehavior b = new MessageBehavior(mMbox.getAccountInfo(false).getId(), MessageBehavior.BehaviorType.valueOf(param(args,1)), Integer.parseInt(msg.getId()), receivedDate + Long.parseLong(param(args,2,"0L")), param(args,3,""));
+    	BehaviorManager.getFactory().getBehaviorManager().storeBehavior(b);
+    	//mMbox.logBehavior(id(args[0]), param(args,1), msg.getReceivedDate() + Long.parseLong(param(args,2,"0L")), param(args,3,""));
+    }
 
+    private void logBehaviorBySearch(String[] args) throws ServiceException {
+    	 mSearchParams = new ZSearchParams(args[0]);
+    	 mSearchParams.setLimit(getOptLimit());
+         mSearchParams.setTypes(ZSearchParams.TYPE_MESSAGE);
+         mSearchParams.setInDumpster(mCommandLine.hasOption(O_DUMPSTER.getLongOpt()));
+         mIndexToId.clear();
+         mSearchPage = 0;
+         BehaviorManager bm = BehaviorManager.getFactory().getBehaviorManager();
+         ZSearchPagerResult pager = mMbox.search(mSearchParams, mSearchPage, false, false);
+         stdout.printf("applying behaviors to %d messages", pager.getResult().getHits().size());
+         for (ZSearchHit hit: pager.getResult().getHits()) {
+        	 if (hit instanceof ZMessageHit) {
+        		 ZMessageHit mh = (ZMessageHit) hit;
+                 long receivedDate = mh.getDate();
+                 if(receivedDate < Integer.MAX_VALUE) {
+					receivedDate = receivedDate * 1000L;
+                 }
+                 MessageBehavior b = new MessageBehavior(mMbox.getAccountInfo(false).getId(), MessageBehavior.BehaviorType.valueOf(param(args,1)), Integer.parseInt(mh.getId()), receivedDate + Long.parseLong(param(args,2,"0L")), param(args,3,""));
+                 bm.storeBehavior(b);
+             }
+         }
+    }
+
+    private void chainBehaviorBySearch(String[] args) throws ServiceException {
+    	String[] args2 = new String[args.length-1];
+    	System.arraycopy(args, 1, args2, 0, args.length-1);
+    	List<MessageBehavior.BehaviorType> behaviorTypes = parseBehaviorChain(args2);
+    	String[] args3 = new String[args.length - 1 - behaviorTypes.size()];
+    	System.arraycopy(args2, behaviorTypes.size(), args3, 0, args2.length-behaviorTypes.size());
+    	List<Long> intervals = parseIntervals(args3);
+
+    	if(intervals.size() != behaviorTypes.size()) {
+    		throw ServiceException.INVALID_REQUEST("Number of behaviors should match number of intervals. Specified " + behaviorTypes.size() + " behaviors and " + intervals.size() + "intervals", null);
+    	}
+    	mSearchParams = new ZSearchParams(args[0]);
+   	 	mSearchParams.setLimit(getOptLimit());
+        mSearchParams.setTypes(ZSearchParams.TYPE_MESSAGE);
+        mSearchParams.setInDumpster(mCommandLine.hasOption(O_DUMPSTER.getLongOpt()));
+        mIndexToId.clear();
+        mSearchPage = 0;
+        BehaviorManager bm = BehaviorManager.getFactory().getBehaviorManager();
+        ZSearchPagerResult pager = mMbox.search(mSearchParams, mSearchPage, false, false);
+        stdout.printf("applying behaviors to %d messages", pager.getResult().getHits().size());
+        for (ZSearchHit hit: pager.getResult().getHits()) {
+       	 if (hit instanceof ZMessageHit) {
+                ZMessageHit mh = (ZMessageHit) hit;
+                Long lastBT = mh.getDate();
+                if(lastBT < Integer.MAX_VALUE) {
+                	lastBT = lastBT * 1000L;
+                }
+                for(int i=0; i<behaviorTypes.size() && i<intervals.size();i++) {
+                	MessageBehavior.BehaviorType bt = behaviorTypes.get(i);
+                	Long interval = intervals.get(i);
+                	lastBT += interval;
+                	MessageBehavior b = new MessageBehavior(mMbox.getAccountInfo(false).getId(), bt, Integer.parseInt(mh.getId()), lastBT, "");
+                	bm.storeBehavior(b);
+                }
+            }
+        }
+   }
+
+    private List<MessageBehavior.BehaviorType> parseBehaviorChain(String[] args) {
+    	List<MessageBehavior.BehaviorType> ret = Lists.newArrayList();
+    	for(String arg : args) {
+    		if(!StringUtils.isNumeric(arg)) {
+    			try {
+    				MessageBehavior.BehaviorType type = MessageBehavior.BehaviorType.valueOf(arg);
+    				ret.add(type);
+    			} catch (Exception e) {
+    				break;
+    			}
+    		}
+    	}
+    	return ret;
+    }
+
+    private List<Long> parseIntervals(String[] args) {
+    	List<Long> ret = Lists.newArrayList();
+    	for(String arg : args) {
+    		if(StringUtils.isNumeric(arg)) {
+    			try {
+    				Long l = Long.parseLong(arg);
+    				ret.add(l);
+    			} catch (Exception e) {
+    				continue;
+    			}
+    		}
+    	}
+    	return ret;
     }
 
     private void doSearch(String[] args) throws ServiceException {

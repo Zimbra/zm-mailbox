@@ -92,6 +92,8 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.ShareLocator;
+import com.zimbra.cs.analytics.BehaviorManager;
+import com.zimbra.cs.analytics.MessageBehavior;
 import com.zimbra.cs.datasource.DataSourceManager;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbMailItem.QueryParams;
@@ -122,6 +124,8 @@ import com.zimbra.cs.mailbox.CalendarItem.ReplyInfo;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata;
 import com.zimbra.cs.mailbox.MailItem.PendingDelete;
 import com.zimbra.cs.mailbox.MailItem.TargetConstraint;
+import com.zimbra.cs.mailbox.MailItem.Type;
+import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.MailboxListener.ChangeNotification;
 import com.zimbra.cs.mailbox.Note.Rectangle;
@@ -145,6 +149,14 @@ import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.mime.ParsedMessage.CalendarPartInfo;
 import com.zimbra.cs.mime.ParsedMessageDataSource;
 import com.zimbra.cs.mime.ParsedMessageOptions;
+import com.zimbra.cs.ml.Classifier;
+import com.zimbra.cs.ml.ClassifierDetailsManager;
+import com.zimbra.cs.ml.ClassifierManager;
+import com.zimbra.cs.ml.ClassifierResult;
+import com.zimbra.cs.ml.InternalLabel;
+import com.zimbra.cs.ml.Label;
+import com.zimbra.cs.ml.SqlClassifierDetailsManager;
+import com.zimbra.cs.ml.TrainingSet;
 import com.zimbra.cs.pop3.Pop3Message;
 import com.zimbra.cs.redolog.op.AddDocumentRevision;
 import com.zimbra.cs.redolog.op.AlterItemTag;
@@ -637,6 +649,8 @@ public class Mailbox {
     private volatile boolean open = false;
     private boolean galSyncMailbox = false;
     private volatile boolean requiresWriteLock = true;
+    private TrainingSet trainingSet;
+    private ClassifierDetailsManager classifierDetailsManager;
 
     protected Mailbox(MailboxManager mailboxManager, MailboxData data) {
     	this.mailboxManager = mailboxManager;
@@ -644,6 +658,8 @@ public class Mailbox {
         mData = data;
         mData.lastChangeDate = System.currentTimeMillis();
         index = new MailboxIndex(this);
+        trainingSet = new TrainingSet(this);
+        classifierDetailsManager = new SqlClassifierDetailsManager(this);
         lock = mailboxManager.getMailboxLockFactory().create(data.accountId, this);
     }
 
@@ -1615,7 +1631,7 @@ public class Mailbox {
 
     private void beginTransaction(String caller, long time, OperationContext octxt, RedoableOp recorder,
                     DbConnection conn, boolean write) throws ServiceException {
-        write = write || requiresWriteLock();
+    	write = write || requiresWriteLock();
         assert recorder == null || write;
         assert !Thread.holdsLock(this) : "use MailboxLock";
         lock.lock(write);
@@ -4173,6 +4189,22 @@ public class Mailbox {
         return (Message) getCachedItem(id, MailItem.Type.MESSAGE);
     }
 
+    public List<MailItem> getItemsByIds(OperationContext octxt, Collection<Integer> ids, Type type) throws ServiceException {
+    	boolean success = false;
+    	try {
+    		beginReadTransaction("itemsByIds", octxt);
+        	List<UnderlyingData> uData = DbMailItem.getById(this, ids, type);
+	    	List<MailItem> results = new ArrayList<MailItem>();
+	    	for (UnderlyingData ud: uData) {
+	    		results.add(getItem(ud));
+	    	}
+	    	success = true;
+	    	return results;
+    	} finally {
+    		endTransaction(success);
+    	}
+    }
+
     public List<Message> getMessagesByConversation(OperationContext octxt, int convId) throws ServiceException {
         return getMessagesByConversation(octxt, convId, SortBy.DATE_ASC, -1);
     }
@@ -5911,6 +5943,7 @@ public class Mailbox {
             if (cpi != null && CalendarItem.isAcceptableInvite(getAccount(), cpi)) {
                 iCal = cpi.cal;
             }
+
             msg = Message.create(messageId, folder, convTarget, pm, staged, unread, flags, ntags, dinfo, noICal, iCal, extended);
 
             redoRecorder.setMessageId(msg.getId());
@@ -6020,11 +6053,37 @@ public class Mailbox {
                 dctxt.setMailboxBlob(mblob);
             }
 
-            // step 7: queue new message for indexing
+            // step 7: run through priority classifier if not sent
+            if(getAccount().isFeaturePriorityInboxEnabled()) {
+                //must be a better way to do this...
+                if (folderId != ID_FOLDER_SENT &&
+                		folderId != ID_FOLDER_SPAM &&
+                		folderId != ID_FOLDER_AUTO_CONTACTS &&
+                		folderId != ID_FOLDER_BRIEFCASE &&
+                		folderId != ID_FOLDER_CALENDAR &&
+                		folderId != ID_FOLDER_COMMENTS &&
+                		folderId != ID_FOLDER_CONTACTS &&
+                		folderId != ID_FOLDER_DRAFTS &&
+                		folderId != ID_FOLDER_IM_LOGS &&
+                		folderId != ID_FOLDER_TAGS &&
+                		folderId != ID_FOLDER_TRASH) {
+
+                	try {
+    		            Classifier cls = ClassifierManager.getClassifier(this);
+    		            ClassifierResult result = cls.classify(msg);
+    		            if (result.getLabel().equals(Label.PRIORITY)) {
+    		            	setPriority(msg.getId(), true, result.getReason());
+    		            }
+                	} catch (Exception e) {
+                		ZimbraLog.analytics.error("error classifying priority for message %" + String.valueOf(msg.getId()), e.getMessage());
+                	}
+                }
+            }
+            // step 8: queue new message for indexing
             index.add(msg);
             success = true;
 
-            // step 8: send lawful intercept message
+            // step 9: send lawful intercept message
             try {
                 Notification.getInstance().interceptIfNecessary(this, pm.getMimeMessage(), "add message", folder);
             } catch (ServiceException e) {
@@ -6046,6 +6105,14 @@ public class Mailbox {
                 // so the next recipient in the multi-recipient case will link
                 // to this blob as opposed to saving its own copy.
                 dctxt.setFirst(false);
+                if(getAccount().isFeaturePriorityInboxEnabled()) {
+                    //log RECEIVED event for the message
+                    try {
+                    	BehaviorManager.getFactory().getBehaviorManager().storeBehavior(new MessageBehavior(getAccountId(),MessageBehavior.BehaviorType.RECIEVED,msg.getId(),msg.getDate(),null));
+                    } catch (Exception e) {
+                    	ZimbraLog.mailbox.error("unable to log RECEIVED behavior for message", e);
+                    }
+                }
             }
         }
 
@@ -6057,7 +6124,40 @@ public class Mailbox {
         return msg;
     }
 
-    public List<Conversation> lookupConversation(ParsedMessage pm) throws ServiceException {
+    public void setPriority(int id, boolean bool, String reason, boolean newTransaction) throws ServiceException {
+    	if (newTransaction) {
+    		boolean success = false;
+	    	beginTransaction("taggingPriority", null);
+	    	try {
+	    		setPriority(id, bool, reason);
+	    		success = true;
+	    	} finally {
+	    		endTransaction(success);
+	    	}
+    	} else {
+    		setPriority(id, bool, reason);
+    	}
+    }
+
+    public void setPriority(int id, boolean bool, String reason) throws ServiceException {
+    	//for now, add a "priority" tag
+    	Tag tag;
+    	try {
+    		tag = getTagByName("priority");
+    	} catch (ServiceException e) {
+    		tag = Tag.create(this, 999 /* probably unsafe */, "priority", new Color("FFD700"), true);
+    	}
+    	alterTag(new int[]{id}, Type.MESSAGE, tag, bool, false);
+    	if (bool && reason != null) {
+    		classifierDetailsManager.setReason(id, reason);
+    	}
+	}
+
+    public void trainClassifier() throws ServiceException {
+    	ClassifierManager.trainAndSave(this);
+    }
+
+	public List<Conversation> lookupConversation(ParsedMessage pm) throws ServiceException {
         boolean success = false;
         beginTransaction("lookupConversation", null);
         try {
@@ -6095,7 +6195,9 @@ public class Mailbox {
     // please keep this package-visible but not public
     Conversation createConversation(int convId, Message... contents) throws ServiceException {
         int id = Math.max(convId, ID_AUTO_INCREMENT);
-        Conversation conv = Conversation.create(this, getNextItemId(id), contents);
+        int nextId = getNextItemId(id);
+        Conversation conv = Conversation.create(this, nextId, contents);
+        index.add(contents[0]);
         if (ZimbraLog.mailbox.isDebugEnabled()) {
             StringBuilder sb = new StringBuilder();
             for (int i = 0; i < contents.length; i++) {
@@ -6361,6 +6463,14 @@ public class Mailbox {
             setOperationTargetConstraint(tcon);
 
             alterTag(itemIds, type, finfo.toFlag(this), addTag);
+            if(getAccount().isFeaturePriorityInboxEnabled()) {
+                BehaviorManager bm = BehaviorManager.getFactory().getBehaviorManager();
+                for(int itemId : itemIds) {
+    	            if(finfo == Flag.FlagInfo.UNREAD && !addTag) {
+    	            	bm.storeBehavior(new MessageBehavior(getAccountId(), MessageBehavior.BehaviorType.READ,itemId,System.currentTimeMillis(),null));
+    	            }
+                }
+            }
             success = true;
         } finally {
             endTransaction(success);
@@ -6405,9 +6515,41 @@ public class Mailbox {
         }
     }
 
-    // common code for the two AlterTag variants (Flag.FlagInfo vs. by tag name)
     private void alterTag(int itemIds[], MailItem.Type type, Tag tag, boolean addTag) throws ServiceException {
+    	alterTag(itemIds, type, tag, addTag, true);
+    }
+
+    // common code for the two AlterTag variants (Flag.FlagInfo vs. by tag name)
+    private void alterTag(int itemIds[], MailItem.Type type, Tag tag, boolean addTag, boolean updateTrainingSet) throws ServiceException {
         MailItem[] items = getItemById(itemIds, type);
+
+        if(getAccount().isFeaturePriorityInboxEnabled()) {
+            /*hack to intercept changes to the priority tag.
+             * Adding a tag called "priority" is the same as adding it to the training set as a positive example,
+             * removing one adds it as a negative example  */
+            if (updateTrainingSet && tag.getName().equalsIgnoreCase("priority")) {
+            	if (addTag) {
+            		for (int i = 0; i < itemIds.length; i++) {
+            			trainingSet.addItem(items[i], InternalLabel.PRIORITY, getOperationConnection(), true);
+                	}
+            	} else {
+            		//removing a priority tag is the same as adding it to the negative training set, for now
+                	for (int i = 0; i < itemIds.length; i++) {
+                		trainingSet.addItem(items[i], InternalLabel.NOT_PRIORITY, getOperationConnection(), true);
+                		MailItem item = items[i];
+                		if (item instanceof Message) {
+                			classifierDetailsManager.deleteReason(itemIds[i]);
+                		} else if (item instanceof Conversation){
+                			List<Message> msgs = ((Conversation) item).getMessages();
+                			for (Message msg: msgs) {
+                				classifierDetailsManager.deleteReason(msg.getId());
+                			}
+                		}
+                	}
+            	}
+            }
+        }
+
         for (MailItem item : items) {
             if (!(item instanceof Conversation)) {
                 if (!checkItemChangeID(item) && item instanceof Tag) {
@@ -6840,9 +6982,25 @@ public class Mailbox {
             }
             int oldUIDNEXT = target.getImapUIDNEXT();
             boolean resetUIDNEXT = false;
-
+            boolean wasInTrash = false;
+            boolean wasInSpam = false;
             for (MailItem item : items) {
 
+            	if (item instanceof Conversation) {
+            		for (Message msg: ((Conversation) item).getMessages()) {
+            			if (msg.inTrash()) {
+            				wasInTrash = true;
+            				break;
+            				//is it safe to assume that if one of the messages is in the trash/spam then all of them are?
+            			} else if (msg.inSpam()) {
+            				wasInSpam = true;
+            				break;
+            			}
+            		}
+            	} else {
+            		wasInTrash = item.inTrash();
+            		wasInSpam = item.inSpam();
+            	}
                 // train the spam filter if necessary...
                 trainSpamFilter(octxt, item, target, "move");
 
@@ -6853,6 +7011,49 @@ public class Mailbox {
                 if (moved && !resetUIDNEXT && isTrackingImap() &&
                         (item instanceof Conversation || item instanceof Message || item instanceof Contact)) {
                     resetUIDNEXT = true;
+                }
+
+                //if moving to/from trash or spam, re-index so that the trash flag gets updated i
+                if (moved && (target.inTrash() || target.inSpam() || wasInTrash || wasInSpam)) {
+                    BehaviorManager bm = null;
+                    MessageBehavior.BehaviorType bt1 = null;
+                    MessageBehavior.BehaviorType bt2 = null;
+                    if(getAccount().isFeaturePriorityInboxEnabled()) {
+                        bm = BehaviorManager.getFactory().getBehaviorManager();
+                        bt1 = target.inTrash() && !wasInTrash ? MessageBehavior.BehaviorType.DELETED :
+                            ( (!target.inTrash() && wasInTrash) ? MessageBehavior.BehaviorType.UNDELETED : null);
+
+                        bt2 = target.inSpam() && !wasInSpam ? MessageBehavior.BehaviorType.SPAMMED :
+                            ( (!target.inSpam() && wasInSpam) ? MessageBehavior.BehaviorType.UNSPAMMED : null);
+                    }
+
+                	if (item instanceof Conversation) {
+                		for (Message msg: ((Conversation) item).getMessages()) {
+                			index.add(msg);
+                			if(bm != null) {
+                    			try {
+                    				if(bt1 != null) {
+                    					bm.storeBehavior(new MessageBehavior(getAccountId(), bt1,msg.getId(),System.currentTimeMillis(),null));
+                    				}
+                    				if(bt2 != null) {
+                    					bm.storeBehavior(new MessageBehavior(getAccountId(), bt2,msg.getId(),System.currentTimeMillis(),null));
+                    				}
+                                } catch (Exception e) {
+                                	ZimbraLog.mailbox.error("unable to log DELETED or SPAMMED behavior for message", e);
+                                }
+                			}
+                		}
+                	} else {
+                		index.add(item);
+                		if(bm != null) {
+                    		if(bt1 != null) {
+            					bm.storeBehavior(new MessageBehavior(getAccountId(), bt1,item.getId(),System.currentTimeMillis(),null));
+            				}
+            				if(bt2 != null) {
+            					bm.storeBehavior(new MessageBehavior(getAccountId(), bt2,item.getId(),System.currentTimeMillis(),null));
+            				}
+                		}
+                	}
                 }
             }
 
@@ -9264,7 +9465,7 @@ public class Mailbox {
     }
 
     private List<Object> rollbackCache(MailboxChange change) throws ServiceException {
-        if (change == null) {
+    	if (change == null) {
             return null;
         }
         try {
@@ -9579,26 +9780,33 @@ public class Mailbox {
      */
     public Pair<List<Integer>, TypedIdList> getItemsChangedSince(
         OperationContext octxt,  int sinceDate) throws ServiceException {
-    lock.lock(false);
-    try {
-
-        boolean success = false;
+        lock.lock(false);
         try {
-            beginReadTransaction("getModifiedItems", octxt);
+            boolean success = false;
+            try {
+                beginReadTransaction("getModifiedItems", octxt);
 
-            Set<Integer> folderIds = Folder.toId(getAccessibleFolders(ACL.RIGHT_READ));
-            Pair<List<Integer>, TypedIdList> dataList = DbMailItem
-                            .getItemsChangedSinceDate(this, MailItem.Type.UNKNOWN,  sinceDate, folderIds);
-            if (dataList == null) {
-                return null;
+                Set<Integer> folderIds = Folder.toId(getAccessibleFolders(ACL.RIGHT_READ));
+                Pair<List<Integer>, TypedIdList> dataList = DbMailItem
+                                .getItemsChangedSinceDate(this, MailItem.Type.UNKNOWN,  sinceDate, folderIds);
+                if (dataList == null) {
+                    return null;
+                }
+                success = true;
+                return dataList;
+            } finally {
+                endTransaction(success);
             }
-            success = true;
-            return dataList;
         } finally {
-            endTransaction(success);
+            lock.release();
         }
-    } finally {
-        lock.release();
     }
+
+    public TrainingSet getTrainingSet() {
+    	return trainingSet;
     }
+
+	public ClassifierDetailsManager getClassifierDetailsManager() {
+		return classifierDetailsManager;
+	}
 }
