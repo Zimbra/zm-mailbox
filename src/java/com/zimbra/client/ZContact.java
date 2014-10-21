@@ -169,7 +169,7 @@ public class ZContact implements ZItem, ToZJSONObject {
         isDirty = false;
         mMailbox = mailbox;
         mId = e.getAttribute(MailConstants.A_ID);
-        mRefId = e.getAttribute(MailConstants.A_REF);
+        mRefId = e.getAttribute(MailConstants.A_REF, null);
         mFolderId = e.getAttribute(MailConstants.A_FOLDER, null);
         mFlags = e.getAttribute(MailConstants.A_FLAGS, null);
         mTagIds = e.getAttribute(MailConstants.A_TAGS, null);
