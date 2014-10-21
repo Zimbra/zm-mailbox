@@ -375,7 +375,7 @@ SECTION 9: GNU General Public License, V3.0
 SECTION 10: GNU Lesser General Public License, V2.1
 
    >>> aspell-0.60.6.1
-   >>> jcommon-1.0.20
+   >>> jcommon-1.0.23
    >>> jfreechart-1.0.16
    >>> jna-3.4.0
    >>> perl-mozilla-ca-20130114
@@ -34919,7 +34919,7 @@ Version: MPL 1.1/GPL 2.0/LGPL 2.1
      the terms of any one of the MPL, the GPL or the LGPL.
 
 
->>> jcommon-1.0.20
+>>> jcommon-1.0.23
 
 (C)opyright, 2000-2009, by Object Refinery Limited and Contributors.
 
