@@ -149,14 +149,8 @@ import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.mime.ParsedMessage.CalendarPartInfo;
 import com.zimbra.cs.mime.ParsedMessageDataSource;
 import com.zimbra.cs.mime.ParsedMessageOptions;
-import com.zimbra.cs.ml.Classifier;
 import com.zimbra.cs.ml.ClassifierDetailsManager;
-import com.zimbra.cs.ml.ClassifierManager;
-import com.zimbra.cs.ml.ClassifierResult;
-import com.zimbra.cs.ml.InternalLabel;
-import com.zimbra.cs.ml.Label;
 import com.zimbra.cs.ml.SqlClassifierDetailsManager;
-import com.zimbra.cs.ml.TrainingSet;
 import com.zimbra.cs.pop3.Pop3Message;
 import com.zimbra.cs.redolog.op.AddDocumentRevision;
 import com.zimbra.cs.redolog.op.AlterItemTag;
@@ -649,7 +643,10 @@ public class Mailbox {
     private volatile boolean open = false;
     private boolean galSyncMailbox = false;
     private volatile boolean requiresWriteLock = true;
+    /*
+     * bug 95964. Have to keep this code out until main is upgraded to Lucene 4.x, because of cross-dependencies with Mahout
     private TrainingSet trainingSet;
+    */
     private ClassifierDetailsManager classifierDetailsManager;
 
     protected Mailbox(MailboxManager mailboxManager, MailboxData data) {
@@ -658,7 +655,10 @@ public class Mailbox {
         mData = data;
         mData.lastChangeDate = System.currentTimeMillis();
         index = new MailboxIndex(this);
+        /*
+         * bug 95964. Have to keep this code out until main is upgraded to Lucene 4.x, because of cross-dependencies with Mahout
         trainingSet = new TrainingSet(this);
+        */
         classifierDetailsManager = new SqlClassifierDetailsManager(this);
         lock = mailboxManager.getMailboxLockFactory().create(data.accountId, this);
     }
@@ -6054,7 +6054,10 @@ public class Mailbox {
             }
 
             // step 7: run through priority classifier if not sent
-            if(getAccount().isFeaturePriorityInboxEnabled()) {
+            /*
+             * bug 95964. Have to keep this code out until main is upgraded to Lucene 4.x, because of cross-dependencies with Mahout
+             *
+             * if(getAccount().isFeaturePriorityInboxEnabled()) {
                 //must be a better way to do this...
                 if (folderId != ID_FOLDER_SENT &&
                 		folderId != ID_FOLDER_SPAM &&
@@ -6078,7 +6081,7 @@ public class Mailbox {
                 		ZimbraLog.analytics.error("error classifying priority for message %" + String.valueOf(msg.getId()), e.getMessage());
                 	}
                 }
-            }
+            }*/
             // step 8: queue new message for indexing
             index.add(msg);
             success = true;
@@ -6154,7 +6157,10 @@ public class Mailbox {
 	}
 
     public void trainClassifier() throws ServiceException {
-    	ClassifierManager.trainAndSave(this);
+    /*	bug 95964. Have to keep this code out until main is upgraded to Lucene 4.x, because of cross-dependencies with Mahout
+     * ClassifierManager.trainAndSave(this);
+     *
+     */
     }
 
 	public List<Conversation> lookupConversation(ParsedMessage pm) throws ServiceException {
@@ -6523,10 +6529,12 @@ public class Mailbox {
     private void alterTag(int itemIds[], MailItem.Type type, Tag tag, boolean addTag, boolean updateTrainingSet) throws ServiceException {
         MailItem[] items = getItemById(itemIds, type);
 
+        /*
+         * bug 95964. Have to keep this code out until main is upgraded to Lucene 4.x, because of cross-dependencies with Mahout
         if(getAccount().isFeaturePriorityInboxEnabled()) {
-            /*hack to intercept changes to the priority tag.
-             * Adding a tag called "priority" is the same as adding it to the training set as a positive example,
-             * removing one adds it as a negative example  */
+            //hack to intercept changes to the priority tag.
+            //Adding a tag called "priority" is the same as adding it to the training set as a positive example,
+            //removing one adds it as a negative example
             if (updateTrainingSet && tag.getName().equalsIgnoreCase("priority")) {
             	if (addTag) {
             		for (int i = 0; i < itemIds.length; i++) {
@@ -6548,7 +6556,7 @@ public class Mailbox {
                 	}
             	}
             }
-        }
+        }*/
 
         for (MailItem item : items) {
             if (!(item instanceof Conversation)) {
@@ -9801,12 +9809,13 @@ public class Mailbox {
             lock.release();
         }
     }
-
+    /*
+     * bug 95964. Have to keep this code out until main is upgraded to Lucene 4.x, because of cross-dependencies with Mahout
     public TrainingSet getTrainingSet() {
     	return trainingSet;
     }
 
 	public ClassifierDetailsManager getClassifierDetailsManager() {
 		return classifierDetailsManager;
-	}
+	}*/
 }

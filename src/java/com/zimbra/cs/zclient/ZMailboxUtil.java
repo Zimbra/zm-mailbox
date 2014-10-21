@@ -44,7 +44,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.TimeZone;
-import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
@@ -124,9 +123,7 @@ import com.zimbra.common.util.HttpUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.zclient.ZClientException;
 import com.zimbra.common.zmime.ZMimeMessage;
-import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.GuestAccount;
-import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.RightManager;
 import com.zimbra.cs.account.soap.SoapAccountInfo;
@@ -134,23 +131,8 @@ import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.account.soap.SoapProvisioning.DelegateAuthResponse;
 import com.zimbra.cs.analytics.BehaviorManager;
 import com.zimbra.cs.analytics.MessageBehavior;
-import com.zimbra.cs.db.DbPool;
-import com.zimbra.cs.db.DbPool.DbConnection;
-import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.MailboxManager;
-import com.zimbra.cs.mailbox.Message;
-import com.zimbra.cs.mailbox.OperationContext;
-import com.zimbra.cs.ml.Classifier;
-import com.zimbra.cs.ml.ClassifierManager;
-import com.zimbra.cs.ml.ClassifierResult;
-import com.zimbra.cs.ml.InternalLabel;
-import com.zimbra.cs.ml.Label;
-import com.zimbra.cs.ml.MahoutClassifier;
-import com.zimbra.cs.ml.MahoutClassifierResult;
-import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.util.SoapCLI;
-import com.zimbra.qa.unittest.TestUtil;
 import com.zimbra.soap.type.SearchSortBy;
 
 /**
@@ -1099,7 +1081,9 @@ public class ZMailboxUtil implements DebugListener {
         }
 
         switch(mCommand) {
-        case CLASSIFY_MESSAGE_PRIORITY:
+        /*
+         * bug 95964. Have to keep this code out until main is upgraded to Lucene 4.x, because of cross-dependencies with Mahout
+         * case CLASSIFY_MESSAGE_PRIORITY:
         	classifyMessage(args);
         	break;
         case APPLY_PRIORITY_BY_QUERY:
@@ -1122,7 +1106,7 @@ public class ZMailboxUtil implements DebugListener {
         	break;
         case CLEAR_TRAINING_DATA:
         	clearTrainingData(args);
-        	break;
+        	break; */
         case CLEAR_ACCOUNT_BEHAVIORS:
         	BehaviorManager.getFactory().getBehaviorManager().deleteBehaviorStore(mMbox.getAccountInfo(false).getId());
         	break;
@@ -1428,13 +1412,15 @@ public class ZMailboxUtil implements DebugListener {
         }
         return ExecuteStatus.OK;
     }
-
+    /*
+     * bug 95964. Have to keep this code out until main is upgraded to Lucene 4.x, because of cross-dependencies with Mahout
     private void printTrainingDataSummary() throws ServiceException {
     	DbPool.startup();
     	Account account = Provisioning.getInstance().getAccountByName(mAuthAccountName);
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
         mbox.getTrainingSet().outputStats(System.out);
 	}
+
 
 	private void applyPriorityByQuery(String[] args) throws IOException, ServiceException {
     	DbPool.startup();
@@ -1576,7 +1562,7 @@ public class ZMailboxUtil implements DebugListener {
 	        ClassifierManager.updateTrainingSetFromBehaviors(mbox, horizon, timeUnit);
         }
     }
-
+*/
 	private final ZEventHandler mTraceHandler = new TraceHandler();
 
     private static class TraceHandler extends ZEventHandler {
