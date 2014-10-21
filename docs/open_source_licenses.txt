@@ -376,7 +376,7 @@ SECTION 10: GNU Lesser General Public License, V2.1
 
    >>> aspell-0.60.6.1
    >>> jcommon-1.0.23
-   >>> jfreechart-1.0.16
+   >>> jfreechart-1.0.19
    >>> jna-3.4.0
    >>> perl-mozilla-ca-20130114
    >>> perl-test-nowarnings-1.04
@@ -34946,7 +34946,7 @@ If you have any comments, suggestions or bugs to report, please post a
 message in the JCommon forum.
 
 
->>> jfreechart-1.0.16
+>>> jfreechart-1.0.19
 
 JFreeChart : a free chart library for the Java(tm) platform
 
