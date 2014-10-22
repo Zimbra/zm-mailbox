@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -24,6 +24,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.HttpUtil;
@@ -39,6 +40,7 @@ import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.service.DavServlet;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Contact;
+import com.zimbra.cs.mailbox.DavNames;
 import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
@@ -160,24 +162,29 @@ public class UrlNamespace {
 
     /* Returns DavResource in the user's mailbox at the specified path. */
     public static DavResource getResourceAt(DavContext ctxt, String user, String path) throws DavException {
-        ZimbraLog.dav.debug("getResource at "+user+" "+path);
-        if (path == null)
+        ZimbraLog.dav.debug("getResource at user='%s' path='%s'", user, path);
+        if (path == null) {
             throw new DavException("invalid uri", HttpServletResponse.SC_NOT_FOUND, null);
+        }
 
         java.util.Collection<DavResource> rss = getResources(ctxt, user, path, false);
-        if (rss.size() > 0)
+        if (rss.size() > 0) {
             return rss.iterator().next();
+        }
         return null;
     }
 
-    public static java.util.Collection<DavResource> getResources(DavContext ctxt, String user, String path, boolean includeChildren) throws DavException {
+    public static java.util.Collection<DavResource> getResources(
+            DavContext ctxt, String user, String path, boolean includeChildren)
+    throws DavException {
         ArrayList<DavResource> rss = new ArrayList<DavResource>();
-        if (user.equals(""))
+        if (user.equals("")) {
             try {
                 rss.add(new Principal(ctxt.getAuthAccount(), DavServlet.DAV_PATH));
                 return rss;
             } catch (ServiceException e) {
             }
+        }
 
         String target = path.toLowerCase();
         DavResource resource = null;
@@ -199,20 +206,22 @@ public class UrlNamespace {
                         try {
                             rss.addAll(getFolders(ctxt, user));
                         } catch (ServiceException e) {
-                            ZimbraLog.dav.warn("can't get folders for "+user, e);
+                            ZimbraLog.dav.warn("can't get folders for user='%s'",user, e);
                         }
                     }
                     return rss;
                 } else {
-                    ZimbraLog.dav.warn("can't get mail item resource for "+user+", "+path, se);
+                    ZimbraLog.dav.warn("can't get mail item resource for user='%s' path='%s'", user, path, se);
                 }
             }
         }
 
-        if (resource != null)
+        if (resource != null) {
             rss.add(resource);
-        if (resource != null && includeChildren)
+        }
+        if (resource != null && includeChildren) {
             rss.addAll(resource.getChildren(ctxt));
+        }
 
         return rss;
     }
@@ -319,6 +328,15 @@ public class UrlNamespace {
         return url.toString();
     }
 
+    /**
+     * @param folder  - name of folder e.g. "Calendar"
+     */
+    public static String getFolderUrl(String authUser, String folder) {
+        StringBuilder url = new StringBuilder();
+        url.append(DavServlet.DAV_PATH).append("/").append(authUser).append("/").append(folder).append("/");
+        return url.toString();
+    }
+
     public static String getResourceUrl(Account user, String path) throws ServiceException {
         return getAbsoluteUrl(user, DavServlet.DAV_PATH + "/" + user.getName() + path);
     }
@@ -334,7 +352,7 @@ public class UrlNamespace {
         return DavServlet.getServiceUrl(server, domain, path);
     }
 
-    private static Map sRenamedResourceMap = MapUtil.newLruMap(100);
+    private static Map <Pair<String,String>,Pair<DavResource,Long>>sRenamedResourceMap = MapUtil.newLruMap(100);
 
     public static void addToRenamedResource(String user, String path, DavResource rsc) {
         synchronized (sRenamedResourceMap) {
@@ -346,8 +364,7 @@ public class UrlNamespace {
         Pair<String,String> key = new Pair<String,String>(user, path.toLowerCase());
         DavResource rsc = null;
         synchronized (sRenamedResourceMap) {
-            @SuppressWarnings("unchecked")
-            Pair<DavResource,Long> item = (Pair<DavResource,Long>)sRenamedResourceMap.get(key);
+            Pair<DavResource,Long> item = sRenamedResourceMap.get(key);
             if (item != null) {
                 long age = System.currentTimeMillis() - item.getSecond();
                 // keep a short TTL of 15 minutes.
@@ -359,11 +376,20 @@ public class UrlNamespace {
         }
         return rsc;
     }
-    private static DavResource getMailItemResource(DavContext ctxt, String user, String path) throws ServiceException, DavException {
+
+    /**
+     *
+     * @param ctxt
+     * @param user
+     * @param path - May contain parameters
+     * @return
+     */
+    private static DavResource getMailItemResource(DavContext ctxt, String user, String path)
+    throws ServiceException, DavException {
         Provisioning prov = Provisioning.getInstance();
         Account account = prov.get(AccountBy.name, user);
         if (account == null)
-            throw new DavException("no such accout "+user, HttpServletResponse.SC_NOT_FOUND, null);
+            throw new DavException("no such account "+user, HttpServletResponse.SC_NOT_FOUND, null);
 
         if (ctxt.getUser().compareTo(user) != 0 || !Provisioning.onLocalServer(account)) {
             try {
@@ -386,6 +412,7 @@ public class UrlNamespace {
                 }
             }
         }
+        // At this point, path will have had any parameters stripped from it
         OperationContext octxt = ctxt.getOperationContext();
         MailItem item = null;
 
@@ -410,10 +437,12 @@ public class UrlNamespace {
             return rs;
 
         // look up the item from path
-        if (path.endsWith("/"))
+        if (path.endsWith("/")) {
             path = path.substring(0, path.length()-1);
+        }
         index = path.lastIndexOf('/');
         String folderPath = path.substring(0, index);
+        String baseName = path.substring(index + 1);
         Folder f = null;
         if (index != -1) {
             try {
@@ -422,8 +451,24 @@ public class UrlNamespace {
             }
         }
         if (f != null) {
-            if (path.toLowerCase().endsWith(CalendarObject.CAL_EXTENSION)) {
-                String uid = path.substring(index + 1, path.length() - CalendarObject.CAL_EXTENSION.length());
+            /* First check whether the default name has been over-ridden - perhaps because the name was
+             * chosen by a DAV client via PUT to a URL when creating the item. */
+            DavNames.DavName davName = null;
+            if (DebugConfig.enableDAVclientCanChooseResourceBaseName) {
+                davName = DavNames.DavName.create(mbox.getId(), f.getId(), baseName);
+            }
+            if (davName != null) {
+                Integer itemId = DavNames.get(davName);
+                if (itemId != null) {
+                    item = mbox.getItemById(octxt, itemId, MailItem.Type.UNKNOWN);
+                    if ((item != null) && (f.getId() == item.getFolderId())) {
+                        return getResourceFromMailItem(ctxt, item);
+                    }
+                    item = null;
+                }
+            }
+            if (baseName.toLowerCase().endsWith(CalendarObject.CAL_EXTENSION)) {
+                String uid = baseName.substring(0, baseName.length() - CalendarObject.CAL_EXTENSION.length());
                 // Unescape the name (It was encoded in DavContext intentionally)
                 uid = HttpUtil.urlUnescape(uid);
                 index = uid.indexOf(',');
@@ -438,14 +483,16 @@ public class UrlNamespace {
                 } else {
                     item = mbox.getCalendarItemByUid(octxt, uid);
                 }
-                if ((item != null) && (f.getId() != item.getFolderId()))
+                if ((item != null) && (f.getId() != item.getFolderId())) {
                     item = null;
-            } else if (path.toLowerCase().endsWith(AddressObject.VCARD_EXTENSION)) {
-                rs = AddressObject.getAddressObjectByUID(ctxt, path.substring(index + 1), account, f);
-                if (rs != null)
+                }
+            } else if (baseName.toLowerCase().endsWith(AddressObject.VCARD_EXTENSION)) {
+                rs = AddressObject.getAddressObjectByUID(ctxt, baseName, account, f);
+                if (rs != null) {
                     return rs;
+                }
             } else if (f.getId() == Mailbox.ID_FOLDER_INBOX || f.getId() == Mailbox.ID_FOLDER_SENT) {
-                ctxt.setPathInfo(path.substring(index+1));
+                ctxt.setActingAsDelegateFor(baseName);
                 // delegated scheduling and notification handling
                 return getResourceFromMailItem(ctxt, f);
             }
@@ -458,7 +505,7 @@ public class UrlNamespace {
         Provisioning prov = Provisioning.getInstance();
         Account account = prov.get(AccountBy.name, user);
         if (account == null)
-            throw new DavException("no such accout "+user, HttpServletResponse.SC_NOT_FOUND, null);
+            throw new DavException("no such account "+user, HttpServletResponse.SC_NOT_FOUND, null);
 
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
         OperationContext octxt = ctxt.getOperationContext();
@@ -483,7 +530,8 @@ public class UrlNamespace {
                     invite = item.getInvite(msg.getId(), compNum);
                 }
                 if (invite != null) {
-                    String path = CalendarObject.CalendarPath.generate(ctxt, msg.getPath(), invite.getUid(), msg.getId());
+                    String path = CalendarObject.CalendarPath.generate(ctxt, msg.getPath(), invite.getUid(),
+                            mbox.getId(), msg.getId(), msg.getId());
                     return new CalendarObject.ScheduleMessage(ctxt, path, ctxt.getUser(), invite, msg);
                 }
             } catch (MailServiceException.NoSuchItemException e) {

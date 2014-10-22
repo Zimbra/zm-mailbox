@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -36,6 +36,7 @@ import org.dom4j.Element;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Sets;
+import com.google.common.io.Closeables;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.calendar.ParsedDateTime;
 import com.zimbra.common.calendar.ParsedDuration;
@@ -71,8 +72,7 @@ import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.AccountUtil.AccountAddressMatcher;
 
-public class ScheduleOutbox extends Collection {
-    private String eventOrganizer;
+public class ScheduleOutbox extends CalendarCollection {
 
     public ScheduleOutbox(DavContext ctxt, Folder f) throws DavException, ServiceException {
         super(ctxt, f);
@@ -82,11 +82,12 @@ public class ScheduleOutbox extends Collection {
     @Override
     public void handlePost(DavContext ctxt) throws DavException, IOException, ServiceException {
         DelegationInfo delegationInfo = new DelegationInfo(ctxt.getRequest().getHeader(DavProtocol.HEADER_ORIGINATOR));
-        Enumeration recipients = ctxt.getRequest().getHeaders(DavProtocol.HEADER_RECIPIENT);
+        Enumeration<String> recipients = ctxt.getRequest().getHeaders(DavProtocol.HEADER_RECIPIENT);
 
         InputStream in = ctxt.getUpload().getInputStream();
 
         ZCalendar.ZVCalendar vcalendar = ZCalendar.ZCalendarBuilder.build(in, MimeConstants.P_CHARSET_UTF8);
+        Closeables.closeQuietly(in);
         Iterator<ZComponent> iter = vcalendar.getComponentIterator();
         ZComponent req = null;
         while (iter.hasNext()) {
@@ -175,7 +176,7 @@ public class ScheduleOutbox extends Collection {
         // Get the recipients.
         ArrayList<String> rcptArray = new ArrayList<String>();
         while (recipients.hasMoreElements()) {
-            String rcptHdr = (String)recipients.nextElement();
+            String rcptHdr = recipients.nextElement();
             String[] rcpts = null;
             if (rcptHdr.indexOf(',') > 0) {
                 rcpts = rcptHdr.split(",");
@@ -349,8 +350,8 @@ public class ScheduleOutbox extends Collection {
         try {
             sender = new JavaMailInternetAddress(delegationInfo.getOriginatorEmail());
             Provisioning prov = Provisioning.getInstance();
-            if (ctxt.getPathInfo() != null) {
-                target = prov.getAccountByName(ctxt.getPathInfo());
+            if (ctxt.getActingAsDelegateFor() != null) {
+                target = prov.getAccountByName(ctxt.getActingAsDelegateFor());
             }
             if (target != null) {
                 from = AccountUtil.getFriendlyEmailAddress(target);

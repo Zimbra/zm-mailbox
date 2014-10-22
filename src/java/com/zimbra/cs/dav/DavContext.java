@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -112,7 +112,13 @@ public class DavContext {
     private String mCollectionPath;
     private RequestProp mResponseProp;
     private String mDavCompliance;
-    private String mPathInfo;
+    /**
+     * "actingAsDelegateFor" is used to form part of the scheduling inbox or scheduling outbox URL used
+     * for scheduling on behalf of another user (the principal we are acting as a delegate for).
+     * e.g.  when actingAsDelegateFor = "user3@example.com",
+     *       the associated inbox would be at path /Inbox/user3@example.com/
+     */
+    private String actingAsDelegateFor = null;
     private boolean mOverwrite;
     private boolean mBrief;
 
@@ -326,31 +332,38 @@ public class DavContext {
         return mPath;
     }
 
+    /**
+     * @return Last component of the path or "/" if the root.  Can return null
+     */
     public String getItem() {
         if (mPath != null) {
-            if (mPath.equals("/"))
+            if (mPath.equals("/")) {
                 return mPath;
+            }
             int index;
             if (mPath.endsWith("/")) {
                 int length = mPath.length();
                 index = mPath.lastIndexOf('/', length-2);
-                if (index != -1)
+                if (index != -1) {
                     return mPath.substring(index+1, length-1);
+                }
             } else {
                 index = mPath.lastIndexOf('/');
-                if (index != -1)
+                if (index != -1) {
                     return mPath.substring(index+1);
+                }
             }
         }
         return null;
     }
 
-    public String getPathInfo() {
-        return mPathInfo;
+    public String getActingAsDelegateFor() {
+        return actingAsDelegateFor;
     }
-    public void setPathInfo(String pathInfo) {
-        mPathInfo = pathInfo;
+    public void setActingAsDelegateFor(String name) {
+        this.actingAsDelegateFor = name;
     }
+
     public String getCollectionPath() {
         return mCollectionPath;
     }

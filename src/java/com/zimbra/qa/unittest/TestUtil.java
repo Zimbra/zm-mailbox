@@ -137,6 +137,7 @@ public class TestUtil
 extends Assert {
 
     public static final String DEFAULT_PASSWORD = "test123";
+    public static boolean fromRunUnitTests = false; /* set if run from within RunUnitTestsRequest */
 
     public static boolean accountExists(String userName)
     throws ServiceException {

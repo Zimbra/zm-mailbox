@@ -30,6 +30,7 @@ import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavContext.RequestProp;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
+import com.zimbra.cs.dav.DavProtocol;
 import com.zimbra.cs.dav.caldav.Filter.CompFilter;
 import com.zimbra.cs.dav.caldav.Range.ExpandRange;
 import com.zimbra.cs.dav.caldav.Range.TimeRange;
@@ -39,7 +40,8 @@ import com.zimbra.cs.dav.resource.DavResource;
 import com.zimbra.cs.dav.service.DavResponse;
 
 /*
- * draft-dusseault-caldav section 9.5
+ * http://tools.ietf.org/html/rfc4791#section-7.8 CALDAV:calendar-query REPORT
+ * previously - draft-dusseault-caldav section 9.5
  *
  *     <!ELEMENT calendar-query ((DAV:allprop |
  *                                DAV:propname |
@@ -51,26 +53,42 @@ public class CalendarQuery extends Report {
     @Override
     public void handle(DavContext ctxt) throws DavException, ServiceException {
         Element query = ctxt.getRequestMessage().getRootElement();
-        if (!query.getQName().equals(DavElements.E_CALENDAR_QUERY))
-            throw new DavException("msg "+query.getName()+" is not calendar-query", HttpServletResponse.SC_BAD_REQUEST, null);
+        if (!query.getQName().equals(DavElements.E_CALENDAR_QUERY)) {
+            throw new DavException("msg "+query.getName()+" is not calendar-query",
+                    HttpServletResponse.SC_BAD_REQUEST, null);
+        }
 
         RequestProp reqProp = ctxt.getRequestProp();
         QueryContext qctxt = new QueryContext(ctxt, query, reqProp);
 
-        if (qctxt.componentFilter == null)
+        if (qctxt.componentFilter == null) {
             throw new DavException("missing filter element in the request", HttpServletResponse.SC_BAD_REQUEST, null);
+        }
 
         DavResource rsc = ctxt.getRequestedResource();
-        if (!(rsc instanceof CalendarCollection))
+        if (!(rsc instanceof CalendarCollection)) {
             throw new DavException("not a calendar resource", HttpServletResponse.SC_BAD_REQUEST, null);
+        }
 
         CalendarCollection cal = (CalendarCollection) rsc;
         TimeRange tr = qctxt.componentFilter.getTimeRange();
-        if (tr == null)
+        if (tr == null) {
             tr = new TimeRange(rsc.getOwner());
+        }
 
-        for (DavResource calItem : cal.getChildren(ctxt, tr))
+        /**
+         * Even if there are no matching items, we should return a DAV:multistatus report
+         * http://tools.ietf.org/html/rfc4791#section-7.8 CALDAV:calendar-query REPORT
+         * The response body for a successful request MUST be a DAV:multistatus XML element (i.e., the response uses
+         * the same format as the response for PROPFIND).  In the case where there are no response elements, the
+         * returned DAV:multistatus XML element is empty.
+         */
+        qctxt.davCtxt.setStatus(DavProtocol.STATUS_MULTI_STATUS);
+        DavResponse resp = qctxt.davCtxt.getDavResponse();
+        resp.getTop(DavElements.E_MULTISTATUS);
+        for (DavResource calItem : cal.getChildren(ctxt, tr)) {
             handleCalendarItem(qctxt, calItem);
+        }
     }
 
     private void handleCalendarItem(QueryContext ctxt, DavResource calItem) {
@@ -78,11 +96,13 @@ public class CalendarQuery extends Report {
             return;
         try {
             CalendarObject calobj = (CalendarObject)calItem;
-            if (!calobj.match(ctxt.componentFilter))
+            if (!calobj.match(ctxt.componentFilter)) {
                 return;
+            }
             DavResponse resp = ctxt.davCtxt.getDavResponse();
-            if (ctxt.expandRange != null)
+            if (ctxt.expandRange != null) {
                 calobj.expand(ctxt.expandRange);
+            }
             resp.addResource(ctxt.davCtxt, calItem, ctxt.props, false);
         } catch (DavException de) {
             ZimbraLog.dav.error("can't get calendar item data", de);

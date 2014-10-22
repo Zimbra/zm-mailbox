@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2008, 2009, 2010, 2011, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -28,6 +28,7 @@ import java.util.Set;
 import org.dom4j.Element;
 import org.dom4j.QName;
 
+import com.google.common.collect.Lists;
 import com.google.common.io.Closeables;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.HttpUtil;
@@ -60,6 +61,23 @@ public class ScheduleInbox extends CalendarCollection {
         addProperty(CalDavProperty.getCalendarFreeBusySet(user, getCalendarFolders(ctxt)));
     }
 
+    private QName supportedInboxReports[] = null;
+
+    @Override
+    protected QName[] getSupportedReports() {
+        if (supportedInboxReports == null) {
+            List<QName> reportList = Lists.newArrayList(super.getSupportedReports());
+            /*
+             *  rfc6638 CALDAV:free-busy-query REPORT is NOT supported on scheduling inbox
+             *  Note that the expected way to determine freebusy information for CalDAV scheduling is to POST
+             *  to the scheduling outbox
+             */
+            reportList.remove(DavElements.E_FREE_BUSY_QUERY);
+            supportedInboxReports = reportList.toArray(new QName[reportList.size()]);
+        }
+        return supportedInboxReports;
+    }
+
     @Override
     public java.util.Collection<DavResource> getChildren(DavContext ctxt, TimeRange tr) throws DavException {
         try {
@@ -80,8 +98,8 @@ public class ScheduleInbox extends CalendarCollection {
         }
         Account target = null;
         Provisioning prov = Provisioning.getInstance();
-        if (ctxt.getPathInfo() != null) {
-            target = prov.getAccountByName(ctxt.getPathInfo());
+        if (ctxt.getActingAsDelegateFor() != null) {
+            target = prov.getAccountByName(ctxt.getActingAsDelegateFor());
         }
         String query = "is:invite is:unread inid:" + getId() + " after:\"-1month\" ";
         Mailbox mbox = getMailbox(ctxt);
@@ -98,6 +116,10 @@ public class ScheduleInbox extends CalendarCollection {
                     if (!msg.isInvite() || !msg.hasCalendarItemInfos()) {
                         continue;
                     }
+                    /* Bug 40567.  hide replies to avoid them being deleted by CalDAV clients.
+                     * TODO: An alternative approach would be to show them but when they are "deleted", flag them as
+                     * absent from the scheduling inbox.
+                     */
                     if ("REPLY".equals(msg.getCalendarItemInfo(0).getInvite().getMethod())) {
                         continue;
                     }

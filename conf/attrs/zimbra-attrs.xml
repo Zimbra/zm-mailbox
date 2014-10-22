@@ -8298,12 +8298,23 @@ TODO: delete them permanently from here
   </desc>
 </attr>
 
-<attr id="1653" name="zimbraReverseProxySSLProtocols" type="string" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited" since="8.6.0">     
+<attr id="1653" name="zimbraReverseProxySSLProtocols" type="string" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited" since="8.6.0">
   <globalConfigValue>SSLv3</globalConfigValue>
   <globalConfigValue>TLSv1</globalConfigValue>
   <globalConfigValue>TLSv1.1</globalConfigValue> 
   <globalConfigValue>TLSv1.2</globalConfigValue> 
   <desc>SSL protocols enabled for the proxy</desc>
+</attr>
+
+<!-- attr id="1654" name="zimbraBehaviorProviderFactory" for 9.0 -->
+
+<attr id="1655" name="zimbraCalendarCalDavCalendarAutoScheduleEnabled" type="boolean" cardinality="single" optionalIn="globalConfig" since="8.6.0">
+  <globalConfigValue>TRUE</globalConfigValue>
+  <desc>
+      Enable support for the  the "calendar-auto-schedule" feature of CalDAV - see RFC6638.
+      If FALSE, the "calendar-schedule" feature of CalDAV is advertised instead - see draft-desruisseaux-caldav-sched-03.
+      Note that the value of "zimbraCalendarCalDavDisableScheduling" takes precedence over this attribute.
+  </desc>
 </attr>
 
 </attrs>

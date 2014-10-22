@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -17,26 +17,36 @@
 
 package com.zimbra.cs.mailbox.calendar;
 
-import java.util.*;
-
 import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.Date;
+import java.util.GregorianCalendar;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import com.zimbra.common.calendar.ICalTimeZone;
 import com.zimbra.common.calendar.ParsedDateTime;
 import com.zimbra.common.calendar.ParsedDuration;
 import com.zimbra.common.calendar.TimeZoneMap;
-import com.zimbra.common.calendar.ZWeekDay;
 import com.zimbra.common.calendar.ZCalendar.ICalTok;
+import com.zimbra.common.calendar.ZWeekDay;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.util.ListUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.common.util.ListUtil;
-import com.zimbra.common.soap.MailConstants;
-import com.zimbra.common.soap.Element;
 import com.zimbra.cs.mailbox.CalendarItem;
-import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.CalendarItem.Instance;
+import com.zimbra.cs.mailbox.Metadata;
 
 
 /**
@@ -414,14 +424,25 @@ public class Recurrence
             return end;
         }
 
+        /**
+         * @return currently returns ALL instances, even if they are outside the requested range
+         */
         @Override
         public List<Instance> expandInstances(int calItemId, long start, long end) {
+            return expandInstances(calItemId);
+        }
+
+        /**
+         * @return returns ALL instances - know this will not be an infinite list...
+         */
+        public List<Instance> expandInstances(int calItemId) {
             List<Instance> list = new ArrayList<Instance>();
             if (mRdateExdate.isEXDATE() || DebugConfig.enableRdate) {
                 for (DateValue val : mDates) {
                     ParsedDateTime valStart = val.getStartTime();
                     ParsedDateTime valEnd = val.getEndTime();
-                    boolean allDay = !valStart.hasTime() || (valStart.hasZeroTime() && mDefaultDuration != null && mDefaultDuration.isMultipleOfDays());
+                    boolean allDay = !valStart.hasTime() ||
+                            (valStart.hasZeroTime() && mDefaultDuration != null && mDefaultDuration.isMultipleOfDays());
                     list.add(new Instance(calItemId, mInvId, true, true,
                                           valStart.getUtcTime(), valEnd.getUtcTime(),
                                           allDay, valStart.getOffset(), valEnd.getOffset(),

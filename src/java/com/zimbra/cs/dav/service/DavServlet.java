@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -97,7 +97,6 @@ import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.FileUploadServlet.Upload;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.servlet.ZimbraServlet;
-import com.zimbra.cs.servlet.util.AuthUtil;
 import com.zimbra.cs.util.AccountUtil;
 
 @SuppressWarnings("serial")
@@ -247,7 +246,7 @@ public class DavServlet extends ZimbraServlet {
         ZimbraLog.clearContext();
         addRemoteIpToLoggingContext(req);
         ZimbraLog.addUserAgentToContext(req.getHeader(DavProtocol.HEADER_USER_AGENT));
-        
+
         //bug fix - send 400 for Range requests
         String rangeHeader = req.getHeader(DavProtocol.HEADER_RANGE);
         if(null != rangeHeader){
@@ -275,7 +274,7 @@ public class DavServlet extends ZimbraServlet {
                 authUser = basicAuthRequest(req, resp, true);
             if (authUser == null) {
                 try {
-                    sendError(resp, HttpServletResponse.SC_NOT_ACCEPTABLE, "Authentication failed", null, Level.debug);
+                    sendError(resp, HttpServletResponse.SC_UNAUTHORIZED, "Authentication failed", null, Level.debug);
                 } catch (Exception e) {}
                 return;
             }

@@ -6897,6 +6897,103 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * Enable support for the the &quot;calendar-auto-schedule&quot; feature
+     * of CalDAV - see RFC6638. If FALSE, the &quot;calendar-schedule&quot;
+     * feature of CalDAV is advertised instead - see
+     * draft-desruisseaux-caldav-sched-03. Note that the value of
+     * &quot;zimbraCalendarCalDavDisableScheduling&quot; takes precedence
+     * over this attribute.
+     *
+     * @return zimbraCalendarCalDavCalendarAutoScheduleEnabled, or true if unset
+     *
+     * @since ZCS 8.6.0
+     */
+    @ZAttr(id=1655)
+    public boolean isCalendarCalDavCalendarAutoScheduleEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraCalendarCalDavCalendarAutoScheduleEnabled, true);
+    }
+
+    /**
+     * Enable support for the the &quot;calendar-auto-schedule&quot; feature
+     * of CalDAV - see RFC6638. If FALSE, the &quot;calendar-schedule&quot;
+     * feature of CalDAV is advertised instead - see
+     * draft-desruisseaux-caldav-sched-03. Note that the value of
+     * &quot;zimbraCalendarCalDavDisableScheduling&quot; takes precedence
+     * over this attribute.
+     *
+     * @param zimbraCalendarCalDavCalendarAutoScheduleEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.6.0
+     */
+    @ZAttr(id=1655)
+    public void setCalendarCalDavCalendarAutoScheduleEnabled(boolean zimbraCalendarCalDavCalendarAutoScheduleEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCalendarCalDavCalendarAutoScheduleEnabled, zimbraCalendarCalDavCalendarAutoScheduleEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Enable support for the the &quot;calendar-auto-schedule&quot; feature
+     * of CalDAV - see RFC6638. If FALSE, the &quot;calendar-schedule&quot;
+     * feature of CalDAV is advertised instead - see
+     * draft-desruisseaux-caldav-sched-03. Note that the value of
+     * &quot;zimbraCalendarCalDavDisableScheduling&quot; takes precedence
+     * over this attribute.
+     *
+     * @param zimbraCalendarCalDavCalendarAutoScheduleEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.6.0
+     */
+    @ZAttr(id=1655)
+    public Map<String,Object> setCalendarCalDavCalendarAutoScheduleEnabled(boolean zimbraCalendarCalDavCalendarAutoScheduleEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCalendarCalDavCalendarAutoScheduleEnabled, zimbraCalendarCalDavCalendarAutoScheduleEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Enable support for the the &quot;calendar-auto-schedule&quot; feature
+     * of CalDAV - see RFC6638. If FALSE, the &quot;calendar-schedule&quot;
+     * feature of CalDAV is advertised instead - see
+     * draft-desruisseaux-caldav-sched-03. Note that the value of
+     * &quot;zimbraCalendarCalDavDisableScheduling&quot; takes precedence
+     * over this attribute.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.6.0
+     */
+    @ZAttr(id=1655)
+    public void unsetCalendarCalDavCalendarAutoScheduleEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCalendarCalDavCalendarAutoScheduleEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Enable support for the the &quot;calendar-auto-schedule&quot; feature
+     * of CalDAV - see RFC6638. If FALSE, the &quot;calendar-schedule&quot;
+     * feature of CalDAV is advertised instead - see
+     * draft-desruisseaux-caldav-sched-03. Note that the value of
+     * &quot;zimbraCalendarCalDavDisableScheduling&quot; takes precedence
+     * over this attribute.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.6.0
+     */
+    @ZAttr(id=1655)
+    public Map<String,Object> unsetCalendarCalDavCalendarAutoScheduleEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCalendarCalDavCalendarAutoScheduleEnabled, "");
+        return attrs;
+    }
+
+    /**
      * Whether to allow password sent to non-secured port from CalDAV
      * clients. If it set to TRUE the server will allow access from CalDAV
      * client to zimbraMailPort. If it set to FALSE the server will return an

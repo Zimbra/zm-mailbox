@@ -108,7 +108,7 @@ public class SoapServlet extends ZimbraServlet {
             i++;
         }
 
-        // See if any extra services were perviously added by extensions
+        // See if any extra services were previously added by extensions
         synchronized (sExtraServices) {
             List<DocumentService> services = sExtraServices.get(getServletName());
             for (DocumentService service : services) {
