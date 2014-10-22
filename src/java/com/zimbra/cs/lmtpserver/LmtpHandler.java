@@ -46,6 +46,7 @@ public abstract class LmtpHandler extends ProtocolHandler {
     private String mCurrentCommandLine;
     
     private final ServerThrottle throttle;
+    
 
     LmtpHandler(LmtpServer server) {
         super(server instanceof TcpLmtpServer ? (TcpLmtpServer) server : null);
@@ -200,7 +201,14 @@ public abstract class LmtpHandler extends ProtocolHandler {
             return false;
             }
             break;
-
+            
+ 		case 's':
+        case 'S':
+            if ("STARTTLS".equalsIgnoreCase(cmd)) {
+                doSTARTTLS(arg);
+                return true;
+            }
+            break;
         case 'v':
         case 'V':
             if ("VRFY".equalsIgnoreCase(cmd)) {
@@ -216,7 +224,7 @@ public abstract class LmtpHandler extends ProtocolHandler {
         return true;
     }
 
-    private void sendReply(LmtpReply reply) {
+    protected void sendReply(LmtpReply reply) {
         String cl = mCurrentCommandLine != null ? mCurrentCommandLine : "<none>";
         if (!reply.success()) {
             ZimbraLog.lmtp.info("S: %s (%s)", reply, cl);
@@ -227,7 +235,7 @@ public abstract class LmtpHandler extends ProtocolHandler {
         mWriter.flush();
     }
 
-    private void doSyntaxError() {
+    protected void doSyntaxError() {
         sendReply(LmtpReply.SYNTAX_ERROR);
     }
 
@@ -273,6 +281,7 @@ public abstract class LmtpHandler extends ProtocolHandler {
         String resp = "250-" + config.getServerName() + "\r\n" +
                 "250-8BITMIME\r\n" +
                 "250-ENHANCEDSTATUSCODES\r\n" +
+                "250-STARTTLS\r\n" +
                 "250-SIZE\r\n" +
                 "250 PIPELINING";
         ZimbraLog.lmtp.trace("S: %s", resp);
@@ -442,4 +451,5 @@ public abstract class LmtpHandler extends ProtocolHandler {
 
         return headers.toString();
     }
+    abstract protected void doSTARTTLS(String arg) throws IOException;
 }
