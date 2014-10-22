@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -18,14 +18,19 @@ package com.zimbra.cs.mailbox.calendar;
 
 import java.util.List;
 
+import javax.mail.Address;
+import javax.mail.internet.AddressException;
+
 import com.zimbra.common.calendar.CalendarUtil;
 import com.zimbra.common.calendar.ZCalendar.ICalTok;
 import com.zimbra.common.calendar.ZCalendar.ZParameter;
 import com.zimbra.common.calendar.ZCalendar.ZProperty;
+import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.IDNUtil;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.service.mail.ToXML;
@@ -262,6 +267,21 @@ public class ZAttendee extends CalendarUser {
 
     public boolean addressMatches(String addr) {
         return getAddress().equalsIgnoreCase(addr);
+    }
+
+    public boolean addressMatches(Address address) {
+        if (address == null) {
+            ZimbraLog.calendar.debug("addressMatches called with 'null' - can never match Zattendee '%s'", this);
+            return false;
+        }
+        JavaMailInternetAddress jmia;
+        try {
+            jmia = new JavaMailInternetAddress(address.toString(), true);
+            return getAddress().equalsIgnoreCase(jmia.getAddress());
+        } catch (AddressException e) {
+            ZimbraLog.calendar.debug("problem matching address '%s' against Zattendee '%s'", address, this, e);
+            return false;
+        }
     }
 
     public CalendarAttendee toJaxb() {

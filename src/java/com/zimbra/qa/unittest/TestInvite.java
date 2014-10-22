@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -50,7 +50,6 @@ import com.zimbra.soap.mail.type.NewMountpointSpec;
 public class TestInvite extends TestCase {
 
     private SoapProvisioning prov = null;
-    static final boolean runningOutsideZimbra = false;  // set to true if running inside an IDE instead of from RunUnitTests
     private static String NAME_PREFIX = "TestInvite";
     private static String USER_NAME = "user1";
     private static String ORGANIZER = "tiorganizer";
@@ -118,7 +117,7 @@ public class TestInvite extends TestCase {
 
     @Override
     public void setUp() throws Exception {
-        if (runningOutsideZimbra) {
+        if (!TestUtil.fromRunUnitTests) {
             TestUtil.cliSetup();
             String tzFilePath = LC.timezone_file.value();
             File tzFile = new File(tzFilePath);

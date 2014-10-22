@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -37,6 +37,7 @@ import org.dom4j.io.XMLWriter;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.mailbox.Color;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.service.ServiceException.Argument;
@@ -57,6 +58,7 @@ import com.zimbra.cs.dav.property.ResourceProperty;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.ACL.Grant;
 import com.zimbra.cs.mailbox.Contact;
+import com.zimbra.cs.mailbox.DavNames;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailItem.Type;
@@ -202,15 +204,19 @@ public abstract class MailItemResource extends DavResource {
     /* Deletes this resource by moving to Trash folder. Hard deletes if the item is in Trash folder.*/
     @Override
     public void delete(DavContext ctxt) throws DavException {
-        if (mId == 0)
+        if (mId == 0) {
             throw new DavException("cannot delete resource", HttpServletResponse.SC_FORBIDDEN, null);
+        }
         try {
+            Mailbox mbox = getMailbox(ctxt);
+            if (DebugConfig.enableDAVclientCanChooseResourceBaseName) {
+                DavNames.remove(mbox.getId(), mId);
+            }
             // hard delete if the item is in Trash.
             if (getMailItem(ctxt).inTrash()) {
                 hardDelete(ctxt);
                 return;
             }
-            Mailbox mbox = getMailbox(ctxt);
             mbox.move(ctxt.getOperationContext(), mId, MailItem.Type.UNKNOWN, Mailbox.ID_FOLDER_TRASH);
         } catch (ServiceException se) {
             if (se.getCode().equals(MailServiceException.ALREADY_EXISTS)) {

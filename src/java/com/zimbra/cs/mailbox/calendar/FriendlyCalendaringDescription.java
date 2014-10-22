@@ -4,11 +4,11 @@ package com.zimbra.cs.mailbox.calendar;
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -24,7 +24,9 @@ import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
 
+import com.google.common.collect.Lists;
 import com.zimbra.common.calendar.ParsedDateTime;
+import com.zimbra.common.calendar.ParsedDuration;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.L10nUtil;
 import com.zimbra.common.util.Log;
@@ -34,10 +36,6 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
-import com.zimbra.cs.mailbox.calendar.Invite;
-import com.zimbra.cs.mailbox.calendar.Recurrence;
-import com.zimbra.cs.mailbox.calendar.ZAttendee;
-import com.zimbra.cs.mailbox.calendar.ZRecur;
 import com.zimbra.cs.mailbox.calendar.Recurrence.IRecurrence;
 import com.zimbra.cs.mailbox.calendar.ZRecur.ZWeekDayNum;
 
@@ -53,9 +51,9 @@ public class FriendlyCalendaringDescription {
     private boolean mDefinitelyModified;
     private StringBuilder mPlainText;
     private StringBuilder mHtml;
-    private Account mAccount;
-    private Locale mLc;
-    private List<Invite> mInviteComponents;
+    private final Account mAccount;
+    private final Locale mLc;
+    private final List<Invite> mInviteComponents;
 
     public FriendlyCalendaringDescription(List <Invite> inviteComponents, Account account) throws ServiceException {
         mDoneGenerate = false;
@@ -65,6 +63,10 @@ public class FriendlyCalendaringDescription {
         mAccount = account;
         mLc = mAccount.getLocale();
         mInviteComponents = inviteComponents;
+    }
+
+    public FriendlyCalendaringDescription(Invite invite, Account account) throws ServiceException {
+        this(Lists.newArrayList(invite), account);
     }
 
     public void setDefinitelyModified(boolean val) {
@@ -174,13 +176,23 @@ public class FriendlyCalendaringDescription {
             mHtml.append("</table>\n<p>\n<table border=\"0\">\n");
             addSimpleRow(L10nUtil.MsgKey.zsLocation, invite.getLocation());
 
-            addSimpleRow(L10nUtil.MsgKey.zsTime, 
-                getTimeDisplayString(invite.getStartTime(), invite.getEndTime(),
-                        invite.isRecurrence(), invite.isAllDayEvent()));
-            ZRecur zr = getRecur(invite);
-            if (zr != null) {
-                addSimpleRow(L10nUtil.MsgKey.zsRecurrence, 
-                    getRecurrenceDisplayString(zr, invite.getStartTime().getCalendarCopy(), mLc));
+            ParsedDateTime startTime = invite.getStartTime();
+            if (startTime != null) {
+                ParsedDateTime endTime = invite.getEndTime();
+                if (endTime == null) {
+                    ParsedDuration dur = invite.getDuration();
+                    if (dur == null) {
+                        dur = ParsedDuration.parse(false, 0, 0, 1 /* hours */, 0/* mins */, 0);
+                    }
+                    endTime = startTime.add(dur);
+                }
+                addSimpleRow(L10nUtil.MsgKey.zsTime,
+                        getTimeDisplayString(startTime, endTime, invite.isRecurrence(), invite.isAllDayEvent()));
+                ZRecur zr = getRecur(invite);
+                if (zr != null) {
+                    addSimpleRow(L10nUtil.MsgKey.zsRecurrence,
+                            getRecurrenceDisplayString(zr, startTime.getCalendarCopy(), mLc));
+                }
             }
             if (!method.equals("REPLY") && (attendees != null) && !attendees.isEmpty()) {
                 mHtml.append("</table>\n<p>\n<table border=\"0\">\n");
@@ -227,7 +239,7 @@ public class FriendlyCalendaringDescription {
             boolean isRecurrence, boolean isAllDayEvent) throws ServiceException {
         return getTimeDisplayString(start, end, isRecurrence, isAllDayEvent, mLc, mAccount);
     }
-    
+
     public static String getTimeDisplayString(ParsedDateTime start, ParsedDateTime end,
             boolean isRecurrence, boolean isAllDayEvent, Locale locale, Account account) throws ServiceException {
         StringBuilder sb = new StringBuilder();
@@ -263,7 +275,7 @@ public class FriendlyCalendaringDescription {
         }
         return sb.toString();
     }
-    
+
     public static String getRecurrenceDisplayString(ZRecur zr, Calendar dtStart, Locale lc) {
         String repeat = null;
         if (zr.getFrequency().equals(ZRecur.Frequency.DAILY)) {
@@ -329,7 +341,7 @@ public class FriendlyCalendaringDescription {
         } else {
             assert false;
         }
-        
+
         String start =  L10nUtil.getMessage(L10nUtil.MsgKey.zsRecurStart, lc, dtStart.getTime());
 
         String end = null;

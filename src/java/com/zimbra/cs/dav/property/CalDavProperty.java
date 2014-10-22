@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -20,7 +20,6 @@ import java.io.CharArrayWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 
 import org.dom4j.Element;
 import org.dom4j.QName;
@@ -114,22 +113,50 @@ public class CalDavProperty extends ResourceProperty {
         return CalComponent.valueOf(comp);
     }
 
-    private static final CalComponent[] sSUPPORTED_COMPONENTS = {
-        CalComponent.VCALENDAR,
-        CalComponent.VTIMEZONE, CalComponent.VFREEBUSY
-    };
-
+    /* http://tools.ietf.org/html/rfc4791#section-5.2.3
+     * Purpose:  Specifies the calendar component types (e.g., VEVENT, VTODO, etc.) that calendar object resources can
+     * contain in the calendar collection.
+     * Conformance:  This property MAY be defined on any calendar collection.  If defined, it MUST be protected and
+     *     SHOULD NOT be returned by a PROPFIND DAV:allprop request (as defined in Section 12.14.1 of [RFC2518]).
+     * Description:  The CALDAV:supported-calendar-component-set property is used to specify restrictions on the
+     *     calendar component types that calendar object resources may contain in a calendar collection. Any attempt by
+     *     the client to store calendar object resources with component types not listed in this property, if it
+     *     exists, MUST result in an error, with the CALDAV:supported-calendar-component precondition (Section 5.3.2.1)
+     *     being violated.  Since this property is protected, it cannot be changed by clients using a
+     *     PROPPATCH request.  However, clients can initialize the value of this property when creating a new calendar
+     *     collection with MKCALENDAR.
+     *     The empty-element tag <C:comp name="VTIMEZONE"/> MUST only be specified if support for calendar object
+     *     resources that only contain VTIMEZONE components is provided or desired.  Support for VTIMEZONE components
+     *     in calendar object resources that contain VEVENT or VTODO components is always assumed.  In the absence of
+     *     this property, the server MUST accept all component types, and the client can assume that all component
+     *     types are accepted.
+     * Example:
+     *   <C:supported-calendar-component-set
+     *       xmlns:C="urn:ietf:params:xml:ns:caldav">
+     *     <C:comp name="VEVENT"/>
+     *     <C:comp name="VTODO"/>
+     *   </C:supported-calendar-component-set>
+     *
+     * Earlier versions of Zimbra always included VCALENDAR, VTIMEZONE, VFREEBUSY
+     * My reading of the above text implies that none of these should be included.
+     */
     private static class SupportedCalendarComponentSet extends CalDavProperty {
         public SupportedCalendarComponentSet(MailItem.Type view) {
             super(DavElements.E_SUPPORTED_CALENDAR_COMPONENT_SET);
             super.setAllowSetOnCreate(true);
             ArrayList<CalComponent> comps = new ArrayList<CalComponent>();
-            Collections.addAll(comps, sSUPPORTED_COMPONENTS);
             if (view == MailItem.Type.APPOINTMENT) {
                 comps.add(CalComponent.VEVENT);
             } else if (view == MailItem.Type.TASK) {
                 comps.add(CalComponent.VTODO);
+            } else {
+                /* assuming inbox or outbox */
+                comps.add(CalComponent.VEVENT);
+                comps.add(CalComponent.VTODO);
             }
+            // Apple Mac OSX Mavericks Calendar's GetInfo for a calendar doesn't offer a checkbox for
+            // "Events affect availability" unless VFREEBUSY is present in this list.
+            comps.add(CalComponent.VFREEBUSY);
 
             for (CalComponent comp : comps) {
                 Element e = org.dom4j.DocumentHelper.createElement(DavElements.E_COMP);

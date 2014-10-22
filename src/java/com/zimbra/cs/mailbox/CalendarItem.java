@@ -213,6 +213,22 @@ public abstract class CalendarItem extends MailItem {
         return Strings.nullToEmpty(sender);
     }
 
+    public ZOrganizer getOrganizer() {
+        Invite firstInvite = getDefaultInviteOrNull();
+        if (firstInvite == null) {
+            return null;
+        }
+        return firstInvite.getOrganizer();
+    }
+
+    public Account getOrganizerAccount() throws ServiceException {
+        Invite firstInvite = getDefaultInviteOrNull();
+        if (firstInvite == null) {
+            return null;
+        }
+        return firstInvite.getOrganizerAccount();
+    }
+
     public long getStartTime() {
         return mStartTime;
     }
@@ -3320,49 +3336,40 @@ public abstract class CalendarItem extends MailItem {
             throw ServiceException.PERM_DENIED("you do not have sufficient permissions to change this appointment/task's state");
 
         boolean dirty = false;
-        Invite invMatchingRecurIdOrSeries = null;
         // unique ID: UID+RECURRENCE_ID
-
-        for (int i = 0; i < numInvites(); i++) {
-            Invite cur = getInvite(i);
-
-            // See RFC2446: 2.1.5 Message Sequencing
-            // UID already matches...next check if RecurId matches
-            // if so, then seqNo is next
-            // finally use DTStamp
+        // See RFC2446: 2.1.5 Message Sequencing
+        // UID already matches...next check if RecurId matches
+        // if so, then seqNo is next
+        // finally use DTStamp
+        Invite matchingInvite = matchingInvite(reply.getRecurId());
+        if (matchingInvite != null) {
+            // they're replying to this invite!
 
             // If any of the existing Invites have recurIDs which exactly match the reply, then we should do a
             // sequence-check against them before deciding to accept this reply
             // FIXME should check for cur.recurID WITHIN_RANGE (THISANDFUTURE-type support)
-            if ((cur.getRecurId() != null && cur.getRecurId().equals(reply.getRecurId())) ||
-                    (cur.getRecurId() == null && reply.getRecurId() == null)) {
 
-                // they're replying to this invite!
-
-                // Bug 32573 Meeting replies can be dropped if client PC time is behind server time
-                // Removed check that (cur.getDTStamp() > reply.getDTStamp()) as the following
-                // implies that REPLY DTSTAMP is related to client submission time rather than
-                // the DTSTAMP in the original invite & clock skew can result in it being earlier.
-                // From http://tools.ietf.org/html/rfc5546 (iTIP) 2.1.5. Message Sequencing :
-                //     for each "ATTENDEE" property of a component,
-                //     "Organizer" CUAs will need to persist the "SEQUENCE"
-                //     and "DTSTAMP" property values associated with the "Attendee's" last
-                //     response, so that any earlier responses from an "Attendee" that are
-                //     received out of order (e.g., due to a delay in the transport) can be
-                //     correctly discarded.
-                // bug 74117 : Allow the replies from attendees whose event sequence number is not
-                //             up to date with the organizer's event, provided there were no major changes.
-                if ((cur.isOrganizer() && (cur.getLastFullSeqNo() > reply.getSeqNo())) ||
-                        (!cur.isOrganizer() && (cur.getSeqNo() > reply.getSeqNo()))) {
-                    sLog.info("Invite-Reply %s is outdated (Calendar entry has higher SEQUENCE), ignoring!", reply);
-                    return false;
-                }
-
-                // maybeStoreNewReply does some further checks which might invalidate this reply
-                // so, postpone updating attendee information until after that.
-                invMatchingRecurIdOrSeries = cur;
-                break; // found a match, fall through to below and process it!
+            // Bug 32573 Meeting replies can be dropped if client PC time is behind server time
+            // Removed check that (cur.getDTStamp() > reply.getDTStamp()) as the following
+            // implies that REPLY DTSTAMP is related to client submission time rather than
+            // the DTSTAMP in the original invite & clock skew can result in it being earlier.
+            // From http://tools.ietf.org/html/rfc5546 (iTIP) 2.1.5. Message Sequencing :
+            //     for each "ATTENDEE" property of a component,
+            //     "Organizer" CUAs will need to persist the "SEQUENCE"
+            //     and "DTSTAMP" property values associated with the "Attendee's" last
+            //     response, so that any earlier responses from an "Attendee" that are
+            //     received out of order (e.g., due to a delay in the transport) can be
+            //     correctly discarded.
+            // bug 74117 : Allow the replies from attendees whose event sequence number is not
+            //             up to date with the organizer's event, provided there were no major changes.
+            if (    (matchingInvite.isOrganizer() && (matchingInvite.getLastFullSeqNo() > reply.getSeqNo())) ||
+                    (!matchingInvite.isOrganizer() && (matchingInvite.getSeqNo() > reply.getSeqNo()))) {
+                sLog.info("Invite-Reply %s is outdated (Calendar entry has higher SEQUENCE), ignoring!", reply);
+                return false;
             }
+
+            // maybeStoreNewReply does some further checks which might invalidate this reply
+            // so, postpone updating attendee information until after that.
         }
 
         // if we got here then we have validated the sequencing against all of our Invites,
@@ -3377,14 +3384,23 @@ public abstract class CalendarItem extends MailItem {
             sLog.info("Invite-Reply %s is outdated ignoring!", reply);
             return false;
         }
-        if (invMatchingRecurIdOrSeries != null) {
-            invMatchingRecurIdOrSeries.updateMatchingAttendeesFromReply(reply);
+        if (matchingInvite != null) {
+            matchingInvite.updateMatchingAttendeesFromReply(reply);
             updateLocalExceptionsWhichMatchSeriesReply(reply);
         } else {
             createPseudoExceptionForSingleInstanceReplyIfNecessary(reply);
         }
         saveMetadata();
         return true;
+    }
+
+    /**
+     * Assumption UID already matches.
+     * @param recurId - if this is null, it means match Series or instance if it is a single instance
+     */
+    public Invite matchingInvite(RecurId aRecurId) {
+        // unique ID: UID+RECURRENCE_ID
+        return Invite.matchingInvite(getInvites(), aRecurId);
     }
 
     /**

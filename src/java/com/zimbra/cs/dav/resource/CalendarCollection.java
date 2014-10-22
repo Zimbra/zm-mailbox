@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -40,6 +40,7 @@ import com.zimbra.common.calendar.ZCalendar;
 import com.zimbra.common.calendar.ZCalendar.ICalTok;
 import com.zimbra.common.calendar.ZCalendar.ZComponent;
 import com.zimbra.common.calendar.ZCalendar.ZVCalendar;
+import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.HttpUtil;
@@ -52,6 +53,7 @@ import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.DavProtocol;
+import com.zimbra.cs.dav.caldav.AutoScheduler;
 import com.zimbra.cs.dav.caldav.CalDavUtils;
 import com.zimbra.cs.dav.caldav.Range.TimeRange;
 import com.zimbra.cs.dav.property.CalDavProperty;
@@ -64,6 +66,8 @@ import com.zimbra.cs.fb.FreeBusyQuery;
 import com.zimbra.cs.mailbox.BadOrganizerException;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.CalendarItem.ReplyInfo;
+import com.zimbra.cs.mailbox.DavNames;
+import com.zimbra.cs.mailbox.DavNames.DavName;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -115,9 +119,25 @@ public class CalendarCollection extends Collection {
         setProperty(DavElements.E_GROUP_MEMBER_SET, null, true);
         setProperty(DavElements.E_GROUP_MEMBERSHIP, null, true);
 
-        // remaining recommented attributes: calendar-timezone, max-resource-size,
+        // remaining recommended attributes: calendar-timezone, max-resource-size,
         // min-date-time, max-date-time, max-instances, max-attendees-per-instance,
         //
+    }
+
+    private static final QName[] SUPPORTED_REPORTS = {
+            DavElements.E_CALENDAR_QUERY,
+            DavElements.E_CALENDAR_MULTIGET,
+            DavElements.E_FREE_BUSY_QUERY,
+            DavElements.E_ACL_PRINCIPAL_PROP_SET,
+            DavElements.E_PRINCIPAL_MATCH,
+            DavElements.E_PRINCIPAL_PROPERTY_SEARCH,
+            DavElements.E_PRINCIPAL_SEARCH_PROPERTY_SET,
+            DavElements.E_EXPAND_PROPERTY
+    };
+
+    @Override
+    protected QName[] getSupportedReports() {
+        return SUPPORTED_REPORTS;
     }
 
     /* Returns all the appoinments stored in the calendar as DavResource. */
@@ -252,17 +272,17 @@ public class CalendarCollection extends Collection {
         MailItem.Type itemType = null;
         LinkedList<Invite> inviteList = new LinkedList<Invite>();
         for (Invite i : invites) {
-            MailItem.Type type = i.getItemType();
-            if (type == MailItem.Type.APPOINTMENT || type == MailItem.Type.TASK) {
+            MailItem.Type mItemType = i.getItemType();
+            if (mItemType == MailItem.Type.APPOINTMENT || mItemType == MailItem.Type.TASK) {
                 if (uid != null && uid.compareTo(i.getUid()) != 0)
                     throw new DavException.InvalidData(DavElements.E_VALID_CALENDAR_OBJECT_RESOURCE, "too many components");
                 uid = i.getUid();
             }
 
-            if (itemType != null && itemType != type)
+            if (itemType != null && itemType != mItemType)
                 throw new DavException.InvalidData(DavElements.E_VALID_CALENDAR_OBJECT_RESOURCE, "different types of components in the same resource");
             else
-                itemType = type;
+                itemType = mItemType;
 
             if (i.isRecurrence())
                 inviteList.addFirst(i);
@@ -352,25 +372,25 @@ public class CalendarCollection extends Collection {
         }
     }
 
-    /* creates an appointment sent in PUT request in this calendar. */
+    /**
+     * Creates an appointment sent in PUT request in this calendar.
+     * @param name - basename (last component) of the path - i.e. the name within this collection
+     */
     @Override
     public DavResource createItem(DavContext ctxt, String name) throws DavException, IOException {
-        if (!ctxt.getUpload().getContentType().startsWith(MimeConstants.CT_TEXT_CALENDAR))
+        if (!ctxt.getUpload().getContentType().startsWith(MimeConstants.CT_TEXT_CALENDAR)) {
             throw new DavException.InvalidData(DavElements.E_SUPPORTED_CALENDAR_DATA,"not a calendar data");
-         if (ctxt.getUpload().getSize() <= 0)
+        }
+        if (ctxt.getUpload().getSize() <= 0) {
             throw new DavException.InvalidData(DavElements.E_VALID_CALENDAR_DATA,"empty request");
+        }
 
         /*
-         * some of the CalDAV clients do not behave very well when it comes to
-         * etags.
-         *
-         * chandler doesn't set User-Agent header, doesn't understand
-         * If-None-Match or If-Match headers.
-         *
-         * evolution 2.8 always sets If-None-Match although we return etag in REPORT.
-         *
-         * ical correctly understands etag and sets If-Match for existing etags, but
-         * does not use If-None-Match for new resource creation.
+         * Some of the CalDAV clients do not behave very well when it comes to etags.
+         *     chandler doesn't set User-Agent header, doesn't understand If-None-Match or If-Match headers.
+         *     evolution 2.8 always sets If-None-Match although we return etag in REPORT.
+         *     ical correctly understands etag and sets If-Match for existing etags, but does not use If-None-Match
+         *     for new resource creation.
          */
         HttpServletRequest req = ctxt.getRequest();
         String etag = req.getHeader(DavProtocol.HEADER_IF_MATCH);
@@ -378,6 +398,9 @@ public class CalendarCollection extends Collection {
 
         //String noneMatch = req.getHeader(DavProtocol.HEADER_IF_NONE_MATCH);
 
+        String baseName = HttpUtil.urlUnescape(name);
+        boolean acceptableClientChosenBasename =
+                DebugConfig.enableDAVclientCanChooseResourceBaseName && baseName.equals(name);
         if (name.endsWith(CalendarObject.CAL_EXTENSION)) {
             name = name.substring(0, name.length()-CalendarObject.CAL_EXTENSION.length());
             // Unescape the name (It was encoded in DavContext intentionally)
@@ -388,61 +411,106 @@ public class CalendarCollection extends Collection {
         try {
             String user = ctxt.getUser();
             Account account = prov.get(AccountBy.name, user);
-            if (account == null)
+            if (account == null) {
                 throw new DavException("no such account "+user, HttpServletResponse.SC_NOT_FOUND, null);
+            }
 
-            InputStream is = ctxt.getUpload().getInputStream();
             List<Invite> invites;
-            try {
+            try (InputStream is = ctxt.getUpload().getInputStream()) {
                 ZCalendar.ZVCalendar vcalendar = ZCalendar.ZCalendarBuilder.build(is, MimeConstants.P_CHARSET_UTF8);
                 CalDavUtils.removeAttendeeForOrganizer(vcalendar);  // Apple iCal fixup
-                if (ctxt.isIcalClient()) // Apple iCal fixup for todos
+                if (ctxt.isIcalClient()) { // Apple iCal fixup for todos
                     CalDavUtils.adjustPercentCompleteForToDos(vcalendar);
-                invites = Invite.createFromCalendar(account,
-                        findSummary(vcalendar),
-                        vcalendar,
-                        true);
+                }
+                invites = Invite.createFromCalendar(account, findSummary(vcalendar), vcalendar, true);
             } catch (ServiceException se) {
                 throw new DavException.InvalidData(DavElements.E_VALID_CALENDAR_DATA,"cannot parse ics");
             }
 
             String uid = findEventUid(invites);
-            if (!uid.equals(name)) {
-                // because we are keying off the URI, we don't have
-                // much choice except to use the UID of VEVENT for calendar item URI.
-                // Evolution doesn't use UID as the URI, so we'll force it
-                // by issuing redirect to the URI we want it to be at.
-                StringBuilder url = new StringBuilder();
-                url.append(DavServlet.getDavUrl(user)).append(mPath).append("/").append(uid).append(CalendarObject.CAL_EXTENSION);
-                ctxt.getResponse().sendRedirect(url.toString());  // sets status to SC_MOVED_TEMPORARILY
-                StringBuilder wrongUrlMsg = new StringBuilder();
-                wrongUrlMsg.append("wrong url - redirecting to:\n").append(url.toString());
-                throw new DavException(wrongUrlMsg.toString(), HttpServletResponse.SC_MOVED_TEMPORARILY, null);
-            }
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
-            CalendarItem calItem = mbox.getCalendarItemByUid(ctxt.getOperationContext(), name);
-            if (calItem == null && useEtag)
+            CalendarItem origCalItem = null;
+            // Is the basename of the path client assigned rather than following the standard pattern?
+            Integer itemId = null;
+            if (acceptableClientChosenBasename) {
+                itemId =  DavNames.get(this.mMailboxId, this.mId, baseName);
+            }
+            if (itemId != null) {
+                try {
+                    MailItem mailItem = mbox.getItemById(ctxt.getOperationContext(), itemId, MailItem.Type.UNKNOWN);
+                    if (mailItem != null && mailItem instanceof CalendarItem) {
+                        origCalItem = (CalendarItem) mailItem;
+                    }
+                } catch (ServiceException se) {
+                }
+            }
+            if (origCalItem == null) {
+                if (uid.equals(name)) {
+                    origCalItem = mbox.getCalendarItemByUid(ctxt.getOperationContext(), name);
+                } else {
+                    /* the basename of the path doesn't fit our preferred naming convention. */
+                    origCalItem = mbox.getCalendarItemByUid(ctxt.getOperationContext(), uid);
+                    String redirectUrl = null;
+                    if (origCalItem != null) {
+                        if (this.mId != origCalItem.getFolderId()) {
+                            // In another folder, ignore
+                            origCalItem = null;
+                        } else {
+                            // The item exists, but doesn't have this name.
+                            // issue a redirect to the URI we want it to be at.
+                            DavName davName = null;
+                            if (acceptableClientChosenBasename) {
+                                davName = DavNames.get(this.mMailboxId, origCalItem.getId());
+                            }
+                            if (davName != null) {
+                                redirectUrl = urlForCalendarItem(user, davName.davBaseName);
+                            } else {
+                                redirectUrl = defaultUrlForCalendarItem(user, uid);
+                            }
+                        }
+                    }
+                    if ((origCalItem == null) && (!DebugConfig.enableDAVclientCanChooseResourceBaseName)) {
+                        redirectUrl = defaultUrlForCalendarItem(user, uid);
+                    }
+                    if (redirectUrl != null) {
+                        /* SC_FOUND - Status code (302) indicating that the resource reside temporarily under a
+                         * different URI. Since the redirection might be altered on occasion, the client should
+                         * continue to use the Request-URI for future requests.(HTTP/1.1) To represent the status code
+                         * (302), it is recommended to use this variable.  Used to be called SC_MOVED_TEMPORARILY
+                         */
+                        ctxt.getResponse().sendRedirect(redirectUrl);  // sets status to SC_FOUND
+                        StringBuilder wrongUrlMsg = new StringBuilder();
+                        wrongUrlMsg.append("wrong url - redirecting to:\n").append(redirectUrl);
+                        throw new DavException(wrongUrlMsg.toString(), HttpServletResponse.SC_FOUND, null);
+                    }
+                }
+            }
+            if (origCalItem == null && useEtag) {
                 throw new DavException("event not found", HttpServletResponse.SC_NOT_FOUND, null);
+            }
 
             boolean isNewItem = true;
             if (useEtag) {
-                String itemEtag = MailItemResource.getEtag(calItem);
-                if (!itemEtag.equals(etag))
-                    throw new DavException("CalDAV client has stale event: event has different etag ("+itemEtag+") vs "+etag, HttpServletResponse.SC_CONFLICT);
+                String itemEtag = MailItemResource.getEtag(origCalItem);
+                if (!itemEtag.equals(etag)) {
+                    throw new DavException(
+                            String.format("CalDAV client has stale event: event has different etag (%s) vs %s",
+                                    itemEtag, etag), HttpServletResponse.SC_CONFLICT);
+                }
                 isNewItem = false;
             }
 
             // prepare to call Mailbox.setCalendarItem()
             int flags = 0; String[] tags = null; List<ReplyInfo> replies = null;
-            if (calItem != null) {
-                flags = calItem.getFlagBitmask();
-                tags = calItem.getTags();
-                replies = calItem.getAllReplies();
+            Invite origInvites[] = null;
+            if (origCalItem != null) {
+                flags = origCalItem.getFlagBitmask();
+                tags = origCalItem.getTags();
+                replies = origCalItem.getAllReplies();
+                origInvites = origCalItem.getInvites();
             }
             SetCalendarItemData scidDefault = new SetCalendarItemData();
             SetCalendarItemData scidExceptions[] = null;
-            if (invites.size() > 1)
-                scidExceptions = new SetCalendarItemData[invites.size() - 1];
 
             int idxExceptions = 0;
             boolean first = true;
@@ -455,14 +523,14 @@ public class CalendarCollection extends Collection {
                 // CalDAV clients don't support attachments, and on edit we have to either
                 // retain existing attachments or drop them.  Retaining is better.
                 ParsedMessage oldPm = null;
-                if (calItem != null) {
-                    Invite oldInv = calItem.getInvite(i.getRecurId());
+                if (origCalItem != null) {
+                    Invite oldInv = origCalItem.getInvite(i.getRecurId());
                     if (oldInv == null && i.hasRecurId()) {
                         // It's a new exception instance.  Inherit from series.
-                        oldInv = calItem.getInvite((RecurId) null);
+                        oldInv = origCalItem.getInvite((RecurId) null);
                     }
                     if (oldInv != null) {
-                        MimeMessage mmInv = calItem.getSubpartMessage(oldInv.getMailItemId());
+                        MimeMessage mmInv = origCalItem.getSubpartMessage(oldInv.getMailItemId());
                         oldPm = mmInv != null ? new ParsedMessage(mmInv, false) : null;
                     }
                 }
@@ -474,6 +542,9 @@ public class CalendarCollection extends Collection {
                     SetCalendarItemData scid = new SetCalendarItemData();
                     scid.invite = i;
                     scid.message = oldPm;
+                    if (scidExceptions == null) {
+                        scidExceptions = new SetCalendarItemData[invites.size() - 1];
+                    }
                     scidExceptions[idxExceptions++] = scid;
                 }
 
@@ -487,9 +558,11 @@ public class CalendarCollection extends Collection {
                             ReplyInfo reply = replyIter.next();
                             if (acctMatcher.matches(reply.getAttendee().getAddress())) {
                                 RecurId ridR = reply.getRecurId(), ridI = i.getRecurId();
-                                if ((ridR == null && ridI == null) || (ridR != null && ridR.equals(ridI))) {  // matching RECURRENCE-ID
+                                if ((ridR == null && ridI == null) || (ridR != null && ridR.equals(ridI))) {
+                                    // matching RECURRENCE-ID
                                     // No need to compare SEQUENCE and DTSTAMP of existing reply and new invite.
-                                    // We're just going to take what the caldav client sent, even if it's older than the existing reply.
+                                    // We're just going to take what the caldav client sent, even if it's older
+                                    // than the existing reply.
                                     replyIter.remove();
                                     if (!IcalXmlStrMap.PARTSTAT_NEEDS_ACTION.equalsIgnoreCase(at.getPartStat())) {
                                         newReply = new ReplyInfo(at, i.getSeqNo(), i.getDTStamp(), ridI);
@@ -504,9 +577,27 @@ public class CalendarCollection extends Collection {
                     }
                 }
             }
-            calItem = mbox.setCalendarItem(ctxt.getOperationContext(), mId, flags, tags,
+            CalendarItem newCalItem = null;
+            AutoScheduler autoScheduler = AutoScheduler.getAutoScheduler(mbox, this.getCalendarMailbox(ctxt),
+                    origInvites, mId, flags, tags, scidDefault, scidExceptions, replies, ctxt);
+            if (autoScheduler == null) {
+                newCalItem = mbox.setCalendarItem(ctxt.getOperationContext(), mId, flags, tags,
                     scidDefault, scidExceptions, replies, CalendarItem.NEXT_ALARM_KEEP_CURRENT);
-            return new CalendarObject.LocalCalendarObject(ctxt, calItem, isNewItem);
+            } else {
+                // Note: This also sets the calendar item
+                newCalItem = autoScheduler.doSchedulingActions();
+            }
+            if (newCalItem == null) {
+                throw new DavException("cannot create icalendar item - corrupt ICAL?",
+                        HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            }
+            if (!uid.equals(name)) {
+                if (acceptableClientChosenBasename) {
+                    DavNames.put(DavNames.DavName.create(
+                            this.mMailboxId, newCalItem.getFolderId(), baseName), newCalItem.getId());
+                }
+            }
+            return new CalendarObject.LocalCalendarObject(ctxt, newCalItem, isNewItem);
         } catch (BadOrganizerException.DiffOrganizerInComponentsException e) {
             throw new DavException.NeedSameOrganizerInAllComponents(e.getMessage());
         } catch (BadOrganizerException e) {
@@ -520,6 +611,17 @@ public class CalendarCollection extends Collection {
                 throw new DavException("cannot create icalendar item", HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e);
             }
         }
+    }
+
+    private String urlForCalendarItem(String user, String basename) throws DavException, ServiceException {
+        StringBuilder url = new StringBuilder();
+        url.append(DavServlet.getDavUrl(user)).append(mPath).append("/").append(basename);
+        return url.toString();
+    }
+
+    private String defaultUrlForCalendarItem(String user, String uid) throws DavException, ServiceException {
+        StringBuilder basename = new StringBuilder(uid).append(CalendarObject.CAL_EXTENSION);
+        return urlForCalendarItem(user, basename.toString());
     }
 
     /* Returns iCalalendar (RFC 2445) representation of freebusy report for specified time range. */

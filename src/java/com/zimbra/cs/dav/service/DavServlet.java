@@ -273,7 +273,7 @@ public class DavServlet extends ZimbraServlet {
                 authUser = basicAuthRequest(req, resp, true);
             if (authUser == null) {
                 try {
-                    sendError(resp, HttpServletResponse.SC_NOT_ACCEPTABLE, "Authentication failed", null, Level.debug);
+                    sendError(resp, HttpServletResponse.SC_UNAUTHORIZED, "Authentication failed", null, Level.debug);
                 } catch (Exception e) {}
                 return;
             }

@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -34,10 +34,11 @@ import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.SearchGalResult;
 import com.zimbra.cs.dav.DavContext;
+import com.zimbra.cs.dav.DavContext.Depth;
+import com.zimbra.cs.dav.DavContext.RequestProp;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.DavProtocol;
-import com.zimbra.cs.dav.DavContext.RequestProp;
 import com.zimbra.cs.dav.property.Acl.Ace;
 import com.zimbra.cs.dav.resource.DavResource;
 import com.zimbra.cs.dav.resource.MailItemResource;
@@ -46,6 +47,7 @@ import com.zimbra.cs.dav.service.DavResponse;
 import com.zimbra.soap.type.GalSearchType;
 
 public class AclReports extends Report {
+
     @Override
     public void handle(DavContext ctxt) throws DavException, ServiceException {
         ctxt.setStatus(DavProtocol.STATUS_MULTI_STATUS);
@@ -57,17 +59,26 @@ public class AclReports extends Report {
         else if (query.getQName().equals(DavElements.E_PRINCIPAL_MATCH))
             handlePrincipalMatch(ctxt, query);
         else if (query.getQName().equals(DavElements.E_PRINCIPAL_SEARCH_PROPERTY_SET))
-            handlePrincipalSearchPropertySet(ctxt);
+            handlePrincipalSearchPropertySet(ctxt, query);
         else
             throw new DavException("msg "+query.getName()+" is not an ACL report", HttpServletResponse.SC_BAD_REQUEST);
     }
 
+    /**
+     * http://tools.ietf.org/html/rfc3744#section-9.4. DAV:principal-property-search REPORT
+     * Preconditions:  None
+     * Postconditions: DAV:number-of-matches-within-limits
+     */
     private void handlePrincipalPropertySearch(DavContext ctxt, Element query) throws DavException, ServiceException {
         RequestProp reqProp = ctxt.getRequestProp();
         DavResponse resp = ctxt.getDavResponse();
-        resp.getTop(DavElements.E_MULTISTATUS);  /* Creates top level element - needed even if there are no matches */
-        for (DavResource rs : getMatchingResources(ctxt, query))
+        // http://tools.ietf.org/html/rfc3744#section-9.4
+        // The response body for a successful request MUST be a DAV:multistatus XML element.  In the case where there
+        // are no response elements, the returned multistatus XML element is empty.
+        resp.getTop(DavElements.E_MULTISTATUS);
+        for (DavResource rs : getMatchingResources(ctxt, query)) {
             resp.addResource(ctxt, rs, reqProp, false);
+        }
     }
 
     private ArrayList<DavResource> getMatchingResources(DavContext ctxt, Element query) throws DavException, ServiceException {
@@ -77,7 +88,7 @@ public class AclReports extends Report {
         String path = ctxt.getUri();
         if (!applyToPrincipalCollection && !path.startsWith(UrlNamespace.PRINCIPALS_PATH))
             return ret;
-    
+
         // apple hack to do user / resource search
         GalSearchType type = GalSearchType.all;
         String queryType = query.attributeValue("type");
@@ -100,7 +111,7 @@ public class AclReports extends Report {
                 ret.addAll(getMatchingPrincipals(ctxt, e.getQName(), match.getText(), type));
             }
         }
-    
+
         return ret;
     }
 
@@ -131,9 +142,27 @@ public class AclReports extends Report {
         return ret;
     }
 
+    /**
+     * http://tools.ietf.org/html/rfc3744#section-9.2 DAV:acl-principal-prop-set REPORT
+     * Postconditions:
+     *     (DAV:number-of-matches-within-limits): The number of matching principals must fall within
+     *     server-specific, predefined limits. For example, this condition might be triggered if a search
+     *     specification would cause the return of an extremely large number of responses.
+     */
     private void handleAclPrincipalPropSet(DavContext ctxt, Element query) throws DavException, ServiceException {
+        /* From rfc3744#section-9.2 DAV:acl-principal-prop-set REPORT
+         *    This report is only defined when the Depth header has value "0"; other values result in a
+         *    400 (Bad Request) error response.  Note that [RFC3253], Section 3.6, states that if the Depth header is
+         *    not present, it defaults to a value of "0".
+         */
+        if (ctxt.getDepth() != Depth.zero) {
+            throw new DavException.REPORTwithDisallowedDepthException(query.getQName().getName(), ctxt.getDepth());
+        }
         RequestProp reqProp = ctxt.getRequestProp();
         DavResponse resp = ctxt.getDavResponse();
+        // The response body for a successful request MUST be a DAV:multistatus XML element.  In the case where there
+        // are no response elements, the returned multistatus XML element is empty.
+        resp.getTop(DavElements.E_MULTISTATUS);
         for (DavResource rs : getAclPrincipals(ctxt))
             resp.addResource(ctxt, rs, reqProp, false);
     }
@@ -155,12 +184,21 @@ public class AclReports extends Report {
         return ret;
     }
 
+    /**
+     * http://tools.ietf.org/html/rfc3744#section-9.3. DAV:principal-match REPORT
+     *     This report is only defined when the Depth header has value "0";
+     *     other values result in a 400 (Bad Request) error response.
+     */
     private void handlePrincipalMatch(DavContext ctxt, Element query) throws DavException, ServiceException {
-        if (ctxt.getDepth() != DavContext.Depth.zero)
-            throw new DavException("non-zero depth", HttpServletResponse.SC_BAD_REQUEST);
+        if (ctxt.getDepth() != Depth.zero) {
+            throw new DavException.REPORTwithDisallowedDepthException(query.getQName().getName(), ctxt.getDepth());
+        }
         ArrayList<DavResource> ret = new ArrayList<DavResource>();
         RequestProp reqProp = ctxt.getRequestProp();
         DavResponse resp = ctxt.getDavResponse();
+        // The response body for a successful request MUST be a DAV:multistatus XML element.  In the case where there
+        // are no response elements, the returned multistatus XML element is empty.
+        resp.getTop(DavElements.E_MULTISTATUS);
         Element principalProp = query.element(DavElements.E_PRINCIPAL_PROPERTY);
         if (principalProp == null) {
             // request must be to the principals path
@@ -199,9 +237,16 @@ public class AclReports extends Report {
         PRINCIPAL_SEARCH_PROPERTIES.add(new Pair<QName,Element>(prop, elem));
     }
 
-    private void handlePrincipalSearchPropertySet(DavContext ctxt) throws DavException, ServiceException {
-        if (ctxt.getDepth() != DavContext.Depth.zero)
-            throw new DavException("non-zero depth", HttpServletResponse.SC_BAD_REQUEST);
+    /**
+     * http://tools.ietf.org/html/rfc3744#section-9.5 DAV:principal-search-property-set REPORT
+     *     This report is only defined when the Depth header has value "0";
+     *     other values result in a 400 (Bad Request) error response.
+     */
+    private void handlePrincipalSearchPropertySet(DavContext ctxt, Element query)
+    throws DavException, ServiceException {
+        if (ctxt.getDepth() != Depth.zero) {
+            throw new DavException.REPORTwithDisallowedDepthException(query.getQName().getName(), ctxt.getDepth());
+        }
         Element response = ctxt.getDavResponse().getTop(DavElements.E_PRINCIPAL_SEARCH_PROPERTY_SET);
         ctxt.setStatus(HttpServletResponse.SC_OK);
         for (Pair<QName,Element> prop : PRINCIPAL_SEARCH_PROPERTIES) {

@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -2421,6 +2422,69 @@ public class Invite {
         return component;
     }
 
+    /**
+     * Assumption UID already matches.
+     * @param recurId - if this is null, it means match Series or instance if it is a single instance
+     */
+    public static Invite matchingInvite(Iterable<Invite>invites, RecurId aRecurId) {
+        if (invites == null) {
+            return null;
+        }
+        for (Invite cur : invites) {
+            // FIXME should check for cur.recurID WITHIN_RANGE (THISANDFUTURE-type support)
+            if ((cur.getRecurId() != null && cur.getRecurId().equals(aRecurId)) ||
+                    (cur.getRecurId() == null && aRecurId == null)) {
+                return cur;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Assumption UID already matches.
+     * @param recurId - if this is null, it means match Series or instance if it is a single instance
+     */
+    public static Invite matchingInvite(Invite invites[], RecurId aRecurId) {
+        return matchingInvite(Arrays.asList(invites), aRecurId);
+    }
+
+    public List<Instance> getExdates() {
+        List<Instance> exdates = Lists.newArrayList();
+        IRecurrence recurrence = getRecurrence();
+        if (recurrence == null) {
+            return exdates;
+        }
+
+        for (Iterator<?> iter = recurrence.subRulesIterator(); iter!=null && iter.hasNext();) {
+            IRecurrence cur = (IRecurrence)iter.next();
+            switch (cur.getType()) {
+            case Recurrence.TYPE_SINGLE_DATES:
+                Recurrence.SingleDates sd = (Recurrence.SingleDates) cur;
+                RdateExdate exdate = sd.getRdateExdate();
+                if (exdate.isEXDATE()) {
+                    exdates.addAll(sd.expandInstances(getMailItemId()));
+                } else {
+                    ZimbraLog.calendar.debug("RDATE '%s' ignored", exdate);
+                }
+                break;
+            case Recurrence.TYPE_REPEATING:
+                // See http://tools.ietf.org/html/rfc5545 A.3. Deprecated Features
+                // 1.  The "EXRULE" property can no longer be specified in a component.
+                ZimbraLog.calendar.debug("EXRULE ignored - no longer supported in rfc5545");
+                break;
+            }
+        }
+        return exdates;
+    }
+
+    public static List<Instance> getExdates(Invite inv) {
+        List<Instance> exdates = Lists.newArrayList();
+        if (inv == null) {
+            return exdates;
+        }
+        return inv.getExdates();
+    }
+
     public static ZComponent[] toVComponents(Invite[] invites,
                                              boolean includePrivateData,
                                              boolean useOutlookCompatAllDayEvents,
@@ -2560,6 +2624,13 @@ public class Invite {
         int thisSeq = getSeqNo();
         int otherSeq = other.getSeqNo();
         return thisSeq >= otherSeq;
+    }
+
+    public boolean isNewerVersion(Invite other) {
+        if (other == null) return false;
+        int thisSeq = getSeqNo();
+        int otherSeq = other.getSeqNo();
+        return thisSeq > otherSeq;
     }
 
     public Invite newCopy() {

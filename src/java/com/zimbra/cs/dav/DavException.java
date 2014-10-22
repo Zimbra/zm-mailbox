@@ -26,6 +26,7 @@ import org.dom4j.Element;
 import org.dom4j.QName;
 
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.dav.DavContext.Depth;
 
 @SuppressWarnings("serial")
 public class DavException extends Exception {
@@ -127,4 +128,12 @@ public class DavException extends Exception {
             setError(e);
         }
     }
+
+    public static class REPORTwithDisallowedDepthException extends DavException {
+        public REPORTwithDisallowedDepthException(String reportName, Depth depth) {
+            super(String.format("%s REPORT with %s depth is not allowed (only 0 is allowed)",
+                    reportName, depth.toString()), HttpServletResponse.SC_BAD_REQUEST);
+        }
+    }
+
 }

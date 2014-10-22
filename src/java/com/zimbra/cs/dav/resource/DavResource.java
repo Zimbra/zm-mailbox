@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -40,7 +40,6 @@ import org.dom4j.io.OutputFormat;
 import org.dom4j.io.XMLWriter;
 
 import com.zimbra.common.account.Key;
-import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.HttpUtil;
@@ -104,8 +103,9 @@ public abstract class DavResource {
         if (isSchedulingEnabled()) {
             if (isCalendarAutoSchedulingEnabled()) {
                 mDavCompliance.add(Compliance.calendar_auto_schedule);
+            } else {
+                mDavCompliance.add(Compliance.calendar_schedule);
             }
-            mDavCompliance.add(Compliance.calendar_schedule);
         }
 
         ResourceProperty rtype = new ResourceProperty(DavElements.E_RESOURCETYPE);
@@ -372,9 +372,15 @@ public abstract class DavResource {
     }
 
     public static boolean isCalendarAutoSchedulingEnabled() {
-        /** TODO: Replace with a Config key when caldav-auto-schedule fully working in a way similar to how
-                        Provisioning.A_zimbraCalendarCalDavDisableScheduling is treated */
-        return DebugConfig.enableExperimentalCaldavAutoSchedule;
+        if (!isSchedulingEnabled()) {
+            return false;
+        }
+        try {
+            return Provisioning.getInstance().getConfig().getBooleanAttr(
+                    Provisioning.A_zimbraCalendarCalDavCalendarAutoScheduleEnabled, true);
+        } catch (ServiceException se) {
+            return true;
+        }
     }
 
 }
