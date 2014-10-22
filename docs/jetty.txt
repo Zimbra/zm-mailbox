@@ -46,9 +46,26 @@
 ============
 
 There are more than one way to debug jetty using Eclipse.  Here we'll
-cover two approaches.
+cover three approaches. The suggested approach is to use the Maven Jetty
+plugin. However, the old instructions for Conventional and Ant debugging
+are left for reference.
 
-I. Conventional Debugging
+I. Maven Jetty plugin (Tested with Eclipse Luna)
+
+1. Setup ZimbraServer and related projects in Eclipse
+
+2. Install the m2e and m2e-dynamic-sources-lookup plugins
+
+3. Right click on the ZimbraServer project; select Debug As...Debug configurations
+
+4. Create a new Maven Build configuration
+
+5. Enter 'jetty:run' in the Goals field
+
+6. Click Apply, then Debug. Note that startup may be a bit slow due to annotation scanning; may be optimized once we upgrade to Jetty 9.2+
+
+
+II. (deprecated) Conventional Debugging
 
 1. Don't follow the instructions in "Debugging Jetty with Eclipse" on
    jetty docs site (at least it didn't work for me).
@@ -88,7 +105,7 @@ I. Conventional Debugging
    that wouldn't do a proper shutdown.
 
 
-II. Ant Jetty Plugin
+III. (deprecated) Ant Jetty Plugin
 
 There's another radically different way to run and debug jetty with
 jetty-ant plugin.  Basically you run jetty as an ant task.  We use

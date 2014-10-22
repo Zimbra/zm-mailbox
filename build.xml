@@ -59,11 +59,11 @@
     <property name="generated.java.dir" location="${build.dir}/generated/src/java"/>
     <property name="warfilename" value="service.war"/>
     <property name="warfile" location="${build.dir}/${warfilename}"/>
-    <property name="jarfile" location="${build.dir}/zimbrastore-${project.maven.version}.jar"/>
+	<property name="warfile.maven" location="${build.dir}/zimbrastore-${project.maven.version}.war"/>
 
     <property name="lib.dir" location="lib"/>
     <property name="config.dir" location="conf"/>
-	<condition property="war.web.xml" value="${config.dir}/web.xml${production.suffix}">
+	<condition property="war.web.xml" value="src/main/webapp/WEB-INF/web.xml">
 	 	<not><isset property="war.web.xml"/></not>
 	</condition>
 	<property name="war.web.xml" location="${war.web.xml}${production.suffix}"/>
@@ -547,9 +547,12 @@
 
     <!-- jetty loads jetty-util*.jar, log4j*.jar and slf4j*.jar -->
 
-    <target name="war" depends="jar">
+    <target name="war">
+      <maven dir="." goal="package"/>
+      <copy file="${warfile.maven}" tofile="${warfile}"/>    
+      <!--
       <war warfile="${warfile}" webxml="${war.web.xml}">
-        <fileset dir="WebRoot"/>
+        <fileset dir="src/main/webapp"/>
         <lib file="${soap.jarfile}"/>
         <lib file="${client.jarfile}"/>
         <lib file="${jarfile}"/>
@@ -594,6 +597,7 @@
         <classes dir="${config.dir}" includes="sieveConfig.xml"/>
         <classes dir="${config.dir}" includes="cxf.xml"/>
       </war>
+      -->
     </target>
 
     <target name="spnego-service-name">
@@ -992,7 +996,7 @@
         <copy tofile="${dist.dir}/lib/jars/zimbracommon.jar" file="${common.jarfile}" overwrite="true"/>
         <copy tofile="${dist.dir}/lib/jars/zimbrasoap.jar" file="${soap.jarfile}" overwrite="true"/>
         <copy tofile="${dist.dir}/lib/jars/zimbraclient.jar" file="${client.jarfile}" overwrite="true"/>
-        <copy tofile="${dist.dir}/lib/jars/zimbrastore.jar" file="${jarfile}" overwrite="true"/>
+        <copy tofile="${dist.dir}/lib/jars/zimbrastore.jar" file="${server.jarfile}" overwrite="true"/>
         <copy tofile="${dist.dir}/lib/jars/zimbranative.jar" file="${native.jarfile}" overwrite="true"/>
         <copy tofile="${dist.dir}/lib/jars/zimbracharset.jar" file="${charset.jarfile}" overwrite="true"/>
 
