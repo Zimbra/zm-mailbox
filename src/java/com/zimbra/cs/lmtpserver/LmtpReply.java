@@ -19,7 +19,8 @@ package com.zimbra.cs.lmtpserver;
 
 
 public enum LmtpReply {
-    
+
+	READY_TO_START_TLS(220, "2.0.0", "Ready to start TLS"),
     OK(250, "2.0.0", "OK"),
     SENDER_OK(250, "2.0.0", "Sender OK"),
     RECIPIENT_OK(250, "2.1.5", "Recipient OK"),

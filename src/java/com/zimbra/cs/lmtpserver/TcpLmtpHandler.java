@@ -17,11 +17,15 @@
 
 package com.zimbra.cs.lmtpserver;
 
-import com.zimbra.common.io.TcpServerInputStream;
-import com.zimbra.common.util.ZimbraLog;
-
-import java.net.Socket;
 import java.io.IOException;
+import java.net.Socket;
+
+import javax.net.ssl.SSLSocket;
+import javax.net.ssl.SSLSocketFactory;
+
+import com.zimbra.common.io.TcpServerInputStream;
+import com.zimbra.common.util.NetUtil;
+import com.zimbra.common.util.ZimbraLog;
 
 public class TcpLmtpHandler extends LmtpHandler {
     private TcpServerInputStream inputStream;
@@ -74,4 +78,22 @@ public class TcpLmtpHandler extends LmtpHandler {
         LmtpMessageInputStream min = new LmtpMessageInputStream(inputStream, getAdditionalHeaders());
         processMessageData(min);
     }
+    
+    @Override
+        protected void doSTARTTLS(String arg) throws IOException {
+            if (arg != null) {
+                doSyntaxError(); // parameter supplied to STARTTLS
+                return;
+            }
+            sendReply(LmtpReply.READY_TO_START_TLS);
+            SSLSocketFactory fac = (SSLSocketFactory) SSLSocketFactory.getDefault();
+            SSLSocket tlsconn = (SSLSocket) fac.createSocket(connection, connection.getInetAddress().getHostName(),
+                        connection.getPort(), true);
+            NetUtil.setSSLEnabledCipherSuites(tlsconn, config.getSslExcludedCiphers(), config.getSslIncludedCiphers());
+            tlsconn.setUseClientMode(false);
+            startHandshake(tlsconn);
+            inputStream = new TcpServerInputStream(tlsconn.getInputStream());
+            mWriter = new LmtpWriter(tlsconn.getOutputStream());
+    }
+
 }
