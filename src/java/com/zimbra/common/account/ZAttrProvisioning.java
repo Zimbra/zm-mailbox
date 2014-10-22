@@ -3338,6 +3338,19 @@ public class ZAttrProvisioning {
     public static final String A_zimbraCalendarCalDavAlternateCalendarHomeSet = "zimbraCalendarCalDavAlternateCalendarHomeSet";
 
     /**
+     * Enable support for the the &quot;calendar-auto-schedule&quot; feature
+     * of CalDAV - see RFC6638. If FALSE, the &quot;calendar-schedule&quot;
+     * feature of CalDAV is advertised instead - see
+     * draft-desruisseaux-caldav-sched-03. Note that the value of
+     * &quot;zimbraCalendarCalDavDisableScheduling&quot; takes precedence
+     * over this attribute.
+     *
+     * @since ZCS 8.6.0
+     */
+    @ZAttr(id=1655)
+    public static final String A_zimbraCalendarCalDavCalendarAutoScheduleEnabled = "zimbraCalendarCalDavCalendarAutoScheduleEnabled";
+
+    /**
      * Whether to allow password sent to non-secured port from CalDAV
      * clients. If it set to TRUE the server will allow access from CalDAV
      * client to zimbraMailPort. If it set to FALSE the server will return an
