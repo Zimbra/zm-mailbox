@@ -7385,6 +7385,16 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMailBlacklistMaxNumEntries = "zimbraMailBlacklistMaxNumEntries";
 
     /**
+     * List of SSL/TLS protocols (as documented by SunJSSE Provider Protocols
+     * and used in setEnabledProtocols) to be enabled in Jetty for HTTPS,
+     * IMAPS, POP3S, and STARTTLS (including LMTP)
+     *
+     * @since ZCS 8.6.0
+     */
+    @ZAttr(id=1657)
+    public static final String A_zimbraMailboxdSSLProtocols = "zimbraMailboxdSSLProtocols";
+
+    /**
      * serverId:mboxId of mailbox before being moved
      */
     @ZAttr(id=346)
@@ -8823,7 +8833,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 9.0.0
      */
-    @ZAttr(id=1653)
+    @ZAttr(id=1656)
     public static final String A_zimbraMobileShareCalendarEnabled = "zimbraMobileShareCalendarEnabled";
 
     /**
@@ -12729,6 +12739,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraReverseProxySSLECDHCurve = "zimbraReverseProxySSLECDHCurve";
 
     /**
+     * SSL protocols enabled for the proxy
+     *
+     * @since ZCS 8.6.0
+     */
+    @ZAttr(id=1653)
+    public static final String A_zimbraReverseProxySSLProtocols = "zimbraReverseProxySSLProtocols";
+
+    /**
      * If set as TRUE, proxy will use SSL to connect to the upstream mail
      * servers for web and mail proxy. Note admin console proxy always use
      * https no matter how this attr is set.
@@ -13681,16 +13699,6 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=564)
     public static final String A_zimbraSSLPrivateKey = "zimbraSSLPrivateKey";
-
-    /**
-     * List of SSL/TLS protocols (as documented by SunJSSE Provider Protocols
-     * and used in setEnabledProtocols) to be enabled in Jetty for HTTPS,
-     * IMAPS, POP3S, and STARTTLS
-     *
-     * @since ZCS 8.6.0
-     */
-    @ZAttr(id=1657)
-    public static final String A_zimbraMailboxdSSLProtocols = "zimbraMailboxdSSLProtocols";
 
     /**
      * description of the custom tab in the Preferences page in HTML client
