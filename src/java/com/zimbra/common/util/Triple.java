@@ -16,50 +16,69 @@
  */
 package com.zimbra.common.util;
 
-public class Pair<F,S> {
+import java.util.Objects;
+
+public class Triple<F,S,T> {
     protected F mFirst;
     protected S mSecond;
+    protected T mThird;
 
-    public Pair(F first, S second) {
+    public Triple(F first, S second, T third) {
         mFirst = first;
         mSecond = second;
+        mThird = third;
     }
 
     public F getFirst() {
         return mFirst;
     }
+
     public S getSecond() {
         return mSecond;
+    }
+
+    public T getThird() {
+        return mThird;
     }
 
     public void setFirst(F first) {
         mFirst = first;
     }
+
     public void setSecond(S second) {
         mSecond = second;
     }
 
+    public void setThird(T third) {
+        mThird = third;
+    }
+
     @Override public boolean equals(Object obj) {
-        if (obj instanceof Pair) {
+        if (obj instanceof Triple) {
             @SuppressWarnings("rawtypes")
-            Pair that = (Pair) obj;
-            if (mFirst != that.mFirst && (mFirst == null || !mFirst.equals(that.mFirst)))
+            Triple that = (Triple) obj;
+            if (!Objects.equals(mFirst, that.mFirst)) {
                 return false;
-            if (mSecond != that.mSecond && (mSecond == null || !mSecond.equals(that.mSecond)))
+            }
+            if (!Objects.equals(mSecond, that.mSecond)) {
                 return false;
+            }
+            if (!Objects.equals(mThird, that.mThird)) {
+                return false;
+            }
             return true;
-        } else {
-            return super.equals(obj);
         }
+        return super.equals(obj);
     }
 
     @Override public int hashCode() {
         int code1 = mFirst == null ? 0 : mFirst.hashCode();
         int code2 = mSecond == null ? 0 : mSecond.hashCode();
-        return code1 ^ code2;
+        int code3 = mThird == null ? 0 : mThird.hashCode();
+        return ("" + code1 + code2 + code3).hashCode();
     }
 
     @Override public String toString() {
-        return "(" + mFirst + "," + mSecond + ")";
+        return "(" + mFirst + "," + mSecond + "," + mThird + ")";
     }
 }
