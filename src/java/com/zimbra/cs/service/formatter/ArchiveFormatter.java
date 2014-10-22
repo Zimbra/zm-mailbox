@@ -1336,7 +1336,7 @@ public abstract class ArchiveFormatter extends Formatter {
                         setFolderId(fldr.getId()).setNoICal(true).
                         setFlags(msg.getFlagBitmask()).
                         setTags(msg.getTags());
-                        newItem = mbox.addMessage(octxt, ais.getInputStream(), (int) aie.getSize(), msg.getDate(), opt, null);
+                        newItem = mbox.addMessage(octxt, ais.getInputStream(), (int) aie.getSize(), msg.getDate(), opt, null, id);
                     }
                     break;
 
