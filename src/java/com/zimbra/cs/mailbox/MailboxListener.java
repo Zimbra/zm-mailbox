@@ -95,7 +95,7 @@ public abstract class MailboxListener {
             register(new CalItemReminderService());
         }
         register(new FilterListener());
-        register(new MemcachedCacheManager());
+        register(new CacheManager());
         register(new FreeBusyProvider.Listener());
         register(new DataSourceListener());
         register(new ShareStartStopListener());

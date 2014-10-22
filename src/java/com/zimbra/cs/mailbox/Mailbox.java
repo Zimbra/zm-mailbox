@@ -2309,7 +2309,7 @@ public class Mailbox {
 
                     // Remove all data related to this mailbox from caches, so the data doesn't
                     // get used by another user later by mistake if/when mailbox id gets reused.
-                    MemcachedCacheManager.purgeMailbox(this);
+                    CacheManager.purgeMailbox(this);
 
                     success = true;
                 } finally {

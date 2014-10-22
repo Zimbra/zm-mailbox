@@ -24,7 +24,7 @@ import com.zimbra.cs.mailbox.calendar.cache.CalendarCacheManager;
 import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.util.Zimbra;
 
-public class MemcachedCacheManager extends MailboxListener {
+public class CacheManager extends MailboxListener {
 
     public static void purgeMailbox(Mailbox mbox) throws ServiceException {
         Zimbra.getAppContext().getBean(CalendarCacheManager.class).purgeMailbox(mbox);
