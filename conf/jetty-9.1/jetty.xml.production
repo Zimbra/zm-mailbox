@@ -126,16 +126,23 @@
 		<Set name="KeyStorePassword">@@mailboxd_keystore_password@@</Set>
 		<Set name="KeyManagerPassword">@@mailboxd_keystore_password@@</Set>
 		<Set name="EndpointIdentificationAlgorithm"></Set>
+		<!-- SSLPROTOCOLSBEGIN %%comment VAR:zimbraMailboxdSSLProtocolsXML,-->%%
+		<Set name="IncludeProtocols">
+			<Array type="java.lang.String">
+				%%zimbraMailboxdSSLProtocolsXML%%
+			</Array>
+		</Set>
+		%%comment VAR:zimbraMailboxdSSLProtocolsXML,<!--%% SSLPROTOCOLSEND -->
 		<Set name="ExcludeCipherSuites">
 			<Array type="java.lang.String">
-              %%zimbraSSLExcludeCipherSuitesXML%%
-            </Array>
+				%%zimbraSSLExcludeCipherSuitesXML%%
+			</Array>
 		</Set>
 		<!-- INCLUDESUITESBEGIN %%comment VAR:zimbraSSLIncludeCipherSuitesXML,-->%%
 		<Set name="IncludeCipherSuites">
-		    <Array type="java.lang.String">
-		      %%zimbraSSLIncludeCipherSuitesXML%%
-		    </Array>
+			<Array type="java.lang.String">
+				%%zimbraSSLIncludeCipherSuitesXML%%
+			</Array>
 		</Set>
 		%%comment VAR:zimbraSSLIncludeCipherSuitesXML,<!--%% INCLUDESUITESEND -->
 	</New>
