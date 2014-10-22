@@ -49,6 +49,7 @@ public class PrivilegedHandler {
 
     private static final String A_zimbraSSLExcludeCipherSuites = "zimbraSSLExcludeCipherSuites";
     private static final String A_zimbraSSLIncludeCipherSuites = "zimbraSSLIncludeCipherSuites";
+    private static final String A_zimbraMailboxdSSLProtocols = "zimbraMailboxdSSLProtocols";
 
     private static final String mailboxd_keystore = "mailboxd_keystore";
     private static final String mailboxd_keystore_password = "mailboxd_keystore_password";
@@ -63,7 +64,7 @@ public class PrivilegedHandler {
     public static void openPorts(Map<String, Object> attributes) {
         int port;
         String address;
-        String[] excludeCiphers, includeCiphers;
+        String[] excludeCiphers, includeCiphers, sslProtocols;
         try {
 
             if (LC.zimbra_ssl_enabled.booleanValue()) { //default is true
@@ -90,7 +91,8 @@ public class PrivilegedHandler {
                 } else {
                     excludeCiphers = getSpaceDelimitedStringArray(attributes, A_zimbraSSLExcludeCipherSuites);
                     includeCiphers = getSpaceDelimitedStringArray(attributes, A_zimbraSSLIncludeCipherSuites);
-                    NetUtil.bindSslTcpServerSocket(address, port, excludeCiphers, includeCiphers);
+                    sslProtocols = getSpaceDelimitedStringArray(attributes, A_zimbraMailboxdSSLProtocols);
+                    NetUtil.bindSslTcpServerSocket(address, port, excludeCiphers, includeCiphers, sslProtocols);
                 }
             }
 
@@ -112,7 +114,8 @@ public class PrivilegedHandler {
                 } else {
                     excludeCiphers = getSpaceDelimitedStringArray(attributes, A_zimbraSSLExcludeCipherSuites);
                     includeCiphers = getSpaceDelimitedStringArray(attributes, A_zimbraSSLIncludeCipherSuites);
-                    NetUtil.bindSslTcpServerSocket(address, port, excludeCiphers, includeCiphers);
+                    sslProtocols = getSpaceDelimitedStringArray(attributes, A_zimbraMailboxdSSLProtocols);
+                    NetUtil.bindSslTcpServerSocket(address, port, excludeCiphers, includeCiphers, sslProtocols);
                 }
             }
 

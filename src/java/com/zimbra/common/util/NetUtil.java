@@ -37,37 +37,48 @@ import com.zimbra.common.service.ServiceException;
 public class NetUtil {
 
     public static ServerSocket getTcpServerSocket(String address, int port) throws ServiceException {
-        return getServerSocket(address, port, false, false, null, null);
+        return getServerSocket(address, port, false, false, null, null, null);
     }
 
     public static ServerSocket getSslTcpServerSocket(String address, int port, String[] excludeCiphers, String[] includeCiphers) throws ServiceException {
-        return getServerSocket(address, port, true, /* doesn't matter, but keep it false always */ false, excludeCiphers, includeCiphers);
+        return getServerSocket(address, port, true, /* doesn't matter, but keep it false always */ false, excludeCiphers, includeCiphers, null);
+    }
+
+    public static ServerSocket getSslTcpServerSocket(String address, int port, String[] excludeCiphers, String[] includeCiphers, String[] sslProtocols) throws ServiceException {
+        return getServerSocket(address, port, true, /* doesn't matter, but keep it false always */ false, excludeCiphers, includeCiphers, sslProtocols);
     }
 
     public static ServerSocket getNioServerSocket(String address, int port) throws ServiceException {
-        return getServerSocket(address, port, false, true, null, null);
+        return getServerSocket(address, port, false, true, null, null, null);
     }
 
     public static void bindTcpServerSocket(String address, int port) throws IOException {
-        bindServerSocket(address, port, false, false, null, null);
+        bindServerSocket(address, port, false, false, null, null, null);
     }
 
     public static void bindSslTcpServerSocket(String address, int port, String[] excludeCiphers, String[] includeCiphers) throws IOException {
-        bindServerSocket(address, port, true, /* doesn't matter, but it false always */ false, excludeCiphers, includeCiphers);
+        bindServerSocket(address, port, true, /* doesn't matter, but it false always */ false, excludeCiphers, includeCiphers, null);
+    }
+
+    public static void bindSslTcpServerSocket(String address, int port, String[] excludeCiphers, String[] includeCiphers, String[] sslProtocols) throws IOException {
+        bindServerSocket(address, port, true, /* doesn't matter, but it false always */ false, excludeCiphers, includeCiphers, sslProtocols);
     }
 
     public static void bindNioServerSocket(String address, int port) throws IOException {
-        bindServerSocket(address, port, false, true, null, null);
+        bindServerSocket(address, port, false, true, null, null, null);
     }
 
-
     public static synchronized ServerSocket getServerSocket(String address, int port, boolean ssl, boolean useChannels, String[] excludeCiphers, String[] includeCiphers) throws ServiceException {
+        return getServerSocket(address, port, true, /* doesn't matter, but keep it false always */ false, excludeCiphers, includeCiphers, null);
+    }
+
+    public static synchronized ServerSocket getServerSocket(String address, int port, boolean ssl, boolean useChannels, String[] excludeCiphers, String[] includeCiphers, String[] sslProtocols) throws ServiceException {
         ServerSocket serverSocket = getAlreadyBoundServerSocket(address, port, ssl, useChannels);
         if (serverSocket != null) {
             return serverSocket;
         }
         try {
-            serverSocket = newBoundServerSocket(address, port, ssl, useChannels, excludeCiphers, includeCiphers);
+            serverSocket = newBoundServerSocket(address, port, ssl, useChannels, excludeCiphers, includeCiphers, sslProtocols);
         } catch (IOException ioe) {
             throw ServiceException.FAILURE("Could not bind to port=" + port + " bindaddr=" + address + " ssl=" + ssl + " useChannels=" + useChannels, ioe);
         }
@@ -78,7 +89,7 @@ public class NetUtil {
     }
 
     private static ServerSocket newBoundServerSocket(String address, int port, boolean ssl, boolean useChannels,
-	    String[] excludeCiphers, String[] includeCiphers) throws IOException {
+            String[] excludeCiphers, String[] includeCiphers, String[] sslProtocols) throws IOException {
         ServerSocket serverSocket = null;
         InetAddress bindAddress = null;
         if (address != null && address.length() > 0) {
@@ -95,6 +106,7 @@ public class NetUtil {
                 SSLServerSocketFactory fact = (SSLServerSocketFactory)
                 SSLServerSocketFactory.getDefault();
                 serverSocket = fact.createServerSocket();
+                setSSLProtocols((SSLServerSocket)serverSocket, sslProtocols);
                 setSSLEnabledCipherSuites((SSLServerSocket)serverSocket, excludeCiphers, includeCiphers);
             } else {
                 serverSocket = new ServerSocket();
@@ -105,6 +117,18 @@ public class NetUtil {
         InetSocketAddress isa = new InetSocketAddress(bindAddress, port);
         serverSocket.bind(isa, 1024);
         return serverSocket;
+    }
+
+    private static void setSSLProtocols(SSLServerSocket socket, String[] sslProtocols) {
+        if (sslProtocols != null && sslProtocols.length > 0) {
+            socket.setEnabledProtocols(sslProtocols);
+        }
+    }
+
+    public static void setSSLProtocols(SSLSocket socket, String[] sslProtocols) {
+        if (sslProtocols != null && sslProtocols.length > 0) {
+            socket.setEnabledProtocols(sslProtocols);
+        }
     }
 
     /**
@@ -157,12 +181,16 @@ public class NetUtil {
     }
 
     public static synchronized void bindServerSocket(String address, int port, boolean ssl, boolean useChannels, String[] excludeCiphers, String[] includeCiphers) throws IOException {
+        bindServerSocket(address, port, ssl, useChannels, excludeCiphers, includeCiphers, null );
+    }
+
+    public static synchronized void bindServerSocket(String address, int port, boolean ssl, boolean useChannels, String[] excludeCiphers, String[] includeCiphers, String[] sslProtocols) throws IOException {
         // Don't use log4j - when this code is called, log4j might not have been initialized
         // and we do not want to initialize log4j at this time because we are likely still
         // running as root.
         System.err.println("Zimbra server reserving server socket port=" + port + " bindaddr=" + address + " ssl=" + ssl);
         String key = makeKey(address, port, ssl, useChannels);
-        ServerSocket serverSocket = NetUtil.newBoundServerSocket(address, port, ssl, useChannels, excludeCiphers, includeCiphers);
+        ServerSocket serverSocket = NetUtil.newBoundServerSocket(address, port, ssl, useChannels, excludeCiphers, includeCiphers, sslProtocols);
         //System.err.println("put table=" + mBoundSockets.hashCode() + " key=" + key + " sock=" + serverSocket);
         mBoundSockets.put(key, serverSocket);
         //dumpMap();

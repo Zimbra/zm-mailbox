@@ -13666,6 +13666,16 @@ public class ZAttrProvisioning {
     public static final String A_zimbraSSLPrivateKey = "zimbraSSLPrivateKey";
 
     /**
+     * List of SSL/TLS protocols (as documented by SunJSSE Provider Protocols
+     * and used in setEnabledProtocols) to be enabled in Jetty for HTTPS,
+     * IMAPS, POP3S, and STARTTLS
+     *
+     * @since ZCS 8.6.0
+     */
+    @ZAttr(id=1657)
+    public static final String A_zimbraMailboxdSSLProtocols = "zimbraMailboxdSSLProtocols";
+
+    /**
      * description of the custom tab in the Preferences page in HTML client
      * in the format {tab-name},{associated-URL}
      *
