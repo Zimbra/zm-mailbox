@@ -187,6 +187,10 @@ public abstract class NioServer implements Server {
     public SslFilter newSSLFilter() {
         SSLContext sslCtxt = getSSLContext();
         SslFilter sslFilter = new SslFilter(sslCtxt);
+        String[] sslProtocols = config.getMailboxdSslProtocols();
+        if (sslProtocols != null && sslProtocols.length > 0) {
+            sslFilter.setEnabledProtocols(sslProtocols);
+        }
         String[] enabledCiphers = getSSLEnabledCiphers(sslCtxt, config);
         if (enabledCiphers.length > 0)
             sslFilter.setEnabledCipherSuites(enabledCiphers);

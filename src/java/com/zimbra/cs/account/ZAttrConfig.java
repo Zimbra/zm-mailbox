@@ -51777,6 +51777,158 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * List of SSL/TLS protocols (as documented by SunJSSE Provider Protocols
+     * and used in setEnabledProtocols) to be enabled in Jetty for HTTPS,
+     * IMAPS, POP3S, and STARTTLS
+     *
+     * @return zimbraMailboxdSSLProtocols, or empty array if unset
+     *
+     * @since ZCS 8.6.0
+     */
+    @ZAttr(id=1657)
+    public String[] getMailboxdSSLProtocols() {
+        String[] value = getMultiAttr(Provisioning.A_zimbraMailboxdSSLProtocols); return value.length > 0 ? value : new String[] {"SSLv3","TLSv1","TLSv1.1","TLSv1.2"};
+    }
+
+    /**
+     * List of SSL/TLS protocols (as documented by SunJSSE Provider Protocols
+     * and used in setEnabledProtocols) to be enabled in Jetty for HTTPS,
+     * IMAPS, POP3S, and STARTTLS
+     *
+     * @param zimbraMailboxdSSLProtocols new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.6.0
+     */
+    @ZAttr(id=1657)
+    public void setMailboxdSSLProtocols(String[] zimbraMailboxdSSLProtocols) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxdSSLProtocols, zimbraMailboxdSSLProtocols);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * List of SSL/TLS protocols (as documented by SunJSSE Provider Protocols
+     * and used in setEnabledProtocols) to be enabled in Jetty for HTTPS,
+     * IMAPS, POP3S, and STARTTLS
+     *
+     * @param zimbraMailboxdSSLProtocols new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.6.0
+     */
+    @ZAttr(id=1657)
+    public Map<String,Object> setMailboxdSSLProtocols(String[] zimbraMailboxdSSLProtocols, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxdSSLProtocols, zimbraMailboxdSSLProtocols);
+        return attrs;
+    }
+
+    /**
+     * List of SSL/TLS protocols (as documented by SunJSSE Provider Protocols
+     * and used in setEnabledProtocols) to be enabled in Jetty for HTTPS,
+     * IMAPS, POP3S, and STARTTLS
+     *
+     * @param zimbraMailboxdSSLProtocols new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.6.0
+     */
+    @ZAttr(id=1657)
+    public void addMailboxdSSLProtocols(String zimbraMailboxdSSLProtocols) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraMailboxdSSLProtocols, zimbraMailboxdSSLProtocols);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * List of SSL/TLS protocols (as documented by SunJSSE Provider Protocols
+     * and used in setEnabledProtocols) to be enabled in Jetty for HTTPS,
+     * IMAPS, POP3S, and STARTTLS
+     *
+     * @param zimbraMailboxdSSLProtocols new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.6.0
+     */
+    @ZAttr(id=1657)
+    public Map<String,Object> addMailboxdSSLProtocols(String zimbraMailboxdSSLProtocols, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraMailboxdSSLProtocols, zimbraMailboxdSSLProtocols);
+        return attrs;
+    }
+
+    /**
+     * List of SSL/TLS protocols (as documented by SunJSSE Provider Protocols
+     * and used in setEnabledProtocols) to be enabled in Jetty for HTTPS,
+     * IMAPS, POP3S, and STARTTLS
+     *
+     * @param zimbraMailboxdSSLProtocols existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.6.0
+     */
+    @ZAttr(id=1657)
+    public void removeMailboxdSSLProtocols(String zimbraMailboxdSSLProtocols) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraMailboxdSSLProtocols, zimbraMailboxdSSLProtocols);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * List of SSL/TLS protocols (as documented by SunJSSE Provider Protocols
+     * and used in setEnabledProtocols) to be enabled in Jetty for HTTPS,
+     * IMAPS, POP3S, and STARTTLS
+     *
+     * @param zimbraMailboxdSSLProtocols existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.6.0
+     */
+    @ZAttr(id=1657)
+    public Map<String,Object> removeMailboxdSSLProtocols(String zimbraMailboxdSSLProtocols, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraMailboxdSSLProtocols, zimbraMailboxdSSLProtocols);
+        return attrs;
+    }
+
+    /**
+     * List of SSL/TLS protocols (as documented by SunJSSE Provider Protocols
+     * and used in setEnabledProtocols) to be enabled in Jetty for HTTPS,
+     * IMAPS, POP3S, and STARTTLS
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.6.0
+     */
+    @ZAttr(id=1657)
+    public void unsetMailboxdSSLProtocols() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxdSSLProtocols, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * List of SSL/TLS protocols (as documented by SunJSSE Provider Protocols
+     * and used in setEnabledProtocols) to be enabled in Jetty for HTTPS,
+     * IMAPS, POP3S, and STARTTLS
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.6.0
+     */
+    @ZAttr(id=1657)
+    public Map<String,Object> unsetMailboxdSSLProtocols(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxdSSLProtocols, "");
+        return attrs;
+    }
+
+    /**
      * whether TLS is required for IMAP/POP GSSAPI auth
      *
      * @return zimbraSaslGssapiRequiresTls, or false if unset

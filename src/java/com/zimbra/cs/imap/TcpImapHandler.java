@@ -333,6 +333,7 @@ final class TcpImapHandler extends ProtocolHandler {
             SSLSocketFactory fac = (SSLSocketFactory) SSLSocketFactory.getDefault();
             SSLSocket tlsconn = (SSLSocket) fac.createSocket(connection, connection.getInetAddress().getHostName(),
                     connection.getPort(), true);
+            NetUtil.setSSLProtocols(tlsconn, config.getMailboxdSslProtocols());
             NetUtil.setSSLEnabledCipherSuites(tlsconn, config.getSslExcludedCiphers(), config.getSslIncludedCiphers());
             tlsconn.setUseClientMode(false);
             startHandshake(tlsconn);
