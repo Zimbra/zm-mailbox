@@ -111,6 +111,7 @@ final class TcpPop3Handler extends ProtocolHandler {
             SSLSocketFactory fac = (SSLSocketFactory) SSLSocketFactory.getDefault();
             SSLSocket sock = (SSLSocket) fac.createSocket(connection,
                     connection.getInetAddress().getHostName(), connection.getPort(), true);
+            NetUtil.setSSLProtocols(sock, config.getMailboxdSslProtocols());
             NetUtil.setSSLEnabledCipherSuites(sock, config.getSslExcludedCiphers(), config.getSslIncludedCiphers());
             sock.setUseClientMode(false);
             startHandshake(sock);

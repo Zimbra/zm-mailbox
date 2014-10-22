@@ -8329,4 +8329,12 @@ TODO: delete them permanently from here
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>Whether to permit syncing shared calendar folders</desc>
 </attr>
+
+<attr id="1657" name="zimbraMailboxdSSLProtocols" type="string" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="8.6.0">
+  <globalConfigValue>SSLv3</globalConfigValue>
+  <globalConfigValue>TLSv1</globalConfigValue>
+  <globalConfigValue>TLSv1.1</globalConfigValue>
+  <globalConfigValue>TLSv1.2</globalConfigValue>
+  <desc>List of SSL/TLS protocols (as documented by SunJSSE Provider Protocols and used in setEnabledProtocols) to be enabled in Jetty for HTTPS, IMAPS, POP3S, and STARTTLS (including LMTP)</desc>
+</attr>
 </attrs>

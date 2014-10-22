@@ -111,6 +111,10 @@ public abstract class ServerConfig {
         return sb.append(getProtocol()).append(" server").toString();
     }
 
+    public String[] getMailboxdSslProtocols() {
+        return getConfigAttr(Provisioning.A_zimbraMailboxdSSLProtocols);
+    }
+
     public String[] getSslExcludedCiphers() {
         return getConfigAttr(Provisioning.A_zimbraSSLExcludeCipherSuites);
     }
@@ -170,7 +174,7 @@ public abstract class ServerConfig {
 
     public ServerSocket getServerSocket() throws ServiceException {
         return isSslEnabled() ?
-            NetUtil.getSslTcpServerSocket(getBindAddress(), getBindPort(), getSslExcludedCiphers(), getSslIncludedCiphers()) :
+            NetUtil.getSslTcpServerSocket(getBindAddress(), getBindPort(), getSslExcludedCiphers(), getSslIncludedCiphers(), getMailboxdSslProtocols()) :
             NetUtil.getTcpServerSocket(getBindAddress(), getBindPort());
     }
 
