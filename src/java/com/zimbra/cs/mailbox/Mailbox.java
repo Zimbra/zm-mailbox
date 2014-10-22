@@ -223,6 +223,7 @@ import com.zimbra.cs.redolog.op.TrackSync;
 import com.zimbra.cs.redolog.op.UnlockItem;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.FeedManager;
+import com.zimbra.cs.service.util.ItemData;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.SpamHandler;
 import com.zimbra.cs.service.util.SpamHandler.SpamReport;
@@ -5641,7 +5642,7 @@ public class Mailbox {
         }
     }
 
-    public Message addMessage(OperationContext octxt, InputStream in, long sizeHint, Long receivedDate, DeliveryOptions dopt, DeliveryContext dctxt)
+    public Message addMessage(OperationContext octxt, InputStream in, long sizeHint, Long receivedDate, DeliveryOptions dopt, DeliveryContext dctxt, ItemData id)
     throws IOException, ServiceException {
         int bufLen = Provisioning.getInstance().getLocalServer().getMailDiskStreamingThreshold();
         CopyInputStream cs = new CopyInputStream(in, sizeHint, bufLen, bufLen);
@@ -5659,6 +5660,10 @@ public class Mailbox {
             }
 
             blob = StoreManager.getInstance().storeIncoming(in);
+            
+            if (id != null && id.ud != null && id.ud.getBlobDigest() != null && !id.ud.getBlobDigest().isEmpty()) {
+                blob.setDigest(id.ud.getBlobDigest());
+            }
 
             if (validator != null && !validator.isValid()) {
                 StoreManager.getInstance().delete(blob);
@@ -5676,6 +5681,11 @@ public class Mailbox {
             cs.release();
             StoreManager.getInstance().quietDelete(blob);
         }
+    }
+    
+    public Message addMessage(OperationContext octxt, InputStream in, long sizeHint, Long receivedDate, DeliveryOptions dopt, DeliveryContext dctxt)
+        throws IOException, ServiceException {
+        return addMessage(octxt, in, sizeHint, receivedDate, dopt, dctxt, null);
     }
 
     public Message addMessage(OperationContext octxt, ParsedMessage pm, DeliveryOptions dopt, DeliveryContext dctxt)
