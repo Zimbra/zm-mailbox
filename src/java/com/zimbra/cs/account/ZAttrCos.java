@@ -10687,7 +10687,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * whether priority inbox feature is enabled
      *
-     * @return zimbraFeaturePriorityInboxEnabled, or true if unset
+     * @return zimbraFeaturePriorityInboxEnabled, or false if unset
      *
      * @since ZCS 8.0.0
      */
@@ -15149,7 +15149,6 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @return zimbraId, or null if unset
      */
-    @Override
     @ZAttr(id=1)
     public String getId() {
         return getAttr(Provisioning.A_zimbraId, null);
@@ -22997,7 +22996,7 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 9.0.0
      */
-    @ZAttr(id=1653)
+    @ZAttr(id=1656)
     public boolean isMobileShareCalendarEnabled() {
         return getBooleanAttr(Provisioning.A_zimbraMobileShareCalendarEnabled, false);
     }
@@ -23010,7 +23009,7 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 9.0.0
      */
-    @ZAttr(id=1653)
+    @ZAttr(id=1656)
     public void setMobileShareCalendarEnabled(boolean zimbraMobileShareCalendarEnabled) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMobileShareCalendarEnabled, zimbraMobileShareCalendarEnabled ? Provisioning.TRUE : Provisioning.FALSE);
@@ -23026,7 +23025,7 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 9.0.0
      */
-    @ZAttr(id=1653)
+    @ZAttr(id=1656)
     public Map<String,Object> setMobileShareCalendarEnabled(boolean zimbraMobileShareCalendarEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMobileShareCalendarEnabled, zimbraMobileShareCalendarEnabled ? Provisioning.TRUE : Provisioning.FALSE);
@@ -23040,7 +23039,7 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 9.0.0
      */
-    @ZAttr(id=1653)
+    @ZAttr(id=1656)
     public void unsetMobileShareCalendarEnabled() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMobileShareCalendarEnabled, "");
@@ -23055,7 +23054,7 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 9.0.0
      */
-    @ZAttr(id=1653)
+    @ZAttr(id=1656)
     public Map<String,Object> unsetMobileShareCalendarEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMobileShareCalendarEnabled, "");
