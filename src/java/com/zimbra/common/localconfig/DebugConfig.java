@@ -193,10 +193,14 @@ public final class DebugConfig {
     public static final boolean caldavAllowAttendeeForOrganizer =
             value("debug_caldav_allow_attendee_for_organizer", false);
 
-    /** TODO: Replace with a Config key when caldav-auto-schedule fully working in a way similar to how
-                    Provisioning.A_zimbraCalendarCalDavDisableScheduling is treated */
-    public static final boolean enableExperimentalCaldavAutoSchedule =
-            value("debug_caldav_enable_experimental_caldav_auto_schedule", false);
+    /** TODO: Replace/remove when support persistence of DavName to DB instead of in memory cache.
+     *        In memory cache version developed to enable a test mode which is more compatible with
+     *        URL: http://svn.calendarserver.org/repository/calendarserver/CalDAVTester/trunk
+     *        As currently implemented, this is only useful for testing.  Names are lost on restart
+     *        which would cause problems for some clients.
+     */
+    public static final boolean enableDAVclientCanChooseResourceBaseName =
+            value("debug_caldav_enable_dav_client_can_choose_resource_basename", false);
 
     public static boolean certAuthCaptureClientCertificate =
         value("debug_certauth_capture_client_certificate", false);
