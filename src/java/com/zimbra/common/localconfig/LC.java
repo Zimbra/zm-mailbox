@@ -266,6 +266,9 @@ public final class LC {
     public static final KnownKey zimbra_index_elasticsearch_url_base = KnownKey.newKey("http://localhost:9200/");
 
     @Supported
+    public static final KnownKey zimbra_index_manual_commit = KnownKey.newKey(false);
+
+    @Supported
     public static final KnownKey zimbra_index_wildcard_max_terms_expanded = KnownKey.newKey(20000);
 
     public static final KnownKey zimbra_index_rfc822address_max_token_length = KnownKey.newKey(256);
@@ -771,8 +774,6 @@ public final class LC {
     public static final KnownKey zmconfigd_listen_port = KnownKey.newKey(7171);
     public static final KnownKey zmconfigd_startup_pause = KnownKey.newKey(60);
 
-    public static final KnownKey zimbra_configrewrite_timeout = KnownKey.newKey(120);
-
     @Supported
     public static final KnownKey zimbra_mailbox_groups = KnownKey.newKey(100);
 
@@ -787,15 +788,15 @@ public final class LC {
 
     public static final KnownKey zimbra_class_accessmanager = KnownKey.newKey("com.zimbra.cs.account.accesscontrol.ACLAccessManager");
     public static final KnownKey zimbra_class_mboxmanager = KnownKey.newKey("com.zimbra.cs.mailbox.MailboxManager");
+    public static final KnownKey zimbra_class_shareddeliverycoordinator = KnownKey.newKey("");
     public static final KnownKey zimbra_class_database = KnownKey.newKey("com.zimbra.cs.db.MySQL");
     public static final KnownKey zimbra_class_store = KnownKey.newKey("com.zimbra.cs.store.file.FileBlobStore");
     public static final KnownKey zimbra_class_index_store_factory = KnownKey.newKey("com.zimbra.cs.index.LuceneIndex$Factory");
-    // public static final KnownKey zimbra_class_index_store_factory = KnownKey.newKey("com.zimbra.cs.index.elasticsearch.ElasticSearchIndex$Factory");
     public static final KnownKey zimbra_class_application = KnownKey.newKey("com.zimbra.cs.util.ZimbraApplication");
     public static final KnownKey zimbra_class_rulerewriterfactory = KnownKey.newKey("com.zimbra.cs.filter.RuleRewriterFactory");
     public static final KnownKey zimbra_class_datasourcemanager = KnownKey.newKey("com.zimbra.cs.datasource.DataSourceManager");
     public static final KnownKey zimbra_class_attrmanager = KnownKey.newKey("com.zimbra.cs.account.AttributeManager");
-    public static final KnownKey zimbra_class_soapsessionfactory = KnownKey.newKey("com.zimbra.soap.SoapSessionFactory");
+    public static final KnownKey zimbra_class_soapsessionfactory = KnownKey.newKey("com.zimbra.soap.DefaultSoapSessionFactory");
     public static final KnownKey zimbra_class_dbconnfactory = KnownKey.newKey("com.zimbra.cs.db.ZimbraConnectionFactory");
     public static final KnownKey zimbra_class_customproxyselector = KnownKey.newKey(""); //intentionally has no value; set one if u want to use a custom proxy selector
     public static final KnownKey zimbra_class_galgroupinfoprovider = KnownKey.newKey("com.zimbra.cs.gal.GalGroupInfoProvider");
@@ -1049,6 +1050,7 @@ public final class LC {
 
     public static final KnownKey zmailbox_message_cachesize = KnownKey.newKey(1);
 
+    public static final KnownKey zimbra_terms_cachesize = KnownKey.newKey(1024);
     @Supported
     public static final KnownKey contact_ranking_enabled = KnownKey.newKey(true);
 
@@ -1256,7 +1258,6 @@ public final class LC {
 
     public static final KnownKey zimbra_ews_autodiscover_use_service_url =
         KnownKey.newKey(false);
-
     static {
         // Automatically set the key name with the variable name.
         for (Field field : LC.class.getFields()) {

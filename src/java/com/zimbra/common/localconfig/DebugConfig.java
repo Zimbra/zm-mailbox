@@ -16,6 +16,8 @@
  */
 package com.zimbra.common.localconfig;
 
+import com.google.common.annotations.VisibleForTesting;
+
 
 /**
  * Various switches to turn features on/off, mainly for measuring the
@@ -131,8 +133,17 @@ public final class DebugConfig {
      * Huge Database (contention and the effects of corruption are issues) and database-per-user (which most DBMSes
      * can't deal with).
      */
-    public static final int numMailboxGroups = disableMailboxGroups ?
+    private static int numMailboxGroups = disableMailboxGroups ?
             Integer.MAX_VALUE : Math.max(LC.zimbra_mailbox_groups.intValue(), 1);
+
+    public static int getNumMailboxGroups() {
+        return numMailboxGroups;
+    }
+
+    @VisibleForTesting
+    public static void setNumMailboxGroup(int numGroups) {
+        numMailboxGroups = numGroups;
+    }
 
     /** If true, more than one server may be sharing the same store and
      *  database install.  In that case, the server must perform extra checks
@@ -182,14 +193,10 @@ public final class DebugConfig {
     public static final boolean caldavAllowAttendeeForOrganizer =
             value("debug_caldav_allow_attendee_for_organizer", false);
 
-    /** TODO: Replace/remove when support persistence of DavName to DB instead of in memory cache.
-     *        In memory cache version developed to enable a test mode which is more compatible with
-     *        URL: http://svn.calendarserver.org/repository/calendarserver/CalDAVTester/trunk
-     *        As currently implemented, this is only useful for testing.  Names are lost on restart
-     *        which would cause problems for some clients.
-     */
-    public static final boolean enableDAVclientCanChooseResourceBaseName =
-            value("debug_caldav_enable_dav_client_can_choose_resource_basename", false);
+    /** TODO: Replace with a Config key when caldav-auto-schedule fully working in a way similar to how
+                    Provisioning.A_zimbraCalendarCalDavDisableScheduling is treated */
+    public static final boolean enableExperimentalCaldavAutoSchedule =
+            value("debug_caldav_enable_experimental_caldav_auto_schedule", false);
 
     public static boolean certAuthCaptureClientCertificate =
         value("debug_certauth_capture_client_certificate", false);
@@ -229,8 +236,17 @@ public final class DebugConfig {
     public static boolean defang_block_form_same_host_post_req = value("defang_block_form_same_host_post_req", true);
 
 
-    public static final boolean disableShareExpirationListener =
+    private static boolean disableShareExpirationListener =
             value("debug_disable_share_expiration_listener", false);
+
+    public static boolean isDisableShareExpirationListener() {
+        return disableShareExpirationListener;
+    }
+
+    public static void setDisableShareExpirationListener(
+            boolean disableShareExpirationListener) {
+        DebugConfig.disableShareExpirationListener = disableShareExpirationListener;
+    }
 
     public static final boolean skipVirtualAccountRegistrationPage =
             value("skip_virtual_account_registration_page", false);
