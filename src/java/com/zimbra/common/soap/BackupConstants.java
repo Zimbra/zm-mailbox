@@ -157,7 +157,6 @@ public final class BackupConstants {
     public static final String A_COUNTER_NUM_SAMPLES = "numSamples";
     public static final String A_TOTAL_SPACE = "totalSpace";
     public static final String A_FREE_SPACE = "freeSpace";
-    public static final String A_INDEX_TYPE = "indextype";
 
     // mailbox move
     public static final String A_SOURCE = "src";

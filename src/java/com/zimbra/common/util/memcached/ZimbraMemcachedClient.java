@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2009, 2010, 2013, 2014 Zimbra, Inc.
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -35,6 +35,11 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.zip.CRC32;
 
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.BEncoding;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.util.BEncoding.BEncodingException;
+
 import net.spy.memcached.BinaryConnectionFactory;
 import net.spy.memcached.CachedData;
 import net.spy.memcached.ConnectionFactory;
@@ -44,17 +49,10 @@ import net.spy.memcached.HashAlgorithm;
 import net.spy.memcached.MemcachedClient;
 import net.spy.memcached.transcoders.Transcoder;
 
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.BEncoding;
-import com.zimbra.common.util.BEncoding.BEncodingException;
-import com.zimbra.common.util.ZimbraLog;
-
 public class ZimbraMemcachedClient {
 
-    private class ConnObserver implements ConnectionObserver {
-        @Override
+    private static class ConnObserver implements ConnectionObserver {
         public void connectionEstablished(SocketAddress sa, int reconnectCount) {
-            connected = true;
             if (sa instanceof InetSocketAddress) {
                 InetSocketAddress isa = (InetSocketAddress) sa;
                 String hostPort = isa.getHostName() + ":" + isa.getPort();
@@ -64,7 +62,6 @@ public class ZimbraMemcachedClient {
             }
         }
 
-        @Override
         public void connectionLost(SocketAddress sa) {
             if (sa instanceof InetSocketAddress) {
                 InetSocketAddress isa = (InetSocketAddress) sa;
@@ -73,14 +70,13 @@ public class ZimbraMemcachedClient {
             } else {
                 ZimbraLog.misc.warn("Lost connection to memcached at " + sa.toString());
             }
-        }
+        }        
     }
 
     public static final int DEFAULT_EXPIRY = -1;
     public static final long DEFAULT_TIMEOUT = -1;
 
     private MemcachedClient mMCDClient;
-    private boolean connected = false;
     private int mDefaultExpiry;  // in seconds
     private long mDefaultTimeout;  // in millis
     private String mServerList;  // used for config reporting only
@@ -98,7 +94,7 @@ public class ZimbraMemcachedClient {
 
     public boolean isConnected() {
         synchronized (this) {
-            return connected;
+            return mMCDClient != null;
         }
     }
 
@@ -199,11 +195,11 @@ public class ZimbraMemcachedClient {
     private void disconnect(MemcachedClient client, long timeout) {
         boolean drained = client.waitForQueues(timeout, TimeUnit.MILLISECONDS);
         if (!drained)
-            ZimbraLog.misc.warn("Memcached client did not drain queue in %dms", timeout);
+            ZimbraLog.misc.warn("Memcached client did not drain queue in " + timeout + "ms");
         boolean success = client.shutdown(timeout, TimeUnit.MILLISECONDS);
         if (!success) {
-            ZimbraLog.misc.warn("Memcached client did not shutdown gracefully in %dms; " +
-                                "forcing immediate shutdown", timeout);
+            ZimbraLog.misc.warn("Memcached client did not shutdown gracefully in " + timeout +
+                                "ms; forcing immediate shutdowb");
             client.shutdown();
         }
     }
@@ -447,37 +443,6 @@ public class ZimbraMemcachedClient {
         }
     }
 
-    public boolean flush() {
-        return flush(DEFAULT_TIMEOUT, true);
-    }
-
-    public boolean flush(long timeout, boolean waitForAck) {
-        Boolean success = null;
-        MemcachedClient client;
-        synchronized (this) {
-            client = mMCDClient;
-            if (timeout == DEFAULT_TIMEOUT)
-                timeout = mDefaultTimeout;
-        }
-        if (client == null) return false;
-        Future<Boolean> future = client.flush();
-        if (waitForAck) {
-            try {
-                success = future.get(timeout, TimeUnit.MILLISECONDS);
-            } catch (TimeoutException e) {
-                ZimbraLog.misc.warn("memcached flush timed out after " + timeout + "ms", e);
-                future.cancel(false);
-            } catch (InterruptedException e) {
-                ZimbraLog.misc.warn("InterruptedException during memcached flush operation", e);
-            } catch (ExecutionException e) {
-                ZimbraLog.misc.warn("ExecutionException during memcached flush operation", e);
-            }
-            return success != null && success.booleanValue();
-        } else {
-            return true;
-        }
-    }
-
     // simple wrapper around a byte[]
     private static class ByteArray {
         private byte[] mBytes;
@@ -704,7 +669,7 @@ public class ZimbraMemcachedClient {
 
     /**
      * Puts the key/value pair for a big byte array.
-     *
+     * 
      * A big byte array value is a byte array whose length can be greater than memcached limit of 1MB.
      * If the data is smaller than MAX_CHUNK_SIZE (1MB - 1KB) it is set in a single key/value pair in
      * memcached, with the value suffixed with a "V". (V for value)  If the data is bigger, the data is
@@ -713,31 +678,31 @@ public class ZimbraMemcachedClient {
      * and chunk number.  The cache value for the original key is set to a table of contents containing
      * the number of chunks, the fingerprint, and length and checksum of each chunk, followed by a "T".
      * (T for table of contents)
-     *
+     * 
      * During retrieval, the value for the main key is examined to see if the last byte is a V or T.  If
      * it's a V, the preceding bytes constitute the entire cache value.  If it's a T, the preceding bytes
      * are interpreted as the table of contents.  The information in the table of contents can be used
      * to then fetch the chunks and reassemble them.  All chunks must exist and must match the length and
      * checksum in the table of contents.  Otherwise the whole get operation is considered a cache miss.
-     *
+     * 
      * When the main key is updated or removed, the chunk values become orphaned because the table of contents
      * will no longer contain the same fingerprint.  (Some collision risk exists.)  These entries will age
      * out of the cache eventually.
-     *
+     * 
      * Example of a short value:
-     *
+     * 
      * key = "foo", value = ['b', 'a', 'r']
      * Memcached will have "foo" = ['b', 'a', 'r', 'V'].
-     *
+     * 
      * Example of a big value:
-     *
+     * 
      * key = "foo", value = <1.5MB byte array>
      * Assume the fingerprint computed is 1234567890.
      * Memcached will have:
      *   "foo" = <table of contents> 'T'
      *   "foo:1234567890.0" = <1st chunk of ~1MB>
      *   "foo:1234567890.1" = <2nd chunk of ~0.5MB>
-     *
+     * 
      * @param key
      * @param value
      * @param expirySec expiry in seconds
@@ -775,7 +740,7 @@ public class ZimbraMemcachedClient {
                 return false;
             }
             ByteArrayChunksTOC toc = chunks.makeTOC();
-
+    
             // Add chunks to the cache.
             String chunkKeyPrefix = key + ":" + toc.getFingerprint() + ".";
             int numChunks = chunks.getNumChunks();
@@ -932,7 +897,7 @@ public class ZimbraMemcachedClient {
         ByteArray[] byteArrays = new ByteArray[numChunks];
         int index = 0;
         for (String ck : chunkKeys) {
-            ByteArray ba = vals.get(ck);
+            ByteArray ba = (ByteArray) vals.get(ck);
             if (ba == null)
                 return null;
             byteArrays[index] = ba;
@@ -998,23 +963,19 @@ public class ZimbraMemcachedClient {
         }
 
         private void printReport(String testName, long elapsed, int bytes, boolean success) {
-            double kbPerSec = (bytes) / 1024.0 / (elapsed) * 1000.0;
+            double kbPerSec = ((double) bytes) / 1024.0 / ((double) elapsed) * 1000.0;
             System.out.printf("%-9s: %5dms, %7.2fkb/s, %s\n", testName, elapsed, kbPerSec, success ? "PASS" : "FAIL");
         }
 
         private static class TestKey implements MemcachedKey {
             private String mKey;
             public TestKey(String k) { mKey = k; }
-            @Override
             public String getKeyPrefix() { return null; }
-            @Override
             public String getKeyValue() { return mKey; }
         }
 
         private static class IntegerSerializer implements MemcachedSerializer<Integer> {
-            @Override
-            public Object serialize(Integer value) throws ServiceException { return value; }
-            @Override
+            public Object serialize(Integer value) throws ServiceException { return value; }        
             public Integer deserialize(Object obj) throws ServiceException { return (Integer) obj; }
         }
 
@@ -1042,9 +1003,7 @@ public class ZimbraMemcachedClient {
         }
 
         private static class StringSerializer implements MemcachedSerializer<String> {
-            @Override
-            public Object serialize(String value) throws ServiceException { return value; }
-            @Override
+            public Object serialize(String value) throws ServiceException { return value; }        
             public String deserialize(Object obj) throws ServiceException { return (String) obj; }
         }
 
@@ -1077,11 +1036,9 @@ public class ZimbraMemcachedClient {
         }
 
         private static class BBASerializer implements ByteArraySerializer<ByteArray> {
-            @Override
             public byte[] serialize(ByteArray value) throws ServiceException {
                 return value.getBytes();
             }
-            @Override
             public ByteArray deserialize(byte[] bytes) throws ServiceException {
                 return new ByteArray(bytes);
             }
