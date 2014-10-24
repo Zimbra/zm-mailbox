@@ -904,7 +904,7 @@ ADDITIONAL LICENSE INFORMATION:
 
 > BSD
 
-curl-7.36.0.tar.gz\curl-7.36.0.tar\curl-7.36.0\lib\security.c
+curl-7.38.0.tar.gz\curl-7.38.0.tar\curl-7.38.0\lib\security.c
 
 
 Copyright (c) 1998, 1999 Kungliga Tekniska Hgskolan
@@ -945,7 +945,7 @@ SUCH DAMAGE.
 > RSA Data Security
 
 
-curl-7.36.0.tar.gz\curl-7.36.0.tar\curl-7.36.0\lib\md4.c
+curl-7.38.0.tar.gz\curl-7.38.0.tar\curl-7.38.0\lib\md4.c
 
 
 Copyright (C) 1990-2, RSA Data Security, Inc. All rights reserved.
