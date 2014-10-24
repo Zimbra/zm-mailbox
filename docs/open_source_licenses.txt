@@ -138,6 +138,7 @@ SECTION 2: Apache License, V2.0
    >>> jurt-4.0.2
    >>> lucene-3.5.0
    >>> nekohtml-1.9.13
+   >>> objenesis-2.1
    >>> org.apache.mina-2.0.4
    >>> org.openid4java-0.9.5
    >>> ridl-4.0.2
@@ -27402,6 +27403,11 @@ SUCH DAMAGE.
 >>> nekohtml-1.9.13
 
 The NekoHTML parser is distributed under the Apache 2.0 license. For specific license details, please refer to the LICENSE.txt file.
+
+
+>>> objenesis-2.1
+
+License : Apache 2.0
 
 
 >>> org.apache.mina-2.0.4
