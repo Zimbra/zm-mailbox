@@ -785,6 +785,7 @@ public interface DbSearchConstraints extends Cloneable {
 
         public void addSizeRange(long min, boolean minInclusive, long max, boolean maxInclusive, boolean bool) {
             if (min < 0 && max < 0) {
+            	noResults = true;
                 return;
             }
             ranges.put(RangeType.SIZE, new NumericRange(min, minInclusive, max, maxInclusive, bool));
