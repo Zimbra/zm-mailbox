@@ -23,6 +23,7 @@ import javax.security.sasl.SaslServer;
 
 import org.apache.mina.core.session.IoSession;
 import org.apache.mina.filter.ssl.SslFilter;
+import org.apache.mina.filter.ssl.ZimbraSslFilter;
 
 import com.zimbra.cs.security.sasl.SaslFilter;
 
@@ -31,6 +32,7 @@ public final class NioConnection {
     private final IoSession session;
     private final OutputStream out;
     private final InetSocketAddress remoteAddress;
+    private ZimbraSslFilter tlsSslFilter;
 
     NioConnection(NioServer server, IoSession session) {
         this.server = server;
@@ -67,9 +69,13 @@ public final class NioConnection {
         session.getConfig().setBothIdleTime(secs);
     }
 
+    public boolean isTlsStartedIfNecessary() {
+        return tlsSslFilter == null || tlsSslFilter.isSslHandshakeComplete(session);
+    }
+
     public void startTls() {
-        SslFilter filter = server.newSSLFilter();
-        session.getFilterChain().addFirst("ssl", filter);
+        tlsSslFilter = server.newSSLFilter();
+        session.getFilterChain().addFirst("ssl", tlsSslFilter);
         session.setAttribute(SslFilter.DISABLE_ENCRYPTION_ONCE, true);
     }
 
