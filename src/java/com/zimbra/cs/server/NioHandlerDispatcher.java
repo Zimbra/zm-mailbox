@@ -87,6 +87,11 @@ final class NioHandlerDispatcher extends IoHandlerAdapter {
 
     @Override
     public void messageReceived(IoSession session, Object msg) throws IOException, ProtocolDecoderException {
+        NioConnection conn = getConnection(session);
+        if (conn != null && !conn.isTlsStartedIfNecessary()) {
+            server.getLog().warn("plaintext message received during starttls handshake");
+            return;
+        }
         getHandler(session).messageReceived(msg);
     }
 

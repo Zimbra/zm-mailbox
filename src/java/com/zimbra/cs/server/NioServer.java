@@ -50,7 +50,7 @@ import org.apache.mina.filter.codec.ProtocolEncoder;
 import org.apache.mina.filter.codec.ProtocolEncoderAdapter;
 import org.apache.mina.filter.codec.ProtocolEncoderOutput;
 import org.apache.mina.filter.executor.ExecutorFilter;
-import org.apache.mina.filter.ssl.SslFilter;
+import org.apache.mina.filter.ssl.ZimbraSslFilter;
 import org.apache.mina.transport.socket.nio.NioProcessor;
 import org.apache.mina.transport.socket.nio.NioSession;
 import org.apache.mina.transport.socket.nio.ZimbraSocketAcceptor;
@@ -184,9 +184,9 @@ public abstract class NioServer implements Server {
         return mSslEnabledCipherSuites;
     }
 
-    public SslFilter newSSLFilter() {
+    public ZimbraSslFilter newSSLFilter() {
         SSLContext sslCtxt = getSSLContext();
-        SslFilter sslFilter = new SslFilter(sslCtxt);
+        ZimbraSslFilter sslFilter = new ZimbraSslFilter(sslCtxt);
         String[] sslProtocols = config.getMailboxdSslProtocols();
         if (sslProtocols != null && sslProtocols.length > 0) {
             sslFilter.setEnabledProtocols(sslProtocols);
