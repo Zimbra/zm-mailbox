@@ -473,11 +473,19 @@ public class MimeTest {
 
         Assert.assertFalse("Line folding should take place.",
             dataAfterFix.equals(dataBeforeFix));
-        Assert.assertTrue("Data should not be modifed apart from line foldings.", 
-            dataAfterFix.replaceAll("\r\n", "").equals(dataBeforeFix.replaceAll("\r\n", "")));
+
+        Assert.assertTrue("Text Part Content-Transfer-Encoding header should be preserved",
+            mpiText.getMimePart().getHeader("Content-Transfer-Encoding", ":").equals("base64"));
+        Assert.assertTrue("HTML Part Content-Transfer-Encoding header should be preserved",
+            mpiHtml.getMimePart().getHeader("Content-Transfer-Encoding", ":").equals("base64"));
+
+        Assert.assertTrue("Text Part Content-Disposition header should be preserved",
+            mpiText.mDisposition.equals("inline"));
+        Assert.assertTrue("HTML Part Content-Disposition header should be preserved",
+            mpiHtml.mDisposition.equals("inline"));
+
         Assert.assertTrue("Text data should not be modified",
-            TestUtil.bytesEqual(textPlain.getBytes(),
-                mpiText.getMimePart().getInputStream()));
+            TestUtil.bytesEqual(textPlain.getBytes(), mpiText.getMimePart().getInputStream()));
         Assert.assertTrue("Html data should not be modified",
             TestUtil.bytesEqual(textHtml.getBytes(), mpiHtml.getMimePart().getInputStream()));
     }
