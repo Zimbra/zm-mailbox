@@ -64,6 +64,7 @@ import com.zimbra.soap.account.message.AuthRequest;
 import com.zimbra.soap.account.message.CreateIdentityRequest;
 import com.zimbra.soap.account.message.GetInfoResponse;
 import com.zimbra.soap.account.message.GetWhiteBlackListResponse;
+import com.zimbra.soap.account.message.ModifyPrefsRequest;
 import com.zimbra.soap.account.type.Pref;
 import com.zimbra.soap.account.type.Session;
 import com.zimbra.soap.admin.message.CreateAccountRequest;
@@ -78,6 +79,7 @@ import com.zimbra.soap.admin.type.QueueQuery;
 import com.zimbra.soap.admin.type.QueueQueryField;
 import com.zimbra.soap.admin.type.ServerWithQueueAction;
 import com.zimbra.soap.admin.type.ValueAttrib;
+import com.zimbra.soap.json.JacksonUtil;
 import com.zimbra.soap.mail.message.ConvActionRequest;
 import com.zimbra.soap.mail.message.DeleteDataSourceRequest;
 import com.zimbra.soap.mail.message.GetContactsRequest;
@@ -994,6 +996,28 @@ Caused by: javax.xml.bind.UnmarshalException: Namespace URIs and local names to 
             }
         }
     }
+
+    private static String modifyPrefsAsJson = "{\"_attrs\":{\"zimbraPrefGroupMailBy\":\"message\","
+            + "\"zimbraPrefMailItemsPerPage\":\"200\",\"+zimbraPrefTimeZoneId\":\"Africa/Harare\","
+            + "\"zimbraPrefSpellIgnoreWord\":[\"zimbra\",\"jaxb\"]},\"_jsns\":\"urn:zimbraAccount\"}";
+
+    @Test
+    public void modifyPrefs() throws Exception {
+        ModifyPrefsRequest req = new ModifyPrefsRequest();
+        req.addPref(new Pref("zimbraPrefGroupMailBy", "message"));
+        req.addPref(new Pref("zimbraPrefMailItemsPerPage", "200"));
+        req.addPref(new Pref("+zimbraPrefTimeZoneId", "Africa/Harare"));  // method of adding to multivalue
+        // method of setting multivalue
+        req.addPref(new Pref("zimbraPrefSpellIgnoreWord", "zimbra"));
+        req.addPref(new Pref("zimbraPrefSpellIgnoreWord", "jaxb"));
+        Element jsonElem = JacksonUtil.jaxbToJSONElement(req);
+        Assert.assertNotNull("JSON Element", jsonElem);
+        Assert.assertEquals("JSON", modifyPrefsAsJson, jsonElem.toString());
+        req = JaxbUtil.elementToJaxb(jsonElem);
+        List<Pref> prefs = req.getPrefs();
+        Assert.assertEquals("Number of round tripped prefs", 5, prefs.size());
+    }
+
     @Test
     public void jaxbMessageHitInfoElementNameOrder() throws Exception {
         JaxbInfo jaxbInfo = JaxbInfo.getFromCache(MessageHitInfo.class);
