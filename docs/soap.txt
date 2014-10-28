@@ -969,19 +969,19 @@ import and export of addressbook.
 
 
 The JSON version is different:
-
-  ModifyPrefsRequest: {
-    _attrs: [
-      {
-        prefName1: "prefValue1"
-       },
-      {
-        prefName2: "prefValue2"
-       },
-       ...
-     ],
-    _jsns: "urn:zimbraAccount"
-   }
+    {
+        ModifyPrefsRequest: {
+            "_attrs": {
+                "prefName1": "prefValue1",
+                "prefName2": "prefValue2"
+                "+nameOfMulitValuedPref3": "addedPrefValue3",
+                "-nameOfMulitValuedPref4": "removedPrefValue4",
+                "nameOfMulitValuedPref5": ["prefValue5one","prefValue5two"],
+                ...
+            },
+            _jsns: "urn:zimbraAccount"
+        }
+    }
 
 ---------
 
