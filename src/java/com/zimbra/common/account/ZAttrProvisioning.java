@@ -9797,6 +9797,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMtaSmtpTlsMandatoryCiphers = "zimbraMtaSmtpTlsMandatoryCiphers";
 
     /**
+     * Value for postconf smtp_tls_protocols
+     *
+     * @since ZCS 8.6.0
+     */
+    @ZAttr(id=1670)
+    public static final String A_zimbraMtaSmtpTlsProtocols = "zimbraMtaSmtpTlsProtocols";
+
+    /**
      * Value for postconf smtp_tls_security_level
      *
      * @since ZCS 8.5.0
