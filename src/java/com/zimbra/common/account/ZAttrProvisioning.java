@@ -754,6 +754,78 @@ public class ZAttrProvisioning {
         public boolean isDns() { return this == dns;}
     }
 
+    public static enum MtaLmtpTlsCiphers {
+        high("high"),
+        null_("null"),
+        low("low"),
+        medium("medium"),
+        export("export");
+        private String mValue;
+        private MtaLmtpTlsCiphers(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static MtaLmtpTlsCiphers fromString(String s) throws ServiceException {
+            for (MtaLmtpTlsCiphers value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isHigh() { return this == high;}
+        public boolean isNull_() { return this == null_;}
+        public boolean isLow() { return this == low;}
+        public boolean isMedium() { return this == medium;}
+        public boolean isExport() { return this == export;}
+    }
+
+    public static enum MtaLmtpTlsMandatoryCiphers {
+        high("high"),
+        null_("null"),
+        low("low"),
+        medium("medium"),
+        export("export");
+        private String mValue;
+        private MtaLmtpTlsMandatoryCiphers(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static MtaLmtpTlsMandatoryCiphers fromString(String s) throws ServiceException {
+            for (MtaLmtpTlsMandatoryCiphers value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isHigh() { return this == high;}
+        public boolean isNull_() { return this == null_;}
+        public boolean isLow() { return this == low;}
+        public boolean isMedium() { return this == medium;}
+        public boolean isExport() { return this == export;}
+    }
+
+    public static enum MtaLmtpTlsSecurityLevel {
+        may("may"),
+        encrypt("encrypt"),
+        dane_only("dane-only"),
+        fingerprint("fingerprint"),
+        verify("verify"),
+        dane("dane"),
+        none("none"),
+        secure("secure");
+        private String mValue;
+        private MtaLmtpTlsSecurityLevel(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static MtaLmtpTlsSecurityLevel fromString(String s) throws ServiceException {
+            for (MtaLmtpTlsSecurityLevel value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isMay() { return this == may;}
+        public boolean isEncrypt() { return this == encrypt;}
+        public boolean isDane_only() { return this == dane_only;}
+        public boolean isFingerprint() { return this == fingerprint;}
+        public boolean isVerify() { return this == verify;}
+        public boolean isDane() { return this == dane;}
+        public boolean isNone() { return this == none;}
+        public boolean isSecure() { return this == secure;}
+    }
+
     public static enum MtaMilterDefaultAction {
         reject("reject"),
         tempfail("tempfail"),
@@ -9139,6 +9211,71 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1507)
     public static final String A_zimbraMtaLmtpHostLookup = "zimbraMtaLmtpHostLookup";
+
+    /**
+     * Value for postconf lmtp_tls_CAfile
+     *
+     * @since ZCS 8.6.0
+     */
+    @ZAttr(id=1663)
+    public static final String A_zimbraMtaLmtpTlsCAfile = "zimbraMtaLmtpTlsCAfile";
+
+    /**
+     * Value for postconf lmtp_tls_CApath
+     *
+     * @since ZCS 8.6.0
+     */
+    @ZAttr(id=1664)
+    public static final String A_zimbraMtaLmtpTlsCApath = "zimbraMtaLmtpTlsCApath";
+
+    /**
+     * Value for postconf lmtp_tls_ciphers
+     *
+     * @since ZCS 8.6.0
+     */
+    @ZAttr(id=1661)
+    public static final String A_zimbraMtaLmtpTlsCiphers = "zimbraMtaLmtpTlsCiphers";
+
+    /**
+     * Value for postconf lmtp_tls_exclude_ciphers
+     *
+     * @since ZCS 8.6.0
+     */
+    @ZAttr(id=1659)
+    public static final String A_zimbraMtaLmtpTlsExcludeCiphers = "zimbraMtaLmtpTlsExcludeCiphers";
+
+    /**
+     * Value for postconf lmtp_tls_loglevel. Defaults to 0. Valid range is
+     * 0-4
+     *
+     * @since ZCS 8.6.0
+     */
+    @ZAttr(id=1665)
+    public static final String A_zimbraMtaLmtpTlsLoglevel = "zimbraMtaLmtpTlsLoglevel";
+
+    /**
+     * Value for postconf lmtp_tls_mandatory_ciphers
+     *
+     * @since ZCS 8.6.0
+     */
+    @ZAttr(id=1662)
+    public static final String A_zimbraMtaLmtpTlsMandatoryCiphers = "zimbraMtaLmtpTlsMandatoryCiphers";
+
+    /**
+     * Value for postconf lmtp_tls_protocols
+     *
+     * @since ZCS 8.6.0
+     */
+    @ZAttr(id=1658)
+    public static final String A_zimbraMtaLmtpTlsProtocols = "zimbraMtaLmtpTlsProtocols";
+
+    /**
+     * Value for postconf lmtp_tls_security_level
+     *
+     * @since ZCS 8.6.0
+     */
+    @ZAttr(id=1660)
+    public static final String A_zimbraMtaLmtpTlsSecurityLevel = "zimbraMtaLmtpTlsSecurityLevel";
 
     /**
      * Value for postconf mailq_path
