@@ -1082,17 +1082,17 @@
           </then>
         </if>
     	
-        <mkdir dir="${solr.home.dir}/configsets/zimbra/conf" />
+        <mkdir dir="${dist.dir}/solr/configsets/zimbra/conf" />
 	        
-        <copy todir="${solr.home.dir}/configsets/zimbra/conf" overwrite="true">
+        <copy todir="${dist.dir}/solr/configsets/zimbra/conf" overwrite="true">
             <fileset dir="${config.dir}/solr/configsets/zimbra/conf/" includes="*.xml,*.txt"/>
         </copy>
         
-        <copy todir="${solr.home.dir}/configsets/zimbra/conf/lang" overwrite="true">
+        <copy todir="${dist.dir}/solr/configsets/zimbra/conf/lang" overwrite="true">
             <fileset dir="${config.dir}/solr/configsets/zimbra/conf/lang" includes="*.txt" />
         </copy>
         
-        <copy todir="${solr.home.dir}/solr" overwrite="true">
+        <copy todir="${dist.dir}/solr/solr" overwrite="true">
             <fileset dir="${config.dir}/solr" includes="solr.xml"/>
         </copy>
     </target>
