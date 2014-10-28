@@ -1,0 +1,22 @@
+To: user1@psurana.local
+Subject: base64 without line folding.
+Content-Type: multipart/alternative;
+	boundary="----=_Part_2_1408469640009"
+From: admin@psurana.local
+Date: Tue, 19 Aug 2014 13:34:01 -0400 (EDT)
+
+------=_Part_2_1408469640009
+Content-Type: text/plain;
+	charset= utf-8
+Content-Transfer-Encoding: base64
+Content-Disposition: inline
+
+TGluZSAxIFRoaXMgaXMgYmFzZTY0IGVuY29kZWQgdGV4dCBtZXNzYWdlIHBhcnQuIEl0IGRvZXMgbm90IGhhdmUgbGluZSBmb2xkaW5nLiANCkxpbmUgMiBUaGlzIGlzIGJhc2U2NCBlbmNvZGVkIHRleHQgbWVzc2FnZSBwYXJ0LiBJdCBkb2VzIG5vdCBoYXZlIGxpbmUgZm9sZGluZy4gDQpMaW5lIDMgVGhpcyBpcyBiYXNlNjQgZW5jb2RlZCB0ZXh0IG1lc3NhZ2UgcGFydC4gSXQgZG9lcyBub3QgaGF2ZSBsaW5lIGZvbGRpbmcuIA0K
+------=_Part_2_1408469640009
+Content-Type: text/html;
+	charset= utf-8
+Content-Transfer-Encoding: base64
+Content-Disposition: inline
+
+PGh0bWw+DQo8Ym9keT4NCkxpbmUgMSBUaGlzIGlzIGJhc2U2NCBlbmNvZGVkIGh0bWwgbWVzc2FnZSBwYXJ0LiBJdCBkb2VzIG5vdCBoYXZlIGxpbmUgZm9sZGluZy4gIDwvIGJyPkxpbmUgMiBUaGlzIGlzIGJhc2U2NCBlbmNvZGVkIGh0bWwgbWVzc2FnZSBwYXJ0LiBJdCBkb2VzIG5vdCBoYXZlIGxpbmUgZm9sZGluZy4gPC8gYnI+DQpMaW5lIDMgVGhpcyBpcyBiYXNlNjQgZW5jb2RlZCBodG1sIG1lc3NhZ2UgcGFydC4gSXQgZG9lcyBub3QgaGF2ZSBsaW5lIGZvbGRpbmcuIA0KPC8gYnI+DQo8L2JvZHk+DQo8L2h0bWw+
+------=_Part_2_1408469640009--
