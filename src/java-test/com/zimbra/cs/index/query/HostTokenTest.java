@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.zimbra.common.service.ServiceException;
@@ -20,6 +21,7 @@ import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.qa.unittest.TestUtil;
 
+@Ignore ("Ignoring this test until EmbeddedSolrServer is integrated into main")
 public class HostTokenTest {
     static Account account;
     static Mailbox mbox;
