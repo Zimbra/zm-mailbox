@@ -16485,7 +16485,7 @@ public abstract class ZAttrServer extends NamedEntry {
      */
     @ZAttr(id=1657)
     public String[] getMailboxdSSLProtocols() {
-        String[] value = getMultiAttr(Provisioning.A_zimbraMailboxdSSLProtocols); return value.length > 0 ? value : new String[] {"SSLv3","TLSv1","TLSv1.1","TLSv1.2"};
+        String[] value = getMultiAttr(Provisioning.A_zimbraMailboxdSSLProtocols); return value.length > 0 ? value : new String[] {"TLSv1","TLSv1.1","TLSv1.2"};
     }
 
     /**
@@ -21261,13 +21261,13 @@ public abstract class ZAttrServer extends NamedEntry {
     /**
      * Value for postconf lmtp_tls_protocols
      *
-     * @return zimbraMtaLmtpTlsProtocols, or "!SSLv2" if unset
+     * @return zimbraMtaLmtpTlsProtocols, or "!SSLv2, !SSLv3" if unset
      *
      * @since ZCS 8.6.0
      */
     @ZAttr(id=1658)
     public String getMtaLmtpTlsProtocols() {
-        return getAttr(Provisioning.A_zimbraMtaLmtpTlsProtocols, "!SSLv2");
+        return getAttr(Provisioning.A_zimbraMtaLmtpTlsProtocols, "!SSLv2, !SSLv3");
     }
 
     /**
@@ -24936,6 +24936,78 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Value for postconf smtp_tls_protocols
+     *
+     * @return zimbraMtaSmtpTlsProtocols, or "!SSLv2, !SSLv3" if unset
+     *
+     * @since ZCS 8.6.0
+     */
+    @ZAttr(id=1670)
+    public String getMtaSmtpTlsProtocols() {
+        return getAttr(Provisioning.A_zimbraMtaSmtpTlsProtocols, "!SSLv2, !SSLv3");
+    }
+
+    /**
+     * Value for postconf smtp_tls_protocols
+     *
+     * @param zimbraMtaSmtpTlsProtocols new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.6.0
+     */
+    @ZAttr(id=1670)
+    public void setMtaSmtpTlsProtocols(String zimbraMtaSmtpTlsProtocols) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpTlsProtocols, zimbraMtaSmtpTlsProtocols);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf smtp_tls_protocols
+     *
+     * @param zimbraMtaSmtpTlsProtocols new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.6.0
+     */
+    @ZAttr(id=1670)
+    public Map<String,Object> setMtaSmtpTlsProtocols(String zimbraMtaSmtpTlsProtocols, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpTlsProtocols, zimbraMtaSmtpTlsProtocols);
+        return attrs;
+    }
+
+    /**
+     * Value for postconf smtp_tls_protocols
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.6.0
+     */
+    @ZAttr(id=1670)
+    public void unsetMtaSmtpTlsProtocols() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpTlsProtocols, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf smtp_tls_protocols
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.6.0
+     */
+    @ZAttr(id=1670)
+    public Map<String,Object> unsetMtaSmtpTlsProtocols(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpTlsProtocols, "");
+        return attrs;
+    }
+
+    /**
      * Value for postconf smtp_tls_security_level
      *
      * <p>Valid values: [may, encrypt, dane-only, fingerprint, verify, dane, none, secure]
@@ -27381,13 +27453,13 @@ public abstract class ZAttrServer extends NamedEntry {
     /**
      * Value for postconf smtpd_tls_protocols
      *
-     * @return zimbraMtaSmtpdTlsProtocols, or null if unset
+     * @return zimbraMtaSmtpdTlsProtocols, or "!SSLv2, !SSLv3" if unset
      *
      * @since ZCS 8.5.0
      */
     @ZAttr(id=1646)
     public String getMtaSmtpdTlsProtocols() {
-        return getAttr(Provisioning.A_zimbraMtaSmtpdTlsProtocols, null);
+        return getAttr(Provisioning.A_zimbraMtaSmtpdTlsProtocols, "!SSLv2, !SSLv3");
     }
 
     /**
@@ -35266,7 +35338,7 @@ public abstract class ZAttrServer extends NamedEntry {
      */
     @ZAttr(id=1653)
     public String[] getReverseProxySSLProtocols() {
-        String[] value = getMultiAttr(Provisioning.A_zimbraReverseProxySSLProtocols); return value.length > 0 ? value : new String[] {"SSLv3","TLSv1","TLSv1.1","TLSv1.2"};
+        String[] value = getMultiAttr(Provisioning.A_zimbraReverseProxySSLProtocols); return value.length > 0 ? value : new String[] {"TLSv1","TLSv1.1","TLSv1.2"};
     }
 
     /**

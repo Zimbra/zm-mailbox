@@ -8272,6 +8272,7 @@ TODO: delete them permanently from here
 </attr>
 
 <attr id="1646" name="zimbraMtaSmtpdTlsProtocols" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
+  <globalConfigValue>!SSLv2, !SSLv3</globalConfigValue>
   <desc>Value for postconf smtpd_tls_protocols</desc>
 </attr>
 
@@ -8306,7 +8307,6 @@ TODO: delete them permanently from here
 </attr>
 
 <attr id="1653" name="zimbraReverseProxySSLProtocols" type="string" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited" since="8.6.0">
-  <globalConfigValue>SSLv3</globalConfigValue>
   <globalConfigValue>TLSv1</globalConfigValue>
   <globalConfigValue>TLSv1.1</globalConfigValue>
   <globalConfigValue>TLSv1.2</globalConfigValue>
@@ -8332,7 +8332,6 @@ TODO: delete them permanently from here
 </attr>
 
 <attr id="1657" name="zimbraMailboxdSSLProtocols" type="string" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="8.6.0">
-  <globalConfigValue>SSLv3</globalConfigValue>
   <globalConfigValue>TLSv1</globalConfigValue>
   <globalConfigValue>TLSv1.1</globalConfigValue>
   <globalConfigValue>TLSv1.2</globalConfigValue>
@@ -8340,7 +8339,7 @@ TODO: delete them permanently from here
 </attr>
 
 <attr id="1658" name="zimbraMtaLmtpTlsProtocols" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.6.0">
-  <globalConfigValue>!SSLv2</globalConfigValue>
+  <globalConfigValue>!SSLv2, !SSLv3</globalConfigValue>
   <desc>Value for postconf lmtp_tls_protocols</desc>
 </attr>
 
@@ -8390,6 +8389,11 @@ TODO: delete them permanently from here
 <attr id="1669" name="zimbraSolrURLBase" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="9.0">
     <globalConfigValue>http://localhost:7983/solr</globalConfigValue>
     <desc>Base URL for accessing Solr. Must include port number. Should point to ZooKeeper when Solr is running in cloud mode.</desc>
+</attr>
+
+<attr id="1670" name="zimbraMtaSmtpTlsProtocols" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.6.0">
+  <globalConfigValue>!SSLv2, !SSLv3</globalConfigValue>
+  <desc>Value for postconf smtp_tls_protocols</desc>
 </attr>
 
 </attrs>
