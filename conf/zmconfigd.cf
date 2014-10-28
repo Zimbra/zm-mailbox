@@ -185,6 +185,14 @@ SECTION mta DEPENDS amavis
 	POSTCONF lmtp_connection_cache_destinations	VAR zimbraMtaLmtpConnectionCacheDestinations
 	POSTCONF lmtp_connection_cache_time_limit	VAR zimbraMtaLmtpConnectionCacheTimeLimit
 	POSTCONF lmtp_host_lookup			VAR zimbraMtaLmtpHostLookup
+	POSTCONF lmtp_tls_protocols			VAR zimbraMtaLmtpTlsProtocols
+	POSTCONF lmtp_tls_exclude_ciphers		VAR zimbraMtaLmtpTlsExcludeCiphers
+	POSTCONF lmtp_tls_security_level		VAR zimbraMtaLmtpTlsSecurityLevel
+	POSTCONF lmtp_tls_ciphers			VAR zimbraMtaLmtpTlsCiphers
+	POSTCONF lmtp_tls_mandatory_ciphers		VAR zimbraMtaLmtpTlsMandatoryCiphers
+	POSTCONF lmtp_tls_CAfile			VAR zimbraMtaLmtpTlsCAfile
+	POSTCONF lmtp_tls_CApath			VAR zimbraMtaLmtpTlsCApath
+	POSTCONF lmtp_tls_loglevel			VAR zimbraMtaLmtpTlsLoglevel
 	POSTCONF transport_maps				VAR zimbraMtaTransportMaps
 	POSTCONF propagate_unmatched_extensions		VAR zimbraMtaPropagateUnmatchedExtensions
 	POSTCONF virtual_alias_domains			VAR zimbraMtaVirtualAliasDomains
