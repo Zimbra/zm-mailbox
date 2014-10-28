@@ -8376,4 +8376,20 @@ TODO: delete them permanently from here
   <desc>Value for postconf lmtp_tls_loglevel. Defaults to 0. Valid range is 0-4</desc>
 </attr>
 
+<attr id="1666" name="zimbraSolrBindAddress" type="string" max="128" cardinality="single" optionalIn="server" requiresRestart="mailbox" since="9.0">
+    <desc>interface address on which Solr should listen; if empty, binds to all localhost</desc>
+</attr>
+<attr id="1667" name="zimbraSolrBindPort" type="port" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" callback="CheckPortConflict" since="9.0">
+    <globalConfigValue>7983</globalConfigValue>
+    <desc>HTTP port for Solr service</desc>
+</attr>
+<attr id="1668" name="zimbraSolrConnectorMaxIdleTimeMillis" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="9.0">
+    <globalConfigValue>60000</globalConfigValue>
+    <desc>Maximum Idle time in milli seconds for a Solr jetty connector. This is applied when waiting for a new request to be received on a connection; when reading the headers and content of a request; when writing the headers and content of a response.</desc>
+</attr>
+<attr id="1669" name="zimbraSolrURLBase" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="9.0">
+    <globalConfigValue>http://localhost:7983/solr</globalConfigValue>
+    <desc>Base URL for accessing Solr. Must include port number. Should point to ZooKeeper when Solr is running in cloud mode.</desc>
+</attr>
+
 </attrs>

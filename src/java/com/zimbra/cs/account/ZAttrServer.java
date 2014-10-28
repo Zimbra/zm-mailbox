@@ -38690,6 +38690,366 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * interface address on which Solr should listen; if empty, binds to all
+     * localhost
+     *
+     * @return zimbraSolrBindAddress, or null if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1666)
+    public String getSolrBindAddress() {
+        return getAttr(Provisioning.A_zimbraSolrBindAddress, null);
+    }
+
+    /**
+     * interface address on which Solr should listen; if empty, binds to all
+     * localhost
+     *
+     * @param zimbraSolrBindAddress new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1666)
+    public void setSolrBindAddress(String zimbraSolrBindAddress) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSolrBindAddress, zimbraSolrBindAddress);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * interface address on which Solr should listen; if empty, binds to all
+     * localhost
+     *
+     * @param zimbraSolrBindAddress new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1666)
+    public Map<String,Object> setSolrBindAddress(String zimbraSolrBindAddress, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSolrBindAddress, zimbraSolrBindAddress);
+        return attrs;
+    }
+
+    /**
+     * interface address on which Solr should listen; if empty, binds to all
+     * localhost
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1666)
+    public void unsetSolrBindAddress() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSolrBindAddress, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * interface address on which Solr should listen; if empty, binds to all
+     * localhost
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1666)
+    public Map<String,Object> unsetSolrBindAddress(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSolrBindAddress, "");
+        return attrs;
+    }
+
+    /**
+     * HTTP port for Solr service
+     *
+     * <p>Use getSolrBindPortAsString to access value as a string.
+     *
+     * @see #getSolrBindPortAsString()
+     *
+     * @return zimbraSolrBindPort, or 7983 if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1667)
+    public int getSolrBindPort() {
+        return getIntAttr(Provisioning.A_zimbraSolrBindPort, 7983);
+    }
+
+    /**
+     * HTTP port for Solr service
+     *
+     * @return zimbraSolrBindPort, or "7983" if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1667)
+    public String getSolrBindPortAsString() {
+        return getAttr(Provisioning.A_zimbraSolrBindPort, "7983");
+    }
+
+    /**
+     * HTTP port for Solr service
+     *
+     * @param zimbraSolrBindPort new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1667)
+    public void setSolrBindPort(int zimbraSolrBindPort) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSolrBindPort, Integer.toString(zimbraSolrBindPort));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * HTTP port for Solr service
+     *
+     * @param zimbraSolrBindPort new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1667)
+    public Map<String,Object> setSolrBindPort(int zimbraSolrBindPort, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSolrBindPort, Integer.toString(zimbraSolrBindPort));
+        return attrs;
+    }
+
+    /**
+     * HTTP port for Solr service
+     *
+     * @param zimbraSolrBindPort new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1667)
+    public void setSolrBindPortAsString(String zimbraSolrBindPort) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSolrBindPort, zimbraSolrBindPort);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * HTTP port for Solr service
+     *
+     * @param zimbraSolrBindPort new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1667)
+    public Map<String,Object> setSolrBindPortAsString(String zimbraSolrBindPort, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSolrBindPort, zimbraSolrBindPort);
+        return attrs;
+    }
+
+    /**
+     * HTTP port for Solr service
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1667)
+    public void unsetSolrBindPort() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSolrBindPort, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * HTTP port for Solr service
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1667)
+    public Map<String,Object> unsetSolrBindPort(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSolrBindPort, "");
+        return attrs;
+    }
+
+    /**
+     * Maximum Idle time in milli seconds for a Solr jetty connector. This is
+     * applied when waiting for a new request to be received on a connection;
+     * when reading the headers and content of a request; when writing the
+     * headers and content of a response.
+     *
+     * @return zimbraSolrConnectorMaxIdleTimeMillis, or 60000 if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1668)
+    public int getSolrConnectorMaxIdleTimeMillis() {
+        return getIntAttr(Provisioning.A_zimbraSolrConnectorMaxIdleTimeMillis, 60000);
+    }
+
+    /**
+     * Maximum Idle time in milli seconds for a Solr jetty connector. This is
+     * applied when waiting for a new request to be received on a connection;
+     * when reading the headers and content of a request; when writing the
+     * headers and content of a response.
+     *
+     * @param zimbraSolrConnectorMaxIdleTimeMillis new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1668)
+    public void setSolrConnectorMaxIdleTimeMillis(int zimbraSolrConnectorMaxIdleTimeMillis) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSolrConnectorMaxIdleTimeMillis, Integer.toString(zimbraSolrConnectorMaxIdleTimeMillis));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum Idle time in milli seconds for a Solr jetty connector. This is
+     * applied when waiting for a new request to be received on a connection;
+     * when reading the headers and content of a request; when writing the
+     * headers and content of a response.
+     *
+     * @param zimbraSolrConnectorMaxIdleTimeMillis new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1668)
+    public Map<String,Object> setSolrConnectorMaxIdleTimeMillis(int zimbraSolrConnectorMaxIdleTimeMillis, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSolrConnectorMaxIdleTimeMillis, Integer.toString(zimbraSolrConnectorMaxIdleTimeMillis));
+        return attrs;
+    }
+
+    /**
+     * Maximum Idle time in milli seconds for a Solr jetty connector. This is
+     * applied when waiting for a new request to be received on a connection;
+     * when reading the headers and content of a request; when writing the
+     * headers and content of a response.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1668)
+    public void unsetSolrConnectorMaxIdleTimeMillis() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSolrConnectorMaxIdleTimeMillis, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum Idle time in milli seconds for a Solr jetty connector. This is
+     * applied when waiting for a new request to be received on a connection;
+     * when reading the headers and content of a request; when writing the
+     * headers and content of a response.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1668)
+    public Map<String,Object> unsetSolrConnectorMaxIdleTimeMillis(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSolrConnectorMaxIdleTimeMillis, "");
+        return attrs;
+    }
+
+    /**
+     * Base URL for accessing Solr. Must include port number. Should point to
+     * ZooKeeper when Solr is running in cloud mode.
+     *
+     * @return zimbraSolrURLBase, or "http://localhost:7983/solr" if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1669)
+    public String getSolrURLBase() {
+        return getAttr(Provisioning.A_zimbraSolrURLBase, "http://localhost:7983/solr");
+    }
+
+    /**
+     * Base URL for accessing Solr. Must include port number. Should point to
+     * ZooKeeper when Solr is running in cloud mode.
+     *
+     * @param zimbraSolrURLBase new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1669)
+    public void setSolrURLBase(String zimbraSolrURLBase) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSolrURLBase, zimbraSolrURLBase);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Base URL for accessing Solr. Must include port number. Should point to
+     * ZooKeeper when Solr is running in cloud mode.
+     *
+     * @param zimbraSolrURLBase new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1669)
+    public Map<String,Object> setSolrURLBase(String zimbraSolrURLBase, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSolrURLBase, zimbraSolrURLBase);
+        return attrs;
+    }
+
+    /**
+     * Base URL for accessing Solr. Must include port number. Should point to
+     * ZooKeeper when Solr is running in cloud mode.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1669)
+    public void unsetSolrURLBase() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSolrURLBase, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Base URL for accessing Solr. Must include port number. Should point to
+     * ZooKeeper when Solr is running in cloud mode.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1669)
+    public Map<String,Object> unsetSolrURLBase(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSolrURLBase, "");
+        return attrs;
+    }
+
+    /**
      * The list of available dictionaries that can be used for spell
      * checking.
      *

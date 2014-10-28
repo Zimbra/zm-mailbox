@@ -100,6 +100,9 @@
     <property name="jetty.version" value="9.1.5.v20140505"/>
     <available property="jetty.start.jar.exists" file="${jetty.home.dir}/start.jar"/>
 
+    <property name="solr.home.dir"  location="${zimbra.home.dir}/solr"/>
+    <property name="solr.war" location="../dist/solr/solr.war"/>
+	
     <property name="ical4j.jar" value="ical4j-0.9.16-patched.jar"/>
     <property name="ziputil.jar" value="ant-1.7.0-ziputil-patched.jar"/>
 
@@ -483,6 +486,15 @@
       <maven dir=".." goal="clean"/>
     </target>
 
+    <target name="deploy-solr-plugins">
+        <ant dir="../SolrPlugins" target="deploy" inheritAll="false"/>
+    </target>
+
+    <target name="compile-solr-plugins">
+        <ant dir="../SolrPlugins" target="jar" inheritAll="false"/>
+        <ant dir="../SolrPlugins" target="deploy-libs" inheritAll="false"/>
+    </target>
+    	
     <target name="clean-opt-zimbra" description="Deletes deployed jars, classes, and zimlets">
     <!-- Delete jars, so that we don't leave cruft if a jar is upgraded with a new name. -->
       <delete dir="${zimbra.home.dir}/lib/jars" failonerror="false"/>
@@ -827,7 +839,7 @@
   <target name="service-deploy" depends="refresh-opt-zimbra,deploy-war"
             description="Not just war file deployment, but a /opt/zimbra refresh as well!"/>
 
-    <target name="deploy-war" depends="stop-jetty,war,copy-war,start-jetty"/>
+    <target name="deploy-war" depends="stop-jetty,war,copy-war,deploy-solr-plugins,copy-solr,start-jetty"/>
 
     <target name="copy-war">
         <delete dir="${jetty.home.dir}/webapps/service"/>
@@ -836,7 +848,18 @@
         <mkdir dir='${jetty.home.dir}/webapps/service'/>
         <unzip dest="${jetty.home.dir}/webapps/service" src="${jetty.home.dir}/webapps/${warfilename}"/>
     </target>
-
+	
+    <target name="copy-solr">
+        <delete dir="${jetty.home.dir}/webapps/solr"/>
+        <delete file="${jetty.hofme.dir}/webapps/solr.war"/>
+        <copy file="${solr.war}" todir="${jetty.home.dir}/webapps"/>
+        <mkdir dir='${jetty.home.dir}/webapps/solr'/>
+        <unzip dest="${jetty.home.dir}/webapps/solr" src="${jetty.home.dir}/webapps/solr.war"/>
+        <copy todir="${jetty.home.dir}/webapps/solr/WEB-INF/lib">
+           <fileset dir="${common.jars.dir}" includes="slf4j*.jar"/>
+        </copy>
+    </target>
+	
     <target name="init-opt-zimbra" depends="dev-dist,localhost-ssl-cert" description="Copies build/dist to /opt/zimbra">
       <echo file="${zimbra.home.dir}/.platform">development</echo>
       <copy todir="${zimbra.home.dir}">
@@ -1058,6 +1081,20 @@
             </java>
           </then>
         </if>
+    	
+        <mkdir dir="${solr.home.dir}/configsets/zimbra/conf" />
+	        
+        <copy todir="${solr.home.dir}/configsets/zimbra/conf" overwrite="true">
+            <fileset dir="${config.dir}/solr/configsets/zimbra/conf/" includes="*.xml,*.txt"/>
+        </copy>
+        
+        <copy todir="${solr.home.dir}/configsets/zimbra/conf/lang" overwrite="true">
+            <fileset dir="${config.dir}/solr/configsets/zimbra/conf/lang" includes="*.txt" />
+        </copy>
+        
+        <copy todir="${solr.home.dir}/solr" overwrite="true">
+            <fileset dir="${config.dir}/solr" includes="solr.xml"/>
+        </copy>
     </target>
 
     <target name="dev-dist-unix" if="is-unix">
@@ -1204,7 +1241,7 @@
         <delete file="${build.dir}/jetty-distribution-${jetty.version}.tar"/>
     </target>
 
-    <target name="reset-all" depends="install-thirdparty,init-jetty,reset-the-world" description="Reset the world plus jetty and OpenLDAP">
+    <target name="reset-all" depends="install-thirdparty,init-jetty,compile-solr-plugins,reset-the-world" description="Reset the world plus jetty and OpenLDAP">
         <ant dir="../ZimbraWebClient" target="clean" inheritAll="false">
         	<property name="skip.maven" value="${skip.maven}"/>
         </ant>
@@ -2060,7 +2097,7 @@
 
     <target name="start-jetty-java">
         <java dir="${jetty.home.dir}" jar="${jetty.home.dir}/start.jar" fork="true" spawn="true">
-            <arg line="-ea -Dfile.encoding=UTF-8 -server -Djava.awt.headless=true -Dsun.net.inetaddr.ttl=60 -Dorg.apache.jasper.compiler.disablejsr199=true -XX:+UseConcMarkSweepGC -XX:PermSize=128m -XX:MaxPermSize=350m -XX:SoftRefLRUPolicyMSPerMB=1 -verbose:gc -XX:+PrintGCDetails -XX:+PrintGCDateStamps -XX:+PrintGCApplicationStoppedTime -XX:-OmitStackTraceInFastThrow -DSTART=c:/opt/zimbra/jetty/etc/start.config -DSTOP.PORT=7867 -DSTOP.KEY=stop -Dzimbra.config=c:/opt/zimbra/conf/localconfig.xml -Djava.library.path=c:\opt\zimbra\lib -Djava.endorsed.dirs=c:\opt\zimbra\jetty\common\endorsed -Djetty.home=c:/opt/zimbra/jetty --module=zimbra,server,servlet,servlets,jsp,jmx,resources,websocket,ext,plus,rewrite,monitor,continuation,webapp etc/jetty.xml"/>
+            <arg line="-ea -Dfile.encoding=UTF-8 -server -Djava.awt.headless=true -Dsun.net.inetaddr.ttl=60 -Dorg.apache.jasper.compiler.disablejsr199=true -Dsolr.solr.home=/opt/zimbra/solr/solr -XX:+UseConcMarkSweepGC -XX:PermSize=128m -XX:MaxPermSize=350m -XX:SoftRefLRUPolicyMSPerMB=1 -verbose:gc -XX:+PrintGCDetails -XX:+PrintGCDateStamps -XX:+PrintGCApplicationStoppedTime -XX:-OmitStackTraceInFastThrow -DSTART=c:/opt/zimbra/jetty/etc/start.config -DSTOP.PORT=7867 -DSTOP.KEY=stop -Dzimbra.config=c:/opt/zimbra/conf/localconfig.xml -Djava.library.path=c:\opt\zimbra\lib -Djava.endorsed.dirs=c:\opt\zimbra\jetty\common\endorsed -Djetty.home=c:/opt/zimbra/jetty --module=zimbra,server,servlet,servlets,jsp,jmx,resources,websocket,ext,plus,rewrite,monitor,continuation,webapp etc/jetty.xml"/>
         </java>
     </target>
 
