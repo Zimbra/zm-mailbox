@@ -13605,6 +13605,43 @@ public class ZAttrProvisioning {
     public static final String A_zimbraSocialcastURL = "zimbraSocialcastURL";
 
     /**
+     * interface address on which Solr should listen; if empty, binds to all
+     * localhost
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1666)
+    public static final String A_zimbraSolrBindAddress = "zimbraSolrBindAddress";
+
+    /**
+     * HTTP port for Solr service
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1667)
+    public static final String A_zimbraSolrBindPort = "zimbraSolrBindPort";
+
+    /**
+     * Maximum Idle time in milli seconds for a Solr jetty connector. This is
+     * applied when waiting for a new request to be received on a connection;
+     * when reading the headers and content of a request; when writing the
+     * headers and content of a response.
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1668)
+    public static final String A_zimbraSolrConnectorMaxIdleTimeMillis = "zimbraSolrConnectorMaxIdleTimeMillis";
+
+    /**
+     * Base URL for accessing Solr. Must include port number. Should point to
+     * ZooKeeper when Solr is running in cloud mode.
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1669)
+    public static final String A_zimbraSolrURLBase = "zimbraSolrURLBase";
+
+    /**
      * If TRUE, spam messages will be affected by user mail filters instead
      * of being automatically filed into the Junk folder.
      *
