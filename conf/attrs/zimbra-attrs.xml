@@ -8278,6 +8278,7 @@ TODO: delete them permanently from here
 <attr id="1647" name="zimbraMtaSmtpdTlsExcludeCiphers" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.5.0">
   <desc>Value for postconf smtpd_tls_exclude_ciphers</desc>
 </attr>
+
 <attr id="1648" name="zimbraExternalAccountProvisioningKey" type="ostring" max="128" immutable="1" cardinality="single" optionalIn="globalConfig" requiresRestart="mailbox" since="8.5.0">
   <desc>Auth token secret key used for encrypting data/auth token in share URL when created for external users.</desc>
 </attr>
@@ -8337,4 +8338,42 @@ TODO: delete them permanently from here
   <globalConfigValue>TLSv1.2</globalConfigValue>
   <desc>List of SSL/TLS protocols (as documented by SunJSSE Provider Protocols and used in setEnabledProtocols) to be enabled in Jetty for HTTPS, IMAPS, POP3S, and STARTTLS (including LMTP)</desc>
 </attr>
+
+<attr id="1658" name="zimbraMtaLmtpTlsProtocols" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.6.0">
+  <globalConfigValue>!SSLv2</globalConfigValue>
+  <desc>Value for postconf lmtp_tls_protocols</desc>
+</attr>
+
+<attr id="1659" name="zimbraMtaLmtpTlsExcludeCiphers" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.6.0">
+  <desc>Value for postconf lmtp_tls_exclude_ciphers</desc>
+</attr>
+
+<attr id="1660" name="zimbraMtaLmtpTlsSecurityLevel" type="enum" value="none,may,encrypt,dane,dane-only,fingerprint,verify,secure" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.6.0">
+  <globalConfigValue>may</globalConfigValue>
+  <desc>Value for postconf lmtp_tls_security_level</desc>
+</attr>
+
+<attr id="1661" name="zimbraMtaLmtpTlsCiphers" type="enum" value="export,low,medium,high,null" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.6.0">
+  <globalConfigValue>export</globalConfigValue>
+  <desc>Value for postconf lmtp_tls_ciphers</desc>
+</attr>
+
+<attr id="1662" name="zimbraMtaLmtpTlsMandatoryCiphers" type="enum" value="export,low,medium,high,null" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.6.0">
+  <globalConfigValue>medium</globalConfigValue>
+  <desc>Value for postconf lmtp_tls_mandatory_ciphers</desc>
+</attr>
+
+<attr id="1663" name="zimbraMtaLmtpTlsCAfile" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.6.0">
+  <desc>Value for postconf lmtp_tls_CAfile</desc>
+</attr>
+
+<attr id="1664" name="zimbraMtaLmtpTlsCApath" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.6.0">
+  <desc>Value for postconf lmtp_tls_CApath</desc>
+</attr>
+
+<attr id="1665" name="zimbraMtaLmtpTlsLoglevel" type="integer" min="0" max="4" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.6.0">
+  <globalConfigValue>0</globalConfigValue>
+  <desc>Value for postconf lmtp_tls_loglevel. Defaults to 0. Valid range is 0-4</desc>
+</attr>
+
 </attrs>
