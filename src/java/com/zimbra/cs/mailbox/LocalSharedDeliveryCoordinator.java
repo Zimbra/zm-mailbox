@@ -26,7 +26,9 @@ import com.zimbra.common.util.ZimbraLog;
  * @since Jun 13, 2004
  */
 public class LocalSharedDeliveryCoordinator implements SharedDeliveryCoordinator {
+    static final int DEFAULT_WAIT_SLEEP_MS = 3000;
     protected Map<String, State> stateByAccountId = new ConcurrentHashMap<>();
+    protected int waitSleepMs = DEFAULT_WAIT_SLEEP_MS;
 
     public LocalSharedDeliveryCoordinator() {}
 
@@ -135,7 +137,9 @@ public class LocalSharedDeliveryCoordinator implements SharedDeliveryCoordinator
         State state = getOrCreateState(mbox);
         while (state.numDelivs.get() > 0) {
             try {
-                wait(3000);
+                synchronized (this) {
+                    wait(waitSleepMs);
+                }
                 ZimbraLog.misc.info("wake up from wait for completion of shared delivery; mailbox=" + mbox.getId() +
                             " # of shared deliv=" + state.numDelivs.get());
             } catch (InterruptedException e) {}
@@ -150,6 +154,11 @@ public class LocalSharedDeliveryCoordinator implements SharedDeliveryCoordinator
     public boolean isSharedDeliveryComplete(Mailbox mbox) throws ServiceException {
         State state = getOrCreateState(mbox);
         return state.numDelivs.get() < 1;
+    }
+
+    @VisibleForTesting
+    public void setWaitSleepMs(int waitSleepMs) {
+        this.waitSleepMs = waitSleepMs;
     }
 
 

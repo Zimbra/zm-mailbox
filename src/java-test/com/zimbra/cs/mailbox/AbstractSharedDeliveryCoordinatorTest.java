@@ -110,7 +110,7 @@ public abstract class AbstractSharedDeliveryCoordinatorTest {
         Assert.assertTrue(sdc.isSharedDeliveryComplete(mbox));
     }
 
-    @Test
+    @Test(timeout=6000)
     public void testWait() throws Exception {
         SharedDeliveryCoordinator sdc = Zimbra.getAppContext().getBean(SharedDeliveryCoordinator.class);
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
@@ -120,17 +120,15 @@ public abstract class AbstractSharedDeliveryCoordinatorTest {
 
         WaitOnceThread waitOnceThread = new WaitOnceThread(mbox, sdc);
         waitOnceThread.start();
-        Assert.assertEquals(false, waitOnceThread.doneWaiting);
+
+        Thread.sleep(100); // cause at lease one wait
 
         sdc.endSharedDelivery(mbox);
         Assert.assertTrue(sdc.isSharedDeliveryComplete(mbox));
 
-        // Expect waiter to un-block within two 3-second run loops
-        long startTime = System.currentTimeMillis();
-        while (!waitOnceThread.doneWaiting && System.currentTimeMillis() - startTime < 6000) {
-            Thread.sleep(100);
-        }
-        Assert.assertTrue(waitOnceThread.doneWaiting);
+        // leave it up to the JUnit test timeout to fail the test if the waiting thread doesn't fall out of
+        // its run loop within the test timeout
+        waitOnceThread.join();
     }
 
 
@@ -138,7 +136,6 @@ public abstract class AbstractSharedDeliveryCoordinatorTest {
     {
         Mailbox mbox;
         SharedDeliveryCoordinator sdc;
-        boolean doneWaiting;
 
         WaitOnceThread(Mailbox mbox, SharedDeliveryCoordinator sdc) {
             this.mbox = mbox;
@@ -148,13 +145,14 @@ public abstract class AbstractSharedDeliveryCoordinatorTest {
         @Override
         public void run() {
             try {
+                long startTime = System.currentTimeMillis();
                 ZimbraLog.test.debug("About to wait for completion of shared delivery");
                 sdc.waitUntilSharedDeliveryCompletes(mbox);
-                ZimbraLog.test.debug("Done waiting for completion of shared delivery");
+                long elapsedTime = System.currentTimeMillis() - startTime;
+                ZimbraLog.test.debug("Done waiting for completion of shared delivery after %dms", elapsedTime);
             } catch (ServiceException e) {
                 ZimbraLog.test.error("Error while waiting for completion of shared delivery", e);
             }
-            doneWaiting = true;
         }
     }
 }

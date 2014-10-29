@@ -39,6 +39,7 @@ public final class LocalSharedDeliveryCoordinatorTest extends AbstractSharedDeli
     protected void flushCacheBetweenTests() throws Exception {
         SharedDeliveryCoordinator sdc = Zimbra.getAppContext().getBean(SharedDeliveryCoordinator.class);
         ((LocalSharedDeliveryCoordinator)sdc).flush();
+        ((LocalSharedDeliveryCoordinator)sdc).setWaitSleepMs(100);
     }
 
     @Test
