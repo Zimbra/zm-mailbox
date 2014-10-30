@@ -101,7 +101,7 @@
     <available property="jetty.start.jar.exists" file="${jetty.home.dir}/start.jar"/>
 
     <property name="solr.home.dir"  location="${zimbra.home.dir}/solr"/>
-    <property name="solr.war" location="../dist/solr/solr.war"/>
+    <property name="solr.war" location="${dist.dir}/solr/solr.war"/>
 	
     <property name="ical4j.jar" value="ical4j-0.9.16-patched.jar"/>
     <property name="ziputil.jar" value="ant-1.7.0-ziputil-patched.jar"/>
@@ -871,10 +871,25 @@
         </chmod>
     	<delete file="${zimbra.home.dir}/jetty/start.ini"/>
         <delete file="${zimbra.home.dir}/jetty/start.d/http.ini"/>
-    	
+    	<antcall target="copy-solr-config" />
         <!-- ant does not preserve perms on copy -->
     </target>
 
+	<target name="copy-solr-config" description="copies solr config files to /opt/zimbra">
+        <mkdir dir="${zimbra.home.dir}/solr/configsets/zimbra/conf" />
+            
+        <copy todir="${zimbra.home.dir}/solr/configsets/zimbra/conf" overwrite="true">
+            <fileset dir="${config.dir}/solr/configsets/zimbra/conf/" includes="*.xml,*.txt"/>
+        </copy>
+        
+        <copy todir="${zimbra.home.dir}/solr/configsets/zimbra/conf/lang" overwrite="true">
+            <fileset dir="${config.dir}/solr/configsets/zimbra/conf/lang" includes="*.txt" />
+        </copy>
+        
+        <copy todir="${zimbra.home.dir}/solr/solr" overwrite="true">
+            <fileset dir="${config.dir}/solr" includes="solr.xml"/>
+        </copy>
+	</target>
     <target name="refresh-opt-zimbra" depends="dev-dist">
       <copy todir="${zimbra.home.dir}" overwrite="true">
         <fileset dir="${dist.dir}">
@@ -886,6 +901,7 @@
         <fileset dir="${zimbra.home.dir}/bin"/>
         <fileset dir="${zimbra.home.dir}/libexec"/>
       </chmod>
+      <antcall target="copy-solr-config" />
     </target>
 
     <target name="enable-im">
@@ -1081,20 +1097,6 @@
             </java>
           </then>
         </if>
-    	
-        <mkdir dir="${dist.dir}/solr/configsets/zimbra/conf" />
-	        
-        <copy todir="${dist.dir}/solr/configsets/zimbra/conf" overwrite="true">
-            <fileset dir="${config.dir}/solr/configsets/zimbra/conf/" includes="*.xml,*.txt"/>
-        </copy>
-        
-        <copy todir="${dist.dir}/solr/configsets/zimbra/conf/lang" overwrite="true">
-            <fileset dir="${config.dir}/solr/configsets/zimbra/conf/lang" includes="*.txt" />
-        </copy>
-        
-        <copy todir="${dist.dir}/solr/solr" overwrite="true">
-            <fileset dir="${config.dir}/solr" includes="solr.xml"/>
-        </copy>
     </target>
 
     <target name="dev-dist-unix" if="is-unix">
