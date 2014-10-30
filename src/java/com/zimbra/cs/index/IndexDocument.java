@@ -198,7 +198,6 @@ public final class IndexDocument {
     }
 
     public void addObjects(String value) {
-        ZimbraLog.index.info("GREN IndexDocument.addObjects(%s)\n%s", value, ZimbraLog.getStackTrace(20));
         document.add(new Field(LuceneFields.L_OBJECTS, value, Field.Store.NO, Field.Index.ANALYZED));
     }
 
