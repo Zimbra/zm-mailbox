@@ -50,13 +50,10 @@ http://www.perforce.com/perforce/doc.current/manuals/p4guide/01_install.html#107
 10. $ cd ~/p4/main
 11. $ p4 sync
 
-12. Download MySQL - MySQL Community Server & install it.
-  http://dev.mysql.com/downloads/mysql/
-  GA > Mac OSX ver 10.7 (x86, 64-bit)
+12. Install MariaDB
+    $ brew install mariadb
 
-  Grab the DMG version and install the two packages (MySQL and the startup item).
-
-13. $ sudo ln -s /usr/local/mysql /opt/zimbra/mysql  (RHEL command, sudo ln -s /usr/local/mysql /usr)
+13. $ sudo ln -s /usr/local/opt/mariadb /opt/zimbra/mysql
 
 14. $ sudo chown {username} /opt/zimbra
 
@@ -66,13 +63,9 @@ http://www.perforce.com/perforce/doc.current/manuals/p4guide/01_install.html#107
   port = 7306
   socket = /opt/zimbra/mysql/data/mysql.sock
 
-16. $ sudo -b /opt/zimbra/mysql/bin/mysqld_safe --user=mysql
-  * With MySQLStartupItem package installed, mysqld will start automatically on reboot.
-  * If the "mysqld_safe" command doesn't exist, just use "mysqld" instead.
-  * MySQL log file can be found at: /opt/zimbra/mysql/data/{server-name}.err
-  * May need to press Enter to return to the prompt
+16. $ launchctl load ~/Library/LaunchAgents/homebrew.mxcl.mariadb.plist
 
-17. $ /opt/zimbra/mysql/bin/mysqladmin  -S /opt/zimbra/mysql/data/mysql.sock -u root password zimbra
+17. $ /opt/zimbra/mysql/bin/mysqladmin -S /opt/zimbra/mysql/data/mysql.sock -u root password zimbra
 
 
 18. $ sudo visudo
