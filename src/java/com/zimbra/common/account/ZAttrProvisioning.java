@@ -1904,6 +1904,22 @@ public class ZAttrProvisioning {
         public boolean isBoth() { return this == both;}
     }
 
+    public static enum ReverseProxyModSecurityEnabled {
+        off("off"),
+        on("on");
+        private String mValue;
+        private ReverseProxyModSecurityEnabled(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static ReverseProxyModSecurityEnabled fromString(String s) throws ServiceException {
+            for (ReverseProxyModSecurityEnabled value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isOff() { return this == off;}
+        public boolean isOn() { return this == on;}
+    }
+
     public static enum ReverseProxyPop3StartTlsMode {
         only("only"),
         off("off"),
@@ -12746,6 +12762,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1624)
     public static final String A_zimbraReverseProxyMailPop3sEnabled = "zimbraReverseProxyMailPop3sEnabled";
+
+    /**
+     * on - ModSecurity for nginx enabled off - ModSecurity for nginx
+     * disabled
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1671)
+    public static final String A_zimbraReverseProxyModSecurityEnabled = "zimbraReverseProxyModSecurityEnabled";
 
     /**
      * whether NGINX mail proxy will pass upstream server errors back to the
