@@ -8396,4 +8396,11 @@ TODO: delete them permanently from here
   <desc>Value for postconf smtp_tls_protocols</desc>
 </attr>
 
+<attr id="1671" name="zimbraReverseProxyModSecurityEnabled" type="enum" value="on,off" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="nginxproxy" since="9.0">
+  <globalConfigValue>on</globalConfigValue>
+  <desc>on   - ModSecurity for nginx enabled
+        off  - ModSecurity for nginx disabled
+  </desc>
+</attr>
+
 </attrs>

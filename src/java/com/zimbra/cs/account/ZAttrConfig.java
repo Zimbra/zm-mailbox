@@ -47570,6 +47570,145 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * on - ModSecurity for nginx enabled off - ModSecurity for nginx
+     * disabled
+     *
+     * <p>Valid values: [off, on]
+     *
+     * @return zimbraReverseProxyModSecurityEnabled, or ZAttrProvisioning.ReverseProxyModSecurityEnabled.on if unset and/or has invalid value
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1671)
+    public ZAttrProvisioning.ReverseProxyModSecurityEnabled getReverseProxyModSecurityEnabled() {
+        try { String v = getAttr(Provisioning.A_zimbraReverseProxyModSecurityEnabled); return v == null ? ZAttrProvisioning.ReverseProxyModSecurityEnabled.on : ZAttrProvisioning.ReverseProxyModSecurityEnabled.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.ReverseProxyModSecurityEnabled.on; }
+    }
+
+    /**
+     * on - ModSecurity for nginx enabled off - ModSecurity for nginx
+     * disabled
+     *
+     * <p>Valid values: [off, on]
+     *
+     * @return zimbraReverseProxyModSecurityEnabled, or "on" if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1671)
+    public String getReverseProxyModSecurityEnabledAsString() {
+        return getAttr(Provisioning.A_zimbraReverseProxyModSecurityEnabled, "on");
+    }
+
+    /**
+     * on - ModSecurity for nginx enabled off - ModSecurity for nginx
+     * disabled
+     *
+     * <p>Valid values: [off, on]
+     *
+     * @param zimbraReverseProxyModSecurityEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1671)
+    public void setReverseProxyModSecurityEnabled(ZAttrProvisioning.ReverseProxyModSecurityEnabled zimbraReverseProxyModSecurityEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyModSecurityEnabled, zimbraReverseProxyModSecurityEnabled.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * on - ModSecurity for nginx enabled off - ModSecurity for nginx
+     * disabled
+     *
+     * <p>Valid values: [off, on]
+     *
+     * @param zimbraReverseProxyModSecurityEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1671)
+    public Map<String,Object> setReverseProxyModSecurityEnabled(ZAttrProvisioning.ReverseProxyModSecurityEnabled zimbraReverseProxyModSecurityEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyModSecurityEnabled, zimbraReverseProxyModSecurityEnabled.toString());
+        return attrs;
+    }
+
+    /**
+     * on - ModSecurity for nginx enabled off - ModSecurity for nginx
+     * disabled
+     *
+     * <p>Valid values: [off, on]
+     *
+     * @param zimbraReverseProxyModSecurityEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1671)
+    public void setReverseProxyModSecurityEnabledAsString(String zimbraReverseProxyModSecurityEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyModSecurityEnabled, zimbraReverseProxyModSecurityEnabled);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * on - ModSecurity for nginx enabled off - ModSecurity for nginx
+     * disabled
+     *
+     * <p>Valid values: [off, on]
+     *
+     * @param zimbraReverseProxyModSecurityEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1671)
+    public Map<String,Object> setReverseProxyModSecurityEnabledAsString(String zimbraReverseProxyModSecurityEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyModSecurityEnabled, zimbraReverseProxyModSecurityEnabled);
+        return attrs;
+    }
+
+    /**
+     * on - ModSecurity for nginx enabled off - ModSecurity for nginx
+     * disabled
+     *
+     * <p>Valid values: [off, on]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1671)
+    public void unsetReverseProxyModSecurityEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyModSecurityEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * on - ModSecurity for nginx enabled off - ModSecurity for nginx
+     * disabled
+     *
+     * <p>Valid values: [off, on]
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1671)
+    public Map<String,Object> unsetReverseProxyModSecurityEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyModSecurityEnabled, "");
+        return attrs;
+    }
+
+    /**
      * whether NGINX mail proxy will pass upstream server errors back to the
      * downstream email clients
      *
