@@ -839,7 +839,7 @@
   <target name="service-deploy" depends="refresh-opt-zimbra,deploy-war"
             description="Not just war file deployment, but a /opt/zimbra refresh as well!"/>
 
-    <target name="deploy-war" depends="stop-jetty,war,copy-war,deploy-solr-plugins,copy-solr,start-jetty"/>
+    <target name="deploy-war" depends="stop-jetty,war,copy-war,compile-solr-plugins,deploy-solr-plugins,copy-solr,start-jetty"/>
 
     <target name="copy-war">
         <delete dir="${jetty.home.dir}/webapps/service"/>
@@ -941,7 +941,7 @@
 	</target>
 	
   <!-- target called by the production build -->
-    <target name="dev-dist" depends="maven-build-parent,compile-solr-plugins,war,dev-dist-unix,dev-dist-jetty,choose-db-schema,generate-ldap-config" description="Initializes build/dist">
+    <target name="dev-dist" depends="maven-build-parent,war,dev-dist-unix,dev-dist-jetty,choose-db-schema,generate-ldap-config" description="Initializes build/dist">
         <echo>Version: ${zimbra.buildinfo.version} Date: ${zimbra.buildinfo.date}</echo>
         <!-- bin, libexec -->
         <copy todir="${dist.dir}/bin" overwrite="true">
