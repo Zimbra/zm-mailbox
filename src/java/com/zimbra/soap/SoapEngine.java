@@ -43,6 +43,7 @@ import com.zimbra.common.soap.XmlParseException;
 import com.zimbra.common.soap.ZimbraNamespace;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
@@ -315,9 +316,13 @@ public class SoapEngine {
         }
         if (doCsrfCheck) {
             try {
-                Element contextElmt = soapProto.getHeader(envelope).getElement(HeaderConstants.E_CONTEXT);
-                String csrfToken = contextElmt.getAttribute(HeaderConstants.E_CSRFTOKEN);
                 HttpServletRequest httpReq = (HttpServletRequest) servReq;
+                // Bug: 96167 SoapEngine should be able to read CSRF token from HTTP headers
+                String csrfToken = httpReq.getHeader(CsrfFilter.CSRF_TOKEN);
+                if (StringUtil.isNullOrEmpty(csrfToken)) {
+                    Element contextElmt = soapProto.getHeader(envelope).getElement(HeaderConstants.E_CONTEXT);
+                    csrfToken = contextElmt.getAttribute(HeaderConstants.E_CSRFTOKEN);
+                }
                 AuthToken authToken = CsrfUtil.getAuthTokenFromReq(httpReq);
                 if (!CsrfUtil.isValidCsrfToken(csrfToken, authToken)) {
                     LOG.debug("CSRF token validation failed for account. " + authToken
