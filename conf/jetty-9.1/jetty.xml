@@ -836,4 +836,43 @@
 		<Call name="open"/>
 	</Ref>
 
+  <Call class="com.zimbra.common.handlers.PrivilegedHandler" name="openPorts">
+    <Arg>
+      <Map>
+        <Entry>
+          <Item>zimbraLmtpBindAddress</Item>
+          <Item><New class="java.lang.String"><Arg><Property name="zimbraLmtpBindAddress" default=""/></Arg></New></Item>
+        </Entry>
+        <Entry>
+          <Item>zimbraImapServerEnabled</Item>
+          <Item><New class="java.lang.Boolean"><Arg><Property name="zimbraImapServerEnabled" default="true"/></Arg></New></Item>
+        </Entry>
+        <Entry>
+          <Item>zimbraLmtpServerEnabled</Item>
+          <Item><New class="java.lang.Boolean"><Arg><Property name="zimbraLmtpServerEnabled" default="false"/></Arg></New></Item>
+        </Entry>
+        <Entry>
+          <Item>zimbraImapBindAddress</Item>
+          <Item><New class="java.lang.String"><Arg><Property name="zimbraImapBindAddress" default=""/></Arg></New></Item>
+        </Entry>
+        <Entry>
+          <Item>zimbraImapBindPort</Item>
+          <Item><New class="java.lang.Integer"><Arg><Property name="zimbraImapBindPort" default="7143"/></Arg></New></Item>
+        </Entry>
+        <Entry>
+          <Item>mailboxd_keystore</Item>
+          <Item><New class="java.lang.String"><Arg><Property name="mailboxd_keystore" default="/opt/zimbra/jetty/etc/keystore"/></Arg></New></Item>
+        </Entry>
+        <Entry>
+          <Item>mailboxd_keystore_password</Item>
+          <Item><New class="java.lang.String"><Arg><Property name="mailboxd_keystore_password" default="zimbra"/></Arg></New></Item>
+        </Entry>
+        <Entry>
+          <Item>mailboxd_truststore_password</Item>
+          <Item><New class="java.lang.String"><Arg><Property name="mailboxd_truststore_password" default="zimbra"/></Arg></New></Item>
+        </Entry>
+      </Map>
+    </Arg>
+  </Call>
+  
 </Configure>
