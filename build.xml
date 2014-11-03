@@ -941,7 +941,7 @@
 	</target>
 	
   <!-- target called by the production build -->
-    <target name="dev-dist" depends="maven-build-parent,war,dev-dist-unix,dev-dist-jetty,choose-db-schema,generate-ldap-config" description="Initializes build/dist">
+    <target name="dev-dist" depends="maven-build-parent,compile-solr-plugins,war,dev-dist-unix,dev-dist-jetty,choose-db-schema,generate-ldap-config" description="Initializes build/dist">
         <echo>Version: ${zimbra.buildinfo.version} Date: ${zimbra.buildinfo.date}</echo>
         <!-- bin, libexec -->
         <copy todir="${dist.dir}/bin" overwrite="true">
@@ -1243,7 +1243,7 @@
         <delete file="${build.dir}/jetty-distribution-${jetty.version}.tar"/>
     </target>
 
-    <target name="reset-all" depends="install-thirdparty,init-jetty,compile-solr-plugins,reset-the-world" description="Reset the world plus jetty and OpenLDAP">
+    <target name="reset-all" depends="install-thirdparty,init-jetty,reset-the-world" description="Reset the world plus jetty and OpenLDAP">
         <ant dir="../ZimbraWebClient" target="clean" inheritAll="false">
         	<property name="skip.maven" value="${skip.maven}"/>
         </ant>
