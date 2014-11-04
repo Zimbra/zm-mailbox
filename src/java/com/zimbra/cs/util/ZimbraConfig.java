@@ -100,7 +100,7 @@ public class ZimbraConfig {
     }
 
     public boolean isRedisAvailable() throws ServiceException {
-        return redisUri() != null;
+        return false; // TODO redisUri() != null;
     }
 
     @Bean(name="jedisPool")
