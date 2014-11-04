@@ -849,7 +849,7 @@
         </Entry>
         <Entry>
           <Item>zimbraLmtpServerEnabled</Item>
-          <Item><New class="java.lang.Boolean"><Arg><Property name="zimbraLmtpServerEnabled" default="false"/></Arg></New></Item>
+          <Item><New class="java.lang.Boolean"><Arg><Property name="zimbraLmtpServerEnabled" default="true"/></Arg></New></Item>
         </Entry>
         <Entry>
           <Item>zimbraImapBindAddress</Item>
