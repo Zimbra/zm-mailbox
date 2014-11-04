@@ -1050,6 +1050,9 @@ public class Mime {
     }
 
     public static String getCharset(String contentType) {
+        if (contentType == null) {
+            return null;
+        }
         String charset = new ContentType(contentType).getParameter(MimeConstants.P_CHARSET);
         if (charset == null || charset.trim().isEmpty()) {
             charset = null;
