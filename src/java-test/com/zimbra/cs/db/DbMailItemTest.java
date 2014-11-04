@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -36,6 +36,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem.QueryParams;
 import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.mailbox.Flag;
+import com.zimbra.cs.mailbox.Flag.FlagInfo;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -258,8 +259,11 @@ public final class DbMailItemTest {
         int now = (int) (System.currentTimeMillis()/1000);
         int beforeNow = now - 1000;
         int afterNow = now + 1000;
+        int deleteNow = now + 2000;
         final int beforeNowCount = 9;
         final int afterNowCount = 13;
+        final int notDeleteCount = 7;
+        final int deleteCount = 17;
         int id = 100;
         Set<Integer> ids = DbMailItem.getIds(mbox, conn, new QueryParams(), false);
         QueryParams params = new QueryParams();
@@ -295,6 +299,26 @@ public final class DbMailItemTest {
         params.setChangeDateAfter(now);
         Set<Integer> idsAfterNow = DbMailItem.getIds(mbox, conn, params, false);
         Assert.assertTrue((idsAfterNow.size()-idsInitAftereNow.size()) == afterNowCount);
+
+        id = 300;
+        for (int i = 0; i < notDeleteCount; i++) {
+            DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item " +
+                    "(mailbox_id, id, type, index_id, date, size, flags, tags, mod_metadata, change_date, mod_content) " +
+                    "VALUES(?, ?, ?, 0, 0, 0, 0, 0, 0, ?, 0)", mbox.getId(), id++, MailItem.Type.MESSAGE.toByte(), deleteNow);
+        }
+        for (int i = 0; i < deleteCount; i++) {
+            DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item " +
+                    "(mailbox_id, id, type, index_id, date, size, flags, tags, mod_metadata, change_date, mod_content) " +
+                    "VALUES(?, ?, ?, 0, 0, 0, 128, 0, 0, ?, 0)", mbox.getId(), id++, MailItem.Type.MESSAGE.toByte(), deleteNow);
+        }
+        params = new QueryParams();
+        params.setChangeDateAfter(deleteNow-1);
+        Set<Integer> idsForDelete = DbMailItem.getIds(mbox, conn, params, false);
+        Assert.assertTrue(idsForDelete.size() == (deleteCount + notDeleteCount));
+
+        params.setFlagToExclude(FlagInfo.DELETED);
+        idsForDelete = DbMailItem.getIds(mbox, conn, params, false);
+        Assert.assertTrue(idsForDelete.size() == notDeleteCount);
     }
 
     @Test

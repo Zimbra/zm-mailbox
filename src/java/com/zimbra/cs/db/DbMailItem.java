@@ -66,6 +66,7 @@ import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Conversation;
 import com.zimbra.cs.mailbox.Flag;
+import com.zimbra.cs.mailbox.Flag.FlagInfo;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailItem.PendingDelete;
@@ -4146,6 +4147,7 @@ public class DbMailItem {
         private Integer modifiedSequenceBefore;
         private Integer rowLimit;
         private Integer offset;
+        private FlagInfo flagToExclude;
         private final Set<MailItem.Type> includedTypes = EnumSet.noneOf(MailItem.Type.class);
         private final Set<MailItem.Type> excludedTypes = EnumSet.noneOf(MailItem.Type.class);
         private final List<String> orderBy = new ArrayList<String>();
@@ -4232,6 +4234,11 @@ public class DbMailItem {
         public QueryParams setRowLimit(Integer rowLimit) { this.rowLimit = rowLimit; return this; }
         public Integer getOffset() { return offset; }
         public QueryParams setOffset(Integer offset) { this.offset = offset; return this; }
+
+        public QueryParams setFlagToExclude(FlagInfo flag) {
+            this.flagToExclude = flag;
+            return this;
+        }
 
         public String getWhereClause() {
             StringBuilder buf = new StringBuilder();
@@ -4330,6 +4337,13 @@ public class DbMailItem {
                     buf.append(" AND ");
                 }
                 buf.append("mod_metadata < ").append(modifiedSequenceBefore);
+            }
+            if (flagToExclude != null) {
+                if (buf.length() > 0) {
+                    buf.append(" AND ");
+                }
+                buf.append(Db.getInstance().bitAND("flags", String.valueOf(flagToExclude.toBitmask())))
+                   .append(" != ").append(String.valueOf(flagToExclude.toBitmask()));
             }
             return buf.toString();
         }
