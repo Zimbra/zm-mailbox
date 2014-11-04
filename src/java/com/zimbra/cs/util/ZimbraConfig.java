@@ -39,7 +39,7 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxPubSubAdapter;
 import com.zimbra.cs.mailbox.MemcachedFoldersAndTagsCache;
 import com.zimbra.cs.mailbox.RedisMailboxPubSubAdapter;
-import com.zimbra.cs.mailbox.RedisQlessSharedDeliveryCoordinator;
+import com.zimbra.cs.mailbox.RedisSharedDeliveryCoordinator;
 import com.zimbra.cs.mailbox.SharedDeliveryCoordinator;
 import com.zimbra.cs.mailbox.acl.EffectiveACLCache;
 import com.zimbra.cs.mailbox.acl.MemcachedEffectiveACLCache;
@@ -100,8 +100,7 @@ public class ZimbraConfig {
     }
 
     public boolean isRedisAvailable() throws ServiceException {
-        // return redisUri() != null;
-        return false; // TODO Placeholder for future Redis support
+        return redisUri() != null;
     }
 
     @Bean(name="jedisPool")
@@ -211,7 +210,7 @@ public class ZimbraConfig {
         }
         if (instance == null) {
             if (isRedisAvailable()) {
-                instance = new RedisQlessSharedDeliveryCoordinator();
+                instance = new RedisSharedDeliveryCoordinator();
 //            } else if (isMemcachedAvailable()) {
 //                TODO: Future Memcached-based shared delivery coordination support
 //                instance = new MemcachedSharedDeliveryCoordinator();
