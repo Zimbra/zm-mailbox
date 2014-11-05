@@ -105,6 +105,8 @@ log4j.appender.EWS.layout.ConversionPattern=%d %-5p [%t] [%z] %c{1} - %m%n
 
 # Appender SOLR writes to the file solr.log 
 log4j.appender.SOLR=org.apache.log4j.rolling.RollingFileAppender
+log4j.appender.SOLR.RollingPolicy=org.apache.log4j.rolling.TimeBasedRollingPolicy
+log4j.appender.SOLR.RollingPolicy.FileNamePattern=/opt/zimbra/log/solr.log.%d{yyyy-MM-dd}
 log4j.appender.SOLR.File=/opt/zimbra/log/solr.log
 log4j.appender.SOLR.layout=com.zimbra.common.util.ZimbraPatternLayout
 log4j.appender.SOLR.layout.ConversionPattern=%d %-5p [%t] [%z] %c{1} - %m%n
