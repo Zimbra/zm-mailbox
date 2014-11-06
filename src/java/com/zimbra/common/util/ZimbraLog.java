@@ -433,10 +433,6 @@ public final class ZimbraLog {
      */
     public static final Log ews = LogFactory.getLog("zimbra.ews");
 
-    /**
-     * the "zimbra.analytics" logger. For analytics components.
-     */
-    public static final Log analytics = LogFactory.getLog("zimbra.analytics");
 
     /**
      * Maps the log category name to its description.
@@ -488,7 +484,6 @@ public final class ZimbraLog {
         Map<String, String> descriptions = new TreeMap<String, String>();
         descriptions.put(misc.getCategory(), "Miscellaneous");
         descriptions.put(index.getCategory(), "Indexing operations");
-        descriptions.put(analytics.getCategory(), "Analytics operations");
         descriptions.put(search.getCategory(), "Search operations");
         descriptions.put(redolog.getCategory(), "Redo log operations");
         descriptions.put(lmtp.getCategory(), "LMTP server (incoming mail)");

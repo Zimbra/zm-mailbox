@@ -16,8 +16,6 @@
  */
 package com.zimbra.common.localconfig;
 
-import com.google.common.annotations.VisibleForTesting;
-
 
 /**
  * Various switches to turn features on/off, mainly for measuring the
@@ -133,17 +131,8 @@ public final class DebugConfig {
      * Huge Database (contention and the effects of corruption are issues) and database-per-user (which most DBMSes
      * can't deal with).
      */
-    private static int numMailboxGroups = disableMailboxGroups ?
+    public static final int numMailboxGroups = disableMailboxGroups ?
             Integer.MAX_VALUE : Math.max(LC.zimbra_mailbox_groups.intValue(), 1);
-
-    public static int getNumMailboxGroups() {
-        return numMailboxGroups;
-    }
-
-    @VisibleForTesting
-    public static void setNumMailboxGroup(int numGroups) {
-        numMailboxGroups = numGroups;
-    }
 
     /** If true, more than one server may be sharing the same store and
      *  database install.  In that case, the server must perform extra checks
@@ -240,17 +229,8 @@ public final class DebugConfig {
     public static boolean defang_block_form_same_host_post_req = value("defang_block_form_same_host_post_req", true);
 
 
-    private static boolean disableShareExpirationListener =
+    public static final boolean disableShareExpirationListener =
             value("debug_disable_share_expiration_listener", false);
-
-    public static boolean isDisableShareExpirationListener() {
-        return disableShareExpirationListener;
-    }
-
-    public static void setDisableShareExpirationListener(
-            boolean disableShareExpirationListener) {
-        DebugConfig.disableShareExpirationListener = disableShareExpirationListener;
-    }
 
     public static final boolean skipVirtualAccountRegistrationPage =
             value("skip_virtual_account_registration_page", false);

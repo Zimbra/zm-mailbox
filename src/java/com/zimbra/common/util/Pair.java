@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2006, 2007, 2009, 2010, 2013, 2014 Zimbra, Inc.
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -17,14 +17,20 @@
 package com.zimbra.common.util;
 
 public class Pair<F,S> {
-    protected F mFirst;
-    protected S mSecond;
+    private F mFirst;
+    private S mSecond;
 
     public Pair(F first, S second) {
         mFirst = first;
         mSecond = second;
     }
 
+    public F car() {
+        return getFirst();
+    }
+    public S cdr() {
+        return getSecond();
+    }
     public F getFirst() {
         return mFirst;
     }
@@ -41,7 +47,6 @@ public class Pair<F,S> {
 
     @Override public boolean equals(Object obj) {
         if (obj instanceof Pair) {
-            @SuppressWarnings("rawtypes")
             Pair that = (Pair) obj;
             if (mFirst != that.mFirst && (mFirst == null || !mFirst.equals(that.mFirst)))
                 return false;
@@ -61,5 +66,13 @@ public class Pair<F,S> {
 
     @Override public String toString() {
         return "(" + mFirst + "," + mSecond + ")";
+    }
+
+    public static void main(String[] args) {
+        System.out.println(new Pair<String,String>("foo", "bar").equals(new Pair<String,String>("foo", "bar")));
+        System.out.println(new Pair<String,String>("foo", null).equals(new Pair<String,String>("fo" + 'o', null)));
+        System.out.println(new Pair<String,String>(null, "bar").equals(new Pair<String,String>(null, "foo")));
+        System.out.println(new Pair<String,String>("foo", "bar").equals(new Pair<String,Integer>("foo", 8)));
+        System.out.println(new Pair<String,String>(null, "bar").equals(new Pair<Integer,String>(0, "bar")));
     }
 }
