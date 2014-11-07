@@ -125,7 +125,7 @@ public abstract class AccessManager {
      *  for non-admin accounts.</i>
      * @param credentials  The authenticated account performing the action.
      * @param target       The target account for the proposed action.
-     * @param asAdmin      If the authenticated account is acting as an admin accunt */
+     * @param asAdmin      If the authenticated account is acting as an admin account */
     public abstract boolean canAccessAccount(Account credentials, Account target, boolean asAdmin) throws ServiceException;
     public abstract boolean canAccessAccount(Account credentials, Account target) throws ServiceException;
 
