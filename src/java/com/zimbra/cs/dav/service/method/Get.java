@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -30,6 +30,7 @@ import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.DavProtocol;
 import com.zimbra.cs.dav.resource.DavResource;
 import com.zimbra.cs.dav.service.DavMethod;
+import com.zimbra.cs.dav.service.DavServlet;
 import com.zimbra.cs.servlet.ETagHeaderFilter;
 
 public class Get extends DavMethod {
@@ -71,11 +72,18 @@ public class Get extends DavMethod {
         if (!returnContent() || !resource.hasContent(ctxt))
             return;
         resp.setHeader("Content-Disposition", "attachment");
-        if (ZimbraLog.dav.isDebugEnabled()) {
-            ZimbraLog.dav.debug("GET " + ctxt.getUri());
-            if (contentType != null && contentType.startsWith("text"))
-                ZimbraLog.dav.debug(new String(ByteUtil.getContent(resource.getContent(ctxt), 0), "UTF-8"));
-        }
         ByteUtil.copy(resource.getContent(ctxt), true, ctxt.getResponse().getOutputStream(), false);
+        resp.setStatus(ctxt.getStatus());
+        ctxt.responseSent();
+        if (ZimbraLog.dav.isDebugEnabled()) {
+            StringBuilder sb = new StringBuilder("Response for DAV GET ").append(ctxt.getUri()).append("\n");
+            if (contentType != null && contentType.startsWith("text")) {
+                DavServlet.addResponseHeaderLoggingInfo(resp, sb);
+                if (ZimbraLog.dav.isTraceEnabled()) {
+                    sb.append(new String(ByteUtil.getContent(resource.getContent(ctxt), 0), "UTF-8"));
+                }
+                ZimbraLog.dav.debug(sb);
+            }
+        }
     }
 }

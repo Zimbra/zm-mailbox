@@ -16,6 +16,7 @@
  */
 package com.zimbra.qa.unittest;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -64,6 +65,7 @@ import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.calendar.ICalTimeZone;
 import com.zimbra.common.calendar.ParsedDateTime;
 import com.zimbra.common.calendar.WellKnownTimeZones;
+import com.zimbra.common.calendar.ZCalendar;
 import com.zimbra.common.calendar.ZCalendar.ICalTok;
 import com.zimbra.common.calendar.ZCalendar.ZComponent;
 import com.zimbra.common.calendar.ZCalendar.ZParameter;
@@ -983,6 +985,66 @@ public class TestCalDav extends TestCase {
         fbResponse = doFreeBusyCheck(dav1, Lists.newArrayList(dav1), fbStartDate, fbEndDate).getResponseAsString();
         assertTrue(String.format("4th FB check after enabling (encoded urls) Response [%s] should contain [%s]",
                 fbResponse, busyTentativeMarker), fbResponse.contains(busyTentativeMarker));
+    }
+
+    private static String VtimeZoneGMT_0600_0500 =
+            "BEGIN:VCALENDAR\n" +
+            "BEGIN:VTIMEZONE\n" +
+            "TZID:GMT-06.00/-05.00\n" +
+            "BEGIN:STANDARD\n" +
+            "DTSTART:16010101T010000\n" +
+            "TZOFFSETTO:-0600\n" +
+            "TZOFFSETFROM:-0500\n" +
+            "RRULE:FREQ=YEARLY;INTERVAL=1;BYMONTH=11;BYDAY=1SU;WKST=MO\n" +
+            "END:STANDARD\n" +
+            "BEGIN:DAYLIGHT\n" +
+            "DTSTART:16010101T030000\n" +
+            "TZOFFSETTO:-0500\n" +
+            "TZOFFSETFROM:-0600\n" +
+            "RRULE:FREQ=YEARLY;INTERVAL=1;BYMONTH=3;BYDAY=2SU;WKST=MO\n" +
+            "END:DAYLIGHT\n" +
+            "END:VTIMEZONE\n" +
+            "END:VCALENDAR\n";
+    public void testFuzzyTimeZoneMatchGMT_06() throws Exception {
+        try (ByteArrayInputStream bais = new ByteArrayInputStream(VtimeZoneGMT_0600_0500.getBytes())) {
+            ZVCalendar tzcal = ZCalendar.ZCalendarBuilder.build(bais, MimeConstants.P_CHARSET_UTF8);
+            assertNotNull("tzcal", tzcal);
+            ZComponent tzcomp = tzcal.getComponent(ICalTok.VTIMEZONE);
+            assertNotNull("tzcomp", tzcomp);
+            ICalTimeZone tz = ICalTimeZone.fromVTimeZone(tzcomp);
+            ICalTimeZone matchtz = ICalTimeZone.lookupMatchingWellKnownTZ(tz);
+            assertEquals("ID of Timezone which fuzzy matches GMT=06.00/-05.00", "America/Chicago", matchtz.getID());
+        }
+    }
+
+    private static String VtimeZoneGMT_0800_0700 =
+            "BEGIN:VCALENDAR\n" +
+            "BEGIN:VTIMEZONE\n" +
+            "TZID:GMT-08.00/-07.00\n" +
+            "BEGIN:STANDARD\n" +
+            "DTSTART:16010101T010000\n" +
+            "TZOFFSETTO:-0800\n" +
+            "TZOFFSETFROM:-0700\n" +
+            "RRULE:FREQ=YEARLY;INTERVAL=1;BYMONTH=11;BYDAY=1SU;WKST=MO\n" +
+            "END:STANDARD\n" +
+            "BEGIN:DAYLIGHT\n" +
+            "DTSTART:16010101T030000\n" +
+            "TZOFFSETTO:-0700\n" +
+            "TZOFFSETFROM:-0800\n" +
+            "RRULE:FREQ=YEARLY;INTERVAL=1;BYMONTH=3;BYDAY=2SU;WKST=MO\n" +
+            "END:DAYLIGHT\n" +
+            "END:VTIMEZONE\n" +
+            "END:VCALENDAR\n";
+    public void testFuzzyTimeZoneMatchGMT_08() throws Exception {
+        try (ByteArrayInputStream bais = new ByteArrayInputStream(VtimeZoneGMT_0800_0700.getBytes())) {
+            ZVCalendar tzcal = ZCalendar.ZCalendarBuilder.build(bais, MimeConstants.P_CHARSET_UTF8);
+            assertNotNull("tzcal", tzcal);
+            ZComponent tzcomp = tzcal.getComponent(ICalTok.VTIMEZONE);
+            assertNotNull("tzcomp", tzcomp);
+            ICalTimeZone tz = ICalTimeZone.fromVTimeZone(tzcomp);
+            ICalTimeZone matchtz = ICalTimeZone.lookupMatchingWellKnownTZ(tz);
+            assertEquals("ID of Timezone which fuzzy matches GMT=08.00/-07.00", "America/Los_Angeles", matchtz.getID());
+        }
     }
 
     @Override
