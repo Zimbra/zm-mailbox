@@ -212,20 +212,19 @@ public class CheckPortConflict extends AttributeCallback {
     }
 
     private boolean conflict(Server server, Map<String, String> ports, String port, String attrName) {
-
         if (StringUtil.isNullOrEmpty(port))
             return false;
         else if (port.equals("0"))
             return false;
         else if (server != null) {
-            if (ProxyPortAttrs.contains(attrName) && NonProxyPortAttrs.contains(ports.get(port)) && !server.hasMailboxService())
-                return false;
-            else if (NonProxyPortAttrs.contains(attrName) && ProxyPortAttrs.contains(ports.get(port)) && !server.hasProxyService())
-                return false;
-            else
-                return ports.containsKey(port);
-        } else
-            return ports.containsKey(port);
+            if (!server.hasMailboxService() || !server.hasProxyService()) {
+                if ((ProxyPortAttrs.contains(attrName) && NonProxyPortAttrs.contains(ports.get(port))) ||
+                    (NonProxyPortAttrs.contains(attrName) && ProxyPortAttrs.contains(ports.get(port))))
+                    return false;
+            }
+        }
+
+        return ports.containsKey(port);
     }
 
     @Override
