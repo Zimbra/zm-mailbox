@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -39,9 +39,9 @@ public class TimeZoneMap implements Cloneable {
         sDayWeekDayMap.put(ZWeekDay.SA, Integer.valueOf(java.util.Calendar.SATURDAY));
     }
 
-    private Map<String /* real TZID */, ICalTimeZone> mTzMap;
-    private Map<String /* alias */, String /* real TZID */> mAliasMap;
-    private ICalTimeZone mLocalTZ;
+    private final Map<String /* real TZID */, ICalTimeZone> mTzMap;
+    private final Map<String /* alias */, String /* real TZID */> mAliasMap;
+    private final ICalTimeZone mLocalTZ;
 
 
     /**
@@ -161,12 +161,10 @@ public class TimeZoneMap implements Cloneable {
         if (zone == null) {
             // Is it a system-defined TZ?
             zone = WellKnownTimeZones.getTimeZoneById(tzId);
-            if (zone != null)
+            if (zone != null) {
                 add(zone);
-            else {
-                ZimbraLog.calendar.warn(
-                        "Encountered time zone with no definition: TZID=" +
-                        tzId);
+            } else {
+                ZimbraLog.calendar.warn("Encountered time zone with no definition: TZID=%s", tzId);
             }
         }
         return zone;
