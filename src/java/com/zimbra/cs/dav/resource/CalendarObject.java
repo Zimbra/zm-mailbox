@@ -22,15 +22,26 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 
 import javax.servlet.http.HttpServletResponse;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.calendar.ICalTimeZone;
 import com.zimbra.common.calendar.ParsedDateTime;
 import com.zimbra.common.calendar.TimeZoneMap;
 import com.zimbra.common.calendar.ZCalendar;
+import com.zimbra.common.calendar.ZCalendar.ICalTok;
 import com.zimbra.common.calendar.ZCalendar.ZComponent;
+import com.zimbra.common.calendar.ZCalendar.ZParameter;
+import com.zimbra.common.calendar.ZCalendar.ZProperty;
+import com.zimbra.common.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.MimeConstants;
@@ -379,64 +390,102 @@ public interface CalendarObject {
             return false;
         }
 
-        /* Returns iCalendar representation of events that matches
-         * the supplied filter.
+        private  ZVCalendar createZVcalendar(List<ZComponent> components, Map<String, ICalTimeZone> oldIdsToNewTZsMap) {
+            Set<String> usedOldIds = Sets.newHashSet();
+            for (ZComponent comp : components) {
+                for (ZProperty prop : comp.getProperties()) {
+                    ZParameter tzidParam = prop.getParameter(ICalTok.TZID);
+                    if (tzidParam == null) {
+                        continue;
+                    }
+                    String tzid = tzidParam.getValue();
+                    if (tzid != null) {
+                        ICalTimeZone newTZ = oldIdsToNewTZsMap.get(tzid);
+                        if (newTZ == null) {
+                            continue; // would be odd.
+                        }
+                        usedOldIds.add(tzid);
+                        tzidParam.setValue(newTZ.getID());
+                    }
+                }
+            }
+            ZVCalendar vcal = new ZVCalendar();
+            vcal.addVersionAndProdId();
+            for (Entry<String, ICalTimeZone> entry : oldIdsToNewTZsMap.entrySet()) {
+                if (usedOldIds.contains(entry.getKey())) {
+                    vcal.addComponent(entry.getValue().newToVTimeZone());
+                }
+            }
+            for (ZComponent comp : components) {
+                vcal.addComponent(comp);
+            }
+            return vcal;
+        }
+
+        /**
+         * Returns iCalendar representation of events that matches the supplied filter.
+         * Unused timezones are removed and well known timezones are used in preference to original timezones.
          */
-        @Override
-        public String getVcalendar(DavContext ctxt, Filter filter) throws IOException, DavException {
-            CharArrayWriter wr = null;
+        public ZVCalendar getZVcalendar(DavContext ctxt, Filter filter) throws ServiceException, DavException {
+            Map<String,ICalTimeZone> oldIdsToNewTZsMap = Maps.newHashMap();
+            List<ZComponent> components = Lists.newArrayList();
+            Iterator<ICalTimeZone> iter = mTzmap.tzIterator();
+            while (iter.hasNext()) {
+                ICalTimeZone tz = iter.next();
+                String oldId = tz.getID();
+                ICalTimeZone wellKnownTZ = ICalTimeZone.lookupMatchingWellKnownTZ(tz);
+                oldIdsToNewTZsMap.put(oldId, wellKnownTZ);
+            }
+            Account acct = ctxt.getAuthAccount();
+            boolean allowPrivateAccess = false;
             try {
-                wr = new CharArrayWriter();
-                wr.append("BEGIN:VCALENDAR\r\n");
-                wr.append("VERSION:").append(ZCalendar.sIcalVersion).append("\r\n");
-                wr.append("PRODID:").append(ZCalendar.sZimbraProdID).append("\r\n");
-                Iterator<ICalTimeZone> iter = mTzmap.tzIterator();
-                while (iter.hasNext()) {
-                    ICalTimeZone tz = iter.next();
-                    tz.newToVTimeZone().toICalendar(wr, true);
-                }
-                Account acct = ctxt.getAuthAccount();
-                boolean allowPrivateAccess = false;
-                try {
-                    Mailbox mbox = getMailbox(ctxt);
-                    OperationContext octxt = ctxt.getOperationContext();
-                    Folder folder = mbox.getFolderById(octxt, mFolderId);
-                    allowPrivateAccess = CalendarItem.allowPrivateAccess(
-                            folder, ctxt.getAuthAccount(), octxt.isUsingAdminPrivileges());
-                } catch (ServiceException se) {
-                    ZimbraLog.dav.warn("cannot determine private access status", se);
-                }
-                boolean delegated = !acct.getId().equalsIgnoreCase(mOwnerId);
-                if (!LC.calendar_apple_ical_compatible_canceled_instances.booleanValue()) {
-                    for (Invite inv : mInvites) {
-                        Invite fixedInv = getFixedUpCopy(ctxt, inv, acct, delegated, false);
-                        ZComponent comp = fixedInv.newToVComponent(false, allowPrivateAccess);
-                        if (filter == null || filter.match(comp))
-                            comp.toICalendar(wr, true);
+                Mailbox mbox = getMailbox(ctxt);
+                OperationContext octxt = ctxt.getOperationContext();
+                Folder folder = mbox.getFolderById(octxt, mFolderId);
+                allowPrivateAccess = CalendarItem.allowPrivateAccess(
+                        folder, ctxt.getAuthAccount(), octxt.isUsingAdminPrivileges());
+            } catch (ServiceException se) {
+                ZimbraLog.dav.warn("cannot determine private access status", se);
+            }
+            boolean delegated = !acct.getId().equalsIgnoreCase(mOwnerId);
+            if (!LC.calendar_apple_ical_compatible_canceled_instances.booleanValue()) {
+                for (Invite inv : mInvites) {
+                    Invite fixedInv = getFixedUpCopy(ctxt, inv, acct, delegated, false);
+                    ZComponent vcomp = fixedInv.newToVComponent(false, allowPrivateAccess);
+                    if (filter == null || filter.match(vcomp)) {
+                        components.add(vcomp);
                     }
-                } else {
-                    Invite[] fixedInvs = new Invite[mInvites.length];
-                    for (int i = 0; i < mInvites.length; ++i) {
-                        fixedInvs[i] = getFixedUpCopy(ctxt, mInvites[i], acct, delegated, false);
-                    }
-                    boolean appleICalExdateHack = LC.calendar_apple_ical_compatible_canceled_instances.booleanValue();
-                    ZComponent[] vcomps = Invite.toVComponents(fixedInvs, allowPrivateAccess, false, appleICalExdateHack);
-                    if (vcomps != null) {
-                        for (ZComponent vcomp : vcomps) {
-                            if (filter == null || filter.match(vcomp))
-                                vcomp.toICalendar(wr, true);
+                }
+            } else {
+                Invite[] fixedInvs = new Invite[mInvites.length];
+                for (int i = 0; i < mInvites.length; ++i) {
+                    fixedInvs[i] = getFixedUpCopy(ctxt, mInvites[i], acct, delegated, false);
+                }
+                boolean appleICalExdateHack = LC.calendar_apple_ical_compatible_canceled_instances.booleanValue();
+                ZComponent[] vcomps = Invite.toVComponents(fixedInvs, allowPrivateAccess, false, appleICalExdateHack);
+                if (vcomps != null) {
+                    for (ZComponent vcomp : vcomps) {
+                        if (filter == null || filter.match(vcomp)) {
+                            components.add(vcomp);
                         }
                     }
                 }
-                wr.append("END:VCALENDAR\r\n");
-                wr.flush();
-                return wr.toString();
+            }
+            return createZVcalendar(components, oldIdsToNewTZsMap);
+        }
+
+        /* Returns iCalendar representation of events that matches the supplied filter.
+         */
+        @Override
+        public String getVcalendar(DavContext ctxt, Filter filter) throws IOException, DavException {
+            try (CharArrayWriter writer = new CharArrayWriter()){
+                ZVCalendar vcal = getZVcalendar(ctxt, filter);
+                vcal.toICalendar(writer, true);
+                writer.flush();
+                return writer.toString();
             } catch (ServiceException se) {
                 ZimbraLog.dav.warn("cannot convert to iCalendar", se);
                 return "";
-            } finally {
-                if (wr != null)
-                    wr.close();
             }
         }
 
