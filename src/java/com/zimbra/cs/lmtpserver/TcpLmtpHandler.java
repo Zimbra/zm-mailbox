@@ -82,7 +82,7 @@ public class TcpLmtpHandler extends LmtpHandler {
     @Override
         protected void doSTARTTLS(String arg) throws IOException {
             if (arg != null) {
-                doSyntaxError(); // parameter supplied to STARTTLS
+            	sendReply(LmtpReply.STARTTLS_WITH_PARAMETER); // parameter supplied to STARTTLS
                 return;
             }
             sendReply(LmtpReply.READY_TO_START_TLS);
@@ -94,6 +94,7 @@ public class TcpLmtpHandler extends LmtpHandler {
             startHandshake(tlsconn);
             inputStream = new TcpServerInputStream(tlsconn.getInputStream());
             mWriter = new LmtpWriter(tlsconn.getOutputStream());
+            startedTLS = true;
     }
 
 }

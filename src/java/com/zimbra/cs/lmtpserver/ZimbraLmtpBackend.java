@@ -739,7 +739,7 @@ public class ZimbraLmtpBackend implements LmtpBackend {
             Collection<LmtpAddress> serverRecipients = serverToRecipientsMap.get(server);
             try {
                 Server serverObj = Provisioning.getInstance().getServerByName(server);
-                lmtpClient = new LmtpClient(server, new Integer(serverObj.getAttr(Provisioning.A_zimbraLmtpBindPort)), null);
+                lmtpClient = new LmtpClient(server, new Integer(serverObj.getAttr(Provisioning.A_zimbraLmtpBindPort)));
                 in = data == null ? blob.getInputStream() : new ByteArrayInputStream(data);
                 boolean success = lmtpClient.sendMessage(in,
                                                          getRecipientsEmailAddress(serverRecipients),

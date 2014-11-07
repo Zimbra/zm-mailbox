@@ -20,7 +20,6 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -53,6 +52,8 @@ extends TestCase {
     private static final String USER_NAME = "user1";
     private static final String USER2_NAME = "user2";
     private static final String NAME_PREFIX = TestLmtp.class.getSimpleName();
+    
+    private static final String STARTTLS = "STARTTLS";
 
     private ZMailbox mbox;
     private Account account;
@@ -657,8 +658,15 @@ extends TestCase {
         LmtpClient lmtpClient =
                 new LmtpClient("localhost",
                                Provisioning.getInstance().getLocalServer().getIntAttr(Provisioning.A_zimbraLmtpBindPort, 7025));
+        assertTrue(lmtpClient.getResponse(), lmtpClient.replyOk());
         lmtpClient.sendLine("LHLO " + LC.zimbra_server_hostname.value());
         assertTrue(lmtpClient.getResponse(), lmtpClient.replyOk());
+        
+        if (lmtpClient.getResponse().contains(STARTTLS)) {
+        	lmtpClient.startTLS();
+        	lmtpClient.sendLine("LHLO " + LC.zimbra_server_hostname.value());
+        	assertTrue(lmtpClient.getResponse(), lmtpClient.replyOk());
+        }
         lmtpClient.sendLine("MAIL FROM:<" + TestUtil.addDomainIfNecessary(USER_NAME) + ">");
         assertTrue(lmtpClient.getResponse(), lmtpClient.replyOk());
         lmtpClient.sendLine("RCPT TO:<" + TestUtil.addDomainIfNecessary(USER_NAME) + ">");
@@ -673,6 +681,86 @@ extends TestCase {
         List<ZMessage> msgs = TestUtil.search(mbox, "in:inbox " + subject);
         assertTrue("msg got delivered via LMTP even though <CRLF>.<CRLF> was not received", msgs.isEmpty());
     }
+    
+    public void testStartTLSSuccess() throws Exception {
+        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        LmtpClient lmtpClient =
+                new LmtpClient("localhost",
+                               Provisioning.getInstance().getLocalServer().getIntAttr(Provisioning.A_zimbraLmtpBindPort, 7025));
+        assertTrue(lmtpClient.getResponse(), lmtpClient.replyOk());
+        lmtpClient.sendLine("LHLO " + LC.zimbra_server_hostname.value());
+        assertTrue(lmtpClient.getResponse(), lmtpClient.replyOk());
+        if (lmtpClient.getResponse().contains(STARTTLS)) {
+        	lmtpClient.startTLS();
+        	lmtpClient.sendLine("LHLO " + LC.zimbra_server_hostname.value());
+        	assertTrue(lmtpClient.getResponse(), lmtpClient.replyOk());
+        }
+        lmtpClient.sendLine("MAIL FROM:<" + TestUtil.addDomainIfNecessary(USER_NAME) + ">");
+        assertTrue(lmtpClient.getResponse(), lmtpClient.replyOk());
+        lmtpClient.sendLine("RCPT TO:<" + TestUtil.addDomainIfNecessary(USER_NAME) + ">");
+        assertTrue(lmtpClient.getResponse(), lmtpClient.replyOk());
+        lmtpClient.sendLine("DATA");
+        assertTrue(lmtpClient.getResponse(), lmtpClient.replyOk());
+        String subject = NAME_PREFIX + " testFinalDotNotSent";
+        lmtpClient.sendLine("Subject: " + subject);
+        lmtpClient.abruptClose();
+        // wait for some time
+        Thread.sleep(1000);
+        List<ZMessage> msgs = TestUtil.search(mbox, "in:inbox " + subject);
+        assertTrue("msg got delivered via LMTP even though <CRLF>.<CRLF> was not received", msgs.isEmpty());
+    }
+    
+    
+    public void testServeShouldNotPublishStartTlsOnSecondLlhoCommand() throws Exception {
+        LmtpClient lmtpClient =
+                new LmtpClient("localhost",
+                               Provisioning.getInstance().getLocalServer().getIntAttr(Provisioning.A_zimbraLmtpBindPort, 7025));
+        assertTrue(lmtpClient.getResponse(), lmtpClient.replyOk());
+        lmtpClient.sendLine("LHLO " + LC.zimbra_server_hostname.value());
+        assertTrue(lmtpClient.getResponse(), lmtpClient.replyOk());
+        if(lmtpClient.getResponse().contains("STARTTLS")) {
+         	lmtpClient.startTLS();
+        	lmtpClient.sendLine("LHLO " + LC.zimbra_server_hostname.value());
+        	assertTrue(lmtpClient.getResponse(), lmtpClient.replyOk());
+        	assertTrue(lmtpClient.getResponse(), !lmtpClient.getResponse().contains(STARTTLS));
+        }
+        lmtpClient.abruptClose();
+    }
+    
+    public void testLhloNotSendByClientAfterStartTLS() throws Exception {
+        LmtpClient lmtpClient =
+                new LmtpClient("localhost",
+                               Provisioning.getInstance().getLocalServer().getIntAttr(Provisioning.A_zimbraLmtpBindPort, 7025));
+        assertTrue(lmtpClient.getResponse(), lmtpClient.replyOk());
+        lmtpClient.sendLine("LHLO " + LC.zimbra_server_hostname.value());
+        assertTrue(lmtpClient.getResponse(), lmtpClient.replyOk());
+        if(lmtpClient.getResponse().contains("STARTTLS")) {
+        	lmtpClient.sendLine(STARTTLS);
+        	assertTrue(lmtpClient.getResponse(), lmtpClient.replyOk());
+        	lmtpClient.sendLine("MAIL FROM:<" + TestUtil.addDomainIfNecessary(USER_NAME) + ">");
+        	assertTrue(lmtpClient.getResponse(), !lmtpClient.replyOk());
+        }
+        lmtpClient.abruptClose();
+    }
+    
+    public void testErrorWhenNoStartTlsOnSslEnforcedByServer() throws Exception {
+        boolean sslEnforcedByServer = "1".equals(LC.get(LC.zimbra_require_interprocess_security.key()));
+        if (sslEnforcedByServer) {
+        	 LmtpClient lmtpClient =
+                     new LmtpClient("localhost",
+                                    Provisioning.getInstance().getLocalServer().getIntAttr(Provisioning.A_zimbraLmtpBindPort, 7025));
+        	 assertTrue(lmtpClient.getResponse(), lmtpClient.replyOk());
+             lmtpClient.sendLine("LHLO " + LC.zimbra_server_hostname.value());
+             assertTrue(lmtpClient.getResponse(), lmtpClient.replyOk());
+             if(lmtpClient.getResponse().contains("STARTTLS")) {
+             	lmtpClient.sendLine("MAIL FROM:<" + TestUtil.addDomainIfNecessary(USER_NAME) + ">");
+             	assertTrue(lmtpClient.getResponse(), !lmtpClient.replyOk());
+             }
+             lmtpClient.abruptClose();
+        }
+    }
+    
+    
 
     @Override
     public void tearDown()
