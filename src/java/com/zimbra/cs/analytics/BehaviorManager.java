@@ -47,11 +47,14 @@ public abstract class BehaviorManager {
         Class<? extends Factory> factoryClass = null;
         try {
             try {
-                factoryClass = Class.forName(factoryClassName).asSubclass(Factory.class);
+                if(factoryClassName != null && !factoryClassName.isEmpty()) {
+                    factoryClass = Class.forName(factoryClassName).asSubclass(Factory.class);
+                } else {
+                    factoryClass = DefaultBehaviorManager.Factory.class; //default stubbed implementation
+                }
             } catch (ClassNotFoundException e) {
                 try {
-                    factoryClass = ExtensionUtil.findClass(factoryClassName)
-                            .asSubclass(Factory.class);
+                    factoryClass = ExtensionUtil.findClass(factoryClassName).asSubclass(Factory.class);
                 } catch (ClassNotFoundException cnfe) {
                     ZimbraLog.analytics.error("Unable to initialize Behavior Manager for class " + factoryClassName, cnfe);
                 }
@@ -59,10 +62,9 @@ public abstract class BehaviorManager {
         } catch (ClassCastException cce) {
             ZimbraLog.analytics.error("Unable to initialize Behavior Manager for class " + factoryClassName, cce);
         }
-        if(factoryClass != null && factory != null) {
-            setFactory(factoryClass);
-            ZimbraLog.analytics.info("Using Behavior Manager %s", factory.getClass().getDeclaringClass().getSimpleName());
-        }
+
+        setFactory(factoryClass != null ? factoryClass : DefaultBehaviorManager.Factory.class.asSubclass(Factory.class));
+        ZimbraLog.analytics.info("Using Behavior Manager %s", factory.getClass().getDeclaringClass().getSimpleName());
     }
 
     private static synchronized final void setFactory(Class<? extends Factory> factoryClass) {
