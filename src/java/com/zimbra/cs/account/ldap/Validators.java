@@ -270,7 +270,7 @@ final public class Validators {
                 } else {
                     // really an internal error
                     // at some point we should probably cleanup the validate interface/code
-                    throw ServiceException.FAILURE("accunt object is null", null);
+                    throw ServiceException.FAILURE("account object is null", null);
                 }
             }
 
