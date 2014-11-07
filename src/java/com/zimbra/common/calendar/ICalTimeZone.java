@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -140,8 +140,12 @@ public class ICalTimeZone extends SimpleTimeZone {
             }
         }
 
-        @Override
-        public int compareTo(SimpleOnset other) {
+        /**
+         * Like compareTo but regards differences at the hour and below level as not relevant
+         * @param other
+         * @return
+         */
+        public int fuzzyCompareTo(SimpleOnset other) {
             int comp;
             comp = mMonth - other.mMonth;
             if (comp != 0) return comp;
@@ -151,6 +155,12 @@ public class ICalTimeZone extends SimpleTimeZone {
                 comp = mDayOfWeek - other.mDayOfWeek;
             else
                 comp = mDayOfMonth - other.mDayOfMonth;
+            return comp;
+        }
+
+        @Override
+        public int compareTo(SimpleOnset other) {
+            int comp = fuzzyCompareTo(other);
             if (comp != 0) return comp;
             comp = mHour - other.mHour;
             if (comp != 0) return comp;
@@ -983,10 +993,12 @@ public class ICalTimeZone extends SimpleTimeZone {
        int mins = time % 60;
        int hours = time / 60;
 
-       if (secs > 0) {
-           toRet.append(new Formatter().format("%02d%02d%02d", hours, mins, secs));
-       } else {
-           toRet.append(new Formatter().format("%02d%02d", hours, mins));
+       try (Formatter formatter = new Formatter()) {
+           if (secs > 0) {
+               toRet.append(formatter.format("%02d%02d%02d", hours, mins, secs));
+           } else {
+               toRet.append(formatter.format("%02d%02d", hours, mins));
+           }
        }
        return toRet.toString();
     }
@@ -1128,39 +1140,38 @@ public class ICalTimeZone extends SimpleTimeZone {
 
         // If only DAYLIGHT is given, make it the STANDARD.
         if (standard == null) {
-        	standard = daylight;
-        	daylight = null;
+            standard = daylight;
+            daylight = null;
         }
-        if (standard == null)
-        	throw new IllegalArgumentException("VTIMEZONE has neither STANDARD nor DAYLIGHT: TZID=" + tzid);
+        if (standard == null) {
+            throw new IllegalArgumentException("VTIMEZONE has neither STANDARD nor DAYLIGHT: TZID=" + tzid);
+        }
 
         String stddtStart = null;
         int stdoffsetTime = 0;
         String stdrrule = null;
         String stdTzname = null;
 
-        if (standard != null) {
-            stddtStart = standard.getPropVal(ICalTok.DTSTART, null);
-            String stdtzOffsetTo = standard.getPropVal(ICalTok.TZOFFSETTO, null);
-            stdoffsetTime = tzOffsetTime(stdtzOffsetTo);
-            stdTzname = standard.getPropVal(ICalTok.TZNAME, null);
+        stddtStart = standard.getPropVal(ICalTok.DTSTART, null);
+        String stdtzOffsetTo = standard.getPropVal(ICalTok.TZOFFSETTO, null);
+        stdoffsetTime = tzOffsetTime(stdtzOffsetTo);
+        stdTzname = standard.getPropVal(ICalTok.TZNAME, null);
 
-            // Check if STANDARD defines a non-DST timezone.  If so, DAYLIGHT should be ignored if its
-            // DTSTART is later than that of STANDARD. (bug 25176)
-            String stdtzOffsetFrom = standard.getPropVal(ICalTok.TZOFFSETFROM, null);
-            if (stdtzOffsetFrom != null) {
-                int tzoffsetFromTime = tzOffsetTime(stdtzOffsetFrom);
-                if (tzoffsetFromTime == stdoffsetTime && daylight != null) {
-                    ZComponent moreRecent = moreRecentTzComp(standard, daylight);
-                    if (moreRecent == standard)
-                        daylight = null;
-                }
+        // Check if STANDARD defines a non-DST timezone.  If so, DAYLIGHT should be ignored if its
+        // DTSTART is later than that of STANDARD. (bug 25176)
+        String stdtzOffsetFrom = standard.getPropVal(ICalTok.TZOFFSETFROM, null);
+        if (stdtzOffsetFrom != null) {
+            int tzoffsetFromTime = tzOffsetTime(stdtzOffsetFrom);
+            if (tzoffsetFromTime == stdoffsetTime && daylight != null) {
+                ZComponent moreRecent = moreRecentTzComp(standard, daylight);
+                if (moreRecent == standard)
+                    daylight = null;
             }
+        }
 
-            if (daylight != null) {
-                // Rule is interesting only if daylight savings is in use.
-                stdrrule = standard.getPropVal(ICalTok.RRULE, null);
-            }
+        if (daylight != null) {
+            // Rule is interesting only if daylight savings is in use.
+            stdrrule = standard.getPropVal(ICalTok.RRULE, null);
         }
 
         String daydtStart = null;
@@ -1204,8 +1215,9 @@ public class ICalTimeZone extends SimpleTimeZone {
                 stdoffsetTime, stddtStart, stdrrule, stdTzname,
                 dayoffsetTime, daydtStart, dayrrule, dayTzname);
 
-        if (!skipLookup)
+        if (!skipLookup) {
             newTz = lookupByRule(newTz, true);
+        }
         return newTz;
     }
 
@@ -1215,10 +1227,11 @@ public class ICalTimeZone extends SimpleTimeZone {
         if (!DebugConfig.disableCalendarTZMatchByID) {
             ICalTimeZone match = WellKnownTimeZones.getTimeZoneById(tzid);
             if (match != null) {
-                if (match.getID().equals(tzid))
+                if (match.getID().equals(tzid)) {
                     return match;
-                else
+                } else {
                     return match.cloneWithNewTZID(tzid);
+                }
             }
         }
         return null;
@@ -1232,10 +1245,11 @@ public class ICalTimeZone extends SimpleTimeZone {
                 if (keepTZID) {
                     // Return the matched TZ, but using the TZID of the passed-in tz.
                     String tzid = tz.getID();
-                    if (match.getID().equals(tzid))
+                    if (match.getID().equals(tzid)) {
                         return match;
-                    else
+                    } else {
                         return match.cloneWithNewTZID(tzid);
+                    }
                 } else {
                     // Return the matched TZ.  TZID may be different than that of passed-in tz.
                     return match;
@@ -1249,13 +1263,15 @@ public class ICalTimeZone extends SimpleTimeZone {
     public static ICalTimeZone lookupMatchingWellKnownTZ(ICalTimeZone tz) {
         if (!DebugConfig.disableCalendarTZMatchByID) {
             ICalTimeZone match = WellKnownTimeZones.getTimeZoneById(tz.getID());
-            if (match != null)
+            if (match != null) {
                 return match;
+            }
         }
         if (!DebugConfig.disableCalendarTZMatchByRule) {
-            ICalTimeZone match = WellKnownTimeZones.getBestMatch(tz);
-            if (match != null)
+            ICalTimeZone match = WellKnownTimeZones.getBestFuzzyMatch(tz);
+            if (match != null) {
                 return match;
+            }
         }
         return tz;
     }

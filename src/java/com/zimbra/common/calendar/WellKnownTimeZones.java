@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -32,14 +32,23 @@ import com.zimbra.common.calendar.ZCalendar.ICalTok;
 import com.zimbra.common.calendar.ZCalendar.ZComponent;
 import com.zimbra.common.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.common.localconfig.LC;
-import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.mime.MimeConstants;
+import com.zimbra.common.service.ServiceException;
 
 public class WellKnownTimeZones {
 
-    private static Map<String /* TZID (or alias) */, ICalTimeZone> sTZIDMap =
-        new HashMap<String, ICalTimeZone>();
-    private static Map<ICalTimeZone, ICalTimeZone> sOffsetRuleMatches = new TreeMap<ICalTimeZone, ICalTimeZone>(new SimpleYearlyTZComparator());
+    private static Map<String /* TZID (or alias) */, ICalTimeZone> sTZIDMap = new HashMap<String, ICalTimeZone>();
+    private static Map<ICalTimeZone, ICalTimeZone> sOffsetRuleMatches =
+            new TreeMap<ICalTimeZone, ICalTimeZone>(new SimpleYearlyTZComparator(false /* fuzzy */));
+    /* Bug 95440 Calendar.app on Yosemite behaves very badly with timezones it doesn't recognize.
+     * Combine that with slightly buggy timezone rules coming out of ActiveSync and these get seen more than
+     * ideally.
+     * So, enable a more relaxed match - this should match timezones which only differ in the time on the onset
+     * days that rules come into effect.  So, only instances which occur during a narrow window on the onset
+     * days should be affected by the rules changes.
+     */
+    private static Map<ICalTimeZone, ICalTimeZone> fuzzyOffsetRuleMatches =
+            new TreeMap<ICalTimeZone, ICalTimeZone>(new SimpleYearlyTZComparator(true /* fuzzy */));
 
     /**
      * Look up a well-known time zone by its TZID.
@@ -58,6 +67,15 @@ public class WellKnownTimeZones {
      */
     public static ICalTimeZone getBestMatch(ICalTimeZone tz) {
         return sOffsetRuleMatches.get(tz);
+    }
+
+    public static ICalTimeZone getBestFuzzyMatch(ICalTimeZone tz) {
+        ICalTimeZone match = getBestMatch(tz);
+        if (match != null) {
+            return match;
+        } else {
+            return fuzzyOffsetRuleMatches.get(tz);
+        }
     }
 
     /**
@@ -113,12 +131,25 @@ public class WellKnownTimeZones {
                     sOffsetRuleMatches.put(itz, itz);
                 } else {
                     String currentId = current.getID();
-                    int currentMatchScore = matchScoreMap.containsKey(currentId) ? matchScoreMap.get(currentId) : 0;                    
+                    int currentMatchScore = matchScoreMap.containsKey(currentId) ? matchScoreMap.get(currentId) : 0;
                     // Higher score wins.  In a tie, the TZID that comes earlier lexicographically wins.
                     if (currentMatchScore < tz.getMatchScore() ||
                         (currentMatchScore == tz.getMatchScore() && currentId.compareTo(id) > 0)) {
                         sOffsetRuleMatches.remove(itz);
                         sOffsetRuleMatches.put(itz, itz);
+                    }
+                }
+                current = fuzzyOffsetRuleMatches.get(itz);
+                if (current == null) {
+                    fuzzyOffsetRuleMatches.put(itz, itz);
+                } else {
+                    String currentId = current.getID();
+                    int currentMatchScore = matchScoreMap.containsKey(currentId) ? matchScoreMap.get(currentId) : 0;
+                    // Higher score wins.  In a tie, the TZID that comes earlier lexicographically wins.
+                    if (currentMatchScore < tz.getMatchScore() ||
+                        (currentMatchScore == tz.getMatchScore() && currentId.compareTo(id) > 0)) {
+                        fuzzyOffsetRuleMatches.remove(itz);
+                        fuzzyOffsetRuleMatches.put(itz, itz);
                     }
                 }
             }
@@ -136,9 +167,17 @@ public class WellKnownTimeZones {
     // Comparator that sorts ICalTimeZone objects based on GMT offsets and DST transition
     // rules.  It allows checking if two time zones with different TZIDs are equivalent.
     private static class SimpleYearlyTZComparator implements Comparator<ICalTimeZone> {
+        final boolean fuzzy;
 
-        // Compare two objects for nullness.  Null sorts before non-null.
-        private static int nullCompare(Object o1, Object o2) {
+        SimpleYearlyTZComparator(boolean fuzzyComparisons) {
+            fuzzy = fuzzyComparisons;
+        }
+
+        /**
+         * Compare two objects for nullness.  Null sorts before non-null. <b>Only</b> interested in nullness.
+         * i.e. if both non-null - returns 0 regardless of their value!
+         */
+        protected static int nullCompare(Object o1, Object o2) {
             if (o1 != null) {
                 if (o2 != null) return 0;
                 else return 1;
@@ -148,6 +187,41 @@ public class WellKnownTimeZones {
             }
         }
 
+        protected static <T> int doCompare(Comparable<T> o1, Comparable<T> o2) {
+            int comp = nullCompare(o1, o2);
+            return (comp != 0) ? comp : o1.compareTo((T) o2);
+        }
+
+        protected static int doFuzzyCompare(SimpleOnset o1, SimpleOnset o2) {
+            int comp = nullCompare(o1, o2);
+            return (comp != 0) ? comp : o1.fuzzyCompareTo(o2);
+        }
+
+        protected int compareObservance(SimpleOnset onset1, SimpleOnset onset2, String rule1, String rule2,
+                String dtstart1, String dtstart2) {
+            int comp;
+            if (onset1 != null || onset2 != null) {
+                if (fuzzy) {
+                    comp = doFuzzyCompare(onset1, onset2);
+                } else {
+                    comp = doCompare(onset1, onset2);
+                }
+            } else {
+                // RRULE
+                comp = doCompare(rule1, rule2);
+                if (comp != 0) {
+                    return comp;
+                }
+                // Not sure whether this makes sense.
+                // if (fuzzy) { return comp; }
+
+                // DTSTART
+                comp = doCompare(dtstart1, dtstart2);
+            }
+            return comp;
+        }
+
+        @Override
         public int compare(ICalTimeZone tz1, ICalTimeZone tz2) {
             // Sort null before non-null.
             if (tz1 == null || tz2 == null)
@@ -174,62 +248,16 @@ public class WellKnownTimeZones {
             // At this point we know both time zones use daylight savings.
 
             // Compare by standard time onset.
-            SimpleOnset stdOnset1 = tz1.getStandardOnset();
-            SimpleOnset stdOnset2 = tz2.getStandardOnset();
-            if (stdOnset1 != null || stdOnset2 != null) {
-                comp = nullCompare(stdOnset1, stdOnset2);
-                if (comp != 0) return comp;
-                comp = stdOnset1.compareTo(stdOnset2);
-                if (comp != 0) return comp;
-            } else {
-                // RRULE
-                String stdRule1 = tz1.getStandardRule();
-                String stdRule2 = tz2.getStandardRule();
-                if (stdRule1 != null && stdRule2 != null)
-                    comp = stdRule1.compareTo(stdRule2);
-                else
-                    comp = nullCompare(stdRule1, stdRule2);
-                if (comp != 0) return comp;
-
-                // DTSTART
-                String stdDt1 = tz1.getStandardDtStart();
-                String stdDt2 = tz2.getStandardDtStart();
-                if (stdDt1 != null && stdDt2 != null)
-                    comp = stdDt1.compareTo(stdDt2);
-                else
-                    comp = nullCompare(stdDt1, stdDt2);
-                if (comp != 0) return comp;
+            comp = compareObservance(tz1.getStandardOnset(), tz2.getStandardOnset(),
+                                        tz1.getStandardRule(), tz2.getStandardRule(),
+                                        tz1.getStandardDtStart(), tz2.getStandardDtStart());
+            if (comp != 0) {
+                return comp;
             }
-
             // Compare by daylight time onset.
-            SimpleOnset dayOnset1 = tz1.getDaylightOnset();
-            SimpleOnset dayOnset2 = tz2.getDaylightOnset();
-            if (dayOnset1 != null || dayOnset2 != null) {
-                comp = nullCompare(dayOnset1, dayOnset2);
-                if (comp != 0) return comp;
-                comp = dayOnset1.compareTo(dayOnset2);
-                if (comp != 0) return comp;
-            } else {
-                // RRULE
-                String dayRule1 = tz1.getDaylightRule();
-                String dayRule2 = tz2.getDaylightRule();
-                if (dayRule1 != null && dayRule2 != null)
-                    comp = dayRule1.compareTo(dayRule2);
-                else
-                    comp = nullCompare(dayRule1, dayRule2);
-                if (comp != 0) return comp;
-
-                // DTSTART
-                String dayDt1 = tz1.getDaylightDtStart();
-                String dayDt2 = tz2.getDaylightDtStart();
-                if (dayDt1 != null && dayDt2 != null)
-                    comp = dayDt1.compareTo(dayDt2);
-                else
-                    comp = nullCompare(dayDt1, dayDt2);
-                if (comp != 0) return comp;
-            }
-
-            return 0;
+            return compareObservance(tz1.getDaylightOnset(), tz2.getDaylightOnset(),
+                                        tz1.getDaylightRule(), tz2.getDaylightRule(),
+                                        tz1.getDaylightDtStart(), tz2.getDaylightDtStart());
         }
     }
 
@@ -240,10 +268,23 @@ public class WellKnownTimeZones {
 
         System.out.println("OFFSET/RULE MATCH TIME ZONES");
         System.out.println("----------------------------");
-        for (Iterator<ICalTimeZone> piter = sOffsetRuleMatches.keySet().iterator(); piter.hasNext(); ) {
-            System.out.println(piter.next().getID());
+        for (ICalTimeZone key : sOffsetRuleMatches.keySet()) {
+            String id = key.getID();
+            boolean inFuzzy = false;
+            for (ICalTimeZone fuzzykey : fuzzyOffsetRuleMatches.keySet()) {
+                if (id.equals(fuzzykey.getID())) {
+                    inFuzzy = true;
+                    break;
+                }
+            }
+            if (inFuzzy) {
+                System.out.println(key.getID());
+            } else {
+                System.out.println(key.getID() + " [missing from fuzzyOffsetRuleMatches]");
+            }
         }
-        System.out.println("(Total = " + sOffsetRuleMatches.size() + ")");
+        System.out.println(
+                "(Total = " + sOffsetRuleMatches.size() + ") (fuzzyTotal = " + fuzzyOffsetRuleMatches.size() + ")");
         System.out.println();
 
         int nTotal = 0, nPrim = 0, nNonPrim = 0;
