@@ -1938,6 +1938,22 @@ public class ZAttrProvisioning {
         public boolean isOn() { return this == on;}
     }
 
+    public static enum ReverseProxySSLStapling {
+        off("off"),
+        on("on");
+        private String mValue;
+        private ReverseProxySSLStapling(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static ReverseProxySSLStapling fromString(String s) throws ServiceException {
+            for (ReverseProxySSLStapling value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isOff() { return this == off;}
+        public boolean isOn() { return this == on;}
+    }
+
     public static enum ShareNotificationMtaConnectionType {
         STARTTLS("STARTTLS"),
         CLEARTEXT("CLEARTEXT"),
@@ -12890,6 +12906,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraReverseProxySendPop3Xoip = "zimbraReverseProxySendPop3Xoip";
 
     /**
+     * Enable/Disable SPDY support for nginx
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1674)
+    public static final String A_zimbraReverseProxySPDYEnabled = "zimbraReverseProxySPDYEnabled";
+
+    /**
      * permitted ciphers for reverse proxy. Ciphers are in the formats
      * supported by OpenSSL e.g.
      * ALL:!ADH:!EXPORT56:RC4+RSA:+HIGH:+MEDIUM:+LOW:+SSLv2:+EXP; if not set,
@@ -12915,6 +12939,24 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1653)
     public static final String A_zimbraReverseProxySSLProtocols = "zimbraReverseProxySSLProtocols";
+
+    /**
+     * Enables or disables stapling of OCSP responses by nginx
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1672)
+    public static final String A_zimbraReverseProxySSLStapling = "zimbraReverseProxySSLStapling";
+
+    /**
+     * OCSP Responder URL which overrides the URL of the OCSP responder
+     * specified in the “Authority Information Access” certificate extension.
+     * Only “http://” OCSP responders are supported
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1673)
+    public static final String A_zimbraReverseProxySSLStaplingResponderURL = "zimbraReverseProxySSLStaplingResponderURL";
 
     /**
      * If set as TRUE, proxy will use SSL to connect to the upstream mail
