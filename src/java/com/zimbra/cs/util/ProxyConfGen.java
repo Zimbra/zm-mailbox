@@ -1527,6 +1527,23 @@ class WebProxyUpstreamEwsTargetVar extends ProxyConfVar {
     }
 }
 
+class SpdyConfVar extends ProxyConfVar {
+    public SpdyConfVar() {
+        super("core.spdy", "zimbraReverseProxySPDYEnabled", true, ProxyConfValueType.BOOLEAN,
+                ProxyConfOverride.SERVER, "String options required in listen directive for SPDY");
+    }
+
+    @Override
+    public String format(Object o) throws ProxyConfException {
+        Boolean value = (Boolean)o;
+        if(value == false) {
+            return "";
+        } else {
+            return " ssl spdy";
+        }
+    }
+}
+
 /**
  *
  * @author zimbra
@@ -2505,6 +2522,8 @@ public class ProxyConfGen
 	    mConfVars.put("web.login.upstream.url", new ProxyConfVar("web.login.upstream.url", "zimbraMailURL", "/", ProxyConfValueType.STRING, ProxyConfOverride.SERVER, "Zimbra Login URL"));
 	    mConfVars.put("web.upstream.login.target", new WebProxyUpstreamLoginTargetVar());
 	    mConfVars.put("web.upstream.ews.target", new WebProxyUpstreamEwsTargetVar());
+	    mConfVars.put("web.ssl.spdy", new SpdyConfVar());
+	    mConfVars.put("web.ssl.stapling", new ProxyConfVar("web.ssl.stapling", "zimbraReverseProxySSLStapling", "off", ProxyConfValueType.STRING, ProxyConfOverride.SERVER, "SSL Stapling flag for NGINX - can be on|off - on Enables stapling of OCSP responses by the server, off disables it"));
     }
 
     /* update the default variable map from the active configuration */

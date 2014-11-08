@@ -35469,6 +35469,78 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Enable/Disable SPDY support for nginx
+     *
+     * @return zimbraReverseProxySPDYEnabled, or true if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1674)
+    public boolean isReverseProxySPDYEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraReverseProxySPDYEnabled, true);
+    }
+
+    /**
+     * Enable/Disable SPDY support for nginx
+     *
+     * @param zimbraReverseProxySPDYEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1674)
+    public void setReverseProxySPDYEnabled(boolean zimbraReverseProxySPDYEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxySPDYEnabled, zimbraReverseProxySPDYEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Enable/Disable SPDY support for nginx
+     *
+     * @param zimbraReverseProxySPDYEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1674)
+    public Map<String,Object> setReverseProxySPDYEnabled(boolean zimbraReverseProxySPDYEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxySPDYEnabled, zimbraReverseProxySPDYEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Enable/Disable SPDY support for nginx
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1674)
+    public void unsetReverseProxySPDYEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxySPDYEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Enable/Disable SPDY support for nginx
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1674)
+    public Map<String,Object> unsetReverseProxySPDYEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxySPDYEnabled, "");
+        return attrs;
+    }
+
+    /**
      * SSL protocols enabled for the proxy
      *
      * @return zimbraReverseProxySSLProtocols, or empty array if unset
@@ -35599,6 +35671,219 @@ public abstract class ZAttrServer extends NamedEntry {
     public Map<String,Object> unsetReverseProxySSLProtocols(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraReverseProxySSLProtocols, "");
+        return attrs;
+    }
+
+    /**
+     * Enables or disables stapling of OCSP responses by nginx
+     *
+     * <p>Valid values: [off, on]
+     *
+     * @return zimbraReverseProxySSLStapling, or ZAttrProvisioning.ReverseProxySSLStapling.on if unset and/or has invalid value
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1672)
+    public ZAttrProvisioning.ReverseProxySSLStapling getReverseProxySSLStapling() {
+        try { String v = getAttr(Provisioning.A_zimbraReverseProxySSLStapling); return v == null ? ZAttrProvisioning.ReverseProxySSLStapling.on : ZAttrProvisioning.ReverseProxySSLStapling.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.ReverseProxySSLStapling.on; }
+    }
+
+    /**
+     * Enables or disables stapling of OCSP responses by nginx
+     *
+     * <p>Valid values: [off, on]
+     *
+     * @return zimbraReverseProxySSLStapling, or "on" if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1672)
+    public String getReverseProxySSLStaplingAsString() {
+        return getAttr(Provisioning.A_zimbraReverseProxySSLStapling, "on");
+    }
+
+    /**
+     * Enables or disables stapling of OCSP responses by nginx
+     *
+     * <p>Valid values: [off, on]
+     *
+     * @param zimbraReverseProxySSLStapling new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1672)
+    public void setReverseProxySSLStapling(ZAttrProvisioning.ReverseProxySSLStapling zimbraReverseProxySSLStapling) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxySSLStapling, zimbraReverseProxySSLStapling.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Enables or disables stapling of OCSP responses by nginx
+     *
+     * <p>Valid values: [off, on]
+     *
+     * @param zimbraReverseProxySSLStapling new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1672)
+    public Map<String,Object> setReverseProxySSLStapling(ZAttrProvisioning.ReverseProxySSLStapling zimbraReverseProxySSLStapling, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxySSLStapling, zimbraReverseProxySSLStapling.toString());
+        return attrs;
+    }
+
+    /**
+     * Enables or disables stapling of OCSP responses by nginx
+     *
+     * <p>Valid values: [off, on]
+     *
+     * @param zimbraReverseProxySSLStapling new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1672)
+    public void setReverseProxySSLStaplingAsString(String zimbraReverseProxySSLStapling) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxySSLStapling, zimbraReverseProxySSLStapling);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Enables or disables stapling of OCSP responses by nginx
+     *
+     * <p>Valid values: [off, on]
+     *
+     * @param zimbraReverseProxySSLStapling new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1672)
+    public Map<String,Object> setReverseProxySSLStaplingAsString(String zimbraReverseProxySSLStapling, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxySSLStapling, zimbraReverseProxySSLStapling);
+        return attrs;
+    }
+
+    /**
+     * Enables or disables stapling of OCSP responses by nginx
+     *
+     * <p>Valid values: [off, on]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1672)
+    public void unsetReverseProxySSLStapling() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxySSLStapling, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Enables or disables stapling of OCSP responses by nginx
+     *
+     * <p>Valid values: [off, on]
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1672)
+    public Map<String,Object> unsetReverseProxySSLStapling(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxySSLStapling, "");
+        return attrs;
+    }
+
+    /**
+     * OCSP Responder URL which overrides the URL of the OCSP responder
+     * specified in the “Authority Information Access” certificate extension.
+     * Only “http://” OCSP responders are supported
+     *
+     * @return zimbraReverseProxySSLStaplingResponderURL, or "http://ocsp.cacert.org/" if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1673)
+    public String getReverseProxySSLStaplingResponderURL() {
+        return getAttr(Provisioning.A_zimbraReverseProxySSLStaplingResponderURL, "http://ocsp.cacert.org/");
+    }
+
+    /**
+     * OCSP Responder URL which overrides the URL of the OCSP responder
+     * specified in the “Authority Information Access” certificate extension.
+     * Only “http://” OCSP responders are supported
+     *
+     * @param zimbraReverseProxySSLStaplingResponderURL new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1673)
+    public void setReverseProxySSLStaplingResponderURL(String zimbraReverseProxySSLStaplingResponderURL) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxySSLStaplingResponderURL, zimbraReverseProxySSLStaplingResponderURL);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * OCSP Responder URL which overrides the URL of the OCSP responder
+     * specified in the “Authority Information Access” certificate extension.
+     * Only “http://” OCSP responders are supported
+     *
+     * @param zimbraReverseProxySSLStaplingResponderURL new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1673)
+    public Map<String,Object> setReverseProxySSLStaplingResponderURL(String zimbraReverseProxySSLStaplingResponderURL, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxySSLStaplingResponderURL, zimbraReverseProxySSLStaplingResponderURL);
+        return attrs;
+    }
+
+    /**
+     * OCSP Responder URL which overrides the URL of the OCSP responder
+     * specified in the “Authority Information Access” certificate extension.
+     * Only “http://” OCSP responders are supported
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1673)
+    public void unsetReverseProxySSLStaplingResponderURL() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxySSLStaplingResponderURL, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * OCSP Responder URL which overrides the URL of the OCSP responder
+     * specified in the “Authority Information Access” certificate extension.
+     * Only “http://” OCSP responders are supported
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1673)
+    public Map<String,Object> unsetReverseProxySSLStaplingResponderURL(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxySSLStaplingResponderURL, "");
         return attrs;
     }
 
