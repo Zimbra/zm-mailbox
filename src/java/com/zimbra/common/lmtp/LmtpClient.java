@@ -24,16 +24,25 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.Socket;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
 import java.util.List;
+
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocket;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManager;
 
 import com.google.common.collect.Lists;
 import com.zimbra.common.io.TcpServerInputStream;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.net.TrustManagers;
 import com.zimbra.common.util.CharsetUtil;
 
 public class LmtpClient {
 
     public static enum Protocol { LMTP, SMTP };
+    private static String STARTTLS = "STARTTLS";
 
     private Protocol mProtocol;
     private Socket mConnection;
@@ -43,24 +52,31 @@ public class LmtpClient {
     private boolean mNewConnection;
     private String mResponse;
     private boolean mWarnOnRejectedRecipients = true;
+    private boolean skipTLSCertValidation = false;
+    
+    public LmtpClient(String host, int port) throws IOException {
+    	//By default don't skip TLS server cert validation
+        this(host, port, Protocol.LMTP, false);
+    }
 
-    public LmtpClient(String host, int port, Protocol proto) throws IOException {
+    public LmtpClient(String host, int port, boolean skipTLSCertValidation) throws IOException {
+        this(host, port, Protocol.LMTP, skipTLSCertValidation);
+    }
+    
+    public LmtpClient(String host, int port, Protocol proto, boolean skipTLSCertValidation) throws IOException {
         if (proto != null)
             mProtocol = proto;
         else
             mProtocol = Protocol.LMTP;
         mGreetname = LC.zimbra_server_hostname.value();
-
         mConnection = new Socket(host, port);
         mOut = new BufferedOutputStream(mConnection.getOutputStream());
         mIn = new TcpServerInputStream(mConnection.getInputStream());
-
         mNewConnection = true;
+        this.skipTLSCertValidation = skipTLSCertValidation;
     }
 
-    public LmtpClient(String host, int port) throws IOException {
-        this(host, port, Protocol.LMTP);
-    }
+   
 
     public void warnOnRejectedRecipients(boolean yesno) {
         mWarnOnRejectedRecipients = yesno;
@@ -132,22 +148,22 @@ public class LmtpClient {
     }
 
     public boolean sendMessage(byte[] msg, String recipient, String sender, String logLabel)
-    throws IOException, LmtpProtocolException {
+    throws IOException, LmtpProtocolException, LmtpClientException {
         return sendMessage(new ByteArrayInputStream(msg), new String[] { recipient }, sender, logLabel, (long) msg.length);
     }
 
     public boolean sendMessage(InputStream msgStream, String recipient, String sender, String logLabel)
-    throws IOException, LmtpProtocolException {
+    throws IOException, LmtpProtocolException, LmtpClientException {
         return sendMessage(msgStream, new String[] { recipient }, sender, logLabel, null);
     }
 
     public boolean sendMessage(InputStream msgStream, String recipient, String sender, String logLabel, long size)
-    throws IOException, LmtpProtocolException {
+    throws IOException, LmtpProtocolException, LmtpClientException {
         return sendMessage(msgStream, new String[] { recipient }, sender, logLabel, size);
     }
 
     public boolean sendMessage(InputStream msgStream, String[] recipients, String sender, String logLabel, Long size)
-    throws IOException, LmtpProtocolException {
+    throws IOException, LmtpProtocolException, LmtpClientException {
         return sendMessage(msgStream, Lists.newArrayList(recipients), sender, logLabel, size);
     }
 
@@ -159,13 +175,14 @@ public class LmtpClient {
      * @param logLabel context string used for logging status
      * @param size the size of the data or <tt>null</tt> if not specified
      * @return <code>true</code> if the message was successfully delivered to all recipients
+     * @throws LmtpClientException 
      */
     public boolean sendMessage(InputStream msgStream, Iterable<String> recipients, String sender, String logLabel, Long size)
-    throws IOException, LmtpProtocolException {
+    throws IOException, LmtpProtocolException, LmtpClientException {
         long start = System.currentTimeMillis();
         if (mNewConnection) {
             mNewConnection = false;
-
+            
             // swallow the greeting
             if (!replyOk()) {
                 throw new LmtpProtocolException(mResponse);
@@ -178,6 +195,17 @@ public class LmtpClient {
             if (!replyOk()) {
                 throw new LmtpProtocolException(mResponse);
             }
+            if (serverSupportsStartTls()) {
+	            startTLS();
+	            if (Protocol.SMTP.equals(mProtocol))
+	                sendLine("EHLO " + mGreetname);
+	            else
+	                sendLine("LHLO " + mGreetname);
+	            if (!replyOk()) {
+	                throw new LmtpProtocolException(mResponse);
+	            }
+            }
+          
         } else {
             sendLine("RSET");
             if (!replyOk()) {
@@ -259,6 +287,49 @@ public class LmtpClient {
     public String getResponse() {
         return (mResponse);
     }
+    
+    private boolean serverSupportsStartTls(){
+    	return getResponse().contains(STARTTLS);
+    }
+    
+    public void startTLS() throws IOException, LmtpProtocolException, LmtpClientException{
+         sendLine(STARTTLS, true);
+         if (!replyOk()) {
+             throw new LmtpProtocolException(mResponse);
+         }
+         SSLSocket sock = newSSLSocket(mConnection);
+         sock.startHandshake();
+         mOut = new BufferedOutputStream(sock.getOutputStream());
+         mIn = new TcpServerInputStream(sock.getInputStream());
+    }
+
+    private SSLSocket newSSLSocket(Socket sock) throws IOException, LmtpClientException {
+        try {
+            final SSLContext sslContext = SSLContext.getInstance("TLS");
+            sslContext.init(null,
+                    new TrustManager[] { getTrustManager() },
+                    new java.security.SecureRandom());
+            final SSLSocketFactory sslSocketFactory = sslContext
+                    .getSocketFactory();
+            return (SSLSocket) sslSocketFactory.createSocket(sock, sock
+                    .getInetAddress().getHostName(), sock.getPort(), false);
+        } catch (KeyManagementException e) {
+            throw new LmtpClientException(e);
+        } catch (NoSuchAlgorithmException e) {
+            throw new LmtpClientException(e);
+        }
+    }
+
+    private TrustManager getTrustManager() {
+        if (skipTLSCertValidation) {
+            info("Server certificate validation will be skipped in TLS handshake.");
+            return TrustManagers.dummyTrustManager();
+        } else {
+            return TrustManagers.customTrustManager();	        
+        }
+    }
+
+
 
     private void warn(String s)  { System.err.println("[warn] "  + s); System.err.flush(); }
     private void error(String s) { System.err.println("[error] " + s); System.err.flush(); }
