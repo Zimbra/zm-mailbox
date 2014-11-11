@@ -17,15 +17,22 @@
 
 package com.zimbra.cs.lmtpserver;
 
+import static com.zimbra.common.account.ZAttrProvisioning.A_zimbraLmtpAdvertisedName;
+import static com.zimbra.common.account.ZAttrProvisioning.A_zimbraLmtpBindAddress;
+import static com.zimbra.common.account.ZAttrProvisioning.A_zimbraLmtpBindPort;
+import static com.zimbra.common.account.ZAttrProvisioning.A_zimbraLmtpExposeVersionOnBanner;
+import static com.zimbra.common.account.ZAttrProvisioning.A_zimbraLmtpNumThreads;
+import static com.zimbra.common.account.ZAttrProvisioning.A_zimbraLmtpPermanentFailureWhenOverQuota;
+import static com.zimbra.common.account.ZAttrProvisioning.A_zimbraLmtpShutdownGraceSeconds;
+import static com.zimbra.common.account.ZAttrProvisioning.A_zimbraMtaRecipientDelimiter;
+
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.server.ServerConfig;
 import com.zimbra.cs.util.BuildInfo;
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.cs.util.Config;
-
-import static com.zimbra.cs.account.Provisioning.*;
 
 public class LmtpConfig extends ServerConfig {
     private final LmtpBackend lmtpBackend;
@@ -105,5 +112,9 @@ public class LmtpConfig extends ServerConfig {
 
     public boolean isPermanentFailureWhenOverQuota() {
         return getBooleanAttr(A_zimbraLmtpPermanentFailureWhenOverQuota, false);
+    }
+    
+    public boolean isTLSEnforcedByServer(){
+        return LC.zimbra_require_interprocess_security.booleanValue();
     }
 }
