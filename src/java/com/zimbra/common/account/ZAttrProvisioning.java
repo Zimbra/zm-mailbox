@@ -755,11 +755,11 @@ public class ZAttrProvisioning {
     }
 
     public static enum MtaLmtpTlsCiphers {
+        export("export"),
         high("high"),
-        null_("null"),
         low("low"),
         medium("medium"),
-        export("export");
+        null_("null");
         private String mValue;
         private MtaLmtpTlsCiphers(String value) { mValue = value; }
         public String toString() { return mValue; }
@@ -769,19 +769,19 @@ public class ZAttrProvisioning {
              }
              throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
+        public boolean isExport() { return this == export;}
         public boolean isHigh() { return this == high;}
-        public boolean isNull_() { return this == null_;}
         public boolean isLow() { return this == low;}
         public boolean isMedium() { return this == medium;}
-        public boolean isExport() { return this == export;}
+        public boolean isNull_() { return this == null_;}
     }
 
     public static enum MtaLmtpTlsMandatoryCiphers {
+        export("export"),
         high("high"),
-        null_("null"),
         low("low"),
         medium("medium"),
-        export("export");
+        null_("null");
         private String mValue;
         private MtaLmtpTlsMandatoryCiphers(String value) { mValue = value; }
         public String toString() { return mValue; }
@@ -791,22 +791,22 @@ public class ZAttrProvisioning {
              }
              throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
+        public boolean isExport() { return this == export;}
         public boolean isHigh() { return this == high;}
-        public boolean isNull_() { return this == null_;}
         public boolean isLow() { return this == low;}
         public boolean isMedium() { return this == medium;}
-        public boolean isExport() { return this == export;}
+        public boolean isNull_() { return this == null_;}
     }
 
     public static enum MtaLmtpTlsSecurityLevel {
-        may("may"),
-        encrypt("encrypt"),
-        dane_only("dane-only"),
         fingerprint("fingerprint"),
-        verify("verify"),
         dane("dane"),
-        none("none"),
-        secure("secure");
+        may("may"),
+        dane_only("dane-only"),
+        encrypt("encrypt"),
+        verify("verify"),
+        secure("secure"),
+        none("none");
         private String mValue;
         private MtaLmtpTlsSecurityLevel(String value) { mValue = value; }
         public String toString() { return mValue; }
@@ -816,14 +816,14 @@ public class ZAttrProvisioning {
              }
              throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
-        public boolean isMay() { return this == may;}
-        public boolean isEncrypt() { return this == encrypt;}
-        public boolean isDane_only() { return this == dane_only;}
         public boolean isFingerprint() { return this == fingerprint;}
-        public boolean isVerify() { return this == verify;}
         public boolean isDane() { return this == dane;}
-        public boolean isNone() { return this == none;}
+        public boolean isMay() { return this == may;}
+        public boolean isDane_only() { return this == dane_only;}
+        public boolean isEncrypt() { return this == encrypt;}
+        public boolean isVerify() { return this == verify;}
         public boolean isSecure() { return this == secure;}
+        public boolean isNone() { return this == none;}
     }
 
     public static enum MtaMilterDefaultAction {
@@ -7448,6 +7448,16 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMailBlacklistMaxNumEntries = "zimbraMailBlacklistMaxNumEntries";
 
     /**
+     * List of SSL/TLS protocols (as documented by SunJSSE Provider Protocols
+     * and used in setEnabledProtocols) to be enabled in Jetty for HTTPS,
+     * IMAPS, POP3S, and STARTTLS (including LMTP)
+     *
+     * @since ZCS 8.6.0
+     */
+    @ZAttr(id=1657)
+    public static final String A_zimbraMailboxdSSLProtocols = "zimbraMailboxdSSLProtocols";
+
+    /**
      * serverId:mboxId of mailbox before being moved
      */
     @ZAttr(id=346)
@@ -9768,6 +9778,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1514)
     public static final String A_zimbraMtaSmtpTlsMandatoryCiphers = "zimbraMtaSmtpTlsMandatoryCiphers";
+
+    /**
+     * Value for postconf smtp_tls_protocols
+     *
+     * @since ZCS 8.6.0
+     */
+    @ZAttr(id=1670)
+    public static final String A_zimbraMtaSmtpTlsProtocols = "zimbraMtaSmtpTlsProtocols";
 
     /**
      * Value for postconf smtp_tls_security_level
@@ -13801,16 +13819,6 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=564)
     public static final String A_zimbraSSLPrivateKey = "zimbraSSLPrivateKey";
-
-    /**
-     * List of SSL/TLS protocols (as documented by SunJSSE Provider Protocols
-     * and used in setEnabledProtocols) to be enabled in Jetty for HTTPS,
-     * IMAPS, POP3S, and STARTTLS
-     *
-     * @since ZCS 8.6.0
-     */
-    @ZAttr(id=1657)
-    public static final String A_zimbraMailboxdSSLProtocols = "zimbraMailboxdSSLProtocols";
 
     /**
      * description of the custom tab in the Preferences page in HTML client
