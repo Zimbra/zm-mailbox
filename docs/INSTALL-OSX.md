@@ -29,7 +29,7 @@ $ vi ~/.bash_profile
 Add the following contents:
 
 ````
-export P4PORT=localhost:1066
+export P4PORT={the p4 server}:1066
 export P4USER={your p4 username}
 export P4CONFIG=.p4config
 export P4EDITOR=/usr/bin/vi
@@ -40,8 +40,7 @@ export ZIMBRA_HOSTNAME={your computer name}.local
 ````
 $ source ~/.bash_profile
 $ sudo mkdir -p /opt/zimbra
-$ mkdir ~/p4
-$ mkdir ~/p4/main
+$ mkdir -p ~/p4/main
 $ p4 login
 * enter your password
 $ p4 client
@@ -77,7 +76,7 @@ $ p4 sync
 $ brew install mariadb
 $ sudo ln -s /usr/local/opt/mariadb /opt/zimbra/mysql
 $ sudo chown {username} /opt/zimbra
-$ sudo vi /opt/zimbra/mysql/my.cnf (RHEL command, sudio vi /var/lib/mysql)
+$ sudo vi /opt/zimbra/mysql/my.cnf (RHEL command, sudo vi /var/lib/mysql)
 ````
 
 ````
