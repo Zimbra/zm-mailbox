@@ -8418,4 +8418,9 @@ TODO: delete them permanently from here
   <desc>Enable/Disable SPDY support for nginx</desc>
 </attr>
 
+<attr id="1675" name="zimbraLmtpLHLORequired" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited"  since="8.6.0">
+  <globalConfigValue>TRUE</globalConfigValue>
+  <desc>Lmtp Server will reject the client transactions which do not issue LHLO</desc>
+</attr>
+
 </attrs>

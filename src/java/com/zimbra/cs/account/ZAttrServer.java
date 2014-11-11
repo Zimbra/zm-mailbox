@@ -12420,6 +12420,83 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Lmtp Server will reject the client transactions which do not issue
+     * LHLO
+     *
+     * @return zimbraLmtpLHLORequired, or true if unset
+     *
+     * @since ZCS 8.6.0
+     */
+    @ZAttr(id=1675)
+    public boolean isLmtpLHLORequired() {
+        return getBooleanAttr(Provisioning.A_zimbraLmtpLHLORequired, true);
+    }
+
+    /**
+     * Lmtp Server will reject the client transactions which do not issue
+     * LHLO
+     *
+     * @param zimbraLmtpLHLORequired new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.6.0
+     */
+    @ZAttr(id=1675)
+    public void setLmtpLHLORequired(boolean zimbraLmtpLHLORequired) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLmtpLHLORequired, zimbraLmtpLHLORequired ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Lmtp Server will reject the client transactions which do not issue
+     * LHLO
+     *
+     * @param zimbraLmtpLHLORequired new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.6.0
+     */
+    @ZAttr(id=1675)
+    public Map<String,Object> setLmtpLHLORequired(boolean zimbraLmtpLHLORequired, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLmtpLHLORequired, zimbraLmtpLHLORequired ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Lmtp Server will reject the client transactions which do not issue
+     * LHLO
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.6.0
+     */
+    @ZAttr(id=1675)
+    public void unsetLmtpLHLORequired() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLmtpLHLORequired, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Lmtp Server will reject the client transactions which do not issue
+     * LHLO
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.6.0
+     */
+    @ZAttr(id=1675)
+    public Map<String,Object> unsetLmtpLHLORequired(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLmtpLHLORequired, "");
+        return attrs;
+    }
+
+    /**
      * number of handler threads, should match MTA concurrency setting for
      * this server
      *
@@ -35679,13 +35756,13 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * <p>Valid values: [off, on]
      *
-     * @return zimbraReverseProxySSLStapling, or ZAttrProvisioning.ReverseProxySSLStapling.on if unset and/or has invalid value
+     * @return zimbraReverseProxySSLStapling, or ZAttrProvisioning.ReverseProxySSLStapling.off if unset and/or has invalid value
      *
      * @since ZCS 9.0
      */
     @ZAttr(id=1672)
     public ZAttrProvisioning.ReverseProxySSLStapling getReverseProxySSLStapling() {
-        try { String v = getAttr(Provisioning.A_zimbraReverseProxySSLStapling); return v == null ? ZAttrProvisioning.ReverseProxySSLStapling.on : ZAttrProvisioning.ReverseProxySSLStapling.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.ReverseProxySSLStapling.on; }
+        try { String v = getAttr(Provisioning.A_zimbraReverseProxySSLStapling); return v == null ? ZAttrProvisioning.ReverseProxySSLStapling.off : ZAttrProvisioning.ReverseProxySSLStapling.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.ReverseProxySSLStapling.off; }
     }
 
     /**
@@ -35693,13 +35770,13 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * <p>Valid values: [off, on]
      *
-     * @return zimbraReverseProxySSLStapling, or "on" if unset
+     * @return zimbraReverseProxySSLStapling, or "off" if unset
      *
      * @since ZCS 9.0
      */
     @ZAttr(id=1672)
     public String getReverseProxySSLStaplingAsString() {
-        return getAttr(Provisioning.A_zimbraReverseProxySSLStapling, "on");
+        return getAttr(Provisioning.A_zimbraReverseProxySSLStapling, "off");
     }
 
     /**
@@ -35810,13 +35887,13 @@ public abstract class ZAttrServer extends NamedEntry {
      * specified in the “Authority Information Access” certificate extension.
      * Only “http://” OCSP responders are supported
      *
-     * @return zimbraReverseProxySSLStaplingResponderURL, or "http://ocsp.cacert.org/" if unset
+     * @return zimbraReverseProxySSLStaplingResponderURL, or null if unset
      *
      * @since ZCS 9.0
      */
     @ZAttr(id=1673)
     public String getReverseProxySSLStaplingResponderURL() {
-        return getAttr(Provisioning.A_zimbraReverseProxySSLStaplingResponderURL, "http://ocsp.cacert.org/");
+        return getAttr(Provisioning.A_zimbraReverseProxySSLStaplingResponderURL, null);
     }
 
     /**
