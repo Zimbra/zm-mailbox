@@ -73,8 +73,10 @@ public class LmtpInject {
 
     private volatile long mFileSizeTotal = 0;
     private int mNumThreads;
+    private boolean skipTLSCertValidation;
 
-    private LmtpInject(int numThreads,
+
+	private LmtpInject(int numThreads,
                        String sender,
                        String[] recipients,
                        List<File> files,
@@ -83,7 +85,7 @@ public class LmtpInject {
                        Protocol proto,
                        boolean quietMode,
                        boolean tracingEnabled,
-                       boolean verbose)
+                       boolean verbose, boolean skipTLSCertValidation)
     throws Exception {
         mNumThreads = numThreads;
         mSender = sender;
@@ -97,6 +99,7 @@ public class LmtpInject {
         mLastProgressCount = 0;
         mQuietMode = quietMode;
         mVerbose = verbose;
+        this.skipTLSCertValidation = skipTLSCertValidation;
     }
 
     public synchronized void markStartTime() {
@@ -156,6 +159,9 @@ public class LmtpInject {
     int getPort() { return mPort; }
     Protocol getProtocol() { return mProto; }
     boolean isVerbose() { return mVerbose; }
+    public boolean isSkipTLSCertValidation() {
+        return skipTLSCertValidation;
+    }
     boolean isQuiet() { return mQuietMode; }
     
     /**
@@ -203,7 +209,7 @@ public class LmtpInject {
         public LmtpInjectTask(LmtpInject driver)
         throws IOException {
             mDriver = driver;
-            mClient = new LmtpClient(driver.getHost(), driver.getPort(), mDriver.getProtocol());
+            mClient = new LmtpClient(driver.getHost(), driver.getPort(), mDriver.getProtocol(),mDriver.isSkipTLSCertValidation());
             if (mDriver.isVerbose() && !mDriver.isQuiet()) {
                 mClient.quiet(false);
             } else {
@@ -268,6 +274,7 @@ public class LmtpInject {
         mOptions.addOption("h", "help",      false, "display usage information");
         mOptions.addOption("v", "verbose",   false, "print detailed delivery status");
         mOptions.addOption(null, "noValidation", false, "don't validate file content");
+        mOptions.addOption(null, "skipTLSCertValidation", false, "don't validate server certifcate during TLS handshake");
     }
 
     private static void usage(String errmsg) {
@@ -404,13 +411,14 @@ public class LmtpInject {
         int totalSucceeded = 0;
         long startTime = System.currentTimeMillis();
         boolean verbose = cl.hasOption("v");
+        boolean skipTLSCertValidation = cl.hasOption("skipTLSCertValidation");
 
         LmtpInject injector = null;
         try {
             injector = new LmtpInject(threads,
                     sender, recipients, files,
                     host, port, proto,
-                    quietMode, tracingEnabled, verbose);
+                    quietMode, tracingEnabled, verbose, skipTLSCertValidation);
         } catch (Exception e) {
             mLog.error("Unable to initialize LmtpInject", e);
             System.exit(1);
