@@ -370,6 +370,8 @@ SECTION ldap
 	LOCAL ldap_common_loglevel
 	LOCAL ldap_common_require_tls
 	LOCAL ldap_common_threads
+	LOCAL ldap_common_tlsciphersuite
+	LOCAL ldap_common_tlsprotocolmin
 	LOCAL ldap_common_toolthreads
 	LOCAL ldap_common_writetimeout
 	LOCAL ldap_db_maxsize
