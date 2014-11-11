@@ -45,7 +45,7 @@ public enum LmtpReply {
     NESTED_MAIL_COMMAND(503, "5.5.1", "Nested MAIL command"),
     NO_RECIPIENTS(503, "5.5.1", "No recipients"),
     MISSING_MAIL_TO(503, "5.5.1", "Need MAIL command"),
-    MISSING_LHLO_AFTER_STARTTLS(503, "5.5.1", "Need LHLO command"),
+    MISSING_LHLO(503, "5.5.1", "Need LHLO command"),
     SYNTAX_ERROR(500, "5.5.2", "Syntax error"),
     INVALID_RECIPIENT_ADDRESS(500, "5.5.2", "Syntax error in recipient address"),
     STARTTLS_WITH_PARAMETER(501, "5.5.4", "No parameters allowed"),
