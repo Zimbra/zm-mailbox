@@ -348,6 +348,57 @@ public class ZimbraMemcachedClient {
         return value;
     }
 
+    // incr
+
+    /**
+     * Increments the value corresponding to the given key by 1.
+     * Default timeout is used.
+     * @param key
+     * @return the new value, or -1 if the increment failed on the server or if the key did not exist, or null if the client could not reach the server
+     */
+    public Long incr(String key) {
+        return incr(key, 1, DEFAULT_TIMEOUT);
+    }
+
+    /**
+     * Increments the value corresponding to the given key.
+     * Default timeout is used.
+     * @param key
+     * @return the new value, or -1 if the increment failed on the server or if the key did not exist, or null if the client could not reach the server
+     */
+    public Long incr(String key, int by) {
+        return incr(key, by, DEFAULT_TIMEOUT);
+    }
+
+    /**
+     * Increments the value corresponding to the given key.
+     * @param key
+     * @param timeout in millis
+     * @return the new value, or -1 if the increment failed on the server or if the key did not exist, or null if the client could not reach the server
+     */
+    public Long incr(String key, int by, long timeout) {
+        Long value = null;
+        MemcachedClient client;
+        synchronized (this) {
+            client = mMCDClient;
+            if (timeout == DEFAULT_TIMEOUT)
+                timeout = mDefaultTimeout;
+        }
+        if (client == null) return null;
+        Future<Long> future = client.asyncIncr(key, by);
+        try {
+            value = future.get(timeout, TimeUnit.MILLISECONDS);
+        } catch (TimeoutException e) {
+            ZimbraLog.misc.warn("memcached asyncIncr timed out after " + timeout + "ms", e);
+            future.cancel(false);
+        } catch (InterruptedException e) {
+            ZimbraLog.misc.warn("InterruptedException during memcached asyncIncr operation", e);
+        } catch (ExecutionException e) {
+            ZimbraLog.misc.warn("ExecutionException during memcached asyncIncr operation", e);
+        }
+        return value;
+    }
+
     // put
 
     /**
