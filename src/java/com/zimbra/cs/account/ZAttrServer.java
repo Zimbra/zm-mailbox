@@ -1747,6 +1747,68 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Whether to scan attachments during compose
+     *
+     * @return zimbraAttachmentsScanEnabled, or false if unset
+     */
+    @ZAttr(id=237)
+    public boolean isAttachmentsScanEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraAttachmentsScanEnabled, false);
+    }
+
+    /**
+     * Whether to scan attachments during compose
+     *
+     * @param zimbraAttachmentsScanEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=237)
+    public void setAttachmentsScanEnabled(boolean zimbraAttachmentsScanEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAttachmentsScanEnabled, zimbraAttachmentsScanEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to scan attachments during compose
+     *
+     * @param zimbraAttachmentsScanEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=237)
+    public Map<String,Object> setAttachmentsScanEnabled(boolean zimbraAttachmentsScanEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAttachmentsScanEnabled, zimbraAttachmentsScanEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether to scan attachments during compose
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=237)
+    public void unsetAttachmentsScanEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAttachmentsScanEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to scan attachments during compose
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=237)
+    public Map<String,Object> unsetAttachmentsScanEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAttachmentsScanEnabled, "");
+        return attrs;
+    }
+
+    /**
      * Data for class that scans attachments during compose
      *
      * @return zimbraAttachmentsScanURL, or empty array if unset

@@ -1361,7 +1361,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>whether list of well known time zones is displayed in calendar UI</desc>
 </attr>
 
-<attr id="237" name="zimbraAttachmentsScanEnabled" type="boolean" cardinality="single" optionalIn="globalConfig">
+<attr id="237" name="zimbraAttachmentsScanEnabled" type="boolean" cardinality="single" optionalIn="server,globalConfig">
   <globalConfigValue>FALSE</globalConfigValue>
   <desc>Whether to scan attachments during compose</desc>
 </attr>
