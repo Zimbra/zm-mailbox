@@ -304,7 +304,6 @@ public class Mailbox {
         public boolean trackImap;
         public Set<String> configKeys;
         public MailboxVersion version;
-        public int itemcacheCheckpoint;
 
         @Override
         protected MailboxData clone() {
@@ -326,7 +325,6 @@ public class Mailbox {
                 mbd.configKeys = new HashSet<String>(configKeys);
             }
             mbd.version = version;
-            mbd.itemcacheCheckpoint = itemcacheCheckpoint;
             return mbd;
         }
 
@@ -1090,10 +1088,6 @@ public class Mailbox {
         return mData.lastChangeDate;
     }
 
-    public int getItemcacheCheckpoint() {
-        return mData.itemcacheCheckpoint;
-    }
-
     /** Returns the change sequence number for the most recent
      *  transaction.  This will be either the change number for the
      *  current transaction or, if no database changes have yet been
@@ -1828,13 +1822,6 @@ public class Mailbox {
             currentChange().itemCache.clear();
         } else {
             mItemCache.clear();
-        }
-        try {
-            if (Zimbra.isAlwaysOn()) {
-                DbMailbox.incrementItemcacheCheckpoint(this);
-            }
-        } catch (ServiceException e) {
-            ZimbraLog.mailbox.error("error while clearing item cache", e);
         }
     }
 
@@ -5660,7 +5647,7 @@ public class Mailbox {
             }
 
             blob = StoreManager.getInstance().storeIncoming(in);
-            
+
             if (id != null && id.ud != null && id.ud.getBlobDigest() != null && !id.ud.getBlobDigest().isEmpty()) {
                 blob.setDigest(id.ud.getBlobDigest());
             }
@@ -5682,7 +5669,7 @@ public class Mailbox {
             StoreManager.getInstance().quietDelete(blob);
         }
     }
-    
+
     public Message addMessage(OperationContext octxt, InputStream in, long sizeHint, Long receivedDate, DeliveryOptions dopt, DeliveryContext dctxt)
         throws IOException, ServiceException {
         return addMessage(octxt, in, sizeHint, receivedDate, dopt, dctxt, null);

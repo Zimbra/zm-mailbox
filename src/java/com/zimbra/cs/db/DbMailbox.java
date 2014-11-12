@@ -695,22 +695,6 @@ public final class DbMailbox {
         }
     }
 
-    public static void incrementItemcacheCheckpoint(Mailbox mbox) throws ServiceException {
-        DbConnection conn = mbox.getOperationConnection();
-        PreparedStatement stmt = null;
-        try {
-            stmt = conn.prepareStatement("UPDATE " + qualifyZimbraTableName(mbox, TABLE_MAILBOX) +
-                    " SET itemcache_checkpoint = itemcache_checkpoint + 1 WHERE id = ?");
-            int pos = 1;
-            pos = DbMailItem.setMailboxId(stmt, mbox, pos++);
-            stmt.executeUpdate();
-        } catch (SQLException e) {
-            throw ServiceException.FAILURE("incrementing mailbox itemcache_checkpoint", e);
-        } finally {
-            DbPool.closeStatement(stmt);
-        }
-    }
-
     /** Returns the zimbra IDs and mailbox IDs for all mailboxes on the
      *  system.  Note that mailboxes are created lazily, so there may be
      *  accounts homed on this system for whom there is is not yet a mailbox
@@ -884,7 +868,7 @@ public final class DbMailbox {
             stmt = conn.prepareStatement(
                     "SELECT account_id," + (DebugConfig.disableMailboxGroups ? mailboxId : " group_id") + "," +
                     " size_checkpoint, contact_count, item_id_checkpoint, change_checkpoint, tracking_sync," +
-                    " tracking_imap, index_volume_id, last_soap_access, new_messages, version, itemcache_checkpoint" +
+                    " tracking_imap, index_volume_id, last_soap_access, new_messages, version" +
                     " FROM " + qualifyZimbraTableName(mailboxId, TABLE_MAILBOX) + " WHERE id = ?");
             stmt.setInt(1, mailboxId);
 
@@ -920,7 +904,6 @@ public final class DbMailbox {
             if (version != null) {
                 mbd.version = MailboxVersion.parse(version);
             }
-            mbd.itemcacheCheckpoint = rs.getInt(pos++);
 
             // round lastItemId and lastChangeId up so that they get written on the next change
             mbd.lastItemId += ITEM_CHECKPOINT_INCREMENT - 1;

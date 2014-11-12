@@ -16,6 +16,8 @@ package com.zimbra.cs.mailbox;
  * ***** END LICENSE BLOCK *****
  */
 
+import java.util.Date;
+
 import javax.annotation.PostConstruct;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,30 +32,64 @@ import com.zimbra.cs.memcached.MemcachedKeyPrefix;
 
 public class MemcachedMailItemCache implements MailItemCache {
     @Autowired protected ZimbraMemcachedClient memcachedClient;
-//    protected static MemcachedMailItemCache sTheInstance = new MemcachedMailItemCache();
-    protected MemcachedMap<IdKey, Metadata> memcachedLookup;
-    protected MemcachedMap<UuidKey, Integer> memcachedUuidLookup;
-//    public static MemcachedMailItemCache getInstance() { return sTheInstance; }
+    protected MemcachedMap<IdKey, Metadata> mailItemByIdLookup;
+    protected MemcachedMap<UuidKey, Integer> mailItemByUuidLookup;
 
-    MemcachedMailItemCache() {
+    /** Constructor */
+    public MemcachedMailItemCache() {
     }
 
     @PostConstruct
     public void init() {
-        memcachedLookup = new MemcachedMap<IdKey, Metadata>(memcachedClient, new MailItemSerializer(), false);
-        memcachedUuidLookup = new MemcachedMap<UuidKey, Integer>(memcachedClient, new IntegerSerializer(), false);
+        mailItemByIdLookup = new MemcachedMap<>(memcachedClient, new MailItemSerializer(), false);
+        mailItemByUuidLookup = new MemcachedMap<>(memcachedClient, new IntegerSerializer(), false);
     }
 
-    /**
-     * Retrieves the item from memcached cache
-     * @param mbox
-     * @param itemId
-     * @return item if present, else null
-     * @throws ServiceException
-     */
+    protected static String keyForCheckpoint(Mailbox mbox) {
+        return MemcachedKeyPrefix.MBOX_MAILITEM + mbox.getAccountId() + "-checkpoint";
+    }
+
+    protected long getCheckpoint(Mailbox mbox) throws ServiceException {
+        // Get checkpoint
+        String key = keyForCheckpoint(mbox);
+        Object value = memcachedClient.get(key);
+        long checkpoint = -1;
+        if (value != null) {
+            try {
+                checkpoint = Long.parseLong(value.toString());
+            } catch (NumberFormatException e) {}
+        }
+        if (checkpoint != -1) {
+            return checkpoint;
+        }
+
+        // Generate & put new checkpoint
+        checkpoint = new Date().getTime();
+        memcachedClient.put(key, Long.toString(checkpoint), true);
+        return checkpoint;
+    }
+
+    protected long incrementCheckpoint(Mailbox mbox) throws ServiceException {
+        // Increment existing key
+        String key = keyForCheckpoint(mbox);
+        Long checkpoint = memcachedClient.incr(key);
+        if (checkpoint == null) {
+            throw ServiceException.TEMPORARILY_UNAVAILABLE();
+        }
+        if (checkpoint != -1) {
+            return checkpoint;
+        }
+
+        // If increment failed or key didn't exist, generate & put a new checkpoint.
+        checkpoint = new Date().getTime();
+        memcachedClient.put(key, Long.toString(checkpoint), true);
+        return checkpoint;
+    }
+
+    @Override
     public MailItem get(Mailbox mbox, int itemId) throws ServiceException {
         IdKey key = new IdKey(mbox, itemId);
-        Metadata meta = memcachedLookup.get(key);
+        Metadata meta = mailItemByIdLookup.get(key);
         if (meta != null) {
             MailItem.UnderlyingData ud = new MailItem.UnderlyingData();
             ud.deserialize(meta);
@@ -63,9 +99,10 @@ public class MemcachedMailItemCache implements MailItemCache {
         }
     }
 
+    @Override
     public MailItem get(Mailbox mbox, String uuid) throws ServiceException {
         UuidKey key = new UuidKey(mbox, uuid);
-        Integer itemId = memcachedUuidLookup.get(key);
+        Integer itemId = mailItemByUuidLookup.get(key);
         if (itemId != null) {
             return get(mbox, itemId);
         } else {
@@ -73,60 +110,60 @@ public class MemcachedMailItemCache implements MailItemCache {
         }
     }
 
+    @Override
     public void put(Mailbox mbox, MailItem item) throws ServiceException {
         IdKey key = new IdKey(mbox, item.getId());
-        memcachedLookup.put(key, item.serializeUnderlyingData());
+        mailItemByIdLookup.put(key, item.serializeUnderlyingData());
         UuidKey uuidKey = new UuidKey(mbox, item.getUuid());
-        memcachedUuidLookup.put(uuidKey, item.getId());
+        mailItemByUuidLookup.put(uuidKey, item.getId());
     }
 
+    @Override
     public MailItem remove(Mailbox mbox, int itemId) throws ServiceException {
         MailItem item = get(mbox, itemId);
         if (item != null) {
             IdKey key = new IdKey(mbox, itemId);
-            memcachedLookup.remove(key);
+            mailItemByIdLookup.remove(key);
             UuidKey uuidKey = new UuidKey(mbox, item.getUuid());
-            memcachedUuidLookup.remove(uuidKey);
+            mailItemByUuidLookup.remove(uuidKey);
             return item;
         } else {
             return null;
         }
     }
 
-    /** @throws UnsupportedOperationException always */
-    public void remove(Mailbox mbox) throws UnsupportedOperationException {
-        throw new UnsupportedOperationException();
+    @Override
+    public void remove(Mailbox mbox) throws ServiceException {
+        incrementCheckpoint(mbox);
     }
 
 
-    private static class IdKey extends StringBasedMemcachedKey {
-        public IdKey(Mailbox mbox, int itemId) {
-            super(MemcachedKeyPrefix.MBOX_MAILITEM, mbox.getAccountId() + ":" + mbox.getItemcacheCheckpoint() + ":" + itemId);
+    private class IdKey extends StringBasedMemcachedKey {
+        public IdKey(Mailbox mbox, int itemId) throws ServiceException {
+            super(MemcachedKeyPrefix.MBOX_MAILITEM, mbox.getAccountId() + ":" + getCheckpoint(mbox) + ":" + itemId);
         }
     }
 
-    private static class UuidKey extends StringBasedMemcachedKey {
-        public UuidKey(Mailbox mbox, String uuid) {
-            super(MemcachedKeyPrefix.MBOX_MAILITEM, mbox.getAccountId() + ":" + mbox.getItemcacheCheckpoint() + ":" + uuid);
+    private class UuidKey extends StringBasedMemcachedKey {
+        public UuidKey(Mailbox mbox, String uuid) throws ServiceException {
+            super(MemcachedKeyPrefix.MBOX_MAILITEM, mbox.getAccountId() + ":" + getCheckpoint(mbox) + ":" + uuid);
         }
     }
 
 
     private static class IntegerSerializer implements MemcachedSerializer<Integer> {
+        @Override
         public Object serialize(Integer value) throws ServiceException { return value; }
+        @Override
         public Integer deserialize(Object obj) throws ServiceException { return (Integer) obj; }
     }
 
 
     private static class MailItemSerializer implements MemcachedSerializer<Metadata> {
-        MailItemSerializer() {
-        }
-
         @Override
         public Object serialize(Metadata value) {
             return value.toString();
         }
-
         @Override
         public Metadata deserialize(Object obj) throws ServiceException {
             return new Metadata((String) obj);
