@@ -21525,6 +21525,83 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * Lmtp Server will reject the client transactions which do not issue
+     * LHLO
+     *
+     * @return zimbraLmtpLHLORequired, or true if unset
+     *
+     * @since ZCS 8.6.0
+     */
+    @ZAttr(id=1675)
+    public boolean isLmtpLHLORequired() {
+        return getBooleanAttr(Provisioning.A_zimbraLmtpLHLORequired, true);
+    }
+
+    /**
+     * Lmtp Server will reject the client transactions which do not issue
+     * LHLO
+     *
+     * @param zimbraLmtpLHLORequired new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.6.0
+     */
+    @ZAttr(id=1675)
+    public void setLmtpLHLORequired(boolean zimbraLmtpLHLORequired) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLmtpLHLORequired, zimbraLmtpLHLORequired ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Lmtp Server will reject the client transactions which do not issue
+     * LHLO
+     *
+     * @param zimbraLmtpLHLORequired new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.6.0
+     */
+    @ZAttr(id=1675)
+    public Map<String,Object> setLmtpLHLORequired(boolean zimbraLmtpLHLORequired, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLmtpLHLORequired, zimbraLmtpLHLORequired ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Lmtp Server will reject the client transactions which do not issue
+     * LHLO
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.6.0
+     */
+    @ZAttr(id=1675)
+    public void unsetLmtpLHLORequired() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLmtpLHLORequired, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Lmtp Server will reject the client transactions which do not issue
+     * LHLO
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.6.0
+     */
+    @ZAttr(id=1675)
+    public Map<String,Object> unsetLmtpLHLORequired(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLmtpLHLORequired, "");
+        return attrs;
+    }
+
+    /**
      * number of handler threads, should match MTA concurrency setting for
      * this server
      *
