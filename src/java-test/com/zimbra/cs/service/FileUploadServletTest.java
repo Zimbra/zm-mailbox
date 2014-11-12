@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -80,11 +80,13 @@ public class FileUploadServletTest {
         return bb.append("--").append(boundary).append("--\r\n");
     }
 
+
+
     private List<Upload> uploadForm(byte[] form) throws Exception {
         URL url = new URL("http://localhost:7070/service/upload?fmt=extended");
         MockHttpServletRequest req = new MockHttpServletRequest(form, url, "multipart/form-data; boundary=" + boundary);
         MockHttpServletResponse resp = new MockHttpServletResponse();
-        return servlet.handleMultipartUpload(req, resp, "extended", testAccount, false);
+        return servlet.handleMultipartUpload(req, resp, "extended", testAccount, false, null, false, false);
     }
 
     private void compareUploads(Upload up, String expectedFilename, byte[] expectedContent) throws Exception {
