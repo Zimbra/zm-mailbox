@@ -44,7 +44,7 @@ public class MemcachedOnLocalhostZimbraConfig extends ZimbraConfig {
                 boolean useBinaryProtocol = server.getBooleanAttr(Provisioning.A_zimbraMemcachedClientBinaryProtocolEnabled, false);
                 String hashAlgorithm = server.getAttr(Provisioning.A_zimbraMemcachedClientHashAlgorithm, HashAlgorithm.KETAMA_HASH.toString());
                 int expirySeconds = 10;
-                long timeoutMillis = 20;
+                long timeoutMillis = 100;
                 client.connect(serverList, useBinaryProtocol, hashAlgorithm, expirySeconds, timeoutMillis);
             }
         };
