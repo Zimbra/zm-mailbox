@@ -98,6 +98,8 @@ public class FileUploadServlet extends ZimbraServlet {
     // This allows customer to allow larger documents/briefcase files than messages sent via SMTP.
     protected static final String PARAM_LIMIT_BY_FILE_UPLOAD_MAX_SIZE = "lbfums";
 
+    protected static final String PARAM_CSRF_TOKEN = "csrfToken";
+
     /** The character separating upload IDs in a list */
     public static final String UPLOAD_DELIMITER = ",";
     /** The character separating server ID from upload ID */
@@ -466,22 +468,27 @@ public class FileUploadServlet extends ZimbraServlet {
         }
 
         boolean doCsrfCheck = false;
+        boolean csrfCheckComplete = false;
         if (req.getAttribute(CsrfFilter.CSRF_TOKEN_CHECK) != null) {
             doCsrfCheck =  (Boolean) req.getAttribute(CsrfFilter.CSRF_TOKEN_CHECK);
         }
 
         if (doCsrfCheck) {
             String csrfToken = req.getHeader(CsrfFilter.CSRF_TOKEN);
-            if (!CsrfUtil.isValidCsrfToken(csrfToken, at)) {
-                drainRequestStream(req);
 
-                mLog.debug("CSRF token validation failed for account: %s"
-                    + ", Auth token is CSRF enabled:  %s" + "CSRF token is: %s",
-                    at, at.isCsrfTokenEnabled(), csrfToken);
-                sendResponse(resp, HttpServletResponse.SC_UNAUTHORIZED, fmt, null, null, null);
-                return;
+            // Bug: 96344 skipping CSRF token check  when file upload is from IE8
+            if (!StringUtil.isNullOrEmpty(csrfToken)) {
+                if (!CsrfUtil.isValidCsrfToken(csrfToken, at)) {
+
+                    drainRequestStream(req);
+                    mLog.debug("CSRF token validation failed for account: %s"
+                        + ", Auth token is CSRF enabled:  %s" + "CSRF token is: %s", at,
+                        at.isCsrfTokenEnabled(), csrfToken);
+                    sendResponse(resp, HttpServletResponse.SC_UNAUTHORIZED, fmt, null, null, null);
+                    return;
+                }
+                csrfCheckComplete = true;
             }
-
         }
 
 
@@ -502,9 +509,10 @@ public class FileUploadServlet extends ZimbraServlet {
 
             // file upload requires multipart enctype
             if (ServletFileUpload.isMultipartContent(req)) {
-                handleMultipartUpload(req, resp, fmt, acct, limitByFileUploadMaxSize);
+                handleMultipartUpload(req, resp, fmt, acct, limitByFileUploadMaxSize, at, doCsrfCheck,
+                    csrfCheckComplete);
             } else {
-                handlePlainUpload(req, resp, fmt, acct, limitByFileUploadMaxSize);
+                handlePlainUpload(req, resp, fmt, acct, limitByFileUploadMaxSize, csrfCheckComplete);
             }
         } catch (ServiceException e) {
             mLog.info("File upload failed", e);
@@ -514,7 +522,8 @@ public class FileUploadServlet extends ZimbraServlet {
     }
 
     @SuppressWarnings("unchecked")
-    List<Upload> handleMultipartUpload(HttpServletRequest req, HttpServletResponse resp, String fmt, Account acct, boolean limitByFileUploadMaxSize)
+    List<Upload> handleMultipartUpload(HttpServletRequest req, HttpServletResponse resp, String fmt, Account acct,
+        boolean limitByFileUploadMaxSize, AuthToken at, boolean doCsrfCheck, boolean csrfCheckComplete)
     throws IOException, ServiceException {
         List<FileItem> items = null;
         String reqId = null;
@@ -522,6 +531,26 @@ public class FileUploadServlet extends ZimbraServlet {
         ServletFileUpload upload = getUploader2(limitByFileUploadMaxSize, acct);
         try {
             items = upload.parseRequest(req);
+
+            if (doCsrfCheck && !csrfCheckComplete) {
+                for (FileItem item : items) {
+                    if (item.isFormField()) {
+                        if (item.getFieldName().equals(PARAM_CSRF_TOKEN)) {
+                            String csrfToken = item.getString();
+                            if (!CsrfUtil.isValidCsrfToken(csrfToken, at)) {
+
+                                drainRequestStream(req);
+                                mLog.debug("CSRF token validation failed for account: %s"
+                                    + ", Auth token is CSRF enabled:  %s" + "CSRF token is: %s", at,
+                                    at.isCsrfTokenEnabled(), csrfToken);
+                                sendResponse(resp, HttpServletResponse.SC_UNAUTHORIZED, fmt, null, null, items);
+                                return Collections.emptyList();
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
         } catch (FileUploadBase.SizeLimitExceededException e) {
             // at least one file was over max allowed size
             mLog.info("Exceeded maximum upload size of " + upload.getSizeMax() + " bytes: " + e);
@@ -605,8 +634,16 @@ public class FileUploadServlet extends ZimbraServlet {
         return uploads;
     }
 
-    List<Upload> handlePlainUpload(HttpServletRequest req, HttpServletResponse resp, String fmt, Account acct, boolean limitByFileUploadMaxSize)
+    List<Upload> handlePlainUpload(HttpServletRequest req, HttpServletResponse resp, String fmt, Account acct,
+        boolean limitByFileUploadMaxSize, boolean csrfCheckComplete)
     throws IOException, ServiceException {
+        if (!csrfCheckComplete) {
+            drainRequestStream(req);
+            mLog.debug("CSRF token validation failed for account: %s"
+                + "No csrf token recd.", acct);
+            sendResponse(resp, HttpServletResponse.SC_UNAUTHORIZED, fmt, null, null, null);
+            return Collections.emptyList();
+        }
         // metadata is encoded in the response's HTTP headers
         ContentType ctype = new ContentType(req.getContentType());
         String contentType = ctype.getContentType(), filename = ctype.getParameter("name");
