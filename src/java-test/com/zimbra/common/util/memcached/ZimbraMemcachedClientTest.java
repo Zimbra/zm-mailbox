@@ -17,7 +17,6 @@
 package com.zimbra.common.util.memcached;
 
 import java.io.IOException;
-import java.util.Random;
 
 import junit.framework.Assert;
 
@@ -37,9 +36,9 @@ public class ZimbraMemcachedClientTest {
         boolean useBinaryProtocol = false;
         String hashAlgorithm = null;
         int expirySeconds = 10;
-        long timeoutMillis = 100;
+        long timeoutMillis = 500;
         zimbraMemcachedClient.connect(serverList, useBinaryProtocol, hashAlgorithm, expirySeconds, timeoutMillis);
-        Thread.sleep(100);
+        Thread.sleep(timeoutMillis);
     }
 
     @Before
@@ -60,7 +59,7 @@ public class ZimbraMemcachedClientTest {
     public void testIncr() throws IOException {
         String key = RandomStringUtils.randomAscii(10);
         boolean waitForAck = true;
-        zimbraMemcachedClient.put(key, "11", waitForAck);
+        Assert.assertTrue(zimbraMemcachedClient.put(key, "11", waitForAck));
         Long value_ = zimbraMemcachedClient.incr(key);
         Assert.assertNotNull(value_);
         Assert.assertEquals(12L, value_.longValue());

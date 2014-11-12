@@ -407,7 +407,7 @@ public class ZimbraMemcachedClient {
      * @param key
      * @param value
      * @param waitForAck if true, block until ack'd or timeout; if false, return immediately
-     * @return
+     * @return true if successful
      */
     public boolean put(String key, Object value, boolean waitForAck) {
         return put(key, value, DEFAULT_EXPIRY, DEFAULT_TIMEOUT, waitForAck);
@@ -420,7 +420,7 @@ public class ZimbraMemcachedClient {
      * @param expirySec expiry in seconds
      * @param timeout in millis
      * @param waitForAck if true, block until ack'd or timeout; if false, return immediately
-     * @return
+     * @return true if successful
      */
     public boolean put(String key, Object value, int expirySec, long timeout, boolean waitForAck) {
         MemcachedClient client;
