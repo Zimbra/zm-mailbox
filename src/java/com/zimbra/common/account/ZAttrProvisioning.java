@@ -7306,6 +7306,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraLmtpExposeVersionOnBanner = "zimbraLmtpExposeVersionOnBanner";
 
     /**
+     * Lmtp Server will reject the client transactions which do not issue
+     * LHLO
+     *
+     * @since ZCS 8.6.0
+     */
+    @ZAttr(id=1675)
+    public static final String A_zimbraLmtpLHLORequired = "zimbraLmtpLHLORequired";
+
+    /**
      * number of handler threads, should match MTA concurrency setting for
      * this server
      */
