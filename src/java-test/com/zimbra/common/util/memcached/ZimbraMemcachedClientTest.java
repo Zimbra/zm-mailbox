@@ -50,14 +50,14 @@ public class ZimbraMemcachedClientTest {
 
     @Test
     public void testIncrNonExistent() throws IOException {
-        String key = RandomStringUtils.randomAscii(10);
+        String key = RandomStringUtils.randomAlphanumeric(10);
         Long value = zimbraMemcachedClient.incr(key);
         Assert.assertEquals(-1L, value.longValue());
     }
 
     @Test
     public void testIncr() throws IOException {
-        String key = RandomStringUtils.randomAscii(10);
+        String key = RandomStringUtils.randomAlphanumeric(10);
         boolean waitForAck = true;
         Assert.assertTrue(zimbraMemcachedClient.put(key, "11", waitForAck));
         Long value_ = zimbraMemcachedClient.incr(key);
