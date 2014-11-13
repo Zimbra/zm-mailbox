@@ -1381,11 +1381,11 @@ class ErrorPagesVar extends ProxyConfVar {
         StringBuilder sb = new StringBuilder();
         if(errURL.length() == 0) {
             for(String err: ErrorPagesVar.ERRORS) {
-                sb.append("error_page " + err + " /zmerror_upstream_" + err + ".html;\n");
+                sb.append("error_page " + err + " /zmerror_upstream_" + err + ".html;\n\t");
             }
         } else {
             for(String err: ErrorPagesVar.ERRORS) {
-                sb.append("error_page " + err + " " + errURL + "?err=" + err + "&up=$upstream_addr;\n");
+                sb.append("error_page " + err + " " + errURL + "?err=" + err + "&up=$upstream_addr;\n\t");
             }
         }
         return sb.toString();
@@ -1590,6 +1590,29 @@ class LoginEnablerVar extends WebEnablerVar {
             return "#";
         } else {
             return "";
+        }
+    }
+}
+
+class SSLStaplingEnablerVar extends ProxyConfVar {
+
+    public SSLStaplingEnablerVar() {
+        super("ssl.stapling.responder.enabled",
+              "zimbraReverseProxySSLStaplingResponderURL",
+              false,
+              ProxyConfValueType.ENABLER,
+              ProxyConfOverride.CUSTOM,
+              "whether to override the URL of the OCSP responder specified in the “Authority Information Access” certificate extension.");
+    }
+
+    @Override
+    public void update() throws ServiceException {
+        String SSLStaplingResponderURL = serverSource.getAttr(mAttribute, true);
+        if (SSLStaplingResponderURL == null ||
+            ProxyConfUtil.isEmptyString(SSLStaplingResponderURL)) {
+            mValue = false;
+        } else {
+            mValue = true;
         }
     }
 }
@@ -2524,6 +2547,8 @@ public class ProxyConfGen
 	    mConfVars.put("web.upstream.ews.target", new WebProxyUpstreamEwsTargetVar());
 	    mConfVars.put("web.ssl.spdy", new SpdyConfVar());
 	    mConfVars.put("web.ssl.stapling", new ProxyConfVar("web.ssl.stapling", "zimbraReverseProxySSLStapling", "off", ProxyConfValueType.STRING, ProxyConfOverride.SERVER, "SSL Stapling flag for NGINX - can be on|off - on Enables stapling of OCSP responses by the server, off disables it"));
+	    mConfVars.put("ssl.stapling.responder.enabled", new SSLStaplingEnablerVar());
+	    mConfVars.put("ssl.stapling.responder.url", new ProxyConfVar("ssl.stapling.responder.url", "zimbraReverseProxySSLStaplingResponderURL", "", ProxyConfValueType.STRING, ProxyConfOverride.SERVER, "SSL Stapling responder URL"));
     }
 
     /* update the default variable map from the active configuration */
