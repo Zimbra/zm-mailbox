@@ -25,6 +25,7 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.Log;
+import com.zimbra.common.util.NetConfigException;
 import com.zimbra.common.util.NetUtil;
 import com.zimbra.cs.account.Provisioning;
 
@@ -173,13 +174,21 @@ public abstract class ServerConfig {
 
 
     public ServerSocket getServerSocket() throws ServiceException {
-        return isSslEnabled() ?
-            NetUtil.getSslTcpServerSocket(getBindAddress(), getBindPort(), getSslExcludedCiphers(), getSslIncludedCiphers(), getMailboxdSslProtocols()) :
-            NetUtil.getTcpServerSocket(getBindAddress(), getBindPort());
+        try {
+            return isSslEnabled() ?
+                NetUtil.getSslTcpServerSocket(getBindAddress(), getBindPort(), getSslExcludedCiphers(), getSslIncludedCiphers(), getMailboxdSslProtocols()) :
+                NetUtil.getTcpServerSocket(getBindAddress(), getBindPort());
+        } catch (NetConfigException e) {
+            throw ServiceException.FAILURE("unable to bind socket", e);
+        }
     }
 
     public ServerSocketChannel getServerSocketChannel() throws ServiceException {
-        return NetUtil.getNioServerSocket(getBindAddress(), getBindPort()).getChannel();
+        try {
+            return NetUtil.getNioServerSocket(getBindAddress(), getBindPort()).getChannel();
+        } catch (NetConfigException e) {
+            throw ServiceException.FAILURE("unable to bind socket", e);
+        }
     }
 
     protected String getAttr(String key, String defaultValue) {
