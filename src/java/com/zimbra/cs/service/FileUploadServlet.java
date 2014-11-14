@@ -476,7 +476,7 @@ public class FileUploadServlet extends ZimbraServlet {
         if (doCsrfCheck) {
             String csrfToken = req.getHeader(CsrfFilter.CSRF_TOKEN);
 
-            // Bug: 96344 skipping CSRF token check  when file upload is from IE8
+            // Bug: 96344
             if (!StringUtil.isNullOrEmpty(csrfToken)) {
                 if (!CsrfUtil.isValidCsrfToken(csrfToken, at)) {
 
@@ -489,6 +489,8 @@ public class FileUploadServlet extends ZimbraServlet {
                 }
                 csrfCheckComplete = true;
             }
+        } else {
+            csrfCheckComplete = true;
         }
 
 
@@ -509,8 +511,7 @@ public class FileUploadServlet extends ZimbraServlet {
 
             // file upload requires multipart enctype
             if (ServletFileUpload.isMultipartContent(req)) {
-                handleMultipartUpload(req, resp, fmt, acct, limitByFileUploadMaxSize, at, doCsrfCheck,
-                    csrfCheckComplete);
+                handleMultipartUpload(req, resp, fmt, acct, limitByFileUploadMaxSize, at, csrfCheckComplete);
             } else {
                 handlePlainUpload(req, resp, fmt, acct, limitByFileUploadMaxSize, csrfCheckComplete);
             }
@@ -523,7 +524,7 @@ public class FileUploadServlet extends ZimbraServlet {
 
     @SuppressWarnings("unchecked")
     List<Upload> handleMultipartUpload(HttpServletRequest req, HttpServletResponse resp, String fmt, Account acct,
-        boolean limitByFileUploadMaxSize, AuthToken at, boolean doCsrfCheck, boolean csrfCheckComplete)
+        boolean limitByFileUploadMaxSize, AuthToken at, boolean csrfCheckComplete)
     throws IOException, ServiceException {
         List<FileItem> items = null;
         String reqId = null;
@@ -532,7 +533,7 @@ public class FileUploadServlet extends ZimbraServlet {
         try {
             items = upload.parseRequest(req);
 
-            if (doCsrfCheck && !csrfCheckComplete) {
+            if (!csrfCheckComplete) {
                 for (FileItem item : items) {
                     if (item.isFormField()) {
                         if (item.getFieldName().equals(PARAM_CSRF_TOKEN)) {
