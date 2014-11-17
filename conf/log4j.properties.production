@@ -103,14 +103,6 @@ log4j.appender.EWS.File=/opt/zimbra/log/ews.log
 log4j.appender.EWS.layout=com.zimbra.common.util.ZimbraPatternLayout
 log4j.appender.EWS.layout.ConversionPattern=%d %-5p [%t] [%z] %c{1} - %m%n
 
-# Appender SOLR writes to the file solr.log 
-log4j.appender.SOLR=org.apache.log4j.rolling.RollingFileAppender
-log4j.appender.SOLR.RollingPolicy=org.apache.log4j.rolling.TimeBasedRollingPolicy
-log4j.appender.SOLR.RollingPolicy.FileNamePattern=/opt/zimbra/log/solr.log.%d{yyyy-MM-dd}
-log4j.appender.SOLR.File=/opt/zimbra/log/solr.log
-log4j.appender.SOLR.layout=com.zimbra.common.util.ZimbraPatternLayout
-log4j.appender.SOLR.layout.ConversionPattern=%d %-5p [%t] [%z] %c{1} - %m%n
-
 # HttpMethodBase spews out too many WARN on the badly formatted cookies.
 log4j.logger.org.apache.commons.httpclient.HttpMethodBase=ERROR
 
@@ -135,13 +127,5 @@ log4j.logger.zimbra=INFO
 log4j.logger.zimbra.op=WARN
 log4j.logger.com.zimbra=INFO
 log4j.additivity.zimbra.slogger=FALSE
-
-#Solr log settings
-log4j.logger.org.apache.solr=ERROR,SOLR
-log4j.logger.org.apache.solr.update.processor=ERROR,SOLR
-log4j.logger.com.zimbra.solr=ERROR,SOLR
-# set to INFO to enable infostream log messages
-log4j.logger.org.apache.solr.update.LoggingInfoStream=OFF
-
 %%comment VAR:!zimbraLogHostname%%log4j.logger.zimbra.slogger=INFO,SLOGGER
 %%uncomment VAR:!zimbraLogHostname%%log4j.logger.zimbra.slogger=ERROR
