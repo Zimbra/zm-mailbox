@@ -89,7 +89,7 @@ public final class FixedMimeMessageTest {
         message.setText("\u3042\u3042\u3042\u3044\u3044\u3044\u3046\u3046\u3046\u3048\u3048\u3048\u304a\u304a\u304a",
                 "UTF-8");
         message.saveChanges();
-        Assert.assertEquals("base64", message.getEncoding());
+        Assert.assertEquals("8bit", message.getEncoding());
     }
 
 }
