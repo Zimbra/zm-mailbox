@@ -35,6 +35,7 @@ import javax.xml.bind.DatatypeConverter;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpression;
+import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
 import junit.framework.TestCase;
@@ -52,6 +53,7 @@ import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.httpclient.methods.PutMethod;
 import org.w3c.dom.Document;
+import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import com.google.common.base.Strings;
@@ -377,6 +379,56 @@ public class TestCalDav extends TestCase {
             "    </comp-filter>\n" +
             "  </filter>\n" +
             "</calendar-query>";
+
+    /**
+     * @param acct
+     * @param UID - null or empty if don't care
+     * @return href of first matching item found
+     * @throws ServiceException
+     * @throws IOException
+     */
+    public static String waitForNewSchedulingRequestOrReplyByUID(Account acct, String UID)
+            throws ServiceException, IOException {
+        String url = getSchedulingInboxUrl(acct, acct);
+        ReportMethod method = new ReportMethod(url);
+        addBasicAuthHeaderForUser(method, acct);
+        HttpClient client = new HttpClient();
+        TestCalDav.HttpMethodExecutor executor;
+        for (int i = 1; i <= 100; i++) {
+            method.addRequestHeader("Content-Type", MimeConstants.CT_TEXT_XML);
+            method.setRequestEntity(new ByteArrayRequestEntity(calendar_query_etags_by_vevent.getBytes(),
+                    MimeConstants.CT_TEXT_XML));
+            executor = new TestCalDav.HttpMethodExecutor(client, method, HttpStatus.SC_MULTI_STATUS);
+            String respBody = new String(executor.responseBodyBytes, MimeConstants.P_CHARSET_UTF8);
+            Document doc = W3cDomUtil.parseXMLToDoc(respBody);
+            XPath xpath = XPathFactory.newInstance().newXPath();
+            xpath.setNamespaceContext(TestCalDav.NamespaceContextForXPath.forCalDAV());
+            XPathExpression xPathExpr;
+            try {
+                xPathExpr = xpath.compile("/D:multistatus/D:response/D:href/text()");
+                NodeList result = (NodeList) xPathExpr.evaluate(doc, XPathConstants.NODESET);
+                if ( 1 <= result.getLength()) {
+                    for (int ndx = 0; ndx < result.getLength(); ndx++) {
+                        Node item = result.item(ndx);
+                        String nodeValue = item.getNodeValue();
+                        if ((Strings.isNullOrEmpty(UID)) || (nodeValue.contains(UID))) {
+                            return nodeValue;
+                        }
+                    }
+                }
+            } catch (XPathExpressionException e1) {
+                ZimbraLog.test.debug("xpath problem", e1);
+            }
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                ZimbraLog.test.debug("sleep got interrupted", e);
+            }
+        }
+        fail("Inbox item didn't arrive in time with UID '" + Strings.nullToEmpty(UID) + "'");
+        return null;
+    }
+
     public void testCalendarQueryOnInbox() throws Exception {
         Account dav1 = TestUtil.createAccount(DAV1);
         String url = getSchedulingInboxUrl(dav1, dav1);
@@ -402,6 +454,7 @@ public class TestCalDav extends TestCase {
         Date startDate = new Date(System.currentTimeMillis() + Constants.MILLIS_PER_DAY);
         Date endDate = new Date(startDate.getTime() + Constants.MILLIS_PER_HOUR);
         TestUtil.createAppointment(organizer, subject, dav1.getName(), startDate, endDate);
+        waitForNewSchedulingRequestOrReplyByUID(dav1, "");
         executor = new TestCalDav.HttpMethodExecutor(client, method, HttpStatus.SC_MULTI_STATUS);
         respBody = new String(executor.responseBodyBytes, MimeConstants.P_CHARSET_UTF8);
         respElem = Element.XMLElement.parseXML(respBody);
@@ -732,6 +785,9 @@ public class TestCalDav extends TestCase {
         putMethod.setRequestEntity(new ByteArrayRequestEntity(body.getBytes(),
                 MimeConstants.CT_TEXT_CALENDAR));
         HttpMethodExecutor.execute(client, putMethod, HttpStatus.SC_CREATED);
+
+        String inboxhref = TestCalDav.waitForNewSchedulingRequestOrReplyByUID(dav2, androidSeriesMeetingUid);
+        assertTrue("Found meeting request for newly created item", inboxhref.contains(androidSeriesMeetingUid));
 
         GetMethod getMethod = new GetMethod(url);
         addBasicAuthHeaderForUser(getMethod, dav1);
