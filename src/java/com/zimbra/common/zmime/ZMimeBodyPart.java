@@ -409,8 +409,10 @@ public class ZMimeBodyPart extends MimeBodyPart implements ZMimePart {
                 return "7bit";
             } else if (qpencodeable < length / 4) {
                 return "quoted-printable";
+            } else if (toolong == 0) {
+                return "8bit"; //section 6.2 of RFC2045
             } else {
-                return "base64";
+                return "binary";
             }
         }
     }
