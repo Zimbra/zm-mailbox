@@ -131,6 +131,10 @@ public class LdapServerPool {
     private ServerSet createServerSet(SocketFactory socketFactory) throws UnknownHostException {
         if (urls.size() == 1) {
             LDAPURL url = urls.get(0);
+            if (LdapConnType.isLDAPI(url.getScheme())) {
+                //dummy ldap host is used for LDAPI
+                return new SingleServerSet(url.getHost(), url.getPort(), socketFactory, connOpts);
+            }
             InetAddress[] addrs = InetAddress.getAllByName(url.getHost());
             if (addrs.length == 1) {
                 if (socketFactory == null) {
