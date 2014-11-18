@@ -668,7 +668,7 @@ public class UserServletContext {
                         is = null;
                     } else {
                         is = new UploadInputStream(fis.openStream(), limit);
-//                        break;
+                        break;
                     }
                 }
             } catch (UserServletException e) {
