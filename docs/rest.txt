@@ -426,3 +426,20 @@ explicit account:
    /home/john.doe/?id=10
    /home/john.doe@zimbra.com/calendar
    /home/34cc4086-801e-42a0-a67a-ea93c1590c4e/?id=10
+   
+------------------------------------------------------------
+APPENDIX B: POST Data with CSRF token
+------------------------------------------------------------
+For POST request which is currently supported for Import in ZWC the CSRF token is expected 
+as a HTTP header
+X-Zimbra-Csrf-Token
+or as a form field
+csrfToken
+
+------Example with Form field ---
+Content-Disposition: form-data; name="csrfToken"
+0_2f9a602552d8be83930b8e061718a5b56eabbc87
+
+----Example with Http Header----
+Referer http://localhost:7070/
+X-Zimbra-Csrf-Token 0_b9c88c641becf7943e7c9af7e569ea911cf8b7a0
