@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -29,7 +29,6 @@ import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.Principal;
-import java.security.Security;
 import java.security.cert.CertPath;
 import java.security.cert.CertPathValidator;
 import java.security.cert.CertPathValidatorException;
@@ -56,8 +55,7 @@ import javax.naming.ldap.Rdn;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import sun.security.x509.AuthorityInfoAccessExtension;
-import sun.security.x509.X509CertImpl;
+import org.apache.commons.codec.binary.Base64;
 
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.localconfig.DebugConfig;
@@ -131,7 +129,9 @@ public class ClientCertAuthenticator extends SSOAuthenticator {
             // Write in text form
             wr = new OutputStreamWriter(os, Charset.forName("UTF-8"));
             wr.write("-----BEGIN CERTIFICATE-----\n");
-            wr.write(new sun.misc.BASE64Encoder().encode(buf));
+            String lineSeparator = System.getProperty("line.separator");
+            byte[] lineEnding = lineSeparator.getBytes();
+            wr.write(new String(new Base64(76, lineEnding).encodeAsString(buf)));
             wr.write("\n-----END CERTIFICATE-----\n");
             wr.flush();
         } catch (CertificateEncodingException e) {
@@ -266,18 +266,6 @@ public class ClientCertAuthenticator extends SSOAuthenticator {
             }
 
           }
-    }
-
-    // examine the certificate's AuthorityInfoAccess extension
-    private boolean IsAIAInfoPresent(X509Certificate cert) {
-        try {
-            AuthorityInfoAccessExtension aia =
-                            X509CertImpl.toImpl(cert).getAuthorityInfoAccessExtension();
-            return  (aia != null);
-        } catch (CertificateException ce) {
-            // treat this case as if the cert had no extension
-            return false;
-            }
     }
 
 }
