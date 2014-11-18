@@ -489,4 +489,17 @@ public class MimeTest {
         Assert.assertTrue("Html data should not be modified",
             TestUtil.bytesEqual(textHtml.getBytes(), mpiHtml.getMimePart().getInputStream()));
     }
+
+    @Test
+    public void fixBase64LineWrappingAttachments() throws Exception {
+        InputStream is = getClass().getResourceAsStream("bug95114.txt");
+        InputStream expectedIs = getClass().getResourceAsStream("bug95114_expected.txt");
+        String expected = IOUtils.toString(expectedIs);
+        MimeMessage mm =  new Mime.FixedMimeMessage(JMSession.getSession(), is);
+        mm.saveChanges();
+        Mime.fixBase64MimePartLineFolding(mm);
+        mm.saveChanges();
+        String actual = IOUtils.toString(mm.getInputStream());
+        Assert.assertEquals("Content altered.", expected, actual);
+    }
 }

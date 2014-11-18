@@ -41,6 +41,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+import javax.activation.DataHandler;
 import javax.activation.DataSource;
 import javax.mail.Address;
 import javax.mail.BodyPart;
@@ -58,6 +59,7 @@ import javax.mail.internet.MimeMultipart;
 import javax.mail.internet.MimePart;
 import javax.mail.internet.MimeUtility;
 import javax.mail.internet.ParseException;
+import javax.mail.util.ByteArrayDataSource;
 import javax.mail.util.SharedFileInputStream;
 
 import org.apache.commons.codec.EncoderException;
@@ -267,7 +269,9 @@ public class Mime {
                 String ctype = mPartInfo.getMimePart().getContentType();
                 ByteArrayOutputStream bos = new ByteArrayOutputStream();
                 IOUtils.copy(io, bos);
-                mPartInfo.getMimePart().setContent(bos.toString(), ctype);
+                DataSource ds = new ByteArrayDataSource(bos.toByteArray(), ctype);
+                DataHandler dh = new DataHandler(ds);
+                mPartInfo.getMimePart().setDataHandler(dh);
                 mPartInfo.getMimePart().setHeader("Content-Transfer-Encoding", ct);
                 mPartInfo.getMimePart().setHeader("Content-Type", ctype);
             }
