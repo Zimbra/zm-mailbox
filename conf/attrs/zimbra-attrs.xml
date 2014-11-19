@@ -2209,7 +2209,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 </attr>
 
 <attr id="428" name="zimbraAllowFromAddress" type="email" max="256" cardinality="multi" optionalIn="account" flags="accountInfo,domainAdminModifiable" callback="AllowFromAddress">
-  <desc>Addresses that this account can as from address if arbitrary-addresses-allowed setting is not set</desc>
+  <desc>Addresses that this account is permitted to use in From: header on sent messages. Only applicable when zimbraAllowAnyFromAddress is set to false.</desc>
 </attr>
 
 <attr id="429" name="zimbraArchiveAccount" type="email" max="256" cardinality="multi" optionalIn="account">
