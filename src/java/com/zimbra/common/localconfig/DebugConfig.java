@@ -259,6 +259,8 @@ public final class DebugConfig {
     public static final long convertdMaxResponseSize = value("convertd_max_response_size",
         (long) 20 * 1024 * 1024);
 
+    public static final boolean imapForceSpecialUse = value("imap_force_special_use", true);
+
     private static boolean value(String key, boolean defaultValue) {
         String value = LC.get(key);
         return value.isEmpty() ? defaultValue : Boolean.parseBoolean(value);
