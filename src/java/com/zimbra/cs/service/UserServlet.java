@@ -574,16 +574,19 @@ public class UserServlet extends ZimbraServlet {
                         doCsrfCheck, csrfToken, paramValue);
                 }
 
-                if (!CsrfUtil.isValidCsrfToken(csrfToken, context.authToken)) {
-                    context.setCsrfAuthSucceeded(Boolean.FALSE);
-                    log.debug("CSRF token validation failed for account: %s"
-                        + ", Auth token is CSRF enabled:  %s" + "CSRF token is: %s",
-                        context.authToken, context.authToken.isCsrfTokenEnabled(), csrfToken);
-                    sendError(context, req, resp,
-                        L10nUtil.getMessage(MsgKey.errMustAuthenticate, req));
-                    return;
+                if (!StringUtil.isNullOrEmpty(csrfToken)) {
+                    if (!CsrfUtil.isValidCsrfToken(csrfToken, context.authToken)) {
+                        context.setCsrfAuthSucceeded(Boolean.FALSE);
+                        log.debug("CSRF token validation failed for account: %s"
+                            + ", Auth token is CSRF enabled:  %s" + "CSRF token is: %s",
+                            context.authToken, context.authToken.isCsrfTokenEnabled(), csrfToken);
+                        sendError(context, req, resp,
+                            L10nUtil.getMessage(MsgKey.errMustAuthenticate, req));
+                        return;
+                    } else {
+                        context.setCsrfAuthSucceeded(Boolean.TRUE);
+                    }
                 }
-
             }
             Folder folder = null;
             String filename = null;
@@ -675,7 +678,12 @@ public class UserServlet extends ZimbraServlet {
             }
         } catch (UserServletException e) {
             // add check for ServiceException root cause?
-            resp.sendError(e.getHttpStatusCode(), e.getMessage());
+            if (e.getHttpStatusCode() == HttpServletResponse.SC_UNAUTHORIZED) {
+                sendError(context, req, resp,
+                    L10nUtil.getMessage(MsgKey.errMustAuthenticate, req));
+            } else {
+                resp.sendError(e.getHttpStatusCode(), e.getMessage());
+            }
         } finally {
             ZimbraLog.clearContext();
         }
