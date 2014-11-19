@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -200,13 +200,15 @@ public final class DebugConfig {
 
     public static final int sendGroupShareNotificationSynchronouslyThreshold =
         value("send_group_share_notification_synchronously_threshold", 20);
-    
+
     /*
      * Default maximum size of convertd response. This reduces OOME in case of
      * large response
      */
     public static final long convertdMaxResponseSize = value("convertd_max_response_size",
                                                              (long) 20 * 1024 * 1024);
+
+    public static final boolean imapForceSpecialUse = value("imap_force_special_use", true);
 
     private static boolean value(String key, boolean defaultValue) {
         String value = LC.get(key);
@@ -221,7 +223,7 @@ public final class DebugConfig {
             return defaultValue;
         }
     }
-    
+
     private static long value(String key, long defaultValue) {
         String value = LC.get(key);
         try {
