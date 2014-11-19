@@ -151,6 +151,7 @@ SECTION 2: Apache License, V2.0
    >>> testng-5.12.1
    >>> unoil-4.0.2
    >>> xerces-j-2.9.1
+   >>> xmlschema-core-2.0.3
    >>> zkclient-0.1
 
 
@@ -27714,6 +27715,11 @@ The name and trademarks of copyright holders may NOT be used in advertising
 or publicity pertaining to this document or its contents without specific,
 written prior permission. Title to copyright in this document will at all
 times remain with copyright holders.
+
+
+>>> xmlschema-core-2.0.3
+
+License: Apache 2.0
 
 
 >>> zkclient-0.1
