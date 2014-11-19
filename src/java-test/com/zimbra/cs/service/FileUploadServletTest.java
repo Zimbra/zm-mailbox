@@ -86,7 +86,7 @@ public class FileUploadServletTest {
         URL url = new URL("http://localhost:7070/service/upload?fmt=extended");
         MockHttpServletRequest req = new MockHttpServletRequest(form, url, "multipart/form-data; boundary=" + boundary);
         MockHttpServletResponse resp = new MockHttpServletResponse();
-        return servlet.handleMultipartUpload(req, resp, "extended", testAccount, false, null, false, false);
+        return servlet.handleMultipartUpload(req, resp, "extended", testAccount, false, null, false);
     }
 
     private void compareUploads(Upload up, String expectedFilename, byte[] expectedContent) throws Exception {
