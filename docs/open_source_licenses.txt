@@ -1,6 +1,6 @@
 open_source_license.txt
 
-Zimbra Collaboration Suite 8.5.0 BETA3
+Zimbra Collaboration Suite 8.6.0 GA
 
 
 ===========================================================================
@@ -41372,6 +41372,6 @@ any resulting litigation.
 
 
 
-Last updated 10 Jun 2014
+Last updated 18 Nov 2014
 
-[ZCS850BETA3VV100614]
+[ZCS860GAVV181114]
