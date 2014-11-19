@@ -69,6 +69,12 @@ public abstract class AuthToken {
      * @return clone of an existing Auth token
      */
     public static AuthToken getCsrfUnsecuredAuthToken(AuthToken authToken)  {
+        // Bug :96496
+        if (authToken == null) {
+            // this is an edge case where the user is changing password during first login and
+            // the autToken is null
+            return null;
+        }
 
         if (authToken.isCsrfTokenEnabled()) {
             AuthToken token;
