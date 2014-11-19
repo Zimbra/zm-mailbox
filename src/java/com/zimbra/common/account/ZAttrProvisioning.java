@@ -2644,8 +2644,9 @@ public class ZAttrProvisioning {
     public static final String A_zimbraAllowAnyFromAddress = "zimbraAllowAnyFromAddress";
 
     /**
-     * Addresses that this account can as from address if
-     * arbitrary-addresses-allowed setting is not set
+     * Addresses that this account is permitted to use in From: header on
+     * sent messages. Only applicable when zimbraAllowAnyFromAddress is set
+     * to false.
      */
     @ZAttr(id=428)
     public static final String A_zimbraAllowFromAddress = "zimbraAllowFromAddress";
