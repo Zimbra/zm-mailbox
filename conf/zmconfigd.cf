@@ -384,6 +384,8 @@ SECTION ldap
 	LDAP ldap_common_loglevel LOCAL ldap_common_loglevel
 	LDAP ldap_common_require_tls LOCAL ldap_common_require_tls
 	LDAP ldap_common_threads LOCAL ldap_common_threads
+	LDAP ldap_common_tlsciphersuite LOCAL ldap_common_tlsciphersuite
+	LDAP ldap_common_tlsprotocolmin LOCAL ldap_common_tlsprotocolmin
 	LDAP ldap_common_toolthreads LOCAL ldap_common_toolthreads
 	LDAP ldap_common_writetimeout LOCAL ldap_common_writetimeout
 	LDAP ldap_db_maxsize LOCAL ldap_db_maxsize
