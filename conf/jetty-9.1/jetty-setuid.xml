@@ -80,7 +80,15 @@
         </Entry>
         <Entry>
           <Item>nio_imap_enabled</Item>
-          <Item><New class="java.lang.Boolean"><Arg><Property name="nio_imap_enabled" default="false"/></Arg></New></Item>
+          <Item><New class="java.lang.Boolean"><Arg><Property name="nio_imap_enabled" default="true"/></Arg></New></Item>
+        </Entry>
+        <Entry>
+          <Item>nio_pop3_enabled</Item>
+          <Item><New class="java.lang.Boolean"><Arg><Property name="nio_pop3_enabled" default="true"/></Arg></New></Item>
+        </Entry>
+        <Entry>
+          <Item>zimbra_ssl_enabled</Item>
+          <Item><New class="java.lang.Boolean"><Arg><Property name="zimbra_ssl_enabled" default="true"/></Arg></New></Item>
         </Entry>
         <Entry>
           <Item>mailboxd_keystore</Item>

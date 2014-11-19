@@ -363,7 +363,6 @@ SECTION proxy
 	VAR zimbraReverseProxySSLECDHCurve
 	VAR zimbraReverseProxyUpstreamLoginServers
 	VAR zimbraReverseProxyUpstreamEwsServers
-	VAR zimbraReverseProxySSLProtocols
 	PROXYGEN
 	RESTART proxy
 
