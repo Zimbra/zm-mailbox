@@ -165,6 +165,10 @@ public final class HttpUtilTest {
         Assert.assertEquals(Browser.IE, browser);
         Assert.assertEquals(5, HttpUtil.guessBrowserMajorVersion(IE_5_2_3));
 
+        String IE_11 = "Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; rv:11.0";
+        browser = HttpUtil.guessBrowser(IE_11);
+        Assert.assertEquals(Browser.IE, browser);
+        Assert.assertEquals(11, HttpUtil.guessBrowserMajorVersion(IE_11));
 
     }
     /**

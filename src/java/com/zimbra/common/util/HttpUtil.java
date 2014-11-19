@@ -76,6 +76,81 @@ public final class HttpUtil {
             return str.indexOf(userAgentStr);
         }
 
+        private static class Version {
+            private String mVersion;
+            private int mMajor = -1;
+            private int mMinor = 0;
+
+            public Version(String v) {
+                if (v == null || v.length() == 0) return;
+
+                // so parseInt doesn't choke on something like 1.9pre
+                v = v.replaceAll("[^0-9\\.].*", "");
+                int d1 = v.indexOf('.');
+                if (d1 != -1) {
+                    mMajor = parseInt(v.substring(0, d1), -1);
+                    int d2 = v.indexOf('.', d1+1);
+                    if (d2 != -1)
+                        mMinor = parseInt(v.substring(d1+1, d2), 0);
+                    else
+                        mMinor = parseInt(v.substring(d1+1), 0);
+                } else {
+                    mMajor = parseInt(v, -1);
+                }
+                mVersion = mMajor + "." + mMinor;
+            }
+
+            private int parseInt(String s, int defaultVal) {
+                try {
+                    return Integer.parseInt(s);
+                } catch (NumberFormatException e) {
+                    return defaultVal;
+                }
+            }
+
+            public String getVersion() { return mVersion; }
+            public int getMajor() { return mMajor; }
+            public int getMinor() { return mMinor; }
+        }
+
+        static boolean isModernIE (String ua) {
+            boolean isModernIE = false;
+            ua = ua.toLowerCase();
+            int index = 0;
+            Version tridentVersion = null;
+            Version mozVersion = null;
+            if ((index = ua.indexOf("trident/")) != -1) {
+                tridentVersion = new Version(ua.substring(index + 8));
+            }
+
+            if ((index = ua.indexOf("rv:")) != -1){
+                mozVersion = new Version(ua.substring(index + 3));
+            }
+
+            if (tridentVersion != null && mozVersion != null) {
+                isModernIE = tridentVersion.getMajor() >= 7 && mozVersion.getMajor() >= 11;
+            }
+
+            return isModernIE;
+        }
+
+        /**
+         * call this method only if isModernIE()=true;
+         * @param ua
+         * @return
+         */
+        static int getModernIEVersion(String ua) {
+            ua = ua.toLowerCase();
+            Version mozVersion;
+            int index = ua.indexOf("rv:");
+            if (index != -1) {
+                mozVersion = new Version(ua.substring(index + 3));
+                return mozVersion.getMajor();
+            } else {
+                return index;
+            }
+        }
+
         /**
          * Guesses the browser type based on the user agent string
          * @param ua The user agent of the browser to check
@@ -84,7 +159,7 @@ public final class HttpUtil {
         static Browser guessBrowser(String ua) {
             if (ua == null || ua.trim().equals(""))
                 return Browser.UNKNOWN;
-            if (Browser.IE.indexOf(ua) != -1)
+            if (Browser.IE.indexOf(ua) != -1 || isModernIE(ua))
                 return Browser.IE;
             if (Browser.FIREFOX.indexOf(ua) != -1)
                 return Browser.FIREFOX;
@@ -119,6 +194,9 @@ public final class HttpUtil {
             int version = 0;
             switch (this) {
             case IE:
+                if (isModernIE(ua)) {
+                    return getModernIEVersion(ua);
+                }
                 // example: MSIE 10.6;
                 start = indexOf(ua) + IE.userAgentStr.length() +1;
                 break;
