@@ -3313,8 +3313,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Addresses that this account can as from address if
-     * arbitrary-addresses-allowed setting is not set
+     * Addresses that this account is permitted to use in From: header on
+     * sent messages. Only applicable when zimbraAllowAnyFromAddress is set
+     * to false.
      *
      * @return zimbraAllowFromAddress, or empty array if unset
      */
@@ -3324,8 +3325,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Addresses that this account can as from address if
-     * arbitrary-addresses-allowed setting is not set
+     * Addresses that this account is permitted to use in From: header on
+     * sent messages. Only applicable when zimbraAllowAnyFromAddress is set
+     * to false.
      *
      * @param zimbraAllowFromAddress new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -3338,8 +3340,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Addresses that this account can as from address if
-     * arbitrary-addresses-allowed setting is not set
+     * Addresses that this account is permitted to use in From: header on
+     * sent messages. Only applicable when zimbraAllowAnyFromAddress is set
+     * to false.
      *
      * @param zimbraAllowFromAddress new value
      * @param attrs existing map to populate, or null to create a new map
@@ -3353,8 +3356,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Addresses that this account can as from address if
-     * arbitrary-addresses-allowed setting is not set
+     * Addresses that this account is permitted to use in From: header on
+     * sent messages. Only applicable when zimbraAllowAnyFromAddress is set
+     * to false.
      *
      * @param zimbraAllowFromAddress new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -3367,8 +3371,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Addresses that this account can as from address if
-     * arbitrary-addresses-allowed setting is not set
+     * Addresses that this account is permitted to use in From: header on
+     * sent messages. Only applicable when zimbraAllowAnyFromAddress is set
+     * to false.
      *
      * @param zimbraAllowFromAddress new to add to existing values
      * @param attrs existing map to populate, or null to create a new map
@@ -3382,8 +3387,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Addresses that this account can as from address if
-     * arbitrary-addresses-allowed setting is not set
+     * Addresses that this account is permitted to use in From: header on
+     * sent messages. Only applicable when zimbraAllowAnyFromAddress is set
+     * to false.
      *
      * @param zimbraAllowFromAddress existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -3396,8 +3402,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Addresses that this account can as from address if
-     * arbitrary-addresses-allowed setting is not set
+     * Addresses that this account is permitted to use in From: header on
+     * sent messages. Only applicable when zimbraAllowAnyFromAddress is set
+     * to false.
      *
      * @param zimbraAllowFromAddress existing value to remove
      * @param attrs existing map to populate, or null to create a new map
@@ -3411,8 +3418,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Addresses that this account can as from address if
-     * arbitrary-addresses-allowed setting is not set
+     * Addresses that this account is permitted to use in From: header on
+     * sent messages. Only applicable when zimbraAllowAnyFromAddress is set
+     * to false.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -3424,8 +3432,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Addresses that this account can as from address if
-     * arbitrary-addresses-allowed setting is not set
+     * Addresses that this account is permitted to use in From: header on
+     * sent messages. Only applicable when zimbraAllowAnyFromAddress is set
+     * to false.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
