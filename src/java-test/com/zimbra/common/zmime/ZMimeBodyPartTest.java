@@ -80,7 +80,7 @@ public class ZMimeBodyPartTest {
         testEncodingSelection("multiline content", "who\r\nare\r\nyou?", ZTransferEncoding.SEVEN_BIT);
 
         testEncodingSelection("single non-ASCII", "cyb\u00c8le illus.", ZTransferEncoding.QUOTED_PRINTABLE);
-        testEncodingSelection("all non-ASCII", "\u00c8", ZTransferEncoding.BASE64);
+        testEncodingSelection("all non-ASCII", "\u00c8", ZTransferEncoding.EIGHT_BIT);
         testEncodingSelection("single NUL", "cyb\u0000le illus.", ZTransferEncoding.QUOTED_PRINTABLE);
         testEncodingSelection("single control char", "ESCAPE ME \u001B", ZTransferEncoding.SEVEN_BIT);
 
