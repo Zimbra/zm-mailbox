@@ -1058,6 +1058,36 @@ public class TestCalDav extends TestCase {
                 fbResponse, busyTentativeMarker), fbResponse.contains(busyTentativeMarker));
     }
 
+    private static String VtimeZoneLotusNotesWEurope =
+            "BEGIN:VCALENDAR\n" +
+            "BEGIN:VTIMEZONE\n" +
+            "TZID:W. Europe\n" +
+            "BEGIN:STANDARD\n" +
+            "DTSTART:19501029T020000\n" +
+            "TZOFFSETFROM:+0200\n" +
+            "TZOFFSETTO:+0100\n" +
+            "RRULE:FREQ=YEARLY;BYMINUTE=0;BYHOUR=2;BYDAY=-1SU;BYMONTH=10\n" +
+            "END:STANDARD\n" +
+            "BEGIN:DAYLIGHT\n" +
+            "DTSTART:19500326T020000\n" +
+            "TZOFFSETFROM:+0100\n" +
+            "TZOFFSETTO:+0200\n" +
+            "RRULE:FREQ=YEARLY;BYMINUTE=0;BYHOUR=2;BYDAY=-1SU;BYMONTH=3\n" +
+            "END:DAYLIGHT\n" +
+            "END:VTIMEZONE\n" +
+            "END:VCALENDAR\n";
+    public void testFuzzyTimeZoneMatchNotesWEurope() throws Exception {
+        try (ByteArrayInputStream bais = new ByteArrayInputStream(VtimeZoneLotusNotesWEurope.getBytes())) {
+            ZVCalendar tzcal = ZCalendar.ZCalendarBuilder.build(bais, MimeConstants.P_CHARSET_UTF8);
+            assertNotNull("tzcal", tzcal);
+            ZComponent tzcomp = tzcal.getComponent(ICalTok.VTIMEZONE);
+            assertNotNull("tzcomp", tzcomp);
+            ICalTimeZone tz = ICalTimeZone.fromVTimeZone(tzcomp);
+            ICalTimeZone matchtz = ICalTimeZone.lookupMatchingWellKnownTZ(tz);
+            assertEquals("ID of Timezone which fuzzy matches W. Europe", "Europe/Berlin", matchtz.getID());
+        }
+    }
+
     private static String VtimeZoneGMT_0600_0500 =
             "BEGIN:VCALENDAR\n" +
             "BEGIN:VTIMEZONE\n" +
