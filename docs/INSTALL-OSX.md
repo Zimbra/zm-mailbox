@@ -92,6 +92,58 @@ $ launchctl load ~/Library/LaunchAgents/homebrew.mxcl.mariadb.plist
 $ /opt/zimbra/mysql/bin/mysqladmin -S /opt/zimbra/mysql/data/mysql.sock -u root password zimbra
 ````
 
+## Install Consul
+
+````
+$ brew install caskroom/cask/brew-cask
+$ brew cask install consul
+````
+
+Configure launch agent:
+
+````
+$ vi ~/Library/LaunchAgents/consul.plist
+
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+  <dict>
+    <key>KeepAlive</key>
+    <dict>
+      <key>SuccessfulExit</key>
+      <false/>
+    </dict>
+    <key>Label</key>
+    <string>consul</string>
+    <key>ProgramArguments</key>
+    <array>
+      <string>/usr/local/bin/consul</string>
+      <string>agent</string>
+      <string>-server</string>
+      <string>-bootstrap-expect</string>
+      <string>1</string>
+      <string>-data-dir</string>
+      <string>/tmp/consul</string>
+    </array>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>WorkingDirectory</key>
+    <string>/usr/local/var</string>
+    <key>StandardErrorPath</key>
+    <string>/usr/local/var/log/consul.log</string>
+    <key>StandardOutPath</key>
+    <string>/usr/local/var/log/consul.log</string>
+  </dict>
+</plist>
+
+$ launchctl load ~/Library/LaunchAgents/consul.plist
+````
+
+Test:
+
+    $ curl 127.0.0.1:8500/v1/catalog/nodes
+    [{"Node":"Davids-MacBook-Pro.local","Address":"10.0.1.7"}]
+
 ## Install Redis
 
 ````
