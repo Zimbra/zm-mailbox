@@ -5332,6 +5332,22 @@ public class LdapProvisioning extends LdapProv {
                     AuthMechanism.namePassedIn(authCtxt), e.getMessage(), e);
         }
     }
+    
+    private boolean isProtocolEnabled(Account authAccount, AuthContext.Protocol protocol) {
+        if (protocol == null)
+            return true;
+        
+        switch (protocol) {
+        case imap:
+            return authAccount.isImapEnabled();
+
+        case pop3:
+            return authAccount.isPop3Enabled();
+
+        default:
+            return true;
+        }
+    }
 
     private void verifyPassword(Account acct, String password, AuthMechanism authMech,
             Map<String, Object> authCtxt)
@@ -5352,7 +5368,12 @@ public class LdapProvisioning extends LdapProv {
                 verifyPasswordInternal(acct, password, authMech, authCtxt);
                 lockoutPolicy.successfulLogin();
             } catch (AccountServiceException e) {
-                lockoutPolicy.failedLogin();
+                AuthContext.Protocol protocol = (AuthContext.Protocol) authCtxt.get(AuthContext.AC_PROTOCOL);
+                if (!isProtocolEnabled(acct, protocol)) {
+                    ZimbraLog.account.info("%s not enabled for %s", protocol, acct.getName());
+                } else {
+                    lockoutPolicy.failedLogin();
+                }
                 // re-throw original exception
                 throw e;
             }
