@@ -2153,11 +2153,16 @@ abstract class ImapHandler {
             attrs.append(attrs.length() == 0 ? "" : " ").append(children ? "\\HasChildren" : "\\HasNoChildren");
         }
 
-        // not exactly the same set as proposed by draft-ietf-morg-list-specialuse-01.txt
-        if ((returnOptions & RETURN_XLIST) != 0 && path.belongsTo(credentials)) {
+        //partial support for special use RFC 6154; return known folder attrs
+        //we also keep support for non-standard XLIST attributes for legacy clients that may still use them
+        if ((DebugConfig.imapForceSpecialUse || (returnOptions & RETURN_XLIST) != 0) && path.belongsTo(credentials)) {
+            //return deprecated XLIST attrs if requested
+            boolean returnXList = (returnOptions & RETURN_XLIST) != 0;
             switch (iid.getId()) {
                 case Mailbox.ID_FOLDER_INBOX:
-                    attrs.append(attrs.length() == 0 ? "" : " ").append("\\Inbox");
+                    if (returnXList) {
+                        attrs.append(attrs.length() == 0 ? "" : " ").append("\\Inbox");
+                    }
                     break;
                 case Mailbox.ID_FOLDER_DRAFTS:
                     attrs.append(attrs.length() == 0 ? "" : " ").append("\\Drafts");
@@ -2169,15 +2174,15 @@ abstract class ImapHandler {
                     attrs.append(attrs.length() == 0 ? "" : " ").append("\\Sent");
                     break;
                 case Mailbox.ID_FOLDER_SPAM:
-                    attrs.append(attrs.length() == 0 ? "" : " ").append("\\Spam");
+                    attrs.append(attrs.length() == 0 ? "" : " ").append(returnXList ? "\\Spam" : "\\Junk");
                     break;
                 default:
                     String query = path.getFolder() instanceof SearchFolder ? ((SearchFolder) path.getFolder()).getQuery() : null;
                     if (query != null) {
                         if (query.equalsIgnoreCase("is:flagged")) {
-                            attrs.append(attrs.length() == 0 ? "" : " ").append("\\Starred");
+                            attrs.append(attrs.length() == 0 ? "" : " ").append(returnXList ? "\\Starred" : "\\Flagged");
                         } else if (query.equalsIgnoreCase("is:local")) {
-                            attrs.append(attrs.length() == 0 ? "" : " ").append("\\AllMail");
+                            attrs.append(attrs.length() == 0 ? "" : " ").append(returnXList ? "\\AllMail" : "\\All");
                         }
                     }
                     break;
