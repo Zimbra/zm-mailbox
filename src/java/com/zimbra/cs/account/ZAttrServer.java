@@ -6061,6 +6061,340 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Interface address on which Consul should listen; if empty, binds to
+     * all interfaces
+     *
+     * @return zimbraConsulBindAddress, or empty array if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1677)
+    public String[] getConsulBindAddress() {
+        return getMultiAttr(Provisioning.A_zimbraConsulBindAddress);
+    }
+
+    /**
+     * Interface address on which Consul should listen; if empty, binds to
+     * all interfaces
+     *
+     * @param zimbraConsulBindAddress new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1677)
+    public void setConsulBindAddress(String[] zimbraConsulBindAddress) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraConsulBindAddress, zimbraConsulBindAddress);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Interface address on which Consul should listen; if empty, binds to
+     * all interfaces
+     *
+     * @param zimbraConsulBindAddress new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1677)
+    public Map<String,Object> setConsulBindAddress(String[] zimbraConsulBindAddress, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraConsulBindAddress, zimbraConsulBindAddress);
+        return attrs;
+    }
+
+    /**
+     * Interface address on which Consul should listen; if empty, binds to
+     * all interfaces
+     *
+     * @param zimbraConsulBindAddress new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1677)
+    public void addConsulBindAddress(String zimbraConsulBindAddress) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraConsulBindAddress, zimbraConsulBindAddress);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Interface address on which Consul should listen; if empty, binds to
+     * all interfaces
+     *
+     * @param zimbraConsulBindAddress new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1677)
+    public Map<String,Object> addConsulBindAddress(String zimbraConsulBindAddress, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraConsulBindAddress, zimbraConsulBindAddress);
+        return attrs;
+    }
+
+    /**
+     * Interface address on which Consul should listen; if empty, binds to
+     * all interfaces
+     *
+     * @param zimbraConsulBindAddress existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1677)
+    public void removeConsulBindAddress(String zimbraConsulBindAddress) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraConsulBindAddress, zimbraConsulBindAddress);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Interface address on which Consul should listen; if empty, binds to
+     * all interfaces
+     *
+     * @param zimbraConsulBindAddress existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1677)
+    public Map<String,Object> removeConsulBindAddress(String zimbraConsulBindAddress, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraConsulBindAddress, zimbraConsulBindAddress);
+        return attrs;
+    }
+
+    /**
+     * Interface address on which Consul should listen; if empty, binds to
+     * all interfaces
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1677)
+    public void unsetConsulBindAddress() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraConsulBindAddress, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Interface address on which Consul should listen; if empty, binds to
+     * all interfaces
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1677)
+    public Map<String,Object> unsetConsulBindAddress(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraConsulBindAddress, "");
+        return attrs;
+    }
+
+    /**
+     * HTTP port for Consul service
+     *
+     * <p>Use getConsulBindPortAsString to access value as a string.
+     *
+     * @see #getConsulBindPortAsString()
+     *
+     * @return zimbraConsulBindPort, or 8500 if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1676)
+    public int getConsulBindPort() {
+        return getIntAttr(Provisioning.A_zimbraConsulBindPort, 8500);
+    }
+
+    /**
+     * HTTP port for Consul service
+     *
+     * @return zimbraConsulBindPort, or "8500" if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1676)
+    public String getConsulBindPortAsString() {
+        return getAttr(Provisioning.A_zimbraConsulBindPort, "8500");
+    }
+
+    /**
+     * HTTP port for Consul service
+     *
+     * @param zimbraConsulBindPort new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1676)
+    public void setConsulBindPort(int zimbraConsulBindPort) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraConsulBindPort, Integer.toString(zimbraConsulBindPort));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * HTTP port for Consul service
+     *
+     * @param zimbraConsulBindPort new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1676)
+    public Map<String,Object> setConsulBindPort(int zimbraConsulBindPort, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraConsulBindPort, Integer.toString(zimbraConsulBindPort));
+        return attrs;
+    }
+
+    /**
+     * HTTP port for Consul service
+     *
+     * @param zimbraConsulBindPort new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1676)
+    public void setConsulBindPortAsString(String zimbraConsulBindPort) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraConsulBindPort, zimbraConsulBindPort);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * HTTP port for Consul service
+     *
+     * @param zimbraConsulBindPort new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1676)
+    public Map<String,Object> setConsulBindPortAsString(String zimbraConsulBindPort, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraConsulBindPort, zimbraConsulBindPort);
+        return attrs;
+    }
+
+    /**
+     * HTTP port for Consul service
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1676)
+    public void unsetConsulBindPort() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraConsulBindPort, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * HTTP port for Consul service
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1676)
+    public Map<String,Object> unsetConsulBindPort(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraConsulBindPort, "");
+        return attrs;
+    }
+
+    /**
+     * URL for accessing the Consul agent.
+     *
+     * @return zimbraConsulURL, or "http://127.0.0.1:8500" if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1678)
+    public String getConsulURL() {
+        return getAttr(Provisioning.A_zimbraConsulURL, "http://127.0.0.1:8500");
+    }
+
+    /**
+     * URL for accessing the Consul agent.
+     *
+     * @param zimbraConsulURL new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1678)
+    public void setConsulURL(String zimbraConsulURL) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraConsulURL, zimbraConsulURL);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * URL for accessing the Consul agent.
+     *
+     * @param zimbraConsulURL new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1678)
+    public Map<String,Object> setConsulURL(String zimbraConsulURL, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraConsulURL, zimbraConsulURL);
+        return attrs;
+    }
+
+    /**
+     * URL for accessing the Consul agent.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1678)
+    public void unsetConsulURL() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraConsulURL, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * URL for accessing the Consul agent.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1678)
+    public Map<String,Object> unsetConsulURL(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraConsulURL, "");
+        return attrs;
+    }
+
+    /**
      * Comma separated list of Contact attributes that should be hidden from
      * clients and export of contacts.
      *

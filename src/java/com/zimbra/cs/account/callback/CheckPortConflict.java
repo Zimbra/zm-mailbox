@@ -75,6 +75,8 @@ public class CheckPortConflict extends AttributeCallback {
         NonProxyPortAttrs.add(Provisioning.A_zimbraMessageChannelPort);
 
         NonProxyPortAttrs.add(Provisioning.A_zimbraSolrBindPort);
+
+        NonProxyPortAttrs.add(Provisioning.A_zimbraConsulBindPort);
     }
 
     private static Set<String> sPortAttrs = new HashSet<String>(NonProxyPortAttrs);

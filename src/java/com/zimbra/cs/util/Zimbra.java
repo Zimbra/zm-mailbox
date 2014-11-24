@@ -225,10 +225,6 @@ public final class Zimbra {
             FirstServlet.waitForInitialization();
         }
 
-        Provisioning prov = Provisioning.getInstance();
-        Server server = prov.getLocalServer();
-        alwaysOnClusterId = server.getAlwaysOnClusterId();
-
         setSystemProperties();
         validateJavaOptions();
 
@@ -262,6 +258,7 @@ public final class Zimbra {
             Zimbra.halt("Unable to load timezones from " + tzFilePath, t);
         }
 
+        Provisioning prov = Provisioning.getInstance();
         if (prov instanceof LdapProv) {
             ((LdapProv) prov).waitForLdapServer();
             if (forMailboxd) {
@@ -269,7 +266,8 @@ public final class Zimbra {
             }
         }
 
-        if(server.isMailSSLClientCertOCSPEnabled()) {
+        Server localServer = prov.getLocalServer();
+        if (localServer.isMailSSLClientCertOCSPEnabled()) {
             // Activate OCSP
             Security.setProperty("ocsp.enable", "true");
             // Activate CRLDP
@@ -325,7 +323,7 @@ public final class Zimbra {
             dbSessionCleanup();
 
             if (!redoLog.isSlave()) {
-                boolean useDirectBuffers = server.isMailUseDirectBuffers();
+                boolean useDirectBuffers = localServer.isMailUseDirectBuffers();
                 IoBuffer.setUseDirectBuffer(useDirectBuffers);
                 ZimbraLog.misc.info("MINA setUseDirectBuffers(" + useDirectBuffers + ")");
 
@@ -360,12 +358,12 @@ public final class Zimbra {
             }
 
             if (app.supports(AclPushTask.class)) {
-                long pushInterval = server.getSharingUpdatePublishInterval();
+                long pushInterval = localServer.getSharingUpdatePublishInterval();
                 sTimer.schedule(new AclPushTask(), pushInterval, pushInterval);
             }
 
             if (app.supports(ExternalAccountManagerTask.class)) {
-                long interval = server.getExternalAccountStatusCheckInterval();
+                long interval = localServer.getExternalAccountStatusCheckInterval();
                 sTimer.schedule(new ExternalAccountManagerTask(), interval, interval);
             }
 
@@ -377,7 +375,6 @@ public final class Zimbra {
                 }
             }
 
-            Server localServer = Provisioning.getInstance().getLocalServer();
             String provPort = localServer.getAttr(Provisioning.A_zimbraMailPort);
             String lcPort = LC.zimbra_mail_service_port.value();
             if (!lcPort.equals(provPort)) {

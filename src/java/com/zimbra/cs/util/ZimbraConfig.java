@@ -16,6 +16,7 @@
  */
 package com.zimbra.cs.util;
 
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 
@@ -31,6 +32,9 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.util.memcached.ZimbraMemcachedClient;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
+import com.zimbra.cs.consul.ConsulClient;
+import com.zimbra.cs.consul.ConsulServiceLocator;
+import com.zimbra.cs.consul.ServiceLocator;
 import com.zimbra.cs.extension.ExtensionUtil;
 import com.zimbra.cs.mailbox.FoldersAndTagsCache;
 import com.zimbra.cs.mailbox.LocalSharedDeliveryCoordinator;
@@ -76,6 +80,14 @@ public class ZimbraConfig {
     @Bean(name="calendarCacheManager")
     public CalendarCacheManager calendarCacheManagerBean() throws ServiceException {
         return new CalendarCacheManager();
+    }
+
+    @Bean
+    public ConsulClient consulClient() throws IOException, ServiceException {
+        Server server = Provisioning.getInstance().getLocalServer();
+        String url = server.getConsulURL();
+        ZimbraLog.misc.warn("Consul url: %s", url);
+        return new ConsulClient(url);
     }
 
     @Bean(name="effectiveACLCache")
@@ -196,6 +208,11 @@ public class ZimbraConfig {
         instance = (RedoLogProvider) klass.newInstance();
         return instance;
     }
+
+	@Bean
+	public ServiceLocator serviceLocator() throws Exception {
+	    return new ConsulServiceLocator();
+	}
 
     @Bean(name="sharedDeliveryCoordinator")
     public SharedDeliveryCoordinator sharedDeliveryCoordinatorBean() throws Exception {

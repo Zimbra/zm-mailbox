@@ -48,6 +48,8 @@ import com.zimbra.common.util.RemoteIP;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.util.ZimbraServletOutputStream;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.consul.CatalogRegistration;
+import com.zimbra.cs.consul.ServiceLocator;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.util.Zimbra;
@@ -124,6 +126,7 @@ public class SoapServlet extends ZimbraServlet {
 
         try {
             Zimbra.startup();
+            registerWithServiceLocator();
         } catch (OutOfMemoryError e) {
             Zimbra.halt("out of memory", e);
         } catch (Throwable t) {
@@ -135,6 +138,7 @@ public class SoapServlet extends ZimbraServlet {
     @Override public void destroy() {
         String name = getServletName();
         ZimbraLog.soap.info("Servlet " + name + " shutting down");
+        deregisterWithServiceLocator();
         try {
             Zimbra.shutdown();
         } catch (ServiceException e) {
@@ -378,5 +382,32 @@ public class SoapServlet extends ZimbraServlet {
             resp.getOutputStream().flush();
         }
         envelope.destroy();
+    }
+
+    protected CatalogRegistration.Service getServiceLocatorService() {
+        String name = "zimbra:mailstore:soap";
+        int port = 7070;
+        String id = name + ":" + port;
+        return new CatalogRegistration.Service(id, name, port);
+    }
+
+    /**
+     * Register with service locator.
+     *
+     * @see https://www.consul.io/docs/agent/http.html#_v1_catalog_register
+     */
+    protected CatalogRegistration.Service registerWithServiceLocator() {
+        CatalogRegistration.Service serviceLocatorService = getServiceLocatorService();
+        Zimbra.getAppContext().getBean(ServiceLocator.class).registerSilent(serviceLocatorService);
+        return serviceLocatorService;
+    }
+
+    /**
+     * De-register with service locator.
+     *
+     * @see https://www.consul.io/docs/agent/http.html#_v1_catalog_deregister
+     */
+    protected void deregisterWithServiceLocator() {
+        Zimbra.getAppContext().getBean(ServiceLocator.class).deregisterSilent(getServiceLocatorService().id);
     }
 }

@@ -8423,4 +8423,16 @@ TODO: delete them permanently from here
   <desc>Lmtp Server will reject the client transactions which do not issue LHLO</desc>
 </attr>
 
+<attr id="1676" name="zimbraConsulBindPort" type="port" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" callback="CheckPortConflict" since="9.0">
+    <globalConfigValue>8500</globalConfigValue>
+    <desc>HTTP port for Consul service</desc>
+</attr>
+<attr id="1677" name="zimbraConsulBindAddress" type="string" max="128" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited" since="9.0">
+  <desc>Interface address on which Consul should listen; if empty, binds to all interfaces</desc>
+</attr>
+<attr id="1678" name="zimbraConsulURL" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="9.0">
+  <globalConfigValue>http://127.0.0.1:8500</globalConfigValue>
+  <desc>URL for accessing the Consul agent.</desc>
+</attr>
+
 </attrs>

@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2010, 2011, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -19,6 +19,8 @@ package com.zimbra.cs.server;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.consul.CatalogRegistration;
+import com.zimbra.cs.consul.ServiceLocator;
 import com.zimbra.cs.imap.ImapConfig;
 import com.zimbra.cs.imap.ImapServer;
 import com.zimbra.cs.imap.NioImapServer;
@@ -32,6 +34,7 @@ import com.zimbra.cs.pop3.NioPop3Server;
 import com.zimbra.cs.pop3.Pop3Config;
 import com.zimbra.cs.pop3.Pop3Server;
 import com.zimbra.cs.pop3.TcpPop3Server;
+import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.util.ZimbraApplication;
 
 public final class ServerManager {
@@ -54,26 +57,31 @@ public final class ServerManager {
     public void startServers() throws ServiceException {
         ZimbraApplication app = ZimbraApplication.getInstance();
         if (app.supports(LmtpServer.class)) {
-            startLmtpServer();
+            lmtpServer = startLmtpServer();
+            registerWithServiceLocator(lmtpServer);
         }
         if (app.supports(Pop3Server.class)) {
             if (isEnabled(Provisioning.A_zimbraPop3ServerEnabled)) {
                 pop3Server = startPop3Server(false);
+                registerWithServiceLocator(pop3Server);
             }
             if (isEnabled(Provisioning.A_zimbraPop3SSLServerEnabled)) {
                 pop3SSLServer = startPop3Server(true);
+                registerWithServiceLocator(pop3SSLServer);
             }
         }
         if (app.supports(ImapServer.class)) {
             if (isEnabled(Provisioning.A_zimbraImapServerEnabled)) {
                 imapServer = startImapServer(false);
+                registerWithServiceLocator(imapServer);
             }
             if (isEnabled(Provisioning.A_zimbraImapSSLServerEnabled)) {
                 imapSSLServer = startImapServer(true);
+                registerWithServiceLocator(imapSSLServer);
             }
         }
 
-        // run milter service in the same process as mailtoxd. should be used only in dev environment
+        // run milter service in the same process as mailboxd. should be used only in dev environment
         if (app.supports(MilterServer.class)) {
             if (LC.milter_in_process_mode.booleanValue()) {
                 milterServer = startMilterServer();
@@ -116,21 +124,27 @@ public final class ServerManager {
 
     public void stopServers() throws ServiceException {
         if (lmtpServer != null) {
+            deregisterWithServiceLocator(lmtpServer);
             lmtpServer.stop();
         }
         if (pop3Server != null) {
+            deregisterWithServiceLocator(pop3Server);
             pop3Server.stop();
         }
         if (pop3SSLServer != null) {
+            deregisterWithServiceLocator(pop3SSLServer);
             pop3SSLServer.stop();
         }
         if (imapServer != null) {
+            deregisterWithServiceLocator(imapServer);
             imapServer.stop();
         }
         if (imapSSLServer != null) {
+            deregisterWithServiceLocator(imapSSLServer);
             imapSSLServer.stop();
         }
         if (milterServer != null) {
+            deregisterWithServiceLocator(milterServer);
             milterServer.stop();
         }
     }
@@ -139,4 +153,27 @@ public final class ServerManager {
         return lmtpServer;
     }
 
+    /**
+     * Register with service locator.
+     *
+     * @see https://www.consul.io/docs/agent/http.html#_v1_catalog_register
+     */
+    public static CatalogRegistration.Service registerWithServiceLocator(Server server) {
+        String name = "zimbra:" + server.getName();
+        String id = name + ":" + server.getConfig().getBindPort();
+        CatalogRegistration.Service serviceLocatorService = new CatalogRegistration.Service(id, name, server.getConfig().getBindPort());
+        Zimbra.getAppContext().getBean(ServiceLocator.class).registerSilent(serviceLocatorService);
+        return serviceLocatorService;
+    }
+
+    /**
+     * De-register with service locator.
+     *
+     * @see https://www.consul.io/docs/agent/http.html#_v1_catalog_deregister
+     */
+    public static void deregisterWithServiceLocator(Server server) {
+        String name = "zimbra:" + server.getName();
+        String id = name + ":" + server.getConfig().getBindPort();
+        Zimbra.getAppContext().getBean(ServiceLocator.class).deregisterSilent(id);
+    }
 }
