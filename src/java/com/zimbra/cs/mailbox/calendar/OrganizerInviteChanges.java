@@ -128,6 +128,7 @@ public class OrganizerInviteChanges {
                 for (Instance fromSecond: second) {
                     if (fromSecond.sameTime(curr)) {
                         iter.remove();
+                        break;
                     }
                 }
             }
@@ -164,6 +165,7 @@ public class OrganizerInviteChanges {
             for (ZAttendee fromSecond: second) {
                 if (fromSecond.addressesMatch(curr)) {
                     iter.remove();
+                    break;
                 }
             }
         }
