@@ -86,7 +86,6 @@ public class ZimbraConfig {
     public ConsulClient consulClient() throws IOException, ServiceException {
         Server server = Provisioning.getInstance().getLocalServer();
         String url = server.getConsulURL();
-        ZimbraLog.misc.warn("Consul url: %s", url);
         return new ConsulClient(url);
     }
 

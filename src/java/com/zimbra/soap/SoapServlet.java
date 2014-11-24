@@ -386,9 +386,10 @@ public class SoapServlet extends ZimbraServlet {
 
     protected CatalogRegistration.Service getServiceLocatorService() {
         String name = "zimbra:mailstore:soap";
-        int port = 7070;
+        int port = 7070; // TODO what about 80, 443?
         String id = name + ":" + port;
         return new CatalogRegistration.Service(id, name, port);
+        // TODO tag with http vs https
     }
 
     /**
