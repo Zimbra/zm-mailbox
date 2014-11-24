@@ -61,6 +61,7 @@ import com.google.common.io.Closeables;
 import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZFolder.View;
 import com.zimbra.client.ZMailbox;
+import com.zimbra.client.ZMessage;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.calendar.ICalTimeZone;
 import com.zimbra.common.calendar.ParsedDateTime;
@@ -78,6 +79,7 @@ import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.W3cDomUtil;
+import com.zimbra.common.soap.XmlParseException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.ZimbraLog;
@@ -85,6 +87,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.dav.DavElements;
+import com.zimbra.cs.dav.DavProtocol;
 import com.zimbra.cs.dav.resource.UrlNamespace;
 import com.zimbra.cs.dav.service.DavServlet;
 
@@ -377,24 +380,98 @@ public class TestCalDav extends TestCase {
             "    </comp-filter>\n" +
             "  </filter>\n" +
             "</calendar-query>";
-    public void testCalendarQueryOnInbox() throws Exception {
-        Account dav1 = TestUtil.createAccount(DAV1);
-        String url = getSchedulingInboxUrl(dav1, dav1);
+    public static Document calendarQuery(String url, Account acct) throws IOException, XmlParseException {
         ReportMethod method = new ReportMethod(url);
-        addBasicAuthHeaderForUser(method, dav1);
+        addBasicAuthHeaderForUser(method, acct);
         HttpClient client = new HttpClient();
         TestCalDav.HttpMethodExecutor executor;
-        String respBody;
-        Element respElem;
         method.addRequestHeader("Content-Type", MimeConstants.CT_TEXT_XML);
         method.setRequestEntity(new ByteArrayRequestEntity(calendar_query_etags_by_vevent.getBytes(),
                 MimeConstants.CT_TEXT_XML));
         executor = new TestCalDav.HttpMethodExecutor(client, method, HttpStatus.SC_MULTI_STATUS);
-        respBody = new String(executor.responseBodyBytes, MimeConstants.P_CHARSET_UTF8);
-        respElem = Element.XMLElement.parseXML(respBody);
-        assertEquals("name of calendar-query response when there are no items",
-                DavElements.P_MULTISTATUS, respElem.getName());
-        assertFalse("response when there are no items should have no child elements", respElem.hasChildren());
+        String respBody = new String(executor.responseBodyBytes, MimeConstants.P_CHARSET_UTF8);
+        Document doc = W3cDomUtil.parseXMLToDoc(respBody);
+        org.w3c.dom.Element docElement = doc.getDocumentElement();
+        assertEquals("Report node name", DavElements.P_MULTISTATUS, docElement.getLocalName());
+        return doc;
+    }
+
+     * @param expected - false if don't expect a matching item to be in collection within timeout time
+     * @return href of first matching item found
+     * @throws ServiceException
+     * @throws IOException
+     */
+    public static String waitForItemInCalendarCollectionByUID(String url, Account acct, String UID, boolean expected,
+            int timeout_millis)
+    throws ServiceException, IOException {
+        int orig_timeout_millis = timeout_millis;
+        while (timeout_millis > 0) {
+            Document doc = calendarQuery(url, acct);
+            XPath xpath = XPathFactory.newInstance().newXPath();
+            xpath.setNamespaceContext(TestCalDav.NamespaceContextForXPath.forCalDAV());
+            XPathExpression xPathExpr;
+            try {
+                xPathExpr = xpath.compile("/D:multistatus/D:response/D:href/text()");
+                NodeList result = (NodeList) xPathExpr.evaluate(doc, XPathConstants.NODESET);
+                if ( 1 <= result.getLength()) {
+                    for (int ndx = 0; ndx < result.getLength(); ndx++) {
+                        Node item = result.item(ndx);
+                        String nodeValue = item.getNodeValue();
+                        if ((Strings.isNullOrEmpty(UID)) || (nodeValue.contains(UID))) {
+                            if (!expected) {
+                                fail(String.format(
+                                        "item with UID '%s' unexpectedly arrived in collection '%s' within %d millisecs",
+                                        Strings.nullToEmpty(UID), url, orig_timeout_millis - timeout_millis));
+
+                            }
+                            return nodeValue;
+                        }
+                    }
+                }
+            } catch (XPathExpressionException e1) {
+                ZimbraLog.test.debug("xpath problem", e1);
+            }
+            try {
+                if (timeout_millis > 100) {
+                    Thread.sleep(100);
+                    timeout_millis = timeout_millis - 100;
+                } else {
+                    Thread.sleep(timeout_millis);
+                    timeout_millis = 0;
+
+                }
+            } catch (InterruptedException e) {
+                ZimbraLog.test.debug("sleep got interrupted", e);
+            }
+        }
+        if (expected) {
+            fail(String.format("item with UID '%s' didn't arrive in collection '%s' within %d millisecs",
+                    Strings.nullToEmpty(UID), url, orig_timeout_millis));
+        }
+        return null;
+
+    }
+    /**
+     * Note: as currently we don't show replies in the scheduling inbox, this ONLY works for requests
+     *
+     * @param acct
+     * @param UID - null or empty if don't care
+     * @return href of first matching item found
+     * @throws ServiceException
+     * @throws IOException
+     */
+    public static String waitForNewSchedulingRequestByUID(Account acct, String UID)
+            throws ServiceException, IOException {
+        String url = getSchedulingInboxUrl(acct, acct);
+        return waitForItemInCalendarCollectionByUID(url, acct, UID, true, 10000);
+    }
+
+    public void testCalendarQueryOnInbox() throws Exception {
+        Account dav1 = TestUtil.createAccount(DAV1);
+        String url = getSchedulingInboxUrl(dav1, dav1);
+        Document doc = calendarQuery(url, dav1);
+        org.w3c.dom.Element rootElem = doc.getDocumentElement();
+        assertFalse("response when there are no items should have no child elements", rootElem.hasChildNodes());
 
         // Send an invite from user1 and check tags.
         ZMailbox organizer = TestUtil.getZMailbox(USER_NAME);
@@ -402,33 +479,20 @@ public class TestCalDav extends TestCase {
         Date startDate = new Date(System.currentTimeMillis() + Constants.MILLIS_PER_DAY);
         Date endDate = new Date(startDate.getTime() + Constants.MILLIS_PER_HOUR);
         TestUtil.createAppointment(organizer, subject, dav1.getName(), startDate, endDate);
-        executor = new TestCalDav.HttpMethodExecutor(client, method, HttpStatus.SC_MULTI_STATUS);
-        respBody = new String(executor.responseBodyBytes, MimeConstants.P_CHARSET_UTF8);
-        respElem = Element.XMLElement.parseXML(respBody);
-        assertEquals("name of calendar-query response when there is 1 item",
-                DavElements.P_MULTISTATUS, respElem.getName());
-        assertTrue("response should have child elements", respElem.hasChildren());
+
+        waitForNewSchedulingRequestByUID(dav1, "");
+        doc = calendarQuery(url, dav1);
+        rootElem = doc.getDocumentElement();
+        assertTrue("response should have child elements", rootElem.hasChildNodes());
     }
 
     public void testCalendarQueryOnOutbox() throws Exception {
         Account dav1 = TestUtil.createAccount(DAV1);
         ZMailbox dav1mbox = TestUtil.getZMailbox(USER_NAME);
         String url = getSchedulingOutboxUrl(dav1, dav1);
-        ReportMethod method = new ReportMethod(url);
-        addBasicAuthHeaderForUser(method, dav1);
-        HttpClient client = new HttpClient();
-        TestCalDav.HttpMethodExecutor executor;
-        String respBody;
-        Element respElem;
-        method.addRequestHeader("Content-Type", MimeConstants.CT_TEXT_XML);
-        method.setRequestEntity(new ByteArrayRequestEntity(calendar_query_etags_by_vevent.getBytes(),
-                MimeConstants.CT_TEXT_XML));
-        executor = new TestCalDav.HttpMethodExecutor(client, method, HttpStatus.SC_MULTI_STATUS);
-        respBody = new String(executor.responseBodyBytes, MimeConstants.P_CHARSET_UTF8);
-        respElem = Element.XMLElement.parseXML(respBody);
-        assertEquals("name of calendar-query response when there are no items",
-                DavElements.P_MULTISTATUS, respElem.getName());
-        assertFalse("response when there are no items should have no child elements", respElem.hasChildren());
+        Document doc = calendarQuery(url, dav1);
+        org.w3c.dom.Element rootElem = doc.getDocumentElement();
+        assertFalse("response when there are no items should have no child elements", rootElem.hasChildNodes());
 
         // Send an invite to user2 and check tags.
         ZMailbox recipient = TestUtil.getZMailbox(USER_NAME);
@@ -436,15 +500,13 @@ public class TestCalDav extends TestCase {
         Date startDate = new Date(System.currentTimeMillis() + Constants.MILLIS_PER_DAY);
         Date endDate = new Date(startDate.getTime() + Constants.MILLIS_PER_HOUR);
         TestUtil.createAppointment(dav1mbox, subject, recipient.getName(), startDate, endDate);
-        executor = new TestCalDav.HttpMethodExecutor(client, method, HttpStatus.SC_MULTI_STATUS);
-        respBody = new String(executor.responseBodyBytes, MimeConstants.P_CHARSET_UTF8);
-        respElem = Element.XMLElement.parseXML(respBody);
-        assertEquals("name of calendar-query response when there is 1 item",
-                DavElements.P_MULTISTATUS, respElem.getName());
+
+        doc = calendarQuery(url, dav1);
+        rootElem = doc.getDocumentElement();
         // We didn't support this report when we only offered caldav-schedule and caldav-auto-schedule
         // doesn't require calendar-query support on the outbox - so we just treat it as always empty.
         assertFalse("response for items in outbox should have no child elements, even though we sent an invite",
-                respElem.hasChildren());
+        rootElem.hasChildNodes());
     }
 
     public void testPropFindSupportedReportSetOnInbox() throws Exception {
@@ -732,6 +794,9 @@ public class TestCalDav extends TestCase {
         putMethod.setRequestEntity(new ByteArrayRequestEntity(body.getBytes(),
                 MimeConstants.CT_TEXT_CALENDAR));
         HttpMethodExecutor.execute(client, putMethod, HttpStatus.SC_CREATED);
+
+        String inboxhref = TestCalDav.waitForNewSchedulingRequestByUID(dav2, androidSeriesMeetingUid);
+        assertTrue("Found meeting request for newly created item", inboxhref.contains(androidSeriesMeetingUid));
 
         GetMethod getMethod = new GetMethod(url);
         addBasicAuthHeaderForUser(getMethod, dav1);
@@ -1045,6 +1110,59 @@ public class TestCalDav extends TestCase {
             ICalTimeZone matchtz = ICalTimeZone.lookupMatchingWellKnownTZ(tz);
             assertEquals("ID of Timezone which fuzzy matches GMT=08.00/-07.00", "America/Los_Angeles", matchtz.getID());
         }
+    }
+
+    private void attendeeDeleteFromCalendar(boolean suppressReply) throws Exception {
+        Account dav1 = TestUtil.createAccount(DAV1);
+        Account dav2 = TestUtil.createAccount(DAV2);
+        String url = getSchedulingInboxUrl(dav1, dav1);
+        ReportMethod method = new ReportMethod(url);
+        addBasicAuthHeaderForUser(method, dav1);
+
+        ZMailbox organizer = TestUtil.getZMailbox(DAV2);
+        String subject = String.format("%s %s", NAME_PREFIX,
+                suppressReply ? "testInvite which shouldNOT be replied to" : "testInvite to be auto-declined");
+        Date startDate = new Date(System.currentTimeMillis() + Constants.MILLIS_PER_DAY);
+        Date endDate = new Date(startDate.getTime() + Constants.MILLIS_PER_HOUR);
+        TestUtil.createAppointment(organizer, subject, dav1.getName(), startDate, endDate);
+
+        // Wait for appointment to arrive
+        String href = waitForNewSchedulingRequestByUID(dav1, "");
+        assertNotNull("href for inbox invitation", href);
+        String uid = href.substring(href.lastIndexOf('/') + 1);
+        uid = uid.substring(0, uid.indexOf(',') -1);
+        String calFolderUrl = getFolderUrl(dav1, "Calendar");
+        String delurl = waitForItemInCalendarCollectionByUID(calFolderUrl, dav1, uid, true, 5000);
+        StringBuilder sb = getLocalServerRoot().append(delurl);
+        DeleteMethod delMethod = new DeleteMethod(sb.toString());
+        addBasicAuthHeaderForUser(delMethod, dav1);
+        if (suppressReply) {
+            delMethod.addRequestHeader(DavProtocol.HEADER_SCHEDULE_REPLY, "F");
+        }
+
+        HttpClient client = new HttpClient();
+        HttpMethodExecutor.execute(client, delMethod, HttpStatus.SC_NO_CONTENT);
+        List<ZMessage> msgs;
+        if (suppressReply) {
+            // timeout may be a bit short but don't want long time wastes in test suite.
+            msgs = TestUtil.waitForMessages(organizer, "is:invite is:unread inid:2 after:\"-1month\"", 0, 2000);
+            if (msgs != null) {
+                assertEquals("Should be no DECLINE reply msg", 0, msgs.size());
+            }
+        } else {
+            msgs = TestUtil.waitForMessages(organizer, "is:invite is:unread inid:2 after:\"-1month\"", 1, 10000);
+            assertNotNull("inbox DECLINE reply msgs", msgs);
+            assertEquals("Should be 1 DECLINE reply msg", 1, msgs.size());
+            assertNotNull("inbox DECLINE reply msg invite", msgs.get(0).getInvite());
+        }
+    }
+
+    public void testAttendeeAutoDecline() throws Exception {
+        attendeeDeleteFromCalendar(false /* suppressReply */);
+    }
+
+    public void testAttendeeSuppressedAutoDecline() throws Exception {
+        attendeeDeleteFromCalendar(true /* suppressReply */);
     }
 
     @Override

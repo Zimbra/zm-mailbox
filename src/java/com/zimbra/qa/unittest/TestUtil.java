@@ -494,20 +494,48 @@ extends Assert {
         return null;
     }
 
-    public static ZMessage waitForMessage(ZMailbox mbox, String query)
-    throws Exception {
-        for (int i = 1; i <= 100; i++) {
-            List<ZMessage> msgs = search(mbox, query);
-            if (msgs.size() == 1) {
-                return msgs.get(0);
+    /**
+     * @param numMsgsExpected - 0 means don't expect a message to arrive before timeout_millis
+     * @param timeout_millis
+     * @throws ServiceException
+     */
+    public static List<ZMessage> waitForMessages(ZMailbox mbox, String query, int numMsgsExpected, int timeout_millis)
+    throws ServiceException {
+        int orig_timeout_millis = timeout_millis;
+        List<ZMessage> msgs = Lists.newArrayListWithExpectedSize(0);
+        while (timeout_millis > 0) {
+            msgs = search(mbox, query);
+            if ((numMsgsExpected > 0) && (msgs.size() == numMsgsExpected)) {
+                return msgs;
             }
-            if (msgs.size() > 1) {
+            if (msgs.size() > numMsgsExpected) {
                 Assert.fail("Unexpected number of messages (" + msgs.size() + ") returned by query '" + query + "'");
             }
-            Thread.sleep(100);
+            try {
+                if (timeout_millis > 100) {
+                    Thread.sleep(100);
+                    timeout_millis = timeout_millis - 100;
+                } else {
+                    Thread.sleep(timeout_millis);
+                    timeout_millis = 0;
+
+                }
+            } catch (InterruptedException e) {
+                ZimbraLog.test.debug("sleep got interrupted", e);
+            }
         }
-        Assert.fail("Message for query '" + query + "' never arrived.  Either the MTA is not running or the test failed.");
-        return null;
+        if (numMsgsExpected > 0) {
+            Assert.fail(String.format( "Message%s for query '%s' didn't arrive within %d millisecs.  %s",
+                        (numMsgsExpected == 1) ? "" : "s", query, orig_timeout_millis,
+                        "Either the MTA is not running or the test failed."));
+        }
+        return msgs;
+    }
+
+    public static ZMessage waitForMessage(ZMailbox mbox, String query)
+    throws Exception {
+        List<ZMessage> msgs = waitForMessages(mbox, query, 1, 10000);
+        return msgs.get(0);
     }
 
     /**

@@ -22,6 +22,7 @@ import java.util.Map;
 
 import javax.mail.Address;
 import javax.mail.internet.MimeMessage;
+import javax.servlet.http.HttpServletRequest;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
@@ -33,6 +34,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.dav.DavContext;
+import com.zimbra.cs.dav.DavProtocol;
 import com.zimbra.cs.dav.resource.DavResource;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.CalendarItem.Instance;
@@ -96,7 +98,7 @@ public abstract class AutoScheduler {
                 sender = AccountUtil.getFriendlyEmailAddress(ctxt.getAuthAccount());
             }
         }
-        this.origInvites = origInvites;
+        this.origInvites = (origInvites == null) ? new Invite[0] : origInvites;
         this.calendarMailItemId = calendarMailItemId;
         this.flags = flags;
         this.tags = tags;
@@ -111,7 +113,7 @@ public abstract class AutoScheduler {
                 }
             }
             organizer = scidDefault.invite.getOrganizer();
-        } else if (origInvites != null && origInvites.length >=1) {
+        } else if (origInvites.length >=1) {
             organizer = origInvites[0].getOrganizer();
         } else {
             organizer = null;
@@ -427,6 +429,9 @@ public abstract class AutoScheduler {
          * @param newInvite
          */
         private void bumpSequenceNumberIfNecessary(Invite oldInvite, Invite newInvite) {
+            if ((oldInvite == null) || (newInvite == null)) {
+                return;
+            }
             int newSeqNum = newInvite.getSeqNo();
             if (newSeqNum == oldInvite.getSeqNo()) {
                 ZimbraLog.dav.debug("Update has same SEQUENCE %d as previous rev. Incrementing on behalf of client",
@@ -482,18 +487,29 @@ public abstract class AutoScheduler {
     }
 
     public static class AttendeeAutoScheduler extends AutoScheduler {
+        private boolean scheduleReplyWanted = true;
         protected AttendeeAutoScheduler(Mailbox userMailbox, Mailbox calendarMailbox, Invite origInvites[], int calendarMailItemId,
                 int flags, String[] tags, SetCalendarItemData scidDefault, SetCalendarItemData scidExceptions[],
                 List<ReplyInfo> replies, DavContext ctxt)
         throws ServiceException {
             super(userMailbox, calendarMailbox, origInvites,
                     calendarMailItemId, flags, tags, scidDefault, scidExceptions, replies, ctxt);
+            HttpServletRequest httpRequest = ctxt.getRequest();
+            if ((httpRequest != null) && ("DELETE".equalsIgnoreCase(httpRequest.getMethod()))) {
+                String hdrScheduleReply = httpRequest.getHeader(DavProtocol.HEADER_SCHEDULE_REPLY);
+                scheduleReplyWanted = ((hdrScheduleReply == null) || !"F".equals(hdrScheduleReply));
+            }
         }
 
         @Override
         public CalendarItem doSchedulingActions() throws ServiceException {
             List<AutoScheduleMsg> msgs = Lists.newArrayList();
-            if ((newInvites.isEmpty()) || (organizer == null)) {
+            if (organizer == null) {
+                return persistToCalendar();
+            }
+            if (!scheduleReplyWanted) {
+                ZimbraLog.dav.debug("Skipping scheduling actions because HTTP header '%s=F'",
+                        DavProtocol.HEADER_SCHEDULE_REPLY);
                 return persistToCalendar();
             }
             Address organizerAddress;
@@ -527,6 +543,28 @@ public abstract class AutoScheduler {
                 subject.append(REPLY_PARTSTAT_SUBJECT_MAP.get(partStat)).append(inv.getName());
                 msgs.add(new AutoScheduleMsg(inv, ICalTok.REPLY, Lists.newArrayList(organizerAddress),
                         subject.toString()));
+            }
+            // Process deletions
+            for (Invite inv : origInvites) {
+                Invite newInvite = Invite.matchingInvite(newInvites, inv.getRecurId());
+                if (newInvite == null) {
+                    Invite decline = inv.newCopy();
+                    List<ZAttendee> attendees = decline.getAttendees();
+                    Iterator<ZAttendee> attendeeIter = attendees.iterator();
+                    while (attendeeIter.hasNext()) {
+                        ZAttendee attendee = attendeeIter.next();
+                        if (attendee.addressMatches(from)) {
+                            attendee.setPartStat(IcalXmlStrMap.PARTSTAT_DECLINED);
+                        } else {
+                            attendeeIter.remove();
+                        }
+                    }
+                    String subject = new StringBuilder(
+                            REPLY_PARTSTAT_SUBJECT_MAP.get(IcalXmlStrMap.PARTSTAT_DECLINED))
+                            .append(decline.getName()).toString();
+                    decline.setName(subject);
+                    msgs.add(new AutoScheduleMsg(decline, ICalTok.REPLY, Lists.newArrayList(organizerAddress), subject));
+                }
             }
             return processSchedulingMessages(msgs);
         }
