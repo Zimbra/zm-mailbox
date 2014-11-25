@@ -49543,6 +49543,150 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * SSL session cache size in megabytes
+     *
+     * @return zimbraReverseProxySSLSessionCacheSize, or "10m" if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1680)
+    public String getReverseProxySSLSessionCacheSize() {
+        return getAttr(Provisioning.A_zimbraReverseProxySSLSessionCacheSize, "10m");
+    }
+
+    /**
+     * SSL session cache size in megabytes
+     *
+     * @param zimbraReverseProxySSLSessionCacheSize new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1680)
+    public void setReverseProxySSLSessionCacheSize(String zimbraReverseProxySSLSessionCacheSize) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxySSLSessionCacheSize, zimbraReverseProxySSLSessionCacheSize);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * SSL session cache size in megabytes
+     *
+     * @param zimbraReverseProxySSLSessionCacheSize new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1680)
+    public Map<String,Object> setReverseProxySSLSessionCacheSize(String zimbraReverseProxySSLSessionCacheSize, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxySSLSessionCacheSize, zimbraReverseProxySSLSessionCacheSize);
+        return attrs;
+    }
+
+    /**
+     * SSL session cache size in megabytes
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1680)
+    public void unsetReverseProxySSLSessionCacheSize() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxySSLSessionCacheSize, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * SSL session cache size in megabytes
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1680)
+    public Map<String,Object> unsetReverseProxySSLSessionCacheSize(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxySSLSessionCacheSize, "");
+        return attrs;
+    }
+
+    /**
+     * SSL session timeout value for the proxy in minutes
+     *
+     * @return zimbraReverseProxySSLSessionTimeout, or "10m" if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1679)
+    public String getReverseProxySSLSessionTimeout() {
+        return getAttr(Provisioning.A_zimbraReverseProxySSLSessionTimeout, "10m");
+    }
+
+    /**
+     * SSL session timeout value for the proxy in minutes
+     *
+     * @param zimbraReverseProxySSLSessionTimeout new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1679)
+    public void setReverseProxySSLSessionTimeout(String zimbraReverseProxySSLSessionTimeout) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxySSLSessionTimeout, zimbraReverseProxySSLSessionTimeout);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * SSL session timeout value for the proxy in minutes
+     *
+     * @param zimbraReverseProxySSLSessionTimeout new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1679)
+    public Map<String,Object> setReverseProxySSLSessionTimeout(String zimbraReverseProxySSLSessionTimeout, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxySSLSessionTimeout, zimbraReverseProxySSLSessionTimeout);
+        return attrs;
+    }
+
+    /**
+     * SSL session timeout value for the proxy in minutes
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1679)
+    public void unsetReverseProxySSLSessionTimeout() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxySSLSessionTimeout, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * SSL session timeout value for the proxy in minutes
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1679)
+    public Map<String,Object> unsetReverseProxySSLSessionTimeout(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxySSLSessionTimeout, "");
+        return attrs;
+    }
+
+    /**
      * Enables or disables stapling of OCSP responses by nginx
      *
      * <p>Valid values: [off, on]

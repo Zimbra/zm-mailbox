@@ -8435,4 +8435,14 @@ TODO: delete them permanently from here
   <desc>URL for accessing the Consul agent.</desc>
 </attr>
 
+<attr id="1679" name="zimbraReverseProxySSLSessionTimeout" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="nginxproxy" since="9.0">
+  <globalConfigValue>10m</globalConfigValue>
+  <desc>SSL session timeout value for the proxy in minutes</desc>
+</attr>
+
+<attr id="1680" name="zimbraReverseProxySSLSessionCacheSize" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="nginxproxy" since="9.0">
+  <globalConfigValue>10m</globalConfigValue>
+  <desc>SSL session cache size in megabytes</desc>
+</attr>
+
 </attrs>

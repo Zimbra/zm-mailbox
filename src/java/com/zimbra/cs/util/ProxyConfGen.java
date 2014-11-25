@@ -1544,6 +1544,26 @@ class SpdyConfVar extends ProxyConfVar {
     }
 }
 
+class WebSSLSessionCacheSizeVar extends ProxyConfVar {
+
+    public WebSSLSessionCacheSizeVar() {
+        super("ssl.session.cachesize", "zimbraReverseProxySSLSessionCacheSize", "shared:SSL:10m",
+                ProxyConfValueType.CUSTOM, ProxyConfOverride.CUSTOM,
+                "SSL session cache size for the proxy");
+    }
+
+    @Override
+    public String format(Object o) {
+        @SuppressWarnings("unchecked")
+        String sslSessionCacheSize = serverSource.getAttr(mAttribute, "10m");
+        StringBuilder sslproto = new StringBuilder();
+        sslproto.append("shared:SSL:");
+        sslproto.append(sslSessionCacheSize);
+
+        return sslproto.toString();
+    }
+}
+
 /**
  *
  * @author zimbra
@@ -2549,6 +2569,8 @@ public class ProxyConfGen
 	    mConfVars.put("web.ssl.stapling", new ProxyConfVar("web.ssl.stapling", "zimbraReverseProxySSLStapling", "off", ProxyConfValueType.STRING, ProxyConfOverride.SERVER, "SSL Stapling flag for NGINX - can be on|off - on Enables stapling of OCSP responses by the server, off disables it"));
 	    mConfVars.put("ssl.stapling.responder.enabled", new SSLStaplingEnablerVar());
 	    mConfVars.put("ssl.stapling.responder.url", new ProxyConfVar("ssl.stapling.responder.url", "zimbraReverseProxySSLStaplingResponderURL", "", ProxyConfValueType.STRING, ProxyConfOverride.SERVER, "SSL Stapling responder URL"));
+	    mConfVars.put("ssl.session.timeout", new ProxyConfVar("ssl.session.timeout", "zimbraReverseProxySSLSessionTimeout", "10m", ProxyConfValueType.STRING, ProxyConfOverride.SERVER, "SSL session timeout value for the proxy in minutes"));
+	    mConfVars.put("ssl.session.cachesize", new WebSSLSessionCacheSizeVar());
     }
 
     /* update the default variable map from the active configuration */
