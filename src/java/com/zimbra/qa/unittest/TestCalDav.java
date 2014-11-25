@@ -35,6 +35,7 @@ import javax.xml.bind.DatatypeConverter;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpression;
+import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
 import junit.framework.TestCase;
@@ -52,6 +53,7 @@ import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.httpclient.methods.PutMethod;
 import org.w3c.dom.Document;
+import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import com.google.common.base.Strings;
@@ -380,6 +382,7 @@ public class TestCalDav extends TestCase {
             "    </comp-filter>\n" +
             "  </filter>\n" +
             "</calendar-query>";
+
     public static Document calendarQuery(String url, Account acct) throws IOException, XmlParseException {
         ReportMethod method = new ReportMethod(url);
         addBasicAuthHeaderForUser(method, acct);
@@ -396,6 +399,9 @@ public class TestCalDav extends TestCase {
         return doc;
     }
 
+    /**
+     * @param acct
+     * @param UID - null or empty if don't care
      * @param expected - false if don't expect a matching item to be in collection within timeout time
      * @return href of first matching item found
      * @throws ServiceException
