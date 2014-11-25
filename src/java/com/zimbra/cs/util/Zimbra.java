@@ -267,6 +267,8 @@ public final class Zimbra {
         }
 
         Server localServer = prov.getLocalServer();
+        alwaysOnClusterId = localServer.getAlwaysOnClusterId();
+
         if (localServer.isMailSSLClientCertOCSPEnabled()) {
             // Activate OCSP
             Security.setProperty("ocsp.enable", "true");
