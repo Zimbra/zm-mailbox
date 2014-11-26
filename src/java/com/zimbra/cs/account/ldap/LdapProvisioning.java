@@ -72,6 +72,7 @@ import com.zimbra.cs.account.AlwaysOnCluster;
 import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.AttributeInfo;
 import com.zimbra.cs.account.AttributeManager;
+import com.zimbra.cs.account.CacheAwareProvisioning;
 import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Cos;
@@ -210,7 +211,7 @@ import com.zimbra.soap.type.TargetBy;
  * @since Sep 23, 2004
  * @author schemers
  */
-public class LdapProvisioning extends LdapProv {
+public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning {
 
     private static final Log mLog = LogFactory.getLog(LdapProvisioning.class);
 
@@ -5332,11 +5333,11 @@ public class LdapProvisioning extends LdapProv {
                     AuthMechanism.namePassedIn(authCtxt), e.getMessage(), e);
         }
     }
-    
+
     private boolean isProtocolEnabled(Account authAccount, AuthContext.Protocol protocol) {
         if (protocol == null)
             return true;
-        
+
         switch (protocol) {
         case imap:
             return authAccount.isImapEnabled();
@@ -10481,6 +10482,11 @@ public class LdapProvisioning extends LdapProv {
         } finally {
             LdapClient.closeContext(zlc);
         }
+    }
+
+    @Override
+    public boolean isCacheEnabled() {
+        return useCache;
     }
 
 }
