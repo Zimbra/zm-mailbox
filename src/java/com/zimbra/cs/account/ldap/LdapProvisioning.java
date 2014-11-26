@@ -72,6 +72,7 @@ import com.zimbra.cs.account.AlwaysOnCluster;
 import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.AttributeInfo;
 import com.zimbra.cs.account.AttributeManager;
+import com.zimbra.cs.account.CacheAwareProvisioning;
 import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Cos;
@@ -210,7 +211,7 @@ import com.zimbra.soap.type.TargetBy;
  * @since Sep 23, 2004
  * @author schemers
  */
-public class LdapProvisioning extends LdapProv {
+public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning {
 
     private static final Log mLog = LogFactory.getLog(LdapProvisioning.class);
 
@@ -5333,6 +5334,22 @@ public class LdapProvisioning extends LdapProv {
         }
     }
 
+    private boolean isProtocolEnabled(Account authAccount, AuthContext.Protocol protocol) {
+        if (protocol == null)
+            return true;
+
+        switch (protocol) {
+        case imap:
+            return authAccount.isImapEnabled();
+
+        case pop3:
+            return authAccount.isPop3Enabled();
+
+        default:
+            return true;
+        }
+    }
+
     private void verifyPassword(Account acct, String password, AuthMechanism authMech,
             Map<String, Object> authCtxt)
     throws ServiceException {
@@ -5352,7 +5369,12 @@ public class LdapProvisioning extends LdapProv {
                 verifyPasswordInternal(acct, password, authMech, authCtxt);
                 lockoutPolicy.successfulLogin();
             } catch (AccountServiceException e) {
-                lockoutPolicy.failedLogin();
+                AuthContext.Protocol protocol = (AuthContext.Protocol) authCtxt.get(AuthContext.AC_PROTOCOL);
+                if (!isProtocolEnabled(acct, protocol)) {
+                    ZimbraLog.account.info("%s not enabled for %s", protocol, acct.getName());
+                } else {
+                    lockoutPolicy.failedLogin();
+                }
                 // re-throw original exception
                 throw e;
             }
@@ -10460,6 +10482,11 @@ public class LdapProvisioning extends LdapProv {
         } finally {
             LdapClient.closeContext(zlc);
         }
+    }
+
+    @Override
+    public boolean isCacheEnabled() {
+        return useCache;
     }
 
 }
