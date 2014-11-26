@@ -1547,15 +1547,15 @@ class SpdyConfVar extends ProxyConfVar {
 class WebSSLSessionCacheSizeVar extends ProxyConfVar {
 
     public WebSSLSessionCacheSizeVar() {
-        super("ssl.session.cachesize", "zimbraReverseProxySSLSessionCacheSize", "shared:SSL:10m",
-                ProxyConfValueType.CUSTOM, ProxyConfOverride.CUSTOM,
+        super("ssl.session.cachesize", "zimbraReverseProxySSLSessionCacheSize", "10m",
+                ProxyConfValueType.STRING, ProxyConfOverride.SERVER,
                 "SSL session cache size for the proxy");
     }
 
     @Override
     public String format(Object o) {
         @SuppressWarnings("unchecked")
-        String sslSessionCacheSize = serverSource.getAttr(mAttribute, "10m");
+        String sslSessionCacheSize = (String)o;
         StringBuilder sslproto = new StringBuilder();
         sslproto.append("shared:SSL:");
         sslproto.append(sslSessionCacheSize);
