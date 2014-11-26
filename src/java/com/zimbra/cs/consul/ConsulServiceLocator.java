@@ -32,6 +32,12 @@ public class ConsulServiceLocator implements ServiceLocator {
     @Autowired protected ConsulClient consulClient;
     protected ObjectMapper objectMapper = new ObjectMapper();
 
+    public ConsulServiceLocator() {}
+
+    public ConsulServiceLocator(ConsulClient consulClient) {
+        this.consulClient = consulClient;
+    }
+
     /** De-register a service. */
     @Override
     public void deregister(String serviceID) throws IOException, ServiceException {
