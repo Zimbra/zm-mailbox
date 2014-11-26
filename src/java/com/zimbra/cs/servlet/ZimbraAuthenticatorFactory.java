@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -25,9 +25,6 @@ import org.eclipse.jetty.security.DefaultAuthenticatorFactory;
 import org.eclipse.jetty.security.IdentityService;
 import org.eclipse.jetty.security.LoginService;
 import org.eclipse.jetty.server.Server;
-
-import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.CacheMode;
 
 /**
  * Jetty Authenticator Factory which adds support for 'ZimbraAuth' mechanism using Zimbra auth tokens
@@ -48,10 +45,6 @@ public class ZimbraAuthenticatorFactory extends DefaultAuthenticatorFactory {
                     IdentityService identityService, LoginService loginService) {
         String auth = configuration.getAuthMethod();
         if (ZIMBRA_AUTH_MECHANISM.equalsIgnoreCase(auth)) {
-            //force lazy load of non-caching prov
-            //this is necessary when running in /zimbra webapp
-            //if this class is ever used in /service webapp the caching prov _should_ already be loaded before we get here
-            Provisioning.getInstance(CacheMode.OFF);
             return zimbraAuthenticator;
         } else {
             return super.getAuthenticator(server, context, configuration, identityService, loginService);
