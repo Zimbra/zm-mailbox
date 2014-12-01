@@ -90,6 +90,12 @@ public class PlainAuthenticator extends Authenticator {
             ZimbraLog.account.info("authentication failed for " + authenticateId + " (no such account)");
             return null;
         }
+        
+        // make sure the protocol is enabled for the user
+        if (!isProtocolEnabled(authAccount, protocol)) {
+            ZimbraLog.account.info("Authentication failed - %s not enabled for %s", protocol, authAccount.getName());
+            return null;
+        }
 
         // authenticate the authentication principal
         Map<String, Object> authCtxt = new HashMap<String, Object>();

@@ -24,6 +24,7 @@ import javax.security.sasl.SaslServer;
 
 import com.zimbra.common.account.Key;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
@@ -98,6 +99,12 @@ public class ZimbraAuthenticator extends Authenticator {
         // make sure the auth token belongs to authenticatedId
         if (!at.getAccountId().equalsIgnoreCase(authAccount.getId()))
             return null;
+        
+        // make sure the protocol is enabled for the user
+        if (!isProtocolEnabled(authAccount, protocol)) {
+            ZimbraLog.account.info("Authentication failed - %s not enabled for %s", protocol, authAccount.getName());
+            return null;
+        }
 
         // if necessary, check that the authenticated user can authorize as the target user
         Account targetAcct = authorize(authAccount, username, AuthToken.isAnyAdmin(at));

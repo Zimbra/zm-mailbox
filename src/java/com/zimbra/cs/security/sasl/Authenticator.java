@@ -168,6 +168,22 @@ public abstract class Authenticator {
     protected Log getLog() {
         return mAuthUser.getLog();
     }
+    
+    protected boolean isProtocolEnabled(Account authAccount, AuthContext.Protocol protocol) {
+        if (protocol == null)
+            return true;
+        
+        switch (protocol) {
+        case imap:
+            return authAccount.isImapEnabled();
+
+        case pop3:
+            return authAccount.isPop3Enabled();
+
+        default:
+            return true;
+        }
+    }
 
     protected boolean authenticate(String authorizationId, String authenticationId, String password)
     throws IOException {
