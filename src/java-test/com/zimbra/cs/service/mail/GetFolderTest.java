@@ -159,7 +159,7 @@ public class GetFolderTest {
 
         Element root = response.getOptionalElement(MailConstants.E_MOUNT);
         Assert.assertNotNull("top-level mountpoint is listed", root);
-        Assert.assertFalse("top level mountpont is not stubbed", isStubbed(root));
+        Assert.assertFalse("top level mountpoint is not stubbed", isStubbed(root));
 
         Element leaf = getSubfolder(root, "bar");
         Assert.assertNotNull("leaf node present", leaf);
