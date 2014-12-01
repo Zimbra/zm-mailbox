@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -43,8 +43,7 @@ public class ContactFolderFormatter extends Formatter {
 
     private static final byte FIELD_DELIMITER   = '\u001D';  // group separator
     private static final byte CONTACT_DELIMITER = '\u001E';  // record separator
-    private static final String CONTENT_TYPE = "text/x-zimbra-delimitted-fields";
-    
+
     private enum Delimiter { Field, Contact };
 
 
@@ -68,7 +67,6 @@ public class ContactFolderFormatter extends Formatter {
             allContacts = true;
 
         ItemIdFormatter ifmt = new ItemIdFormatter(context.getAuthAccount(), context.targetAccount, false);
-        context.resp.setContentType(CONTENT_TYPE);
         OutputStream out = new BufferedOutputStream(context.resp.getOutputStream());
 
         Iterator<? extends MailItem> contacts = null;
@@ -134,7 +132,7 @@ public class ContactFolderFormatter extends Formatter {
                 out.write(fields.get(k).getBytes("UTF-8"));
             }
         }
-        
+
         // return the image part number required for Extensible Universal Contact Card (bug 73146)
         List<Contact.Attachment> attachments = ((Contact) item).getAttachments();
         for (Contact.Attachment attachment : attachments) {
@@ -146,7 +144,7 @@ public class ContactFolderFormatter extends Formatter {
                 break;
             }
         }
-        
+
         switch (d) {
         case Field:
             out.write(FIELD_DELIMITER);
@@ -156,20 +154,20 @@ public class ContactFolderFormatter extends Formatter {
             break;
         }
     }
-    
+
     private void printContactGroup(String encodedContactGroup, OutputStream out) throws IOException {
         ContactGroup contactGroup = null;
-        
+
         try {
             contactGroup = ContactGroup.init(encodedContactGroup);
         } catch (ServiceException e) {
             ZimbraLog.contact.warn("unable to init contact group", e);
         }
-        
+
         if (contactGroup == null) {
             return;
         }
-        
+
         for (ContactGroup.Member member : contactGroup.getMembers()) {
             ContactGroup.Member.Type type = member.getType();
             out.write(FIELD_DELIMITER);

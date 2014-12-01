@@ -525,6 +525,10 @@ public class UserServlet extends ZimbraServlet {
         if (!StringUtil.isNullOrEmpty(cacheControlValue)) {
             resp.addHeader("Cache-Control", cacheControlValue);
         }
+        FormatType formatType = context.formatter.getType();
+        if (formatType != null) {
+            context.resp.setContentType(formatType.getContentType());
+        }
 
         context.formatter.format(context);
     }

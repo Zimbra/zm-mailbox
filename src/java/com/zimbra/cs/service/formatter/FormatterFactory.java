@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -20,6 +20,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.zimbra.common.mime.MimeConstants;
+
 /**
  * This factory provides access to the formatters that are currently registered with the system.
  * @author jpowers
@@ -32,23 +34,23 @@ public class FormatterFactory {
      */
     public enum FormatType
     {
-            ATOM("atom"),
-            CONTACT_FOLDER("cf"),
-            CSV("csv"),
-            FREE_BUSY("freebusy"),
-            HTML("html"),
-            HTML_CONVERTED("native"),
-            ICS("ics"),
-            IFB("ifb"),
-            JSON("json"),
-            RSS("rss"),
-            SYNC("sync"),
-            TAR("tar"),
-            TGZ("tgz"),
-            VCF("vcf"),
-            XML("xml"),
-            ZIP("zip"),
-            OPATCH("opatch");
+            ATOM("atom", "application/atom+xml"),
+            CONTACT_FOLDER("cf", "text/x-zimbra-delimitted-fields"),
+            CSV("csv", "text/csv"),
+            FREE_BUSY("freebusy", MimeConstants.CT_TEXT_HTML),
+            HTML("html", MimeConstants.CT_TEXT_HTML),
+            HTML_CONVERTED("native", MimeConstants.CT_TEXT_HTML),
+            ICS("ics", MimeConstants.CT_TEXT_CALENDAR),
+            IFB("ifb", MimeConstants.CT_TEXT_CALENDAR),
+            JSON("json", MimeConstants.CT_APPLICATION_JSON),
+            RSS("rss", "application/rss+xml"),
+            SYNC("sync", MimeConstants.CT_APPLICATION_OCTET_STREAM),
+            TAR("tar", "application/x-tar"),
+            TGZ("tgz", "application/x-compressed"),
+            VCF("vcf", MimeConstants.CT_TEXT_VCARD),
+            XML("xml", MimeConstants.CT_TEXT_XML),
+            ZIP("zip", MimeConstants.CT_APPLICATION_ZIP),
+            OPATCH("opatch", MimeConstants.CT_APPLICATION_OCTET_STREAM);
 
             /**
              * cache of available format types
@@ -59,20 +61,30 @@ public class FormatterFactory {
              * The string name of the format type
              * mostly for backwards compatibility
              */
-            private String strName;
+            private final String strName;
+
+            /* See http://www.iana.org/assignments/media-types/media-types.xhtml for official Content-Type values */
+            private final String contentType;
 
 
             /*
              * Creates a new format type using the legacy string name
              */
-            FormatType(String strName){
+            FormatType(String strName, String contentType){
                 this.strName = strName;
+                this.contentType = contentType;
             }
 
 
+            @Override
             public String toString() {
                 return strName;
             }
+
+            public String getContentType() {
+                return contentType;
+            }
+
             /**
              * Gets a type form a string if its registered
              * @param str The string to check (should match the output of the toString() method)
