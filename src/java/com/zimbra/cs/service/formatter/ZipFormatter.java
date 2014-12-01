@@ -19,6 +19,7 @@ package com.zimbra.cs.service.formatter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.charset.Charset;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -50,7 +51,7 @@ public class ZipFormatter extends ArchiveFormatter {
         private ZipInputStream is;
         
         public ZipArchiveInputStream(InputStream is, String cset) {
-            this.is = new ZipInputStream(is);
+            this.is = new ZipInputStream(is, Charset.forName(cset));
         }
         
         public void close() throws IOException { is.close(); }
