@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -40,6 +40,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
@@ -90,24 +91,32 @@ public class GetAccountInfo extends AccountDocumentHandler  {
             String httpSoap = URLUtil.getSoapPublicURL(server, domain, false);
             String httpsSoap = URLUtil.getSoapPublicURL(server, domain, true);
 
-            if (httpSoap != null)
+            if (httpSoap != null) {
                 response.addAttribute(AccountConstants.E_SOAP_URL /* soapURL */, httpSoap, Element.Disposition.CONTENT);
-
-            if (httpsSoap != null && !httpsSoap.equalsIgnoreCase(httpSoap))
+            }
+            if (httpsSoap != null && !httpsSoap.equalsIgnoreCase(httpSoap)) {
                 /* Note: addAttribute with Element.Disposition.CONTENT REPLACEs any previous attribute with the same name.
                  * i.e. Will NOT end up with both httpSoap and httpsSoap as values for "soapURL"
                  */
                 response.addAttribute(AccountConstants.E_SOAP_URL /* soapURL */, httpsSoap, Element.Disposition.CONTENT);
-
+            }
             String pubUrl = URLUtil.getPublicURLForDomain(server, domain, "", true);
-            if (pubUrl != null)
+            if (pubUrl != null) {
                 response.addAttribute(AccountConstants.E_PUBLIC_URL, pubUrl, Element.Disposition.CONTENT);
-
+            }
+            if (AccessManager.getInstance().isAdequateAdminAccount(account)) {
+                String publicAdminUrl = URLUtil.getPublicAdminConsoleURLForDomain(server, domain);
+                if (publicAdminUrl != null) {
+                    response.addAttribute(AccountConstants.E_ADMIN_URL, publicAdminUrl, Element.Disposition.CONTENT);
+                }
+            }
             String changePasswordUrl = null;
-            if (domain != null)
+            if (domain != null) {
                 changePasswordUrl = domain.getAttr(Provisioning.A_zimbraChangePasswordURL);
-            if (changePasswordUrl != null)
+            }
+            if (changePasswordUrl != null) {
                 response.addAttribute(AccountConstants.E_CHANGE_PASSWORD_URL, changePasswordUrl, Element.Disposition.CONTENT);
+            }
         }
         //add a Community redirect URL
         if(account.getBooleanAttr(Provisioning.A_zimbraFeatureSocialExternalEnabled, false)) {
