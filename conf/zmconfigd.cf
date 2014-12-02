@@ -23,7 +23,6 @@ SECTION amavis
 	VAR zimbraSpamTagPercent
 	VAR zimbraSpamSubjectTag
 	VAR zimbraAmavisQuarantineAccount
-	VAR zimbraAmavisDSPAMEnabled
 	VAR zimbraMtaMyNetworks
 	VAR zimbraDomainMandatoryMailSignatureEnabled
 	VAR zimbraIPMode
@@ -48,7 +47,6 @@ SECTION antivirus DEPENDS amavis
 
 SECTION antispam DEPENDS amavis
 	REWRITE conf/salocal.cf.in data/spamassassin/localrules/salocal.cf
-	REWRITE conf/dspam.conf.in conf/dspam.conf
 	VAR zimbraMtaMyNetworks
 	VAR zimbraMtaAntiSpamLockMethod
 	VAR zimbraIPMode
@@ -363,7 +361,6 @@ SECTION proxy
 	VAR zimbraReverseProxySSLECDHCurve
 	VAR zimbraReverseProxyUpstreamLoginServers
 	VAR zimbraReverseProxyUpstreamEwsServers
-	VAR zimbraReverseProxySSLProtocols
 	PROXYGEN
 	RESTART proxy
 
