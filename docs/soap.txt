@@ -580,6 +580,7 @@ Setting logoff to "1" will prevent the cookie from being re-used.
    </zimlets>
    <mailURL>{mail-url}</mailURL>+
    <publicURL>{account-base-public-url}</publicURL>
+   [<adminURL>{admin-base-public-url}</adminURL>]
    [<communityURL>{community-url}</communityURL>]
    <identities>
      <identity name={identity-name} id="...">
@@ -638,6 +639,8 @@ Setting logoff to "1" will prevent the cookie from being re-used.
 
   {account-base-public-url} = base public URL for the requested account
 
+  {admin-base-public-url} = base admin console URL. Only returned for admin accounts.
+
   attrs under <childAccount>: including the following attrs of the child account:
         - displayName
 
@@ -659,6 +662,7 @@ Setting logoff to "1" will prevent the cookie from being re-used.
    <attr name="{name}">{value}</a>+
    <soapURL>{soap-url}</soapURL>+
    <publicURL>{account-base-public-url}</publicURL>
+   [<adminURL>{admin-base-public-url}</adminURL>]
    [<changePasswordURL>{change-password-url}</changePasswordURL>]
    [<communityURL>{community-url}</communityURL>]
 </GetAccountInfoResponse>
@@ -679,6 +683,7 @@ Setting logoff to "1" will prevent the cookie from being re-used.
        the only one URL will be returned.
 
   {account-base-public-url} = base public URL for the requested account
+  {admin-base-public-url} = base admin console URL. Only returned for admin accounts.
   {change-password-url} = URL to talk to in order to change a password.  Not returned if not configured via domain
                           attribute zimbraChangePasswordURL
   {community-url} = Zimbra Community URL to load in Community tab. 
