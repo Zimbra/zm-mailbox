@@ -1770,8 +1770,9 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Whether or not Amavis should use DSPAM as an additional score factor
-     * for SPAM. Defaults to FALSE
+     * Deprecated since: 9.0.0_BETA1. dspam has been removed from Zimbra and
+     * replaced with CRM114. Orig desc: Whether or not Amavis should use
+     * DSPAM as an additional score factor for SPAM. Defaults to FALSE
      *
      * @return zimbraAmavisDSPAMEnabled, or false if unset
      *
@@ -1783,8 +1784,9 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Whether or not Amavis should use DSPAM as an additional score factor
-     * for SPAM. Defaults to FALSE
+     * Deprecated since: 9.0.0_BETA1. dspam has been removed from Zimbra and
+     * replaced with CRM114. Orig desc: Whether or not Amavis should use
+     * DSPAM as an additional score factor for SPAM. Defaults to FALSE
      *
      * @param zimbraAmavisDSPAMEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -1799,8 +1801,9 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Whether or not Amavis should use DSPAM as an additional score factor
-     * for SPAM. Defaults to FALSE
+     * Deprecated since: 9.0.0_BETA1. dspam has been removed from Zimbra and
+     * replaced with CRM114. Orig desc: Whether or not Amavis should use
+     * DSPAM as an additional score factor for SPAM. Defaults to FALSE
      *
      * @param zimbraAmavisDSPAMEnabled new value
      * @param attrs existing map to populate, or null to create a new map
@@ -1816,8 +1819,9 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Whether or not Amavis should use DSPAM as an additional score factor
-     * for SPAM. Defaults to FALSE
+     * Deprecated since: 9.0.0_BETA1. dspam has been removed from Zimbra and
+     * replaced with CRM114. Orig desc: Whether or not Amavis should use
+     * DSPAM as an additional score factor for SPAM. Defaults to FALSE
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -1831,8 +1835,9 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Whether or not Amavis should use DSPAM as an additional score factor
-     * for SPAM. Defaults to FALSE
+     * Deprecated since: 9.0.0_BETA1. dspam has been removed from Zimbra and
+     * replaced with CRM114. Orig desc: Whether or not Amavis should use
+     * DSPAM as an additional score factor for SPAM. Defaults to FALSE
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs

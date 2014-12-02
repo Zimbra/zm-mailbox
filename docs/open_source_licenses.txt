@@ -141,6 +141,7 @@ SECTION 2: Apache License, V2.0
    >>> objenesis-2.1
    >>> org.apache.mina-2.0.4
    >>> org.openid4java-0.9.5
+   >>> redisson-1.1.5
    >>> ridl-4.0.2
    >>> selenium-2.43.0
    >>> smack-3.2.1
@@ -180,13 +181,7 @@ SECTION 5: Common Development and Distribution License, V1.1
 
 
 
-SECTION 6: GNU AFFERO GENERAL PUBLIC LICENSE 3.0
-
-   >>> dspam-3.10.2
-
-
-
-SECTION 7: GNU General Public License, V1.0
+SECTION 6: GNU General Public License, V1.0
 
    >>> perl-class-load-0.21
    >>> perl-convert-asn1-0.26
@@ -27548,6 +27543,11 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 License : Apache 2.0
 
 
+>>> redisson-1.1.5
+
+License : Apache 2.0
+
+
 >>> ridl-4.0.2
 
 License : Apache 2.0
@@ -29843,92 +29843,8 @@ If you wish your version of this file to be governed by only the CDDL or only th
 If you don't indicate a single choice of license, a recipient has the option to distribute your version of this file under either the CDDL, the GPL Version 2 or to extend the choice of license to its licensees as provided above.  However, if you add GPL Version 2 code and therefore, elected the GPL Version 2 license, then the option applies only if the new code is made subject to such option by the copyright holder.
 
 
---------------- SECTION 6: GNU AFFERO GENERAL PUBLIC LICENSE 3.0 ----------
 
-GNU AFFERO GENERAL PUBLIC LICENSE 3.0 is applicable to the following component(s).
-
-
->>> dspam-3.10.2
-
-COPYRIGHT (C) 2002-2012 DSPAM Project
-http://dspam.sourceforge.net
-
-LICENSE
-
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU Affero General Public License as
-published by the Free Software Foundation, either version 3 of the
-License, or (at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU Affero General Public License for more details.
-
-You should have received a copy of the GNU Affero General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
-
-> GPL 2.0
-
-dspam-3.10.2.tar.gz\dspam-3.10.2.tar\dspam-3.10.2\src\external_lookup.c
-
-COPYRIGHT (C) 2006 HUGO MONTEIRO
-
-external lookup library for DSPAM v0.6
- 
-This program is free software; you can redistribute it and/or
-modify it under the terms of the GNU General Public License
-as published by the Free Software Foundation; version 2
-of the License.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-
-
-> Permissive license
-
-libDSPAMReporting - LoutsScript Library for retraining DSPAM mails in      
-Lotus Notes/Domino                                                         
-                                                                             
-Copyright 2004, Stevan Bajic <stevan@bajic.ch>, all rights reserved.       
-                                                                             
-You are free to use this code within your own applications, but you are    
-expressly forbidden from selling or otherwise distributing this source     
-code without prior written consent. This includes both posting free demo   
-projects made from this code as well as reproducing the code in text or    
-html format.                                                               
-                                                                             
-The DSPAM community project (http://www.sourceforge.net/projects/dspam/)   
-is excluded from any licensing limitations.
-
-
-[ZIMBRA DOES NOT DISTRIBUTE THE SUB-COMPONENT THUNDERBIRD]  
-
-> MPL 1.1
-
-dspam-3.10.2.tar.gz\dspam-3.10.2.tar\dspam-3.10.2\contrib\plugins\thunderbird\license.txt
-
-Version: MPL 1.1
-
-The contents of this file are subject to the Mozilla Public License Version 
-1.1 (the "License"); you may not use this file except in compliance with 
-the License. You may obtain a copy of the License at 
-http://www.mozilla.org/MPL/
-
-Software distributed under the License is distributed on an "AS IS" basis,
-WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
-for the specific language governing rights and limitations under the
-License.
-
-
---------------- SECTION 7: GNU General Public License, V1.0 ----------
+--------------- SECTION 6: GNU General Public License, V1.0 ----------
 
 GNU General Public License, V1.0 is applicable to the following component(s).
 

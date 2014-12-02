@@ -7319,9 +7319,10 @@ TODO: delete them permanently from here
   <desc>Whether or not Amavis should Bypass SpamAsassin for originating email.  Defaults to FALSE</desc>
 </attr>
 
-<attr id="1465" name="zimbraAmavisDSPAMEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mta" since="8.5.0">
+<attr id="1465" name="zimbraAmavisDSPAMEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mta" since="8.5.0" deprecatedSince="9.0.0_BETA1">
   <globalConfigValue>FALSE</globalConfigValue>
   <desc>Whether or not Amavis should use DSPAM as an additional score factor for SPAM. Defaults to FALSE</desc>
+  <deprecateDesc>dspam has been removed from Zimbra and replaced with CRM114</deprecateDesc>
 </attr>
 
 <attr id="1466" name="zimbraMtaEnableSmtpdPolicyd" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mta" since="8.5.0">
