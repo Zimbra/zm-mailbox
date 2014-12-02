@@ -67,20 +67,17 @@ public class ContactAutoComplete {
         public final Collection<ContactEntry> entries;
         public boolean canBeCached;
         public final int limit;
-        private final Set<String> keys;
+        private final List<String> keys;
 
         public AutoCompleteResult(int l) {
             entries = new TreeSet<ContactEntry>();
-            keys = new HashSet<String>();
+            keys = new ArrayList<String>();
             canBeCached = true;
             limit = l;
         }
 
         public void addEntry(ContactEntry entry) {
             String key = entry.getKey();
-            if (keys.contains(key)) {
-                return;
-            }
             if (entries.size() >= limit) {
                 canBeCached = false;
                 return;
@@ -124,7 +121,13 @@ public class ContactAutoComplete {
         long mLastAccessed;
 
         protected String getKey() {
-            return (mIsContactGroup ? mDisplayName : mEmail).toLowerCase();
+            if (mIsContactGroup) {
+                return mDisplayName.toLowerCase();
+            } else if (!StringUtil.isNullOrEmpty(mDisplayName)) {
+                return (mDisplayName + mEmail).toLowerCase();
+            } else {
+                return mEmail.toLowerCase(); //mEmail should not be null.
+            }
         }
 
         public String getEmail() {
@@ -241,6 +244,11 @@ public class ContactAutoComplete {
             StringBuilder buf = new StringBuilder();
             toString(buf);
             return buf.toString();
+        }
+
+        @Override
+        public int hashCode() {
+            return toString().hashCode();
         }
 
         public void toString(StringBuilder buf) {
