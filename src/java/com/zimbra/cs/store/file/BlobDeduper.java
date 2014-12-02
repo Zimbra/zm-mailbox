@@ -327,7 +327,7 @@ public class BlobDeduper {
             this.volumeIds = volumeIds;
         }
         
-        private void populateVolumeBlobs(short volumeId, int groupId, int lastSyncDate, int currentSyncDate) throws ServiceException {
+        private void populateVolumeBlobs(short volumeId, int groupId, long lastSyncDate, long currentSyncDate) throws ServiceException {
             DbConnection conn = null;
             Iterable<MailboxBlobInfo> allBlobs = null;
             try {      
@@ -368,7 +368,7 @@ public class BlobDeduper {
             boolean resumed = false;
             if (metadata.getCurrentSyncDate() == 0) {
                 // this is not a resume. update the current sync date.
-                metadata.setCurrentSyncDate((int) (System.currentTimeMillis() / 1000));
+                metadata.setCurrentSyncDate(System.currentTimeMillis());
             } else { // this is resumed request.
                 resumed = true;
             }

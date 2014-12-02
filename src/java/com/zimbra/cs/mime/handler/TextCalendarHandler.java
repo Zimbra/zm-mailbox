@@ -25,7 +25,7 @@ import javax.activation.DataSource;
 
 import net.fortuna.ical4j.data.ParserException;
 
-import org.apache.lucene.document.Document;
+import org.apache.solr.common.SolrInputDocument;
 
 import com.zimbra.common.calendar.ZCalendar.ICalTok;
 import com.zimbra.common.calendar.ZCalendar.ZCalendarBuilder;
@@ -113,7 +113,7 @@ public class TextCalendarHandler extends MimeHandler {
         }
     }
 
-    @Override public void addFields(Document doc) {
+    @Override public void addFields(SolrInputDocument doc) {
     }
 
     @Override public String convert(AttachmentInfo doc, String baseURL) {

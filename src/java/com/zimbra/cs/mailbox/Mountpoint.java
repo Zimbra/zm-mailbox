@@ -164,7 +164,7 @@ public class Mountpoint extends Folder {
         data.type = Type.MOUNTPOINT.toByte();
         data.folderId = parent.getId();
         data.parentId = data.folderId;
-        data.date = mbox.getOperationTimestamp();
+        data.date = mbox.getOperationTimestampMillis();
         data.setFlags(flags & Flag.FLAGS_FOLDER);
         data.name = name;
         data.setSubject(name);

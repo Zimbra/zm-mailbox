@@ -52,12 +52,12 @@ public final class SenderQuery extends Query {
         sender = text.substring(comparison.toString().length());
     }
 
-    public static Query create(Analyzer analyzer, String text) {
+    public static Query create(String text) {
         if (text.length() > 1 &&
                 (text.startsWith(Comparison.LT.toString()) || text.startsWith(Comparison.GT.toString()))) {
             return new SenderQuery(text);
         } else {
-            return new TextQuery(analyzer, LuceneFields.L_H_FROM, text);
+            return new TextQuery(LuceneFields.L_H_FROM, text);
         }
     }
 

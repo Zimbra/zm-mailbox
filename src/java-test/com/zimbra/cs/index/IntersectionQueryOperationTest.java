@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -22,6 +22,7 @@ import java.util.HashMap;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.zimbra.common.soap.SoapProtocol;
@@ -40,6 +41,7 @@ import com.zimbra.cs.mime.ParsedMessage;
  *
  * @author ysasaki
  */
+@Ignore("The query optimizations this test verifies do not apply to the SOLR search backend")
 public final class IntersectionQueryOperationTest {
 
     @BeforeClass

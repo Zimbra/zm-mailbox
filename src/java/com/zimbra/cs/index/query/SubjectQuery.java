@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -15,8 +15,6 @@
  * ***** END LICENSE BLOCK *****
  */
 package com.zimbra.cs.index.query;
-
-import org.apache.lucene.analysis.Analyzer;
 
 import com.zimbra.cs.index.DBQueryOperation;
 import com.zimbra.cs.index.LuceneFields;
@@ -38,24 +36,23 @@ public final class SubjectQuery extends Query {
      * This is only used for subject queries that start with {@code <} or {@code >}, otherwise we just use the normal
      * {@link TextQuery}.
      */
-    private SubjectQuery(String text) {
-        lt = (text.charAt(0) == '<');
-        inclusive = false;
-        subject = text.substring(1);
+    private SubjectQuery(String text, Comparison comp) {
+    	subject = text;
+        lt = comp.equals(Comparison.LE) || comp.equals(Comparison.LT);
+        inclusive = comp.equals(Comparison.GE) || comp.equals(Comparison.LE);
+    }
 
-        if (subject.charAt(0) == '=') {
-            inclusive = true;
-            subject = subject.substring(1);
+    public static Query create(String text, Comparison comp) {
+        if (comp != null) {
+            // real subject query!
+            return new SubjectQuery(text, comp);
+        } else {
+            return new TextQuery(LuceneFields.L_H_SUBJECT, text);
         }
     }
 
-    public static Query create(Analyzer analyzer, String text) {
-        if (text.length() > 1 && (text.startsWith("<") || text.startsWith(">"))) {
-            // real subject query!
-            return new SubjectQuery(text);
-        } else {
-            return new TextQuery(analyzer, LuceneFields.L_H_SUBJECT, text);
-        }
+    public static Query create(String text) {
+    	return create(text, null);
     }
 
     @Override

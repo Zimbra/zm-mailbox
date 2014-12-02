@@ -45,6 +45,7 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 import javax.mail.util.SharedByteArrayInputStream;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.calendar.ICalTimeZone;
@@ -72,8 +73,6 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.index.IndexDocument;
 import com.zimbra.cs.index.LuceneFields;
-import com.zimbra.cs.index.analysis.FieldTokenStream;
-import com.zimbra.cs.index.analysis.RFC822AddressTokenStream;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
 import com.zimbra.cs.mailbox.Mailbox.SetCalendarItemData;
 import com.zimbra.cs.mailbox.calendar.Alarm;
@@ -310,6 +309,7 @@ public abstract class CalendarItem extends MailItem {
 
         for (Invite inv : getInvites()) {
             StringBuilder s = new StringBuilder();
+            String description = null;
             List<String> toAddrs = new ArrayList<String>();
 
             // NAME (subject)
@@ -350,7 +350,10 @@ public abstract class CalendarItem extends MailItem {
 
             // DESCRIPTION
             try {
-                s.append(inv.getDescription()).append(' ');
+            	description = inv.getDescription();
+            	if (description != null) {
+            		s.append(description).append(' ');
+            	}
             } catch (ServiceException ex) {
                 if (ZimbraLog.index.isDebugEnabled()) {
                     ZimbraLog.index.debug("Caught exception fetching description while indexing CalendarItem "+this.getId()+" skipping", ex);
@@ -415,7 +418,7 @@ public abstract class CalendarItem extends MailItem {
                     }
                 }
             }
-
+            
             for (IndexDocument doc : docList) {
                 // update the doc, overriding many of the fields with data from the appointment
                 doc.addContent(s.toString());
@@ -424,17 +427,15 @@ public abstract class CalendarItem extends MailItem {
                 doc.removeFrom();
                 doc.removeSubject();
 
-                for (String to : toAddrs) {
-                    doc.addTo(new RFC822AddressTokenStream(to));
-                }
-                doc.addFrom(new RFC822AddressTokenStream(orgToUse));
+                doc.addTo(Joiner.on(", ").join(toAddrs));
+                doc.addFrom(orgToUse);
                 doc.addSubject(nameToUse);
                 toRet.add(doc);
             }
         }
 
         // set the "public"/"private" flag in the index for this appointment
-        FieldTokenStream fields = new FieldTokenStream(INDEX_FIELD_ITEM_CLASS, isPublic() ? "public" : "private");
+        String fields = String.format("%s:%s",INDEX_FIELD_ITEM_CLASS, isPublic() ? "public" : "private");
         for (IndexDocument doc : toRet) {
             doc.addField(fields);
         }
@@ -521,7 +522,7 @@ public abstract class CalendarItem extends MailItem {
             data.indexId = IndexStatus.DEFERRED.id();
         }
         data.imapId = id;
-        data.date = mbox.getOperationTimestamp();
+        data.date = mbox.getOperationTimestampMillis();
         data.setFlags(flags & (Flag.FLAGS_CALITEM | Flag.FLAGS_GENERIC));
         data.setTags(ntags);
         data.setSubject(subject);

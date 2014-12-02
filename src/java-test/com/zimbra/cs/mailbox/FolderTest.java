@@ -36,6 +36,7 @@ import com.zimbra.cs.db.DbResults;
 import com.zimbra.cs.db.DbUtil;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
+import com.zimbra.cs.mailbox.MailboxManager.FetchMode;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.qa.unittest.TestUtil;
 
@@ -165,7 +166,11 @@ public final class FolderTest {
         Account account = prov.getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
         try {
             account.setDefaultFolderFlags("*");
-            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID, FetchMode.DO_NOT_AUTOCREATE);
+            if(mbox != null) {
+            	mbox.deleteMailbox();
+            }
+            mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID, FetchMode.AUTOCREATE);
             Folder inbox = mbox.getFolderById(Mailbox.ID_FOLDER_INBOX);
             Assert.assertTrue(inbox.isFlagSet(Flag.BITMASK_SUBSCRIBED));
         } finally {
@@ -176,7 +181,7 @@ public final class FolderTest {
     @Test
     public void deleteFolder() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-
+        
         Folder.FolderOptions fopt = new Folder.FolderOptions().setDefaultView(MailItem.Type.DOCUMENT);
         Folder root = mbox.createFolder(null, "/Root", fopt);
         mbox.createFolder(null, "/Root/test1", fopt);

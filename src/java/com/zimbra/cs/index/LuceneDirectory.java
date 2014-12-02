@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -22,6 +22,7 @@ import java.util.Collection;
 
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
+import org.apache.lucene.store.IOContext;
 import org.apache.lucene.store.IndexInput;
 import org.apache.lucene.store.IndexOutput;
 import org.apache.lucene.store.Lock;
@@ -111,16 +112,6 @@ public final class LuceneDirectory extends Directory {
         return directory.fileExists(name);
     }
 
-    @Override
-    public long fileModified(String name) throws IOException {
-        return directory.fileModified(name);
-    }
-
-    @Override
-    @Deprecated
-    public void touchFile(String name) throws IOException {
-        directory.touchFile(name);
-    }
 
     @Override
     public void deleteFile(String name) throws IOException {
@@ -132,26 +123,21 @@ public final class LuceneDirectory extends Directory {
         return directory.fileLength(name);
     }
 
-
-    @Override
-    public IndexOutput createOutput(String name) throws IOException {
-        return new LuceneIndexOutput(directory.createOutput(name));
-    }
+	@Override
+	public IndexOutput createOutput(String name, IOContext context)
+			throws IOException {
+		return new LuceneIndexOutput(directory.createOutput(name, context));
+	}
 
     @Override
     public void sync(Collection<String> names) throws IOException {
         directory.sync(names);
     }
 
-    @Override
-    public IndexInput openInput(String name) throws IOException {
-        return new LuceneIndexInput(directory.openInput(name));
-    }
-
-    @Override
-    public IndexInput openInput(String name, int bufferSize) throws IOException {
-        return new LuceneIndexInput(directory.openInput(name, bufferSize));
-    }
+	@Override
+	public IndexInput openInput(String name, IOContext context) throws IOException {
+		return new LuceneIndexInput(directory.openInput(name, context));
+	}
 
     @Override
     public Lock makeLock(String name) {
@@ -189,10 +175,12 @@ public final class LuceneDirectory extends Directory {
     }
 
     private static final class LuceneIndexInput extends IndexInput {
-        private final IndexInput input;
+
+		private final IndexInput input;
         private boolean disableCounters = LC.zimbra_index_disable_perf_counters.booleanValue();
 
         LuceneIndexInput(IndexInput in) {
+        	super("");
             input = in;
         }
 
@@ -222,11 +210,6 @@ public final class LuceneDirectory extends Directory {
         }
 
         @Override
-        public void setModifiedUTF8StringsMode() {
-            input.setModifiedUTF8StringsMode();
-        }
-
-        @Override
         public void close() throws IOException {
             input.close();
         }
@@ -247,9 +230,15 @@ public final class LuceneDirectory extends Directory {
         }
 
         @Override
-        public Object clone() {
-            return new LuceneIndexInput((IndexInput) input.clone());
+        public IndexInput clone() {
+            return new LuceneIndexInput(input.clone());
         }
+
+		@Override
+		public IndexInput slice(String arg0, long arg1, long arg2)
+				throws IOException {
+			return input.slice(arg0, arg1, arg2);
+		}
     }
 
     private static final class LuceneIndexOutput extends IndexOutput {
@@ -300,19 +289,13 @@ public final class LuceneDirectory extends Directory {
         }
 
         @Override
-        public void seek(long pos) throws IOException {
-            output.seek(pos);
-        }
-
-        @Override
         public long length() throws IOException {
             return output.length();
         }
 
-        @Override
-        public void setLength(long len) throws IOException {
-            output.setLength(len);
-        }
+		@Override
+		public long getChecksum() throws IOException {
+			return output.getChecksum();
+		}
     }
-
 }

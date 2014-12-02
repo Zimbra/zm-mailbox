@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -68,8 +68,8 @@ public final class MailboxTest {
     @Before
     public void setUp() throws Exception {
         MailboxTestUtil.clearData();
-        MailboxTestUtil.cleanupIndexStore(
-                MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID));
+//        MailboxTestUtil.cleanupIndexStore(
+//                MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID));
     }
 
     public static final DeliveryOptions STANDARD_DELIVERY_OPTIONS = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX);
@@ -90,17 +90,71 @@ public final class MailboxTest {
         mbox.addMessage(null, new ParsedMessage("From: test3-2@sub3.zimbra.com".getBytes(), false), dopt, null);
         mbox.addMessage(null, new ParsedMessage("From: test4-1@sub4.zimbra.com".getBytes(), false), dopt, null);
         mbox.index.indexDeferredItems();
+        MailboxTestUtil.waitUntilIndexingCompleted(mbox);
 
         List<BrowseTerm> terms = mbox.browse(null, Mailbox.BrowseBy.domains, null, 100);
+        Assert.assertEquals("Number of expected terms", 4, terms.size());
         Assert.assertEquals("sub1.zimbra.com", terms.get(0).getText());
         Assert.assertEquals("sub2.zimbra.com", terms.get(1).getText());
         Assert.assertEquals("sub3.zimbra.com", terms.get(2).getText());
         Assert.assertEquals("sub4.zimbra.com", terms.get(3).getText());
-        Assert.assertEquals("Number of expected terms", 4, terms.size());
         Assert.assertEquals(8, terms.get(0).getFreq());
         Assert.assertEquals(6, terms.get(1).getFreq());
         Assert.assertEquals(4, terms.get(2).getFreq());
         Assert.assertEquals(2, terms.get(3).getFreq());
+    }
+
+    @Test
+    public void browseWithSmallLimit() throws Exception {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX);
+        mbox.addMessage(null, new ParsedMessage("From: test1-1@sub1.zimbra.com".getBytes(), false), dopt, null);
+        mbox.addMessage(null, new ParsedMessage("From: test1-2@sub1.zimbra.com".getBytes(), false), dopt, null);
+        mbox.addMessage(null, new ParsedMessage("From: test1-3@sub1.zimbra.com".getBytes(), false), dopt, null);
+        mbox.addMessage(null, new ParsedMessage("From: test1-4@sub1.zimbra.com".getBytes(), false), dopt, null);
+        mbox.addMessage(null, new ParsedMessage("From: test2-1@sub2.zimbra.com".getBytes(), false), dopt, null);
+        mbox.addMessage(null, new ParsedMessage("From: test2-2@sub2.zimbra.com".getBytes(), false), dopt, null);
+        mbox.addMessage(null, new ParsedMessage("From: test2-3@sub2.zimbra.com".getBytes(), false), dopt, null);
+        mbox.addMessage(null, new ParsedMessage("From: test3-1@sub3.zimbra.com".getBytes(), false), dopt, null);
+        mbox.addMessage(null, new ParsedMessage("From: test3-2@sub3.zimbra.com".getBytes(), false), dopt, null);
+        mbox.addMessage(null, new ParsedMessage("From: test4-1@sub4.zimbra.com".getBytes(), false), dopt, null);
+        mbox.index.indexDeferredItems();
+        String defaultLimit = LC.zimbra_terms_cachesize.value();
+        LC.zimbra_terms_cachesize.setDefault("5");
+        List<BrowseTerm> terms = mbox.browse(null, Mailbox.BrowseBy.domains, null, 100);
+        LC.zimbra_terms_cachesize.setDefault(defaultLimit);
+        Assert.assertEquals("Number of expected terms", 4, terms.size());
+        Assert.assertEquals("sub1.zimbra.com", terms.get(0).getText());
+        Assert.assertEquals("sub2.zimbra.com", terms.get(1).getText());
+        Assert.assertEquals("sub3.zimbra.com", terms.get(2).getText());
+        Assert.assertEquals("sub4.zimbra.com", terms.get(3).getText());
+        Assert.assertEquals(8, terms.get(0).getFreq());
+        Assert.assertEquals(6, terms.get(1).getFreq());
+        Assert.assertEquals(4, terms.get(2).getFreq());
+        Assert.assertEquals(2, terms.get(3).getFreq());
+    }
+
+    @Test
+    public void browseOverLimit() throws Exception {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        int numDomains = LC.zimbra_terms_cachesize.intValue() +  LC.zimbra_terms_cachesize.intValue()/3;
+        DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX);
+        for(int i = 0; i< numDomains; i++) {
+	        mbox.addMessage(null, new ParsedMessage(String.format("From: test1-1@sub%d.zimbra.com",i).getBytes(), false), dopt, null);
+	        if( i % 2 == 0) {
+	        	mbox.addMessage(null, new ParsedMessage(String.format("From: test1-2@sub%d.zimbra.com",i).getBytes(), false), dopt, null);
+	        }
+	        if( i % 3 == 0) {
+	        	mbox.addMessage(null, new ParsedMessage(String.format("From: test1-3@sub%d.zimbra.com",i).getBytes(), false), dopt, null);
+	        }
+        }
+        mbox.index.indexDeferredItems();
+
+        List<BrowseTerm> terms = mbox.browse(null, Mailbox.BrowseBy.domains, null, 100);
+        Assert.assertEquals("Number of expected terms", 100, terms.size());
+
+        terms = mbox.browse(null, Mailbox.BrowseBy.domains, null, numDomains*2);
+        Assert.assertEquals("Number of expected terms", numDomains, terms.size());
     }
 
     @Test
@@ -535,19 +589,19 @@ public final class MailboxTest {
         contactList = mbox.createAutoContact(null, addrs);
         assertEquals(3, contactList.size());
     }
-    
+
     @Test
     public void createAutoContactTestForDisplayNameFormat() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
         Account acct1 = Provisioning.getInstance().get(Key.AccountBy.id, MockProvisioning.DEFAULT_ACCOUNT_ID);
-        
+
         Collection<InternetAddress> addrs = new ArrayList<InternetAddress>();
-        addrs.add(new InternetAddress("\"First Last\" <user@email.com>"));        
+        addrs.add(new InternetAddress("\"First Last\" <user@email.com>"));
         List<Contact> contactList = mbox.createAutoContact(null, addrs);
         Contact contact = contactList.get(0);
         assertEquals("First", contact.get("firstName"));
         assertEquals("Last", contact.get("lastName"));
-        
+
         addrs = new ArrayList<InternetAddress>();
         addrs.add(new InternetAddress("\"Last First\" <user@email.com>"));
         acct1.setPrefLocale("ja");;

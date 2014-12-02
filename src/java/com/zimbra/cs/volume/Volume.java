@@ -67,8 +67,8 @@ public final class Volume {
     private Metadata metadata;
     
     public static class VolumeMetadata {
-        private int lastSyncDate;
-        private int currentSyncDate;
+        private long lastSyncDate;
+        private long currentSyncDate;
         private int groupId;
 
         private static final String FN_DATE_LASTSYNC = "lsd";
@@ -84,22 +84,30 @@ public final class Volume {
         }
 
         public VolumeMetadata(Metadata meta) throws ServiceException {
-            this.lastSyncDate = meta.getInt(FN_DATE_LASTSYNC, 0);
-            this.currentSyncDate = meta.getInt(FN_DATE_CURRENTSYNC, 0);
+            this.lastSyncDate = meta.getLong(FN_DATE_LASTSYNC, 0);
+            this.currentSyncDate = meta.getLong(FN_DATE_CURRENTSYNC, 0);
             this.groupId = meta.getInt(FN_LAST_GROUP_ID, 0);
+            
+            //to handle pre-9.0 serialized metadata
+            if(this.lastSyncDate > 0 && this.lastSyncDate < Integer.MAX_VALUE) {
+            	this.lastSyncDate = this.lastSyncDate*1000;
+            }
+            if(this.currentSyncDate > 0 && this.currentSyncDate < Integer.MAX_VALUE) {
+            	this.currentSyncDate = this.currentSyncDate*1000;
+            }
         }
         
-        public VolumeMetadata(int lastSyncDate, int currentSyncDate, int groupId) {
+        public VolumeMetadata(long lastSyncDate, long currentSyncDate, int groupId) {
             this.lastSyncDate = lastSyncDate;
             this.currentSyncDate = currentSyncDate;
             this.groupId = groupId;
         }
         
-        public int getLastSyncDate() {
+        public long getLastSyncDate() {
             return lastSyncDate;
         }
         
-        public int getCurrentSyncDate() {
+        public long getCurrentSyncDate() {
             return currentSyncDate;
         }
         
@@ -107,11 +115,11 @@ public final class Volume {
             return groupId;
         }
         
-        public void setLastSyncDate(int date) {
+        public void setLastSyncDate(long date) {
             this.lastSyncDate = date;
         }
         
-        public void setCurrentSyncDate(int date) {
+        public void setCurrentSyncDate(long date) {
             this.currentSyncDate = date;
         }
         

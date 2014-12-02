@@ -14,16 +14,23 @@
  * If not, see <http://www.gnu.org/licenses/>.
  * ***** END LICENSE BLOCK *****
  */
-options {    JDK_VERSION = "1.6";    STATIC = false;
+options {
+    JDK_VERSION = "1.6";
+    STATIC = false;
     UNICODE_INPUT = true;
     IGNORE_CASE = true;
     ERROR_REPORTING = true;
     TRACK_TOKENS = true;
     SUPPORT_CLASS_VISIBILITY_PUBLIC = false;
-}PARSER_BEGIN(Parser)package com.zimbra.cs.index.query.parser;
+}
+
+PARSER_BEGIN(Parser)
+package com.zimbra.cs.index.query.parser;
 
 final class Parser {
-}PARSER_END(Parser)
+}
+PARSER_END(Parser)
+
 <*> SKIP : {
     " " | "\t"
 }
@@ -39,6 +46,7 @@ final class Parser {
 |   <NOT: ("not" | "!")>
 |   <PLUS: "+">
 |   <MINUS: "-">
+|   <RANGE: ("<" | ">" | "<=" | ">=")>
 }
 
 <DEFAULT, TEXT> TOKEN : {
@@ -48,6 +56,7 @@ final class Parser {
 |   <QUOTED_TERM: "\"" (<_ESCAPED_QUOTE> | ~["\n", "\""])* "\""> : DEFAULT
 |   <#_ESCAPED_QUOTE: "\\\"">
 |   <BRACED_TERM: "{" (~["}"])+ "}"> : DEFAULT
+|   <QUOTED_RANGE_TERM: <RANGE> <QUOTED_TERM>> : DEFAULT
 }
 
 // Don't match operators after these tokens
@@ -65,6 +74,7 @@ final class Parser {
 |   <TOCC: "tocc:"> : TEXT
 |   <FROMCC: "fromcc:"> : TEXT
 |   <TOFROMCC: "tofromcc:"> : TEXT
+|   <FROMORSENDER: "fromorsender:"> : TEXT
 |   <IN: "in:"> : TEXT
 |   <UNDER: "under:"> : TEXT
 |   <FILENAME: "filename:"> : TEXT
@@ -81,7 +91,8 @@ final class Parser {
 |   <#_FIELD2: "#" <TERM> ":">
 }
 
-<DEFAULT> TOKEN : {    <DATE: "date:">
+<DEFAULT> TOKEN : {
+    <DATE: "date:">
 |   <MDATE: "mdate:">
 |   <DAY: "day:">
 |   <WEEK: "week:">
@@ -112,9 +123,13 @@ final class Parser {
 |   <SORTBY: "sortby:">
 |   <SORT: "sort:">
 }
-SimpleNode parse() #Root : {
-}{    Query() ["\r" | <EOF>] { return jjtThis; }
-}
+
+SimpleNode parse() #Root : {
+}
+{
+    Query() ["\r" | <EOF>] { return jjtThis; }
+}
+
 private void Query() : {
 }
 {
@@ -125,7 +140,8 @@ private void Clause() : {
 }
 {
     [Modifier()]
-    (        <LPAREN> Query() <RPAREN>
+    (
+        <LPAREN> Query() <RPAREN>
     |   TextClause()
     |   ItemClause()
     |   DateClause()
@@ -136,19 +152,32 @@ private void Clause() : {
 private void DefaultClause() : {
 }
 {
-    <TERM> | <QUOTED_TERM>}
+    <TERM> | <QUOTED_TERM>
+}
 
 private void TextClause() : {
 }
-{    TextField() TextTerm()
+{
+    TextField() TextTerm()
+|   SubjField() SubjTerm()
 }
 
-private void ItemClause() : {}
+private void ItemClause() : {
+}
 {
-    <ITEM> ItemTerm()}
+    <ITEM> ItemTerm()
+}
 
-private void DateClause() : {}
-{    DateField() DateTerm()
+private void DateClause() : {
+}
+{
+    DateField() DateTerm()
+}
+
+private void SubjField() #void : {
+}
+{
+    <SUBJECT>
 }
 
 private void TextField() #void : {
@@ -156,8 +185,8 @@ private void TextField() #void : {
 {
     <FIELD> | <MSGID> | <MODSEQ> | <TYPE> | <MY> | <IS> | <TAG> | <PRIORITY>
 |   <FROM> | <TO> | <CC> | <ENVFROM> | <ENVTO>
-|   <TOFROM> | <TOCC> | <FROMCC> | <TOFROMCC>
-|   <SUBJECT> | <MESSAGE> | <CONTENT>
+|   <TOFROM> | <TOCC> | <FROMCC> | <TOFROMCC> | <FROMORSENDER>
+|   <MESSAGE> | <CONTENT>
 |   <IN> | <INID> | <UNDER> | <UNDERID>
 |   <ATTACHMENT> | <HAS> | <FILENAME>
 |   <CONTACT> | <AUTHOR> | <TITLE> | <KEYWORDS> | <COMPANY> | <METADATA>
@@ -167,7 +196,8 @@ private void TextField() #void : {
 
 private void DateField() #void : {
 }
-{    <DATE> | <MDATE> | <DAY> | <MONTH> | <WEEK> | <YEAR>
+{
+    <DATE> | <MDATE> | <DAY> | <MONTH> | <WEEK> | <YEAR>
 |   <AFTER> | <BEFORE> | <CONV_START> | <CONV_END> | <APPT_START> | <APPT_END>
 }
 
@@ -193,6 +223,14 @@ private void SortBy() : {
 }
 {
     (<SORTBY> | <SORT>) <TERM>
+}
+
+
+private void SubjTerm() : {
+}
+{
+    (<LPAREN> [Modifier()] SubjTerm() ([Conjunction()] [Modifier()] SubjTerm())* <RPAREN>)
+|   <TERM> | <QUOTED_TERM> | <QUOTED_RANGE_TERM>
 }
 
 private void TextTerm() : {

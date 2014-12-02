@@ -28,10 +28,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.lucene.document.Document;
 import org.apache.lucene.index.Term;
+import org.apache.solr.common.SolrDocument;
 
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 import com.google.common.io.Closeables;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -143,6 +144,31 @@ public class DBQueryOperation extends QueryOperation {
             //that gets handled elsewhere, just return null
             return null;
         }
+    }
+
+    public void removeUnwantedFoldersFromConstraints(Set<Folder> foldersToRemove) {
+    	if (foldersToRemove.size() == 0) {return; }
+    	removeUnwantedFoldersFromConstraints(constraints, foldersToRemove);
+    }
+
+    static void removeUnwantedFoldersFromConstraints(DbSearchConstraints node, Set<Folder> foldersToRemove) {
+    	if (node instanceof DbSearchConstraints.Leaf) {
+    		DbSearchConstraints.Leaf leaf = ((DbSearchConstraints.Leaf) node);
+    		Set<Folder> updatedFolders = new HashSet<Folder>();
+    		Sets.difference(leaf.folders, foldersToRemove).copyInto(updatedFolders);
+    		leaf.folders.clear();
+    		leaf.folders.addAll(updatedFolders);
+    		if (leaf.folders.isEmpty() && !leaf.isEmpty()) {
+				//If the folder constraints were all removed, we need the leaf node to
+				//not return any results. This will happen if there are no other constraints specified,
+				//but if there are, we need to eliminate them.
+    			leaf.noResults = true;
+    		}
+    	} else if (node instanceof DbSearchConstraints.Union) {
+    		for (DbSearchConstraints subConstraints: node.getChildren()) {
+    			removeUnwantedFoldersFromConstraints(subConstraints, foldersToRemove);
+    		}
+    	}
     }
 
     @Override
@@ -322,6 +348,16 @@ public class DBQueryOperation extends QueryOperation {
         allResultsQuery = false;
         getTopLeafConstraint().addCalEndDateRange(min, minInclusive, max, maxInclusive, bool);
     }
+
+	public void addConvStartDateRange(long min, boolean minInclusive, long max, boolean maxInclusive, boolean bool) {
+		allResultsQuery = false;
+		getTopLeafConstraint().addConvStartDateRange(min, minInclusive, max, maxInclusive, bool);
+	}
+
+	public void addConvEndDateRange(long min, boolean minInclusive, long max, boolean maxInclusive, boolean bool) {
+		allResultsQuery = false;
+		getTopLeafConstraint().addConvEndDateRange(min, minInclusive, max, maxInclusive, bool);
+	}
 
     public void addConvCountRange(long min, boolean minInclusive, long max, boolean maxInclusive, boolean bool) {
         allResultsQuery = false;
@@ -528,7 +564,7 @@ public class DBQueryOperation extends QueryOperation {
                     // message with separately-indexed MIME parts. Each of these parts will turn into a separate
                     // ZimbraHit at this point, although they might be combined together at a higher level (via a
                     // HitGrouper).
-                    Collection<Document> docs = luceneChunk != null ? luceneChunk.getHit(sr.getIndexId()) : null;
+                    Collection<SolrDocument> docs = luceneChunk != null ? luceneChunk.getHit(sr.getIndexId()) : null;
 
                     if (docs == null || !ZimbraQueryResultsImpl.shouldAddDuplicateHits(sr.getType())) {
                         ZimbraHit toAdd = context.getResults().getZimbraHit(context.getMailbox(), sr, null, fetch);
@@ -540,7 +576,7 @@ public class DBQueryOperation extends QueryOperation {
                             }
                         }
                     } else {
-                        for (Document doc : docs) {
+                        for (SolrDocument doc : docs) {
                             ZimbraHit toAdd = context.getResults().getZimbraHit(context.getMailbox(), sr, doc, fetch);
                             if (toAdd != null) {
                                 // make sure we only return each hit once
@@ -1237,5 +1273,4 @@ public class DBQueryOperation extends QueryOperation {
     public long getCursorOffset() {
         return cursorOffset;
     }
-
 }

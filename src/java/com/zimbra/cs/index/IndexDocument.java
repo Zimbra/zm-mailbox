@@ -16,15 +16,11 @@
  */
 package com.zimbra.cs.index;
 
-import org.apache.lucene.document.DateTools;
-import org.apache.lucene.document.Document;
-import org.apache.lucene.document.Field;
+import org.apache.solr.client.solrj.util.ClientUtils;
+import org.apache.solr.common.SolrDocument;
+import org.apache.solr.common.SolrInputDocument;
 
 import com.google.common.base.Strings;
-import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.index.analysis.FieldTokenStream;
-import com.zimbra.cs.index.analysis.MimeTypeTokenStream;
-import com.zimbra.cs.index.analysis.RFC822AddressTokenStream;
 
 /**
  * Helper for Lucene {@link Document}.
@@ -32,178 +28,182 @@ import com.zimbra.cs.index.analysis.RFC822AddressTokenStream;
  * @author ysasaki
  */
 public final class IndexDocument {
-    private final Document document;
+	private final SolrInputDocument inputDocument;
 
-    public IndexDocument() {
-        document = new Document();
+	public IndexDocument() {
+		inputDocument = new SolrInputDocument();
+	}
+
+	public IndexDocument(SolrInputDocument doc) {
+		inputDocument = doc;
+	}
+
+	public SolrInputDocument toInputDocument() {
+		return inputDocument;
+	}
+
+	public SolrDocument toDocument() {
+		return ClientUtils.toSolrDocument(inputDocument);
+	}
+
+	public void addMimeType(String value) {
+		inputDocument.addField(LuceneFields.L_MIMETYPE, value);
+	}
+
+	public void addPartName(String value) {
+		inputDocument.addField(LuceneFields.L_PARTNAME, value);
+	}
+
+	public void addFilename(String value) {
+		inputDocument.addField(LuceneFields.L_FILENAME, value);
+	}
+
+	public void addSortSize(long value) {
+		inputDocument.addField(LuceneFields.L_SORT_SIZE, String.valueOf(value));
+	}
+
+	public void removeSortSize() {
+		inputDocument.removeField(LuceneFields.L_SORT_SIZE);
+	}
+
+	public void addSortAttachment(boolean value) {
+		inputDocument.addField(LuceneFields.L_SORT_ATTACH,
+				LuceneFields.valueForBooleanField(value));
+	}
+
+	public void removeSortAttachment() {
+		inputDocument.removeField(LuceneFields.L_SORT_ATTACH);
+	}
+
+	public void addSortFlag(boolean value) {
+		inputDocument.addField(LuceneFields.L_SORT_FLAG,
+				 LuceneFields.valueForBooleanField(value));
+	}
+
+	public void removeSortFlag() {
+		inputDocument.removeField(LuceneFields.L_SORT_FLAG);
+	}
+
+	public void addSortPriority(int value) {
+		inputDocument.addField(LuceneFields.L_SORT_PRIORITY,
+				LuceneFields.valueForPriority(value));
+	}
+
+	public void removeSortPriority() {
+		inputDocument.removeField(LuceneFields.L_SORT_PRIORITY);
+	}
+
+	public void addFrom(String value) {
+		inputDocument.addField(LuceneFields.L_H_FROM, value);
+	}
+
+	public void removeFrom() {
+		inputDocument.removeField(LuceneFields.L_H_FROM);
+	}
+
+	public void addTo(String value) {
+		inputDocument.addField(LuceneFields.L_H_TO, value);
+	}
+
+	public void removeTo() {
+		inputDocument.removeField(LuceneFields.L_H_TO);
+	}
+
+	public void addCc(String value) {
+		inputDocument.addField(LuceneFields.L_H_CC, value);
+	}
+
+	public void removeCc() {
+		inputDocument.removeField(LuceneFields.L_H_CC);
+	}
+
+    public void addSender(String value) {
+        inputDocument.addField(LuceneFields.L_H_SENDER, value);
     }
 
-    public IndexDocument(Document doc) {
-        document = doc;
+    public void removeSender() {
+        inputDocument.removeField(LuceneFields.L_H_SENDER);
     }
 
-    public Document toDocument() {
-        return document;
-    }
+	public void addEnvFrom(String value) {
+		inputDocument.addField(LuceneFields.L_H_X_ENV_FROM, value);
+	}
 
-    public void addMimeType(MimeTypeTokenStream stream) {
-        document.add(new Field(LuceneFields.L_MIMETYPE, stream));
-    }
+	public void addEnvTo(String value) {
+		inputDocument.addField(LuceneFields.L_H_X_ENV_TO, value);
+	}
 
-    public void addPartName(String value) {
-        document.add(new Field(LuceneFields.L_PARTNAME, value, Field.Store.YES, Field.Index.NOT_ANALYZED));
-    }
+	public void addMessageId(String value) {
+		inputDocument.addField(LuceneFields.L_H_MESSAGE_ID, value);
+	}
 
-    public void addFilename(String value) {
-        document.add(new Field(LuceneFields.L_FILENAME, value, Field.Store.YES, Field.Index.ANALYZED));
-    }
+	public void addField(String value) {
+		inputDocument.addField(LuceneFields.L_FIELD, value);
+	}
 
-    public void addSortSize(long value) {
-        document.add(new Field(LuceneFields.L_SORT_SIZE, String.valueOf(value), Field.Store.YES,
-                Field.Index.NOT_ANALYZED));
-    }
+	public void addSortName(String value) {
+		if (Strings.isNullOrEmpty(value)) {
+			return;
+		}
+		inputDocument.addField(LuceneFields.L_SORT_NAME, value.toLowerCase());
+	}
 
-    public void removeSortSize() {
-        document.removeFields(LuceneFields.L_SORT_SIZE);
-    }
+	public void removeSortName() {
+		inputDocument.removeField(LuceneFields.L_SORT_NAME);
+	}
 
-    public void addSortAttachment(boolean value) {
-        document.add(new Field(LuceneFields.L_SORT_ATTACH, LuceneFields.valueForBooleanField(value),
-                Field.Store.YES, Field.Index.NOT_ANALYZED_NO_NORMS));
-    }
+	public void addSubject(String value) {
+		inputDocument.addField(LuceneFields.L_H_SUBJECT, value);
+	}
 
-    public void removeSortAttachment() {
-        document.removeFields(LuceneFields.L_SORT_ATTACH);
-    }
+	public void removeSubject() {
+		inputDocument.removeField(LuceneFields.L_H_SUBJECT);
+	}
 
-    public void addSortFlag(boolean value) {
-        document.add(new Field(LuceneFields.L_SORT_FLAG, LuceneFields.valueForBooleanField(value),
-                Field.Store.YES, Field.Index.NOT_ANALYZED_NO_NORMS));
-    }
+	public void addSortSubject(String value) {
+		if (Strings.isNullOrEmpty(value)) {
+			return;
+		}
+		inputDocument.addField(LuceneFields.L_SORT_SUBJECT, value.toUpperCase());
+	}
 
-    public void removeSortFlag() {
-        document.removeFields(LuceneFields.L_SORT_FLAG);
-    }
+	public void removeSortSubject() {
+		inputDocument.removeField(LuceneFields.L_SORT_SUBJECT);
+	}
 
-    public void addSortPriority(int value) {
-        document.add(new Field(LuceneFields.L_SORT_PRIORITY, LuceneFields.valueForPriority(value),
-                Field.Store.YES, Field.Index.NOT_ANALYZED_NO_NORMS));
-    }
+	public void addContent(String value) {
+		inputDocument.addField(LuceneFields.L_CONTENT, value);
+	}
 
-    public void removeSortPriority() {
-        document.removeFields(LuceneFields.L_SORT_PRIORITY);
-    }
+	public void addAttachments(String value) {
+		inputDocument.addField(LuceneFields.L_ATTACHMENTS, value);
+	}
 
-    public void addFrom(RFC822AddressTokenStream stream) {
-        document.add(new Field(LuceneFields.L_H_FROM, stream));
-    }
+	public void addMailboxBlobId(int value) {
+		inputDocument.addField(LuceneFields.L_MAILBOX_BLOB_ID, String.valueOf(value));
+	}
 
-    public void removeFrom() {
-        document.removeFields(LuceneFields.L_H_FROM);
-    }
+	public void removeMailboxBlobId() {
+		inputDocument.removeField(LuceneFields.L_MAILBOX_BLOB_ID);
+	}
 
-    public void addTo(RFC822AddressTokenStream stream) {
-        document.add(new Field(LuceneFields.L_H_TO, stream));
-    }
+	public void addSortDate(long value) {
+		inputDocument.addField(LuceneFields.L_SORT_DATE, String.valueOf(value));
+	}
 
-    public void removeTo() {
-        document.removeFields(LuceneFields.L_H_TO);
-    }
+	public void removeSortDate() {
+		inputDocument.removeField(LuceneFields.L_SORT_DATE);
+	}
 
-    public void addCc(RFC822AddressTokenStream stream) {
-        document.add(new Field(LuceneFields.L_H_CC, stream));
-    }
+	public void addContactData(String value) {
+		inputDocument.addField(LuceneFields.L_CONTACT_DATA, value);
+	}
 
-    public void removeCc() {
-        document.removeFields(LuceneFields.L_H_CC);
-    }
+	public void addObjects(String value) {
+		inputDocument.addField(LuceneFields.L_OBJECTS, value);
+	}
 
-    public void addEnvFrom(RFC822AddressTokenStream stream) {
-        document.add(new Field(LuceneFields.L_H_X_ENV_FROM, stream));
-    }
-
-    public void addEnvTo(RFC822AddressTokenStream stream) {
-        document.add(new Field(LuceneFields.L_H_X_ENV_TO, stream));
-    }
-
-    public void addMessageId(String value) {
-        document.add(new Field(LuceneFields.L_H_MESSAGE_ID, value, Field.Store.NO, Field.Index.NOT_ANALYZED));
-    }
-
-    public void addField(FieldTokenStream stream) {
-        document.add(new Field(LuceneFields.L_FIELD, stream));
-    }
-
-    public void addSortName(String value) {
-        if (Strings.isNullOrEmpty(value)) {
-            return;
-        }
-        document.add(new Field(LuceneFields.L_SORT_NAME, value.toLowerCase(),
-                Field.Store.NO, Field.Index.NOT_ANALYZED));
-    }
-
-    public void removeSortName() {
-        document.removeFields(LuceneFields.L_SORT_NAME);
-    }
-
-    public void addSubject(String value) {
-        document.add(new Field(LuceneFields.L_H_SUBJECT, value, Field.Store.NO, Field.Index.ANALYZED));
-    }
-
-    public void removeSubject() {
-        document.removeFields(LuceneFields.L_H_SUBJECT);
-    }
-
-    public void addSortSubject(String value) {
-        if (Strings.isNullOrEmpty(value)) {
-            return;
-        }
-        document.add(new Field(LuceneFields.L_SORT_SUBJECT, value.toUpperCase(),
-                Field.Store.NO, Field.Index.NOT_ANALYZED));
-    }
-
-    public void removeSortSubject() {
-        document.removeFields(LuceneFields.L_SORT_SUBJECT);
-    }
-
-    public void addContent(String value) {
-        document.add(new Field(LuceneFields.L_CONTENT, value, Field.Store.NO, Field.Index.ANALYZED));
-    }
-
-    public void addAttachments(MimeTypeTokenStream stream) {
-        document.add(new Field(LuceneFields.L_ATTACHMENTS, stream));
-    }
-
-    public void addMailboxBlobId(int value) {
-        document.add(new Field(LuceneFields.L_MAILBOX_BLOB_ID, String.valueOf(value),
-                Field.Store.YES, Field.Index.NOT_ANALYZED));
-    }
-
-    public void removeMailboxBlobId() {
-        document.removeFields(LuceneFields.L_MAILBOX_BLOB_ID);
-    }
-
-    public void addSortDate(long value) {
-        document.add(new Field(LuceneFields.L_SORT_DATE,
-                DateTools.timeToString(value, DateTools.Resolution.MILLISECOND),
-                Field.Store.YES, Field.Index.NOT_ANALYZED));
-    }
-
-    public void removeSortDate() {
-        document.removeFields(LuceneFields.L_SORT_DATE);
-    }
-
-    public void addContactData(String value) {
-        document.add(new Field(LuceneFields.L_CONTACT_DATA, value, Field.Store.NO, Field.Index.ANALYZED));
-    }
-
-    public void addObjects(String value) {
-        document.add(new Field(LuceneFields.L_OBJECTS, value, Field.Store.NO, Field.Index.ANALYZED));
-    }
-
-    public void addVersion(int value) {
-        document.add(new Field(LuceneFields.L_VERSION, String.valueOf(value),
-                Field.Store.YES, Field.Index.NOT_ANALYZED));
-    }
-
+	public void addVersion(int value) {
+		inputDocument.addField(LuceneFields.L_VERSION, String.valueOf(value));
+	}
 }

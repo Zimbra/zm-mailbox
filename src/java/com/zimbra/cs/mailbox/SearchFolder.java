@@ -140,7 +140,7 @@ public final class SearchFolder extends Folder {
         data.type = Type.SEARCHFOLDER.toByte();
         data.folderId = parent.getId();
         data.parentId = parent.getId();
-        data.date = mbox.getOperationTimestamp();
+        data.date = mbox.getOperationTimestampMillis();
         data.setFlags((flags | Flag.toBitmask(mbox.getAccount().getDefaultFolderFlags())) & Flag.FLAGS_FOLDER);
         data.name = name;
         data.setSubject(name);

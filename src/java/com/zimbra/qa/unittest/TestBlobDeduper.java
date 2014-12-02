@@ -73,7 +73,7 @@ public final class TestBlobDeduper extends TestCase {
         }
         // Make sure inodes are different for paths
         for (int i = 0; i < 4; i++) {
-            Assert.assertFalse(IO.fileInfo(paths[i]).getInodeNum() == IO.fileInfo(paths[i+1]).getInodeNum());
+            Assert.assertFalse(String.format("inodes should not be same for paths %s and %s", paths[i], paths[i+1]),IO.fileInfo(paths[i]).getInodeNum() == IO.fileInfo(paths[i+1]).getInodeNum());
         }
         // wait for a seconds, so that timestamp gets changed.
         Thread.sleep(1000);
@@ -86,7 +86,7 @@ public final class TestBlobDeduper extends TestCase {
         }
         // Make sure inodes are same for paths
         for (int i = 0; i < 4; i++) {
-            Assert.assertTrue(IO.fileInfo(paths[i]).getInodeNum() == IO.fileInfo(paths[i+1]).getInodeNum());
+            Assert.assertEquals(String.format("inodes are not the same for paths %s and %s after deduping", paths[i], paths[i+1]), IO.fileInfo(paths[i]).getInodeNum(),IO.fileInfo(paths[i+1]).getInodeNum());
         }
     }
 

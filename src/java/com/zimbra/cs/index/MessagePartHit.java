@@ -18,6 +18,7 @@
 package com.zimbra.cs.index;
 
 import org.apache.lucene.document.Document;
+import org.apache.solr.common.SolrDocument;
 
 import com.google.common.base.Objects;
 import com.zimbra.common.service.ServiceException;
@@ -39,12 +40,12 @@ import com.zimbra.cs.mailbox.Message;
  */
 public final class MessagePartHit extends ZimbraHit {
 
-    private final Document document;
+    private final SolrDocument document;
     private MessageHit hit;
     private final int itemId;
 
     protected MessagePartHit(ZimbraQueryResultsImpl res, Mailbox mbx, int id,
-            Message msg, Document doc, Object sortValue) {
+            Message msg, SolrDocument doc, Object sortValue) {
         super(res, mbx, sortValue);
         itemId = id;
         document = doc;
@@ -95,16 +96,16 @@ public final class MessagePartHit extends ZimbraHit {
     }
 
     public String getFilename() {
-        return document != null ? document.get(LuceneFields.L_FILENAME) : null;
+        return document != null ? (String) document.get(LuceneFields.L_FILENAME) : null;
     }
 
     public String getType() {
-        return document != null ? document.get(LuceneFields.L_MIMETYPE) : null;
+        return document != null ? (String) document.get(LuceneFields.L_MIMETYPE) : null;
     }
 
     public String getPartName() {
         if (document != null) {
-            String part = document.get(LuceneFields.L_PARTNAME);
+            String part = (String) document.get(LuceneFields.L_PARTNAME);
             if (part != null && !part.equals(LuceneFields.L_PARTNAME_TOP)) {
                 return part;
             }

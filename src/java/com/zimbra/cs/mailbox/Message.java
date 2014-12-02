@@ -575,6 +575,8 @@ public class Message extends MailItem {
         long date = pm.getReceivedDate(), now = System.currentTimeMillis();
         if (date < 0 || date > now) {
             date = now;
+        } else if (date < Integer.MAX_VALUE) { //date is resolved to seconds, need to update to milliseconds
+        	date = date * 1000L;
         }
         UnderlyingData data = new UnderlyingData();
         data.id = id;
@@ -586,7 +588,7 @@ public class Message extends MailItem {
         data.indexId = !folder.inSpam() || acct.isJunkMessagesIndexingEnabled() ? IndexStatus.DEFERRED.id() : IndexStatus.DONE.id();
         data.locator = staged.getLocator();
         data.imapId = id;
-        data.date = (int) (date / 1000);
+        data.date = date;
         data.size = staged.getSize();
         data.setBlobDigest(staged.getDigest());
         data.setFlags(flags & (Flag.FLAGS_MESSAGE | Flag.FLAGS_GENERIC));

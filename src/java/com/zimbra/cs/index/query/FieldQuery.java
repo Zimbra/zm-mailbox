@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -21,13 +21,13 @@ import java.util.regex.Pattern;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.TermRangeQuery;
+import org.apache.lucene.util.BytesRef;
 import org.apache.lucene.util.NumericUtils;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.LuceneQueryOperation;
 import com.zimbra.cs.index.QueryOperation;
-import com.zimbra.cs.index.analysis.FieldTokenStream;
 import com.zimbra.cs.mailbox.Mailbox;
 
 /**
@@ -41,8 +41,7 @@ public final class FieldQuery extends TextQuery {
     private static final Pattern NUMERIC_QUERY_REGEX = Pattern.compile("(<|>|<=|>=)?-?\\d+");
 
     private FieldQuery(String name, String value) {
-        super(new FieldTokenStream(name, value), LuceneFields.L_FIELD,
-                String.format("%s:%s", name, value == null ? "" : value));
+        super(LuceneFields.L_FIELD, String.format("%s:%s", name, value == null ? "" : value));
     }
 
     /**
@@ -118,33 +117,47 @@ public final class FieldQuery extends TextQuery {
         @Override
         public QueryOperation compile(Mailbox mbox, boolean bool) {
             org.apache.lucene.search.Query query = null;
+            int BUF_SIZE_INT = 31/7 + 2;
+        	BytesRef encodedNumBytes = new BytesRef(BUF_SIZE_INT);
+        	BytesRef encodedMaxBytes;
+        	BytesRef encodedMinBytes;
+        	NumericUtils.intToPrefixCoded(number, 0, encodedNumBytes);
+
             switch (range) {
                 case EQ:
                     query = new TermQuery(new Term(LuceneFields.L_FIELD,
-                            name + "#:" + NumericUtils.intToPrefixCoded(number)));
+                            name + "#:" + encodedNumBytes.utf8ToString()));
                     break;
                 case GT:
+                	encodedMaxBytes = new BytesRef(BUF_SIZE_INT);
+                	NumericUtils.intToPrefixCoded(Integer.MAX_VALUE, 0, encodedMaxBytes);
                     query = new TermRangeQuery(LuceneFields.L_FIELD,
-                            name + "#:" + NumericUtils.intToPrefixCoded(number),
-                            name + "#:" + NumericUtils.intToPrefixCoded(Integer.MAX_VALUE),
+                            new BytesRef(name + "#:" + encodedNumBytes.utf8ToString()),
+                            new BytesRef(name + "#:" + encodedMaxBytes.utf8ToString()),
                             false, true);
                     break;
                 case GT_EQ:
+                	encodedMaxBytes = new BytesRef(BUF_SIZE_INT);
+                	NumericUtils.intToPrefixCoded(Integer.MAX_VALUE, 0, encodedMaxBytes);
                     query = new TermRangeQuery(LuceneFields.L_FIELD,
-                            name + "#:" + NumericUtils.intToPrefixCoded(number),
-                            name + "#:" + NumericUtils.intToPrefixCoded(Integer.MAX_VALUE),
+                            new BytesRef(name + "#:" + encodedNumBytes.utf8ToString()),
+                            new BytesRef(name + "#:" + encodedMaxBytes.utf8ToString()),
                             true, true);
                     break;
                 case LT:
+                	encodedMinBytes = new BytesRef(BUF_SIZE_INT);
+                	NumericUtils.intToPrefixCoded(Integer.MIN_VALUE, 0, encodedMinBytes);
                     query = new TermRangeQuery(LuceneFields.L_FIELD,
-                            name + "#:" + NumericUtils.intToPrefixCoded(Integer.MIN_VALUE),
-                            name + "#:" + NumericUtils.intToPrefixCoded(number),
+                            new BytesRef(name + "#:" + encodedMinBytes.utf8ToString()),
+                            new BytesRef(name + "#:" + encodedNumBytes.utf8ToString()),
                             true, false);
                     break;
                 case LT_EQ:
+                	encodedMinBytes = new BytesRef(BUF_SIZE_INT);
+                	NumericUtils.intToPrefixCoded(Integer.MIN_VALUE, 0, encodedMinBytes);
                     query = new TermRangeQuery(LuceneFields.L_FIELD,
-                            name + "#:" + NumericUtils.intToPrefixCoded(Integer.MIN_VALUE),
-                            name + "#:" + NumericUtils.intToPrefixCoded(number),
+                            new BytesRef(name + "#:" + encodedMinBytes.utf8ToString()),
+                            new BytesRef(name + "#:" + encodedNumBytes.utf8ToString()),
                             true, true);
                     break;
                 default:

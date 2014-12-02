@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2009, 2010, 2011, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -23,7 +23,9 @@ import java.text.ParseException;
 import org.apache.lucene.document.DateTools;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.MultiFields;
 import org.apache.lucene.store.Directory;
+import org.apache.lucene.util.Bits;
 
 public final class RawIndexEditor {
 
@@ -95,9 +97,16 @@ public final class RawIndexEditor {
         try {
             int maxDoc = reader.maxDoc();
             System.out.println("There are "+maxDoc+" documents in this index.");
-
-            for (int i = 0; i < maxDoc; i++) {
-                dumpDocument(reader.document(i), reader.isDeleted(i));
+            Bits liveDocs = MultiFields.getLiveDocs(reader);
+            if (liveDocs == null) {
+            	//no deletions
+            	for (int i = 0; i < maxDoc; i++) {
+                    dumpDocument(reader.document(i), false);
+                }
+            } else {
+	            for (int i = 0; i < maxDoc; i++) {
+	                dumpDocument(reader.document(i), !liveDocs.get(i));
+	            }
             }
         } finally {
             reader.close();

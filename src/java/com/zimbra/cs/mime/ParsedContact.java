@@ -35,6 +35,7 @@ import javax.mail.internet.SharedInputStream;
 import javax.mail.util.ByteArrayDataSource;
 import javax.mail.util.SharedByteArrayInputStream;
 
+import org.apache.solr.common.SolrInputDocument;
 import org.json.JSONException;
 
 import com.google.common.base.Strings;
@@ -54,9 +55,6 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.convert.ConversionException;
 import com.zimbra.cs.index.IndexDocument;
 import com.zimbra.cs.index.LuceneFields;
-import com.zimbra.cs.index.analysis.FieldTokenStream;
-import com.zimbra.cs.index.analysis.NormalizeTokenFilter;
-import com.zimbra.cs.index.analysis.RFC822AddressTokenStream;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.Contact.Attachment;
 import com.zimbra.cs.mailbox.Contact.DerefGroupMembersOption;
@@ -698,7 +696,7 @@ public final class ParsedContact {
                 // Lucene document.  This is necessary so that we can tell the
                 // client what parts match if a search matched a particular
                 // part.
-                org.apache.lucene.document.Document doc = handler.getDocument();
+                SolrInputDocument doc = handler.getDocument();
                 if (doc != null) {
                     IndexDocument idoc = new IndexDocument(doc);
                     idoc.addSortSize(attach.getSize());
@@ -711,7 +709,7 @@ public final class ParsedContact {
     private static void appendContactField(StringBuilder sb, ParsedContact contact, String fieldName) {
         String value = contact.getFields().get(fieldName);
         if (!Strings.isNullOrEmpty(value)) {
-            sb.append(NormalizeTokenFilter.normalize(value)).append(' ');
+            sb.append(value).append(' ');
         }
     }
 
@@ -721,7 +719,8 @@ public final class ParsedContact {
 
         String emailFields[] = Contact.getEmailFields(acct);
 
-        FieldTokenStream fields = new FieldTokenStream();
+        IndexDocument doc = new IndexDocument();
+        
         for (Map.Entry<String, String> entry : getFields().entrySet()) {
             String fieldName = entry.getKey();
 
@@ -732,11 +731,7 @@ public final class ParsedContact {
                 continue;
             }
 
-            if (!Contact.isEmailField(emailFields, fieldName)) { // skip email addrs, they're added to CONTENT below
-                if (!ContactConstants.A_fileAs.equalsIgnoreCase(fieldName))
-                    contentText.append(entry.getValue()).append(' ');
-            }
-            fields.add(fieldName, entry.getValue());
+            doc.addField(String.format("%s:%s", fieldName, entry.getValue()));
         }
 
         // fetch all the 'email' addresses for this contact into a single concatenated string
@@ -746,10 +741,8 @@ public final class ParsedContact {
             emails.append(email).append(',');
         }
 
-        RFC822AddressTokenStream to = new RFC822AddressTokenStream(emails.toString());
-        String emailStrTokens = StringUtil.join(" ", to.getAllTokens());
-
-        StringBuilder searchText = new StringBuilder(emailStrTokens).append(' ');
+        String to = emails.toString();
+        StringBuilder searchText = new StringBuilder();
         appendContactField(searchText, this, ContactConstants.A_company);
         appendContactField(searchText, this, ContactConstants.A_phoneticCompany);
         appendContactField(searchText, this, ContactConstants.A_firstName);
@@ -759,25 +752,17 @@ public final class ParsedContact {
         appendContactField(searchText, this, ContactConstants.A_nickname);
         appendContactField(searchText, this, ContactConstants.A_fullName);
 
-        // rebuild contentText here with the emailStr FIRST, then the other text.
-        // The email addresses should be first so that they have a higher search score than the other
-        // text
-        contentText = new StringBuilder(emailStrTokens).append(' ').append(contentText).append(' ').append(contentStrIn);
-
-        IndexDocument doc = new IndexDocument();
+        contentText = new StringBuilder(contentText).append(' ').append(contentStrIn);
 
         /* put the email addresses in the "To" field so they can be more easily searched */
         doc.addTo(to);
 
         /* put the name in the "From" field since the MailItem table uses 'Sender'*/
-        doc.addFrom(new RFC822AddressTokenStream(Contact.getFileAsString(contactFields)));
+        doc.addFrom(Contact.getFileAsString(contactFields));
         /* bug 11831 - put contact searchable data in its own field so wildcard search works better  */
         doc.addContactData(searchText.toString());
         doc.addContent(contentText.toString());
         doc.addPartName(LuceneFields.L_PARTNAME_CONTACT);
-
-        // add key:value pairs to the structured FIELD Lucene field
-        doc.addField(fields);
 
         return doc;
     }

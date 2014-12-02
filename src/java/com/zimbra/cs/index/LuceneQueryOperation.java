@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -23,8 +23,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Set;
+import java.util.regex.Pattern;
 
-import org.apache.lucene.document.Document;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanClause.Occur;
@@ -34,6 +34,7 @@ import org.apache.lucene.search.Query;
 import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.SortField;
 import org.apache.lucene.search.TermQuery;
+import org.apache.solr.common.SolrDocument;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.LinkedHashMultimap;
@@ -227,8 +228,13 @@ public final class LuceneQueryOperation extends QueryOperation {
         if (searcher == null || luceneQuery == null) {
             return true;
         }
-
-        if (luceneQuery instanceof TermQuery) {
+        /* Since the lucene Query objects are used as nothing more
+         * than convenient container classes for passing around SOLR queries,
+         * we can't reliably use (luceneQuery instanceof TermQuery) anymore.
+         * Therefore we need to check to make sure that the query text
+         * is actually a term query.
+         */
+        if (isTermQuery()) {
             TermQuery query = (TermQuery) luceneQuery;
             Term term = query.getTerm();
             long start = System.currentTimeMillis();
@@ -240,7 +246,7 @@ public final class LuceneQueryOperation extends QueryOperation {
                 if (freq > docsCutoff) {
                     return true;
                 }
-            } catch (IOException e) {
+            } catch (IOException | ServiceException e) {
                 return false;
             }
         }
@@ -273,7 +279,22 @@ public final class LuceneQueryOperation extends QueryOperation {
         }
     }
 
-    private long getTotalItemCount(Set<Folder> folders) {
+    private boolean isTermQuery() {
+		if (luceneQuery instanceof TermQuery) {
+			String queryText = ((TermQuery) luceneQuery).getTerm().text();
+			if (queryText.indexOf("*") >= 0) { //check for wildcard
+				return false;
+			} else if (Pattern.matches("\\s", queryText)) { //check for phrase query
+				return false;
+			} else {
+				return true;
+			}
+		} else {
+			return false;
+		}
+	}
+
+	private long getTotalItemCount(Set<Folder> folders) {
         long total = 0;
         for (Folder f : folders)
             total += f.getItemCount();
@@ -305,7 +326,33 @@ public final class LuceneQueryOperation extends QueryOperation {
         if (!haveRunSearch) {
             fetchFirstResults(max);
         }
-
+        int luceneLen = hits != null ? hits.getTotalHits() : 0;
+        LuceneResultsChunk result = new LuceneResultsChunk();
+        while ((result.size() < max) && (curHitNo < luceneLen)) {
+        	if (topDocsLen <= curHitNo) {
+                topDocsLen += topDocsChunkSize;
+                topDocsChunkSize *= 4;
+                if (topDocsChunkSize > 1000000) {
+                    topDocsChunkSize = 1000000;
+                }
+                if (topDocsLen > luceneLen) {
+                    topDocsLen = luceneLen;
+                }
+                runSearch();
+            }
+	        for(IndexDocument indexDoc : hits.getIndexDocs()) {
+	        	String mbid = (String) indexDoc.toDocument().getFieldValue(LuceneFields.L_MAILBOX_BLOB_ID);
+	        	if (mbid != null) {
+	        		try {
+	        			result.addHit(Integer.parseInt(mbid), indexDoc.toDocument());
+	        			curHitNo++;
+	        		}  catch (NumberFormatException e) {
+	        			ZimbraLog.search.error("Invalid MAILBOX_BLOB_ID: " + mbid, e);
+	        		}
+	        	}
+	        }
+        }
+        /*
         long start = System.currentTimeMillis();
         LuceneResultsChunk result = new LuceneResultsChunk();
         int luceneLen = hits != null ? hits.getTotalHits() : 0;
@@ -339,8 +386,8 @@ public final class LuceneQueryOperation extends QueryOperation {
                     ZimbraLog.search.error("Invalid MAILBOX_BLOB_ID: " + mbid, e);
                 }
             }
-        }
-        ZimbraLog.search.debug("LuceneFetchDocs n=%d,elapsed=%d", luceneLen, System.currentTimeMillis() - start);
+        }*/
+       // ZimbraLog.search.debug("LuceneFetchDocs n=%d,elapsed=%d", luceneLen, System.currentTimeMillis() - start);
         return result;
     }
 
@@ -402,7 +449,7 @@ public final class LuceneQueryOperation extends QueryOperation {
             }
             ZimbraLog.search.debug("LuceneSearch query=%s,n=%d,total=%d,elapsed=%d",
                     luceneQuery, topDocsLen, hits.getTotalHits(), System.currentTimeMillis() - start);
-        } catch (IOException e) {
+        } catch (IOException | ServiceException e) {
             ZimbraLog.search.error("Failed to search query=%s", luceneQuery, e);
             Closeables.closeQuietly(searcher);
             searcher = null;
@@ -410,7 +457,7 @@ public final class LuceneQueryOperation extends QueryOperation {
         }
     }
 
-    private Query expandLazyMultiPhraseQuery(Query query) throws IOException {
+    private Query expandLazyMultiPhraseQuery(Query query) throws IOException , ServiceException {
         if (query instanceof LazyMultiPhraseQuery) {
             LazyMultiPhraseQuery lazy = (LazyMultiPhraseQuery) query;
             int max = LC.zimbra_index_wildcard_max_terms_expanded.intValue();
@@ -481,7 +528,7 @@ public final class LuceneQueryOperation extends QueryOperation {
     private LuceneQueryOperation cloneInternal() {
         assert(!haveRunSearch);
         LuceneQueryOperation clone = (LuceneQueryOperation) super.clone();
-        clone.luceneQuery = (Query) luceneQuery.clone();
+        clone.luceneQuery = luceneQuery.clone();
         return clone;
     }
 
@@ -779,28 +826,28 @@ public final class LuceneQueryOperation extends QueryOperation {
             case NAME:
             case NAME_NATURAL_ORDER:
             case SENDER:
-                return new Sort(new SortField(LuceneFields.L_SORT_NAME, SortField.STRING,
+                return new Sort(new SortField(LuceneFields.L_SORT_NAME, SortField.Type.STRING,
                         sortBy.getDirection() == SortBy.Direction.DESC));
             case SUBJECT:
-                return new Sort(new SortField(LuceneFields.L_SORT_SUBJECT, SortField.STRING,
+                return new Sort(new SortField(LuceneFields.L_SORT_SUBJECT, SortField.Type.STRING,
                         sortBy.getDirection() == SortBy.Direction.DESC));
             case SIZE:
-                return new Sort(new SortField(LuceneFields.L_SORT_SIZE, SortField.LONG,
+                return new Sort(new SortField(LuceneFields.L_SORT_SIZE, SortField.Type.LONG,
                         sortBy.getDirection() == SortBy.Direction.DESC));
             case ATTACHMENT:
-                return new Sort(new SortField(LuceneFields.L_SORT_ATTACH, SortField.STRING,
+                return new Sort(new SortField(LuceneFields.L_SORT_ATTACH, SortField.Type.STRING,
                         sortBy.getDirection() == SortBy.Direction.DESC));
             case FLAG:
-                return new Sort(new SortField(LuceneFields.L_SORT_FLAG, SortField.STRING,
+                return new Sort(new SortField(LuceneFields.L_SORT_FLAG, SortField.Type.STRING,
                         sortBy.getDirection() == SortBy.Direction.DESC));
             case PRIORITY:
-                return new Sort(new SortField(LuceneFields.L_SORT_PRIORITY, SortField.STRING,
+                return new Sort(new SortField(LuceneFields.L_SORT_PRIORITY, SortField.Type.STRING,
                         sortBy.getDirection() == SortBy.Direction.DESC));
             case RCPT:
                 assert false : sortBy; // should already be checked in the compile phase
             case DATE:
             default: // default to DATE_DESCENDING
-                return new Sort(new SortField(LuceneFields.L_SORT_DATE, SortField.STRING,
+                return new Sort(new SortField(LuceneFields.L_SORT_DATE, SortField.Type.STRING,
                         sortBy.getDirection() == SortBy.Direction.DESC));
         }
     }
@@ -810,7 +857,7 @@ public final class LuceneQueryOperation extends QueryOperation {
      * against the DB.
      */
     static final class LuceneResultsChunk {
-        private final Multimap<Integer, Document> hits = LinkedHashMultimap.create();
+        private final Multimap<Integer, SolrDocument> hits = LinkedHashMultimap.create();
 
         Set<Integer> getIndexIds() {
             return hits.keySet();
@@ -820,11 +867,11 @@ public final class LuceneQueryOperation extends QueryOperation {
             return hits.size();
         }
 
-        void addHit(int indexId, Document doc) {
+        void addHit(int indexId, SolrDocument doc) {
             hits.put(indexId, doc);
         }
 
-        Collection<Document> getHit(int indexId) {
+        Collection<SolrDocument> getHit(int indexId) {
             return hits.get(indexId);
         }
     }

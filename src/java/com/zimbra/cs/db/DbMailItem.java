@@ -163,7 +163,7 @@ public class DbMailItem {
             } else {
                 stmt.setInt(pos++, data.imapId);
             }
-            stmt.setInt(pos++, data.date);
+            stmt.setLong(pos++, data.date);
             stmt.setLong(pos++, data.size);
             stmt.setString(pos++, data.locator);
             stmt.setString(pos++, data.getBlobDigest());
@@ -186,9 +186,9 @@ public class DbMailItem {
             stmt.setString(pos++, checkMetadataLength(data.metadata));
             stmt.setInt(pos++, data.modMetadata);
             if (data.dateChanged > 0) {
-                stmt.setInt(pos++, data.dateChanged);
+                stmt.setLong(pos++, data.dateChanged);
             } else {
-                stmt.setNull(pos++, Types.INTEGER);
+                stmt.setNull(pos++, Types.BIGINT);
             }
             stmt.setInt(pos++, data.modContent);
             stmt.setString(pos++, data.uuid);
@@ -284,7 +284,7 @@ public class DbMailItem {
             stmt.setString(pos++, locator);
             stmt.setString(pos++, checkMetadataLength(metadata));  // METADATA
             stmt.setInt(pos++, mbox.getOperationChangeID());   // MOD_METADATA
-            stmt.setInt(pos++, mbox.getOperationTimestamp());  // CHANGE_DATE
+            stmt.setLong(pos++, mbox.getOperationTimestampMillis());  // CHANGE_DATE
             stmt.setInt(pos++, mbox.getOperationChangeID());   // MOD_CONTENT
             stmt.setString(pos++, uuid);                       // UUID
             pos = setMailboxId(stmt, mbox, pos);
@@ -431,7 +431,7 @@ public class DbMailItem {
             stmt.setInt(pos++, data.imapId);                   // IMAP_ID
             stmt.setString(pos++, data.locator);
             stmt.setInt(pos++, mbox.getOperationChangeID());   // MOD_METADATA
-            stmt.setInt(pos++, mbox.getOperationTimestamp());  // CHANGE_DATE
+            stmt.setLong(pos++, mbox.getOperationTimestampMillis());  // CHANGE_DATE
             stmt.setInt(pos++, mbox.getOperationChangeID());   // MOD_CONTENT
             pos = setMailboxId(stmt, mbox, pos);
             stmt.setInt(pos++, source.getId());
@@ -449,7 +449,7 @@ public class DbMailItem {
                 pos = 1;
                 if (altersMODSEQ) {
                     stmt.setInt(pos++, mbox.getOperationChangeID());
-                    stmt.setInt(pos++, mbox.getOperationTimestamp());
+                    stmt.setLong(pos++, mbox.getOperationTimestampMillis());
                 }
                 pos = setMailboxId(stmt, mbox, pos);
                 stmt.setInt(pos++, source.getId());
@@ -613,7 +613,7 @@ public class DbMailItem {
                 }
             }
             stmt.setInt(pos++, modseq);
-            stmt.setInt(pos++, mbox.getOperationTimestamp());
+            stmt.setLong(pos++, mbox.getOperationTimestampMillis());
             pos = setMailboxId(stmt, mbox, pos);
             stmt.setInt(pos++, item instanceof VirtualConversation ? ((VirtualConversation) item).getMessageId() : item.getId());
             stmt.executeUpdate();
@@ -693,7 +693,7 @@ public class DbMailItem {
                     stmt.setString(pos++, msgs.get(i).getUnderlyingData().getPrevFolders());
                 }
                 stmt.setInt(pos++, modseq);
-                stmt.setInt(pos++, mbox.getOperationTimestamp());
+                stmt.setLong(pos++, mbox.getOperationTimestampMillis());
                 pos = setMailboxId(stmt, mbox, pos);
                 for (int index = i; index < i + count; index++) {
                     stmt.setInt(pos++, msgs.get(index).getId());
@@ -901,7 +901,7 @@ public class DbMailItem {
                     stmt.setInt(pos++, parent.getId());
                 }
                 stmt.setInt(pos++, mbox.getOperationChangeID());
-                stmt.setInt(pos++, mbox.getOperationTimestamp());
+                stmt.setLong(pos++, mbox.getOperationTimestampMillis());
                 pos = setMailboxId(stmt, mbox, pos);
                 for (int index = i; index < i + count; index++) {
                     stmt.setInt(pos++, children[index].getId());
@@ -940,7 +940,7 @@ public class DbMailItem {
                 stmt.setInt(pos++, newParent.getId());
             }
             stmt.setInt(pos++, mbox.getOperationChangeID());
-            stmt.setInt(pos++, mbox.getOperationTimestamp());
+            stmt.setLong(pos++, mbox.getOperationTimestampMillis());
             pos = setMailboxId(stmt, mbox, pos);
             stmt.setInt(pos++, oldParent instanceof VirtualConversation ? ((VirtualConversation) oldParent).getMessageId() : oldParent.getId());
             stmt.executeUpdate();
@@ -960,11 +960,11 @@ public class DbMailItem {
                         " SET date = ?, size = ?, metadata = ?, mod_metadata = ?, change_date = ?, mod_content = ?" +
                         " WHERE " + IN_THIS_MAILBOX_AND + "id = ?");
             int pos = 1;
-            stmt.setInt(pos++, (int) (item.getDate() / 1000));
+            stmt.setLong(pos++, item.getDate());
             stmt.setLong(pos++, item.getSize());
             stmt.setString(pos++, checkMetadataLength(metadata));
             stmt.setInt(pos++, mbox.getOperationChangeID());
-            stmt.setInt(pos++, mbox.getOperationTimestamp());
+            stmt.setLong(pos++, mbox.getOperationTimestampMillis());
             stmt.setInt(pos++, item.getSavedSequence());
             pos = setMailboxId(stmt, mbox, pos);
             stmt.setInt(pos++, item.getId());
@@ -990,9 +990,9 @@ public class DbMailItem {
             stmt.setString(pos++, checkMetadataLength(metadata.toString()));
             stmt.setInt(pos++, item.getModifiedSequence());
             if (item.getChangeDate() > 0) {
-                stmt.setInt(pos++, (int) (item.getChangeDate() / 1000));
+                stmt.setLong(pos++, item.getChangeDate());
             } else {
-                stmt.setNull(pos++, Types.INTEGER);
+                stmt.setNull(pos++, Types.BIGINT);
             }
             stmt.setInt(pos++, item.getSavedSequence());
             pos = setMailboxId(stmt, mbox, pos);
@@ -1015,11 +1015,11 @@ public class DbMailItem {
                         " SET date = ?, size = ?, subject = ?, mod_metadata = ?, change_date = ?, mod_content = ?" +
                         " WHERE " + IN_THIS_MAILBOX_AND + "id = ?");
             int pos = 1;
-            stmt.setInt(pos++, (int) (note.getDate() / 1000));
+            stmt.setLong(pos++, note.getDate());
             stmt.setLong(pos++, note.getSize());
             stmt.setString(pos++, note.getSubject());
             stmt.setInt(pos++, mbox.getOperationChangeID());
-            stmt.setInt(pos++, mbox.getOperationTimestamp());
+            stmt.setLong(pos++, mbox.getOperationTimestampMillis());
             stmt.setInt(pos++, mbox.getOperationChangeID());
             pos = setMailboxId(stmt, mbox, pos);
             stmt.setInt(pos++, note.getId());
@@ -1046,7 +1046,7 @@ public class DbMailItem {
                         "  metadata = ?, mod_metadata = ?, change_date = ?" +
                         " WHERE " + IN_THIS_MAILBOX_AND + "id = ?");
             int pos = 1;
-            stmt.setInt(pos++, (int) (item.getDate() / 1000));
+            stmt.setLong(pos++, item.getDate());
             stmt.setLong(pos++, item.getSize());
             stmt.setLong(pos++, item.getInternalFlagBitmask());
             stmt.setString(pos++, name);
@@ -1057,7 +1057,7 @@ public class DbMailItem {
             }
             stmt.setString(pos++, metadata.toString());
             stmt.setInt(pos++, mbox.getOperationChangeID());
-            stmt.setInt(pos++, mbox.getOperationTimestamp());
+            stmt.setLong(pos++, mbox.getOperationTimestampMillis());
             pos = setMailboxId(stmt, mbox, pos);
             stmt.setInt(pos++, item.getId());
             stmt.executeUpdate();
@@ -1108,7 +1108,7 @@ public class DbMailItem {
             } else {
                 stmt.setInt(pos++, item.getParentId());
             }
-            stmt.setInt(pos++, (int) (item.getDate() / 1000));
+            stmt.setLong(pos++, item.getDate());
             stmt.setLong(pos++, item.getSize());
             stmt.setLong(pos++, item.getInternalFlagBitmask());
             stmt.setString(pos++, item.getDigest());
@@ -1118,7 +1118,7 @@ public class DbMailItem {
             stmt.setString(pos++, name);
             stmt.setString(pos++, checkMetadataLength(metadata.toString()));
             stmt.setInt(pos++, mailbox.getOperationChangeID());
-            stmt.setInt(pos++, mailbox.getOperationTimestamp());
+            stmt.setLong(pos++, mailbox.getOperationTimestampMillis());
             stmt.setInt(pos++, item.getSavedSequence());
             stmt.setString(pos++, item.getLocator());
             pos = setMailboxId(stmt, mailbox, pos);
@@ -1228,7 +1228,7 @@ public class DbMailItem {
      * @param mbox the mailbox
      * @param beforeDate the cutoff date in seconds
      */
-    public static void closeOldConversations(Mailbox mbox, int beforeDate) throws ServiceException {
+    public static void closeOldConversations(Mailbox mbox, long beforeDate) throws ServiceException {
         DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         ZimbraLog.purge.debug("Closing conversations dated before %d.", beforeDate);
@@ -1242,7 +1242,7 @@ public class DbMailItem {
                 "  AND date < ?)");
             int pos = 1;
             pos = setMailboxId(stmt, mbox, pos);
-            stmt.setInt(pos++, beforeDate);
+            stmt.setLong(pos++, beforeDate);
             int numRows = stmt.executeUpdate();
             if (numRows > 0) {
                 ZimbraLog.purge.info("Closed %d conversations dated before %d.", numRows, beforeDate);
@@ -1283,9 +1283,9 @@ public class DbMailItem {
             stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(mbox) +
                         " SET date = ?, mod_metadata = ?, change_date = ? WHERE " + IN_THIS_MAILBOX_AND + "id = ?");
             int pos = 1;
-            stmt.setInt(pos++, (int) (item.getDate() / 1000));
+            stmt.setLong(pos++, item.getDate());
             stmt.setInt(pos++, mbox.getOperationChangeID());
-            stmt.setInt(pos++, mbox.getOperationTimestamp());
+            stmt.setLong(pos++, mbox.getOperationTimestampMillis());
             pos = setMailboxId(stmt, mbox, pos);
             stmt.setInt(pos++, item.getId());
             stmt.executeUpdate();
@@ -1328,7 +1328,7 @@ public class DbMailItem {
             int pos = 1;
             stmt.setInt(pos++, item.getImapUid());
             stmt.setInt(pos++, mbox.getOperationChangeID());
-            stmt.setInt(pos++, mbox.getOperationTimestamp());
+            stmt.setLong(pos++, mbox.getOperationTimestampMillis());
             pos = setMailboxId(stmt, mbox, pos);
             stmt.setInt(pos++, item.getId());
             stmt.executeUpdate();
@@ -1358,7 +1358,7 @@ public class DbMailItem {
                 int pos = 1;
                 stmt.setInt(pos++, unread ? 1 : 0);
                 stmt.setInt(pos++, mbox.getOperationChangeID());
-                stmt.setInt(pos++, mbox.getOperationTimestamp());
+                stmt.setLong(pos++, mbox.getOperationTimestampMillis());
                 pos = setMailboxId(stmt, mbox, pos);
                 stmt.setInt(pos++, unread ? 0 : 1);
                 for (int index = i; index < i + count; index++) {
@@ -1407,7 +1407,7 @@ public class DbMailItem {
                 pos = setMailboxId(stmt, mbox, pos);
                 stmt.setInt(pos++, folder.getId());
                 stmt.setInt(pos++, mbox.getOperationChangeID());
-                stmt.setInt(pos++, mbox.getOperationTimestamp());
+                stmt.setLong(pos++, mbox.getOperationTimestampMillis());
                 pos = setMailboxId(stmt, mbox, pos);
                 stmt.executeUpdate();
                 stmt.close();
@@ -1442,7 +1442,7 @@ public class DbMailItem {
                         pos = 1;
                         stmt.setInt(pos++, update.getKey());
                         stmt.setInt(pos++, mbox.getOperationChangeID());
-                        stmt.setInt(pos++, mbox.getOperationTimestamp());
+                        stmt.setLong(pos++, mbox.getOperationTimestampMillis());
                         pos = setMailboxId(stmt, mbox, pos);
                         for (int index = i; index < i + count; index++) {
                             stmt.setInt(pos++, convIDs.get(index));
@@ -1497,7 +1497,7 @@ public class DbMailItem {
                         stmt.setInt(pos++, ids.get(index));
                     }
                     stmt.setInt(pos++, mbox.getOperationChangeID());
-                    stmt.setInt(pos++, mbox.getOperationTimestamp());
+                    stmt.setLong(pos++, mbox.getOperationTimestampMillis());
                     pos = setMailboxId(stmt, mbox, pos);
                     stmt.executeUpdate();
                     stmt.close();
@@ -1532,7 +1532,7 @@ public class DbMailItem {
                     pos = 1;
                     stmt.setInt(pos++, update.getKey());
                     stmt.setInt(pos++, mbox.getOperationChangeID());
-                    stmt.setInt(pos++, mbox.getOperationTimestamp());
+                    stmt.setLong(pos++, mbox.getOperationTimestampMillis());
                     pos = setMailboxId(stmt, mbox, pos);
                     for (int convId : update.getValue()) {
                         stmt.setInt(pos++, convId);
@@ -1718,7 +1718,7 @@ public class DbMailItem {
                     " SELECT " + MAIL_ITEM_DUMPSTER_COPY_SRC_FIELDS + " FROM " + miTableName +
                     " WHERE " + IN_THIS_MAILBOX_AND + miWhere);
             int pos = 1;
-            miCopyStmt.setInt(pos++, mbox.getOperationTimestamp());
+            miCopyStmt.setLong(pos++, mbox.getOperationTimestampMillis());
             pos = setMailboxId(miCopyStmt, mbox, pos);
             for (int i = offset; i < offset + count; ++i) {
                 miCopyStmt.setInt(pos++, ids.get(i));
@@ -1810,7 +1810,7 @@ public class DbMailItem {
             int pos = 1;
             pos = setMailboxId(stmt, mbox, pos);
             stmt.setInt(pos++, mbox.getOperationChangeID());
-            stmt.setInt(pos++, mbox.getOperationTimestamp());
+            stmt.setLong(pos++, mbox.getOperationTimestampMillis());
             stmt.setByte(pos++, type.toByte());
             stmt.setString(pos++, row);
             stmt.executeUpdate();
@@ -1934,7 +1934,7 @@ public class DbMailItem {
      * @param beforeDate timestamp in seconds
      * @return the change number of the most recent tombstone that was deleted, or 0 if none were removed
      */
-    public static int purgeTombstones(Mailbox mbox, int beforeDate)
+    public static int purgeTombstones(Mailbox mbox, long beforeDate)
     throws ServiceException {
         int cutoff = 0;
 
@@ -2652,7 +2652,7 @@ public class DbMailItem {
     }
 
     public static Pair<List<Integer>,TypedIdList> getModifiedItems(Mailbox mbox, MailItem.Type type, long lastSync,
-            int sinceDate, Set<Integer> visible)
+            long sinceDate, Set<Integer> visible)
     throws ServiceException {
         if (Mailbox.isCachedType(type)) {
             throw ServiceException.INVALID_REQUEST("folders and tags must be retrieved from cache", null);
@@ -2673,7 +2673,7 @@ public class DbMailItem {
             pos = setMailboxId(stmt, mbox, pos);
             stmt.setLong(pos++, lastSync);
             if (sinceDate > 0) {
-                stmt.setInt(pos++, sinceDate);
+                stmt.setLong(pos++, sinceDate);
             }
 
             return  populateWithResultSetData(visible, stmt);
@@ -2883,7 +2883,7 @@ public class DbMailItem {
         }
     }
 
-    public static HashSet<Integer> getItemsWithOutdatedRevisions(Mailbox mbox, int before)    throws ServiceException {
+    public static HashSet<Integer> getItemsWithOutdatedRevisions(Mailbox mbox, long before)    throws ServiceException {
         DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         ResultSet rs = null;
@@ -2907,7 +2907,7 @@ public class DbMailItem {
 
             int pos = 1;
             pos = setMailboxId(stmt, mbox, pos);
-            stmt.setInt(pos++, before);
+            stmt.setLong(pos++, before);
 
             rs = stmt.executeQuery();
 
@@ -2925,7 +2925,7 @@ public class DbMailItem {
         }
     }
 
-    public static PendingDelete getLeafNodes(Mailbox mbox, List<Folder> folders, int before, boolean globalMessages,
+    public static PendingDelete getLeafNodes(Mailbox mbox, List<Folder> folders, long before, boolean globalMessages,
                                              Boolean unread, boolean useChangeDate, Integer maxItems)
     throws ServiceException {
         DbConnection conn = mbox.getOperationConnection();
@@ -2963,7 +2963,7 @@ public class DbMailItem {
             }
             int pos = 1;
             pos = setMailboxId(stmt, mbox, pos);
-            stmt.setInt(pos++, before);
+            stmt.setLong(pos++, before);
             if (!globalMessages) {
                 for (Folder folder : folders) {
                     stmt.setInt(pos++, folder.getId());
@@ -3418,7 +3418,7 @@ public class DbMailItem {
                 stmt.setInt(pos++, folder.getId());
             }
             if (popDate >= 0) {
-                stmt.setInt(pos++, (int) (popDate / 1000L));
+                stmt.setLong(pos++, popDate);
             }
             rs = stmt.executeQuery();
 
@@ -3529,7 +3529,7 @@ public class DbMailItem {
     }
 
     public static SpoolingCache<MailboxBlob.MailboxBlobInfo> getAllBlobs(DbConnection conn, int groupId, int volumeId,
-            int lastSyncDate, int currentSyncDate) throws ServiceException {
+            long lastSyncDate, long currentSyncDate) throws ServiceException {
         SpoolingCache<MailboxBlob.MailboxBlobInfo> blobs = new SpoolingCache<MailboxBlob.MailboxBlobInfo>(5000);
         PreparedStatement stmt = null;
         try {
@@ -3610,16 +3610,16 @@ public class DbMailItem {
         }
     }
 
-    private static void getAllBlobs(PreparedStatement stmt, int volumeId, int lastSyncDate, int currentSyncDate,
+    private static void getAllBlobs(PreparedStatement stmt, int volumeId, long lastSyncDate, long currentSyncDate,
             SpoolingCache<MailboxBlob.MailboxBlobInfo> blobs) throws ServiceException, SQLException, IOException {
         ResultSet rs = null;
         try {
             int pos = 1;
             if (currentSyncDate > 0) {
-                stmt.setInt(pos++, lastSyncDate);
-                stmt.setInt(pos++, currentSyncDate);
-                stmt.setInt(pos++, lastSyncDate);
-                stmt.setInt(pos++, currentSyncDate);
+                stmt.setLong(pos++, lastSyncDate);
+                stmt.setLong(pos++, currentSyncDate);
+                stmt.setLong(pos++, lastSyncDate);
+                stmt.setLong(pos++, currentSyncDate);
             }
             if (volumeId > -1) {
                 stmt.setInt(pos++, volumeId);
@@ -3751,7 +3751,7 @@ public class DbMailItem {
         if (rs.wasNull()) {
             data.imapId = -1;
         }
-        data.date = rs.getInt(CI_DATE + offset);
+        data.date = rs.getLong(CI_DATE + offset);
         data.size = rs.getLong(CI_SIZE + offset);
         data.locator = rs.getString(CI_LOCATOR + offset);
         data.setBlobDigest(rs.getString(CI_BLOB_DIGEST + offset));
@@ -3768,7 +3768,7 @@ public class DbMailItem {
         data.metadata = decodeMetadata(rs.getString(CI_METADATA + offset));
         data.modMetadata = rs.getInt(CI_MODIFIED + offset);
         data.modContent = rs.getInt(CI_SAVED + offset);
-        data.dateChanged = rs.getInt(CI_MODIFY_DATE + offset);
+        data.dateChanged = rs.getLong(CI_MODIFY_DATE + offset);
         // make sure to handle NULL column values
         if (data.parentId == 0) {
             data.parentId = -1;
@@ -3791,7 +3791,7 @@ public class DbMailItem {
         data.folderId    = item.getFolderId();
         data.indexId = MailItem.IndexStatus.NO.id();
         data.imapId      = -1;
-        data.date        = rs.getInt(1);
+        data.date        = rs.getLong(1);
         data.size        = rs.getLong(2);
         data.locator    = rs.getString(3);
         data.setBlobDigest(rs.getString(4));
@@ -3806,7 +3806,7 @@ public class DbMailItem {
         data.name        = rs.getString(5);
         data.metadata    = decodeMetadata(rs.getString(6));
         data.modMetadata = rs.getInt(7);
-        data.dateChanged = rs.getInt(8);
+        data.dateChanged = rs.getLong(8);
         data.modContent  = rs.getInt(9);
         // make sure to handle NULL column values
         if (data.parentId <= 0) {
@@ -4140,10 +4140,10 @@ public class DbMailItem {
 
     public static class QueryParams {
         private final SortedSet<Integer> folderIds = new TreeSet<Integer>();
-        private Integer dateBefore;
-        private Integer dateAfter;
-        private Integer changeDateBefore;
-        private Integer changeDateAfter;
+        private Long dateBefore;
+        private Long dateAfter;
+        private Long changeDateBefore;
+        private Long changeDateAfter;
         private Integer modifiedSequenceBefore;
         private Integer rowLimit;
         private Integer offset;
@@ -4190,43 +4190,43 @@ public class DbMailItem {
             return this;
         }
 
-        public Integer getDateBefore() {
+        public Long getDateBefore() {
             return dateBefore;
         }
 
-        public void setDateBefore(Integer dateBefore) {
+        public void setDateBefore(Long dateBefore) {
             this.dateBefore = dateBefore;
         }
 
-        public Integer getDateAfter() {
+        public Long getDateAfter() {
             return dateAfter;
         }
 
-        public void setDateAfter(Integer dateAfter) {
+        public void setDateAfter(Long dateAfter) {
             this.dateAfter = dateAfter;
         }
 
         /**
          * @return the timestamp, in seconds
          */
-        public Integer getChangeDateBefore() { return changeDateBefore; }
+        public Long getChangeDateBefore() { return changeDateBefore; }
 
         /**
          * @return the timestamp, in seconds
          */
-        public Integer getChangeDateAfter() { return changeDateAfter; }
+        public Long getChangeDateAfter() { return changeDateAfter; }
 
         /**
          * Return items modified earlier than the given timestamp.
          * @param timestamp the timestamp, in seconds
          */
-        public QueryParams setChangeDateBefore(Integer timestamp) { changeDateBefore = timestamp; return this; }
+        public QueryParams setChangeDateBefore(Long timestamp) { changeDateBefore = timestamp; return this; }
 
         /**
          * Return items modified later than the given timestamp.
          * @param timestamp the timestamp, in seconds
          */
-        public QueryParams setChangeDateAfter(Integer timestamp) { changeDateAfter = timestamp; return this; }
+        public QueryParams setChangeDateAfter(Long timestamp) { changeDateAfter = timestamp; return this; }
         public Integer getModifiedSequenceBefore() { return modifiedSequenceBefore; }
         public QueryParams setModifiedSequenceBefore(Integer changeId) { modifiedSequenceBefore = changeId; return this; }
 
@@ -4474,12 +4474,12 @@ public class DbMailItem {
      *
      * @return the matching ids in order, or an empty <tt>List</tt>
      */
-    public static List<Pair<Integer, Integer>> getDatesAndIdsInOrder(Mailbox mbox, DbConnection conn,
+    public static List<Pair<Long, Long>> getDatesAndIdsInOrder(Mailbox mbox, DbConnection conn,
             QueryParams params, boolean fromDumpster)
             throws ServiceException {
         PreparedStatement stmt = null;
         ResultSet rs = null;
-        List<Pair<Integer, Integer>> result = new ArrayList<Pair<Integer, Integer>>();
+        List<Pair<Long, Long>> result = new ArrayList<Pair<Long, Long>>();
         try {
             // Prepare the statement based on query parameters.
             StringBuilder buf = new StringBuilder();
@@ -4507,7 +4507,7 @@ public class DbMailItem {
             rs = stmt.executeQuery();
 
             while (rs.next()) {
-                result.add(new Pair<Integer, Integer>(rs.getInt(1), rs.getInt(2)));
+                result.add(new Pair<Long, Long>(rs.getLong(1), rs.getLong(2)));
             }
             return result;
         } catch (SQLException e) {

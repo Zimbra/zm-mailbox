@@ -31,9 +31,10 @@ public interface ParserTreeConstants
   public int JJTMODIFIER = 9;
   public int JJTDATEMODIFIER = 10;
   public int JJTSORTBY = 11;
-  public int JJTTEXTTERM = 12;
-  public int JJTITEMTERM = 13;
-  public int JJTDATETERM = 14;
+  public int JJTSUBJTERM = 12;
+  public int JJTTEXTTERM = 13;
+  public int JJTITEMTERM = 14;
+  public int JJTDATETERM = 15;
 
 
   public String[] jjtNodeName = {
@@ -49,9 +50,10 @@ public interface ParserTreeConstants
     "Modifier",
     "DateModifier",
     "SortBy",
+    "SubjTerm",
     "TextTerm",
     "ItemTerm",
     "DateTerm",
   };
 }
-/* JavaCC - OriginalChecksum=948171b49488e41742c8291039f25b7c (do not edit this line) */
+/* JavaCC - OriginalChecksum=0d9f9a09e73bedd54e684d953eaae233 (do not edit this line) */

@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -85,6 +85,7 @@ public final class ZimbraQuery {
      * Once a simple tree is built, then ParseTree "distributes the NOTs" down to the leaf
      * nodes: this is so we never have to do result-set inversions, which are prohibitively
      * expensive for nontrivial cases.
+     *
      */
     private static class ParseTree {
         enum Conjunction {
@@ -357,6 +358,7 @@ public final class ZimbraQuery {
         return count.num;
     }
 
+
     /**
      * Parse the query string.
      */
@@ -369,7 +371,7 @@ public final class ZimbraQuery {
 
         // Parse the text using the JavaCC parser.
         try {
-            QueryParser parser = new QueryParser(mbox, mbox.index.getAnalyzer());
+            QueryParser parser = new QueryParser(mbox);
             parser.setDefaultField(params.getDefaultField());
             parser.setTypes(params.getTypes());
             parser.setTimeZone(params.getTimeZone());
@@ -874,35 +876,41 @@ public final class ZimbraQuery {
                         ZimbraLog.search.debug("Query changed to NULL_QUERY_OPERATION, no visible folders");
                         union.operations.add(i, new NoResultsQueryOperation());
                     } else {
-                        union.operations.remove(i);
-
-                        // build a "and (in:visible1 or in:visible2 or in:visible3...)" query tree here!
-                        IntersectionQueryOperation intersect = new IntersectionQueryOperation();
-                        intersect.addQueryOp(op);
-
-                        UnionQueryOperation newUnion = new UnionQueryOperation();
-                        intersect.addQueryOp(newUnion);
-
-                        //if one or more target folders are specified, use those which are visible.
-                        Set<Folder> targetFolders = null;
+                    	Set<Folder> targetFolders = null;
                         if (op instanceof DBQueryOperation) {
                             DBQueryOperation dbOp = (DBQueryOperation) op;
                             targetFolders = dbOp.getTargetFolders();
                         }
-
-                        for (Folder folder : visibleFolders) {
-                            // exclude remote folders
-                            if (!(folder instanceof Mountpoint) || ((Mountpoint) folder).isLocal()) {
-                                if (targetFolders != null && targetFolders.size() > 0 && !targetFolders.contains(folder)) {
-                                    continue; //don't bother searching other visible folders if the query asked for specific folders...
+                        if (targetFolders != null && targetFolders.size() > 0) {
+                        	//determine if any target folders are not visible, and if so, remove them from
+                        	//the folder constraints.
+                        	Set<Folder> disallowedFolders = new HashSet<Folder>();
+                        	for (Folder folder: targetFolders) {
+                                if (!(folder instanceof Mountpoint) || ((Mountpoint) folder).isLocal()) {
+                                    if (!visibleFolders.contains(folder)) {
+                                    	disallowedFolders.add(folder);
+                                    }
+                                } else {
+                                	disallowedFolders.add(folder); //searching for a non-local target
                                 }
-                                DBQueryOperation newOp = new DBQueryOperation();
-                                newUnion.add(newOp);
-                                newOp.addInFolder(folder, true);
-                            }
-                        }
+                        	}
+                        	DBQueryOperation dbOp = (DBQueryOperation) op;
+                        	dbOp.removeUnwantedFoldersFromConstraints(disallowedFolders);
 
-                        union.operations.add(i, intersect);
+                        } else {
+                        	//if no target folders specified, build a "and (in:visible1 or in:visible2 or in:visible3...)" query tree
+                        	union.operations.remove(i);
+                            IntersectionQueryOperation intersect = new IntersectionQueryOperation();
+                            intersect.addQueryOp(op);
+                            UnionQueryOperation newUnion = new UnionQueryOperation();
+                            intersect.addQueryOp(newUnion);
+                            for (Folder folder: visibleFolders) {
+                            	DBQueryOperation newOp = new DBQueryOperation();
+                            	newUnion.add(newOp);
+                            	newOp.addInFolder(folder, true);
+                            }
+                            union.operations.add(i, intersect);
+                        }
                     }
                 }
             }

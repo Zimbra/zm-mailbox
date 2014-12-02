@@ -306,6 +306,10 @@ extends Assert {
         }
         boolean success = lmtp.sendMessage(new ByteArrayInputStream(data), recipWithDomain, senderAddress, "TestUtil", (long) data.length);
         lmtp.close();
+        if(LC.zimbra_class_index_store_factory.value().contains("Solr") || LC.zimbra_class_index_store_factory.value().contains("ElasticSearchIndex")) {
+            Thread.sleep(500);
+            //when running solr and tests on the same machine, next search request may come before Solr updates the index
+        }
         return success;
     }
 

@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -175,23 +175,23 @@ public final class ZimbraQueryTest {
         DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item " +
                 "(mailbox_id, id, folder_id, type, flags, date, change_date, size, tags, mod_metadata, mod_content) " +
                 "VALUES(?, ?, ?, ?, 0, ?, ?, 0, 0, 0, 0)", mbox.getId(), 101, Mailbox.ID_FOLDER_INBOX,
-                MailItem.Type.MESSAGE.toByte(), 100, 1000);
+                MailItem.Type.MESSAGE.toByte(), 100000, 1000000);
         DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item " +
                 "(mailbox_id, id, folder_id, type, flags, date, change_date, size, tags, mod_metadata, mod_content) " +
                 "VALUES(?, ?, ?, ?, 0, ?, ?, 0, 0, 0, 0)", mbox.getId(), 102, Mailbox.ID_FOLDER_INBOX,
-                MailItem.Type.MESSAGE.toByte(), 200, 2000);
+                MailItem.Type.MESSAGE.toByte(), 200000, 2000000);
         DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item " +
                 "(mailbox_id, id, folder_id, type, flags, date, change_date, size, tags, mod_metadata, mod_content) " +
                 "VALUES(?, ?, ?, ?, 0, ?, ?, 0, 0, 0, 0)", mbox.getId(), 103, Mailbox.ID_FOLDER_INBOX,
-                MailItem.Type.MESSAGE.toByte(), 300, 3000);
+                MailItem.Type.MESSAGE.toByte(), 300000, 3000000);
         DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item " +
                 "(mailbox_id, id, folder_id, type, flags, date, change_date, size, tags, mod_metadata, mod_content) " +
                 "VALUES(?, ?, ?, ?, 0, ?, ?, 0, 0, 0, 0)", mbox.getId(), 104, Mailbox.ID_FOLDER_INBOX,
-                MailItem.Type.MESSAGE.toByte(), 400, 4000);
+                MailItem.Type.MESSAGE.toByte(), 400000, 4000000);
         DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item " +
                 "(mailbox_id, id, folder_id, type, flags, date, change_date, size, tags, mod_metadata, mod_content) " +
                 "VALUES(?, ?, ?, ?, 0, ?, ?, 0, 0, 0, 0)", mbox.getId(), 105, Mailbox.ID_FOLDER_INBOX,
-                MailItem.Type.MESSAGE.toByte(), 500, 5000);
+                MailItem.Type.MESSAGE.toByte(), 500000, 5000000);
         conn.commit();
         conn.closeQuietly();
 

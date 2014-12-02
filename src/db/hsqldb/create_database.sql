@@ -28,7 +28,7 @@ CREATE TABLE *{DATABASE_NAME}.mail_item (
    prev_folders  VARCHAR(255),               -- e.g. "101:2;110:5", before mod_metadata 101, this item was in folder 2, before 110, it was in 5
    index_id      INTEGER,
    imap_id       INTEGER,
-   date          INTEGER NOT NULL,
+   date          BIGINT NOT NULL,  -- stored as a UNIX-style timestamp
    size          BIGINT NOT NULL,
    locator       VARCHAR(1024),
    blob_digest   VARCHAR(44),
@@ -42,7 +42,7 @@ CREATE TABLE *{DATABASE_NAME}.mail_item (
    name          VARCHAR(255),
    metadata      VARCHAR(1000000),
    mod_metadata  INTEGER NOT NULL,
-   change_date   INTEGER,
+   change_date   BIGINT,           -- UNIX-style timestamp for last row modification
    mod_content   INTEGER NOT NULL,
    uuid          VARCHAR(127),               -- e.g. "d94e42c4-1636-11d9-b904-4dd689d02402"
 
@@ -62,7 +62,7 @@ CREATE TABLE *{DATABASE_NAME}.mail_item_dumpster (
    prev_folders  VARCHAR(255),               -- e.g. "101:2;110:5", before mod_metadata 101, this item was in folder 2, before 110, it was in 5
    index_id      INTEGER,
    imap_id       INTEGER,
-   date          INTEGER NOT NULL,
+   date          BIGINT NOT NULL,  -- stored as a UNIX-style timestamp
    size          BIGINT NOT NULL,
    locator       VARCHAR(1024),
    blob_digest   VARCHAR(44),
@@ -76,7 +76,7 @@ CREATE TABLE *{DATABASE_NAME}.mail_item_dumpster (
    name          VARCHAR(255),
    metadata      VARCHAR(255),
    mod_metadata  INTEGER NOT NULL,
-   change_date   INTEGER,
+   change_date   BIGINT,           -- UNIX-style timestamp for last row modification
    mod_content   INTEGER NOT NULL,
    uuid          VARCHAR(127),               -- e.g. "d94e42c4-1636-11d9-b904-4dd689d02402"
 
@@ -88,14 +88,14 @@ CREATE TABLE *{DATABASE_NAME}.revision (
    mailbox_id    INTEGER NOT NULL,
    item_id       INTEGER NOT NULL,
    version       INTEGER NOT NULL,
-   date          INTEGER NOT NULL,
+   date          BIGINT NOT NULL,  -- stored as a UNIX-style timestamp
    size          BIGINT NOT NULL,
    locator       VARCHAR(1024),
    blob_digest   VARCHAR(44),
    name          VARCHAR(255),
    metadata      VARCHAR(255),
    mod_metadata  INTEGER NOT NULL,
-   change_date   INTEGER,
+   change_date   BIGINT,           -- UNIX-style timestamp for last row modification
    mod_content   INTEGER NOT NULL,
 
    CONSTRAINT pk_revision PRIMARY KEY (mailbox_id, item_id, version),
@@ -108,14 +108,14 @@ CREATE TABLE *{DATABASE_NAME}.revision_dumpster (
    mailbox_id    INTEGER NOT NULL,
    item_id       INTEGER NOT NULL,
    version       INTEGER NOT NULL,
-   date          INTEGER NOT NULL,
+   date          BIGINT NOT NULL,  -- stored as a UNIX-style timestamp
    size          BIGINT NOT NULL,
    locator       VARCHAR(1024),
    blob_digest   VARCHAR(44),
    name          VARCHAR(255),
    metadata      VARCHAR(255),
    mod_metadata  INTEGER NOT NULL,
-   change_date   INTEGER,
+   change_date   BIGINT,           -- UNIX-style timestamp for last row modification
    mod_content   INTEGER NOT NULL,
 
    CONSTRAINT pk_revision_dumpster PRIMARY KEY (mailbox_id, item_id, version),
@@ -192,7 +192,7 @@ CREATE TABLE *{DATABASE_NAME}.appointment_dumpster (
 CREATE TABLE *{DATABASE_NAME}.tombstone (
    mailbox_id  INTEGER NOT NULL,
    sequence    INTEGER NOT NULL,
-   date        INTEGER NOT NULL,
+   date        BIGINT NOT NULL,
    type        TINYINT,
    ids         VARCHAR(255),
 

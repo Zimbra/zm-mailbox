@@ -263,7 +263,8 @@ public class Conversation extends MailItem {
         assert(id != Mailbox.ID_AUTO_INCREMENT && msgs.length > 0);
         Arrays.sort(msgs, new Message.SortDateAscending());
 
-        int date = 0, unread = 0, flags = 0;
+        long date = 0;
+        int unread = 0, flags = 0;
         CustomMetadataList extended = null;
         Set<String> tags = new HashSet<String>();
         for (int i = 0; i < msgs.length; i++) {
@@ -657,7 +658,7 @@ public class Conversation extends MailItem {
 
         // FIXME: this ordering is to work around the fact that when getSenderList has to
         //   recalc the metadata, it uses the already-updated DB message state to do it...
-        mData.date = mMailbox.getOperationTimestamp();
+        mData.date = mMailbox.getOperationTimestampMillis();
         contentChanged();
 
         if (!mMailbox.hasListeners(Session.Type.SOAP)) {

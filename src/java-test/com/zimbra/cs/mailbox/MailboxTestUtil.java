@@ -18,6 +18,7 @@
 package com.zimbra.cs.mailbox;
 
 import java.io.File;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.List;
 
@@ -28,10 +29,6 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 import javax.mail.util.ByteArrayDataSource;
 
-import org.apache.commons.httpclient.HttpException;
-import org.apache.commons.httpclient.HttpMethod;
-import org.apache.commons.httpclient.HttpStatus;
-import org.apache.commons.httpclient.methods.DeleteMethod;
 import org.apache.commons.io.FileUtils;
 
 import com.google.common.base.Strings;
@@ -50,8 +47,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.HSQLDB;
 import com.zimbra.cs.index.IndexStore;
-import com.zimbra.cs.index.elasticsearch.ElasticSearchConnector;
-import com.zimbra.cs.index.elasticsearch.ElasticSearchIndex;
+import com.zimbra.cs.index.solr.EmbeddedSolrIndex;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
@@ -129,13 +125,83 @@ public final class MailboxTestUtil {
         LC.zimbra_class_database.setDefault(HSQLDB.class.getName());
         DbPool.startup();
         HSQLDB.createDatabase(zimbraServerDir, false);
-
+        LC.zimbra_class_index_store_factory.setDefault(EmbeddedSolrIndex.Factory.class.getName());
         IndexStore.setFactory(LC.zimbra_class_index_store_factory.value());
-
         LC.zimbra_class_store.setDefault(storeManagerClass.getName());
         LC.zimbra_class_soapsessionfactory.setDefault(DefaultSoapSessionFactory.class.getName());
+        setupEmbeddedSolrDirs(true);
         Zimbra.startupTest(configClass);
         StoreManager.getInstance().startup();
+    }
+
+    private static void setupEmbeddedSolrDirs(boolean recreateIfExists) throws Exception {
+        File solrDir = new File("../ZimbraServer/build/test/solr/");
+        if (recreateIfExists && solrDir.exists()) {
+            try {
+                FileUtils.deleteDirectory(solrDir);
+            } catch (IOException e) {
+                Thread.sleep(1000);
+                try {
+                    FileUtils.deleteDirectory(solrDir);
+                } catch (IOException e2) {
+                    ZimbraLog.test.warn("cannot delete SOLR directory");
+                }
+            }
+        }
+        if (!solrDir.exists()) {
+            solrDir.mkdirs();
+        }
+        File solrXml = new File("../ZimbraServer/build/test/solr/solr.xml");
+        if (solrXml.exists()) {
+            solrXml.delete();
+        }
+        FileUtils.copyFile(new File("../ZimbraServer/src/test/resources/solr.xml"), solrXml);
+        File configSets = new File("../ZimbraServer/build/test/solr/configsets/");
+        if (configSets.exists()) {
+            FileUtils.cleanDirectory(configSets);
+        }
+        else {
+            configSets.mkdirs();
+        }
+
+
+        FileUtils.copyDirectory(new File("../ZimbraServer/conf/solr/configsets/"), configSets);
+        File libsDir = new File("../ZimbraServer/build/test/solr/custom/");
+        if (libsDir.exists()) {
+            FileUtils.cleanDirectory(libsDir);
+        } else {
+            libsDir.mkdirs();
+        }
+        copytoSolrLibsDir(locateFile(new File("../SolrPlugins/target/"), "solrplugins-.*-SNAPSHOT\\.jar"), libsDir);
+        copytoSolrLibsDir(locateFile(new File("../ZimbraCommon/ZimbraStoreCommon/target/"), "zimbracommon-.*\\.jar"), libsDir);
+        File commonJarsDir = new File("../ZimbraCommon/jars/");
+        copytoSolrLibsDir(locateFile(commonJarsDir, "guava-.*\\.jar"), libsDir);
+        copytoSolrLibsDir(locateFile(commonJarsDir, "mail-.*\\.jar"), libsDir);
+        copytoSolrLibsDir(locateFile(commonJarsDir, "lucene-core-.*\\.jar"), libsDir);
+        copytoSolrLibsDir(locateFile(commonJarsDir, "lucene-analyzers-common-.*\\.jar"), libsDir);
+        copytoSolrLibsDir(locateFile(commonJarsDir, "lucene-queryparser-.*\\.jar"), libsDir);
+    }
+
+    private static File locateFile(File directory, String regex) throws ServiceException {
+        File[] matchingFiles = directory.listFiles(new FilenameFilter() {
+
+            @Override
+            public boolean accept(File dir, String name) {
+                return name.matches(regex);
+            }
+        });
+        if (matchingFiles.length == 0) {
+            throw ServiceException.FAILURE(String.format("no file matching pattern %s found", regex), new Throwable());
+        } else if (matchingFiles.length > 1) {
+            throw ServiceException.FAILURE(String.format("multiple files matching pattern found", regex), new Throwable());
+        } else {
+            return matchingFiles[0];
+        }
+
+    }
+    private static void copytoSolrLibsDir(File from, File toDir) throws IOException {
+        File dest = new File(toDir, from.getName());
+        FileUtils.copyFile(from, dest);
     }
 
     /**
@@ -152,11 +218,8 @@ public final class MailboxTestUtil {
     public static void clearData(String zimbraServerDir) throws Exception {
         HSQLDB.clearDatabase(zimbraServerDir);
         MailboxManager.getInstance().clearCache();
+        cleanupAllIndexStores();
         MailboxIndex.shutdown();
-        File index = new File("build/test/index");
-        if (index.isDirectory()) {
-            deleteDirContents(index);
-        }
         StoreManager sm = StoreManager.getInstance();
         if (sm instanceof MockStoreManager) {
             ((MockStoreManager) sm).purge();
@@ -166,57 +229,35 @@ public final class MailboxTestUtil {
         DocumentHandler.resetLocalHost();
     }
 
-    private static void deleteDirContents(File dir) throws IOException {
-        deleteDirContents(dir, 0);
-    }
+    public static void cleanupAllIndexStores() throws Exception {
+        File[] cores = new File("../ZimbraServer/build/test/solr/").listFiles(new FilenameFilter() {
 
-    private static void deleteDirContents(File dir, int recurCount) throws IOException {
-        try {
-            FileUtils.deleteDirectory(dir);
-        } catch (IOException ioe) {
-            if (recurCount > 10) {
-                throw new IOException("Gave up after multiple IOExceptions", ioe);
+            @Override
+            public boolean accept(File dir, String name) {
+                return (!name.equals("configsets") &&
+                        !name.equals("custom") &&
+                        !name.equals("solrtestcore") &&
+                        !name.equals("solr.xml"));
             }
-            ZimbraLog.test.info("delete dir failed due to IOException (probably files still in use). Waiting a moment and trying again");
-            //wait a moment and try again; this can bomb if files still being written by some thread
+        });
+        for (int i = 0; i < cores.length; i++) {
             try {
-                Thread.sleep(2500);
-            } catch (InterruptedException ie) {
-
+                cleanupIndexStore(MailboxManager.getInstance().getMailboxByAccountId(cores[i].getName()));
+            } catch (ServiceException e) {
+                deleteIndexDir(cores[i].getName()); //delete core folder anyways
             }
-            deleteDirContents(dir, recurCount+1);
         }
-
     }
 
-    public static void cleanupIndexStore(Mailbox mbox) {
-        IndexStore index = mbox.index.getIndexStore();
-        if (index instanceof ElasticSearchIndex) {
-            String key = mbox.getAccountId();
-            String indexUrl = String.format("%s%s/", LC.zimbra_index_elasticsearch_url_base.value(), key);
-            HttpMethod method = new DeleteMethod(indexUrl);
-            try {
-                ElasticSearchConnector connector = new ElasticSearchConnector();
-                int statusCode = connector.executeMethod(method);
-                if (statusCode == HttpStatus.SC_OK) {
-                    boolean ok = connector.getBooleanAtJsonPath(new String[] {"ok"}, false);
-                    boolean acknowledged = connector.getBooleanAtJsonPath(new String[] {"acknowledged"}, false);
-                    if (!ok || !acknowledged) {
-                        ZimbraLog.index.debug("Delete index status ok=%b acknowledged=%b", ok, acknowledged);
-                    }
-                } else {
-                    String error = connector.getStringAtJsonPath(new String[] {"error"});
-                    if (error != null && error.startsWith("IndexMissingException")) {
-                        ZimbraLog.index.debug("Unable to delete index for key=%s.  Index is missing", key);
-                    } else {
-                        ZimbraLog.index.error("Problem deleting index for key=%s error=%s", key, error);
-                    }
-                }
-            } catch (HttpException e) {
-                ZimbraLog.index.error("Problem Deleting index with key=" + key, e);
-            } catch (IOException e) {
-                ZimbraLog.index.error("Problem Deleting index with key=" + key, e);
-            }
+    private static void deleteIndexDir(String dir) throws IOException {
+        File f = new File("../ZimbraServer/build/test/solr/", dir);
+        FileUtils.deleteDirectory(f);
+    }
+
+    public static void cleanupIndexStore(Mailbox mbox) throws ServiceException, IOException {
+        if(mbox != null && mbox.index != null) {
+            waitUntilIndexingCompleted(mbox);
+          mbox.index.deleteIndex();
         }
     }
 
@@ -301,5 +342,22 @@ public final class MailboxTestUtil {
                 true);
 
         return invites.get(0);
+    }
+
+    public static synchronized void waitUntilIndexingCompleted(Mailbox mbox) {
+        int timeWaited = 0;
+        int waitIncrement  = 100;
+        int maxWaitTime = 5000;
+        while (mbox.index.indexTasksRunning() && timeWaited < maxWaitTime) {
+            try {
+                Thread.sleep(waitIncrement);
+                timeWaited += waitIncrement;
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        if (timeWaited >= maxWaitTime) {
+            ZimbraLog.test.warn(String.format("waiting for mailbox %s to finish indexing took longer than %s ms; continuing anyways", mbox.getAccountId(), maxWaitTime));
+        }
     }
 }

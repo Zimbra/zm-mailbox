@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2006, 2007, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -28,20 +28,29 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.lucene.analysis.miscellaneous.LimitTokenCountAnalyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
+import org.apache.lucene.index.DirectoryReader;
+import org.apache.lucene.index.DocsEnum;
+import org.apache.lucene.index.Fields;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
+import org.apache.lucene.index.IndexWriterConfig;
+import org.apache.lucene.index.IndexableField;
+import org.apache.lucene.index.MultiFields;
 import org.apache.lucene.index.Term;
-import org.apache.lucene.index.TermDocs;
-import org.apache.lucene.index.TermEnum;
+import org.apache.lucene.index.Terms;
+import org.apache.lucene.index.TermsEnum;
 import org.apache.lucene.search.Filter;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
-import org.apache.lucene.search.Searcher;
 import org.apache.lucene.search.TopDocs;
+import org.apache.lucene.util.Bits;
+import org.apache.lucene.util.BytesRef;
+import org.apache.lucene.util.Version;
 
 import com.zimbra.common.account.Key;
 import com.zimbra.common.localconfig.LC;
@@ -53,7 +62,6 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.index.LuceneDirectory;
-import com.zimbra.cs.index.LuceneIndex;
 import com.zimbra.cs.service.admin.GetMailQueue;
 
 public class RemoteMailQueue {
@@ -234,9 +242,11 @@ public class RemoteMailQueue {
             if (ZimbraLog.rmgmt.isDebugEnabled()) {
                 ZimbraLog.rmgmt.debug("clearing index (" + mIndexPath + ") for " + this);
             }
-            writer = new IndexWriter(LuceneDirectory.open(mIndexPath),
-                    new StandardAnalyzer(LuceneIndex.VERSION), true,
-                    IndexWriter.MaxFieldLength.LIMITED);
+            IndexWriterConfig conf = new IndexWriterConfig(Version.LUCENE_4_9,
+            		new LimitTokenCountAnalyzer(
+            				new StandardAnalyzer(Version.LUCENE_4_9), 10000));
+            LuceneDirectory dir = LuceneDirectory.open(mIndexPath);
+            writer = new IndexWriter(dir, conf);
             mNumMessages.set(0);
         } finally {
             if (writer != null) {
@@ -331,9 +341,11 @@ public class RemoteMailQueue {
         if (ZimbraLog.rmgmt.isDebugEnabled()) {
             ZimbraLog.rmgmt.debug("opening indexwriter " + this);
         }
-        mIndexWriter = new IndexWriter(LuceneDirectory.open(mIndexPath),
-                new StandardAnalyzer(LuceneIndex.VERSION), true,
-                IndexWriter.MaxFieldLength.LIMITED);
+        IndexWriterConfig conf = new IndexWriterConfig(Version.LUCENE_4_9,
+        		new LimitTokenCountAnalyzer(
+        				new StandardAnalyzer(Version.LUCENE_4_9), 10000));
+        LuceneDirectory dir = LuceneDirectory.open(mIndexPath);
+        mIndexWriter = new IndexWriter(dir, conf);
     }
 
     void closeIndexWriter() throws IOException {
@@ -348,9 +360,11 @@ public class RemoteMailQueue {
             ZimbraLog.rmgmt.debug("reopening indexwriter " + this);
         }
         mIndexWriter.close();
-        mIndexWriter = new IndexWriter(LuceneDirectory.open(mIndexPath),
-                new StandardAnalyzer(LuceneIndex.VERSION), false,
-                IndexWriter.MaxFieldLength.LIMITED);
+        IndexWriterConfig conf = new IndexWriterConfig(Version.LUCENE_4_9,
+        		new LimitTokenCountAnalyzer(
+        				new StandardAnalyzer(Version.LUCENE_4_9), 10000));
+        LuceneDirectory dir = LuceneDirectory.open(mIndexPath);
+        mIndexWriter = new IndexWriter(dir, conf);
     }
 
     public static final class SummaryItem implements Comparable<SummaryItem> {
@@ -384,56 +398,61 @@ public class RemoteMailQueue {
     }
 
     private void summarize(SearchResult result, IndexReader indexReader) throws IOException {
-        TermEnum terms = indexReader.terms();
-        boolean hasDeletions = indexReader.hasDeletions();
-        do {
-            Term term = terms.term();
-            if (term != null) {
-                String field = term.field();
-                if (field != null && field.length() > 0) {
-                    QueueAttr attr = QueueAttr.valueOf(field);
-                    if (attr == QueueAttr.addr ||
-                        attr == QueueAttr.host ||
-                        attr == QueueAttr.from ||
-                        attr == QueueAttr.to ||
-                        attr == QueueAttr.fromdomain ||
-                        attr == QueueAttr.todomain ||
-                        attr == QueueAttr.reason ||
-                        attr == QueueAttr.received)
-                    {
-                        List<SummaryItem> list = result.sitems.get(attr);
-                        if (list == null) {
-                            list = new LinkedList<SummaryItem>();
-                            result.sitems.put(attr, list);
-                        }
-                        int count = 0;
-                        if (hasDeletions) {
-                            TermDocs termDocs = indexReader.termDocs(term);
-                            while (termDocs.next()) {
-                                if (!indexReader.isDeleted(termDocs.doc())) {
-                                    count++;
-                                }
-                            }
-                        } else {
-                            count = terms.docFreq();
-                        }
-                        if (count > 0) {
-                            list.add(new SummaryItem(term.text(), count));
-                        }
-                    }
-                }
-            }
-        } while (terms.next());
+    	boolean hasDeletions = indexReader.hasDeletions();
+        Fields fields = MultiFields.getFields(indexReader);
+        Bits liveDocs = MultiFields.getLiveDocs(indexReader);
+        for (String field: fields) {
+        	Terms fieldTerms = fields.terms(field);
+        	if (fieldTerms == null) {continue; }
+        	TermsEnum terms = fieldTerms.iterator(null);
+        	BytesRef term;
+        	term = terms.next();
+	        do {
+	            if (term != null) {
+	                if (field != null && field.length() > 0) {
+	                    QueueAttr attr = QueueAttr.valueOf(field);
+	                    if (attr == QueueAttr.addr ||
+	                        attr == QueueAttr.host ||
+	                        attr == QueueAttr.from ||
+	                        attr == QueueAttr.to ||
+	                        attr == QueueAttr.fromdomain ||
+	                        attr == QueueAttr.todomain ||
+	                        attr == QueueAttr.reason ||
+	                        attr == QueueAttr.received)
+	                    {
+	                        List<SummaryItem> list = result.sitems.get(attr);
+	                        if (list == null) {
+	                            list = new LinkedList<SummaryItem>();
+	                            result.sitems.put(attr, list);
+	                        }
+	                        int count = 0;
+	                        if (hasDeletions) {
+	                        	DocsEnum termDocs = terms.docs(liveDocs, null);
+	                            while (termDocs.nextDoc() != termDocs.NO_MORE_DOCS) {
+	                            	//deleted docs shouldn't be returned, so add up all docs
+	                            	count++;
+	                            }
+	                        } else {
+	                            count = terms.docFreq();
+	                        }
+	                        if (count > 0) {
+	                            list.add(new SummaryItem(term.utf8ToString(), count));
+	                        }
+	                    }
+	                }
+	            }
+	        } while (terms.next() != null);
+        }
     }
 
     private Map<QueueAttr,String> docToQueueItem(Document doc) {
         Map<QueueAttr, String> qitem = new HashMap<QueueAttr,String>();
         for (QueueAttr attr : QueueAttr.values()) {
-            Field[] fields = doc.getFields(attr.toString());
+            IndexableField[] fields = doc.getFields(attr.toString());
             if (fields != null) {
                 StringBuilder sb = new StringBuilder();
                 boolean first = true;
-                for (Field field : fields) {
+                for (IndexableField field : fields) {
                     if (first) {
                         first = false;
                     } else {
@@ -460,9 +479,9 @@ public class RemoteMailQueue {
 
         int skip = 0;
         int listed = 0;
-
+        Bits liveDocs = MultiFields.getLiveDocs(indexReader);
         for (int i = 0; i < max; i++) {
-            if (indexReader.isDeleted(i)) {
+            if (!liveDocs.get(i)) {
                 continue;
             }
 
@@ -488,8 +507,7 @@ public class RemoteMailQueue {
         if (ZimbraLog.rmgmt.isDebugEnabled()) {
             ZimbraLog.rmgmt.debug("searching query=" + query + " offset=" + offset + " limit=" + limit + " " + this);
         }
-        Searcher searcher = null;
-        try {
+        IndexSearcher searcher = null;
             searcher = new IndexSearcher(indexReader);
             TopDocs topDocs = searcher.search(query, (Filter) null, limit);
             ScoreDoc[] hits = topDocs.scoreDocs;
@@ -509,11 +527,6 @@ public class RemoteMailQueue {
                 }
             }
             result.hits = hits.length;
-        } finally {
-            if (searcher != null) {
-                searcher.close();
-            }
-        }
     }
 
     public SearchResult search(Query query, int offset, int limit) throws ServiceException {
@@ -559,7 +572,10 @@ public class RemoteMailQueue {
                 clearIndex();
                 all = true;
             } else {
-                indexReader = IndexReader.open(LuceneDirectory.open(mIndexPath), false);
+                indexReader = DirectoryReader.open(LuceneDirectory.open(mIndexPath));
+                if (mIndexWriter == null) {
+                	openIndexWriter();
+                }
             }
 
             int done = 0;
@@ -578,7 +594,8 @@ public class RemoteMailQueue {
                     }
                     if (!all) {
                         Term toDelete = new Term(QueueAttr.id.toString(), ids[i].toLowerCase());
-                        int numDeleted = indexReader.deleteDocuments(toDelete);
+                        int numDeleted = indexReader.docFreq(toDelete);
+                        mIndexWriter.deleteDocuments(toDelete);
                         mNumMessages.getAndAdd(-numDeleted);
                         if (ZimbraLog.rmgmt.isDebugEnabled()) ZimbraLog.rmgmt.debug("deleting term:" + toDelete + ", docs deleted=" + numDeleted);
                     }

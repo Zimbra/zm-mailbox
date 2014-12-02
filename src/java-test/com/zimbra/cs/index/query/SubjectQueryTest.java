@@ -19,8 +19,6 @@ package com.zimbra.cs.index.query;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.zimbra.cs.index.ZimbraAnalyzer;
-
 /**
  * Unit test for {@link SubjectQuery}.
  *
@@ -30,7 +28,7 @@ public final class SubjectQueryTest {
 
     @Test
     public void emptySubject() throws Exception {
-        Query query = SubjectQuery.create(ZimbraAnalyzer.getInstance(), "");
+        Query query = SubjectQuery.create("");
         Assert.assertEquals(TextQuery.class, query.getClass());
         Assert.assertEquals("Q(subject:)", query.toString());
     }

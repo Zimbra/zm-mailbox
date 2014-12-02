@@ -45,7 +45,7 @@ public class Comment extends MailItem {
         data.folderId = Mailbox.ID_FOLDER_COMMENTS;
         data.parentId = parent.mId;
         data.setSubject(text);
-        data.date = mbox.getOperationTimestamp();
+        data.date = mbox.getOperationTimestampMillis();
         data.size = text.length();
         data.metadata = encodeMetadata(DEFAULT_COLOR_RGB, 1, 1, creatorId, custom);
         data.contentChanged(mbox);

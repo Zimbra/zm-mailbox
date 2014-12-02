@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2010, 2011, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -20,8 +20,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.lucene.analysis.Analyzer;
-
 import com.zimbra.cs.index.LuceneFields;
 
 /**
@@ -33,7 +31,7 @@ import com.zimbra.cs.index.LuceneFields;
 public final class AddrQuery extends SubQuery {
 
     public enum Address {
-        FROM, TO, CC
+        FROM, TO, CC, SENDER
     }
 
     private AddrQuery(List<Query> clauses) {
@@ -45,25 +43,32 @@ public final class AddrQuery extends SubQuery {
         return true;
     }
 
-    public static AddrQuery create(Analyzer analyzer, Set<Address> addrs, String text) {
+    public static AddrQuery create(Set<Address> addrs, String text) {
         List<Query> clauses = new ArrayList<Query>();
 
         if (addrs.contains(Address.FROM)) {
-            clauses.add(new TextQuery(analyzer, LuceneFields.L_H_FROM, text));
+            clauses.add(new TextQuery(LuceneFields.L_H_FROM, text));
         }
 
         if (addrs.contains(Address.TO)) {
             if (!clauses.isEmpty()) {
                 clauses.add(new ConjQuery(ConjQuery.Conjunction.OR));
             }
-            clauses.add(new TextQuery(analyzer, LuceneFields.L_H_TO, text));
+            clauses.add(new TextQuery(LuceneFields.L_H_TO, text));
         }
 
         if (addrs.contains(Address.CC)) {
             if (!clauses.isEmpty()) {
                 clauses.add(new ConjQuery(ConjQuery.Conjunction.OR));
             }
-            clauses.add(new TextQuery(analyzer, LuceneFields.L_H_CC, text));
+            clauses.add(new TextQuery(LuceneFields.L_H_CC, text));
+        }
+
+        if (addrs.contains(Address.SENDER)) {
+            if (!clauses.isEmpty()) {
+                clauses.add(new ConjQuery(ConjQuery.Conjunction.OR));
+            }
+            clauses.add(new TextQuery(LuceneFields.L_H_SENDER, text));
         }
 
         return new AddrQuery(clauses);

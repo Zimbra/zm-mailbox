@@ -81,8 +81,8 @@ public final class MessageTest {
         Assert.assertEquals("\u65e5\u672c\u8a9e", pm.getFragment(null));
         List<IndexDocument> docs = message.generateIndexData();
         Assert.assertEquals(2, docs.size());
-        String subject = docs.get(0).toDocument().get(LuceneFields.L_H_SUBJECT);
-        String body = docs.get(0).toDocument().get(LuceneFields.L_CONTENT);
+        String subject = (String) docs.get(0).toDocument().getFieldValue(LuceneFields.L_H_SUBJECT);
+        String body = (String) docs.get(0).toDocument().getFieldValue(LuceneFields.L_CONTENT);
         Assert.assertEquals("\u65e5\u672c\u8a9e", subject);
         Assert.assertEquals("\u65e5\u672c\u8a9e", body.trim());
     }

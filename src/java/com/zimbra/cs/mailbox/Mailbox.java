@@ -124,8 +124,6 @@ import com.zimbra.cs.mailbox.CalendarItem.ReplyInfo;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata;
 import com.zimbra.cs.mailbox.MailItem.PendingDelete;
 import com.zimbra.cs.mailbox.MailItem.TargetConstraint;
-import com.zimbra.cs.mailbox.MailItem.Type;
-import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.MailboxListener.ChangeNotification;
 import com.zimbra.cs.mailbox.Note.Rectangle;
@@ -149,8 +147,6 @@ import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.mime.ParsedMessage.CalendarPartInfo;
 import com.zimbra.cs.mime.ParsedMessageDataSource;
 import com.zimbra.cs.mime.ParsedMessageOptions;
-import com.zimbra.cs.ml.ClassifierDetailsManager;
-import com.zimbra.cs.ml.SqlClassifierDetailsManager;
 import com.zimbra.cs.pop3.Pop3Message;
 import com.zimbra.cs.redolog.op.AddDocumentRevision;
 import com.zimbra.cs.redolog.op.AlterItemTag;
@@ -369,9 +365,9 @@ public class Mailbox {
         }
     }
 
-    static final class IndexItemEntry {
-        final List<IndexDocument> documents;
-        final MailItem item;
+    public static final class IndexItemEntry {
+        public final List<IndexDocument> documents;
+        public final MailItem item;
 
         IndexItemEntry(MailItem item, List<IndexDocument> docs) {
             this.item = item;
@@ -616,7 +612,7 @@ public class Mailbox {
         }
     }
 
-    private MailboxManager mailboxManager;
+    private final MailboxManager mailboxManager;
 
     // This class handles all the indexing internals for the Mailbox
     public final MailboxIndex index;
@@ -642,11 +638,6 @@ public class Mailbox {
     private volatile boolean open = false;
     private boolean galSyncMailbox = false;
     private volatile boolean requiresWriteLock = true;
-    /*
-     * bug 95964. Have to keep this code out until main is upgraded to Lucene 4.x, because of cross-dependencies with Mahout
-    private TrainingSet trainingSet;
-    */
-    private ClassifierDetailsManager classifierDetailsManager;
 
     protected Mailbox(MailboxManager mailboxManager, MailboxData data) {
     	this.mailboxManager = mailboxManager;
@@ -654,11 +645,6 @@ public class Mailbox {
         mData = data;
         mData.lastChangeDate = System.currentTimeMillis();
         index = new MailboxIndex(this);
-        /*
-         * bug 95964. Have to keep this code out until main is upgraded to Lucene 4.x, because of cross-dependencies with Mahout
-        trainingSet = new TrainingSet(this);
-        */
-        classifierDetailsManager = new SqlClassifierDetailsManager(this);
         lock = mailboxManager.getMailboxLockFactory().create(data.accountId, this);
     }
 
@@ -1066,12 +1052,15 @@ public class Mailbox {
         return currentChange().imap == null ? mData.trackImap : currentChange().imap;
     }
 
-    /** Returns the operation timestamp as a UNIX int with 1-second
+    /**
+     * @deprecated
+     * Returns the operation timestamp as a UNIX int with 1-millisecond
      *  resolution.  This time is set at the start of the Mailbox
      *  transaction and should match the <tt>long</tt> returned
      *  by {@link #getOperationTimestampMillis}. */
-    public int getOperationTimestamp() {
-        return (int) (currentChange().timestamp / 1000L);
+    @Deprecated
+    public long getOperationTimestamp() {
+        return currentChange().timestamp;
     }
 
     /** Returns the operation timestamp as a Java long with full
@@ -3685,7 +3674,7 @@ public class Mailbox {
      * @return
      * @throws ServiceException
      */
-    public Pair<List<Integer>, TypedIdList> getModifiedItems(OperationContext octxt, int lastSync, int sinceDate,
+    public Pair<List<Integer>, TypedIdList> getModifiedItems(OperationContext octxt, int lastSync, long sinceDate,
             MailItem.Type type, Set<Integer> folderIds) throws ServiceException {
         lock.lock(false);
         try {
@@ -4177,22 +4166,6 @@ public class Mailbox {
         return (Message) getCachedItem(id, MailItem.Type.MESSAGE);
     }
 
-    public List<MailItem> getItemsByIds(OperationContext octxt, Collection<Integer> ids, Type type) throws ServiceException {
-    	boolean success = false;
-    	try {
-    		beginReadTransaction("itemsByIds", octxt);
-        	List<UnderlyingData> uData = DbMailItem.getById(this, ids, type);
-	    	List<MailItem> results = new ArrayList<MailItem>();
-	    	for (UnderlyingData ud: uData) {
-	    		results.add(getItem(ud));
-	    	}
-	    	success = true;
-	    	return results;
-    	} finally {
-    		endTransaction(success);
-    	}
-    }
-
     public List<Message> getMessagesByConversation(OperationContext octxt, int convId) throws ServiceException {
         return getMessagesByConversation(octxt, convId, SortBy.DATE_ASC, -1);
     }
@@ -4512,12 +4485,12 @@ public class Mailbox {
         }
     }
 
-    public List<Pair<Integer, Integer>> getDateAndItemIdList(OperationContext octxt, QueryParams params)
+    public List<Pair<Long, Long>> getDateAndItemIdList(OperationContext octxt, QueryParams params)
             throws ServiceException {
         boolean success = false;
         try {
             beginTransaction("getDateAndItemIdList", octxt);
-            List<Pair<Integer, Integer>> result =
+            List<Pair<Long, Long>> result =
                     DbMailItem.getDatesAndIdsInOrder(this, this.getOperationConnection(), params, false);
             success = true;
             return result;
@@ -6050,36 +6023,7 @@ public class Mailbox {
                 dctxt.setMailboxBlob(mblob);
             }
 
-            // step 7: run through priority classifier if not sent
-            /*
-             * bug 95964. Have to keep this code out until main is upgraded to Lucene 4.x, because of cross-dependencies with Mahout
-             *
-             * if(getAccount().isFeaturePriorityInboxEnabled()) {
-                //must be a better way to do this...
-                if (folderId != ID_FOLDER_SENT &&
-                		folderId != ID_FOLDER_SPAM &&
-                		folderId != ID_FOLDER_AUTO_CONTACTS &&
-                		folderId != ID_FOLDER_BRIEFCASE &&
-                		folderId != ID_FOLDER_CALENDAR &&
-                		folderId != ID_FOLDER_COMMENTS &&
-                		folderId != ID_FOLDER_CONTACTS &&
-                		folderId != ID_FOLDER_DRAFTS &&
-                		folderId != ID_FOLDER_IM_LOGS &&
-                		folderId != ID_FOLDER_TAGS &&
-                		folderId != ID_FOLDER_TRASH) {
-
-                	try {
-    		            Classifier cls = ClassifierManager.getClassifier(this);
-    		            ClassifierResult result = cls.classify(msg);
-    		            if (result.getLabel().equals(Label.PRIORITY)) {
-    		            	setPriority(msg.getId(), true, result.getReason());
-    		            }
-                	} catch (Exception e) {
-                		ZimbraLog.analytics.error("error classifying priority for message %" + String.valueOf(msg.getId()), e.getMessage());
-                	}
-                }
-            }*/
-            // step 8: queue new message for indexing
+            // step 7: queue new message for indexing
             index.add(msg);
             success = true;
 
@@ -6124,43 +6068,7 @@ public class Mailbox {
         return msg;
     }
 
-    public void setPriority(int id, boolean bool, String reason, boolean newTransaction) throws ServiceException {
-    	if (newTransaction) {
-    		boolean success = false;
-	    	beginTransaction("taggingPriority", null);
-	    	try {
-	    		setPriority(id, bool, reason);
-	    		success = true;
-	    	} finally {
-	    		endTransaction(success);
-	    	}
-    	} else {
-    		setPriority(id, bool, reason);
-    	}
-    }
-
-    public void setPriority(int id, boolean bool, String reason) throws ServiceException {
-    	//for now, add a "priority" tag
-    	Tag tag;
-    	try {
-    		tag = getTagByName("priority");
-    	} catch (ServiceException e) {
-    		tag = Tag.create(this, 999 /* probably unsafe */, "priority", new Color("FFD700"), true);
-    	}
-    	alterTag(new int[]{id}, Type.MESSAGE, tag, bool, false);
-    	if (bool && reason != null) {
-    		classifierDetailsManager.setReason(id, reason);
-    	}
-	}
-
-    public void trainClassifier() throws ServiceException {
-    /*	bug 95964. Have to keep this code out until main is upgraded to Lucene 4.x, because of cross-dependencies with Mahout
-     * ClassifierManager.trainAndSave(this);
-     *
-     */
-    }
-
-	public List<Conversation> lookupConversation(ParsedMessage pm) throws ServiceException {
+    public List<Conversation> lookupConversation(ParsedMessage pm) throws ServiceException {
         boolean success = false;
         beginTransaction("lookupConversation", null);
         try {
@@ -6198,9 +6106,7 @@ public class Mailbox {
     // please keep this package-visible but not public
     Conversation createConversation(int convId, Message... contents) throws ServiceException {
         int id = Math.max(convId, ID_AUTO_INCREMENT);
-        int nextId = getNextItemId(id);
-        Conversation conv = Conversation.create(this, nextId, contents);
-        index.add(contents[0]);
+        Conversation conv = Conversation.create(this, getNextItemId(id), contents);
         if (ZimbraLog.mailbox.isDebugEnabled()) {
             StringBuilder sb = new StringBuilder();
             for (int i = 0; i < contents.length; i++) {
@@ -6518,43 +6424,9 @@ public class Mailbox {
         }
     }
 
-    private void alterTag(int itemIds[], MailItem.Type type, Tag tag, boolean addTag) throws ServiceException {
-    	alterTag(itemIds, type, tag, addTag, true);
-    }
-
     // common code for the two AlterTag variants (Flag.FlagInfo vs. by tag name)
-    private void alterTag(int itemIds[], MailItem.Type type, Tag tag, boolean addTag, boolean updateTrainingSet) throws ServiceException {
+    private void alterTag(int itemIds[], MailItem.Type type, Tag tag, boolean addTag) throws ServiceException {
         MailItem[] items = getItemById(itemIds, type);
-
-        /*
-         * bug 95964. Have to keep this code out until main is upgraded to Lucene 4.x, because of cross-dependencies with Mahout
-        if(getAccount().isFeaturePriorityInboxEnabled()) {
-            //hack to intercept changes to the priority tag.
-            //Adding a tag called "priority" is the same as adding it to the training set as a positive example,
-            //removing one adds it as a negative example
-            if (updateTrainingSet && tag.getName().equalsIgnoreCase("priority")) {
-            	if (addTag) {
-            		for (int i = 0; i < itemIds.length; i++) {
-            			trainingSet.addItem(items[i], InternalLabel.PRIORITY, getOperationConnection(), true);
-                	}
-            	} else {
-            		//removing a priority tag is the same as adding it to the negative training set, for now
-                	for (int i = 0; i < itemIds.length; i++) {
-                		trainingSet.addItem(items[i], InternalLabel.NOT_PRIORITY, getOperationConnection(), true);
-                		MailItem item = items[i];
-                		if (item instanceof Message) {
-                			classifierDetailsManager.deleteReason(itemIds[i]);
-                		} else if (item instanceof Conversation){
-                			List<Message> msgs = ((Conversation) item).getMessages();
-                			for (Message msg: msgs) {
-                				classifierDetailsManager.deleteReason(msg.getId());
-                			}
-                		}
-                	}
-            	}
-            }
-        }*/
-
         for (MailItem item : items) {
             if (!(item instanceof Conversation)) {
                 if (!checkItemChangeID(item) && item instanceof Tag) {
@@ -6987,25 +6859,9 @@ public class Mailbox {
             }
             int oldUIDNEXT = target.getImapUIDNEXT();
             boolean resetUIDNEXT = false;
-            boolean wasInTrash = false;
-            boolean wasInSpam = false;
+
             for (MailItem item : items) {
 
-            	if (item instanceof Conversation) {
-            		for (Message msg: ((Conversation) item).getMessages()) {
-            			if (msg.inTrash()) {
-            				wasInTrash = true;
-            				break;
-            				//is it safe to assume that if one of the messages is in the trash/spam then all of them are?
-            			} else if (msg.inSpam()) {
-            				wasInSpam = true;
-            				break;
-            			}
-            		}
-            	} else {
-            		wasInTrash = item.inTrash();
-            		wasInSpam = item.inSpam();
-            	}
                 // train the spam filter if necessary...
                 trainSpamFilter(octxt, item, target, "move");
 
@@ -7016,49 +6872,6 @@ public class Mailbox {
                 if (moved && !resetUIDNEXT && isTrackingImap() &&
                         (item instanceof Conversation || item instanceof Message || item instanceof Contact)) {
                     resetUIDNEXT = true;
-                }
-
-                //if moving to/from trash or spam, re-index so that the trash flag gets updated i
-                if (moved && (target.inTrash() || target.inSpam() || wasInTrash || wasInSpam)) {
-                    BehaviorManager bm = null;
-                    MessageBehavior.BehaviorType bt1 = null;
-                    MessageBehavior.BehaviorType bt2 = null;
-                    if(getAccount().isFeaturePriorityInboxEnabled() && BehaviorManager.getFactory() != null) {
-                        bm = BehaviorManager.getFactory().getBehaviorManager();
-                        bt1 = target.inTrash() && !wasInTrash ? MessageBehavior.BehaviorType.DELETED :
-                            ( (!target.inTrash() && wasInTrash) ? MessageBehavior.BehaviorType.UNDELETED : null);
-
-                        bt2 = target.inSpam() && !wasInSpam ? MessageBehavior.BehaviorType.SPAMMED :
-                            ( (!target.inSpam() && wasInSpam) ? MessageBehavior.BehaviorType.UNSPAMMED : null);
-                    }
-
-                	if (item instanceof Conversation) {
-                		for (Message msg: ((Conversation) item).getMessages()) {
-                			index.add(msg);
-                			if(bm != null) {
-                    			try {
-                    				if(bt1 != null) {
-                    					bm.storeBehavior(new MessageBehavior(getAccountId(), bt1,msg.getId(),System.currentTimeMillis(),null));
-                    				}
-                    				if(bt2 != null) {
-                    					bm.storeBehavior(new MessageBehavior(getAccountId(), bt2,msg.getId(),System.currentTimeMillis(),null));
-                    				}
-                                } catch (Exception e) {
-                                	ZimbraLog.mailbox.error("unable to log DELETED or SPAMMED behavior for message", e);
-                                }
-                			}
-                		}
-                	} else {
-                		index.add(item);
-                		if(bm != null) {
-                    		if(bt1 != null) {
-            					bm.storeBehavior(new MessageBehavior(getAccountId(), bt1,item.getId(),System.currentTimeMillis(),null));
-            				}
-            				if(bt2 != null) {
-            					bm.storeBehavior(new MessageBehavior(getAccountId(), bt2,item.getId(),System.currentTimeMillis(),null));
-            				}
-                		}
-                	}
                 }
             }
 
@@ -7336,7 +7149,7 @@ public class Mailbox {
         ZimbraLog.mailbox.info("Emptying dumpster with batchSize=" + batchSize);
         QueryParams params = new QueryParams();
         // +1 to catch items put into dumpster in the same second
-        params.setChangeDateBefore((int) (System.currentTimeMillis() / 1000 + 1)).setRowLimit(batchSize);
+        params.setChangeDateBefore(System.currentTimeMillis() + 1000).setRowLimit(batchSize);
         while (true) {
             lock.lock();
             try {
@@ -7363,7 +7176,7 @@ public class Mailbox {
 
     private int purgeDumpster(long olderThanMillis, int maxItems) throws ServiceException {
         QueryParams params = new QueryParams();
-        params.setChangeDateBefore((int) (olderThanMillis / 1000)).setRowLimit(maxItems);
+        params.setChangeDateBefore(olderThanMillis).setRowLimit(maxItems);
 
         Set<Integer> itemIds = DbMailItem.getIds(this, getOperationConnection(), params, true);
         if (!itemIds.isEmpty()) {
@@ -7650,7 +7463,7 @@ public class Mailbox {
      * @param addrs email addresses
      * @return addresses doesn't exist
      */
-    public Collection<Address> newContactAddrs(Collection<Address> addrs) throws IOException {
+    public Collection<Address> newContactAddrs(Collection<Address> addrs) throws IOException, ServiceException {
         if (addrs.isEmpty()) {
             return Collections.emptySet();
         }
@@ -8669,7 +8482,7 @@ public class Mailbox {
                     }
 
                     long tagTimeout = getOperationTimestampMillis() - tagLifetime;
-                    PendingDelete info = DbTag.getLeafNodes(this, tag, (int) (tagTimeout / 1000), maxItemsPerFolder);
+                    PendingDelete info = DbTag.getLeafNodes(this, tag, tagTimeout, maxItemsPerFolder);
                     MailItem.delete(this, info, null, false, false);
                     List<Integer> ids = info.itemIds.getIds(MailItem.Type.MESSAGE);
                     int numPurged = (ids == null ? 0 : ids.size());
@@ -8684,13 +8497,13 @@ public class Mailbox {
             }
 
             if (Threader.isHashPurgeAllowed(acct)) {
-                int convTimeoutSecs = (int) (LC.conversation_max_age_ms.longValue() / Constants.MILLIS_PER_SECOND);
-                DbMailItem.closeOldConversations(this, getOperationTimestamp() - convTimeoutSecs);
+                long convTimeoutSecs = LC.conversation_max_age_ms.longValue();
+                DbMailItem.closeOldConversations(this, getOperationTimestampMillis() - convTimeoutSecs);
             }
 
             if (isTrackingSync()) {
-                int tombstoneTimeoutSecs = (int) (LC.tombstone_max_age_ms.longValue() / Constants.MILLIS_PER_SECOND);
-                int largestTrimmed = DbMailItem.purgeTombstones(this, getOperationTimestamp() - tombstoneTimeoutSecs);
+                long tombstoneTimeoutSecs = LC.tombstone_max_age_ms.longValue();
+                int largestTrimmed = DbMailItem.purgeTombstones(this, getOperationTimestampMillis() - tombstoneTimeoutSecs);
                 if (largestTrimmed > getSyncCutoff()) {
                     currentChange().sync = largestTrimmed;
                     DbMailbox.setSyncCutoff(this, currentChange().sync);
@@ -9806,13 +9619,4 @@ public class Mailbox {
             lock.release();
         }
     }
-    /*
-     * bug 95964. Have to keep this code out until main is upgraded to Lucene 4.x, because of cross-dependencies with Mahout
-    public TrainingSet getTrainingSet() {
-    	return trainingSet;
-    }
-
-	public ClassifierDetailsManager getClassifierDetailsManager() {
-		return classifierDetailsManager;
-	}*/
 }

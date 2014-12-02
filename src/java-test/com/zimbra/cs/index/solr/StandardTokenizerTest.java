@@ -1,48 +1,43 @@
-/*
- * ***** BEGIN LICENSE BLOCK *****
- * Zimbra Collaboration Suite Server
- * Copyright (C) 2010, 2011, 2013, 2014 Zimbra, Inc.
- * 
- * This program is free software: you can redistribute it and/or modify it under
- * the terms of the GNU General Public License as published by the Free Software Foundation,
- * version 2 of the License.
- * 
- * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
- * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * See the GNU General Public License for more details.
- * You should have received a copy of the GNU General Public License along with this program.
- * If not, see <http://www.gnu.org/licenses/>.
- * ***** END LICENSE BLOCK *****
- */
-package com.zimbra.cs.index.analysis;
+package com.zimbra.cs.index.solr;
+
+import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
 import java.io.StringReader;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.cjk.CJKAnalyzer;
-import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.analysis.tokenattributes.OffsetAttribute;
 import org.apache.lucene.analysis.tokenattributes.PositionIncrementAttribute;
 import org.apache.lucene.util.Version;
+import org.apache.solr.client.solrj.SolrServerException;
+import org.apache.solr.client.solrj.response.AnalysisResponseBase.TokenInfo;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.ByteStreams;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.solr.ZimbraTokenizer;
 
 /**
- * Unit test for {@link UniversalAnalyzer}.
- *
+ * Note: many of these tests currently fail.
+ * This is because the StandardAnalyzer used for cross-referencing the Zimbra tokenizer
+ * was versioned to Lucene 2.4, which we no longer have access to, since we are now at 4.9 and
+ * can only use versions back to 3.0. However, the StandardAnalyzer behavior has changed since 2.4
+ * and many of the tests break. Eventually it may be worthwhile to remove the StandardAnalyzer
+ * as a reference entirely.
+ * @author iraykin
  * @author ysasaki
+ *
  */
-public final class UniversalAnalyzerTest {
-    private UniversalAnalyzer universalAnalyzer = new UniversalAnalyzer();
-    // for backward compatibility
-    private StandardAnalyzer standardAnalyzer = new StandardAnalyzer(Version.LUCENE_24);
-    private CJKAnalyzer cjkAnalyzer = new CJKAnalyzer(Version.LUCENE_31);
+@Ignore ("This test case is ignored until bug described in https://issues.apache.org/jira/browse/SOLR-2834 is fixed in solrj. The bug is causing the SolrPluginTestBase.doAnalysisRequest method to fail.")
+public class StandardTokenizerTest extends SolrPluginTestBase {
     // See https://issues.apache.org/jira/browse/LUCENE-1068
     private boolean assertOffset = true;
 
@@ -214,56 +209,82 @@ public final class UniversalAnalyzerTest {
         testCJK("\uff34\uff45\uff53\uff54 \uff11\uff12\uff13\uff14");
     }
 
-    private void testSTD(String src) throws IOException {
-        TokenStream std = standardAnalyzer.tokenStream(null, new StringReader(src));
+    private void testSTD(String src) throws IOException, SolrServerException, ServiceException {
+        TokenStream std = new ZimbraTokenizer(new StringReader(src));
+        std.reset();
         CharTermAttribute stdTermAttr = std.addAttribute(CharTermAttribute.class);
         OffsetAttribute stdOffsetAttr = std.addAttribute(OffsetAttribute.class);
         PositionIncrementAttribute stdPosIncAttr = std.addAttribute(PositionIncrementAttribute.class);
 
-        TokenStream uni = universalAnalyzer.tokenStream(null, new StringReader(src));
-        CharTermAttribute uniTermAttr = uni.addAttribute(CharTermAttribute.class);
-        OffsetAttribute uniOffsetAttr = uni.addAttribute(OffsetAttribute.class);
-        PositionIncrementAttribute uniPosIncAttr = uni.addAttribute(PositionIncrementAttribute.class);
+        List<String> terms = new ArrayList<String>();
+        List<Integer> positions = new ArrayList<Integer>();
+        List<Integer> startOffsets = new ArrayList<Integer>();
+        List<Integer> endOffsets = new ArrayList<Integer>();
+        List<TokenInfo> tokens = getTokenInfoWithoutReversals("zmtext", src);
+        for (TokenInfo token: tokens) {
+            terms.add(token.getText());
+            positions.add(token.getPosition());
+            startOffsets.add(token.getStart());
+            endOffsets.add(token.getEnd());
+        }
 
+
+        int idx = 0;
         while (true) {
             boolean result = std.incrementToken();
-            Assert.assertEquals(result, uni.incrementToken());
             if (!result) {
+                assertEquals(idx, tokens.size());
                 break;
             }
-            String term = stdTermAttr.toString();
-            Assert.assertEquals(stdTermAttr, uniTermAttr);
+            String expectedTerm = stdTermAttr.toString();
+            String actualTerm   = terms.get(idx);
+            Assert.assertEquals(expectedTerm, actualTerm);
             if (assertOffset) {
-                Assert.assertEquals(term, stdOffsetAttr, uniOffsetAttr);
+                assertEquals(expectedTerm, stdOffsetAttr.startOffset(), (int) startOffsets.get(idx));
+                assertEquals(expectedTerm, stdOffsetAttr.endOffset(), (int) endOffsets.get(idx));
             }
-            Assert.assertEquals(term, stdPosIncAttr, uniPosIncAttr);
+            Assert.assertEquals(expectedTerm, stdPosIncAttr.getPositionIncrement(), (int) positions.get(idx));
+            idx++;
         }
+        std.close();
     }
 
-    private void testCJK(String src) throws IOException {
-        TokenStream cjk = cjkAnalyzer.tokenStream(null, new StringReader(src));
+    private void testCJK(String src) throws IOException, SolrServerException, ServiceException {
+        TokenStream cjk = new CJKAnalyzer(Version.LUCENE_4_9).tokenStream(null, new StringReader(src));
+        cjk.reset();
         CharTermAttribute cjkTermAttr = cjk.addAttribute(CharTermAttribute.class);
         OffsetAttribute cjkOffsetAttr = cjk.addAttribute(OffsetAttribute.class);
         PositionIncrementAttribute cjkPosIncAttr = cjk.addAttribute(PositionIncrementAttribute.class);
 
-        TokenStream uni = universalAnalyzer.tokenStream(null, new StringReader(src));
-        CharTermAttribute uniTermAttr = uni.addAttribute(CharTermAttribute.class);
-        OffsetAttribute uniOffsetAttr = uni.addAttribute(OffsetAttribute.class);
-        PositionIncrementAttribute uniPosIncAttr = uni.addAttribute(PositionIncrementAttribute.class);
+        List<String> terms = new ArrayList<String>();
+        List<Integer> positions = new ArrayList<Integer>();
+        List<Integer> startOffsets = new ArrayList<Integer>();
+        List<Integer> endOffsets = new ArrayList<Integer>();
+        List<TokenInfo> tokens = getTokenInfoWithoutReversals("zmtext", src);
+        for (TokenInfo token: tokens) {
+            terms.add(token.getText());
+            positions.add(token.getPosition());
+            startOffsets.add(token.getStart());
+            endOffsets.add(token.getEnd());
+        }
 
+        int idx = 0;
         while (true) {
             boolean result = cjk.incrementToken();
-            Assert.assertEquals(result, uni.incrementToken());
             if (!result) {
+                assertEquals(idx, tokens.size());
                 break;
             }
-            String term = cjkTermAttr.toString();
-            Assert.assertEquals(cjkTermAttr, uniTermAttr);
+            String expectedTerm = cjkTermAttr.toString();
+            String actualTerm   = terms.get(idx);
+            Assert.assertEquals(expectedTerm, actualTerm);
             if (assertOffset) {
-                Assert.assertEquals(term, cjkOffsetAttr, uniOffsetAttr);
+                assertEquals(expectedTerm, cjkOffsetAttr.startOffset(), (int) startOffsets.get(idx));
+                assertEquals(expectedTerm, cjkOffsetAttr.endOffset(), (int) endOffsets.get(idx));
             }
-            Assert.assertEquals(term, cjkPosIncAttr, uniPosIncAttr);
+            Assert.assertEquals(expectedTerm, cjkPosIncAttr.getPositionIncrement(), (int) positions.get(idx));
+            idx++;
         }
+        cjk.close();
     }
-
 }

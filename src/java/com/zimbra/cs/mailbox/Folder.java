@@ -825,7 +825,7 @@ public class Folder extends MailItem {
         data.type = Type.FOLDER.toByte();
         data.folderId = (id == Mailbox.ID_FOLDER_ROOT ? id : parent.getId());
         data.parentId = data.folderId;
-        data.date = date == null ?  mbox.getOperationTimestamp() : (int) (date / 1000);
+        data.date = date == null ?  mbox.getOperationTimestampMillis() : date;
         data.setFlags((flags | Flag.toBitmask(mbox.getAccount().getDefaultFolderFlags())) & Flag.FLAGS_FOLDER);
         data.name = name;
         data.setSubject(name);
@@ -1359,7 +1359,7 @@ public class Folder extends MailItem {
                 }
             }
         }
-        PendingDelete info = DbMailItem.getLeafNodes(mbox, folders, (int) (beforeDate / 1000), allFolders, unread, useChangeDate, maxItems);
+        PendingDelete info = DbMailItem.getLeafNodes(mbox, folders, beforeDate, allFolders, unread, useChangeDate, maxItems);
         delete(mbox, info, null, false, false);
 
         if (deleteEmptySubfolders) {

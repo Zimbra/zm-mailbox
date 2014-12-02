@@ -20,8 +20,10 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.util.List;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.Mailbox.IndexItemEntry;
 
 /**
  * Abstraction of index write operations.
@@ -34,15 +36,17 @@ public interface Indexer extends Closeable {
 
     /**
      * Adds index documents.
+     * @throws ServiceException 
      */
-    void addDocument(Folder folder, MailItem item, List<IndexDocument> docs) throws IOException;
+    void addDocument(Folder folder, MailItem item, List<IndexDocument> docs) throws IOException, ServiceException;
 
     /**
      * Deletes index documents.
      *
      * @param ids list of item IDs to delete
+     * @throws ServiceException 
      */
-    void deleteDocument(List<Integer> ids) throws IOException;
+    void deleteDocument(List<Integer> ids) throws IOException, ServiceException;
 
     /**
      * Compacts the index by expunging all the deletes.
@@ -57,4 +61,8 @@ public interface Indexer extends Closeable {
      * @return total number of documents in this index excluding deletions
      */
     int maxDocs();
+
+	void add(List<IndexItemEntry> entries) throws IOException, ServiceException;
+
+	//List<IndexItemEntry> getIndexed();
 }

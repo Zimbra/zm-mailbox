@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -16,6 +16,7 @@
  */
 package com.zimbra.cs.index;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.lucene.search.TopDocs;
@@ -29,21 +30,27 @@ public class ZimbraTopDocs {
     private final int totalHits;
     private final float maxScore;
     private final List<ZimbraScoreDoc> scoreDocs;
+    private final List<IndexDocument> indexDocs;
 
-    protected ZimbraTopDocs(int totalHits, List<ZimbraScoreDoc> scoreDocs, float maxScore) {
+    protected ZimbraTopDocs(int totalHits, List<ZimbraScoreDoc> scoreDocs, float maxScore, List<IndexDocument> docs) {
         this.totalHits = totalHits;
         this.scoreDocs = scoreDocs;
         this.maxScore = maxScore;
+        this.indexDocs = docs;
     }
 
-    public static ZimbraTopDocs create(int totalHits, List<ZimbraScoreDoc> scoreDocs, float maxScore) {
-        return new ZimbraTopDocs(totalHits, scoreDocs, maxScore);
+    protected ZimbraTopDocs(int totalHits, List<ZimbraScoreDoc> scoreDocs, float maxScore) {
+        this(totalHits, scoreDocs, maxScore, new ArrayList<IndexDocument>());
+    }
+
+    public static ZimbraTopDocs create(int totalHits, List<ZimbraScoreDoc> scoreDocs, float maxScore, List<IndexDocument> docs) {
+        return new ZimbraTopDocs(totalHits, scoreDocs, maxScore, docs);
     }
 
     /**
      * Create a ZimbraTopDocs object for search results where scores are not tracked.
      */
-    public static ZimbraTopDocs create(int totalHits, List<ZimbraScoreDoc> scoreDocs) {
+    public static ZimbraTopDocs create(int totalHits, List<ZimbraScoreDoc> scoreDocs, List<IndexDocument> docs) {
         return new ZimbraTopDocs(totalHits, scoreDocs, Float.NaN);
     }
 
@@ -89,5 +96,13 @@ public class ZimbraTopDocs {
                 .add("totalHits", totalHits)
                 .add("maxScore", maxScore)
                 .add("scoreDocs", scoreDocs).toString();
+    }
+
+    public IndexDocument getDoc(int index) {
+    	return indexDocs.get(index);
+    }
+
+    public List<IndexDocument> getIndexDocs() {
+    	return indexDocs;
     }
 }

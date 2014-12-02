@@ -26,15 +26,15 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
-
-import org.apache.lucene.analysis.Analyzer;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Objects;
@@ -50,7 +50,6 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.AccessBoundedRegex;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.DbConnection;
@@ -63,11 +62,9 @@ import com.zimbra.cs.index.IndexPendingDeleteException;
 import com.zimbra.cs.index.IndexStore;
 import com.zimbra.cs.index.Indexer;
 import com.zimbra.cs.index.LuceneFields;
-import com.zimbra.cs.index.LuceneIndex;
 import com.zimbra.cs.index.ReSortingQueryResults;
 import com.zimbra.cs.index.SearchParams;
 import com.zimbra.cs.index.SortBy;
-import com.zimbra.cs.index.ZimbraAnalyzer;
 import com.zimbra.cs.index.ZimbraIndexReader.TermFieldEnumeration;
 import com.zimbra.cs.index.ZimbraIndexSearcher;
 import com.zimbra.cs.index.ZimbraQuery;
@@ -101,23 +98,16 @@ public final class MailboxIndex {
     // Only one thread may run index at a time.
     private final Semaphore indexLock = new Semaphore(1);
     private final Mailbox mailbox;
-    private final Analyzer analyzer;
     private IndexStore indexStore;
     // current re-indexing operation for this mailbox, or NULL if a re-index is not in progress.
     private volatile ReIndexTask reIndex;
     // current compact-indexing operation for this mailbox, or NULL if a compact-index is not in progress.
     private volatile CompactIndexTask compactIndex;
     private volatile SetMultimap<MailItem.Type, Integer> deferredIds; // guarded by IndexHelper
-
+    private volatile AtomicInteger numIndexTasksRunning = new AtomicInteger();
+    private static ConcurrentHashMap<String, AtomicInteger> indexTasksByMailbox = new ConcurrentHashMap<String, AtomicInteger>();
     MailboxIndex(Mailbox mbox) {
         mailbox = mbox;
-        String analyzerName;
-        try {
-            analyzerName = mbox.getAccount().getTextAnalyzer();
-        } catch (ServiceException e) {
-            analyzerName = null;
-        }
-        analyzer = ZimbraAnalyzer.getAnalyzer(analyzerName);
     }
 
     /**
@@ -131,12 +121,8 @@ public final class MailboxIndex {
         IndexStore.getFactory().destroy();
     }
 
-    public Analyzer getAnalyzer() {
-        return analyzer;
-    }
-
     void open() throws ServiceException {
-        indexStore = IndexStore.getFactory().getIndexStore(mailbox);
+        indexStore = IndexStore.getFactory().getIndexStore(mailbox.getAccountId());
     }
 
     public final IndexStore getIndexStore() {
@@ -255,7 +241,7 @@ public final class MailboxIndex {
     /**
      * Returns true if any of the specified email addresses exists in contacts, otherwise false.
      */
-    public boolean existsInContacts(Collection<InternetAddress> addrs) throws IOException {
+    public boolean existsInContacts(Collection<InternetAddress> addrs) throws IOException, ServiceException {
         Set<MailItem.Type> types = EnumSet.of(MailItem.Type.CONTACT);
         if (getDeferredCount(types) > 0) {
             try {
@@ -295,22 +281,21 @@ public final class MailboxIndex {
      * use of the index, all deferred unindexed items are immediately indexed regardless of batch size. If this number
      * is {@code 0}, all items are indexed immediately when they are added.
      */
-    public int getBatchThreshold() {
-        if (indexStore instanceof LuceneIndex) {
-            try {
-                return mailbox.getAccount().getBatchedIndexingSize();
-            } catch (ServiceException e) {
-                ZimbraLog.index.warn("Failed to get %s",Provisioning.A_zimbraBatchedIndexingSize, e);
-            }
-        }
-        return 0; // disable batch indexing for non Lucene index stores
-    }
+	public int getBatchThreshold() {
+	    return 0; //disabling batch threshold for SOLR
+//		try {
+//			return mailbox.getAccount().getBatchedIndexingSize();
+//		} catch (ServiceException e) {
+//			ZimbraLog.index.warn("Failed to get %s", Provisioning.A_zimbraBatchedIndexingSize, e);
+//			return 0;
+//		}
+	}
 
     void evict() {
         indexStore.evict();
     }
 
-    public void deleteIndex() throws IOException {
+    public void deleteIndex() throws IOException, ServiceException {
         if (isReIndexInProgress()) {
             cancelReIndex();
         }
@@ -846,7 +831,7 @@ public final class MailboxIndex {
             ZimbraLog.index.debug("delete of ids from index aborted as it is pending delete");
             lastFailedTime = System.currentTimeMillis();
             return;
-        } catch (IOException e) {
+        } catch (IOException | ServiceException e) {
             ZimbraLog.index.warn("Failed to open Indexer", e);
             lastFailedTime = System.currentTimeMillis();
             return;
@@ -854,7 +839,7 @@ public final class MailboxIndex {
 
         try {
             indexer.deleteDocument(ids);
-        } catch (IOException e) {
+        } catch (IOException | ServiceException e) {
             ZimbraLog.index.warn("Failed to delete index documents", e);
         } finally {
             try {
@@ -876,9 +861,10 @@ public final class MailboxIndex {
             return;
         }
 
-        Indexer indexer;
+        Indexer indexer = null;
         try {
             indexer = indexStore.openIndexer();
+            indexer.add(entries);
         } catch (IndexPendingDeleteException e) {
             ZimbraLog.index.debug("add of entries to index aborted as index is pending delete");
             lastFailedTime = System.currentTimeMillis();
@@ -887,49 +873,25 @@ public final class MailboxIndex {
             ZimbraLog.index.warn("Failed to open Indexer", e);
             lastFailedTime = System.currentTimeMillis();
             return;
-        }
-
-        List<MailItem> indexed = new ArrayList<MailItem>(entries.size());
-        try {
-            for (IndexItemEntry entry : entries) {
-                if ((indexStore != null) && indexStore.isPendingDelete()) {
-                    ZimbraLog.index.debug("add of list of entries to index aborted as index is pending delete");
-                    lastFailedTime = System.currentTimeMillis();
-                    return;  // No point in indexing if we are going to delete the index
-                }
-                if (entry.documents == null) {
-                    ZimbraLog.index.warn("NULL index data item=%s", entry);
-                    continue;
-                }
-
-                ZimbraLog.index.debug("Indexing id=%d", entry.item.getId());
-
-                try {
-                    indexer.addDocument(entry.item.getFolder(), entry.item, entry.documents);
-                } catch (IOException e) {
-                    ZimbraLog.index.warn("Failed to index item=%s", entry, e);
-                    lastFailedTime = System.currentTimeMillis();
-                    continue;
-                }
-                indexed.add(entry.item);
-            }
         } finally {
             try {
-                indexer.close();
+            	if(indexer != null) {
+            		indexer.close();
+            	}
             } catch (IOException e) {
                 ZimbraLog.index.error("Failed to close Indexer", e);
                 return;
             }
         }
-
-        List<Integer> ids = new ArrayList<Integer>(indexed.size());
-        for (MailItem item : indexed) {
-            ids.add(item.getId());
+        List<Integer> ids = new ArrayList<Integer>(entries.size());
+        //List<IndexItemEntry> indexedEntries = indexer.getIndexed();
+        for (IndexItemEntry entry : entries) {
+            ids.add(entry.item.getId());
         }
         DbMailItem.setIndexIds(mailbox.getOperationConnection(), mailbox, ids);
-        for (MailItem item : indexed) {
-            item.mData.indexId = item.getId();
-            removeDeferredId(item.getId());
+        for (IndexItemEntry entry : entries) {
+            entry.item.mData.indexId = entry.item.getId();
+            removeDeferredId(entry.item.getId());
         }
     }
 
@@ -1397,6 +1359,15 @@ public final class MailboxIndex {
         protected abstract void exec() throws Exception;
     }
 
+    private static synchronized void incrementCounter(String id) {
+        indexTasksByMailbox.putIfAbsent(id, new AtomicInteger());
+        indexTasksByMailbox.get(id).incrementAndGet();
+    }
+
+    private static synchronized void decrementCounter(String id) {
+        indexTasksByMailbox.get(id).decrementAndGet();
+    }
+
     private final class BatchIndexTask extends IndexTask {
 
         BatchIndexTask() {
@@ -1405,7 +1376,12 @@ public final class MailboxIndex {
 
         @Override
         protected void exec() throws Exception {
-            indexDeferredItems(EnumSet.noneOf(MailItem.Type.class), new BatchStatus(), false);
+            incrementCounter(mailbox.getAccountId());
+            try {
+                indexDeferredItems(EnumSet.noneOf(MailItem.Type.class), new BatchStatus(), false);
+            } finally {
+                decrementCounter(mailbox.getAccountId());
+            }
         }
 
     }
@@ -1439,4 +1415,8 @@ public final class MailboxIndex {
         }
     }
 
+    @VisibleForTesting
+    public boolean indexTasksRunning() {
+        return indexTasksByMailbox.getOrDefault(mailbox.getAccountId(), new AtomicInteger()).get() > 0;
+    }
 }

@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -435,7 +435,7 @@ public final class DbTag {
                 // change ID update
                 if (altersModseq) {
                     stmt.setInt(pos++, mbox.getOperationChangeID());
-                    stmt.setInt(pos++, mbox.getOperationTimestamp());
+                    stmt.setLong(pos++, mbox.getOperationTimestampMillis());
                 }
                 pos = DbMailItem.setMailboxId(stmt, mbox, pos);
                 // sanity check
@@ -622,7 +622,7 @@ public final class DbTag {
                 stmt.setString(pos++, delimitTagName(oldName));
                 stmt.setString(pos++, delimitTagName(newName));
                 stmt.setInt(pos++, mbox.getOperationChangeID());
-                stmt.setInt(pos++, mbox.getOperationTimestamp());
+                stmt.setLong(pos++, mbox.getOperationTimestampMillis());
                 pos = DbMailItem.setMailboxId(stmt, mbox, pos);
                 stmt.setInt(pos++, tag.getId());
             } else {
@@ -634,7 +634,7 @@ public final class DbTag {
                 stmt.setString(pos++, delimitTagName(oldName));
                 stmt.setString(pos++, delimitTagName(newName));
                 stmt.setInt(pos++, mbox.getOperationChangeID());
-                stmt.setInt(pos++, mbox.getOperationTimestamp());
+                stmt.setLong(pos++, mbox.getOperationTimestampMillis());
                 pos = DbMailItem.setMailboxId(stmt, mbox, pos);
                 pos = DbMailItem.setMailboxId(stmt, mbox, pos);
                 stmt.setInt(pos++, tag.getId());
@@ -672,7 +672,7 @@ public final class DbTag {
                 stmt.setString(pos++, delimited);
                 stmt.setString(pos++, delimited);
                 stmt.setInt(pos++, mbox.getOperationChangeID());
-                stmt.setInt(pos++, mbox.getOperationTimestamp());
+                stmt.setLong(pos++, mbox.getOperationTimestampMillis());
                 pos = DbMailItem.setMailboxId(stmt, mbox, pos);
                 stmt.setInt(pos++, tag.getId());
             } else {
@@ -683,7 +683,7 @@ public final class DbTag {
                 stmt.setString(pos++, delimited);
                 stmt.setString(pos++, delimited);
                 stmt.setInt(pos++, mbox.getOperationChangeID());
-                stmt.setInt(pos++, mbox.getOperationTimestamp());
+                stmt.setLong(pos++, mbox.getOperationTimestampMillis());
                 pos = DbMailItem.setMailboxId(stmt, mbox, pos);
                 pos = DbMailItem.setMailboxId(stmt, mbox, pos);
                 stmt.setInt(pos++, tag.getId());
@@ -720,7 +720,7 @@ public final class DbTag {
         }
     }
 
-    public static PendingDelete getLeafNodes(Mailbox mbox, Tag tag, int before, Integer maxItems)
+    public static PendingDelete getLeafNodes(Mailbox mbox, Tag tag, long before, Integer maxItems)
     throws ServiceException {
         DbConnection conn = mbox.getOperationConnection();
 
@@ -741,7 +741,7 @@ public final class DbTag {
             int pos = 1;
             pos = DbMailItem.setMailboxId(stmt, mbox, pos);
             stmt.setInt(pos++, tag.getId());
-            stmt.setInt(pos++, before);
+            stmt.setLong(pos++, before);
 
             PendingDelete info = DbMailItem.accumulateDeletionInfo(mbox, stmt);
             stmt = null;

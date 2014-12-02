@@ -161,7 +161,7 @@ public class Note extends MailItem {
         if (!folder.inSpam() || mbox.getAccount().getBooleanAttr(Provisioning.A_zimbraJunkMessagesIndexingEnabled, false)) {
             data.indexId = IndexStatus.DEFERRED.id();
         }
-        data.date = mbox.getOperationTimestamp();
+        data.date = mbox.getOperationTimestampMillis();
         data.setSubject(content);
         data.metadata = encodeMetadata(color, 1, 1, custom, location);
         data.contentChanged(mbox);
@@ -202,7 +202,7 @@ public class Note extends MailItem {
         markItemModified(Change.CONTENT | Change.DATE);
         // XXX: should probably update both mData.size and the Mailbox's size
         mData.setSubject(content);
-        mData.date = mMailbox.getOperationTimestamp();
+        mData.date = mMailbox.getOperationTimestampMillis();
         saveData(new DbMailItem(mMailbox));
     }
 

@@ -45,7 +45,7 @@ public class Link extends Document {
         data.type = Type.MOUNTPOINT.toByte();
         data.folderId = parent.getId();
         data.parentId = data.folderId;
-        data.date = mbox.getOperationTimestamp();
+        data.date = mbox.getOperationTimestampMillis();
         data.name = name;
         data.setSubject(name);
         data.metadata = encodeMetadata(DEFAULT_COLOR_RGB, 1, 1, ownerId, remoteId, custom);

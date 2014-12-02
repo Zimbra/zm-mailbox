@@ -41,131 +41,137 @@ interface ParserConstants {
   /** RegularExpression Id. */
   int MINUS = 9;
   /** RegularExpression Id. */
-  int TERM = 10;
+  int RANGE = 10;
   /** RegularExpression Id. */
-  int _TERM_START_CHAR = 11;
+  int TERM = 11;
   /** RegularExpression Id. */
-  int _TERM_CHAR = 12;
+  int _TERM_START_CHAR = 12;
   /** RegularExpression Id. */
-  int QUOTED_TERM = 13;
+  int _TERM_CHAR = 13;
   /** RegularExpression Id. */
-  int _ESCAPED_QUOTE = 14;
+  int QUOTED_TERM = 14;
   /** RegularExpression Id. */
-  int BRACED_TERM = 15;
+  int _ESCAPED_QUOTE = 15;
   /** RegularExpression Id. */
-  int CONTENT = 16;
+  int BRACED_TERM = 16;
   /** RegularExpression Id. */
-  int SUBJECT = 17;
+  int QUOTED_RANGE_TERM = 17;
   /** RegularExpression Id. */
-  int MSGID = 18;
+  int CONTENT = 18;
   /** RegularExpression Id. */
-  int ENVTO = 19;
+  int SUBJECT = 19;
   /** RegularExpression Id. */
-  int ENVFROM = 20;
+  int MSGID = 20;
   /** RegularExpression Id. */
-  int CONTACT = 21;
+  int ENVTO = 21;
   /** RegularExpression Id. */
-  int TO = 22;
+  int ENVFROM = 22;
   /** RegularExpression Id. */
-  int FROM = 23;
+  int CONTACT = 23;
   /** RegularExpression Id. */
-  int CC = 24;
+  int TO = 24;
   /** RegularExpression Id. */
-  int TOFROM = 25;
+  int FROM = 25;
   /** RegularExpression Id. */
-  int TOCC = 26;
+  int CC = 26;
   /** RegularExpression Id. */
-  int FROMCC = 27;
+  int TOFROM = 27;
   /** RegularExpression Id. */
-  int TOFROMCC = 28;
+  int TOCC = 28;
   /** RegularExpression Id. */
-  int IN = 29;
+  int FROMCC = 29;
   /** RegularExpression Id. */
-  int UNDER = 30;
+  int TOFROMCC = 30;
   /** RegularExpression Id. */
-  int FILENAME = 31;
+  int FROMORSENDER = 31;
   /** RegularExpression Id. */
-  int TAG = 32;
+  int IN = 32;
   /** RegularExpression Id. */
-  int MESSAGE = 33;
+  int UNDER = 33;
   /** RegularExpression Id. */
-  int MY = 34;
+  int FILENAME = 34;
   /** RegularExpression Id. */
-  int AUTHOR = 35;
+  int TAG = 35;
   /** RegularExpression Id. */
-  int TITLE = 36;
+  int MESSAGE = 36;
   /** RegularExpression Id. */
-  int KEYWORDS = 37;
+  int MY = 37;
   /** RegularExpression Id. */
-  int COMPANY = 38;
+  int AUTHOR = 38;
   /** RegularExpression Id. */
-  int METADATA = 39;
+  int TITLE = 39;
   /** RegularExpression Id. */
-  int FIELD = 40;
+  int KEYWORDS = 40;
   /** RegularExpression Id. */
-  int _FIELD1 = 41;
+  int COMPANY = 41;
   /** RegularExpression Id. */
-  int _FIELD2 = 42;
+  int METADATA = 42;
   /** RegularExpression Id. */
-  int DATE = 43;
+  int FIELD = 43;
   /** RegularExpression Id. */
-  int MDATE = 44;
+  int _FIELD1 = 44;
   /** RegularExpression Id. */
-  int DAY = 45;
+  int _FIELD2 = 45;
   /** RegularExpression Id. */
-  int WEEK = 46;
+  int DATE = 46;
   /** RegularExpression Id. */
-  int MONTH = 47;
+  int MDATE = 47;
   /** RegularExpression Id. */
-  int YEAR = 48;
+  int DAY = 48;
   /** RegularExpression Id. */
-  int AFTER = 49;
+  int WEEK = 49;
   /** RegularExpression Id. */
-  int BEFORE = 50;
+  int MONTH = 50;
   /** RegularExpression Id. */
-  int APPT_START = 51;
+  int YEAR = 51;
   /** RegularExpression Id. */
-  int APPT_END = 52;
+  int AFTER = 52;
   /** RegularExpression Id. */
-  int CONV_START = 53;
+  int BEFORE = 53;
   /** RegularExpression Id. */
-  int CONV_END = 54;
+  int APPT_START = 54;
   /** RegularExpression Id. */
-  int SIZE = 55;
+  int APPT_END = 55;
   /** RegularExpression Id. */
-  int BIGGER = 56;
+  int CONV_START = 56;
   /** RegularExpression Id. */
-  int SMALLER = 57;
+  int CONV_END = 57;
   /** RegularExpression Id. */
-  int CONV = 58;
+  int SIZE = 58;
   /** RegularExpression Id. */
-  int CONV_COUNT = 59;
+  int BIGGER = 59;
   /** RegularExpression Id. */
-  int CONV_MINM = 60;
+  int SMALLER = 60;
   /** RegularExpression Id. */
-  int CONV_MAXM = 61;
+  int CONV = 61;
   /** RegularExpression Id. */
-  int MODSEQ = 62;
+  int CONV_COUNT = 62;
   /** RegularExpression Id. */
-  int PRIORITY = 63;
+  int CONV_MINM = 63;
   /** RegularExpression Id. */
-  int IS = 64;
+  int CONV_MAXM = 64;
   /** RegularExpression Id. */
-  int INID = 65;
+  int MODSEQ = 65;
   /** RegularExpression Id. */
-  int UNDERID = 66;
+  int PRIORITY = 66;
   /** RegularExpression Id. */
-  int HAS = 67;
+  int IS = 67;
   /** RegularExpression Id. */
-  int TYPE = 68;
+  int INID = 68;
   /** RegularExpression Id. */
-  int ATTACHMENT = 69;
+  int UNDERID = 69;
   /** RegularExpression Id. */
-  int ITEM = 70;
+  int HAS = 70;
   /** RegularExpression Id. */
-  int SORTBY = 71;
+  int TYPE = 71;
   /** RegularExpression Id. */
-  int SORT = 72;
+  int ATTACHMENT = 72;
+  /** RegularExpression Id. */
+  int ITEM = 73;
+  /** RegularExpression Id. */
+  int SORTBY = 74;
+  /** RegularExpression Id. */
+  int SORT = 75;
 
   /** Lexical state. */
   int TEXT = 0;
@@ -184,12 +190,14 @@ interface ParserConstants {
     "<NOT>",
     "\"+\"",
     "\"-\"",
+    "<RANGE>",
     "<TERM>",
     "<_TERM_START_CHAR>",
     "<_TERM_CHAR>",
     "<QUOTED_TERM>",
     "\"\\\\\\\"\"",
     "<BRACED_TERM>",
+    "<QUOTED_RANGE_TERM>",
     "\"content:\"",
     "\"subject:\"",
     "\"msgid:\"",
@@ -203,6 +211,7 @@ interface ParserConstants {
     "\"tocc:\"",
     "\"fromcc:\"",
     "\"tofromcc:\"",
+    "\"fromorsender:\"",
     "\"in:\"",
     "\"under:\"",
     "\"filename:\"",

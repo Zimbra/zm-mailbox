@@ -177,7 +177,7 @@ public class Document extends MailItem {
         if(!LC.documents_disable_instant_parsing.booleanValue())
             fragment = pd.getFragment();
 
-        mData.date = (int) (pd.getCreatedDate() / 1000L);
+        mData.date = pd.getCreatedDate();
         mData.name = pd.getFilename();
         mData.setSubject(pd.getFilename());
         description = pd.getDescription();
@@ -223,7 +223,7 @@ public class Document extends MailItem {
             data.indexId = IndexStatus.DEFERRED.id();
         }
         data.imapId = id;
-        data.date = (int) (pd.getCreatedDate() / 1000L);
+        data.date = pd.getCreatedDate();
         data.size = pd.getSize();
         data.name = name;
         data.setSubject(name);

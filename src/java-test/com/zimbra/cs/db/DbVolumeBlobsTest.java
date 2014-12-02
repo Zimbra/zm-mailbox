@@ -148,13 +148,13 @@ public class DbVolumeBlobsTest {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
         DeliveryOptions opt = new DeliveryOptions();
         opt.setFolderId(Mailbox.ID_FOLDER_INBOX);
-        int ts1 = (int) (System.currentTimeMillis()/1000);
+        long ts1 = System.currentTimeMillis();
         Message msg1 = mbox.addMessage(null, new ParsedMessage("From: from1@zimbra.com\r\nTo: to1@zimbra.com".getBytes(), false), opt, null);
         Thread.sleep(1000);
-        int ts2 = (int) (System.currentTimeMillis()/1000);
+        long ts2 = System.currentTimeMillis();
         Message msg2 = mbox.addMessage(null, new ParsedMessage("From: from1@zimbra.com\r\nTo: to1@zimbra.com".getBytes(), false), opt, null);
         Thread.sleep(1000);
-        int ts3 = (int) (System.currentTimeMillis()/1000);
+        long ts3 = System.currentTimeMillis();
         Iterable<MailboxBlobInfo> allBlobs = null;
         Volume vol = VolumeManager.getInstance().getCurrentMessageVolume();
         allBlobs = DbMailItem.getAllBlobs(conn, mbox.getSchemaGroupId(), vol.getId(), ts1, ts2);

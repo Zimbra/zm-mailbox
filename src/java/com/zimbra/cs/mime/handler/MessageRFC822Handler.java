@@ -25,7 +25,7 @@ import java.io.InputStream;
 import javax.activation.DataSource;
 import javax.mail.internet.InternetHeaders;
 
-import org.apache.lucene.document.Document;
+import org.apache.solr.common.SolrInputDocument;
 
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.cs.convert.AttachmentInfo;
@@ -46,7 +46,7 @@ public class MessageRFC822Handler extends MimeHandler {
     }
 
     @Override
-    public void addFields(Document doc) {
+    public void addFields(SolrInputDocument doc) {
     }
 
     /**

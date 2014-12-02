@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -23,9 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
-import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.index.Term;
-import org.apache.lucene.queryParser.QueryParser;
 import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.MultiPhraseQuery;
@@ -36,6 +34,7 @@ import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.SortField;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.TermRangeQuery;
+import org.apache.lucene.util.BytesRef;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -222,7 +221,7 @@ public abstract class AbstractIndexStoreTest {
         ZimbraTermsFilter filter = new ZimbraTermsFilter(terms);
         ZimbraIndexSearcher srchr = index.openSearcher();
         ZimbraTopDocs result;
-        Sort sort = new Sort(new SortField(LuceneFields.L_SORT_DATE, SortField.STRING, false));
+        Sort sort = new Sort(new SortField(LuceneFields.L_SORT_DATE, SortField.Type.STRING, false));
         result = srchr.search(new TermQuery(new Term(LuceneFields.L_CONTACT_DATA, "zimbra.com")), filter, 100, sort);
         Assert.assertNotNull("searcher.search result object - searching for zimbra.com", result);
         ZimbraLog.test.debug("Result for search for 'zimbra.com', filtering by IDs 2,4 & 5\n%s", result.toString());
@@ -230,7 +229,7 @@ public abstract class AbstractIndexStoreTest {
         Assert.assertEquals("Match Blob ID 1", String.valueOf(con2.getId()), getBlobIdForResultDoc(srchr, result, 0));
         Assert.assertEquals("Match Blob ID 2", String.valueOf(con4.getId()), getBlobIdForResultDoc(srchr, result, 1));
         // Repeat but with a reverse sort this time
-        sort = new Sort(new SortField(LuceneFields.L_SORT_DATE, SortField.STRING, true));
+        sort = new Sort(new SortField(LuceneFields.L_SORT_DATE, SortField.Type.STRING, true));
         result = srchr.search(new TermQuery(new Term(LuceneFields.L_CONTACT_DATA, "zimbra.com")), filter, 100, sort);
         Assert.assertNotNull("searcher.search result object - searching for zimbra.com", result);
         ZimbraLog.test.debug("Result for search for 'zimbra.com' sorted reverse, filter by IDs\n%s", result.toString());
@@ -250,12 +249,8 @@ public abstract class AbstractIndexStoreTest {
 
         IndexStore index = mbox.index.getIndexStore();
         ZimbraIndexSearcher searcher = index.openSearcher();
-        // This seems to be the supported way of enabling leading wildcard queries for Lucene
-        QueryParser queryParser = new QueryParser(LuceneIndex.VERSION, LuceneFields.L_CONTACT_DATA,
-                new StandardAnalyzer(LuceneIndex.VERSION));
-        queryParser.setAllowLeadingWildcard(true);
-        Query query = queryParser.parse("*irst");
-        ZimbraTopDocs result = searcher.search(query, 100);
+        //this will only work with SOLR since it requires the WildcardQueryParser
+        ZimbraTopDocs result = searcher.search(new TermQuery(new Term(LuceneFields.L_CONTACT_DATA, "*irst")), 100);
         Assert.assertNotNull("searcher.search result object - searching for *irst", result);
         ZimbraLog.test.debug("Result for search for '*irst'\n" + result.toString());
         Assert.assertEquals("Number of hits searching for *irst", 1, result.getTotalHits());
@@ -274,11 +269,7 @@ public abstract class AbstractIndexStoreTest {
 
         IndexStore index = mbox.index.getIndexStore();
         ZimbraIndexSearcher searcher = index.openSearcher();
-        // This seems to be the supported way of enabling leading wildcard queries
-        QueryParser queryParser = new QueryParser(LuceneIndex.VERSION, LuceneFields.L_CONTACT_DATA,
-                new StandardAnalyzer(LuceneIndex.VERSION));
-        queryParser.setAllowLeadingWildcard(true);
-        Query wquery = queryParser.parse("*irst");
+        Query wquery = new TermQuery(new Term(LuceneFields.L_CONTACT_DATA, "*irst"));
         Query tquery = new TermQuery(new Term(LuceneFields.L_CONTACT_DATA, "absent"));
         Query tquery2 = new TermQuery(new Term(LuceneFields.L_CONTACT_DATA, "Last"));
         BooleanQuery bquery = new BooleanQuery();
@@ -447,8 +438,8 @@ public abstract class AbstractIndexStoreTest {
         IndexStore index = mbox.index.getIndexStore();
         ZimbraIndexSearcher searcher = index.openSearcher();
         TermRangeQuery query = new TermRangeQuery(LuceneFields.L_FIELD,
-                "email:aba@zimbra.com",
-                "email:abz@zimbra.com",
+                new BytesRef("email:aba@zimbra.com"),
+                new BytesRef("email:abz@zimbra.com"),
                 false, true);
         ZimbraTopDocs result = searcher.search(query, 100);
         Assert.assertNotNull("searcher.search result object", result);
@@ -647,8 +638,9 @@ public abstract class AbstractIndexStoreTest {
         try {
             fields = searcher.getIndexReader().getTermsForField(LuceneFields.L_SORT_DATE, "");
             checkNextTermFieldType(fields, LuceneFields.L_SORT_DATE);
-            // TODO:  ElasticSearch has more.  Not sure why and not sure it matters
-            // checkAtEnd(fields, LuceneFields.L_SORT_DATE);
+            // TODO:  Check fails on ES, because ElasticSearch has more.  Not sure why and not sure it matters.
+            // Check passes on Solr and on Lucene
+            checkAtEnd(fields, LuceneFields.L_SORT_DATE);
         } finally {
             Closeables.closeQuietly(fields);
         }
@@ -657,10 +649,11 @@ public abstract class AbstractIndexStoreTest {
             fields = searcher.getIndexReader().getTermsForField(LuceneFields.L_MAILBOX_BLOB_ID, "");
             checkNextTermFieldType(fields, LuceneFields.L_MAILBOX_BLOB_ID);
             checkNextTermFieldType(fields, LuceneFields.L_MAILBOX_BLOB_ID);
-            // TODO:  ElasticSearch has more.  Investigate?  Believe it relates to fact that is a number field
+            // TODO: Check fails on ES, because ElasticSearch has more.  Investigate?  Believe it relates to fact that is a number field
             // Numbers have an associated precision step (number of terms generated for each number value)
             // which defaults to 4.
-            // checkAtEnd(fields, LuceneFields.L_MAILBOX_BLOB_ID);
+            //Check passes on Solr and on Lucene
+            checkAtEnd(fields, LuceneFields.L_MAILBOX_BLOB_ID);
         } finally {
             Closeables.closeQuietly(fields);
         }
@@ -698,7 +691,7 @@ public abstract class AbstractIndexStoreTest {
     }
 
     private static String getBlobIdForResultDoc(ZimbraIndexSearcher searcher, ZimbraTopDocs result, int index)
-            throws IOException {
+            throws IOException, ServiceException {
         return searcher.doc(result.getScoreDoc(index).getDocumentID()).get(LuceneFields.L_MAILBOX_BLOB_ID);
     }
 

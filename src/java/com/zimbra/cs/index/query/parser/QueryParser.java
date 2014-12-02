@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2010, 2011, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -43,6 +43,7 @@ import static com.zimbra.cs.index.query.parser.ParserConstants.FIELD;
 import static com.zimbra.cs.index.query.parser.ParserConstants.FILENAME;
 import static com.zimbra.cs.index.query.parser.ParserConstants.FROM;
 import static com.zimbra.cs.index.query.parser.ParserConstants.FROMCC;
+import static com.zimbra.cs.index.query.parser.ParserConstants.FROMORSENDER;
 import static com.zimbra.cs.index.query.parser.ParserConstants.HAS;
 import static com.zimbra.cs.index.query.parser.ParserConstants.IN;
 import static com.zimbra.cs.index.query.parser.ParserConstants.INID;
@@ -61,6 +62,7 @@ import static com.zimbra.cs.index.query.parser.ParserConstants.NOT;
 import static com.zimbra.cs.index.query.parser.ParserConstants.OR;
 import static com.zimbra.cs.index.query.parser.ParserConstants.PLUS;
 import static com.zimbra.cs.index.query.parser.ParserConstants.PRIORITY;
+import static com.zimbra.cs.index.query.parser.ParserConstants.QUOTED_RANGE_TERM;
 import static com.zimbra.cs.index.query.parser.ParserConstants.QUOTED_TERM;
 import static com.zimbra.cs.index.query.parser.ParserConstants.SIZE;
 import static com.zimbra.cs.index.query.parser.ParserConstants.SMALLER;
@@ -89,6 +91,7 @@ import static com.zimbra.cs.index.query.parser.ParserTreeConstants.JJTMODIFIER;
 import static com.zimbra.cs.index.query.parser.ParserTreeConstants.JJTQUERY;
 import static com.zimbra.cs.index.query.parser.ParserTreeConstants.JJTROOT;
 import static com.zimbra.cs.index.query.parser.ParserTreeConstants.JJTSORTBY;
+import static com.zimbra.cs.index.query.parser.ParserTreeConstants.JJTSUBJTERM;
 import static com.zimbra.cs.index.query.parser.ParserTreeConstants.JJTTEXTCLAUSE;
 import static com.zimbra.cs.index.query.parser.ParserTreeConstants.JJTTEXTTERM;
 
@@ -104,8 +107,6 @@ import java.util.Set;
 import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import org.apache.lucene.analysis.Analyzer;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Strings;
@@ -216,7 +217,6 @@ public final class QueryParser {
     private static Pattern FIELD_REGEX = Pattern.compile("field\\[(.+)\\]:|#(.+):", Pattern.CASE_INSENSITIVE);
 
     private final Mailbox mailbox;
-    private final Analyzer analyzer;
     private TimeZone timezone = TimeZone.getTimeZone("UTC");
     private Locale locale = Locale.ENGLISH;
     private int defaultField = CONTENT;
@@ -230,9 +230,8 @@ public final class QueryParser {
      * @param mbox mailbox to search
      * @param analyzer Lucene analyzer
      */
-    public QueryParser(Mailbox mbox, Analyzer analyzer) {
+    public QueryParser(Mailbox mbox) {
         this.mailbox = mbox;
-        this.analyzer = analyzer;
     }
 
     /**
@@ -420,7 +419,7 @@ public final class QueryParser {
     }
 
     private Query toTerm(Token field, SimpleNode node) throws ParseException, ServiceException {
-        assert(node.id == JJTDATETERM || node.id == JJTTEXTTERM || node.id == JJTITEMTERM);
+        assert(node.id == JJTDATETERM || node.id == JJTTEXTTERM || node.id == JJTITEMTERM || node.id == JJTSUBJTERM);
 
         if (node.jjtGetNumChildren() == 0) {
             Token token = node.jjtGetFirstToken();
@@ -470,6 +469,7 @@ public final class QueryParser {
         switch (node.id) {
             case JJTTEXTTERM:
             case JJTITEMTERM:
+            case JJTSUBJTERM:
             case JJTDEFAULTCLAUSE:
                 return toString(node.jjtGetFirstToken());
             case JJTDATETERM:
@@ -491,7 +491,9 @@ public final class QueryParser {
     private String toString(Token token) {
         switch (token.kind) {
             case TERM:
-                return token.image;
+            	return token.image;
+            case QUOTED_RANGE_TERM:
+            	return token.image.substring(token.image.indexOf("\"") + 1, token.image.length() - 1).replaceAll("\\\\\"", "\"");
             case QUOTED_TERM:
                 return token.image.substring(1, token.image.length() - 1).replaceAll("\\\\\"", "\"");
             case BRACED_TERM:
@@ -589,14 +591,30 @@ public final class QueryParser {
                 }
             case IS:
                 try {
-                    return BuiltInQuery.getQuery(text.toLowerCase(), mailbox, analyzer);
+                    return BuiltInQuery.getQuery(text.toLowerCase(), mailbox);
                 } catch (IllegalArgumentException e) {
                     throw exception("UNKNOWN_TEXT_AFTER_IS", term);
                 }
             case CONV:
                 return ConvQuery.create(mailbox, text);
             case CONV_COUNT:
-                return ConvCountQuery.create(text);
+            	try {
+            		return ConvCountQuery.create(text);
+            	} catch (NumberFormatException e) {
+            		throw exception("INVALID_CONV_COUNT", term);
+            	}
+            case CONV_MINM:
+            	try {
+            		return ConvCountQuery.create(">=" + text);
+            	} catch (NumberFormatException e) {
+            		throw exception("INVALID_CONV_COUNT", term);
+            	}
+            case CONV_MAXM:
+            	try {
+            		return ConvCountQuery.create("<=" + text);
+            	} catch (NumberFormatException e) {
+            		throw exception("INVALID_CONV_COUNT", term);
+            	}
             case DATE:
                 return createDateQuery(DateQuery.Type.DATE, term, text);
             case MDATE:
@@ -625,27 +643,32 @@ public final class QueryParser {
                 if (Strings.isNullOrEmpty(text)) {
                     throw exception("MISSING_TEXT_AFTER_TOFROM", term);
                 }
-                return AddrQuery.create(analyzer, EnumSet.of(Address.TO, Address.FROM), text);
+                return AddrQuery.create(EnumSet.of(Address.TO, Address.FROM), text);
             case TOCC:
                 if (Strings.isNullOrEmpty(text)) {
                     throw exception("MISSING_TEXT_AFTER_TOCC", term);
                 }
-                return AddrQuery.create(analyzer, EnumSet.of(Address.TO, Address.CC), text);
+                return AddrQuery.create(EnumSet.of(Address.TO, Address.CC), text);
             case FROMCC:
                 if (Strings.isNullOrEmpty(text)) {
                     throw exception("MISSING_TEXT_AFTER_FROMCC", term);
                 }
-                return AddrQuery.create(analyzer, EnumSet.of(Address.FROM, Address.CC), text);
+                return AddrQuery.create(EnumSet.of(Address.FROM, Address.CC), text);
             case TOFROMCC:
                 if (Strings.isNullOrEmpty(text)) {
                     throw exception("MISSING_TEXT_AFTER_TOFROMCC", term);
                 }
-                return AddrQuery.create(analyzer, EnumSet.of(Address.TO, Address.FROM, Address.CC), text);
+                return AddrQuery.create(EnumSet.of(Address.TO, Address.FROM, Address.CC), text);
+            case FROMORSENDER:
+                if (Strings.isNullOrEmpty(text)) {
+                    throw exception("MISSING_TEXT_AFTER_FROMORSENDER", term);
+                }
+                return AddrQuery.create(EnumSet.of(Address.FROM, Address.SENDER), text);
             case FROM:
                 if (Strings.isNullOrEmpty(text)) {
                     throw exception("MISSING_TEXT_AFTER_FROM", term);
                 }
-                return SenderQuery.create(analyzer, text);
+                return SenderQuery.create(text);
             case TO:
                 if (Strings.isNullOrEmpty(text)) {
                     throw exception("MISSING_TEXT_AFTER_TO", term);
@@ -675,7 +698,27 @@ public final class QueryParser {
             case SMALLER:
                 return createSizeQuery(SizeQuery.Type.LT, term, text);
             case SUBJECT:
-                return SubjectQuery.create(analyzer, text);
+            	Query.Comparison comp;
+            	if (term.kind == QUOTED_RANGE_TERM) {
+            		comp = Query.Comparison.fromString(term.image.substring(0, term.image.indexOf("\"")));
+            	} else if (term.kind == TERM) {
+            		//check for a non-quoted range query like subject:<foo
+            		if (term.image.charAt(0) == '<' || term.image.charAt(0) == '>') {
+            			if (term.image.charAt(1) == '=') {
+            				comp = Query.Comparison.fromString(term.image.substring(0, 2));
+            				text = text.substring(2);
+            			} else {
+            				comp = Query.Comparison.fromString(term.image.substring(0, 1));
+            				text = text.substring(1);
+            			}
+            		} else {
+            			comp = null;
+            		}
+            	} else {
+            		comp = null;
+            	}
+            	return SubjectQuery.create(text, comp);
+
             case FIELD:
                 return createFieldQuery(field.image, term, text);
             case CONTACT:
@@ -691,7 +734,7 @@ public final class QueryParser {
                     return createContentQuery(text);
                 }
             default:
-                return new TextQuery(analyzer, JJ2LUCENE.get(field.kind), text);
+                return new TextQuery(JJ2LUCENE.get(field.kind), text);
         }
     }
 
@@ -717,7 +760,7 @@ public final class QueryParser {
         if (term.startsWith("@")) {
             return new DomainQuery(field, term);
         } else {
-            return new TextQuery(analyzer, field, term);
+            return new TextQuery(field, term);
         }
     }
 
@@ -732,14 +775,14 @@ public final class QueryParser {
     }
 
     private Query createContentQuery(String text) {
-        return new TextQuery(analyzer, LuceneFields.L_CONTENT, text);
+        return new TextQuery(LuceneFields.L_CONTENT, text);
     }
 
     private Query createQuickQuery(String text) {
         if (types.size() == 1 && types.contains(MailItem.Type.CONTACT)) {
             return new ContactQuery(text);
         } else {
-            TextQuery query = new TextQuery(analyzer, LuceneFields.L_CONTENT, text);
+            TextQuery query = new TextQuery(LuceneFields.L_CONTENT, text);
             query.setQuick(true);
             return query;
         }

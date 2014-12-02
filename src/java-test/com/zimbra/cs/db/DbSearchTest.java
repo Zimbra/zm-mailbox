@@ -209,19 +209,19 @@ public final class DbSearchTest {
     public void mdate() throws Exception {
         DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item " +
                 "(mailbox_id, id, type, flags, date, change_date, size, tags, mod_metadata, mod_content) " +
-                "VALUES(?, ?, ?, 0, ?, ?, 0, 0, 0, 0)", mbox.getId(), 101, MailItem.Type.MESSAGE.toByte(), 100, 1000);
+                "VALUES(?, ?, ?, 0, ?, ?, 0, 0, 0, 0)", mbox.getId(), 101, MailItem.Type.MESSAGE.toByte(), 100000, 1000000);
         DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item " +
                 "(mailbox_id, id, type, flags, date, change_date, size, tags, mod_metadata, mod_content) " +
-                "VALUES(?, ?, ?, 0, ?, ?, 0, 0, 0, 0)", mbox.getId(), 102, MailItem.Type.MESSAGE.toByte(), 200, 2000);
+                "VALUES(?, ?, ?, 0, ?, ?, 0, 0, 0, 0)", mbox.getId(), 102, MailItem.Type.MESSAGE.toByte(), 200000, 2000000);
         DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item " +
                 "(mailbox_id, id, type, flags, date, change_date, size, tags, mod_metadata, mod_content) " +
-                "VALUES(?, ?, ?, 0, ?, ?, 0, 0, 0, 0)", mbox.getId(), 103, MailItem.Type.MESSAGE.toByte(), 300, 3000);
+                "VALUES(?, ?, ?, 0, ?, ?, 0, 0, 0, 0)", mbox.getId(), 103, MailItem.Type.MESSAGE.toByte(), 300000, 3000000);
         DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item " +
                 "(mailbox_id, id, type, flags, date, change_date, size, tags, mod_metadata, mod_content) " +
-                "VALUES(?, ?, ?, 0, ?, ?, 0, 0, 0, 0)", mbox.getId(), 104, MailItem.Type.MESSAGE.toByte(), 400, 4000);
+                "VALUES(?, ?, ?, 0, ?, ?, 0, 0, 0, 0)", mbox.getId(), 104, MailItem.Type.MESSAGE.toByte(), 400000, 4000000);
         DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item " +
                 "(mailbox_id, id, type, flags, date, change_date, size, tags, mod_metadata, mod_content) " +
-                "VALUES(?, ?, ?, 0, ?, ?, 0, 0, 0, 0)", mbox.getId(), 105, MailItem.Type.MESSAGE.toByte(), 500, 5000);
+                "VALUES(?, ?, ?, 0, ?, ?, 0, 0, 0, 0)", mbox.getId(), 105, MailItem.Type.MESSAGE.toByte(), 500000, 5000000);
 
         DbSearchConstraints.Leaf constraints = new DbSearchConstraints.Leaf();
         constraints.addDateRange(200000, true, 400000, false, true);
@@ -243,19 +243,19 @@ public final class DbSearchTest {
     public void tag() throws Exception {
         DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item " +
                 "(mailbox_id, id, type, flags, date, change_date, size, tags, mod_metadata, mod_content) " +
-                "VALUES(?, ?, ?, 0, ?, ?, 0, 0, 0, 0)", mbox.getId(), 101, MailItem.Type.MESSAGE.toByte(), 100, 1000);
+                "VALUES(?, ?, ?, 0, ?, ?, 0, 0, 0, 0)", mbox.getId(), 101, MailItem.Type.MESSAGE.toByte(), 100000, 1000000);
         DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item " +
                 "(mailbox_id, id, type, flags, date, change_date, size, tags, mod_metadata, mod_content) " +
-                "VALUES(?, ?, ?, 0, ?, ?, 0, 0, 0, 0)", mbox.getId(), 102, MailItem.Type.MESSAGE.toByte(), 200, 2000);
+                "VALUES(?, ?, ?, 0, ?, ?, 0, 0, 0, 0)", mbox.getId(), 102, MailItem.Type.MESSAGE.toByte(), 200000, 2000000);
         DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item " +
                 "(mailbox_id, id, type, flags, date, change_date, size, tags, mod_metadata, mod_content) " +
-                "VALUES(?, ?, ?, 0, ?, ?, 0, 0, 0, 0)", mbox.getId(), 103, MailItem.Type.MESSAGE.toByte(), 300, 3000);
+                "VALUES(?, ?, ?, 0, ?, ?, 0, 0, 0, 0)", mbox.getId(), 103, MailItem.Type.MESSAGE.toByte(), 300000, 3000000);
         DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item " +
                 "(mailbox_id, id, type, flags, date, change_date, size, tags, mod_metadata, mod_content) " +
-                "VALUES(?, ?, ?, 0, ?, ?, 0, 0, 0, 0)", mbox.getId(), 104, MailItem.Type.MESSAGE.toByte(), 400, 4000);
+                "VALUES(?, ?, ?, 0, ?, ?, 0, 0, 0, 0)", mbox.getId(), 104, MailItem.Type.MESSAGE.toByte(), 400000, 4000000);
         DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item " +
                 "(mailbox_id, id, type, flags, date, change_date, size, tags, mod_metadata, mod_content) " +
-                "VALUES(?, ?, ?, 0, ?, ?, 0, 0, 0, 0)", mbox.getId(), 105, MailItem.Type.MESSAGE.toByte(), 500, 5000);
+                "VALUES(?, ?, ?, 0, ?, ?, 0, 0, 0, 0)", mbox.getId(), 105, MailItem.Type.MESSAGE.toByte(), 500000, 5000000);
 
         DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.tagged_item (mailbox_id, item_id, tag_id) " +
                 "VALUES(?, ?, ?)", mbox.getId(), 101, Flag.ID_UNREAD);

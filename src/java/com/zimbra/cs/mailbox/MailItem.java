@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -259,7 +259,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         public int imapId   = -1;
         public String locator;
         private String blobDigest;
-        public int date; /* Seconds since 1970-01-01 00:00:00 UTC */
+        public long date; /* Milliseconds since 1970-01-01 00:00:00 UTC */
         public long size;
         public int unreadCount;
         private int flags;
@@ -268,7 +268,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         public String name;
         public String metadata;
         public int modMetadata;
-        public int dateChanged; /* Seconds since 1970-01-01 00:00:00 UTC */
+        public long dateChanged; /* Seconds since 1970-01-01 00:00:00 UTC */
         public int modContent;
         public String uuid;
 
@@ -378,7 +378,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
 
         private void metadataChanged(Mailbox mbox, boolean updateFolderMODSEQ) throws ServiceException {
             modMetadata = mbox.getOperationChangeID();
-            dateChanged = mbox.getOperationTimestamp();
+            dateChanged = mbox.getOperationTimestampMillis();
             if (updateFolderMODSEQ && !isAcceptableType(Type.FOLDER, Type.of(type)) && !isAcceptableType(Type.TAG, Type.of(type))) {
                 mbox.getFolderById(folderId).updateHighestMODSEQ();
             }
@@ -449,7 +449,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
             this.imapId = (int) meta.getLong(FN_IMAP_ID, -1);
             this.locator = meta.get(FN_LOCATOR, null);
             this.blobDigest = meta.get(FN_BLOB_DIGEST, null);
-            this.date = (int) meta.getLong(FN_DATE, 0);
+            this.date = meta.getLong(FN_DATE, 0);
             this.size = meta.getLong(FN_SIZE, 0);
             this.unreadCount = (int) meta.getLong(FN_UNREAD_COUNT, 0);
             setFlags((int) meta.getLong(FN_FLAGS, 0));
@@ -925,7 +925,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
     /** Returns the date the item's content was last modified as number of milliseconds since 1970-01-01 00:00:00 UTC.
      *  For immutable objects (e.g. received messages), this will be the same as the date the item was created. */
     public long getDate() {
-        return mData.date * 1000L;
+        return mData.date;
     }
 
     /** Returns the change ID corresponding to the last time the item's
@@ -938,7 +938,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
     /** Returns the date the item's metadata and/or content was last modified as number of milliseconds since
      * 1970-01-01 00:00:00 UTC. Includes changes in tags and flags as well as folder-to-folder moves and recoloring. */
     public long getChangeDate() {
-        return mData.dateChanged * 1000L;
+        return mData.dateChanged;
     }
 
     /** Returns the change ID corresponding to the last time the item's
@@ -1562,7 +1562,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
      * This class intentionally does not inherit from ServiceException, the
      *  exception is internal-only and should never be exposed outside of this package.
      */
-    static class TemporaryIndexingException extends Exception {
+   public static class TemporaryIndexingException extends Exception {
         private static final long serialVersionUID = 730987946876783701L;
     }
 
@@ -1927,7 +1927,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
      *    <li><tt>service.PERM_DENIED</tt> - if you don't have sufficient
      *        permissions</ul> */
     void setDate(long date) throws ServiceException {
-        if (mData.date == (int) (date / 1000L)) {
+        if (mData.date == date) {
             return;
         }
 
@@ -1939,7 +1939,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
             ZimbraLog.mailop.debug("Setting date of %s to %d.", getMailopContext(this), date);
         }
         markItemModified(Change.DATE);
-        mData.date = (int) (date / 1000L);
+        mData.date = date;
         metadataChanged();
         DbMailItem.saveDate(this);
     }
@@ -2001,7 +2001,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         getFolder().updateSize(0, 0, size - mData.size);
 
         mData.setBlobDigest(staged == null ? null : staged.getDigest());
-        mData.date   = mMailbox.getOperationTimestamp();
+        mData.date   = mMailbox.getOperationTimestampMillis();
         mData.imapId = mMailbox.isTrackingImap() ? 0 : mData.id;
         contentChanged();
 
@@ -2173,7 +2173,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
     }
 
     static public int purgeRevisions(Mailbox mbx, long before) throws ServiceException {
-        HashSet<Integer>  outdatedIds = DbMailItem.getItemsWithOutdatedRevisions( mbx, (int)(before/1000) );
+        HashSet<Integer>  outdatedIds = DbMailItem.getItemsWithOutdatedRevisions( mbx, before );
         int numberofpurgedrevisions = 0;
         for(Iterator<Integer> iter= outdatedIds.iterator(); iter.hasNext();)  {
             MailItem  item = getById(mbx, iter.next());
@@ -2860,7 +2860,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
             markItemModified(Change.NAME);
             mData.name = name;
             mData.setSubject(name);
-            mData.dateChanged = mMailbox.getOperationTimestamp();
+            mData.dateChanged = mMailbox.getOperationTimestampMillis();
             metadataChanged();
 
             saveName(target.getId());

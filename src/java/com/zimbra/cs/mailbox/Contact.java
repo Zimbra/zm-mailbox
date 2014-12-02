@@ -692,7 +692,7 @@ public class Contact extends MailItem {
         data.locator = mblob == null ? null : mblob.getLocator();
         data.setBlobDigest(pc.getDigest());
         data.size = pc.getSize();
-        data.date = mbox.getOperationTimestamp();
+        data.date = mbox.getOperationTimestampMillis();
         data.setFlags(flags | (pc.hasAttachment() ? Flag.BITMASK_ATTACHED : 0));
         data.setTags(ntags);
         data.metadata = encodeMetadata(DEFAULT_COLOR_RGB, 1, 1, custom, pc.getFields(), pc.getAttachments());

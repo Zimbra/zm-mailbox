@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2010, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -20,9 +20,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
@@ -38,14 +36,17 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.lucene.document.DateTools;
 import org.apache.lucene.document.Document;
-import org.apache.lucene.document.Fieldable;
 import org.apache.lucene.index.CheckIndex;
-import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.Term;
-import org.apache.lucene.index.TermEnum;
-import org.apache.lucene.index.TermPositions;
 import org.apache.lucene.index.CheckIndex.Status;
+import org.apache.lucene.index.DocsAndPositionsEnum;
+import org.apache.lucene.index.Fields;
+import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.IndexableField;
+import org.apache.lucene.index.MultiFields;
+import org.apache.lucene.index.TermsEnum;
 import org.apache.lucene.store.Directory;
+import org.apache.lucene.util.Bits;
+import org.apache.lucene.util.BytesRef;
 
 import com.zimbra.common.util.SetUtil;
 
@@ -203,9 +204,8 @@ public class LuceneViewer {
     private void dumpFields() throws IOException {
         outputBanner("Fields");
 
-        Collection<String> fieldNames = mIndexReader.getFieldNames(
-                IndexReader.FieldOption.ALL);
-        for (String fieldName : fieldNames) {
+        Fields fields = MultiFields.getFields(mIndexReader);
+        for (String fieldName : fields) {
             outputLn("    " + fieldName.toString());
         }
     }
@@ -222,7 +222,7 @@ public class LuceneViewer {
         for (int i = 0; i < totalDocs; i++) {
             Document doc = null;
             try {
-                doc = mIndexReader.document(i, null);
+                doc = mIndexReader.document(i);
             } catch (IllegalArgumentException e) {
                 if ("attempt to access a deleted document".equals(e.getMessage())) {
                     mConsole.warn("encountered exception while dumping document " +
@@ -250,7 +250,7 @@ public class LuceneViewer {
         }
 
         // note: only stored fields will be returned
-        for (Fieldable field : doc.getFields()) {
+        for (IndexableField field : doc.getFields()) {
             String fieldName = field.name();
 
             boolean isDate = "l.date".equals(fieldName);
@@ -292,84 +292,80 @@ public class LuceneViewer {
 
     private void dumpTerms() throws IOException {
         outputBanner("Terms (in Term.compareTo() order)");
-
-        TermEnum terms = mIndexReader.terms();
+        Fields fields = MultiFields.getFields(mIndexReader);
+        Bits liveDocs = MultiFields.getLiveDocs(mIndexReader);
         int order = 0;
+        for (String field: fields) {
+        	TermsEnum terms = fields.terms(field).iterator(null);
+        	BytesRef term;
+	        while (terms.next() != null) {
+	            order++;
+	            term = terms.term();
+	            String text = term.utf8ToString();
 
-        while (terms.next()) {
-            order++;
-            Term term = terms.term();
-            String field = term.field();
-            String text = term.text();
+	            if (!wantThisTerm(field, text)) {
+	                continue;
+	            }
 
-            if (!wantThisTerm(field, text)) {
-                continue;
-            }
+	            outputLn(order + " " + field + ": " + text);
 
-            outputLn(order + " " + field + ": " + text);
+	            /*
+	             * for each term, print the
+	             * <document, frequency, <position>* > tuples for a term.
+	             *
+	             * document:  document in which the Term appears
+	             * frequency: number of time the Term appears in the document
+	             * position:  position for each appearance in the document
+	             *
+	             * e.g. doc.add(new Field("field", "one two three two four five", Field.Store.YES, Field.Index.ANALYZED));
+	             *      then the tuple for Term("field", "two") in this document would be like:
+	             *      88, 2, <2, 4>
+	             *      where
+	             *      88 is the document number
+	             *      2  is the frequency this term appear in the document
+	             *      <2, 4> are the positions for each appearance in the document
+	             */
+	            // by TermPositions
+	            outputLn("    document, frequency, <position>*");
 
-            /*
-             * for each term, print the
-             * <document, frequency, <position>* > tuples for a term.
-             *
-             * document:  document in which the Term appears
-             * frequency: number of time the Term appears in the document
-             * position:  position for each appearance in the document
-             *
-             * e.g. doc.add(new Field("field", "one two three two four five", Field.Store.YES, Field.Index.ANALYZED));
-             *      then the tuple for Term("field", "two") in this document would be like:
-             *      88, 2, <2, 4>
-             *      where
-             *      88 is the document number
-             *      2  is the frequency this term appear in the document
-             *      <2, 4> are the positions for each appearance in the document
-             */
-            // by TermPositions
-            outputLn("    document, frequency, <position>*");
+	            // keep track of docs that appear in all terms that are filtered in.
+	            Set<Integer> docNums = null;
+	            if (hasFilters()) {
+	                docNums = new HashSet<Integer>();
+	            }
+	            DocsAndPositionsEnum termPos = terms.docsAndPositions(liveDocs, null);
+	            while (termPos.nextDoc() != DocsAndPositionsEnum.NO_MORE_DOCS) {
+	                int docNum = termPos.docID();
+	                int freq = termPos.freq();
+	                if (docNums != null) {
+	                    docNums.add(docNum);
+	                }
 
-            // keep track of docs that appear in all terms that are filtered in.
-            Set<Integer> docNums = null;
-            if (hasFilters()) {
-                docNums = new HashSet<Integer>();
-            }
+	                output("    " + docNum + ", " + freq + ", <");
 
-            TermPositions termPos = mIndexReader.termPositions(term);
-            while (termPos.next()) {
-                int docNum = termPos.doc();
-                int freq = termPos.freq();
+	                boolean first = true;
+	                for (int f = 0; f < freq; f++) {
+	                    int positionInDoc = termPos.nextPosition();
+	                    if (!first) {
+	                        output(" ");
+	                    } else {
+	                        first = false;
+	                    }
+	                    output(positionInDoc + "");
+	                }
+	                outputLn(">");
+	            }
+	            if (docNums != null) {
+	                 computeDocsIntersection(docNums);
+	            }
 
-                if (docNums != null) {
-                    docNums.add(docNum);
-                }
+	            outputLn();
 
-                output("    " + docNum + ", " + freq + ", <");
-
-                boolean first = true;
-                for (int f = 0; f < freq; f++) {
-                    int positionInDoc = termPos.nextPosition();
-                    if (!first) {
-                        output(" ");
-                    } else {
-                        first = false;
-                    }
-                    output(positionInDoc + "");
-                }
-                outputLn(">");
-            }
-            termPos.close();
-
-            if (docNums != null) {
-                 computeDocsIntersection(docNums);
-            }
-
-            outputLn();
-
-            if (order % 1000 == 0) {
-                mConsole.debug("Dumped " + order + " terms");
-            }
+	            if (order % 1000 == 0) {
+	                mConsole.debug("Dumped " + order + " terms");
+	            }
+	        }
         }
-
-        terms.close();
     }
 
     private void dumpDocsIntersection() throws IOException {

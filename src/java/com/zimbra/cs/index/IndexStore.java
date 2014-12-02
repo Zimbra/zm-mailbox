@@ -18,14 +18,28 @@ package com.zimbra.cs.index;
 
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.solr.client.solrj.SolrServerException;
+import org.apache.solr.client.solrj.impl.HttpSolrServer;
+import org.apache.solr.client.solrj.request.QueryRequest;
+import org.apache.solr.common.params.CommonParams;
+import org.apache.solr.common.params.ModifiableSolrParams;
+import org.apache.solr.common.util.NamedList;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.extension.ExtensionUtil;
+import com.zimbra.cs.mailbox.Appointment;
+import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mailbox.Task;
 import com.zimbra.cs.util.Zimbra;
 
 /**
@@ -39,13 +53,15 @@ public abstract class IndexStore {
 
     /**
      * {@link Indexer#close()} must be called after use.
+     * @throws ServiceException 
      */
-    public abstract Indexer openIndexer() throws IOException;
+    public abstract Indexer openIndexer() throws IOException, ServiceException;
 
     /**
      * {@link ZimbraIndexSearcher#close()} must be called after use.
+     * @throws ServiceException 
      */
-    public abstract ZimbraIndexSearcher openSearcher() throws IOException;
+    public abstract ZimbraIndexSearcher openSearcher() throws IOException, ServiceException;
 
     /**
      * Prime the index.
@@ -59,8 +75,9 @@ public abstract class IndexStore {
 
     /**
      * Deletes the whole index data for the mailbox.
+     * @throws ServiceException 
      */
-    public abstract void deleteIndex() throws IOException;
+    public abstract void deleteIndex() throws IOException, ServiceException;
 
     /**
      * Get value of Flag that indicates that the index is scheduled for deletion
@@ -146,11 +163,30 @@ public abstract class IndexStore {
         /**
          * Get an IndexStore instance for a particular mailbox
          */
-        IndexStore getIndexStore(Mailbox mbox) throws ServiceException;
+        IndexStore getIndexStore(String accountId) throws ServiceException;
 
         /**
          * Cleanup any caches etc associated with the IndexStore
          */
         void destroy();
     }
+    
+    public abstract boolean indexExists();
+    
+    public abstract void initIndex() throws IOException, ServiceException;
+    
+	public long getLatestIndexGeneration(String accountId)
+			throws ServiceException {
+		return 0;
+	}
+	
+	/**
+	 * Fetches the list of index files
+	 * @param gen generation of index.
+	 * @param account ID
+	 * @throws ServiceException
+	 */
+	public List<Map<String, Object>> fetchFileList(long gen, String accountId) throws ServiceException {
+		return Collections.emptyList();
+	}
 }

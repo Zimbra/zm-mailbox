@@ -122,17 +122,32 @@ CONTENT:
  *------------------------------------------------------------------------------
  * FF00-FFEF Halfwidth and Fullwidth Forms
 
+ Additionally, the following Unicode ranges of Southeast Asian languages are recognized:
+ 
+ * 0E00-0E7F Thai
+ * 0E80-0EFF Lao
+ * 1000-109F Myanmar
+ * 1780-17FF Khmer
+
  To CJK character sequences, we apply the bigram tokenization where words are constructed by every subsequence of 2
  characters (e.g. ABCD consists of AB, BC and CD) regardless of the grammatical structure. Therefore, CJK character
  sequences are searchable by a subsequence of 2 characters or a combination of those. For example, suppose you have
  a text content: "ABCDEFG". Searching by "AB", "BC", "BCD", "BCDE" are all hits even if "ABCDEFG" are grammatically
  tokenized into "ABC" "DEF", and "G".
 
- To non CJK character sequences, words are split by whitespace [\r|\n|\t|\f] or punctuation [_|-|/|.|,] with some
- exceptions:
+ Thai character sequences get tokenized using a dictionary-based tokenizer that tries to find word breaks despite
+ the lack of whitespace. Common thai stopwords are then removed.
+
+ All other character sequences are split by whitespace [\r|\n|\t|\f] or punctuation [/|.|,] with some exceptions:
  * We recognize email addresses by a pattern of "*@*.*[.*]".
  * We recognize host names by a pattern of "*.*[.*]".
- * We recognize numbers by a pattern of "*[0-9]([_|-|/|.|,][0-9])*".
+ * We recognize numbers by a pattern of "*[0-9]([_|-|.|,][0-9])*".
+ * Characters in the set + - < > are treated as literals when they are present in a string of at least one 
+   alphanumeric or CJK character, but ignored otherwise. For example, "c++" is kept intact but just "++" is skipped.
+ * Character sequences from the set ~ ! # $ % ^ & ( ) ? { } [ ] ; form their own tokens.
+   For example, "foo!?bar" gets tokenized into "foo", "!?", and "bar". Punctuation characters do not impede phrase searches,
+   so "foo bar" will match "foo!?bar". 
+ 
  After tokenization, all words become case-insensitive, and the following common English words are trimmed.
 
  "a", "an", "and", "are", "as", "at", "be", "but", "by", "for", "if", "in", "into", "is", "it", "no", "not", "of", "on",
@@ -142,7 +157,21 @@ CONTENT:
  you have a text content: "3401 Hillview Ave, Palo Alto, CA 94304 USA". Searching by "3401", "ave" and "palo alto" are
  all hits. But, substrings of each word such as "hill", "view", "94" or "US" are not hits.
 
- Wildcards (*) are only supported at the end of word, and the search works as if it's a prefix search.
+ Wildcards (*) are supported at the end of any word in a query, or at the beginning of a single-word query.
+ 
+ To demonstrate this, the following types of wildcard queries are valid:
+  foo*
+  foo bar*
+  foo* bar
+  foo* bar*
+  *foo
+ 
+ But the following are not:
+  *foo bar
+  foo *bar
+
+ Stopwords in queries are ignored, and matching phrases can have any term in place of the stopword.
+ This means that a query of the form "foo <STOPWORD> bar" will match "foo <ANY WORD> bar".
 
 CONTACT:
 
@@ -156,12 +185,20 @@ header-related
   cc:{name|domain}
   subject:
 
+  subject searches support the range modifiers <, >, <=, >= at the beginning of the query:
+   * subject:<foo
+   * subject:>="foo bar"
+ 
+  However, inside parentheses these characters are treated as literals:
+   * subject:"<foo"
+   * subject:">=foo bar" 
+
 
 saved-search-related:     (UNIMPLEMENTED)
 
   my:{name-of-saved-search}
 
-  i.e., could have a saved search of "domain:example.zimbra.com"
+  i.e., could have a saved search of "tofromcc:example.zimbra.com"
   called "zimbra" and say:
 
   my:zimbra
@@ -322,9 +359,16 @@ tag-related fields
 
 
 domain-related fields
-
-  domain:{domain-list}
-  EXAMPLES: domain:stanford.edu OR: domain:*.org
+  operators supporting domain searches are:
+   * to
+   * from
+   * cc
+   * tofrom
+   * tocc
+   * fromcc
+   * tofromcc
+  <domain operator>:{domain-list}
+  EXAMPLES: tofromcc:stanford.edu OR: from:*.org
 
 
 db-related fields

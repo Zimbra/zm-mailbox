@@ -15,19 +15,26 @@
  * If not, see <http://www.gnu.org/licenses/>.
  * ***** END LICENSE BLOCK *****
  */
-options {    JDK_VERSION = "1.6";    STATIC = false;
+options {
+    JDK_VERSION = "1.6";
+    STATIC = false;
     UNICODE_INPUT = true;
     IGNORE_CASE = true;
     ERROR_REPORTING = true;
                         
     SUPPORT_CLASS_VISIBILITY_PUBLIC = false;
-}PARSER_BEGIN(Parser)package com.zimbra.cs.index.query.parser;
+}
+
+PARSER_BEGIN(Parser)
+package com.zimbra.cs.index.query.parser;
 
 final class Parser/*@bgen(jjtree)*/implements ParserTreeConstants/*@egen*/ {/*@bgen(jjtree)*/
   protected JJTParserState jjtree = new JJTParserState();
 
 /*@egen*/
-}PARSER_END(Parser)
+}
+PARSER_END(Parser)
+
 <*> SKIP : {
     " " | "\t"
 }
@@ -43,6 +50,7 @@ final class Parser/*@bgen(jjtree)*/implements ParserTreeConstants/*@egen*/ {/*@b
 |   <NOT: ("not" | "!")>
 |   <PLUS: "+">
 |   <MINUS: "-">
+|   <RANGE: ("<" | ">" | "<=" | ">=")>
 }
 
 <DEFAULT, TEXT> TOKEN : {
@@ -52,6 +60,7 @@ final class Parser/*@bgen(jjtree)*/implements ParserTreeConstants/*@egen*/ {/*@b
 |   <QUOTED_TERM: "\"" (<_ESCAPED_QUOTE> | ~["\n", "\""])* "\""> : DEFAULT
 |   <#_ESCAPED_QUOTE: "\\\"">
 |   <BRACED_TERM: "{" (~["}"])+ "}"> : DEFAULT
+|   <QUOTED_RANGE_TERM: <RANGE> <QUOTED_TERM>> : DEFAULT
 }
 
 // Don't match operators after these tokens
@@ -69,6 +78,7 @@ final class Parser/*@bgen(jjtree)*/implements ParserTreeConstants/*@egen*/ {/*@b
 |   <TOCC: "tocc:"> : TEXT
 |   <FROMCC: "fromcc:"> : TEXT
 |   <TOFROMCC: "tofromcc:"> : TEXT
+|   <FROMORSENDER: "fromorsender:"> : TEXT
 |   <IN: "in:"> : TEXT
 |   <UNDER: "under:"> : TEXT
 |   <FILENAME: "filename:"> : TEXT
@@ -85,7 +95,8 @@ final class Parser/*@bgen(jjtree)*/implements ParserTreeConstants/*@egen*/ {/*@b
 |   <#_FIELD2: "#" <TERM> ":">
 }
 
-<DEFAULT> TOKEN : {    <DATE: "date:">
+<DEFAULT> TOKEN : {
+    <DATE: "date:">
 |   <MDATE: "mdate:">
 |   <DAY: "day:">
 |   <WEEK: "week:">
@@ -116,15 +127,18 @@ final class Parser/*@bgen(jjtree)*/implements ParserTreeConstants/*@egen*/ {/*@b
 |   <SORTBY: "sortby:">
 |   <SORT: "sort:">
 }
-SimpleNode parse()       : {/*@bgen(jjtree) Root */
+
+SimpleNode parse()       : {/*@bgen(jjtree) Root */
   SimpleNode jjtn000 = new SimpleNode(JJTROOT);
   boolean jjtc000 = true;
   jjtree.openNodeScope(jjtn000);
   jjtn000.jjtSetFirstToken(getToken(1));
 /*@egen*/
-}{/*@bgen(jjtree) Root */
+}
+{/*@bgen(jjtree) Root */
     try {
-/*@egen*/    Query() ["\r" | <EOF>]/*@bgen(jjtree)*/
+/*@egen*/
+    Query() ["\r" | <EOF>]/*@bgen(jjtree)*/
                            {
                              jjtree.closeNodeScope(jjtn000, true);
                              jjtc000 = false;
@@ -152,7 +166,8 @@ final class Parser/*@bgen(jjtree)*/implements ParserTreeConstants/*@egen*/ {/*@b
       }
     }
 /*@egen*/
-}
+}
+
 private void Query() : {/*@bgen(jjtree) Query */
   SimpleNode jjtn000 = new SimpleNode(JJTQUERY);
   boolean jjtc000 = true;
@@ -198,7 +213,8 @@ private void Clause() : {/*@bgen(jjtree) Clause */
     try {
 /*@egen*/
     [Modifier()]
-    (        <LPAREN> Query() <RPAREN>
+    (
+        <LPAREN> Query() <RPAREN>
     |   TextClause()
     |   ItemClause()
     |   DateClause()
@@ -244,7 +260,8 @@ private void DefaultClause() : {/*@bgen(jjtree) DefaultClause */
         jjtn000.jjtSetLastToken(getToken(0));
       }
     }
-/*@egen*/}
+/*@egen*/
+}
 
 private void TextClause() : {/*@bgen(jjtree) TextClause */
   SimpleNode jjtn000 = new SimpleNode(JJTTEXTCLAUSE);
@@ -255,7 +272,9 @@ private void TextClause() : {/*@bgen(jjtree) TextClause */
 }
 {/*@bgen(jjtree) TextClause */
     try {
-/*@egen*/    TextField() TextTerm()/*@bgen(jjtree)*/
+/*@egen*/
+    TextField() TextTerm()
+|   SubjField() SubjTerm()/*@bgen(jjtree)*/
     } catch (Throwable jjte000) {
       if (jjtc000) {
         jjtree.clearNodeScope(jjtn000);
@@ -284,7 +303,8 @@ private void ItemClause() : {/*@bgen(jjtree) ItemClause */
   boolean jjtc000 = true;
   jjtree.openNodeScope(jjtn000);
   jjtn000.jjtSetFirstToken(getToken(1));
-/*@egen*/}
+/*@egen*/
+}
 {/*@bgen(jjtree) ItemClause */
     try {
 /*@egen*/
@@ -309,17 +329,20 @@ private void ItemClause() : {/*@bgen(jjtree) ItemClause */
         jjtn000.jjtSetLastToken(getToken(0));
       }
     }
-/*@egen*/}
+/*@egen*/
+}
 
 private void DateClause() : {/*@bgen(jjtree) DateClause */
   SimpleNode jjtn000 = new SimpleNode(JJTDATECLAUSE);
   boolean jjtc000 = true;
   jjtree.openNodeScope(jjtn000);
   jjtn000.jjtSetFirstToken(getToken(1));
-/*@egen*/}
+/*@egen*/
+}
 {/*@bgen(jjtree) DateClause */
     try {
-/*@egen*/    DateField() DateTerm()/*@bgen(jjtree)*/
+/*@egen*/
+    DateField() DateTerm()/*@bgen(jjtree)*/
     } catch (Throwable jjte000) {
       if (jjtc000) {
         jjtree.clearNodeScope(jjtn000);
@@ -343,13 +366,19 @@ private void DateClause() : {/*@bgen(jjtree) DateClause */
 /*@egen*/
 }
 
+private void SubjField()       : {
+}
+{
+    <SUBJECT>
+}
+
 private void TextField()       : {
 }
 {
     <FIELD> | <MSGID> | <MODSEQ> | <TYPE> | <MY> | <IS> | <TAG> | <PRIORITY>
 |   <FROM> | <TO> | <CC> | <ENVFROM> | <ENVTO>
-|   <TOFROM> | <TOCC> | <FROMCC> | <TOFROMCC>
-|   <SUBJECT> | <MESSAGE> | <CONTENT>
+|   <TOFROM> | <TOCC> | <FROMCC> | <TOFROMCC> | <FROMORSENDER>
+|   <MESSAGE> | <CONTENT>
 |   <IN> | <INID> | <UNDER> | <UNDERID>
 |   <ATTACHMENT> | <HAS> | <FILENAME>
 |   <CONTACT> | <AUTHOR> | <TITLE> | <KEYWORDS> | <COMPANY> | <METADATA>
@@ -359,7 +388,8 @@ private void TextField()       : {
 
 private void DateField()       : {
 }
-{    <DATE> | <MDATE> | <DAY> | <MONTH> | <WEEK> | <YEAR>
+{
+    <DATE> | <MDATE> | <DAY> | <MONTH> | <WEEK> | <YEAR>
 |   <AFTER> | <BEFORE> | <CONV_START> | <CONV_END> | <APPT_START> | <APPT_END>
 }
 
@@ -434,6 +464,42 @@ private void SortBy() : {/*@bgen(jjtree) SortBy */
     try {
 /*@egen*/
     (<SORTBY> | <SORT>) <TERM>/*@bgen(jjtree)*/
+    } finally {
+      if (jjtc000) {
+        jjtree.closeNodeScope(jjtn000, true);
+        jjtn000.jjtSetLastToken(getToken(0));
+      }
+    }
+/*@egen*/
+}
+
+
+private void SubjTerm() : {/*@bgen(jjtree) SubjTerm */
+  SimpleNode jjtn000 = new SimpleNode(JJTSUBJTERM);
+  boolean jjtc000 = true;
+  jjtree.openNodeScope(jjtn000);
+  jjtn000.jjtSetFirstToken(getToken(1));
+/*@egen*/
+}
+{/*@bgen(jjtree) SubjTerm */
+    try {
+/*@egen*/
+    (<LPAREN> [Modifier()] SubjTerm() ([Conjunction()] [Modifier()] SubjTerm())* <RPAREN>)
+|   <TERM> | <QUOTED_TERM> | <QUOTED_RANGE_TERM>/*@bgen(jjtree)*/
+    } catch (Throwable jjte000) {
+      if (jjtc000) {
+        jjtree.clearNodeScope(jjtn000);
+        jjtc000 = false;
+      } else {
+        jjtree.popNode();
+      }
+      if (jjte000 instanceof RuntimeException) {
+        throw (RuntimeException)jjte000;
+      }
+      if (jjte000 instanceof ParseException) {
+        throw (ParseException)jjte000;
+      }
+      throw (Error)jjte000;
     } finally {
       if (jjtc000) {
         jjtree.closeNodeScope(jjtn000, true);

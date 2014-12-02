@@ -30,7 +30,6 @@ import org.junit.Test;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.index.ZimbraAnalyzer;
 import com.zimbra.cs.index.query.parser.QueryParser;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
@@ -53,7 +52,7 @@ public final class QueryParserTest {
         prov.createAccount("test@zimbra.com", "secret", new HashMap<String, Object>());
 
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-        parser = new QueryParser(mbox, ZimbraAnalyzer.getInstance());
+        parser = new QueryParser(mbox);
     }
 
     @Test
@@ -99,7 +98,7 @@ public final class QueryParserTest {
         Assert.assertEquals("(Q(l.content:x) || Q(l.content:y)) && Q(IN:Inbox)", Query.toString(parser.parse(src)));
 
         src = "\"This is a \\\"phrase\\\" query\"";
-        Assert.assertEquals("Q(l.content:phrase,query)", Query.toString(parser.parse(src)));
+        Assert.assertEquals("Q(l.content:This is a \"phrase\" query)", Query.toString(parser.parse(src)));
     }
 
     @Test
@@ -120,8 +119,8 @@ public final class QueryParserTest {
         Assert.assertEquals("Q(DATE:DATE," + getDate(-4) + "-" + getDate(-3) + ")", Query.toString(parser.parse(src)));
 
         src = "(a or b) and before:1/1/2009 and -subject:\"quoted string\"";
-        Assert.assertEquals("(Q(l.content:) || Q(l.content:b)) && Q(DATE:BEFORE,196912312359-200901010000) && " +
-                "-Q(subject:quoted,string)", Query.toString(parser.parse(src)));
+        Assert.assertEquals("(Q(l.content:a) || Q(l.content:b)) && Q(DATE:BEFORE,196912312359-200901010000) && " +
+                "-Q(subject:quoted string)", Query.toString(parser.parse(src)));
 
         src = "date:(01/01/2001 02/02/2002)";
         Assert.assertEquals("(Q(DATE:DATE,200101010000-200101020000) && Q(DATE:DATE,200202020000-200202030000))",
@@ -299,19 +298,19 @@ public final class QueryParserTest {
         Assert.assertEquals("Q(from:foo@bar.com)", Query.toString(parser.parse(src)));
 
         src = "from:\"foo bar\"";
-        Assert.assertEquals("Q(from:foo,bar)", Query.toString(parser.parse(src)));
+        Assert.assertEquals("Q(from:foo bar)", Query.toString(parser.parse(src)));
 
         src = "to:foo@bar.com";
         Assert.assertEquals("Q(to:foo@bar.com)", Query.toString(parser.parse(src)));
 
         src = "to:\"foo bar\"";
-        Assert.assertEquals("Q(to:foo,bar)", Query.toString(parser.parse(src)));
+        Assert.assertEquals("Q(to:foo bar)", Query.toString(parser.parse(src)));
 
         src = "cc:foo@bar.com";
         Assert.assertEquals("Q(cc:foo@bar.com)", Query.toString(parser.parse(src)));
 
         src = "cc:\"foo bar\"";
-        Assert.assertEquals("Q(cc:foo,bar)", Query.toString(parser.parse(src)));
+        Assert.assertEquals("Q(cc:foo bar)", Query.toString(parser.parse(src)));
     }
 
     @Test
@@ -320,10 +319,10 @@ public final class QueryParserTest {
         Assert.assertEquals("Q(subject:foo)", Query.toString(parser.parse(src)));
 
         src = "subject:\"foo bar\" and content:\"baz gub\"";
-        Assert.assertEquals("Q(subject:foo,bar) && Q(l.content:baz,gub)", Query.toString(parser.parse(src)));
+        Assert.assertEquals("Q(subject:foo bar) && Q(l.content:baz gub)", Query.toString(parser.parse(src)));
 
         src = "subject:this_is_my_subject subject:\"this is_my_subject\"";
-        Assert.assertEquals("Q(subject:my,subject) && Q(subject:my,subject)", Query.toString(parser.parse(src)));
+        Assert.assertEquals("Q(subject:this_is_my_subject) && Q(subject:this is_my_subject)", Query.toString(parser.parse(src)));
     }
 
     @Test
@@ -335,7 +334,7 @@ public final class QueryParserTest {
     @Test
     public void filename() throws Exception {
         String src = "filename:foo filename:(\"foo\" \"foo bar\" gub)";
-        Assert.assertEquals("Q(filename:foo) && (Q(filename:foo) && Q(filename:foo,bar) && Q(filename:gub))",
+        Assert.assertEquals("Q(filename:foo) && (Q(filename:foo) && Q(filename:foo bar) && Q(filename:gub))",
                 Query.toString(parser.parse(src)));
     }
 
@@ -487,19 +486,19 @@ public final class QueryParserTest {
     @Test
     public void metadata() throws Exception {
         String src = "author:foo author:(\"foo\" \"foo bar\" gub)";
-        Assert.assertEquals("Q(AUTHOR:foo) && (Q(AUTHOR:foo) && Q(AUTHOR:foo,bar) && Q(AUTHOR:gub))",
+        Assert.assertEquals("Q(AUTHOR:foo) && (Q(AUTHOR:foo) && Q(AUTHOR:foo bar) && Q(AUTHOR:gub))",
                 Query.toString(parser.parse(src)));
 
         src = "title:foo title:(\"foo\" \"foo bar\" gub)";
-        Assert.assertEquals("Q(TITLE:foo) && (Q(TITLE:foo) && Q(TITLE:foo,bar) && Q(TITLE:gub))",
+        Assert.assertEquals("Q(TITLE:foo) && (Q(TITLE:foo) && Q(TITLE:foo bar) && Q(TITLE:gub))",
                 Query.toString(parser.parse(src)));
 
         src = "keywords:foo keywords:(\"foo\" \"foo bar\" gub)";
-        Assert.assertEquals("Q(KEYWORDS:foo) && (Q(KEYWORDS:foo) && Q(KEYWORDS:foo,bar) && Q(KEYWORDS:gub))",
+        Assert.assertEquals("Q(KEYWORDS:foo) && (Q(KEYWORDS:foo) && Q(KEYWORDS:foo bar) && Q(KEYWORDS:gub))",
                 Query.toString(parser.parse(src)));
 
         src = "company:foo company:(\"foo\" \"foo bar\" gub)";
-        Assert.assertEquals("Q(COMPANY:foo) && (Q(COMPANY:foo) && Q(COMPANY:foo,bar) && Q(COMPANY:gub))",
+        Assert.assertEquals("Q(COMPANY:foo) && (Q(COMPANY:foo) && Q(COMPANY:foo bar) && Q(COMPANY:gub))",
                 Query.toString(parser.parse(src)));
     }
 
@@ -526,51 +525,51 @@ public final class QueryParserTest {
 
     @Test
     public void contact() throws Exception {
-        QueryParser parser = new QueryParser(null, ZimbraAnalyzer.getInstance());
+        QueryParser parser = new QueryParser(null);
         String src = "contact:\"Conf -\"";
-        Assert.assertEquals("Q(CONTACT:conf,-)", Query.toString(parser.parse(src)));
+        Assert.assertEquals("Q(CONTACT:Conf -)", Query.toString(parser.parse(src)));
 
         src = "contact:\"Conf - Prom\"";
-        Assert.assertEquals("Q(CONTACT:conf,-,prom)", Query.toString(parser.parse(src)));
+        Assert.assertEquals("Q(CONTACT:Conf - Prom)", Query.toString(parser.parse(src)));
 
         src = "contact:\"Conf - Promontory E\"";
-        Assert.assertEquals("Q(CONTACT:conf,-,promontory,e)", Query.toString(parser.parse(src)));
+        Assert.assertEquals("Q(CONTACT:Conf - Promontory E)", Query.toString(parser.parse(src)));
 
         src = "contact:\"Conf - Promontory E*****\"";
-        Assert.assertEquals("Q(CONTACT:conf,-,promontory,e)", Query.toString(parser.parse(src)));
+        Assert.assertEquals("Q(CONTACT:Conf - Promontory E*****)", Query.toString(parser.parse(src)));
 
         src = "contact:\"Conf - Prom* E*\"";
-        Assert.assertEquals("Q(CONTACT:conf,-,prom,e)", Query.toString(parser.parse(src)));
+        Assert.assertEquals("Q(CONTACT:Conf - Prom* E*)", Query.toString(parser.parse(src)));
     }
 
     @Test
     public void contactContent() throws Exception {
-        QueryParser parser = new QueryParser(null, ZimbraAnalyzer.getInstance());
+        QueryParser parser = new QueryParser(null);
         parser.setTypes(EnumSet.of(MailItem.Type.CONTACT));
 
         String src = "zimbra";
         Assert.assertEquals("(Q(CONTACT:zimbra) || Q(l.content:zimbra))", Query.toString(parser.parse(src)));
 
         src = "in"; // stop word
-        Assert.assertEquals("(Q(CONTACT:in) || Q(l.content:))", Query.toString(parser.parse(src)));
+        Assert.assertEquals("(Q(CONTACT:in) || Q(l.content:in))", Query.toString(parser.parse(src)));
     }
 
     @Test
     public void quoted() throws Exception {
-        QueryParser parser = new QueryParser(null, ZimbraAnalyzer.getInstance());
+        QueryParser parser = new QueryParser(null);
         parser.setTypes(EnumSet.of(MailItem.Type.CONTACT));
 
-        Assert.assertEquals("(Q(CONTACT:zimbra,quoted,test) || Q(l.content:zimbra,quoted,test))",
+        Assert.assertEquals("(Q(CONTACT:Zimbra \"quoted\" test) || Q(l.content:Zimbra \"quoted\" test))",
                 Query.toString(parser.parse("\"Zimbra \\\"quoted\\\" test\"")));
     }
 
     @Test
     public void quick() throws Exception {
-        QueryParser parser = new QueryParser(null, ZimbraAnalyzer.getInstance());
+        QueryParser parser = new QueryParser(null);
         parser.setQuick(true);
 
-        Assert.assertEquals("Q(l.content:all,hands,meeting[*])", Query.toString(parser.parse("all hands meeting")));
-        Assert.assertEquals("Q(l.content:all,hands,meeting[*])", Query.toString(parser.parse("all hands meeting*")));
+        Assert.assertEquals("Q(l.content:all hands meeting[*])", Query.toString(parser.parse("all hands meeting")));
+        Assert.assertEquals("Q(l.content:all hands meeting*)", Query.toString(parser.parse("all hands meeting*")));
     }
 
 }

@@ -29,8 +29,6 @@ import com.zimbra.cs.convert.ConversionException;
 import com.zimbra.cs.index.Fragment;
 import com.zimbra.cs.index.IndexDocument;
 import com.zimbra.cs.index.LuceneFields;
-import com.zimbra.cs.index.ZimbraAnalyzer;
-import com.zimbra.cs.index.analysis.RFC822AddressTokenStream;
 import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.StoreManager;
 
@@ -122,13 +120,11 @@ public final class ParsedDocument {
             }
 
             StringBuilder content = new StringBuilder();
-            appendToContent(content, filename);
-            appendToContent(content, ZimbraAnalyzer.getAllTokensConcatenated(LuceneFields.L_FILENAME, filename));
             appendToContent(content, textContent);
             appendToContent(content, description);
 
             document.addContent(content.toString());
-            document.addFrom(new RFC822AddressTokenStream(creator));
+            document.addFrom(creator);
             document.addFilename(filename);
             long elapsed = System.currentTimeMillis() - start;
             ZimbraLog.doc.debug("ParsedDocument performExtraction elapsed=" + elapsed);

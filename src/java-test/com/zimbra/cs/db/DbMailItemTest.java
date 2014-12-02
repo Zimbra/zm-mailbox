@@ -256,10 +256,10 @@ public final class DbMailItemTest {
 
     @Test
     public void getIds() throws Exception {
-        int now = (int) (System.currentTimeMillis()/1000);
-        int beforeNow = now - 1000;
-        int afterNow = now + 1000;
-        int deleteNow = now + 2000;
+        long now = System.currentTimeMillis();
+        long beforeNow = now - 1000;
+        long afterNow = now + 1000;
+		long deleteNow = now + 2000;
         final int beforeNowCount = 9;
         final int afterNowCount = 13;
         final int notDeleteCount = 7;

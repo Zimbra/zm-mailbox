@@ -26,6 +26,7 @@ import com.zimbra.client.ZSearchParams;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.soap.admin.type.CacheEntryType;
 
 
 public class TestIndex extends TestCase {
@@ -49,7 +50,7 @@ public class TestIndex extends TestCase {
             body.append("Walrus walrus walrus walrus walrus walrus walrus.\n");
         }
         body.append("Goo goo goo joob.\n");
-
+        
         // Test text truncated
         setTextLimit(50);
         String subject = NAME_PREFIX + " text attachment 1";
@@ -86,6 +87,9 @@ public class TestIndex extends TestCase {
         checkQuery("in:inbox subject:\"" + subject + "\" gun", null);
     }
 
+/*  Stopword-related tests are deprecated for the SOLR branch because stopwords are now managed
+    on the SOLR server instead of the mail server.
+    
     public void testRemovingStopWords() throws Exception {
     	Provisioning.getInstance().getConfig().removeDefaultAnalyzerStopWords("a");
     	String body = "Walrus walrus walrus walrus walrus walrus walrus is a walrus.\n";
@@ -105,7 +109,7 @@ public class TestIndex extends TestCase {
 
         //test existing stop word "s"
         checkQuery("in:inbox subject:\" is \"", null);
-    }
+    }*/
     /**
      * Verifies the fix to bug 54613.
      */
@@ -154,6 +158,8 @@ public class TestIndex extends TestCase {
 
     private void setTextLimit(int numBytes)
     throws Exception {
+    	Provisioning prov = Provisioning.getInstance();
+    	prov.flushCache(CacheEntryType.all, null);
         TestUtil.setServerAttr(Provisioning.A_zimbraAttachmentsIndexedTextLimit, Integer.toString(numBytes));
     }
 

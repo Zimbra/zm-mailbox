@@ -23,6 +23,7 @@ import java.util.List;
 
 import org.apache.lucene.document.DateTools;
 import org.apache.lucene.document.Document;
+import org.apache.solr.common.SolrDocument;
 
 import com.google.common.base.Objects;
 import com.zimbra.common.service.ServiceException;
@@ -32,7 +33,6 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mime.ParsedAddress;
-
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 
@@ -48,14 +48,14 @@ public final class MessageHit extends ZimbraHit {
 
     private static final Log LOG = LogFactory.getLog(MessageHit.class);
 
-    private Document document = null;
+    private SolrDocument document = null;
     private Message message = null;
     private List<MessagePartHit> matchedParts = null;
     private int conversationId = 0;
     private int messageId = 0;
     private ConversationHit conversationHit = null;
 
-    MessageHit(ZimbraQueryResultsImpl results, Mailbox mbx, int id, Message msg, Document doc, Object sortValue) {
+    MessageHit(ZimbraQueryResultsImpl results, Mailbox mbx, int id, Message msg, SolrDocument doc, Object sortValue) {
         super(results, mbx, sortValue);
         messageId = id;
         message = msg;
@@ -149,7 +149,7 @@ public final class MessageHit extends ZimbraHit {
 
     public long getDateHeader() throws ServiceException {
         if (message == null && document != null) {
-            String dateStr = document.get(LuceneFields.L_SORT_DATE);
+            String dateStr = (String) document.get(LuceneFields.L_SORT_DATE);
             if (dateStr != null) {
                 try {
                     return DateTools.stringToTime(dateStr);

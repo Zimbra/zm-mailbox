@@ -350,6 +350,7 @@ public interface DbSearchConstraints extends Cloneable {
             result.indexIds.addAll(indexIds);
             result.types.addAll(types);
             result.excludeTypes.addAll(excludeTypes);
+            result.noResults = noResults;
             for (Map.Entry<RangeType, Range> entry : ranges.entries()) {
                 result.ranges.put(entry.getKey(), entry.getValue().clone());
             }
@@ -405,7 +406,7 @@ public interface DbSearchConstraints extends Cloneable {
                 if (folder instanceof Mountpoint) {
                     out.append("-INID:").append(((Mountpoint) folder).getRemoteId()).append(' ');
                 } else {
-                    out.append("-ID:").append(folder.getPath()).append(' ');
+                    out.append("-IN:").append(folder.getPath()).append(' ');
                 }
             }
             for (RemoteFolderDescriptor folder : remoteFolders) {
@@ -783,6 +784,20 @@ public interface DbSearchConstraints extends Cloneable {
             ranges.put(RangeType.CONV_COUNT, new NumericRange(min, minInclusive, max, maxInclusive, bool));
         }
 
+		public void addConvStartDateRange(long min, boolean minInclusive, long max, boolean maxInclusive, boolean bool) {
+            if (min < 0 && max < 0) {
+                return;
+            }
+            ranges.put(RangeType.CONV_START, new NumericRange(min, minInclusive, max, maxInclusive, bool));
+		}
+
+		public void addConvEndDateRange(long min, boolean minInclusive, long max, boolean maxInclusive, boolean bool) {
+            if (min < 0 && max < 0) {
+                return;
+            }
+            ranges.put(RangeType.CONV_END, new NumericRange(min, minInclusive, max, maxInclusive, bool));
+		}
+
         public void addSizeRange(long min, boolean minInclusive, long max, boolean maxInclusive, boolean bool) {
             if (min < 0 && max < 0) {
             	noResults = true;
@@ -932,6 +947,21 @@ public interface DbSearchConstraints extends Cloneable {
         public String toString() {
             return toQueryString(new StringBuilder()).toString();
         }
+
+        /**
+         * Returns TRUE if the mail_item table will need to be joined with itself.
+         * Used for searches that aggregate over conversations, such as conv-count, conv-start, and conv-end.
+         * @return
+         */
+		public boolean needsSelfJoin() {
+			if ((ranges.containsKey(RangeType.CONV_COUNT) && getIsSoloPart() == null) ||
+					ranges.containsKey(RangeType.CONV_START) ||
+					ranges.containsKey(RangeType.CONV_END)) {
+				return true;
+			} else {
+				return false;
+			}
+		}
     }
 
 
@@ -1428,7 +1458,8 @@ public interface DbSearchConstraints extends Cloneable {
 
     enum RangeType {
         DATE("DATE"), MDATE("MDATE"), MODSEQ("MODSEQ"), SIZE("SIZE"), CONV_COUNT("CONV-COUNT"),
-        CAL_START_DATE("APPT-START"), CAL_END_DATE("APPT-END"), SUBJECT("SUBJECT"), SENDER("FROM");
+        CAL_START_DATE("APPT-START"), CAL_END_DATE("APPT-END"), SUBJECT("SUBJECT"), SENDER("FROM"),
+        CONV_START("CONV-START"), CONV_END("CONV-END");
 
         private final String query;
 
