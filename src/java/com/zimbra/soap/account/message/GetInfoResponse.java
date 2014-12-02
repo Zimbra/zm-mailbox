@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -17,13 +17,6 @@
 
 package com.zimbra.soap.account.message;
 
-import com.google.common.base.Objects;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Multimap;
-
-import org.codehaus.jackson.annotate.JsonPropertyOrder;
-
 import java.util.Collections;
 import java.util.List;
 
@@ -31,11 +24,17 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlElementWrapper;
+import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
+import org.codehaus.jackson.annotate.JsonPropertyOrder;
+
+import com.google.common.base.Objects;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Multimap;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.account.type.AccountCalDataSource;
@@ -57,11 +56,10 @@ import com.zimbra.soap.account.type.LicenseInfo;
 import com.zimbra.soap.account.type.Pref;
 import com.zimbra.soap.account.type.Prop;
 import com.zimbra.soap.account.type.Signature;
-import com.zimbra.soap.type.ZmBoolean;
-
 import com.zimbra.soap.json.jackson.annotate.ZimbraJsonAttribute;
 import com.zimbra.soap.json.jackson.annotate.ZimbraKeyValuePairs;
 import com.zimbra.soap.json.jackson.annotate.ZimbraUniqueElement;
+import com.zimbra.soap.type.ZmBoolean;
 /**
  * Note that LicenseAdminService and LicenseService both register a handler (the same one) which
  * extends com.zimbra.cs.service.account.GetInfo - this adds the "license" element
@@ -73,10 +71,10 @@ import com.zimbra.soap.json.jackson.annotate.ZimbraUniqueElement;
 @XmlType(propOrder = {"version", "accountId", "accountName", "crumb", "lifetime", "adminDelegated", "restUrl",
         "quotaUsed", "previousSessionTime", "lastWriteAccessTime", "recentMessageCount", "cos", "prefs", "attrs",
         "zimlets", "props", "identities", "signatures", "dataSources", "childAccounts", "discoveredRights",
-        "soapURL", "publicURL", "changePasswordURL", "license"})
+        "soapURL", "publicURL", "changePasswordURL", "license", "adminURL"})
 @JsonPropertyOrder({"version", "id", "name", "crumb", "lifetime", "adminDelegated", "docSizeLimit", "attSizeLimit",
         "rest", "used", "prevSession", "accessed", "recent", "cos", "prefs", "attrs", "zimlets", "props", "identities",
-        "signatures", "dataSources", "childAccounts", "rights", "soapURL", "publicURL", "license"})
+        "signatures", "dataSources", "childAccounts", "rights", "soapURL", "publicURL", "license", "adminURL"})
 public final class GetInfoResponse {
 
     /**
@@ -298,6 +296,14 @@ public final class GetInfoResponse {
     private String changePasswordURL;
 
     /**
+     * @zm-api-field-tag admin-base-public-url
+     * @zm-api-field-description base URL for accessing the admin console
+     */
+    @XmlElement(name=AccountConstants.E_ADMIN_URL /* adminURL */, required=false)
+    @ZimbraJsonAttribute
+    private String adminURL;
+
+    /**
      * @zm-api-field-description License information.  Only present for Network Edition
      */
     @ZimbraUniqueElement
@@ -423,6 +429,7 @@ public final class GetInfoResponse {
 
     public void setPublicURL(String publicURL) { this.publicURL = publicURL; }
     public void setChangePasswordURL(String changePasswordURL) { this.changePasswordURL = changePasswordURL; }
+    public void setAdminURL(String adminURL) { this.adminURL = adminURL; }
     public void setLicense(LicenseInfo license) { this.license = license; }
 
     public Long getAttachmentSizeLimit() { return attachmentSizeLimit; }
@@ -438,6 +445,8 @@ public final class GetInfoResponse {
     public Long getPreviousSessionTime() { return previousSessionTime; }
     public Long getLastWriteAccessTime() { return lastWriteAccessTime; }
     public Integer getRecentMessageCount() { return recentMessageCount; }
+    public String getAdminURL() { return adminURL; }
+
     public Cos getCos() { return cos; }
     public List<Pref> getPrefs() {
         return Collections.unmodifiableList(prefs);

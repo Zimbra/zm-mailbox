@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -40,7 +40,7 @@ import com.zimbra.soap.type.NamedValue;
  */
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AccountConstants.E_GET_ACCOUNT_INFO_RESPONSE)
-@XmlType(propOrder = {"name", "attrs", "soapURL", "publicURL", "changePasswordURL","communityURL"})
+@XmlType(propOrder = {"name", "attrs", "soapURL", "publicURL", "changePasswordURL","communityURL", "adminURL"})
 public class GetAccountInfoResponse {
 
     /**
@@ -103,6 +103,14 @@ public class GetAccountInfoResponse {
     private String communityURL;
 
     /**
+     * @zm-api-field-tag admin-base-public-url
+     * @zm-api-field-description base URL for accessing the admin console
+     */
+    @XmlElement(name=AccountConstants.E_ADMIN_URL /* adminURL */, required=false)
+    @ZimbraJsonAttribute
+    private String adminURL;
+
+    /**
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
@@ -130,6 +138,7 @@ public class GetAccountInfoResponse {
     public void setPublicURL(String publicURL) { this.publicURL = publicURL; }
     public void setChangePasswordURL(String changePasswordURL) { this.changePasswordURL = changePasswordURL; }
     public void setCommunityURL(String communityURL) { this.communityURL = communityURL; }
+    public void setAdminURL(String adminURL) { this.adminURL = adminURL; }
     public String getName() { return name; }
     public List<NamedValue> getAttrs() {
         return attrs;
@@ -137,6 +146,8 @@ public class GetAccountInfoResponse {
     public String getSoapURL() { return soapURL; }
     public String getPublicURL() { return publicURL; }
     public String getChangePasswordURL() { return changePasswordURL; }
+    public String getCommunityURL() { return communityURL; }
+    public String getAdminURL() { return adminURL; }
 
     public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
