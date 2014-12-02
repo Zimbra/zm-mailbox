@@ -1,13 +1,11 @@
 <project name="ZimbraSoap" default="jar">
 
-  <property name="build.dir" location="target" />
-
   <import file="../ant-global.xml" />
 
   <!-- Properties -->
 
   <property name="jar.file" value="zimbrasoap.jar" />
-	
+
   <property name="wsdl.test.dir" location="${build.dir}/wsdl-test"/>
   <property name="wsdl.test.src.dir" location="src/wsdl-test"/>
   <property name="wsdl.generated.test.src.root"
@@ -48,25 +46,15 @@
     <pathelement location="${common.classes.dir}"/>
     <pathelement location="${build.classes.dir}" />
     <fileset dir="${common.jars.dir}">
-        <include name="guava*.jar"/>
-        <include name="junit*.jar"/>
-        <include name="jackson*.jar"/>
-        <include name="log4j*.jar"/>
-        <include name="dom4j*.jar"/>
-        <include name="commons-codec*.jar"/>
+        <include name="**/*.jar"/>
     </fileset>
   </path>
 
   <path id="jaxws.classpath">
-    <fileset dir="${common.jars.dir}">
-        <include name="jaxb-api*.jar"/>
-        <include name="jaxb-core*.jar"/>
-        <include name="jaxb-impl*.jar"/>
-        <include name="jaxb-jxc*.jar"/>
-        <include name="jaxb-xjc*.jar"/>
-        <include name="jaxws-tools*.jar"/>
+    <fileset dir="${metro.jars.dir}">
+        <include name="**/*.jar"/>
     </fileset>
- </path>
+  </path>
 
   <path id="test.class.path">
     <path refid="class.path"/>
@@ -130,24 +118,23 @@
     <mkdir dir="${build.classes.dir}" />
   </target>
 
-<!--
   <target name="compile" depends="build-init" description="Compiles the source code">
     <ant dir="${common.dir}" target="jar" inheritAll="false"/>
     <javac destdir="${build.classes.dir}" debug="true" classpathref="class.path" target="${javac.target}">
       <src refid="all.java.path" />
     </javac>
   </target>
--->
+
     <target name="jar" depends="compile,generate-schema,wsdl-file" description="Creates the jar file">
         <antcall target="zimbra-jar">
             <param name="implementation.title" value="Zimbra Soap"/>
         </antcall>
     </target>
-<!--
+
   <target name="clean" description="Removes build files">
     <delete dir="${build.dir}" />
   </target>
--->
+
   <target name="wsdl-file" depends="compile,generate-schema">
     <mkdir dir="${xml.schema.dir}"/>
     <java classname="com.zimbra.soap.util.WsdlGenerator" classpathref="class.path" fork="true" failonerror="true">

@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013, 2014 Zimbra, Inc.
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -44,7 +44,7 @@ import com.zimbra.soap.admin.type.Attr;
 public class GetAllConfigTest {
 
     private static final Logger LOG = Logger.getLogger(GetAllConfigTest.class);
-
+    
     private static Unmarshaller unmarshaller;
 
     static {
@@ -70,7 +70,7 @@ public class GetAllConfigTest {
         GetAllConfigResponse resp = (GetAllConfigResponse) unmarshaller.unmarshal(is);
         Assert.assertNotNull("Response", resp);
         List<Attr> attrs = resp.getAttrs();
-        LOG.debug("unmarshallGetAllConfigResponseTest:KVPS from elem=" + kvps.size() + " from jaxb=" + attrs.size());
+        LOG.info("unmarshallGetAllConfigResponseTest:KVPS from elem=" + kvps.size() + " from jaxb=" + attrs.size());
         Assert.assertTrue("Have some attrs", attrs.size() > 20);
         Assert.assertEquals("Number of attrs from elem and from jaxb agree", kvps.size(), attrs.size());
     }

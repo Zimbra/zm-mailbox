@@ -41,7 +41,6 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.dom4j.QName;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.base.Charsets;
@@ -211,7 +210,6 @@ public class JaxbToElementTest {
     }
 
     @Test
-    @Ignore("element order changes in jdk8?")
     public void jaxBToElementTest() throws Exception {
         for (int cnt = 1; cnt <= iterationNum;cnt++) {
             Element el = JaxbUtil.jaxbToElement(getInfoRespJaxb);
@@ -235,7 +233,7 @@ public class JaxbToElementTest {
                 out.write(actual);
                 out.close();
             }catch (Exception e){//Catch exception if any
-              LOG.error("validateLongString:Error writing to " + actualFile, e);
+              System.err.println("validateLongString:Error writing to " + actualFile + " : " + e.getMessage());
             }
             Assert.fail(message + "\nexpected=" + expectedFile + "\nactual=" + actualFile);
         }
@@ -257,7 +255,8 @@ public class JaxbToElementTest {
     public void elementToJaxbTest() throws Exception {
         Element el = JaxbUtil.jaxbToElement(getInfoRespJaxb);
         org.w3c.dom.Document doc = el.toW3cDom();
-        LOG.debug("(XML)elementToJaxbTest toW3cDom() Xml:\n" + W3cDomUtil.asXML(doc));
+        if (LOG.isDebugEnabled())
+            LOG.debug("(XML)elementToJaxbTest toW3cDom() Xml:\n" + W3cDomUtil.asXML(doc));
         for (int cnt = 1; cnt <= iterationNum;cnt++) {
             GetInfoResponse getInfoResp = JaxbUtil.elementToJaxb(getInfoRespElem);
             Assert.assertEquals("Account name", "user1@tarka.local", getInfoResp.getAccountName());
@@ -441,7 +440,8 @@ Caused by: javax.xml.bind.UnmarshalException: Namespace URIs and local names to 
         Element env = Element.parseJSON(getInfoResponseJSONwithEnv);
         Element el = env.listElements().get(0);
         org.w3c.dom.Document doc = el.toW3cDom();
-        LOG.debug("JSONelementToJaxbTest toW3cDom Xml:\n" + W3cDomUtil.asXML(doc));
+        if (LOG.isDebugEnabled())
+            LOG.debug("JSONelementToJaxbTest toW3cDom Xml:\n" + W3cDomUtil.asXML(doc));
         GetInfoResponse getInfoResp = JaxbUtil.elementToJaxb(el);
         Assert.assertEquals("Account name", "user1@tarka.local", getInfoResp.getAccountName());
     }
@@ -728,7 +728,7 @@ Caused by: javax.xml.bind.UnmarshalException: Namespace URIs and local names to 
         ConvActionRequest car = new ConvActionRequest(fas);
         Element carE = JaxbUtil.jaxbToElement(car);
         String eXml = carE.toString();
-        LOG.debug("ConvActionRequestJaxbSubclassHandling: marshalled XML=" +
+        LOG.info("ConvActionRequestJaxbSubclassHandling: marshalled XML=" +
                 eXml);
         Assert.assertTrue("Xml should contain recursive attribute",
                 eXml.contains("recursive=\"true\""));
@@ -741,12 +741,12 @@ Caused by: javax.xml.bind.UnmarshalException: Namespace URIs and local names to 
         actionE.addAttribute(MailConstants.A_FOLDER, "folder");
         actionE.addAttribute(MailConstants.A_RECURSIVE, true);
         actionE.addAttribute(MailConstants.A_URL, "http://url");
-        LOG.debug("ConvActionRequestJaxbSubclassHandling: half baked XML=" +
+        LOG.info("ConvActionRequestJaxbSubclassHandling: half baked XML=" +
                 carE.toString());
         car = JaxbUtil.elementToJaxb(carE);
         carE = JaxbUtil.jaxbToElement(car);
         eXml = carE.toString();
-        LOG.debug("ConvActionRequestJaxbSubclassHandling: round tripped XML=" +
+        LOG.info("ConvActionRequestJaxbSubclassHandling: round tripped XML=" +
                 eXml);
         ActionSelector as = car.getAction();
         Assert.assertEquals("Folder attribute value",
@@ -788,22 +788,20 @@ Caused by: javax.xml.bind.UnmarshalException: Namespace URIs and local names to 
     }
 
     @Test
-    @Ignore("Element order changes in JDK8?")
     public void standalonElementToJaxbTest() throws Exception {
         InputStream is = getClass().getResourceAsStream("retentionPolicy.xml");
         Element elem = Element.parseXML(is);
         String eXml = elem.toString();
-        LOG.debug("retentionPolicy.xml from Element:\n" + eXml);
+        LOG.info("retentionPolicy.xml from Element:\n" + eXml);
         RetentionPolicy rp = JaxbUtil.elementToJaxb(elem, RetentionPolicy.class);
         Assert.assertNotNull("elementToJaxb RetentionPolicy returned object", rp);
         Element elem2 = JaxbUtil.jaxbToElement(rp, XMLElement.mFactory);
         String eXml2 = elem2.toString();
-        LOG.debug("Round tripped retentionPolicy.xml from Element:\n" + eXml2);
+        LOG.info("Round tripped retentionPolicy.xml from Element:\n" + eXml2);
         Assert.assertEquals("elementToJaxb RetentionPolicy Xml after", eXml, eXml2);
     }
 
     @Test
-    @Ignore("Element order changes in JDK8?")
     public void IdentityToStringTest () throws Exception {
         com.zimbra.soap.account.type.Identity id =
                 new com.zimbra.soap.account.type.Identity("hello", null);
@@ -943,14 +941,14 @@ Caused by: javax.xml.bind.UnmarshalException: Namespace URIs and local names to 
         encodeAttr(identEjson, "keyAllowed", "valueAllowed", AccountConstants.E_A, AccountConstants.A_NAME, true);
         encodeAttr(identEjson, "keyDenied", "valueDenied", AccountConstants.E_A, AccountConstants.A_NAME, false);
         // <identity><a name="keyAllowed">valueAllowed</a><a pd="1" name="keyDenied"/></identity>
-        LOG.debug("encodeAttrsWithDenied xml\n" + identExml.toString());
+        LOG.info("encodeAttrsWithDenied xml\n" + identExml.toString());
         // {"_attrs":{"keyAllowed":"valueAllowed","keyDenied":{"_content":"","pd":true}}}
-        LOG.debug("encodeAttrsWithDenied json\n" + identEjson.toString());
+        LOG.info("encodeAttrsWithDenied json\n" + identEjson.toString());
         com.zimbra.soap.account.type.Attr deniedAttr = com.zimbra.soap.account.type.Attr.forNameWithPermDenied("keyDenied");
         Element elem2 = JaxbUtil.jaxbToNamedElement(AccountConstants.E_A, AccountConstants.NAMESPACE_STR,
                 deniedAttr, XMLElement.mFactory);
         String eXml2 = elem2.toString();
-        LOG.debug("XML from JAXB denied attr\n" + eXml2);
+        LOG.info("XML from JAXB denied attr\n" + eXml2);
         Assert.assertEquals("XML from JAXB Attr top name", AccountConstants.E_A, elem2.getName());
         Assert.assertEquals("XML from JAXB Attr pd", "1", elem2.getAttribute("pd"));
         Assert.assertEquals("XML from JAXB Attr name", "keyDenied", elem2.getAttribute("name"));

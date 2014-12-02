@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013, 2014 Zimbra, Inc.
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -47,7 +47,7 @@ import com.zimbra.soap.admin.type.ValueAttrib;
 public class MailQueueActionTest {
 
     private static final Logger LOG = Logger.getLogger(MailQueueActionTest.class);
-
+    
     private static Unmarshaller unmarshaller;
     private static Marshaller marshaller;
 
@@ -115,7 +115,8 @@ public class MailQueueActionTest {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         marshaller.marshal(gsr, out);
         String xml = out.toString("UTF-8");
-        LOG.debug("Xml:\n" + xml);
+        if (LOG.isInfoEnabled())
+            LOG.info("Xml:\n" + xml);
         Assert.assertTrue("Marshalled XML should end with 'MailQueueActionRequest>'",
                 xml.endsWith("MailQueueActionRequest>"));
     }
@@ -134,7 +135,8 @@ public class MailQueueActionTest {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         marshaller.marshal(gsr, out);
         String xml = out.toString("UTF-8");
-        LOG.debug("Xml:\n" + xml);
+        if (LOG.isInfoEnabled())
+            LOG.info("Xml:\n" + xml);
         Assert.assertTrue("Marshalled XML should end with 'MailQueueActionRequest>'",
                 xml.endsWith("MailQueueActionRequest>"));
     }

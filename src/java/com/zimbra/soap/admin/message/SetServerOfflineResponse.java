@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011, 2013, 2014 Zimbra, Inc.
+ * Copyright (C) 2013, 2014 Zimbra, Inc.
  * 
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -15,12 +15,17 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.mail.message;
+package com.zimbra.soap.admin.message;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
-import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.soap.AdminConstants;
 
-@XmlRootElement(name=MailConstants.E_SEND_SHARE_NOTIFICATION_RESPONSE)
-public class SendShareNotificationResponse {
+@XmlRootElement(name=AdminConstants.E_SET_SERVER_OFFLINE_RESPONSE)
+public class SetServerOfflineResponse {
+    /**
+     * no-argument constructor wanted by JAXB
+     */
+    private SetServerOfflineResponse() {
+    }
 }

@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013, 2014 Zimbra, Inc.
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -47,7 +47,6 @@ import org.codehaus.jackson.map.introspect.JacksonAnnotationIntrospector;
 import org.codehaus.jackson.xc.JaxbAnnotationIntrospector;
 import org.dom4j.QName;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
@@ -123,9 +122,9 @@ public class JaxbToJsonTest {
         LOG.setLevel(Level.INFO);
     }
 
-    private void logDebug(String format, Object ... objects) {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug(testName.getMethodName() + ":" + String.format(format, objects));
+    private void logInfo(String format, Object ... objects) {
+        if (LOG.isInfoEnabled()) {
+            LOG.info(testName.getMethodName() + ":" + String.format(format, objects));
         }
     }
 
@@ -225,30 +224,30 @@ public class JaxbToJsonTest {
 
         sb = new StringBuilder();
         xmlcalItemElem.output(sb);
-        logDebug("bug61264 - XML from XMLElement\n%1$s", sb.toString());
+        logInfo("bug61264 - XML from XMLElement\n%1$s", sb.toString());
 
         sb = new StringBuilder();
         xmlJaxbElem.output(sb);
-        logDebug("bug61264 - XML from JAXB\n%1$s", sb.toString());
+        logInfo("bug61264 - XML from JAXB\n%1$s", sb.toString());
 
         sb = new StringBuilder();  // something that is appendable for Element.out(Appendable) to play with
         jsoncalItemElem.output(sb);
         String jsonFromElement = sb.toString();
-        logDebug("bug61264 - JSON from JSONElement\n%1$s", jsonFromElement);
+        logInfo("bug61264 - JSON from JSONElement\n%1$s", jsonFromElement);
 
         sb = new StringBuilder();
         jsonJaxbElem.output(sb);
-        logDebug("bug61264 - JSON from JAXB\n%1$s", sb.toString());
+        logInfo("bug61264 - JSON from JAXB\n%1$s", sb.toString());
 
         sb = new StringBuilder();
         jacksonJaxbElem.output(sb);
-        logDebug("bug61264 - JSON from JAXB using Jackson\n%1$s", sb.toString());
+        logInfo("bug61264 - JSON from JAXB using Jackson\n%1$s", sb.toString());
         sb = new StringBuilder();
         parent4legacyJson.output(sb);
-        logDebug("bug61264 - JSON from JAXB child using Jackson\n%1$s", sb.toString());
+        logInfo("bug61264 - JSON from JAXB child using Jackson\n%1$s", sb.toString());
         sb = new StringBuilder();
         parent4jackson.output(sb);
-        logDebug("bug61264 - JSON from JSONElement child\n%1$s", sb.toString());
+        logInfo("bug61264 - JSON from JSONElement child\n%1$s", sb.toString());
         Assert.assertEquals("UID", uid, jacksonJaxbElem.getAttribute(MailConstants.A_UID));
         Assert.assertEquals("x_uid", uid, jacksonJaxbElem.getAttribute("x_uid"));
         Element instE = jacksonJaxbElem.getElement(MailConstants.E_INSTANCE);
@@ -263,25 +262,27 @@ public class JaxbToJsonTest {
         String json = JacksonUtil.jaxbToJsonString(mapper, obj);
         StringBuilder fullTag = new StringBuilder("JacksonPlay ")
             .append(obj.getClass().getName()).append(" ").append(tag).append(" ");
-        logDebug(fullTag.toString() +
+        logInfo(fullTag.toString() +
                 "JAXB --> Jackson --> String\n" + json);
         try {
             Element jsonElemFromJackson = JacksonUtil.jacksonJsonToElement(json, obj);
-            logDebug(fullTag.toString() +
+            logInfo(fullTag.toString() +
                     "JAXB --> Jackson --> String ---> Element ---> prettyPrint\n" +
                     jsonElemFromJackson.prettyPrint());
         } catch (ServiceException e) {
-            LOG.error(fullTag.toString() + "\nProblem with Element.parseJSON", e);
+            logInfo(fullTag.toString() + "\nProblem with Element.parseJSON");
+            e.printStackTrace();
         }
         try {
             Element jsonE = JaxbUtil.jaxbToElement(obj, JSONElement.mFactory);
-            logDebug(fullTag.toString() +
+            logInfo(fullTag.toString() +
                     "JAXB --> jaxbToElement --> Element ---> prettyPrint\n" +
                     jsonE.prettyPrint());
         } catch (ServiceException e) {
-            LOG.error(fullTag.toString() + "\nProblem with jaxbToElement", e);
+            logInfo(fullTag.toString() + "\nProblem with jaxbToElement");
+            e.printStackTrace();
         }
-        logDebug("===============================================");
+        logInfo("===============================================");
     }
 
     /**
@@ -302,11 +303,11 @@ public class JaxbToJsonTest {
         Element legacyElem = JSONElement.mFactory.createElement(AdminConstants.VERIFY_INDEX_RESPONSE);
         legacyElem.addElement(AdminConstants.E_STATUS).addText(String.valueOf(true));
         legacyElem.addElement(AdminConstants.E_MESSAGE).addText(msg);
-        logDebug("VerifyIndexResponse JSONElement ---> prettyPrint\n%1$s", legacyElem.prettyPrint());
+        logInfo("VerifyIndexResponse JSONElement ---> prettyPrint\n%1$s", legacyElem.prettyPrint());
 
         VerifyIndexResponse viResp = new VerifyIndexResponse(true, msg);
         Element jsonJaxbElem = JacksonUtil.jaxbToJSONElement(viResp);
-        logDebug("VerifyIndexResponse JSONElement from JAXB ---> prettyPrint\n%1$s", jsonJaxbElem.prettyPrint());
+        logInfo("VerifyIndexResponse JSONElement from JAXB ---> prettyPrint\n%1$s", jsonJaxbElem.prettyPrint());
         Assert.assertEquals("status", true, jsonJaxbElem.getAttributeBool(AdminConstants.E_STATUS));
         Assert.assertEquals("message", msg, jsonJaxbElem.getAttribute(AdminConstants.E_MESSAGE));
         VerifyIndexResponse roundtripped = JaxbUtil.elementToJaxb(jsonJaxbElem, VerifyIndexResponse.class);
@@ -331,13 +332,13 @@ public class JaxbToJsonTest {
         Element legacyElem = JSONElement.mFactory.createElement(MailConstants.DIFF_DOCUMENT_RESPONSE);
         legacyElem.addElement(MailConstants.E_CHUNK).addAttribute(MailConstants.A_DISP, dispos1).setText(text1);
         legacyElem.addElement(MailConstants.E_CHUNK).addAttribute(MailConstants.A_DISP, dispos2).setText(text2);
-        logDebug("DiffDocumentResponse JSONElement ---> prettyPrint\n%1$s", legacyElem.prettyPrint());
+        logInfo("DiffDocumentResponse JSONElement ---> prettyPrint\n%1$s", legacyElem.prettyPrint());
         // --------------------------------- @XmlValue handling test - need @JsonProperty("_content") annotation
         DiffDocumentResponse ddResp = new DiffDocumentResponse();
         ddResp.addChunk(DispositionAndText.create(dispos1, text1));
         ddResp.addChunk(DispositionAndText.create(dispos2, text2));
         Element jsonJaxbElem = JacksonUtil.jaxbToJSONElement(ddResp);
-        logDebug("DiffDocumentResponse JSONElement from JAXB ---> prettyPrint\n%1$s", jsonJaxbElem.prettyPrint());
+        logInfo("DiffDocumentResponse JSONElement from JAXB ---> prettyPrint\n%1$s", jsonJaxbElem.prettyPrint());
         List<Element> chunks = jsonJaxbElem.listElements();
         Assert.assertEquals("Number of child elements", 2, chunks.size());
         Element chunk1 = chunks.get(0);
@@ -381,8 +382,8 @@ public class JaxbToJsonTest {
         kvPairs.addKeyValuePair(new KeyValuePair("key2", "value2-b"));
         Element jsonJaxbElem = JacksonUtil.jaxbToJSONElement(kvPairs);
         KVPairs roundtripped = JaxbUtil.elementToJaxb(jsonJaxbElem, KVPairs.class);
-        logDebug("JSONElement (for comparison) ---> prettyPrint\n%1$s", jsonElem.prettyPrint());
-        logDebug("JSONElement from JAXB ---> prettyPrint\n%1$s", jsonJaxbElem.prettyPrint());
+        logInfo("JSONElement (for comparison) ---> prettyPrint\n%1$s", jsonElem.prettyPrint());
+        logInfo("JSONElement from JAXB ---> prettyPrint\n%1$s", jsonJaxbElem.prettyPrint());
         List<com.zimbra.common.soap.Element.KeyValuePair> elemKVPs = jsonJaxbElem.listKeyValuePairs();
         Assert.assertEquals("elemKVP num", 3, elemKVPs.size());
         List<KeyValuePair> kvps = roundtripped.getKeyValuePairs();
@@ -424,11 +425,11 @@ public class JaxbToJsonTest {
         attrs.add(new KeyValuePair("key2", "value2-a"));
         attrs.add(new KeyValuePair("key2", "value2-b"));
         KeyValuePairsTester jaxb = new KeyValuePairsTester(attrs);
-        logDebug("XMLElement (from JAXB) ---> prettyPrint\n%1$s",
+        logInfo("XMLElement (from JAXB) ---> prettyPrint\n%1$s",
                 JaxbUtil.jaxbToElement(jaxb, Element.XMLElement.mFactory, true, false).prettyPrint());
         Element jsonJaxbElem = JacksonUtil.jaxbToJSONElement(jaxb);
-        logDebug("JSONElement (for comparison) ---> prettyPrint\n%1$s", jsonElem.prettyPrint());
-        logDebug("JSONElement from JAXB ---> prettyPrint\n%1$s", jsonJaxbElem.prettyPrint());
+        logInfo("JSONElement (for comparison) ---> prettyPrint\n%1$s", jsonElem.prettyPrint());
+        logInfo("JSONElement from JAXB ---> prettyPrint\n%1$s", jsonJaxbElem.prettyPrint());
         KeyValuePairsTester roundtripped = JaxbUtil.elementToJaxb(jsonJaxbElem, KeyValuePairsTester.class);
         List<com.zimbra.common.soap.Element.KeyValuePair> elemKVPs = jsonJaxbElem.listKeyValuePairs();
         Assert.assertEquals("elemKVP num", 3, elemKVPs.size());
@@ -471,12 +472,12 @@ public class JaxbToJsonTest {
         attrs.add(new Attr("key2", "value2-a"));
         attrs.add(new Attr("key2", "value2-b"));
         OddKeyValuePairsTester jaxb = new OddKeyValuePairsTester(attrs);
-        logDebug("XMLElement (from JAXB) ---> prettyPrint\n%1$s",
+        logInfo("XMLElement (from JAXB) ---> prettyPrint\n%1$s",
                 JaxbUtil.jaxbToElement(jaxb, Element.XMLElement.mFactory, true, false).prettyPrint());
         Element jsonJaxbElem = JacksonUtil.jaxbToJSONElement(jaxb);
-        logDebug("JSONElement (for comparison) ---> prettyPrint\n%1$s", jsonElem.prettyPrint());
+        logInfo("JSONElement (for comparison) ---> prettyPrint\n%1$s", jsonElem.prettyPrint());
         String origJson = jsonJaxbElem.prettyPrint();
-        logDebug("JSONElement from JAXB ---> prettyPrint\n%1$s", origJson);
+        logInfo("JSONElement from JAXB ---> prettyPrint\n%1$s", origJson);
         OddKeyValuePairsTester roundtripped = JaxbUtil.elementToJaxb(jsonJaxbElem, OddKeyValuePairsTester.class);
         List<com.zimbra.common.soap.Element.KeyValuePair> elemKVPs = jsonJaxbElem.listKeyValuePairs();
         Assert.assertEquals("elemKVP num", 3, elemKVPs.size());
@@ -486,7 +487,7 @@ public class JaxbToJsonTest {
         jsonJaxbElem = JacksonUtil.jaxbToJSONElement(roundtripped);
         String finalJson = jsonJaxbElem.prettyPrint();
         if (!origJson.equals(finalJson)) {
-            logDebug("JSONElement from roundtripped JAXB ---> prettyPrint\n%1$s", jsonJaxbElem.prettyPrint());
+            logInfo("JSONElement from roundtripped JAXB ---> prettyPrint\n%1$s", jsonJaxbElem.prettyPrint());
             Assert.assertEquals("roundtripped JSON pretty print", origJson, finalJson);
         }
     }
@@ -514,8 +515,8 @@ public class JaxbToJsonTest {
         attrs.add(new KeyValuePair("key2", "value2"));
         WrappedKeyValuePairsTester jaxb = new WrappedKeyValuePairsTester(attrs);
         Element jsonJaxbElem = JacksonUtil.jaxbToJSONElement(jaxb);
-        logDebug("JSONElement (for comparison) ---> prettyPrint\n%1$s", jsonElem.prettyPrint());
-        logDebug("JSONElement from JAXB ---> prettyPrint\n%1$s", jsonJaxbElem.prettyPrint());
+        logInfo("JSONElement (for comparison) ---> prettyPrint\n%1$s", jsonElem.prettyPrint());
+        logInfo("JSONElement from JAXB ---> prettyPrint\n%1$s", jsonJaxbElem.prettyPrint());
         Assert.assertEquals("prettyPrint", jsonElem.prettyPrint(), jsonJaxbElem.prettyPrint());
         WrappedKeyValuePairsTester roundtripped = JaxbUtil.elementToJaxb(jsonJaxbElem, WrappedKeyValuePairsTester.class);
         List<com.zimbra.common.soap.Element.KeyValuePair> elemKVPs = jsonJaxbElem.getElement("wrapper").listKeyValuePairs();
@@ -587,8 +588,8 @@ Extract from mailbox.log for creation of this DL by ZWC - demonstrating the diff
         Element xmlElem = XMLElement.mFactory.createElement(
                 QName.get(AccountConstants.E_CREATE_DISTRIBUTION_LIST_RESPONSE, AccountConstants.NAMESPACE_STR));
         populateCreateDlResp(xmlElem);
-        logDebug("XmlElement (for comparison) ---> prettyPrint\n%1$s", xmlElem.prettyPrint());
-        logDebug("JSONElement (for comparison) ---> prettyPrint\n%1$s", jsonElem.prettyPrint());
+        logInfo("XmlElement (for comparison) ---> prettyPrint\n%1$s", xmlElem.prettyPrint());
+        logInfo("JSONElement (for comparison) ---> prettyPrint\n%1$s", jsonElem.prettyPrint());
         List<KeyValuePair> attrs = Lists.newArrayList();
         attrs.add(new KeyValuePair("key1", "value1"));
         attrs.add(new KeyValuePair("key2", "value2"));
@@ -597,8 +598,8 @@ Extract from mailbox.log for creation of this DL by ZWC - demonstrating the diff
         Element xmlJaxbElem = JaxbUtil.jaxbToElement(jaxb, XMLElement.mFactory);
         Element jsonJaxbElem = JacksonUtil.jaxbToJSONElement(jaxb);
         DLInfo roundtripped = JaxbUtil.elementToJaxb(jsonJaxbElem, DLInfo.class);
-        logDebug("JSONElement from JAXB ---> prettyPrint\n%1$s", jsonJaxbElem.prettyPrint());
-        logDebug("XMLElement from JAXB ---> prettyPrint\n%1$s", xmlJaxbElem.prettyPrint());
+        logInfo("JSONElement from JAXB ---> prettyPrint\n%1$s", jsonJaxbElem.prettyPrint());
+        logInfo("XMLElement from JAXB ---> prettyPrint\n%1$s", xmlJaxbElem.prettyPrint());
         Element eDL = jsonJaxbElem.getElement(AdminConstants.E_DL);
         List<? extends KeyValuePair> kvps = roundtripped.getAttrList();
         Assert.assertEquals("roundtripped kvps num", 2, kvps.size());
@@ -630,8 +631,8 @@ Extract from mailbox.log for creation of this DL by ZWC - demonstrating the diff
         Element xmlElem = XMLElement.mFactory.createElement(
                 QName.get(AccountConstants.E_GET_DISTRIBUTION_LIST_RESPONSE, AccountConstants.NAMESPACE_STR));
         populateGetDlResp(xmlElem);
-        logDebug("XmlElement (for comparison) ---> prettyPrint\n%1$s", xmlElem.prettyPrint());
-        logDebug("JSONElement (for comparison) ---> prettyPrint\n%1$s", jsonElem.prettyPrint());
+        logInfo("XmlElement (for comparison) ---> prettyPrint\n%1$s", xmlElem.prettyPrint());
+        logInfo("JSONElement (for comparison) ---> prettyPrint\n%1$s", jsonElem.prettyPrint());
         // ObjectInfo declares this field:
         //     @ZimbraKeyValuePairs
         //     @XmlElement(name=AccountConstants.E_A /* a */, required=false)
@@ -646,8 +647,8 @@ Extract from mailbox.log for creation of this DL by ZWC - demonstrating the diff
         Element jsonJaxbElem = JacksonUtil.jaxbToJSONElement(jaxb);
         GetDistributionListResponse roundtripped = JaxbUtil.elementToJaxb(jsonJaxbElem, GetDistributionListResponse.class);
         GetDistributionListResponse roundtrippedX = JaxbUtil.elementToJaxb(xmlJaxbElem, GetDistributionListResponse.class);
-        logDebug("JSONElement from JAXB ---> prettyPrint\n%1$s", jsonJaxbElem.prettyPrint());
-        logDebug("XMLElement from JAXB ---> prettyPrint\n%1$s", xmlJaxbElem.prettyPrint());
+        logInfo("JSONElement from JAXB ---> prettyPrint\n%1$s", jsonJaxbElem.prettyPrint());
+        logInfo("XMLElement from JAXB ---> prettyPrint\n%1$s", xmlJaxbElem.prettyPrint());
         List<? extends KeyValuePair> kvps = roundtripped.getDl().getAttrList();
         Assert.assertEquals("roundtripped kvps num", 2, kvps.size());
         Assert.assertEquals("prettyPrint", jsonElem.prettyPrint(), jsonJaxbElem.prettyPrint());
@@ -668,8 +669,8 @@ Extract from mailbox.log for creation of this DL by ZWC - demonstrating the diff
         Element xmlElem = XMLElement.mFactory.createElement(
                 QName.get(AccountConstants.E_GET_DISTRIBUTION_LIST_RESPONSE, AccountConstants.NAMESPACE_STR));
         populateGetDlResp(xmlElem);
-        logDebug("XmlElement (for comparison) ---> prettyPrint\n%1$s", xmlElem.prettyPrint());
-        logDebug("JSONElement (for comparison) ---> prettyPrint\n%1$s", jsonElem.prettyPrint());
+        logInfo("XmlElement (for comparison) ---> prettyPrint\n%1$s", xmlElem.prettyPrint());
+        logInfo("JSONElement (for comparison) ---> prettyPrint\n%1$s", jsonElem.prettyPrint());
         List<KeyValuePair> attrs = Lists.newArrayList();
         attrs.add(new KeyValuePair("mail", "fun@example.test"));
         attrs.add(new KeyValuePair("zimbraMailStatus", "enabled"));
@@ -682,8 +683,8 @@ Extract from mailbox.log for creation of this DL by ZWC - demonstrating the diff
         Element jsonJaxbElem = JacksonUtil.jaxbToJSONElement(jaxb);
         GetDistributionListResponse roundtripped = JaxbUtil.elementToJaxb(jsonJaxbElem, GetDistributionListResponse.class);
         GetDistributionListResponse roundtrippedX = JaxbUtil.elementToJaxb(xmlJaxbElem, GetDistributionListResponse.class);
-        logDebug("JSONElement from JAXB ---> prettyPrint\n%1$s", jsonJaxbElem.prettyPrint());
-        logDebug("XMLElement from JAXB ---> prettyPrint\n%1$s", xmlJaxbElem.prettyPrint());
+        logInfo("JSONElement from JAXB ---> prettyPrint\n%1$s", jsonJaxbElem.prettyPrint());
+        logInfo("XMLElement from JAXB ---> prettyPrint\n%1$s", xmlJaxbElem.prettyPrint());
         List<? extends KeyValuePair> kvps = roundtripped.getDl().getAttrList();
         Assert.assertEquals("roundtripped kvps num", 2, kvps.size());
         Assert.assertEquals("roundtripped owner num", 1, roundtripped.getDl().getOwners().size());
@@ -709,7 +710,7 @@ Extract from mailbox.log for creation of this DL by ZWC - demonstrating the diff
         legacyElem.addKeyValuePair("accounts", "*");
         legacyElem.addKeyValuePair("limit", "0");
         legacyElem.addKeyValuePair("notificationMessage", notifMsg);
-        logDebug("CreateXmbxSearchRequest JSONElement ---> prettyPrint\n%1$s", legacyElem.prettyPrint());
+        logInfo("CreateXmbxSearchRequest JSONElement ---> prettyPrint\n%1$s", legacyElem.prettyPrint());
         // CreateXMbxSearchRequest extends AdminKeyValuePairs which uses ZimbraKeyValuePairs annotation to flag need
         // for special handling required  when serializing to JSON:
         //     @ZimbraKeyValuePairs
@@ -721,7 +722,7 @@ Extract from mailbox.log for creation of this DL by ZWC - demonstrating the diff
         jaxb.addKeyValuePair(new KeyValuePair("limit", "0"));
         jaxb.addKeyValuePair(new KeyValuePair("notificationMessage", notifMsg));
         Element elem = JacksonUtil.jaxbToJSONElement(jaxb, XMbxSearchConstants.CREATE_XMBX_SEARCH_REQUEST);
-        logDebug("CreateXmbxSearchRequest JSONElement from JAXB ---> prettyPrint\n%1$s", elem.prettyPrint());
+        logInfo("CreateXmbxSearchRequest JSONElement from JAXB ---> prettyPrint\n%1$s", elem.prettyPrint());
         List<com.zimbra.common.soap.Element.KeyValuePair> kvps = elem.listKeyValuePairs();
         Assert.assertEquals("Number of keyValuePairs ", 4, kvps.size());
         com.zimbra.common.soap.Element.KeyValuePair kvp4 = kvps.get(3);
@@ -803,7 +804,7 @@ Extract from mailbox.log for creation of this DL by ZWC - demonstrating the diff
         legacyElem.addElement(AccountConstants.E_DLM).setText("dlmember1@no.where");
         legacyElem.addElement(AccountConstants.E_DLM).setText("dlmember2@no.where");
         legacyElem.addElement(AccountConstants.E_DLM).setText("dlmember3@no.where");
-        logDebug("GetDistributionListMembersResponse JSONElement ---> prettyPrint\n%1$s", legacyElem.prettyPrint());
+        logInfo("GetDistributionListMembersResponse JSONElement ---> prettyPrint\n%1$s", legacyElem.prettyPrint());
         // GetDistributionListMembersResponse has:
         //      @XmlElement(name=AccountConstants.E_DLM, required=false)
         //      private List<String> dlMembers = Lists.newArrayList();
@@ -814,7 +815,7 @@ Extract from mailbox.log for creation of this DL by ZWC - demonstrating the diff
         jaxb.addDlMember("dlmember2@no.where");
         jaxb.addDlMember("dlmember3@no.where");
         Element elem = JacksonUtil.jaxbToJSONElement(jaxb, AccountConstants.GET_DISTRIBUTION_LIST_MEMBERS_RESPONSE);
-        logDebug("GetDistributionListMembersResponse JSONElement from JAXB ---> prettyPrint\n%1$s", elem.prettyPrint());
+        logInfo("GetDistributionListMembersResponse JSONElement from JAXB ---> prettyPrint\n%1$s", elem.prettyPrint());
         List<Element> dlMembers = elem.listElements(AccountConstants.E_DLM);
         Assert.assertEquals("Number of dlMembers", 3, dlMembers.size());
         Element dlMem3 = dlMembers.get(2);
@@ -834,7 +835,7 @@ Extract from mailbox.log for creation of this DL by ZWC - demonstrating the diff
     public void booleanMarshal() throws Exception {
         Element legacy0Elem = JSONElement.mFactory.createElement(MailConstants.NO_OP_RESPONSE);
         legacy0Elem.addAttribute(MailConstants.A_WAIT_DISALLOWED, false);
-        logDebug("NoOpResponse JSONElement ---> prettyPrint\n%1$s", legacy0Elem.prettyPrint());
+        logInfo("NoOpResponse JSONElement ---> prettyPrint\n%1$s", legacy0Elem.prettyPrint());
         Element legacy1Elem = JSONElement.mFactory.createElement(MailConstants.NO_OP_RESPONSE);
         legacy1Elem.addAttribute(MailConstants.A_WAIT_DISALLOWED, true);
         Element legacyFalseElem = JSONElement.mFactory.createElement(MailConstants.NO_OP_RESPONSE);
@@ -846,22 +847,22 @@ Extract from mailbox.log for creation of this DL by ZWC - demonstrating the diff
         //     private ZmBoolean waitDisallowed;
         NoOpResponse jaxb = NoOpResponse.create(false);
         Element xmlElem = JaxbUtil.jaxbToElement(jaxb, Element.XMLElement.mFactory);
-        logDebug("XMLElement from JAXB (false)---> prettyPrint\n%1$s", xmlElem.prettyPrint());
+        logInfo("XMLElement from JAXB (false)---> prettyPrint\n%1$s", xmlElem.prettyPrint());
         Assert.assertEquals("false Value of 'waitDisallowed'",
                 "0", xmlElem.getAttribute(MailConstants.A_WAIT_DISALLOWED));
         Element jsonElem = JacksonUtil.jaxbToJSONElement(jaxb, MailConstants.NO_OP_RESPONSE);
-        logDebug("NoOpResponse JSONElement from JAXB (false)---> prettyPrint\n%1$s", jsonElem.prettyPrint());
+        logInfo("NoOpResponse JSONElement from JAXB (false)---> prettyPrint\n%1$s", jsonElem.prettyPrint());
         Assert.assertEquals("false Value of 'waitDisallowed'",
                 "false", jsonElem.getAttribute(MailConstants.A_WAIT_DISALLOWED));
 
         // ensure that marshaling where Boolean has value true works
         jaxb.setWaitDisallowed(true);
         xmlElem = JaxbUtil.jaxbToElement(jaxb, Element.XMLElement.mFactory);
-        logDebug("XMLElement from JAXB (true) ---> prettyPrint\n%1$s", xmlElem.prettyPrint());
+        logInfo("XMLElement from JAXB (true) ---> prettyPrint\n%1$s", xmlElem.prettyPrint());
         Assert.assertEquals("true Value of 'waitDisallowed'",
                 "1", xmlElem.getAttribute(MailConstants.A_WAIT_DISALLOWED));
         jsonElem = JacksonUtil.jaxbToJSONElement(jaxb, MailConstants.NO_OP_RESPONSE);
-        logDebug("NoOpResponse JSONElement from JAXB (true) ---> prettyPrint\n%1$s", jsonElem.prettyPrint());
+        logInfo("NoOpResponse JSONElement from JAXB (true) ---> prettyPrint\n%1$s", jsonElem.prettyPrint());
         Assert.assertEquals("true Value of 'waitDisallowed'",
                 "true", jsonElem.getAttribute(MailConstants.A_WAIT_DISALLOWED));
         // ensure that unmarshaling where XML Boolean representation is "1" for true works
@@ -976,8 +977,8 @@ header="X-Spam-Score"/>
         rule1.addFilterAction(stopAction);
         jaxb.addFilterRule(rule1);
         Element xmlElem = JaxbUtil.jaxbToElement(jaxb, Element.XMLElement.mFactory);
-        logDebug("legacyXMLElement ---> prettyPrint\n%1$s", legacyXmlElem.prettyPrint());
-        logDebug("XMLElement from JAXB ---> prettyPrint\n%1$s", xmlElem.prettyPrint());
+        logInfo("legacyXMLElement ---> prettyPrint\n%1$s", legacyXmlElem.prettyPrint());
+        logInfo("XMLElement from JAXB ---> prettyPrint\n%1$s", xmlElem.prettyPrint());
         // Attribute Ordering not reliable: Assert.assertEquals("XML", legacyXmlElem.prettyPrint(), xmlElem.prettyPrint());
         Element xmlFr = xmlElem.getElement(MailConstants.E_FILTER_RULES).getElement(MailConstants.E_FILTER_RULE);
         Assert.assertEquals("XMLElement from JAXB filter rule name", "filter.bug65572", xmlFr.getAttribute(MailConstants.A_NAME));
@@ -998,8 +999,8 @@ header="X-Spam-Score"/>
         Assert.assertEquals("XMLElement from JAXB action stop index", 1, xmlStop.getAttributeInt(MailConstants.A_INDEX));
 
         Element jsonJaxbElem = JacksonUtil.jaxbToJSONElement(jaxb, MailConstants.GET_FILTER_RULES_RESPONSE);
-        logDebug("GetFilterRulesResponse legacyJSONElement ---> prettyPrint\n%1$s", legacyJsonElem.prettyPrint());
-        logDebug("GetFilterRulesResponse JSONElement from JAXB ---> prettyPrint\n%1$s", jsonJaxbElem.prettyPrint());
+        logInfo("GetFilterRulesResponse legacyJSONElement ---> prettyPrint\n%1$s", legacyJsonElem.prettyPrint());
+        logInfo("GetFilterRulesResponse JSONElement from JAXB ---> prettyPrint\n%1$s", jsonJaxbElem.prettyPrint());
         Assert.assertEquals("JSON", legacyJsonElem.prettyPrint(), jsonJaxbElem.prettyPrint());
         GetFilterRulesResponse roundtripped = JaxbUtil.elementToJaxb(jsonJaxbElem, GetFilterRulesResponse.class);
         List<FilterRule> rules = roundtripped.getFilterRules();
@@ -1062,7 +1063,7 @@ header="X-Spam-Score"/>
         tests.addTest(inviteTest);
         Element jsonJaxbElem = JacksonUtil.jaxbToJSONElement(tests,
                 QName.get(MailConstants.E_FILTER_TESTS, MailConstants.NAMESPACE));
-        logDebug("filterTests JSONElement from JAXB ---> prettyPrint\n%1$s", jsonJaxbElem.prettyPrint());
+        logInfo("filterTests JSONElement from JAXB ---> prettyPrint\n%1$s", jsonJaxbElem.prettyPrint());
         FilterTests roundtripped = JaxbUtil.elementToJaxb(jsonJaxbElem, FilterTests.class);
         FilterTest.InviteTest rtInviteTest = (FilterTest.InviteTest)roundtripped.getTests().get(0);
         Assert.assertEquals("roundtripped num methods", 3, rtInviteTest.getMethods().size());
@@ -1093,8 +1094,8 @@ header="X-Spam-Score"/>
         tstr.setFold2(ViewEnum.UNKNOWN);
         Element jsonJaxbElem = JacksonUtil.jaxbToJSONElement(tstr, QName.get("enum-tester", "urn:zimbraTest"));
         EnumAttribEnumElem roundtripped = JaxbUtil.elementToJaxb(jsonJaxbElem, EnumAttribEnumElem.class);
-        logDebug("JSONElement (for comparison) ---> prettyPrint\n%1$s", jsonElem.prettyPrint());
-        logDebug("JSONElement from JAXB ---> prettyPrint\n%1$s", jsonJaxbElem.prettyPrint());
+        logInfo("JSONElement (for comparison) ---> prettyPrint\n%1$s", jsonElem.prettyPrint());
+        logInfo("JSONElement from JAXB ---> prettyPrint\n%1$s", jsonJaxbElem.prettyPrint());
         // Want 'virtual conversation' not 'VIRTUAL_CONVERSATION'
         Assert.assertEquals("fold1 value", ViewEnum.VIRTUAL_CONVERSATION.toString(), jsonJaxbElem.getAttribute("fold1"));
         // Want '' not 'UNKNOWN'
@@ -1124,7 +1125,7 @@ header="X-Spam-Score"/>
         tstr.setFold2(ViewEnum.UNKNOWN);
         Element jsonJaxbElem = JacksonUtil.jaxbToJSONElement(tstr, QName.get("enum-tester", "urn:zimbraTest"));
         EnumAttribs roundtripped = JaxbUtil.elementToJaxb(jsonJaxbElem, EnumAttribs.class);
-        logDebug("JSONElement from JAXB ---> prettyPrint\n%1$s", jsonJaxbElem.prettyPrint());
+        logInfo("JSONElement from JAXB ---> prettyPrint\n%1$s", jsonJaxbElem.prettyPrint());
         // Want 'virtual conversation' not 'VIRTUAL_CONVERSATION'
         Assert.assertEquals("fold1 value", ViewEnum.VIRTUAL_CONVERSATION.toString(), jsonJaxbElem.getAttribute("fold1"));
         // Want '' not 'UNKNOWN'
@@ -1158,9 +1159,9 @@ header="X-Spam-Score"/>
         tstr.setElem1(elem1Val);
         Element jsonJaxbElem = JacksonUtil.jaxbToJSONElement(tstr);
         Element xmlElem = JaxbUtil.jaxbToElement(tstr, Element.XMLElement.mFactory, true, false);
-        logDebug("JSONElement (for comparison) ---> prettyPrint\n%1$s", jsonElem.prettyPrint());
-        logDebug("JSONElement from JAXB ---> prettyPrint\n%1$s", jsonJaxbElem.prettyPrint());
-        logDebug("XmlElement (for comparison) ---> prettyPrint\n%1$s", xmlElem.prettyPrint());
+        logInfo("JSONElement (for comparison) ---> prettyPrint\n%1$s", jsonElem.prettyPrint());
+        logInfo("JSONElement from JAXB ---> prettyPrint\n%1$s", jsonJaxbElem.prettyPrint());
+        logInfo("XmlElement (for comparison) ---> prettyPrint\n%1$s", xmlElem.prettyPrint());
         StringAttrStringElem roundtrippedX = JaxbUtil.elementToJaxb(xmlElem, StringAttrStringElem.class);
         StringAttrStringElem roundtripped = JaxbUtil.elementToJaxb(jsonJaxbElem, StringAttrStringElem.class);
         Assert.assertEquals("JSONElement attr1", attr1Val, jsonJaxbElem.getAttribute("attribute-1"));
@@ -1193,20 +1194,20 @@ header="X-Spam-Score"/>
         Element saseElem = jsonElem.addElement(QName.get("strAttrStrElem", "urn:ZimbraTest5"));
         saseElem.addAttribute("attribute-1", attr1Val);
         saseElem.addElement(QName.get("element1", "urn:ZimbraTest3")).addText(elem1Val);
-        logDebug("JSONElement (for comparison) ---> prettyPrint\n%1$s", jsonElem.prettyPrint());
+        logInfo("JSONElement (for comparison) ---> prettyPrint\n%1$s", jsonElem.prettyPrint());
         NamespaceDeltaElem tstr = new NamespaceDeltaElem();
         StringAttrStringElem tstrSase = new StringAttrStringElem();
         tstrSase.setAttr1(attr1Val);
         tstrSase.setElem1(elem1Val);
         tstr.setSase(tstrSase);
         Element jsonJaxbElem = JacksonUtil.jaxbToJSONElement(tstr);
-        logDebug("JSONElement from JAXB ---> prettyPrint\n%1$s", jsonJaxbElem.prettyPrint());
+        logInfo("JSONElement from JAXB ---> prettyPrint\n%1$s", jsonJaxbElem.prettyPrint());
         NamespaceDeltaElem roundtripped = JaxbUtil.elementToJaxb(jsonJaxbElem, NamespaceDeltaElem.class);
         Element saseJsonJaxbElem = jsonJaxbElem.getElement(QName.get("strAttrStrElem", "urn:ZimbraTest5"));
         Assert.assertEquals("JSONElement attr1", attr1Val, saseJsonJaxbElem.getAttribute("attribute-1"));
         Assert.assertEquals("JSONElement elem1", elem1Val, saseJsonJaxbElem.getElement("element1").getText());
-        logDebug("roundtripped attr1=%1$s", roundtripped.getSase().getAttr1());
-        logDebug("roundtripped elem1=%1$s", roundtripped.getSase().getElem1());
+        logInfo("roundtripped attr1=%1$s", roundtripped.getSase().getAttr1());
+        logInfo("roundtripped elem1=%1$s", roundtripped.getSase().getElem1());
         Assert.assertEquals("roundtripped attr1", attr1Val, roundtripped.getSase().getAttr1());
         Assert.assertEquals("roundtripped elem1", elem1Val, roundtripped.getSase().getElem1());
         Assert.assertEquals("prettyPrint", jsonElem.prettyPrint(), jsonJaxbElem.prettyPrint());
@@ -1234,8 +1235,8 @@ header="X-Spam-Score"/>
         AuthResponse roundtrippedX = JaxbUtil.elementToJaxb(xmlElem, AuthResponse.class);
         Element jsonJaxbElem = JacksonUtil.jaxbToJSONElement(tstr);
         AuthResponse roundtripped = JaxbUtil.elementToJaxb(jsonJaxbElem, AuthResponse.class);
-        logDebug("XmlElement (for comparison) ---> prettyPrint\n%1$s", xmlElem.prettyPrint());
-        logDebug("JSONElement from JAXB ---> prettyPrint\n%1$s", jsonJaxbElem.prettyPrint());
+        logInfo("XmlElement (for comparison) ---> prettyPrint\n%1$s", xmlElem.prettyPrint());
+        logInfo("JSONElement from JAXB ---> prettyPrint\n%1$s", jsonJaxbElem.prettyPrint());
         Assert.assertEquals("JSONElement lifetime", lifetimeStr, jsonJaxbElem.getAttribute("lifetime"));
         Assert.assertEquals("JSONElement authToken", authToken, jsonJaxbElem.getElement("authToken").getText());
         Assert.assertEquals("roundtripped lifetime", lifetime, roundtripped.getLifetime());
@@ -1263,8 +1264,8 @@ header="X-Spam-Score"/>
         StringAttribIntValue tstr = new StringAttribIntValue(attrib1, value);
         Element jsonJaxbElem = JacksonUtil.jaxbToJSONElement(tstr);
         StringAttribIntValue roundtripped = JaxbUtil.elementToJaxb(jsonJaxbElem, StringAttribIntValue.class);
-        logDebug("JSONElement (for comparison) ---> prettyPrint\n%1$s", jsonElem.prettyPrint());
-        logDebug("JSONElement from JAXB ---> prettyPrint\n%1$s", jsonJaxbElem.prettyPrint());
+        logInfo("JSONElement (for comparison) ---> prettyPrint\n%1$s", jsonElem.prettyPrint());
+        logInfo("JSONElement from JAXB ---> prettyPrint\n%1$s", jsonJaxbElem.prettyPrint());
         Assert.assertEquals("attr1", attrib1, jsonJaxbElem.getAttribute("attr1"));
         Assert.assertEquals("XmlValue", valueStr, jsonJaxbElem.getText());
         Assert.assertEquals("roundtripped attrib1", attrib1, roundtripped.getAttrib1());
@@ -1303,14 +1304,14 @@ header="X-Spam-Score"/>
         jsonElem.addUniqueElement(QName.get("unique-str-elem", "urn:zimbraTest1")).setText(elem1);
         jsonElem.addElement(QName.get("non-unique-elem", "urn:zimbraTest1")).setText(elem1);
         jsonElem.addUniqueElement("unique-complex-elem").addAttribute("attr1", attrib1).setText(valueStr);
-        logDebug("JSONElement (for comparison) ---> prettyPrint\n%1$s", jsonElem.prettyPrint());
+        logInfo("JSONElement (for comparison) ---> prettyPrint\n%1$s", jsonElem.prettyPrint());
         UniqueTester tstr = new UniqueTester();
         tstr.setUniqueStrElem(elem1);
         tstr.setNonUniqueStrElem(elem1);
         StringAttribIntValue complex = new StringAttribIntValue(attrib1, value);
         tstr.setUniqueComplexElem(complex);
         Element jsonJaxbElem = JacksonUtil.jaxbToJSONElement(tstr);
-        logDebug("JSONElement from JAXB ---> prettyPrint\n%1$s", jsonJaxbElem.prettyPrint());
+        logInfo("JSONElement from JAXB ---> prettyPrint\n%1$s", jsonJaxbElem.prettyPrint());
         UniqueTester roundtripped = JaxbUtil.elementToJaxb(jsonJaxbElem, UniqueTester.class);
         Assert.assertEquals("roundtripped non-unique elem", elem1, roundtripped.getNonUniqueStrElem());
         Assert.assertEquals("roundtripped unique elem", elem1, roundtripped.getUniqueStrElem());
@@ -1343,14 +1344,14 @@ header="X-Spam-Score"/>
         jsonElem.addElement("enum-entry").addText(ViewEnum.APPOINTMENT.toString());
         jsonElem.addElement("enum-entry").addText(ViewEnum.UNKNOWN.toString());
         jsonElem.addElement("enum-entry").addText(ViewEnum.DOCUMENT.toString());
-        logDebug("JSONElement (for comparison) ---> prettyPrint\n%1$s", jsonElem.prettyPrint());
+        logInfo("JSONElement (for comparison) ---> prettyPrint\n%1$s", jsonElem.prettyPrint());
         EnumElemList tstr = new EnumElemList();
         tstr.addEntry(ViewEnum.APPOINTMENT);
         tstr.addEntry(ViewEnum.UNKNOWN);
         tstr.addEntry(ViewEnum.DOCUMENT);
         Element jsonJaxbElem = JacksonUtil.jaxbToJSONElement(tstr);
         EnumElemList roundtripped = JaxbUtil.elementToJaxb(jsonJaxbElem, EnumElemList.class);
-        logDebug("JSONElement from JAXB ---> prettyPrint\n%1$s", jsonJaxbElem.prettyPrint());
+        logInfo("JSONElement from JAXB ---> prettyPrint\n%1$s", jsonJaxbElem.prettyPrint());
         List<Element> jsonElems = jsonJaxbElem.listElements();
         List<ViewEnum> entries = roundtripped.getEntries();
         Assert.assertEquals("jsonElems num", 3, jsonElems.size());
@@ -1370,7 +1371,7 @@ header="X-Spam-Score"/>
     public void emptyEnumElemList() throws Exception {
         EnumElemList tstr = new EnumElemList();
         Element jsonJaxbElem = JacksonUtil.jaxbToJSONElement(tstr);
-        logDebug("JSONElement from JAXB FOR EMPTY LIST ---> prettyPrint\n%1$s", jsonJaxbElem.prettyPrint());
+        logInfo("JSONElement from JAXB FOR EMPTY LIST ---> prettyPrint\n%1$s", jsonJaxbElem.prettyPrint());
         EnumElemList roundtripped = JaxbUtil.elementToJaxb(jsonJaxbElem, EnumElemList.class);
         List<Element> jsonElems = jsonJaxbElem.listElements();
         List<ViewEnum> entries = roundtripped.getEntries();
@@ -1403,13 +1404,13 @@ header="X-Spam-Score"/>
         Element wrapElem = jsonElem.addElement("wrapper");
         wrapElem.addElement("enum-entry").addText(ViewEnum.APPOINTMENT.toString());
         wrapElem.addElement("enum-entry").addText(ViewEnum.DOCUMENT.toString());
-        logDebug("JSONElement (for comparison) ---> prettyPrint\n%1$s", jsonElem.prettyPrint());
+        logInfo("JSONElement (for comparison) ---> prettyPrint\n%1$s", jsonElem.prettyPrint());
         WrappedEnumElemList tstr = new WrappedEnumElemList();
         tstr.addEntry(ViewEnum.APPOINTMENT);
         tstr.addEntry(ViewEnum.DOCUMENT);
         Element jsonJaxbElem = JacksonUtil.jaxbToJSONElement(tstr);
         WrappedEnumElemList roundtripped = JaxbUtil.elementToJaxb(jsonJaxbElem, WrappedEnumElemList.class);
-        logDebug("JSONElement from JAXB ---> prettyPrint\n%1$s", jsonJaxbElem.prettyPrint());
+        logInfo("JSONElement from JAXB ---> prettyPrint\n%1$s", jsonJaxbElem.prettyPrint());
         Element wElem = jsonJaxbElem.getElement("wrapper");
         List<Element> jsonElems = wElem.listElements();
         List<ViewEnum> entries = roundtripped.getEntries();
@@ -1427,7 +1428,7 @@ header="X-Spam-Score"/>
         tstr.setAttr1(attr1Val);
         // tstr.setElem1(elem1Val);
         Element jsonJaxbElem = JacksonUtil.jaxbToJSONElement(tstr);
-        logDebug("JSONElement from JAXB ---> prettyPrint\n%1$s", jsonJaxbElem.prettyPrint());
+        logInfo("JSONElement from JAXB ---> prettyPrint\n%1$s", jsonJaxbElem.prettyPrint());
         StringAttrStringElem roundtripped = JaxbUtil.elementToJaxb(jsonJaxbElem, StringAttrStringElem.class);
         Assert.assertEquals("JSONElement attr1", attr1Val, jsonJaxbElem.getAttribute("attribute-1"));
         try {
@@ -1448,7 +1449,7 @@ header="X-Spam-Score"/>
         tstr.setFold2(ViewEnum.UNKNOWN);
         Element jsonJaxbElem = JacksonUtil.jaxbToJSONElement(tstr);
         EnumAttribEnumElem roundtripped = JaxbUtil.elementToJaxb(jsonJaxbElem, EnumAttribEnumElem.class);
-        logDebug("JSONElement from JAXB ---> prettyPrint\n%1$s", jsonJaxbElem.prettyPrint());
+        logInfo("JSONElement from JAXB ---> prettyPrint\n%1$s", jsonJaxbElem.prettyPrint());
         Assert.assertEquals("fold2 value", ViewEnum.UNKNOWN.toString(), jsonJaxbElem.getElement("fold2").getText());
         Assert.assertEquals("roundtripped fold1", null, roundtripped.getFold1());
         Assert.assertEquals("roundtripped fold2", ViewEnum.UNKNOWN, roundtripped.getFold2());
@@ -1460,7 +1461,7 @@ header="X-Spam-Score"/>
         WrappedRequired tstr = new WrappedRequired();
         Element jsonJaxbElem = JacksonUtil.jaxbToJSONElement(tstr);
         WrappedRequired roundtripped = JaxbUtil.elementToJaxb(jsonJaxbElem, WrappedRequired.class);
-        logDebug("JSONElement from JAXB ---> prettyPrint\n%1$s", jsonJaxbElem.prettyPrint());
+        logInfo("JSONElement from JAXB ---> prettyPrint\n%1$s", jsonJaxbElem.prettyPrint());
         try {
             jsonJaxbElem.getElement("wrapper");
         } catch (ServiceException svcE) {
@@ -1495,17 +1496,16 @@ header="X-Spam-Score"/>
      * How to achieve a wrapped list where no element for the wrapper will appear in the XML if the list is empty.
      */
     @Test
-    @Ignore
     public void wrapperAbsentIfEmpty() throws Exception {
         WrapperAbsentIfEmpty jaxb = new  WrapperAbsentIfEmpty();
         Element jsonJaxbElem = JacksonUtil.jaxbToJSONElement(jaxb);
         WrapperAbsentIfEmpty roundtripped = JaxbUtil.elementToJaxb(jsonJaxbElem, WrapperAbsentIfEmpty.class);
-        logDebug("JSONElement from JAXB (empty numbers)--> prettyPrint\n%1$s", jsonJaxbElem.prettyPrint());
+        logInfo("JSONElement from JAXB (empty numbers)--> prettyPrint\n%1$s", jsonJaxbElem.prettyPrint());
         Assert.assertNull("original getNumbers (empty list)", jaxb.getNumbers());
         Assert.assertNull("JSON roundtripped getNumbers (empty list)", roundtripped.getNumbers());
         Assert.assertEquals("JSON for empty Numbers", "{\n  \"_jsns\": \"urn:zimbraTest\"\n}", jsonJaxbElem.prettyPrint());
         Element xmlElem = JaxbUtil.jaxbToElement(jaxb, Element.XMLElement.mFactory, true, false);
-        logDebug("XmlElement from JAXB (empty numbers) ---> prettyPrint\n%1$s", xmlElem.prettyPrint());
+        logInfo("XmlElement from JAXB (empty numbers) ---> prettyPrint\n%1$s", xmlElem.prettyPrint());
         WrapperAbsentIfEmpty roundtrippedX = JaxbUtil.elementToJaxb(xmlElem, WrapperAbsentIfEmpty.class);
         Assert.assertNull("XML roundtripped getNumbers (empty list)", roundtrippedX.getNumbers());
         Assert.assertEquals("XML for empty Numbers",
@@ -1514,11 +1514,11 @@ header="X-Spam-Score"/>
         jaxb.addNumber(42);
         jsonJaxbElem = JacksonUtil.jaxbToJSONElement(jaxb);
         roundtripped = JaxbUtil.elementToJaxb(jsonJaxbElem, WrapperAbsentIfEmpty.class);
-        logDebug("JSONElement from JAXB (empty numbers)--> prettyPrint\n%1$s", jsonJaxbElem.prettyPrint());
+        logInfo("JSONElement from JAXB (empty numbers)--> prettyPrint\n%1$s", jsonJaxbElem.prettyPrint());
         Assert.assertEquals("original size of Numbers (2 numbers)", 2, jaxb.getNumbers().size());
         Assert.assertEquals("JSON roundtripped size of Numbers (2 numbers)", 2, roundtripped.getNumbers().size());
         xmlElem = JaxbUtil.jaxbToElement(jaxb, Element.XMLElement.mFactory, true, false);
-        logDebug("XmlElement from JAXB (empty numbers) ---> prettyPrint\n%1$s", xmlElem.prettyPrint());
+        logInfo("XmlElement from JAXB (empty numbers) ---> prettyPrint\n%1$s", xmlElem.prettyPrint());
         roundtrippedX = JaxbUtil.elementToJaxb(xmlElem, WrapperAbsentIfEmpty.class);
         Assert.assertEquals("XML roundtripped size of Numbers (2 numbers)", 2, roundtrippedX.getNumbers().size());
         Assert.assertEquals("XML when have 2 numbers",
@@ -1556,8 +1556,8 @@ header="X-Spam-Score"/>
         jaxb.setByRef(inner);
         Element jsonJaxbElem = JacksonUtil.jaxbToJSONElement(jaxb);
         Element xmlElem = JaxbUtil.jaxbToElement(jaxb, Element.XMLElement.mFactory, true, false);
-        logDebug("JSONElement from JAXB ---> prettyPrint\n%1$s", jsonJaxbElem.prettyPrint());
-        logDebug("XmlElement (for comparison) ---> prettyPrint\n%1$s", xmlElem.prettyPrint());
+        logInfo("JSONElement from JAXB ---> prettyPrint\n%1$s", jsonJaxbElem.prettyPrint());
+        logInfo("XmlElement (for comparison) ---> prettyPrint\n%1$s", xmlElem.prettyPrint());
         ElementRefTester roundtrippedX = JaxbUtil.elementToJaxb(xmlElem, ElementRefTester.class);
         ElementRefTester roundtripped = JaxbUtil.elementToJaxb(jsonJaxbElem, ElementRefTester.class);
         StringAttribIntValue rtByRef = roundtripped.getByRef();
@@ -1598,8 +1598,8 @@ header="X-Spam-Score"/>
         jaxb.setElems(elems);
         Element jsonJaxbElem = JacksonUtil.jaxbToJSONElement(jaxb);
         Element xmlElem = JaxbUtil.jaxbToElement(jaxb, Element.XMLElement.mFactory, true, false);
-        logDebug("JSONElement from JAXB ---> prettyPrint\n%1$s", jsonJaxbElem.prettyPrint());
-        logDebug("XmlElement (for comparison) ---> prettyPrint\n%1$s", xmlElem.prettyPrint());
+        logInfo("JSONElement from JAXB ---> prettyPrint\n%1$s", jsonJaxbElem.prettyPrint());
+        logInfo("XmlElement (for comparison) ---> prettyPrint\n%1$s", xmlElem.prettyPrint());
         ElementRefsTester roundtrippedX = JaxbUtil.elementToJaxb(xmlElem, ElementRefsTester.class);
         ElementRefsTester roundtripped = JaxbUtil.elementToJaxb(jsonJaxbElem, ElementRefsTester.class);
         Assert.assertEquals("roundtrippedX num elems", 2, roundtrippedX.getElems().size());
@@ -1632,14 +1632,14 @@ header="X-Spam-Score"/>
         jaxb.setElems(elems);
 
         Element xmlElem = JaxbUtil.jaxbToElement(jaxb, Element.XMLElement.mFactory, true, false);
-        logDebug("XmlElement (for comparison) [Mixed has element] ---> prettyPrint\n%1$s", xmlElem.prettyPrint());
+        logInfo("XmlElement (for comparison) [Mixed has element] ---> prettyPrint\n%1$s", xmlElem.prettyPrint());
         MixedTester roundtrippedX = JaxbUtil.elementToJaxb(xmlElem, MixedTester.class);
         Assert.assertEquals("roundtrippedX num elems", 1, roundtrippedX.getElems().size());
         StringAttribIntValue rtXmlByRef = (StringAttribIntValue) roundtrippedX.getElems().get(0);
         Assert.assertEquals("roundtrippedX [Mixed has element] str", str, rtXmlByRef.getAttrib1());
         Assert.assertEquals("roundtrippedX [Mixed has element] num", num, rtXmlByRef.getMyValue());
         Element jsonJaxbElem = JacksonUtil.jaxbToJSONElement(jaxb);
-        logDebug("JSONElement from JAXB [Mixed has element] ---> prettyPrint\n%1$s", jsonJaxbElem.prettyPrint());
+        logInfo("JSONElement from JAXB [Mixed has element] ---> prettyPrint\n%1$s", jsonJaxbElem.prettyPrint());
         MixedTester roundtripped = JaxbUtil.elementToJaxb(jsonJaxbElem, MixedTester.class);
         Assert.assertEquals("roundtripped [Mixed has element] num elems", 1, roundtripped.getElems().size());
         StringAttribIntValue rtByRef = (StringAttribIntValue) roundtripped.getElems().get(0);
@@ -1662,12 +1662,12 @@ header="X-Spam-Score"/>
 
         Element xmlElem = JaxbUtil.jaxbToElement(jaxb, Element.XMLElement.mFactory, true, false);
         xmlElem = JaxbUtil.jaxbToElement(jaxb, Element.XMLElement.mFactory, true, false);
-        logDebug("XmlElement (for comparison) [Mixed has just text] ---> prettyPrint\n%1$s", xmlElem.prettyPrint());
+        logInfo("XmlElement (for comparison) [Mixed has just text] ---> prettyPrint\n%1$s", xmlElem.prettyPrint());
         MixedTester roundtrippedX = JaxbUtil.elementToJaxb(xmlElem, MixedTester.class);
         Assert.assertEquals("roundtrippedX [Mixed has just text] num elems", 1, roundtrippedX.getElems().size());
         Assert.assertEquals("roundtrippedX [Mixed has just text] str", textStr, (String) roundtrippedX.getElems().get(0));
         Element jsonJaxbElem = JacksonUtil.jaxbToJSONElement(jaxb);
-        logDebug("JSONElement from JAXB [Mixed has just text] ---> prettyPrint\n%1$s", jsonJaxbElem.prettyPrint());
+        logInfo("JSONElement from JAXB [Mixed has just text] ---> prettyPrint\n%1$s", jsonJaxbElem.prettyPrint());
         MixedTester roundtripped = JaxbUtil.elementToJaxb(jsonJaxbElem, MixedTester.class);
         Assert.assertEquals("roundtripped [Mixed has just text] num elems", 1, roundtripped.getElems().size());
         Assert.assertEquals("roundtripped [Mixed has just text] str", textStr, (String) roundtripped.getElems().get(0));
@@ -1713,13 +1713,13 @@ header="X-Spam-Score"/>
 
         Element xmlElem = JaxbUtil.jaxbToElement(jaxb, Element.XMLElement.mFactory, true, false);
         xmlElem = JaxbUtil.jaxbToElement(jaxb, Element.XMLElement.mFactory, true, false);
-        logDebug("XmlElement (for comparison) [Mixed w3c element] ---> prettyPrint\n%1$s", xmlElem.prettyPrint());
+        logInfo("XmlElement (for comparison) [Mixed w3c element] ---> prettyPrint\n%1$s", xmlElem.prettyPrint());
         MixedAnyTester roundtrippedX = JaxbUtil.elementToJaxb(xmlElem, MixedAnyTester.class);
         Assert.assertEquals("roundtrippedX [Mixed w3c element] num elems", 1, roundtrippedX.getElems().size());
         org.w3c.dom.Element w3ce = (org.w3c.dom.Element) roundtrippedX.getElems().get(0);
         Assert.assertEquals("roundtrippedX [Mixed w3c element] elem name", "alien", w3ce.getLocalName());
         Element jsonJaxbElem = JacksonUtil.jaxbToJSONElement(jaxb);
-        logDebug("JSONElement from JAXB [Mixed w3c element] ---> prettyPrint\n%1$s", jsonJaxbElem.prettyPrint());
+        logInfo("JSONElement from JAXB [Mixed w3c element] ---> prettyPrint\n%1$s", jsonJaxbElem.prettyPrint());
         MixedAnyTester roundtripped = JaxbUtil.elementToJaxb(jsonJaxbElem, MixedAnyTester.class);
         Assert.assertEquals("roundtripped [Mixed w3c element] num elems", 1, roundtripped.getElems().size());
         org.w3c.dom.Element rtElem = (org.w3c.dom.Element) roundtripped.getElems().get(0);
@@ -1758,15 +1758,15 @@ header="X-Spam-Score"/>
 
         Element xmlElem = JaxbUtil.jaxbToElement(jaxb, Element.XMLElement.mFactory, true, false);
         xmlElem = JaxbUtil.jaxbToElement(jaxb, Element.XMLElement.mFactory, true, false);
-        logDebug("XmlElement (for comparison) ---> prettyPrint\n%1$s", xmlElem.prettyPrint());
+        logInfo("XmlElement (for comparison) ---> prettyPrint\n%1$s", xmlElem.prettyPrint());
         AnyTester roundtrippedX = JaxbUtil.elementToJaxb(xmlElem, AnyTester.class);
         Assert.assertEquals("roundtrippedX given", given, roundtrippedX.getGiven());
         Assert.assertEquals("roundtrippedX num elems", 2, roundtrippedX.getElems().size());
         org.w3c.dom.Element w3ce = roundtrippedX.getElems().get(0);
         Assert.assertEquals("roundtrippedX elem name", "alien", w3ce.getLocalName());
-        logDebug("STRING from JAXB ---> prettyPrint\n%1$s", getZimbraJsonJaxbString(jaxb));
+        logInfo("STRING from JAXB ---> prettyPrint\n%1$s", getZimbraJsonJaxbString(jaxb));
         Element jsonJaxbElem = JacksonUtil.jaxbToJSONElement(jaxb);
-        logDebug("JSONElement from JAXB ---> prettyPrint\n%1$s", jsonJaxbElem.prettyPrint());
+        logInfo("JSONElement from JAXB ---> prettyPrint\n%1$s", jsonJaxbElem.prettyPrint());
         AnyTester roundtripped = JaxbUtil.elementToJaxb(jsonJaxbElem, AnyTester.class);
         Assert.assertEquals("roundtripped given", given, roundtripped.getGiven());
         Assert.assertEquals("roundtripped num elems", 2, roundtripped.getElems().size());
@@ -1804,14 +1804,14 @@ header="X-Spam-Score"/>
 
         Element xmlElem = JaxbUtil.jaxbToElement(jaxb, Element.XMLElement.mFactory, true, false);
         xmlElem = JaxbUtil.jaxbToElement(jaxb, Element.XMLElement.mFactory, true, false);
-        logDebug("XmlElement (for comparison) ---> prettyPrint\n%1$s", xmlElem.prettyPrint());
+        logInfo("XmlElement (for comparison) ---> prettyPrint\n%1$s", xmlElem.prettyPrint());
         AnyAttrTester roundtrippedX = JaxbUtil.elementToJaxb(xmlElem, AnyAttrTester.class);
         Assert.assertEquals("roundtrippedX given", given, roundtrippedX.getGiven());
         Map<javax.xml.namespace.QName, Object> rtXextras = roundtrippedX.getExtraAttributes();
         Assert.assertEquals("roundtrippedX num extras", 2, rtXextras.size());
 
         Element jsonJaxbElem = JacksonUtil.jaxbToJSONElement(jaxb);
-        logDebug("JSONElement from JAXB ---> prettyPrint\n%1$s", jsonJaxbElem.prettyPrint());
+        logInfo("JSONElement from JAXB ---> prettyPrint\n%1$s", jsonJaxbElem.prettyPrint());
         AnyAttrTester roundtripped = JaxbUtil.elementToJaxb(jsonJaxbElem, AnyAttrTester.class);
         Assert.assertEquals("roundtripped given", given, roundtripped.getGiven());
         Map<javax.xml.namespace.QName, Object> rtextras = roundtripped.getExtraAttributes();
@@ -1835,8 +1835,8 @@ header="X-Spam-Score"/>
         TransientTester jaxb = new TransientTester(str, num);
         Element jsonJaxbElem = JacksonUtil.jaxbToJSONElement(jaxb);
         Element xmlElem = JaxbUtil.jaxbToElement(jaxb, Element.XMLElement.mFactory, true, false);
-        logDebug("JSONElement from JAXB ---> prettyPrint\n%1$s", jsonJaxbElem.prettyPrint());
-        logDebug("XmlElement (for comparison) ---> prettyPrint\n%1$s", xmlElem.prettyPrint());
+        logInfo("JSONElement from JAXB ---> prettyPrint\n%1$s", jsonJaxbElem.prettyPrint());
+        logInfo("XmlElement (for comparison) ---> prettyPrint\n%1$s", xmlElem.prettyPrint());
         TransientTester roundtrippedX = JaxbUtil.elementToJaxb(xmlElem, TransientTester.class);
         TransientTester roundtripped = JaxbUtil.elementToJaxb(jsonJaxbElem, TransientTester.class);
         Assert.assertEquals("roundtrippedX num", new Integer(num), roundtrippedX.getNummer());
@@ -1872,8 +1872,8 @@ header="X-Spam-Score"/>
         jsonElem.addAttribute(AccountConstants.E_SOAP_URL, httpsSoap, Element.Disposition.CONTENT);
         xmlElem.addAttribute(AccountConstants.E_SOAP_URL, httpSoap, Element.Disposition.CONTENT);
         xmlElem.addAttribute(AccountConstants.E_SOAP_URL, httpsSoap, Element.Disposition.CONTENT);
-        logDebug("MultiContentAttrs XMLElement ---> prettyPrint\n%1$s", xmlElem.prettyPrint());
-        logDebug("MultiContentAttrs JSONElement ---> prettyPrint\n%1$s", jsonElem.prettyPrint());
+        logInfo("MultiContentAttrs XMLElement ---> prettyPrint\n%1$s", xmlElem.prettyPrint());
+        logInfo("MultiContentAttrs JSONElement ---> prettyPrint\n%1$s", jsonElem.prettyPrint());
         Assert.assertEquals("XMLElement soapURL as attribute", httpsSoap, xmlElem.getAttribute(AccountConstants.E_SOAP_URL));
         Assert.assertEquals("XMLElement num soapURL elements", 1, xmlElem.listElements(AccountConstants.E_SOAP_URL).size());
         Assert.assertEquals("XMLElement soapURL as element", httpsSoap, xmlElem.getElement(AccountConstants.E_SOAP_URL).getText());
@@ -1916,11 +1916,11 @@ header="X-Spam-Score"/>
         jsonElem.addElement("classic-elem").setText(str2);
         xmlElem.addAttribute("xml-elem-json-attr", str1, Element.Disposition.CONTENT);
         xmlElem.addElement("classic-elem").setText(str2);
-        logDebug("XMLElement ---> prettyPrint\n%1$s", xmlElem.prettyPrint());
-        logDebug("JSONElement ---> prettyPrint\n%1$s", jsonElem.prettyPrint());
+        logInfo("XMLElement ---> prettyPrint\n%1$s", xmlElem.prettyPrint());
+        logInfo("JSONElement ---> prettyPrint\n%1$s", jsonElem.prettyPrint());
         XmlElemJsonAttr jaxb = new XmlElemJsonAttr(str1, str2);
         Element jsonJaxbElem = JacksonUtil.jaxbToJSONElement(jaxb);
-        logDebug("JSONElement from JAXB ---> prettyPrint\n%1$s", jsonJaxbElem.prettyPrint());
+        logInfo("JSONElement from JAXB ---> prettyPrint\n%1$s", jsonJaxbElem.prettyPrint());
         Assert.assertEquals("JSONElement and JSONElement from JAXB", jsonElem.prettyPrint(), jsonJaxbElem.prettyPrint());
         XmlElemJsonAttr roundtripped = JaxbUtil.elementToJaxb(jsonJaxbElem, XmlElemJsonAttr.class);
         Assert.assertEquals("roundtripped xml-elem-json-attr", str1, roundtripped.getXmlElemJsonAttr());
@@ -1934,7 +1934,7 @@ header="X-Spam-Score"/>
             try {
                 return JacksonUtil.jaxbToJsonString(JacksonUtil.getObjectMapper(), obj);
             } catch (ServiceException e) {
-                LOG.error(e.getLocalizedMessage(), e);
+                e.printStackTrace();
                 return null;
             }
     }
@@ -1942,7 +1942,7 @@ header="X-Spam-Score"/>
             try {
                 return JacksonUtil.jaxbToJsonString(getSimpleJsonJaxbMapper(), obj);
             } catch (ServiceException e) {
-                LOG.error(e.getLocalizedMessage(), e);
+                e.printStackTrace();
                 return null;
             }
     }

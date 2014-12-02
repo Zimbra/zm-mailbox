@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011, 2012, 2013, 2014 Zimbra, Inc.
+ * Copyright (C) 2013, 2014 Zimbra, Inc.
  * 
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -15,38 +15,35 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.admin.type;
+package com.zimbra.soap.admin.message;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.soap.admin.type.ServerInfo;
 
 @XmlAccessorType(XmlAccessType.NONE)
-@XmlType(propOrder = {})
-public class MailboxByAccountIdSelector {
+@XmlRootElement(name=AdminConstants.E_GET_ALL_ACTIVE_SERVERS_RESPONSE)
+public class GetAllActiveServersResponse {
 
     /**
-     * @zm-api-field-tag account-id
-     * @zm-api-field-description Account ID
+     * @zm-api-field-description Information about active servers
      */
-    @XmlAttribute(name=AdminConstants.A_ACCOUNTID, required=true)
-    private final String id;
+    @XmlElement(name=AdminConstants.E_SERVER)
+    private final List <ServerInfo> serverList = new ArrayList<ServerInfo>();
 
-    /**
-     * no-argument constructor wanted by JAXB
-     */
-    @SuppressWarnings("unused")
-    private MailboxByAccountIdSelector() {
-        this(null);
+    public GetAllActiveServersResponse() {
     }
 
-    public MailboxByAccountIdSelector(String accountid) {
-        this.id = accountid;
+    public void addServer(ServerInfo server ) {
+        this.getServerList().add(server);
     }
 
-    public String getId() { return id; }
+    public List <ServerInfo> getServerList() { return serverList; }
 }
