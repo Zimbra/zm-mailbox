@@ -76,19 +76,17 @@ $ p4 sync
 $ brew install mariadb
 $ sudo ln -s /usr/local/opt/mariadb /opt/zimbra/mysql
 $ sudo chown {username} /opt/zimbra
-$ sudo vi /opt/zimbra/mysql/my.cnf (RHEL command, sudo vi /var/lib/mysql)
+$ sudo vi /usr/local/etc/my.cnf
 ````
 
 ````
-[mysqld]
+[client-server]
 port = 7306
 socket = /opt/zimbra/mysql/data/mysql.sock
 ````
 
 ````
-$ ln -sfv /usr/local/opt/mariadb/homebrew.mxcl.mariadb.plist ~/Library/LaunchAgents
-$ launchctl load ~/Library/LaunchAgents/homebrew.mxcl.mariadb.plist
-
+$ mysql.server restart
 $ /opt/zimbra/mysql/bin/mysqladmin -S /opt/zimbra/mysql/data/mysql.sock -u root password zimbra
 ````
 
