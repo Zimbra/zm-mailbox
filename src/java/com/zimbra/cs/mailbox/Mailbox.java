@@ -7529,7 +7529,7 @@ public class Mailbox {
      * @param addrs email addresses
      * @return addresses doesn't exist
      */
-    public Collection<Address> newContactAddrs(Collection<Address> addrs) throws IOException {
+    public Collection<Address> newContactAddrs(Collection<Address> addrs) {
         if (addrs.isEmpty()) {
             return Collections.emptySet();
         }
@@ -7541,11 +7541,16 @@ public class Mailbox {
         for (Address addr : addrs) {
             if (addr instanceof javax.mail.internet.InternetAddress) {
                 javax.mail.internet.InternetAddress iaddr = (javax.mail.internet.InternetAddress) addr;
-                if (!Strings.isNullOrEmpty(iaddr.getAddress()) &&
-                        !index.existsInContacts(Collections.singleton(new com.zimbra.common.mime.InternetAddress(
-                                iaddr.getPersonal(), iaddr.getAddress())))) {
-                    newAddrs.add(addr);
-                }
+                try {
+					if (!Strings.isNullOrEmpty(iaddr.getAddress()) &&
+					        !index.existsInContacts(Collections.singleton(new com.zimbra.common.mime.InternetAddress(
+					                iaddr.getPersonal(), iaddr.getAddress())))) {
+					    newAddrs.add(addr);
+					}
+				} catch (IOException e) {
+					//bug 86938: a corrupt index should not interrupt message delivery
+					ZimbraLog.search.error("error searching index for contacts");
+				}
 
             }
         }
