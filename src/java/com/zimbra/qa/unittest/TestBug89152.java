@@ -16,6 +16,10 @@
  */
 package com.zimbra.qa.unittest;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.fail;
+
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.util.ArrayList;
@@ -24,8 +28,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import junit.framework.TestCase;
-
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.zimbra.client.ZMailbox;
@@ -42,13 +47,14 @@ import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.soap.type.SearchSortBy;
 
-public class TestBug89152 extends TestCase {
+@Ignore ("bug not fixed yet")
+public class TestBug89152   {
     private static final String RECIPIENT1 = "search_test";
     private static final String PASSWORD = "test123";
-    private static final String SEARCH_STRING = "堀江";
+    private static final String SEARCH_STRING = "\u5800\uu6c5f"; //"\u5800\uu6c5f"; //"&#22528;&#27743";
     private static final String TEST_MESSAGE_FILE = "/Users/gsolovyev/p4/main/ZimbraQA/data/TestMailRaw/bug89152/testmessage.eml";
 
-    @Override
+    @Before
     public void setUp() throws Exception {
         cleanUp();
         Map<String, Object> attrs = new HashMap<String, Object>();
@@ -58,7 +64,6 @@ public class TestBug89152 extends TestCase {
         attrs.put("displayName", "TestAccount unit test user 1");
         Provisioning.getInstance().createAccount(TestUtil.getAddress(RECIPIENT1), PASSWORD, attrs);
     }
-
 
     @Test
     public void testMessagesWithDifferentTimestamps()  {
@@ -189,11 +194,12 @@ public class TestBug89152 extends TestCase {
 
 
 
-    @Override
+    @After
     public void tearDown()
     throws Exception {
         cleanUp();
     }
+    
     private void cleanUp()
     throws Exception {
         Provisioning prov = Provisioning.getInstance();

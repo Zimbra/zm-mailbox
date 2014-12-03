@@ -43,7 +43,7 @@ import com.zimbra.qa.unittest.server.TestPop3ImportServer;
  */
 public class ZimbraSuite extends TestSuite
 {
-    private static final List<Class<? extends TestCase>> sClasses = new ArrayList<Class<? extends TestCase>>();
+    private static final List<Class> sClasses = new ArrayList<Class>();
 
     static {
         sClasses.add(TestWaitSet.class);
@@ -123,9 +123,9 @@ public class ZimbraSuite extends TestSuite
         sClasses.add(TestInvite.class);
         sClasses.add(TestSearchJunkTrash.class);
         sClasses.add(TestCommunityIntegration.class);
+        sClasses.add(TestBug89152.class);
         sClasses.add(TestJaxb.class);
         sClasses.add(TestCollectConfigServletsAccess.class);
-        //sClasses.add(TestDLMembership.class);
     }
 
     /**
@@ -140,7 +140,7 @@ public class ZimbraSuite extends TestSuite
     }
 
     public static TestResults runUserTests(List<String> testNames) throws ServiceException {
-        List<Class<? extends TestCase>> tests = new ArrayList<Class<? extends TestCase>>();
+        List<Class> tests = new ArrayList<Class>();
 
         for (String testName : testNames) {
             if (testName.indexOf('.') < 0) {
@@ -182,7 +182,7 @@ public class ZimbraSuite extends TestSuite
         return runTestsInternal(sClasses);
     }
 
-    private static TestResults runTestsInternal(Collection<Class<? extends TestCase>> testClasses) {
+    private static TestResults runTestsInternal(Collection<Class> testClasses) {
         JUnitCore junit = new JUnitCore();
         junit.addListener(new TestLogger());
         TestResults results = new TestResults();
