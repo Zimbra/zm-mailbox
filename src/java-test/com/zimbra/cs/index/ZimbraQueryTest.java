@@ -164,7 +164,7 @@ public final class ZimbraQueryTest {
         Assert.assertEquals("ZQ: Q(l.content:test)", query.toString());
         // The order of HashSet iteration may be different on different platforms.
         Assert.assertTrue(query.toQueryString().matches(
-                "\\(\\(content:test\\) AND -ID:/(Junk|Trash) -ID:/(Junk|Trash) \\)"));
+                "\\(\\(content:test\\) AND -IN:/(Junk|Trash) -IN:/(Junk|Trash) \\)"));
     }
 
     @Test
@@ -217,9 +217,6 @@ public final class ZimbraQueryTest {
         Contact contact = mbox.createContact(null, new ParsedContact(Collections.singletonMap(
                 ContactConstants.A_email, "test1@zimbra.com")), Mailbox.ID_FOLDER_CONTACTS, null);
         MailboxTestUtil.index(mbox);
-
-        mbox.createContact(null, new ParsedContact(Collections.singletonMap(
-                ContactConstants.A_email, "test2@zimbra.com")), Mailbox.ID_FOLDER_CONTACTS, null);
 
         SearchParams params = new SearchParams();
         params.setQueryString("test");
