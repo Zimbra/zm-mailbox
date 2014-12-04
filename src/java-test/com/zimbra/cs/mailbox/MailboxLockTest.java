@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -48,6 +48,7 @@ public class MailboxLockTest {
     @Before
     public void setup() throws Exception {
         MailboxTestUtil.clearData();
+        MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
     }
 
     @Test
@@ -300,6 +301,13 @@ public class MailboxLockTest {
 
     @Test
     public void tooManyWaiters() {
+        Mailbox mbox = null;
+        try {
+            mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        } catch (ServiceException e) {
+            Assert.fail();
+        }
+
         int threads = LC.zimbra_mailbox_lock_max_waiting_threads.intValue();
         final AtomicBoolean done = new AtomicBoolean(false);
         final Set<Thread> waitThreads = new HashSet<Thread>();
@@ -350,12 +358,6 @@ public class MailboxLockTest {
 
         writeThread.start();
 
-        Mailbox mbox = null;
-        try {
-            mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-        } catch (ServiceException e) {
-            Assert.fail();
-        }
         while (mbox.lock.getQueueLength() < LC.zimbra_mailbox_lock_max_waiting_threads.intValue()) {
             try {
                 Thread.sleep(100);
@@ -385,6 +387,13 @@ public class MailboxLockTest {
 
     @Test
     public void tooManyWaitersWithSingleReadOwner() {
+        Mailbox mbox = null;
+        try {
+            mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        } catch (ServiceException e) {
+            Assert.fail();
+        }
+
         int threads = LC.zimbra_mailbox_lock_max_waiting_threads.intValue();
         final AtomicBoolean done = new AtomicBoolean(false);
         final Set<Thread> waitThreads = new HashSet<Thread>();
@@ -440,12 +449,6 @@ public class MailboxLockTest {
 
         readThread.start();
 
-        Mailbox mbox = null;
-        try {
-            mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-        } catch (ServiceException e) {
-            Assert.fail();
-        }
         while (mbox.lock.getQueueLength() < LC.zimbra_mailbox_lock_max_waiting_threads.intValue()) {
             try {
                 Thread.sleep(100);
@@ -476,6 +479,13 @@ public class MailboxLockTest {
 
     @Test
     public void tooManyWaitersWithMultipleReadOwners() {
+        Mailbox mbox = null;
+        try {
+            mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        } catch (ServiceException e) {
+            Assert.fail();
+        }
+
         int threads = LC.zimbra_mailbox_lock_max_waiting_threads.intValue();
         final AtomicBoolean done = new AtomicBoolean(false);
         final Set<Thread> waitThreads = new HashSet<Thread>();
@@ -566,12 +576,6 @@ public class MailboxLockTest {
 
         lastReadThread.start();
 
-        Mailbox mbox = null;
-        try {
-            mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-        } catch (ServiceException e) {
-            Assert.fail();
-        }
         while (mbox.lock.getQueueLength() < LC.zimbra_mailbox_lock_max_waiting_threads.intValue()) {
             try {
                 Thread.sleep(100);
