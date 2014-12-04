@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -66,7 +66,7 @@ public final class AddressBookTestTest {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
         mbox.createContact(null, new ParsedContact(Collections.<String, Object>singletonMap(
                 ContactConstants.A_email, "test1@zimbra.com")), Mailbox.ID_FOLDER_CONTACTS, null);
-
+        Thread.sleep(1000);
         account.setMailSieveScript("if addressbook :in \"From\" { tag \"Priority\"; }");
         List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
                 new ParsedMessage("From: test1@zimbra.com".getBytes(), false), 0, account.getName(),

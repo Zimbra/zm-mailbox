@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -163,11 +163,10 @@ public final class ContactTest {
         Assert.assertEquals("TEST1@zimbra.com", contacts.get(0).getFields().get(ContactConstants.A_email));
         Assert.assertEquals("2, Test", contacts.get(1).getFileAsString());
         Assert.assertEquals("TEST2@zimbra.com", contacts.get(1).getFields().get(ContactConstants.A_email));
-
         Collection<javax.mail.Address> newAddrs = mbox.newContactAddrs(ImmutableList.of(
                 (javax.mail.Address)new javax.mail.internet.InternetAddress("test1@zimbra.com", "Test 1"),
                 (javax.mail.Address)new javax.mail.internet.InternetAddress("test2@zimbra.com", "Test 2")));
-
+        Thread.sleep(1000);
         Assert.assertEquals(0, newAddrs.size());
     }
 
