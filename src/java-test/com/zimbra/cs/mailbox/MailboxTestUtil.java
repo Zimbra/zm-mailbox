@@ -129,7 +129,7 @@ public final class MailboxTestUtil {
         IndexStore.setFactory(LC.zimbra_class_index_store_factory.value());
         LC.zimbra_class_store.setDefault(storeManagerClass.getName());
         LC.zimbra_class_soapsessionfactory.setDefault(DefaultSoapSessionFactory.class.getName());
-        setupEmbeddedSolrDirs(true);
+        setupEmbeddedSolrDirs(false);
         Zimbra.startupTest(configClass);
         StoreManager.getInstance().startup();
     }
@@ -190,9 +190,12 @@ public final class MailboxTestUtil {
                 return name.matches(regex);
             }
         });
-        if (matchingFiles.length == 0) {
-            throw ServiceException.FAILURE(String.format("no file matching pattern %s found", regex), new Throwable());
-        } else if (matchingFiles.length > 1) {
+        if (matchingFiles == null || matchingFiles.length == 0) {
+            //The can happen in certain build scenarios; when the required projects aren't built yet.
+            //In this case, we want to silently fall through, since the embedded solr directory will have been created by maven.
+            return null;
+        }
+        if (matchingFiles.length > 1) {
             throw ServiceException.FAILURE(String.format("multiple files matching pattern found", regex), new Throwable());
         } else {
             return matchingFiles[0];
@@ -200,6 +203,9 @@ public final class MailboxTestUtil {
 
     }
     private static void copytoSolrLibsDir(File from, File toDir) throws IOException {
+        if (from == null) {
+            return;
+        }
         File dest = new File(toDir, from.getName());
         FileUtils.copyFile(from, dest);
     }
@@ -353,7 +359,6 @@ public final class MailboxTestUtil {
                 Thread.sleep(waitIncrement);
                 timeWaited += waitIncrement;
             } catch (InterruptedException e) {
-                e.printStackTrace();
             }
         }
         if (timeWaited >= maxWaitTime) {
