@@ -48,6 +48,7 @@ public class LocalMailboxLockTest {
     @Before
     public void setup() throws Exception {
         MailboxTestUtil.clearData();
+        MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
     }
 
     @Test
@@ -300,6 +301,13 @@ public class LocalMailboxLockTest {
 
     @Test
     public void tooManyWaiters() {
+        Mailbox mbox = null;
+        try {
+            mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        } catch (ServiceException e) {
+            Assert.fail();
+        }
+
         int threads = LC.zimbra_mailbox_lock_max_waiting_threads.intValue();
         final AtomicBoolean done = new AtomicBoolean(false);
         final Set<Thread> waitThreads = new HashSet<Thread>();
@@ -350,12 +358,6 @@ public class LocalMailboxLockTest {
 
         writeThread.start();
 
-        Mailbox mbox = null;
-        try {
-            mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-        } catch (ServiceException e) {
-            Assert.fail();
-        }
         while (((LocalMailboxLock)mbox.lock).getQueueLength() < LC.zimbra_mailbox_lock_max_waiting_threads.intValue()) {
             try {
                 Thread.sleep(100);
@@ -385,6 +387,13 @@ public class LocalMailboxLockTest {
 
     @Test
     public void tooManyWaitersWithSingleReadOwner() {
+        Mailbox mbox = null;
+        try {
+            mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        } catch (ServiceException e) {
+            Assert.fail();
+        }
+
         int threads = LC.zimbra_mailbox_lock_max_waiting_threads.intValue();
         final AtomicBoolean done = new AtomicBoolean(false);
         final Set<Thread> waitThreads = new HashSet<Thread>();
@@ -440,12 +449,6 @@ public class LocalMailboxLockTest {
 
         readThread.start();
 
-        Mailbox mbox = null;
-        try {
-            mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-        } catch (ServiceException e) {
-            Assert.fail();
-        }
         while (((LocalMailboxLock)mbox.lock).getQueueLength() < LC.zimbra_mailbox_lock_max_waiting_threads.intValue()) {
             try {
                 Thread.sleep(100);
@@ -476,6 +479,13 @@ public class LocalMailboxLockTest {
 
     @Test
     public void tooManyWaitersWithMultipleReadOwners() {
+        Mailbox mbox = null;
+        try {
+            mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        } catch (ServiceException e) {
+            Assert.fail();
+        }
+
         int threads = LC.zimbra_mailbox_lock_max_waiting_threads.intValue();
         final AtomicBoolean done = new AtomicBoolean(false);
         final Set<Thread> waitThreads = new HashSet<Thread>();
@@ -566,12 +576,6 @@ public class LocalMailboxLockTest {
 
         lastReadThread.start();
 
-        Mailbox mbox = null;
-        try {
-            mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-        } catch (ServiceException e) {
-            Assert.fail();
-        }
         while (((LocalMailboxLock)mbox.lock).getQueueLength() < LC.zimbra_mailbox_lock_max_waiting_threads.intValue()) {
             try {
                 Thread.sleep(100);
