@@ -617,7 +617,7 @@ public class TestLdap {
         initPerJVM(testConfig);
     }
     
-    static String baseDomainName(Class<? extends TestLdap> klass) {
+    static String baseDomainName(Class klass) {
         return klass.getName().toLowerCase() + "." + TEST_LDAP_BASE_DOMAIN;
     }
     

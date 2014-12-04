@@ -82,6 +82,7 @@ import com.zimbra.client.ZTag;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.Key.DistributionListBy;
+import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.lmtp.LmtpClient;
 import com.zimbra.common.localconfig.LC;
@@ -711,6 +712,15 @@ extends Assert {
     }
 
     /**
+     * Creates a domain with a given name
+     */
+    public static Domain createDomain(String dName)
+    throws ServiceException {
+        Provisioning prov = Provisioning.getInstance();
+        Map<String, Object> attrs = new HashMap<String, Object>();
+        return prov.createDomain(dName, attrs);
+    }
+    /**
      * Creates a DL with a given address
      */
     public static DistributionList createDistributionList(String dlName)
@@ -757,6 +767,21 @@ extends Assert {
         }
     }
 
+    public static void deleteDomain(String domainName)
+    throws ServiceException {
+        Provisioning prov = Provisioning.getInstance();
+
+        // If this code is running on the server, call SoapProvisioning explicitly
+        // so that both the account and mailbox are deleted.
+        if (!(prov instanceof SoapProvisioning)) {
+            prov = newSoapProvisioning();
+        }
+        Domain domain = prov.get(DomainBy.name, domainName);
+        if (domain != null) {
+            prov.deleteDomain(domain.getId());
+        }
+    }
+    
     public static String getServerAttr(String attrName)
     throws ServiceException {
         Provisioning prov = Provisioning.getInstance();
