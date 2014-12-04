@@ -157,7 +157,7 @@ public final class ContactTest {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
         List<Contact> contacts = mbox.createAutoContact(null, ImmutableList.of(
                 new InternetAddress("Test 1", "TEST1@zimbra.com"), new InternetAddress("Test 2", "TEST2@zimbra.com")));
-
+        Thread.sleep(1000);
         Assert.assertEquals(2, contacts.size());
         Assert.assertEquals("1, Test", contacts.get(0).getFileAsString());
         Assert.assertEquals("TEST1@zimbra.com", contacts.get(0).getFields().get(ContactConstants.A_email));
@@ -166,7 +166,6 @@ public final class ContactTest {
         Collection<javax.mail.Address> newAddrs = mbox.newContactAddrs(ImmutableList.of(
                 (javax.mail.Address)new javax.mail.internet.InternetAddress("test1@zimbra.com", "Test 1"),
                 (javax.mail.Address)new javax.mail.internet.InternetAddress("test2@zimbra.com", "Test 2")));
-        Thread.sleep(1000);
         Assert.assertEquals(0, newAddrs.size());
     }
 
