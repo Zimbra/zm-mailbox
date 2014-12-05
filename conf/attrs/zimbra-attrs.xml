@@ -8456,4 +8456,8 @@ TODO: delete them permanently from here
   <desc>Shared memory zone size in megabytes used by ngx_http_limit_req_module to store the current number of excessive requests per client IP</desc>
 </attr>
 
+<attr id="1683" name="zimbraReverseProxyRestrictedIPs" type="string" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="nginxproxy" since="9.0">
+  <desc>Client network or IP address to be denied access by the proxy</desc>
+</attr>
+
 </attrs>

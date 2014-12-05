@@ -49101,6 +49101,140 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * Client network or IP address to be denied access by the proxy
+     *
+     * @return zimbraReverseProxyRestrictedIPs, or empty array if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1683)
+    public String[] getReverseProxyRestrictedIPs() {
+        return getMultiAttr(Provisioning.A_zimbraReverseProxyRestrictedIPs);
+    }
+
+    /**
+     * Client network or IP address to be denied access by the proxy
+     *
+     * @param zimbraReverseProxyRestrictedIPs new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1683)
+    public void setReverseProxyRestrictedIPs(String[] zimbraReverseProxyRestrictedIPs) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyRestrictedIPs, zimbraReverseProxyRestrictedIPs);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Client network or IP address to be denied access by the proxy
+     *
+     * @param zimbraReverseProxyRestrictedIPs new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1683)
+    public Map<String,Object> setReverseProxyRestrictedIPs(String[] zimbraReverseProxyRestrictedIPs, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyRestrictedIPs, zimbraReverseProxyRestrictedIPs);
+        return attrs;
+    }
+
+    /**
+     * Client network or IP address to be denied access by the proxy
+     *
+     * @param zimbraReverseProxyRestrictedIPs new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1683)
+    public void addReverseProxyRestrictedIPs(String zimbraReverseProxyRestrictedIPs) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraReverseProxyRestrictedIPs, zimbraReverseProxyRestrictedIPs);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Client network or IP address to be denied access by the proxy
+     *
+     * @param zimbraReverseProxyRestrictedIPs new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1683)
+    public Map<String,Object> addReverseProxyRestrictedIPs(String zimbraReverseProxyRestrictedIPs, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraReverseProxyRestrictedIPs, zimbraReverseProxyRestrictedIPs);
+        return attrs;
+    }
+
+    /**
+     * Client network or IP address to be denied access by the proxy
+     *
+     * @param zimbraReverseProxyRestrictedIPs existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1683)
+    public void removeReverseProxyRestrictedIPs(String zimbraReverseProxyRestrictedIPs) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraReverseProxyRestrictedIPs, zimbraReverseProxyRestrictedIPs);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Client network or IP address to be denied access by the proxy
+     *
+     * @param zimbraReverseProxyRestrictedIPs existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1683)
+    public Map<String,Object> removeReverseProxyRestrictedIPs(String zimbraReverseProxyRestrictedIPs, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraReverseProxyRestrictedIPs, zimbraReverseProxyRestrictedIPs);
+        return attrs;
+    }
+
+    /**
+     * Client network or IP address to be denied access by the proxy
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1683)
+    public void unsetReverseProxyRestrictedIPs() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyRestrictedIPs, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Client network or IP address to be denied access by the proxy
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1683)
+    public Map<String,Object> unsetReverseProxyRestrictedIPs(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyRestrictedIPs, "");
+        return attrs;
+    }
+
+    /**
      * Time interval after which NGINX will fail over to the next route
      * lookup handler, if a handler does not respond to the route lookup
      * request within this time. Must be in valid duration format:

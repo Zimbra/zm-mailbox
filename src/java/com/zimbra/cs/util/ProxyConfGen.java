@@ -1556,14 +1556,54 @@ class WebSSLSessionCacheSizeVar extends ProxyConfVar {
     public String format(Object o) {
         @SuppressWarnings("unchecked")
         String sslSessionCacheSize = (String)o;
-        StringBuilder sslproto = new StringBuilder();
-        sslproto.append("shared:SSL:");
-        sslproto.append(sslSessionCacheSize);
+        StringBuilder sslsessioncache = new StringBuilder();
+        sslsessioncache.append("shared:SSL:");
+        sslsessioncache.append(sslSessionCacheSize);
 
-        return sslproto.toString();
+        return sslsessioncache.toString();
     }
 }
 
+class WebUpstreamRestrictedIPsVar extends ProxyConfVar {
+
+    public WebUpstreamRestrictedIPsVar() {
+        super("web.upstream.restricted.:ips", Provisioning.A_zimbraReverseProxyRestrictedIPs, "",
+               ProxyConfValueType.CUSTOM, ProxyConfOverride.CUSTOM,
+               "List of Client network or IP address to be denied access by the proxy");
+    }
+
+    @Override
+    public void update() {
+
+        ArrayList<String> iplist = new ArrayList<String>();
+        String[] ips =
+            serverSource.getMultiAttr("zimbraReverseProxyRestrictedIPs");
+        for (String ip : ips)
+        {
+            iplist.add(ip);
+        }
+        if (iplist.size() > 0) {
+            mValue = iplist;
+        } else {
+            mValue = mDefault;
+        }
+    }
+
+    @Override
+    public String format(Object o) {
+
+        @SuppressWarnings("unchecked")
+        ArrayList<String> ips = (ArrayList<String>) o;
+        StringBuilder RestrictedIPs = new StringBuilder();
+        for (String ip : ips) {
+            RestrictedIPs.append("deny ");
+            RestrictedIPs.append(ip);
+            RestrictedIPs.append(";\n\t");
+        }
+        return RestrictedIPs.toString();
+    }
+
+}
 /**
  *
  * @author zimbra
@@ -2573,6 +2613,7 @@ public class ProxyConfGen
 	    mConfVars.put("ssl.session.cachesize", new WebSSLSessionCacheSizeVar());
 	    mConfVars.put("web.upstream.zone.size", new ProxyConfVar("web.upstream.zone.size", "zimbraReverseProxyLimitReqZoneSize", "10m", ProxyConfValueType.STRING, ProxyConfOverride.SERVER, "Shared memory zone size in megabytes used for rate-limiting"));
 	    mConfVars.put("web.upstream.zone.rate", new ProxyConfVar("web.upstream.zone.rate", "zimbraReverseProxyLimitReqZoneRate", new Integer(120), ProxyConfValueType.INTEGER, ProxyConfOverride.SERVER, "Maximum rate in requests per second to be enforced by the proxy for a particualr zone. Requests in excess of this are throttled"));
+	    mConfVars.put("web.upstream.restricted.:ips", new WebUpstreamRestrictedIPsVar());
     }
 
     /* update the default variable map from the active configuration */
