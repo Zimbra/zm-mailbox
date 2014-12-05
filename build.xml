@@ -338,7 +338,7 @@
         </if>
     </target>
 
-    <target name="generate-getters"  description="generate methods for attributes in zimbra-attrs.xml">
+    <target name="generate-getters" depends="compile,generate-buildinfo" description="generate methods for attributes in zimbra-attrs.xml">
         <antcall target="generate-getter">
             <param name="getter.class" value="account"/>
             <param name="getter.output" value="ZAttrAccount.java"/>
