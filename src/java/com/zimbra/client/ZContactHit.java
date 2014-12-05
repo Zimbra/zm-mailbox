@@ -21,18 +21,12 @@ import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.common.zclient.ZClientException;
-import com.zimbra.client.ZContact.Flag;
-import com.zimbra.client.ZContact.ZContactAttachmentInfo;
 import com.zimbra.client.event.ZModifyContactEvent;
 import com.zimbra.client.event.ZModifyEvent;
 import org.json.JSONException;
 
-import java.io.InputStream;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 public class ZContactHit implements ZSearchHit {
 
@@ -61,35 +55,6 @@ public class ZContactHit implements ZSearchHit {
     private String mNameSuffix;
     private String mCompany;
     private String mPhoneticCompany;
-    private Map<String, String> mAttrs;
-    private Map<String, ZContactAttachmentInfo> mAttachments;
-
-    public static class ZContactAttachmentInfo {
-        private String mContentType;
-        private String mFileName;
-        private String mPart;
-        private long mLength;
-
-        public ZContactAttachmentInfo(String part, String fileName, String contentType, long length) {
-            mPart = part;
-            mFileName = fileName;
-            mContentType = contentType;
-            mLength = length;
-        }
-
-        public String getContentType() {
-            return mContentType;
-        }
-        public String getFileName() {
-            return mFileName;
-        }
-        public String getPart() {
-            return mPart;
-        }
-        public long getLength() {
-            return mLength;
-        }
-    }
 
     public ZContactHit(Element e) throws ServiceException {
         mId = e.getAttribute(MailConstants.A_ID);
@@ -103,23 +68,12 @@ public class ZContactHit implements ZSearchHit {
         mMetaDataDate = e.getAttributeLong(MailConstants.A_CHANGE_DATE, 0) * 1000;
 
         HashMap<String, String> attrs = new HashMap<String, String>();
-        HashMap<String, ZContactAttachmentInfo> attachments = new HashMap<String, ZContactAttachmentInfo>();
 
         for (Element attrEl : e.listElements(MailConstants.E_ATTRIBUTE)) {
             String name = attrEl.getAttribute(MailConstants.A_ATTRIBUTE_NAME);
-            String part = attrEl.getAttribute(MailConstants.A_PART, null);
-            if (part != null) {
-                String fileName = attrEl.getAttribute(MailConstants.A_CONTENT_FILENAME, null);
-                String contentType = attrEl.getAttribute(MailConstants.A_CONTENT_TYPE, null);
-                long size = attrEl.getAttributeLong(MailConstants.A_SIZE, 0);
-                attachments.put(name, new ZContactAttachmentInfo(part, fileName, contentType, size));
-            } else {
-                attrs.put(name, attrEl.getText());
-            }
+            attrs.put(name, attrEl.getText());
         }
 
-        mAttrs = Collections.unmodifiableMap(attrs);
-        mAttachments = Collections.unmodifiableMap(attachments);
         mEmail = attrs.get(ContactConstants.A_email);
         mEmail2 = attrs.get(ContactConstants.A_email2);
         mEmail3 = attrs.get(ContactConstants.A_email3);
@@ -164,7 +118,6 @@ public class ZContactHit implements ZSearchHit {
         jo.put(ContactConstants.A_workEmail2, mWorkEmail2);
         jo.put(ContactConstants.A_workEmail3, mWorkEmail3);
         jo.put(ContactConstants.A_fullName, mFullName);
-        jo.putMap("attrs", mAttrs);
         return jo;
     }
 
@@ -242,40 +195,8 @@ public class ZContactHit implements ZSearchHit {
         return mFlags;
     }
 
-    public Map<String, String> getAttrs() {
-        return mAttrs;
-    }
-
-    /**
-     * Returns the attachment names, or an empty set.
-     */
-    public Set<String> getAttachmentNames() {
-        return mAttachments.keySet();
-    }
-
-    public String getAttachmentPartName(String name) {
-        return mAttachments.get(name).getPart();
-    }
-
-    public String getAttachmentDataUrl(String name)
-    throws ServiceException {
-        String part = mAttachments.get(name).getPart();
-        if (part == null) {
-            throw ZClientException.CLIENT_ERROR("Invalid attachment name: " + name, null);
-        }
-        return String.format("?id=%s&part=%s", getId(), part);
-    }
-
-    public ZContactAttachmentInfo getAttachmentPartInfo(String name) {
-        return mAttachments.get(name);
-    }
-
     public boolean hasFlags() {
         return mFlags != null && mFlags.length() > 0;
-    }
-
-    public boolean hasAttachment() {
-        return hasFlags() && mFlags.indexOf(Flag.attachment.getFlagChar()) != -1;
     }
 
     public boolean isFlagged() {
@@ -342,7 +263,6 @@ public class ZContactHit implements ZSearchHit {
                 mPhoneticLastName = get(attrs, ContactConstants.A_phoneticLastName, mPhoneticLastName);
                 mCompany = get(attrs, ContactConstants.A_company, mCompany);
                 mPhoneticCompany = get(attrs, ContactConstants.A_phoneticCompany, mPhoneticCompany);
-                mAttrs = cevent.getAttrs(mAttrs);
             }
         }
     }

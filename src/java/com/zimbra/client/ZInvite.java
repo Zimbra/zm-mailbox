@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2008, 2009, 2010, 2011, 2013, 2014 Zimbra, Inc.
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -17,15 +17,6 @@
 
 package com.zimbra.client;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.List;
-
-import org.json.JSONException;
-
 import com.zimbra.common.calendar.CalendarUtil;
 import com.zimbra.common.calendar.Geo;
 import com.zimbra.common.calendar.ZCalendar.ZParameter;
@@ -33,12 +24,18 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.ListUtil;
-import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.zclient.ZClientException;
+import org.json.JSONException;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
 
 public class ZInvite implements ToZJSONObject {
 
-    private String mId;
     private List<ZTimeZone> mTimeZones;
     private List<ZComponent> mComponents;
     private ZInviteType mType;
@@ -47,7 +44,7 @@ public class ZInvite implements ToZJSONObject {
         mTimeZones = new ArrayList<ZTimeZone>();
         mComponents = new ArrayList<ZComponent>();
     }
-
+    
     public ZInvite(Element e) throws ServiceException {
         mTimeZones = new ArrayList<ZTimeZone>();
         mType = ZInviteType.fromString(e.getAttribute(MailConstants.A_TYPE, ZInviteType.appt.name()));
@@ -58,17 +55,12 @@ public class ZInvite implements ToZJSONObject {
         for (Element compEl : e.listElements(MailConstants.E_INVITE_COMPONENT)) {
             mComponents.add(new ZComponent(compEl));
         }
-        mId = e.getAttribute(MailConstants.A_ID, "");
-    }
-
-    public String getId() {
-        return mId;
     }
 
     public void setTimeZones(List<ZTimeZone> timeZones) {
         mTimeZones = timeZones;
     }
-
+    
     public List<ZTimeZone> getTimeZones() {
         return mTimeZones;
     }
@@ -76,7 +68,7 @@ public class ZInvite implements ToZJSONObject {
     public void setType(ZInviteType type) {
         mType = type;
     }
-
+    
     public ZInviteType getType() {
         return mType;
     }
@@ -119,7 +111,6 @@ public class ZInvite implements ToZJSONObject {
         return invEl;
     }
 
-    @Override
     public ZJSONObject toZJSONObject() throws JSONException {
         ZJSONObject zjo = new ZJSONObject();
         zjo.put("type", mType.name());
@@ -128,7 +119,6 @@ public class ZInvite implements ToZJSONObject {
         return zjo;
     }
 
-    @Override
     public String toString() {
         return String.format("[ZInvite %s]", getComponent().getName());
     }
@@ -154,7 +144,6 @@ public class ZInvite implements ToZJSONObject {
 
     public static class ZComponent implements ToZJSONObject {
 
-        private String mUid;
         private ZStatus mStatus;
         private ZClass mClass;
         private ZFreeBusyStatus mFreeBusyStatus;
@@ -199,9 +188,8 @@ public class ZInvite implements ToZJSONObject {
             mAttendees = new ArrayList<ZAttendee>();
             mAlarms = new ArrayList<ZAlarm>();
         }
-
+        
         public ZComponent(Element e) throws ServiceException {
-            mUid = e.getAttribute(MailConstants.A_UID, null);
             mStatus = ZStatus.fromString(e.getAttribute(MailConstants.A_CAL_STATUS, ZStatus.CONF.name()));
             mClass = ZClass.fromString(e.getAttribute(MailConstants.A_CAL_CLASS, ZClass.PUB.name()));
             mFreeBusyStatus = ZFreeBusyStatus.fromString(e.getAttribute(MailConstants.A_APPT_FREEBUSY, ZFreeBusyStatus.B.name()));
@@ -254,7 +242,7 @@ public class ZInvite implements ToZJSONObject {
             mComponentNum = e.getAttribute(MailConstants.A_CAL_COMPONENT_NUM, "0");
             mReplies = new ArrayList<ZReply>();
             mAlarms = new ArrayList<ZAlarm>();
-
+            
             Element repliesEl = e.getOptionalElement(MailConstants.E_CAL_REPLIES);
             if (repliesEl != null) {
                 for (Element replyEl : repliesEl.listElements(MailConstants.E_CAL_REPLY)) {
@@ -299,7 +287,7 @@ public class ZInvite implements ToZJSONObject {
             Element descHtmlElem = e.getOptionalElement(MailConstants.E_CAL_DESC_HTML);
             mDescriptionHtml = descHtmlElem != null ? descHtmlElem.getText() : null;
 
-
+            
         }
 
 
@@ -357,8 +345,8 @@ public class ZInvite implements ToZJSONObject {
                 mDuration.toElement(compEl);
 
             if (mOrganizer != null)
-                mOrganizer.toElement(compEl);
-
+                    mOrganizer.toElement(compEl);
+            
             if (mAttendees != null && !mAttendees.isEmpty()) {
                 for (ZAttendee attendee : mAttendees)
                     attendee.toElement(compEl);
@@ -369,24 +357,8 @@ public class ZInvite implements ToZJSONObject {
 
             for (ZAlarm alarm : mAlarms)
                 alarm.toElement(compEl);
-
-            if (!StringUtil.isNullOrEmpty(mDescription)) {
-                Element desc = compEl.addUniqueElement(MailConstants.E_CAL_DESCRIPTION);
-                desc.setText(mDescription);
-            }
-            if (!StringUtil.isNullOrEmpty(mDescriptionHtml)) {
-                Element desc = compEl.addUniqueElement(MailConstants.E_CAL_DESC_HTML);
-                desc.setText(mDescriptionHtml);
-            }
+            
             return compEl;
-        }
-
-        public void setUid(String uid) {
-            mUid = uid;
-        }
-
-        public String getUid() {
-            return mUid;
         }
 
         public ZRecurrence getRecurrence() {
@@ -574,12 +546,12 @@ public class ZInvite implements ToZJSONObject {
         }
 
         public Date getComputedEndDate() {
-            if (getEnd() != null)
-                return getEnd().getDate();
-            else if (getDuration() != null)
-                return getDuration().addToDate(getStart().getDate());
-            else // simply return the start date
-                return getStart().getDate();
+          if (getEnd() != null)
+              return getEnd().getDate();
+          else if (getDuration() != null)
+			  return getDuration().addToDate(getStart().getDate());
+		  else // simply return the start date
+			  return getStart().getDate();
         }
 
         public ZDateTime getEnd() {
@@ -600,10 +572,6 @@ public class ZInvite implements ToZJSONObject {
 
         public ZOrganizer getOrganizer() {
             return mOrganizer;
-        }
-
-        public boolean hasOrganizer() {
-            return mOrganizer != null;
         }
 
         public void setOrganizer(ZOrganizer organizer) {
@@ -665,8 +633,7 @@ public class ZInvite implements ToZJSONObject {
         public void setIsNoBlob(boolean noBlob) {
             mIsNoBlob = noBlob;
         }
-
-        @Override
+        
         public ZJSONObject toZJSONObject() throws JSONException {
             ZJSONObject zjo = new ZJSONObject();
             zjo.put("status", mStatus.name());
@@ -698,17 +665,16 @@ public class ZInvite implements ToZJSONObject {
             zjo.put("attendees", mAttendees);
             zjo.put("recurrence", mRecurrence);
             zjo.put("recurrenceId", mRecurrenceIdZ);
-            zjo.put("desc", mDescription);
-            zjo.put("deschtml", mDescriptionHtml);
+            zjo.put("desc",mDescription);
+            zjo.put("deschtml",mDescriptionHtml);
             zjo.put("noblob",mIsNoBlob);
             return zjo;
         }
 
-        @Override
         public String toString() {
             return String.format("[ZComponent %s]", getName());
         }
-
+        
         public String dump() {
             return ZJSONObject.toString(this);
         }
@@ -726,7 +692,6 @@ public class ZInvite implements ToZJSONObject {
 
             }
 
-            @Override
             public ZJSONObject toZJSONObject() throws JSONException {
                 ZJSONObject zjo = new ZJSONObject();
                 zjo.put("date", mDate);
@@ -734,8 +699,7 @@ public class ZInvite implements ToZJSONObject {
                 zjo.put("participantStatus", mParticipantStatus.name());
                 return zjo;
             }
-
-            @Override
+            
             public String toString() {
                 return String.format("[ZReply %s]", mAttendee);
             }
@@ -763,7 +727,7 @@ public class ZInvite implements ToZJSONObject {
                 if (mTimeZone != null) replyEl.addAttribute(MailConstants.A_CAL_TIMEZONE, mTimeZone);
                 return replyEl;
             }
-
+            
             public long getDate() {
                 return mDate;
             }
@@ -829,7 +793,7 @@ public class ZInvite implements ToZJSONObject {
         public ZTimeZone() {
 
         }
-
+        
         public ZTimeZone(Element e) throws ServiceException {
             mId = e.getAttribute(MailConstants.A_ID);
             mStandardTzname = e.getAttribute(MailConstants.A_CAL_TZ_STDNAME, null);
@@ -857,7 +821,7 @@ public class ZInvite implements ToZJSONObject {
 
             if (mDaylight != null)
                 mDaylight.toElement(MailConstants.E_CAL_TZ_DAYLIGHT, tzEl);
-
+            
             return tzEl;
         }
 
@@ -930,7 +894,6 @@ public class ZInvite implements ToZJSONObject {
             mDaylight = daylight;
         }
 
-        @Override
         public ZJSONObject toZJSONObject() throws JSONException {
             ZJSONObject zjo = new ZJSONObject();
             zjo.put("id", mId);
@@ -943,7 +906,6 @@ public class ZInvite implements ToZJSONObject {
             return zjo;
         }
 
-        @Override
         public String toString() {
             return String.format("[ZTimeZone %s]", mId);
         }
@@ -964,7 +926,7 @@ public class ZInvite implements ToZJSONObject {
             public ZTransitionRule() {
 
             }
-
+            
             public ZTransitionRule(Element e) throws ServiceException {
                 mWeek = (int) e.getAttributeLong(MailConstants.A_CAL_TZ_WEEK,  0);
                 mDayOfWeek = (int) e.getAttributeLong(MailConstants.A_CAL_TZ_DAYOFWEEK,  0);
@@ -986,7 +948,7 @@ public class ZInvite implements ToZJSONObject {
                 trEl.addAttribute(MailConstants.A_CAL_TZ_SECOND, mSecond);
                 return trEl;
             }
-
+            
             public int getWeek() {
                 return mWeek;
             }
@@ -1043,7 +1005,6 @@ public class ZInvite implements ToZJSONObject {
                 mSecond = second;
             }
 
-            @Override
             public ZJSONObject toZJSONObject() throws JSONException {
                 ZJSONObject zjo = new ZJSONObject();
                 zjo.put("week", mWeek);
@@ -1056,7 +1017,6 @@ public class ZInvite implements ToZJSONObject {
                 return zjo;
             }
 
-            @Override
             public String toString() {
                 return "[ZTransitionRule]";
             }
@@ -1167,7 +1127,6 @@ public class ZInvite implements ToZJSONObject {
             mSeconds = seconds;
         }
 
-        @Override
         public ZJSONObject toZJSONObject() throws JSONException {
             ZJSONObject zjo = new ZJSONObject();
             zjo.put("negative", mNegative);
@@ -1179,7 +1138,6 @@ public class ZInvite implements ToZJSONObject {
             return zjo;
         }
 
-        @Override
         public String toString() {
             return "[ZDuration]"; // TODO
         }
@@ -1416,7 +1374,6 @@ public class ZInvite implements ToZJSONObject {
             return mXParams.iterator();
         }
 
-        @Override
         public ZJSONObject toZJSONObject() throws JSONException {
             ZJSONObject zjo = new ZJSONObject();
             zjo.put("address", mAddress);
@@ -1428,11 +1385,10 @@ public class ZInvite implements ToZJSONObject {
             return zjo;
         }
 
-        @Override
         public String toString() {
             return String.format("[ZCalendarUser %s]", mAddress);
         }
-
+        
         public String dump() {
             return ZJSONObject.toString(this);
         }
@@ -1466,7 +1422,6 @@ public class ZInvite implements ToZJSONObject {
             return orEl;
         }
 
-        @Override
         public String toString() {
             return String.format("[ZOrganizer %s]", getAddress());
         }
@@ -1573,7 +1528,6 @@ public class ZInvite implements ToZJSONObject {
             mDelegatedFrom = delegatedFrom;
         }
 
-        @Override
         public ZJSONObject toZJSONObject() throws JSONException {
             ZJSONObject zjo = super.toZJSONObject();
             zjo.put("role", mRole.name());
@@ -1586,12 +1540,10 @@ public class ZInvite implements ToZJSONObject {
             return zjo;
         }
 
-        @Override
         public String toString() {
             return String.format("[ZAttendee %s]", getAddress());
         }
 
-        @Override
         public String dump() {
             return ZJSONObject.toString(this);
         }
@@ -1606,7 +1558,7 @@ public class ZInvite implements ToZJSONObject {
         public ZRecurrenceDate() {
 
         }
-
+        
         public ZRecurrenceDate(Element e) throws ServiceException {
             mStart = new ZDateTime(e.getElement(MailConstants.E_CAL_START_TIME));
             Element endEl = e.getOptionalElement(MailConstants.E_CAL_END_TIME);
@@ -1627,7 +1579,7 @@ public class ZInvite implements ToZJSONObject {
             return dtvalEl;
         }
 
-        public ZDateTime getStart() {
+       public ZDateTime getStart() {
             return mStart;
         }
 
@@ -1651,7 +1603,6 @@ public class ZInvite implements ToZJSONObject {
             mDuration = duration;
         }
 
-        @Override
         public ZJSONObject toZJSONObject() throws JSONException {
             ZJSONObject zjo = new ZJSONObject();
             zjo.put("start", mStart);
@@ -1660,7 +1611,6 @@ public class ZInvite implements ToZJSONObject {
             return zjo;
         }
 
-        @Override
         public String toString() {
             return String.format("[ZRecurrenceDate]"); // TODO
         }
@@ -1712,7 +1662,6 @@ public class ZInvite implements ToZJSONObject {
             mDates = dates;
         }
 
-        @Override
         public ZJSONObject toZJSONObject() throws JSONException {
             ZJSONObject zjo = new ZJSONObject();
             zjo.put("timeZoneId", mTimeZoneId);
@@ -1720,7 +1669,6 @@ public class ZInvite implements ToZJSONObject {
             return zjo;
         }
 
-        @Override
         public String toString() {
             return String.format("[ZRecurrenceDates]"); // TODO
         }
@@ -1769,7 +1717,7 @@ public class ZInvite implements ToZJSONObject {
             else
                 return ZWeekDay.values()[ord];
         }
-
+        
         public boolean isSunday() { return equals(SU); }
         public boolean isMonday() { return equals(MO); }
         public boolean isTuesday() { return equals(TU); }
@@ -1829,7 +1777,7 @@ public class ZInvite implements ToZJSONObject {
             mWeekOrd = weekOrd;
 
         }
-
+        
         public ZByDayWeekDay(Element e) throws ServiceException {
             mWeekOrd = (int) e.getAttributeLong(MailConstants.A_CAL_RULE_BYDAY_WKDAY_ORDWK, 0);
             mDay = ZWeekDay.fromString(e.getAttribute(MailConstants.A_CAL_RULE_DAY));
@@ -1860,7 +1808,6 @@ public class ZInvite implements ToZJSONObject {
         }
 
 
-        @Override
         public ZJSONObject toZJSONObject() throws JSONException {
             ZJSONObject zjo = new ZJSONObject();
             zjo.put("weekOrd", mWeekOrd);
@@ -1868,7 +1815,6 @@ public class ZInvite implements ToZJSONObject {
             return zjo;
         }
 
-        @Override
         public String toString() {
             return String.format("[ZByDayWeekDay weekOrd=%d day=%s]", mWeekOrd, mDay);
         }
@@ -1877,7 +1823,7 @@ public class ZInvite implements ToZJSONObject {
             return ZJSONObject.toString(this);
         }
     }
-
+    
     public static class ZByRule implements ToZJSONObject {
         private ZByType mType;
         private String mList;
@@ -1978,7 +1924,7 @@ public class ZInvite implements ToZJSONObject {
                     elName = MailConstants.E_CAL_RULE_BYMONTH;
                     listName = MailConstants.A_CAL_RULE_BYMONTH_MOLIST;
                     break;
-                case BY_SETPOS:
+               case BY_SETPOS:
                     elName = MailConstants.E_CAL_RULE_BYSETPOS;
                     listName = MailConstants.A_CAL_RULE_BYSETPOS_POSLIST;
                     break;
@@ -2020,7 +1966,6 @@ public class ZInvite implements ToZJSONObject {
             return mWeekDays;
         }
 
-        @Override
         public ZJSONObject toZJSONObject() throws JSONException {
             ZJSONObject zjo = new ZJSONObject();
             zjo.put("type", mType.name());
@@ -2029,7 +1974,6 @@ public class ZInvite implements ToZJSONObject {
             return zjo;
         }
 
-        @Override
         public String toString() {
             return String.format("[ZByRule]"); //TODO
         }
@@ -2050,7 +1994,7 @@ public class ZInvite implements ToZJSONObject {
         public ZRecurrenceRule() {
 
         }
-
+        
         public ZRecurrenceRule(Element e) throws ServiceException {
             mFrequency = ZFrequency.fromString(e.getAttribute(MailConstants.A_CAL_RULE_FREQ));
             mByRules = new ArrayList<ZByRule>();
@@ -2070,7 +2014,6 @@ public class ZInvite implements ToZJSONObject {
             }
         }
 
-        @Override
         public ZJSONObject toZJSONObject() throws JSONException {
             ZJSONObject zjo = new ZJSONObject();
             zjo.put("frequency", mFrequency.name());
@@ -2082,7 +2025,6 @@ public class ZInvite implements ToZJSONObject {
             return zjo;
         }
 
-        @Override
         public String toString() {
             return String.format("[ZRecurrenceRule]"); // TODO
         }
@@ -2168,11 +2110,12 @@ public class ZInvite implements ToZJSONObject {
 
         private List<ZRecurrenceRule> mRules;
         private List<ZRecurrenceDates> mDates;
-
+        
         private List<ZRecurrenceRule> mExRules;
         private List<ZRecurrenceDates> mExDates;
 
         public ZRecurrence() {
+
         }
 
         public ZRecurrence(Element e) throws ServiceException {
@@ -2180,7 +2123,7 @@ public class ZInvite implements ToZJSONObject {
             mExRules = new ArrayList<ZRecurrenceRule>();
             mDates = new ArrayList<ZRecurrenceDates>();
             mExDates = new ArrayList<ZRecurrenceDates>();
-
+            
             for (Element addEl : e.listElements(MailConstants.E_CAL_ADD)) {
                 for (Element ruleEl : addEl.listElements(MailConstants.E_CAL_RULE))
                     mRules.add(new ZRecurrenceRule(ruleEl));
@@ -2232,7 +2175,7 @@ public class ZInvite implements ToZJSONObject {
                         dates.toElement(exEl);
                     }
                 }
-
+                
             }
 
             return recurEl;
@@ -2270,7 +2213,6 @@ public class ZInvite implements ToZJSONObject {
             mExDates = exDates;
         }
 
-        @Override
         public ZJSONObject toZJSONObject() throws JSONException {
             ZJSONObject jso = new ZJSONObject();
             jso.put("rules", mRules);
@@ -2280,7 +2222,6 @@ public class ZInvite implements ToZJSONObject {
             return jso;
         }
 
-        @Override
         public String toString() {
             return String.format("[ZRecurrence]");
         }

@@ -176,9 +176,9 @@ public class ZMailbox implements ToZJSONObject {
 
     public static final class Fetch {
         public static final Fetch none              = new Fetch("none");
-        public static final Fetch first             = new Fetch("first");
-        public static final Fetch hits              = new Fetch("hits");
-        public static final Fetch all               = new Fetch("all");
+        public static final Fetch first			    = new Fetch("first");
+        public static final Fetch hits 			    = new Fetch("hits");
+        public static final Fetch all 			    = new Fetch("all");
         public static final Fetch unread            = new Fetch("unread");
         public static final Fetch u1                = new Fetch("u1");
         public static final Fetch first_msg         = new Fetch("!");
@@ -461,10 +461,39 @@ public class ZMailbox implements ToZJSONObject {
 
     private final List<ZEventHandler> mHandlers = new ArrayList<ZEventHandler>();
 
+    public static ZMailbox getMailbox(Options options) throws ServiceException {
+        return new ZMailbox(options);
+    }
+
     /**
      * for use with changePassword
      */
-    private ZMailbox() {}
+    private ZMailbox() { }
+
+    /**
+     * change password. You must pass in an options with an account, password, newPassword, and Uri.
+     * @param options uri/name/pass/newPass
+     * @throws ServiceException on error
+     */
+    public static ZChangePasswordResult changePassword(Options options) throws ServiceException {
+        ZMailbox mailbox = new ZMailbox();
+        mailbox.mClientIp = options.getClientIp();
+        mailbox.mNotifyPreference = NotifyPreference.fromOptions(options);
+        mailbox.initPreAuth(options);
+        return mailbox.changePassword(options.getAccount(), options.getAccountBy(), options.getPassword(), options.getNewPassword(), options.getVirtualHost());
+    }
+
+    public static ZMailbox getByName(String name, String password, String uri) throws ServiceException {
+        return new ZMailbox(new Options(name, AccountBy.name, password, uri));
+    }
+
+    public static ZMailbox getByAuthToken(String authToken, String uri) throws ServiceException {
+        return new ZMailbox(new Options(authToken, uri));
+    }
+
+    public static ZMailbox getByAuthToken(ZAuthToken authToken, String uri, boolean forceAuth, boolean csrfSupported) throws ServiceException {
+        return new ZMailbox(new Options(authToken, uri, forceAuth, csrfSupported));
+    }
 
     public ZMailbox(Options options) throws ServiceException {
         mHandlers.add(new InternalEventHandler());
@@ -506,35 +535,6 @@ public class ZMailbox implements ToZJSONObject {
         if (options.getTargetAccount() != null) {
             initTargetAccount(options.getTargetAccount(), options.getTargetAccountBy());
         }
-    }
-
-    public static ZMailbox getMailbox(Options options) throws ServiceException {
-        return new ZMailbox(options);
-    }
-
-    /**
-     * change password. You must pass in an options with an account, password, newPassword, and Uri.
-     * @param options uri/name/pass/newPass
-     * @throws ServiceException on error
-     */
-    public static ZChangePasswordResult changePassword(Options options) throws ServiceException {
-        ZMailbox mailbox = new ZMailbox();
-        mailbox.mClientIp = options.getClientIp();
-        mailbox.mNotifyPreference = NotifyPreference.fromOptions(options);
-        mailbox.initPreAuth(options);
-        return mailbox.changePassword(options.getAccount(), options.getAccountBy(), options.getPassword(), options.getNewPassword(), options.getVirtualHost());
-    }
-
-    public static ZMailbox getByName(String name, String password, String uri) throws ServiceException {
-        return new ZMailbox(new Options(name, AccountBy.name, password, uri));
-    }
-
-    public static ZMailbox getByAuthToken(String authToken, String uri) throws ServiceException {
-        return new ZMailbox(new Options(authToken, uri));
-    }
-
-    public static ZMailbox getByAuthToken(ZAuthToken authToken, String uri, boolean forceAuth, boolean csrfSupported) throws ServiceException {
-        return new ZMailbox(new Options(authToken, uri, forceAuth, csrfSupported));
     }
 
     public boolean addEventHandler(ZEventHandler handler) {
@@ -4726,26 +4726,20 @@ public class ZMailbox implements ToZJSONObject {
 
     public static class ZAppointmentResult {
 
-        private final String calItemId;
-        private final String inviteId;
-        private final String modseq;
+        private final String mCalItemId;
+        private final String mInviteId;
 
         public ZAppointmentResult(Element response) {
-            calItemId = response.getAttribute(MailConstants.A_CAL_ID, null);
-            inviteId = response.getAttribute(MailConstants.A_CAL_INV_ID, null);
-            modseq = response.getAttribute(MailConstants.A_MODIFIED_SEQUENCE, null);
+            mCalItemId = response.getAttribute(MailConstants.A_CAL_ID, null);
+            mInviteId = response.getAttribute(MailConstants.A_CAL_INV_ID, null);
         }
 
         public String getCalItemId() {
-            return calItemId;
+            return mCalItemId;
         }
 
         public String getInviteId() {
-            return inviteId;
-        }
-
-        public String getModSeq() {
-            return modseq;
+            return mInviteId;
         }
     }
 
@@ -5033,12 +5027,12 @@ public class ZMailbox implements ToZJSONObject {
         List<ZAppointmentHit> result = new ArrayList<ZAppointmentHit>();
         for (ZFreeBusyTimeSlot slot : slots) {
             switch (slot.getType()) {
-                case BUSY:
-                case TENTATIVE:
-                case UNAVAILABLE:
-                case NODATA:
-                    result.add(new ZAppointmentHit(slot));
-                    break;
+            case BUSY:
+            case TENTATIVE:
+            case UNAVAILABLE:
+            case NODATA:
+                result.add(new ZAppointmentHit(slot));
+                break;
             }
         }
         return result;
@@ -5456,13 +5450,13 @@ public class ZMailbox implements ToZJSONObject {
         EndSessionRequest logout = new EndSessionRequest();
         logout.setLogOff(true);
         try {
-            invokeJaxb(logout);
-        } catch (ServiceException e) {
-            //do not thrown an exception if the authtoken has already expired as when user us redirected to logout tag when authtoken expires.
-            if(!ServiceException.AUTH_EXPIRED.equals(e.getCode())) {
-                throw ZClientException.CLIENT_ERROR("Failed to log out", e);
-            }
-        }
+			invokeJaxb(logout);
+		} catch (ServiceException e) {
+		    //do not thrown an exception if the authtoken has already expired as when user us redirected to logout tag when authtoken expires.
+		    if(!ServiceException.AUTH_EXPIRED.equals(e.getCode())) {
+		        throw ZClientException.CLIENT_ERROR("Failed to log out", e);
+		    }
+		}
     }
     private static final int ADMIN_PORT = LC.zimbra_admin_service_port.intValue();
 

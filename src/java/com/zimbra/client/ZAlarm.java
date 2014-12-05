@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2008, 2009, 2010, 2011, 2013, 2014 Zimbra, Inc.
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -16,25 +16,25 @@
  */
 package com.zimbra.client;
 
-import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-
-import com.zimbra.client.ZInvite.ZAttendee;
 import com.zimbra.common.calendar.Attach;
 import com.zimbra.common.calendar.ParsedDateTime;
 import com.zimbra.common.calendar.ParsedDuration;
-import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.client.ZInvite.ZAttendee;
+
+import java.util.List;
+import java.util.Iterator;
+import java.util.ArrayList;
+import java.text.ParseException;
 
 /**
  * Created by IntelliJ IDEA.
  * User: akanjila
  * Date: Feb 6, 2008
  * Time: 12:50:55 PM
- */
+  */
 public class ZAlarm {
 
     public enum ZAction {
@@ -53,7 +53,6 @@ public class ZAlarm {
             this.mValue = value;
         }
 
-        @Override
         public String toString(){
             return this.mValue;
         }
@@ -82,7 +81,7 @@ public class ZAlarm {
         }
 
     }
-
+    
     public enum ZTriggerType {
         ABSOLUTE, RELATIVE;
         public static ZTriggerType lookup(String str) {
@@ -153,8 +152,8 @@ public class ZAlarm {
             if (triggerAbsoluteElem == null)
                 throw ServiceException.INVALID_REQUEST(
                         "<" + MailConstants.E_CAL_ALARM_TRIGGER + "> must have either <" +
-                                MailConstants.E_CAL_ALARM_RELATIVE + "> or <" +
-                                MailConstants.E_CAL_ALARM_ABSOLUTE + "> child element", null);
+                        MailConstants.E_CAL_ALARM_RELATIVE + "> or <" +
+                        MailConstants.E_CAL_ALARM_ABSOLUTE + "> child element", null);
             String datetime = triggerAbsoluteElem.getAttribute(MailConstants.A_DATE);
             try {
                 triggerAbsolute = ParsedDateTime.parseUtcOnly(datetime);
@@ -250,7 +249,7 @@ public class ZAlarm {
     }
 
     public String getSummary(){
-        return this.mSummary;
+        return this.mSummary;                                        
     }
 
     public List<ZAttendee> getAttendees(){
@@ -292,8 +291,8 @@ public class ZAlarm {
         if (mAttach != null)
             mAttach.toXml(alarm);
         if (ZAction.EMAIL.equals(mAction) ||
-                ZAction.X_YAHOO_CALENDAR_ACTION_IM.equals(mAction) ||
-                ZAction.X_YAHOO_CALENDAR_ACTION_MOBILE.equals(mAction)) {
+            ZAction.X_YAHOO_CALENDAR_ACTION_IM.equals(mAction) ||
+            ZAction.X_YAHOO_CALENDAR_ACTION_MOBILE.equals(mAction)) {
             Element summary = alarm.addElement(MailConstants.E_CAL_ALARM_SUMMARY);
             if (mSummary != null) {
                 summary.setText(mSummary);
@@ -305,17 +304,5 @@ public class ZAlarm {
             }
         }
         return alarm;
-    }
-
-    public long getTriggerTime(long instStart, long instEnd) {
-        if (ZTriggerType.ABSOLUTE.equals(mTriggerType)) {
-            assert (mTriggerAbsolute != null);
-            return mTriggerAbsolute.getUtcTime();
-        }
-        if (ZRelated.END.equals(mTriggerRelated)) {
-            return mTriggerRelative.addToTime(instEnd);
-        } else {
-            return mTriggerRelative.addToTime(instStart);
-        }
     }
 }
