@@ -675,7 +675,7 @@ public abstract class ZFilterCondition implements ToZJSONObject {
         }
 
         ZAddressBookCondition(FilterTest.AddressBookTest test) {
-            this.op = test.isNegative() ? AddressBookOp.IN : AddressBookOp.NOT_IN;
+            this.op = test.isNegative() ? AddressBookOp.NOT_IN : AddressBookOp.IN;
             this.header = test.getHeader();
         }
 
