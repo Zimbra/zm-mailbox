@@ -338,7 +338,7 @@
         </if>
     </target>
 
-    <target name="generate-getters" depends="compile,generate-buildinfo" description="generate methods for attributes in zimbra-attrs.xml">
+    <target name="generate-getters"  description="generate methods for attributes in zimbra-attrs.xml">
         <antcall target="generate-getter">
             <param name="getter.class" value="account"/>
             <param name="getter.output" value="ZAttrAccount.java"/>
@@ -1298,7 +1298,7 @@
         </java>
     </target>
 
-    <target name="localhost-ssl-cert">
+    <target name="localhost-ssl-cert-gen">
         <delete failonerror="no">
             <fileset dir="${jetty.conf.dir}" includes="keystore"/>
         </delete>
@@ -1322,6 +1322,34 @@
                 <param name="C" value="US"/>
             </dname>
         </genkey>
+    </target>
+    <target name="localhost-ssl-cert-import" depends="localhost-ssl-cert-gen">
+        <exec executable="keytool" failonerror="true">
+            <arg value="-exportcert"/>
+            <arg line="-keystore ${jetty.conf.dir}/keystore"/>
+            <arg line="-alias jetty"/>
+            <arg line="-storepass zimbra"/>
+            <arg line="-file ${jetty.conf.dir}/export"/>
+        </exec>
+        <exec executable="keytool" failonerror="true" inputstring="yes">
+            <arg value="-delete"/>
+            <arg line="-keystore ${zimbra.home.dir}/java/lib/security/cacerts"/>
+            <arg line="-alias jetty"/>
+            <arg line="-storepass changeit"/>
+        </exec>
+        <exec executable="keytool" failonerror="true" inputstring="yes">
+            <arg value="-importcert"/>
+            <arg line="-keystore ${zimbra.home.dir}/java/lib/security/cacerts"/>
+            <arg line="-alias jetty"/>
+            <arg line="-storepass changeit"/>
+            <arg line="-file ${jetty.conf.dir}/export"/>
+        </exec>
+         <delete failonerror="no">
+            <fileset dir="${jetty.conf.dir}" includes="export"/>
+        </delete>
+        </target>
+    
+    <target name="localhost-ssl-cert" depends="localhost-ssl-cert-import">
     </target>
 
     <target name="keystore-backup">
