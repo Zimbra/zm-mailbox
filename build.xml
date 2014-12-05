@@ -1331,7 +1331,7 @@
             <arg line="-storepass zimbra"/>
             <arg line="-file ${jetty.conf.dir}/export"/>
         </exec>
-        <exec executable="keytool" failonerror="true" inputstring="yes">
+        <exec executable="keytool" inputstring="yes">
             <arg value="-delete"/>
             <arg line="-keystore ${zimbra.home.dir}/java/lib/security/cacerts"/>
             <arg line="-alias jetty"/>
