@@ -361,6 +361,17 @@ SECTION proxy
 	VAR zimbraReverseProxySSLECDHCurve
 	VAR zimbraReverseProxyUpstreamLoginServers
 	VAR zimbraReverseProxyUpstreamEwsServers
+	VAR zimbraReverseProxyLogToSyslog
+	VAR zimbraReverseProxySSLProtocols
+	VAR zimbraReverseProxyModSecurityEnabled
+	VAR zimbraReverseProxySSLStapling
+	VAR zimbraReverseProxySSLStaplingResponderURL
+	VAR zimbraReverseProxySPDYEnabled
+	VAR zimbraReverseProxySSLSessionTimeout
+	VAR zimbraReverseProxySSLSessionCacheSize
+	VAR zimbraReverseProxyLimitReqZoneRate
+	VAR zimbraReverseProxyLimitReqZoneSize
+	VAR zimbraReverseProxyRestrictedIPs
 	PROXYGEN
 	RESTART proxy
 
