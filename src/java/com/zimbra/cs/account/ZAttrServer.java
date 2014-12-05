@@ -34226,6 +34226,160 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Maximum rate in requests per second to be enforced by the proxy for a
+     * particualr zone. Requests in excess of this are throttled.
+     *
+     * @return zimbraReverseProxyLimitReqZoneRate, or 120 if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1681)
+    public int getReverseProxyLimitReqZoneRate() {
+        return getIntAttr(Provisioning.A_zimbraReverseProxyLimitReqZoneRate, 120);
+    }
+
+    /**
+     * Maximum rate in requests per second to be enforced by the proxy for a
+     * particualr zone. Requests in excess of this are throttled.
+     *
+     * @param zimbraReverseProxyLimitReqZoneRate new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1681)
+    public void setReverseProxyLimitReqZoneRate(int zimbraReverseProxyLimitReqZoneRate) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyLimitReqZoneRate, Integer.toString(zimbraReverseProxyLimitReqZoneRate));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum rate in requests per second to be enforced by the proxy for a
+     * particualr zone. Requests in excess of this are throttled.
+     *
+     * @param zimbraReverseProxyLimitReqZoneRate new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1681)
+    public Map<String,Object> setReverseProxyLimitReqZoneRate(int zimbraReverseProxyLimitReqZoneRate, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyLimitReqZoneRate, Integer.toString(zimbraReverseProxyLimitReqZoneRate));
+        return attrs;
+    }
+
+    /**
+     * Maximum rate in requests per second to be enforced by the proxy for a
+     * particualr zone. Requests in excess of this are throttled.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1681)
+    public void unsetReverseProxyLimitReqZoneRate() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyLimitReqZoneRate, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum rate in requests per second to be enforced by the proxy for a
+     * particualr zone. Requests in excess of this are throttled.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1681)
+    public Map<String,Object> unsetReverseProxyLimitReqZoneRate(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyLimitReqZoneRate, "");
+        return attrs;
+    }
+
+    /**
+     * Shared memory zone size in megabytes used by ngx_http_limit_req_module
+     * to store the current number of excessive requests per client IP
+     *
+     * @return zimbraReverseProxyLimitReqZoneSize, or "10m" if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1682)
+    public String getReverseProxyLimitReqZoneSize() {
+        return getAttr(Provisioning.A_zimbraReverseProxyLimitReqZoneSize, "10m");
+    }
+
+    /**
+     * Shared memory zone size in megabytes used by ngx_http_limit_req_module
+     * to store the current number of excessive requests per client IP
+     *
+     * @param zimbraReverseProxyLimitReqZoneSize new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1682)
+    public void setReverseProxyLimitReqZoneSize(String zimbraReverseProxyLimitReqZoneSize) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyLimitReqZoneSize, zimbraReverseProxyLimitReqZoneSize);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Shared memory zone size in megabytes used by ngx_http_limit_req_module
+     * to store the current number of excessive requests per client IP
+     *
+     * @param zimbraReverseProxyLimitReqZoneSize new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1682)
+    public Map<String,Object> setReverseProxyLimitReqZoneSize(String zimbraReverseProxyLimitReqZoneSize, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyLimitReqZoneSize, zimbraReverseProxyLimitReqZoneSize);
+        return attrs;
+    }
+
+    /**
+     * Shared memory zone size in megabytes used by ngx_http_limit_req_module
+     * to store the current number of excessive requests per client IP
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1682)
+    public void unsetReverseProxyLimitReqZoneSize() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyLimitReqZoneSize, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Shared memory zone size in megabytes used by ngx_http_limit_req_module
+     * to store the current number of excessive requests per client IP
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1682)
+    public Map<String,Object> unsetReverseProxyLimitReqZoneSize(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyLimitReqZoneSize, "");
+        return attrs;
+    }
+
+    /**
      * Log level for NGINX Proxy error log
      *
      * <p>Valid values: [warn, debug, debug_core, crit, debug_zimbra, error, debug_mail, info, notice, debug_http]

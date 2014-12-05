@@ -8446,4 +8446,14 @@ TODO: delete them permanently from here
   <desc>SSL session cache size in megabytes</desc>
 </attr>
 
+<attr id="1681" name="zimbraReverseProxyLimitReqZoneRate" type="integer" min="1" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="nginxproxy" since="9.0">
+  <globalConfigValue>120</globalConfigValue>
+  <desc>Maximum rate in requests per second to be enforced by the proxy for a particualr zone. Requests in excess of this are throttled.</desc>
+</attr>
+
+<attr id="1682" name="zimbraReverseProxyLimitReqZoneSize" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="nginxproxy" since="9.0">
+  <globalConfigValue>10m</globalConfigValue>
+  <desc>Shared memory zone size in megabytes used by ngx_http_limit_req_module to store the current number of excessive requests per client IP</desc>
+</attr>
+
 </attrs>

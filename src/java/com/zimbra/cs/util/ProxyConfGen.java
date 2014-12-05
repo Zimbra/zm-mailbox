@@ -2571,6 +2571,8 @@ public class ProxyConfGen
 	    mConfVars.put("ssl.stapling.responder.url", new ProxyConfVar("ssl.stapling.responder.url", "zimbraReverseProxySSLStaplingResponderURL", "", ProxyConfValueType.STRING, ProxyConfOverride.SERVER, "SSL Stapling responder URL"));
 	    mConfVars.put("ssl.session.timeout", new ProxyConfVar("ssl.session.timeout", "zimbraReverseProxySSLSessionTimeout", "10m", ProxyConfValueType.STRING, ProxyConfOverride.SERVER, "SSL session timeout value for the proxy in minutes"));
 	    mConfVars.put("ssl.session.cachesize", new WebSSLSessionCacheSizeVar());
+	    mConfVars.put("web.upstream.zone.size", new ProxyConfVar("web.upstream.zone.size", "zimbraReverseProxyLimitReqZoneSize", "10m", ProxyConfValueType.STRING, ProxyConfOverride.SERVER, "Shared memory zone size in megabytes used for rate-limiting"));
+	    mConfVars.put("web.upstream.zone.rate", new ProxyConfVar("web.upstream.zone.rate", "zimbraReverseProxyLimitReqZoneRate", new Integer(120), ProxyConfValueType.INTEGER, ProxyConfOverride.SERVER, "Maximum rate in requests per second to be enforced by the proxy for a particualr zone. Requests in excess of this are throttled"));
     }
 
     /* update the default variable map from the active configuration */
