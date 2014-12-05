@@ -113,6 +113,7 @@ SECTION 2: Apache License, V2.0
    >>> apache-commons-dbcp-1.4
    >>> apache-commons-fileupload-1.2.2
    >>> apache-commons-httpclient-3.1
+   >>> apache-commons-httpclient-4.2.1
    >>> apache-commons-io-1.4
    >>> apache-commons-logging-1.1.1
    >>> apache-commons-pool-1.6
@@ -150,6 +151,7 @@ SECTION 2: Apache License, V2.0
    >>> stax2-api-3.1.1
    >>> testng-5.12.1
    >>> unoil-4.0.2
+   >>> woodstox-core-4.2.0
    >>> xerces-j-2.9.1
    >>> xmlschema-core-2.0.3
    >>> zkclient-0.1
@@ -241,7 +243,7 @@ SECTION 8: GNU General Public License, V2.0
    >>> javax.ws.rs-api-2.0-m10
    >>> libtool-2.2.6b
    >>> libwww-perl-6.05
-   >>> mariadb-10.0.14
+   >>> mariadb-10.0.15
    >>> mysql-connector-java-5.1.29
    >>> perl-archive-tar-1.96
    >>> perl-archive-zip-1.37
@@ -21408,6 +21410,11 @@ This product includes software developed by
 The Apache Software Foundation (http://www.apache.org/).
 
 
+>>> apache-commons-httpclient-4.2.1
+
+License: Apache License 2.0
+
+
 >>> apache-commons-io-1.4
 
 Apache Commons IO
@@ -27641,6 +27648,11 @@ LICENSE = Apache License 2.0
 License: Apache 2.0
 
 
+>>> woodstox-core-4.2.0
+
+License: Apache 2.0
+
+
 >>> xerces-j-2.9.1
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -31066,7 +31078,7 @@ COPYRIGHT
 This library is free software; you can redistribute it and/or modify it under the same terms as Perl itself.
 
 
->>> mariadb-10.0.14
+>>> mariadb-10.0.15
 
 
 This is a release of MariaDB.
