@@ -1567,7 +1567,7 @@ class WebSSLSessionCacheSizeVar extends ProxyConfVar {
 class WebUpstreamRestrictedIPsVar extends ProxyConfVar {
 
     public WebUpstreamRestrictedIPsVar() {
-        super("web.upstream.restricted.:ips", Provisioning.A_zimbraReverseProxyRestrictedIPs, "",
+        super("web.upstream.restricted.:ips", Provisioning.A_zimbraReverseProxyRestrictedIPs, new ArrayList<String>(),
                ProxyConfValueType.CUSTOM, ProxyConfOverride.CUSTOM,
                "List of Client network or IP address to be denied access by the proxy");
     }
