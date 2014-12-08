@@ -431,7 +431,7 @@ global soap/system errors used with zimbra:Error/Code:
  <AuthResponse">
    <authToken>...</authToken>
    [<csrfToken>...</csrfToken>]
-   <lifetime>...</lifetime>
+   <lifetime>{lifetime-in-millseconds}</lifetime>
    <session .../>
    <refer>{mail-host}</refer>
    [<prefs><pref name="{name}" modified="{modified-time}">{value}</pref>...</prefs>]

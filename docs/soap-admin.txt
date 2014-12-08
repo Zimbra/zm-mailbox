@@ -23,7 +23,7 @@ When updating multiple attributes, you need to specify all the old values at the
 
  <AuthResponse>
    <authToken>...</authToken>
-   <lifetime>...</lifetime>
+   <lifetime>{lifetime-in-milliseconds}</lifetime>
  </AuthResponse>
 
   {persistAuthTokenCookie} = controls whether the auth token cookie in the response should 
