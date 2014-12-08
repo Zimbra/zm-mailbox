@@ -23,6 +23,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.store.MockStoreManager;
 import com.zimbra.cs.util.Zimbra;
 
+@Ignore // class is unfinished and not used yet
 public class RedissonLockTest {
     JedisPool jedisPool;
     final UUID id = UUID.randomUUID();
