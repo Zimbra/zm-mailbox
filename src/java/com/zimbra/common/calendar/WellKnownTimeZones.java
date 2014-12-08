@@ -53,7 +53,7 @@ public class WellKnownTimeZones {
     /**
      * Look up a well-known time zone by its TZID.
      * @param tzid
-     * @return
+     * @return Best matching zone or null if no match is found.
      */
     public static ICalTimeZone getTimeZoneById(String tzid) {
         return sTZIDMap.get(tzid);
@@ -62,13 +62,24 @@ public class WellKnownTimeZones {
     /**
      * Find a well-known time zone that matches the given time zone's standard/daylight offsets
      * and transition rules.  Null is returned if no match is found.
-     * @param tz
-     * @return
+     * Made private to encourage use of {@link getBestFuzzyMatch} as call sites which used <b>getBestMatch</b> let
+     * through problematic timezone definitions.
+     * @return Best matching zone or null if no match is found.
      */
-    public static ICalTimeZone getBestMatch(ICalTimeZone tz) {
+    private static ICalTimeZone getBestMatch(ICalTimeZone tz) {
         return sOffsetRuleMatches.get(tz);
     }
 
+    /**
+     * Find a well-known time zone that matches the given time zone's standard/daylight offsets and transition rules.
+     * If a known zone only differs by times of onsets on the transition days, we accept that as a match.  This is
+     * considered a good idea because this is a frequent source of buggy timezone definitions and some software
+     * really doesn't handle unknown timezones at all well, so we should try as hard as possible to coerce to a known
+     * zone.
+     *
+     * @param tz
+     * @return Best matching zone or null if no match is found.
+     */
     public static ICalTimeZone getBestFuzzyMatch(ICalTimeZone tz) {
         ICalTimeZone match = getBestMatch(tz);
         if (match != null) {

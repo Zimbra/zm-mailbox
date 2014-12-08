@@ -436,29 +436,29 @@ public class ICalTimeZone extends SimpleTimeZone {
     }
 
     /**
+     * Generally, it makes sense to match by ID in preference to by rules, because if you see a timezone with outdated
+     * rules, it probably makes more sense to pick up the up to date rules  rather than change the ID to a zone which
+     * happens to match the out of date rules...
      *
      * @param tzId       iCal TZID string
      * @param stdOffset  standard time offset from UTC in milliseconds
-     * @param stdDtStart iCal datetime string specifying the beginning of the
-     *                   period for which stdRRule applies.  The format is
-     *                   "YYYYMMDDThhmmss" with 24-hour hour.  In practice,
-     *                   the date portion is set to some very early date, like
-     *                   "16010101", and only the time portion varies according
+     * @param stdDtStart iCal datetime string specifying the beginning of the period for which stdRRule applies.
+     *                   The format is "YYYYMMDDThhmmss" with 24-hour hour.  In practice, the date portion is set to
+     *                   some very early date, like "16010101", and only the time portion varies according
      *                   to the rules of the time zone.
-     * @param stdRRule   iCal recurrence rule for transition into standard
-     *                   time (i.e. transition out of daylight time)
+     * @param stdRRule   iCal recurrence rule for transition into standard time (i.e. transition out of daylight time)
      *                   e.g. "FREQ=YEARLY;WKST=MO;INTERVAL=1;BYMONTH=10;BYDAY=-1SU"
      * @param dayOffset  daylight time offset from UTC in milliseconds
-     * @param dayDtStart iCal datetime string specifying the beginning of the
-     *                   period for which dayRRUle applies
-     * @param dayRRule   iCal recurrence rule for transition into daylight
-     *                   time
+     * @param dayDtStart iCal datetime string specifying the beginning of the period for which dayRRUle applies
+     * @param dayRRule   iCal recurrence rule for transition into daylight time
      */
     public static ICalTimeZone lookup(String tzid,
             int stdOffset, String stdDtStart, String stdRRule, String stdTzname,
             int dayOffset, String dayDtStart, String dayRRule, String dayTzname) {
         ICalTimeZone tz = lookupByTZID(tzid);
-        if (tz != null) return tz;
+        if (tz != null) {
+            return tz;
+        }
         ICalTimeZone newTz = new ICalTimeZone(
                 tzid, stdOffset, stdDtStart, stdRRule, stdTzname, dayOffset, dayDtStart, dayRRule, dayTzname);
         tz = lookupByRule(newTz, true);
@@ -484,11 +484,18 @@ public class ICalTimeZone extends SimpleTimeZone {
         initFromICalData(false);
     }
 
+    /**
+     * Generally, it makes sense to match by ID in preference to by rules, because if you see a timezone with outdated
+     * rules, it probably makes more sense to pick up the up to date rules  rather than change the ID to a zone which
+     * happens to match the out of date rules...
+     */
     public static ICalTimeZone lookup(String tzid,
                                       int standardOffset, SimpleOnset standardOnset, String standardTzname,
                                       int daylightOffset, SimpleOnset daylightOnset, String daylightTzname) {
         ICalTimeZone tz = lookupByTZID(tzid);
-        if (tz != null) return tz;
+        if (tz != null) {
+            return tz;
+        }
         ICalTimeZone newTz = new ICalTimeZone(tzid, standardOffset, standardOnset, standardTzname, daylightOffset, daylightOnset, daylightTzname);
         tz = lookupByRule(newTz, true);
         return tz;
@@ -1071,7 +1078,9 @@ public class ICalTimeZone extends SimpleTimeZone {
 
         if (!skipLookup) {
             ICalTimeZone tz = lookupByTZID(tzid);
-            if (tz != null) return tz;
+            if (tz != null) {
+                return tz;
+            }
         }
 
         ZComponent standard = null;
@@ -1240,7 +1249,7 @@ public class ICalTimeZone extends SimpleTimeZone {
     // Lookup a well-known time zone by DST rule.
     public static ICalTimeZone lookupByRule(ICalTimeZone tz, boolean keepTZID) {
         if (!DebugConfig.disableCalendarTZMatchByRule) {
-            ICalTimeZone match = WellKnownTimeZones.getBestMatch(tz);
+            ICalTimeZone match = WellKnownTimeZones.getBestFuzzyMatch(tz);
             if (match != null) {
                 if (keepTZID) {
                     // Return the matched TZ, but using the TZID of the passed-in tz.
