@@ -451,6 +451,8 @@ public final class DbSearch {
         needAnd = needAnd | encodeTag(constraint.excludeTags, false, false, needAnd);
         needAnd = needAnd | encodeFolder(constraint.folders, true,  needAnd);
         needAnd = needAnd | encodeFolder(constraint.excludeFolders, false, needAnd);
+        needAnd = needAnd | encodeRecipients(constraint.recipients, true, needAnd);
+        needAnd = needAnd | encodeRecipients(constraint.excludeRecipients, false, needAnd);
 
         if (constraint.convId > 0) {
             needAnd = needAnd | encode(column("parent_id"), true, constraint.convId, needAnd);
@@ -534,7 +536,6 @@ public final class DbSearch {
         }
         sql.append(')');
     }
-
 
     /**
      * @return TRUE if some part of this query has a non-appointment select (ie 'type not in (11,15)' non-null
@@ -1244,6 +1245,24 @@ public final class DbSearch {
             params.add(range.max.replace("\\\"", "\""));
         }
         sql.append(')');
+        return true;
+    }
+
+    private boolean encodeRecipients(Set<String> recipients, boolean bool, boolean and) {
+        if (recipients.isEmpty()) {
+            return false;
+        }
+        if (and) {sql.append(" AND ");}
+        sql.append("(");
+        if (bool) {
+            sql.append(DbUtil.whereIn(column("recipients"), recipients.size()));
+        } else {
+            sql.append(DbUtil.whereNotIn(column("recipients"), recipients.size()));
+        }
+        sql.append(")");
+        for (String recip: recipients) {
+            params.add(recip.replace("\\\"", "\""));
+        }
         return true;
     }
 

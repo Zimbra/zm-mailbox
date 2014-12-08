@@ -189,5 +189,11 @@ public abstract class BuiltInQuery {
                         EnumSet.of(AddrQuery.Address.TO, AddrQuery.Address.FROM, AddrQuery.Address.CC));
             }
         })
+        .put("tomeonly", new BuiltInQuery() {
+            @Override
+            Query create(Mailbox mbox) throws ServiceException {
+                return new ToMeOnlyQuery();
+            }
+        })
         .build();
 }

@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -242,6 +242,12 @@ public interface DbSearchConstraints extends Cloneable {
 
         /** optional - ALL of these types are excluded. */
         public final Set<MailItem.Type> excludeTypes = EnumSet.noneOf(MailItem.Type.class);
+
+        /** optional - ANY of the listed recipients will be included */
+        public final Set<String> recipients = Sets.newHashSetWithExpectedSize(0);
+
+        /** optional - ALL of the listed recipients will be excluded */
+        public final Set<String> excludeRecipients = Sets.newHashSetWithExpectedSize(0);
 
         // A possible result must match *ALL* the range constraints below.  It might seem strange that we don't
         // just combine the ranges -- yes this would be easy for positive ranges (foo>5 AND foo >7 and foo<10)
@@ -940,6 +946,20 @@ public interface DbSearchConstraints extends Cloneable {
                     noResults = true;
                 }
                 excludeTags.add(tag);
+            }
+        }
+
+        public void addRecipient(String recipient, boolean bool) {
+            if (bool) {
+                if (excludeRecipients.contains(recipient)) {
+                    noResults = true;
+                }
+                recipients.add(recipient);
+            } else {
+                if (recipients.contains(recipient)) {
+                    noResults = true;
+                }
+                excludeRecipients.add(recipient);
             }
         }
 
