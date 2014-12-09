@@ -22,6 +22,7 @@ import java.net.URL;
 import java.security.InvalidAlgorithmParameterException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -299,12 +300,13 @@ public final class CsrfUtil {
      * @param crumb
      * @param account
      * @return
+     * @throws ServiceException
      */
-    private static String getTokenDataFromLdap(String crumb, Account account) {
+    private static String getTokenDataFromLdap(String crumb, Account account) throws ServiceException {
         String csrfTokenData = null;
         String [] validCsrfTokens = account.getMultiAttr(Provisioning.A_zimbraCsrfTokenData);
         List<String> validCsrfTokenList = Arrays.asList(validCsrfTokens);
-        validCsrfTokenList = purgeOldCsrfTokens(validCsrfTokenList);
+        validCsrfTokenList = purgeOldCsrfTokens(validCsrfTokenList, account);
         for (String validCsrfToken : validCsrfTokenList) {
             String [] temp = validCsrfToken.split(":");
             if (temp[1].equals(crumb)) {
@@ -338,18 +340,25 @@ public final class CsrfUtil {
     /**
      * @param validCsrfTokenList
      * @return
+     * @throws ServiceException
      */
     private static List<String> purgeOldCsrfTokens(
-        List<String> validCsrfTokenSaltList) {
+        List<String> validCsrfTokenSaltList, Account account) throws ServiceException {
 
         List <String> validList = new ArrayList<String>();
         long now  = System.currentTimeMillis();
+        HashMap<String, Object> toPurge = new HashMap<String, Object>();
         for (String csrfTokenSalt : validCsrfTokenSaltList) {
             String [] temp = csrfTokenSalt.split(":");
             long tokenExpiration = Long.parseLong(temp[2]);
             if (now < tokenExpiration) {
                 validList.add(csrfTokenSalt);
+            } else {
+                StringUtil.addToMultiMap(toPurge, "-" + Provisioning.A_zimbraCsrfTokenData, csrfTokenSalt);
             }
+        }
+        if (toPurge.size() > 0) {
+            account.modify(toPurge);
         }
         return validList;
     }
@@ -426,34 +435,32 @@ public final class CsrfUtil {
             Provisioning prov = Provisioning.getInstance();
             Account account = prov.get(AccountBy.id, accountId);
             String [] validCsrfTokens = account.getMultiAttr(Provisioning.A_zimbraCsrfTokenData);
-            List<String> validCsrfTokenList = new ArrayList<String>(Arrays.asList(validCsrfTokens));
 //            CSRF token data:Auth token Key crumb:Auth Token Key expiration
-            String value = data + ":" + crumb + ":" + authTokenExpiration ;
-            int index = -1;
-            for (String tokenData : validCsrfTokenList) {
-                if (tokenData.contains(crumb)) {
-                    index = validCsrfTokenList.indexOf(tokenData);
-                    break;
+            String newToken = data + ":" + crumb + ":" + authTokenExpiration ;
+            HashMap<String,Object> mods = new HashMap<String,Object>();
+            boolean needToAdd = true;
+            for (String tokenData : validCsrfTokens) {
+                String[] temp = tokenData.split(":");
+                String tokenCrumb = temp[1];
+                if (tokenCrumb.equals(crumb)) {
+                    if (!tokenData.equals(newToken)) {
+                        StringUtil.addToMultiMap(mods, "-" + Provisioning.A_zimbraCsrfTokenData, tokenData);
+                    } else {
+                        ZimbraLog.misc.debug("token already stored in LDAP");
+                        needToAdd = false;
+                    }
                 }
             }
-            if (index != -1) {
-                validCsrfTokenList.remove(index);
+            if (needToAdd) {
+                StringUtil.addToMultiMap(mods, "+" + Provisioning.A_zimbraCsrfTokenData, newToken);
             }
-            validCsrfTokenList.add(value);
-            String [] modCsrfTokenValidSalts = new String[validCsrfTokenList.size()];
-            validCsrfTokenList.toArray(modCsrfTokenValidSalts);
-            account.setCsrfTokenData(modCsrfTokenValidSalts);
+            if (mods.size() > 0) {
+                account.modify(mods);
+            }
         } catch (ServiceException e) {
-            ZimbraLog.misc.info("Error storing CSRF token valid salt.");
+            ZimbraLog.misc.info("Error storing CSRF token valid salt.", e);
         }
     }
-
-
-
-
-
-
-
 
     public static CsrfTokenKey getCsrfTokenKey() throws ServiceException {
         return CsrfTokenKey.getCurrentKey();
