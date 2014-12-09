@@ -195,6 +195,14 @@ public final class MockProvisioning extends Provisioning {
         return config;
     }
 
+    private String[] listToStringArray(List<?> list) {
+        String[] strArray = new String[list.size()];
+        for (int i = 0; i < list.size(); i++) {
+            strArray[i] = list.get(i).toString();
+        }
+        return strArray;
+    }
+
     @Override
     public void modifyAttrs(Entry entry, Map<String, ? extends Object> attrs, boolean checkImmutable) {
         Map<String, Object> map = entry.getAttrs(false);
@@ -203,12 +211,7 @@ public final class MockProvisioning extends Provisioning {
             if (attr.getValue() != null) {
                 Object value = attr.getValue();
                 if (value instanceof List) { // Convert list to string array.
-                    List<?> list = (List<?>) value;
-                    String[] strArray = new String[list.size()];
-                    for (int i = 0; i < list.size(); i++) {
-                        strArray[i] = list.get(i).toString();
-                    }
-                    value = strArray;
+                    value = listToStringArray((List<?>) value);
                 }
                 boolean add = key.startsWith("+");
                 boolean remove = key.startsWith("-");
@@ -235,7 +238,7 @@ public final class MockProvisioning extends Provisioning {
                             list.remove(value);
                         }
                         if (list.size() > 0) {
-                            map.put(realKey, value);
+                            map.put(realKey, listToStringArray(list));
                         } else {
                             map.remove(realKey);
                         }
