@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -199,6 +199,7 @@ public final class MockProvisioning extends Provisioning {
     public void modifyAttrs(Entry entry, Map<String, ? extends Object> attrs, boolean checkImmutable) {
         Map<String, Object> map = entry.getAttrs(false);
         for (Map.Entry<String, ? extends Object> attr : attrs.entrySet()) {
+            String key = attr.getKey();
             if (attr.getValue() != null) {
                 Object value = attr.getValue();
                 if (value instanceof List) { // Convert list to string array.
@@ -209,7 +210,39 @@ public final class MockProvisioning extends Provisioning {
                     }
                     value = strArray;
                 }
-                map.put(attr.getKey(), value);
+                boolean add = key.startsWith("+");
+                boolean remove = key.startsWith("-");
+                if (add || remove) {
+                    String realKey = key.substring(1);
+                    Object existing = map.get(key.substring(1));
+                    if (existing == null) {
+                       if (add) {
+                           map.put(realKey, value);
+                       } else {
+                           return;
+                       }
+                    } else {
+                        List<Object> list = null;
+                        if (existing instanceof Object[]) {
+                            list = Arrays.asList(existing);
+                        } else if (existing instanceof Object) {
+                            list = new ArrayList<Object>();
+                            list.add(existing);
+                        }
+                        if (add) {
+                            list.add(value);
+                        } else {
+                            list.remove(value);
+                        }
+                        if (list.size() > 0) {
+                            map.put(realKey, value);
+                        } else {
+                            map.remove(realKey);
+                        }
+                    }
+                } else {
+                    map.put(attr.getKey(), value);
+                }
             } else {
                 map.remove(attr.getKey());
             }
