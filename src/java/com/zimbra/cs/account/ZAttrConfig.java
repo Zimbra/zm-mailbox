@@ -44263,6 +44263,149 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * URL prefixes that don&#039;t exist in mailboxd and need to be blocked
+     * by the proxy
+     *
+     * @return zimbraReverseProxyBlockedURLs, or empty array if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1684)
+    public String[] getReverseProxyBlockedURLs() {
+        String[] value = getMultiAttr(Provisioning.A_zimbraReverseProxyBlockedURLs); return value.length > 0 ? value : new String[] {"/scripts","/lcgi","/cgi-bin","/eManager","/cgi-script"};
+    }
+
+    /**
+     * URL prefixes that don&#039;t exist in mailboxd and need to be blocked
+     * by the proxy
+     *
+     * @param zimbraReverseProxyBlockedURLs new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1684)
+    public void setReverseProxyBlockedURLs(String[] zimbraReverseProxyBlockedURLs) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyBlockedURLs, zimbraReverseProxyBlockedURLs);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * URL prefixes that don&#039;t exist in mailboxd and need to be blocked
+     * by the proxy
+     *
+     * @param zimbraReverseProxyBlockedURLs new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1684)
+    public Map<String,Object> setReverseProxyBlockedURLs(String[] zimbraReverseProxyBlockedURLs, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyBlockedURLs, zimbraReverseProxyBlockedURLs);
+        return attrs;
+    }
+
+    /**
+     * URL prefixes that don&#039;t exist in mailboxd and need to be blocked
+     * by the proxy
+     *
+     * @param zimbraReverseProxyBlockedURLs new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1684)
+    public void addReverseProxyBlockedURLs(String zimbraReverseProxyBlockedURLs) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraReverseProxyBlockedURLs, zimbraReverseProxyBlockedURLs);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * URL prefixes that don&#039;t exist in mailboxd and need to be blocked
+     * by the proxy
+     *
+     * @param zimbraReverseProxyBlockedURLs new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1684)
+    public Map<String,Object> addReverseProxyBlockedURLs(String zimbraReverseProxyBlockedURLs, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraReverseProxyBlockedURLs, zimbraReverseProxyBlockedURLs);
+        return attrs;
+    }
+
+    /**
+     * URL prefixes that don&#039;t exist in mailboxd and need to be blocked
+     * by the proxy
+     *
+     * @param zimbraReverseProxyBlockedURLs existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1684)
+    public void removeReverseProxyBlockedURLs(String zimbraReverseProxyBlockedURLs) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraReverseProxyBlockedURLs, zimbraReverseProxyBlockedURLs);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * URL prefixes that don&#039;t exist in mailboxd and need to be blocked
+     * by the proxy
+     *
+     * @param zimbraReverseProxyBlockedURLs existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1684)
+    public Map<String,Object> removeReverseProxyBlockedURLs(String zimbraReverseProxyBlockedURLs, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraReverseProxyBlockedURLs, zimbraReverseProxyBlockedURLs);
+        return attrs;
+    }
+
+    /**
+     * URL prefixes that don&#039;t exist in mailboxd and need to be blocked
+     * by the proxy
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1684)
+    public void unsetReverseProxyBlockedURLs() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyBlockedURLs, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * URL prefixes that don&#039;t exist in mailboxd and need to be blocked
+     * by the proxy
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1684)
+    public Map<String,Object> unsetReverseProxyBlockedURLs(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyBlockedURLs, "");
+        return attrs;
+    }
+
+    /**
      * time interval that an entry cached by NGINX will remain in the cache.
      * Must be in valid duration format: {digits}{time-unit}. digits: 0-9,
      * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,

@@ -8460,4 +8460,13 @@ TODO: delete them permanently from here
   <desc>Client network or IP address to be denied access by the proxy</desc>
 </attr>
 
+<attr id="1684" name="zimbraReverseProxyBlockedURLs" type="string" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="nginxproxy" since="9.0">
+  <globalConfigValue>/scripts</globalConfigValue>
+  <globalConfigValue>/lcgi</globalConfigValue>
+  <globalConfigValue>/cgi-bin</globalConfigValue>
+  <globalConfigValue>/eManager</globalConfigValue>
+  <globalConfigValue>/cgi-script</globalConfigValue>
+  <desc>URL prefixes that don't exist in mailboxd and need to be blocked by the proxy</desc>
+</attr>
+
 </attrs>

@@ -372,6 +372,7 @@ SECTION proxy
 	VAR zimbraReverseProxyLimitReqZoneRate
 	VAR zimbraReverseProxyLimitReqZoneSize
 	VAR zimbraReverseProxyRestrictedIPs
+	VAR zimbraReverseProxyBlockedURLs
 	PROXYGEN
 	RESTART proxy
 

@@ -1775,7 +1775,7 @@ class WebSSLProtocolsVar extends ProxyConfVar {
 class MailSSLProtocolsVar extends ProxyConfVar {
 
     public MailSSLProtocolsVar() {
-        super("web.ssl.protocols", null, getEnabledSSLProtocols(),
+        super("mail.ssl.protocols", null, getEnabledSSLProtocols(),
                 ProxyConfValueType.CUSTOM, ProxyConfOverride.CUSTOM,
                 "SSL Protocols enabled for the mail proxy");
     }
@@ -1816,6 +1816,57 @@ class MailSSLProtocolsVar extends ProxyConfVar {
             sslproto.append(c);
         }
         return sslproto.toString();
+    }
+}
+
+class WebUpstreamBlockedURLsVar extends ProxyConfVar {
+
+    public WebUpstreamBlockedURLsVar() {
+        super("web.upstream.blocked.urls", "zimbraReverseProxyBlockedURLs", getDefaultBlockedURLs(),
+                ProxyConfValueType.CUSTOM, ProxyConfOverride.CUSTOM,
+                "URL prefixes that need to be blocked by the web proxy");
+    }
+
+    static ArrayList<String> getDefaultBlockedURLs () {
+        ArrayList<String> BlockedURLs = new ArrayList<String> ();
+        BlockedURLs.add("/scripts");
+        BlockedURLs.add("/lcgi");
+        BlockedURLs.add("/cgi-bin");
+        BlockedURLs.add("/eManager");
+        BlockedURLs.add("/cgi-script");
+        return BlockedURLs;
+    }
+
+    @Override
+    public void update() {
+
+        ArrayList<String> BlockedURLsArr = new ArrayList<String>();
+        String[] BlockedURLs =
+            serverSource.getMultiAttr("zimbraReverseProxyBlockedURLs");
+        for (String c:BlockedURLs)
+        {
+            BlockedURLsArr.add(c);
+        }
+        if (BlockedURLsArr.size() > 0) {
+            mValue = BlockedURLsArr;
+        } else {
+            mValue = mDefault;
+        }
+    }
+
+    @Override
+    public String format(Object o) {
+
+        @SuppressWarnings("unchecked")
+        ArrayList<String> BlockedURLs = (ArrayList<String>) o;
+        StringBuilder BlockedURLsStr = new StringBuilder();
+        for (String c : BlockedURLs) {
+            BlockedURLsStr.append(c.substring(1));
+            BlockedURLsStr.append("|");
+        }
+        BlockedURLsStr.toString();
+
+        return BlockedURLsStr.substring(0, BlockedURLsStr.length() - 1);
     }
 }
 
@@ -2614,6 +2665,7 @@ public class ProxyConfGen
 	    mConfVars.put("web.upstream.zone.size", new ProxyConfVar("web.upstream.zone.size", "zimbraReverseProxyLimitReqZoneSize", "10m", ProxyConfValueType.STRING, ProxyConfOverride.SERVER, "Shared memory zone size in megabytes used for rate-limiting"));
 	    mConfVars.put("web.upstream.zone.rate", new ProxyConfVar("web.upstream.zone.rate", "zimbraReverseProxyLimitReqZoneRate", new Integer(120), ProxyConfValueType.INTEGER, ProxyConfOverride.SERVER, "Maximum rate in requests per second to be enforced by the proxy for a particualr zone. Requests in excess of this are throttled"));
 	    mConfVars.put("web.upstream.restricted.:ips", new WebUpstreamRestrictedIPsVar());
+	    mConfVars.put("web.upstream.blocked.urls", new WebUpstreamBlockedURLsVar());
     }
 
     /* update the default variable map from the active configuration */
