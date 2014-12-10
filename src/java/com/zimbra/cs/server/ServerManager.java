@@ -54,7 +54,7 @@ public final class ServerManager {
     public void startServers() throws ServiceException {
         ZimbraApplication app = ZimbraApplication.getInstance();
         if (app.supports(LmtpServer.class)) {
-            startLmtpServer();
+        	lmtpServer = startLmtpServer();
         }
         if (app.supports(Pop3Server.class)) {
             if (isEnabled(Provisioning.A_zimbraPop3ServerEnabled)) {
