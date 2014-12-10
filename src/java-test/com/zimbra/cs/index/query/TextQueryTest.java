@@ -93,7 +93,6 @@ public final class TextQueryTest {
         Message msgWithAttach = mbox.addMessage(null,
                 MailboxTestUtil.generateMessageWithAttachment("test subject has attach"), dopt, null);
         MailboxTestUtil.waitUntilIndexingCompleted(mbox);
-        Thread.sleep(1000);
         SearchResponse resp;
         List<SearchHit> hits;
         int msgId;
@@ -133,7 +132,6 @@ public final class TextQueryTest {
                 Flag.BITMASK_UNREAD | Flag.BITMASK_FLAGGED);
         Message msgWithFlag = mbox.addMessage(null, MailboxTestUtil.generateMessage("test subject flag"), dopt, null);
         MailboxTestUtil.waitUntilIndexingCompleted(mbox);
-        Thread.sleep(1000);
         SearchResponse resp;
         List<SearchHit> hits;
         int msgId;
@@ -174,7 +172,6 @@ public final class TextQueryTest {
         Message msgWithLowPri = mbox.addMessage(null,
                 MailboxTestUtil.generateLowPriorityMessage("test subject is LOW-PRI"), dopt, null);
         MailboxTestUtil.waitUntilIndexingCompleted(mbox);
-        Thread.sleep(1000);
         SearchResponse resp;
         List<SearchHit> hits;
         int msgId;

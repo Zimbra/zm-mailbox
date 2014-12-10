@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -123,11 +123,11 @@ public class DbVolumeBlobsTest {
 
         Assert.assertEquals(path, getPath(ref));
     }
-    
+
     @Test
     public void testDuplicateRow() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-        
+
         DeliveryOptions opt = new DeliveryOptions();
         opt.setFolderId(Mailbox.ID_FOLDER_INBOX);
         Message msg = mbox.addMessage(null, new ParsedMessage("From: from1@zimbra.com\r\nTo: to1@zimbra.com".getBytes(), false), opt, null);
@@ -142,7 +142,7 @@ public class DbVolumeBlobsTest {
            // expected
         }
     }
-    
+
     @Test
     public void testIncrementalBlobs() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
@@ -150,10 +150,9 @@ public class DbVolumeBlobsTest {
         opt.setFolderId(Mailbox.ID_FOLDER_INBOX);
         long ts1 = System.currentTimeMillis();
         Message msg1 = mbox.addMessage(null, new ParsedMessage("From: from1@zimbra.com\r\nTo: to1@zimbra.com".getBytes(), false), opt, null);
-        Thread.sleep(1000);
         long ts2 = System.currentTimeMillis();
         Message msg2 = mbox.addMessage(null, new ParsedMessage("From: from1@zimbra.com\r\nTo: to1@zimbra.com".getBytes(), false), opt, null);
-        Thread.sleep(1000);
+        MailboxTestUtil.waitUntilIndexingCompleted(mbox);
         long ts3 = System.currentTimeMillis();
         Iterable<MailboxBlobInfo> allBlobs = null;
         Volume vol = VolumeManager.getInstance().getCurrentMessageVolume();
@@ -191,7 +190,7 @@ public class DbVolumeBlobsTest {
 
         Assert.assertTrue(digestToPath.isEmpty());
     }
-    
+
     @Test
     public void testUniqueBlobDigests() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
@@ -344,7 +343,7 @@ public class DbVolumeBlobsTest {
         blobs = DbVolumeBlobs.getBlobReferences(conn, digest, vol);
         Assert.assertEquals(0, blobs.size());
     }
-    
+
     @Test
     public void deleteAllBlobRef() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);

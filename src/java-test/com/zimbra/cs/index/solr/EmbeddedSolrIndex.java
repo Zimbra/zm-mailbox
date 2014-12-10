@@ -53,13 +53,6 @@ public class EmbeddedSolrIndex  extends SolrIndexBase {
         this.accountId = accountId;
     }
 
-    private void loadIfNecessary() {
-        CoreContainer container = getCoreContainer();
-        if (!container.isLoaded(accountId)) {
-            container.load();
-        }
-    }
-
     private CoreContainer getCoreContainer() {
         if (coreContainer == null) {
             coreContainer = new CoreContainer(solrHome);
@@ -75,8 +68,6 @@ public class EmbeddedSolrIndex  extends SolrIndexBase {
     @Override
     public synchronized void initIndex() throws IOException, ServiceException {
         if (!indexExists()) {
-//          loadIfNecessary();
-//          CoreContainer container = getCoreContainer();
             CoreContainer container = getSolrServer().getCoreContainer();
             Properties props = new Properties();
             props.put("configSet", "zimbra");
@@ -188,6 +179,11 @@ public class EmbeddedSolrIndex  extends SolrIndexBase {
         }
 
         @Override
+        protected void setAction(UpdateRequest req) {
+            req.setAction(ACTION.COMMIT, false, true, false);
+        }
+
+        @Override
         public int maxDocs() {
             SolrServer solrServer = null;
             try {
@@ -222,7 +218,7 @@ public class EmbeddedSolrIndex  extends SolrIndexBase {
             SolrServer solrServer = getSolrServer();
             UpdateRequest req = new UpdateRequest();
             setupRequest(req, solrServer);
-            req.setAction(ACTION.COMMIT, false, true, true);
+            setAction(req);
             for (IndexItemEntry entry : entries) {
                 if (entry.documents == null) {
                     ZimbraLog.index.warn("NULL index data item=%s", entry);

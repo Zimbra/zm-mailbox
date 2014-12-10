@@ -66,7 +66,7 @@ public final class AddressBookTestTest {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
         mbox.createContact(null, new ParsedContact(Collections.<String, Object>singletonMap(
                 ContactConstants.A_email, "test1@zimbra.com")), Mailbox.ID_FOLDER_CONTACTS, null);
-        Thread.sleep(1000);
+        MailboxTestUtil.waitUntilIndexingCompleted(mbox);
         account.setMailSieveScript("if addressbook :in \"From\" { tag \"Priority\"; }");
         List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
                 new ParsedMessage("From: test1@zimbra.com".getBytes(), false), 0, account.getName(),

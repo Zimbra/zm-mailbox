@@ -701,13 +701,17 @@ public abstract class SolrIndexBase extends IndexStore {
 
         }
 
+        protected void setAction(UpdateRequest req) {
+            req.setAction(ACTION.COMMIT, false, true, true);
+        }
+
         @Override
         public void add(List<Mailbox.IndexItemEntry> entries) throws IOException, ServiceException {
             SolrServer solrServer = getSolrServer();
             UpdateRequest req = new UpdateRequest();
             setupRequest(req, solrServer);
             if(LC.zimbra_index_manual_commit.booleanValue()) {
-                req.setAction(ACTION.COMMIT, false, true, true);
+                setAction(req);
             }
             for (IndexItemEntry entry : entries) {
                 if (entry.documents == null) {
@@ -762,7 +766,7 @@ public abstract class SolrIndexBase extends IndexStore {
                 setupRequest(req, solrServer);
                 req.add(solrDoc);
                 if(LC.zimbra_index_manual_commit.booleanValue()) {
-                    req.setAction(ACTION.COMMIT, false, true, true);
+                    setAction(req);
                 }
                 try {
                     processRequest(solrServer, req);
@@ -782,7 +786,7 @@ public abstract class SolrIndexBase extends IndexStore {
                     UpdateRequest req = new UpdateRequest().deleteByQuery(String.format("%s:%d",LuceneFields.L_MAILBOX_BLOB_ID,id));
                     setupRequest(req, solrServer);
                     if(LC.zimbra_index_manual_commit.booleanValue()) {
-                        req.setAction(ACTION.COMMIT, false, true, true);
+                        setAction(req);
                     }
                     try {
                         processRequest(solrServer, req);
