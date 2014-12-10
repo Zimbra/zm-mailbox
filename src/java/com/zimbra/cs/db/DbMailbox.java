@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -44,6 +44,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxVersion;
 import com.zimbra.cs.mailbox.Metadata;
+import com.zimbra.cs.util.Zimbra;
 
 /**
  * @since Oct 28, 2004
@@ -864,11 +865,8 @@ public final class DbMailbox {
         }
     }
 
-    // For AlwaysOn, checkpoint for every item/change.
-    //public static final int CHANGE_CHECKPOINT_INCREMENT = Math.max(1, LC.zimbra_mailbox_change_checkpoint_frequency.intValue());
-    //public static final int ITEM_CHECKPOINT_INCREMENT   = 20;
-    public static final int CHANGE_CHECKPOINT_INCREMENT = 1;
-    public static final int ITEM_CHECKPOINT_INCREMENT   = 1;
+    public static final int CHANGE_CHECKPOINT_INCREMENT = Zimbra.isAlwaysOn() ? 1 : Math.max(1, LC.zimbra_mailbox_change_checkpoint_frequency.intValue());
+    public static final int ITEM_CHECKPOINT_INCREMENT   = Zimbra.isAlwaysOn() ? 1 : 20;
 
     public static Mailbox.MailboxData getMailboxStats(DbConnection conn, int mailboxId) throws ServiceException {
         // no locking check because it's a mailbox-level op done before the Mailbox object is instantiated...
