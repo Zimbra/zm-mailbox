@@ -32843,6 +32843,149 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * User Agents that need to be blocked by the proxy (Case insensitive eg.
+     * Firefox, chrome, SAFARI etc)
+     *
+     * @return zimbraReverseProxyBlockedUserAgents, or empty array if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1685)
+    public String[] getReverseProxyBlockedUserAgents() {
+        return getMultiAttr(Provisioning.A_zimbraReverseProxyBlockedUserAgents);
+    }
+
+    /**
+     * User Agents that need to be blocked by the proxy (Case insensitive eg.
+     * Firefox, chrome, SAFARI etc)
+     *
+     * @param zimbraReverseProxyBlockedUserAgents new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1685)
+    public void setReverseProxyBlockedUserAgents(String[] zimbraReverseProxyBlockedUserAgents) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyBlockedUserAgents, zimbraReverseProxyBlockedUserAgents);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * User Agents that need to be blocked by the proxy (Case insensitive eg.
+     * Firefox, chrome, SAFARI etc)
+     *
+     * @param zimbraReverseProxyBlockedUserAgents new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1685)
+    public Map<String,Object> setReverseProxyBlockedUserAgents(String[] zimbraReverseProxyBlockedUserAgents, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyBlockedUserAgents, zimbraReverseProxyBlockedUserAgents);
+        return attrs;
+    }
+
+    /**
+     * User Agents that need to be blocked by the proxy (Case insensitive eg.
+     * Firefox, chrome, SAFARI etc)
+     *
+     * @param zimbraReverseProxyBlockedUserAgents new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1685)
+    public void addReverseProxyBlockedUserAgents(String zimbraReverseProxyBlockedUserAgents) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraReverseProxyBlockedUserAgents, zimbraReverseProxyBlockedUserAgents);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * User Agents that need to be blocked by the proxy (Case insensitive eg.
+     * Firefox, chrome, SAFARI etc)
+     *
+     * @param zimbraReverseProxyBlockedUserAgents new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1685)
+    public Map<String,Object> addReverseProxyBlockedUserAgents(String zimbraReverseProxyBlockedUserAgents, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraReverseProxyBlockedUserAgents, zimbraReverseProxyBlockedUserAgents);
+        return attrs;
+    }
+
+    /**
+     * User Agents that need to be blocked by the proxy (Case insensitive eg.
+     * Firefox, chrome, SAFARI etc)
+     *
+     * @param zimbraReverseProxyBlockedUserAgents existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1685)
+    public void removeReverseProxyBlockedUserAgents(String zimbraReverseProxyBlockedUserAgents) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraReverseProxyBlockedUserAgents, zimbraReverseProxyBlockedUserAgents);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * User Agents that need to be blocked by the proxy (Case insensitive eg.
+     * Firefox, chrome, SAFARI etc)
+     *
+     * @param zimbraReverseProxyBlockedUserAgents existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1685)
+    public Map<String,Object> removeReverseProxyBlockedUserAgents(String zimbraReverseProxyBlockedUserAgents, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraReverseProxyBlockedUserAgents, zimbraReverseProxyBlockedUserAgents);
+        return attrs;
+    }
+
+    /**
+     * User Agents that need to be blocked by the proxy (Case insensitive eg.
+     * Firefox, chrome, SAFARI etc)
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1685)
+    public void unsetReverseProxyBlockedUserAgents() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyBlockedUserAgents, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * User Agents that need to be blocked by the proxy (Case insensitive eg.
+     * Firefox, chrome, SAFARI etc)
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1685)
+    public Map<String,Object> unsetReverseProxyBlockedUserAgents(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyBlockedUserAgents, "");
+        return attrs;
+    }
+
+    /**
      * CA certificate for authenticating client certificates in nginx proxy
      * (https only)
      *

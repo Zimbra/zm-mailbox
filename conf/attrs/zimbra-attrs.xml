@@ -8469,4 +8469,8 @@ TODO: delete them permanently from here
   <desc>URL prefixes that don't exist in mailboxd and need to be blocked by the proxy</desc>
 </attr>
 
+<attr id="1685" name="zimbraReverseProxyBlockedUserAgents" type="string" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="nginxproxy" since="9.0">
+  <desc>User Agents that need to be blocked by the proxy (Case insensitive eg. Firefox, chrome, SAFARI etc)</desc>
+</attr>
+
 </attrs>

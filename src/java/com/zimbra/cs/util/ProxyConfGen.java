@@ -1870,6 +1870,67 @@ class WebUpstreamBlockedURLsVar extends ProxyConfVar {
     }
 }
 
+class WebBlockedUserAgentsEnablerVar extends WebEnablerVar {
+
+    public WebBlockedUserAgentsEnablerVar() {
+        super("web.blocked.user.agents.enabled", "#",
+                "Indicates whether user agent blocking section should be populated " +
+                "(false unless zimbraReverseProxyBlockedUserAgents is populated)");
+    }
+
+
+    @Override
+    public String format(Object o)  {
+        String[] user_agents = serverSource.getMultiAttr("zimbraReverseProxyBlockedUserAgents");
+        if (user_agents.length  == 0) {
+            return "#";
+        } else {
+            return "";
+        }
+    }
+}
+
+class WebBlockedUserAgentsVar extends ProxyConfVar {
+
+    public WebBlockedUserAgentsVar() {
+        super("web.blocked.user.agents", "zimbraReverseProxyBlockedUserAgents", new ArrayList<String> (),
+                ProxyConfValueType.CUSTOM, ProxyConfOverride.CUSTOM,
+                "User Agents that need to be blocked by the web proxy");
+    }
+
+    @Override
+    public void update() {
+
+        ArrayList<String> BlockedUAArr = new ArrayList<String>();
+        String[] BlockedUA =
+            serverSource.getMultiAttr("zimbraReverseProxyBlockedUserAgents");
+        for (String c:BlockedUA)
+        {
+            BlockedUAArr.add(c);
+        }
+        if (BlockedUAArr.size() > 0) {
+            mValue = BlockedUAArr;
+        } else {
+            mValue = mDefault;
+        }
+    }
+
+    @Override
+    public String format(Object o) {
+
+        @SuppressWarnings("unchecked")
+        ArrayList<String> BlockedUA = (ArrayList<String>) o;
+        StringBuilder BlockedUAStr = new StringBuilder();
+        for (String c : BlockedUA) {
+            BlockedUAStr.append(c);
+            BlockedUAStr.append("|");
+        }
+        BlockedUAStr.toString();
+
+        return BlockedUAStr.substring(0, BlockedUAStr.length() - 1);
+    }
+}
+
 public class ProxyConfGen
 {
     private static final int DEFAULT_SERVERS_NAME_HASH_MAX_SIZE = 512;
@@ -2666,6 +2727,8 @@ public class ProxyConfGen
 	    mConfVars.put("web.upstream.zone.rate", new ProxyConfVar("web.upstream.zone.rate", "zimbraReverseProxyLimitReqZoneRate", new Integer(120), ProxyConfValueType.INTEGER, ProxyConfOverride.SERVER, "Maximum rate in requests per second to be enforced by the proxy for a particualr zone. Requests in excess of this are throttled"));
 	    mConfVars.put("web.upstream.restricted.:ips", new WebUpstreamRestrictedIPsVar());
 	    mConfVars.put("web.upstream.blocked.urls", new WebUpstreamBlockedURLsVar());
+	    mConfVars.put("web.blocked.user.agents.enabled", new WebBlockedUserAgentsEnablerVar());
+	    mConfVars.put("web.blocked.user.agents", new WebBlockedUserAgentsVar());
     }
 
     /* update the default variable map from the active configuration */
