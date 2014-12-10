@@ -44,6 +44,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxVersion;
 import com.zimbra.cs.mailbox.Metadata;
+import com.zimbra.cs.util.Zimbra;
 
 /**
  * @since Oct 28, 2004
@@ -848,11 +849,8 @@ public final class DbMailbox {
         }
     }
 
-    // For AlwaysOn, checkpoint for every item/change.
-    //public static final int CHANGE_CHECKPOINT_INCREMENT = Math.max(1, LC.zimbra_mailbox_change_checkpoint_frequency.intValue());
-    //public static final int ITEM_CHECKPOINT_INCREMENT   = 20;
-    public static final int CHANGE_CHECKPOINT_INCREMENT = 1;
-    public static final int ITEM_CHECKPOINT_INCREMENT   = 1;
+    public static final int CHANGE_CHECKPOINT_INCREMENT = Zimbra.isAlwaysOn() ? 1 : Math.max(1, LC.zimbra_mailbox_change_checkpoint_frequency.intValue());
+    public static final int ITEM_CHECKPOINT_INCREMENT   = Zimbra.isAlwaysOn() ? 1 : 20;
 
     public static Mailbox.MailboxData getMailboxStats(DbConnection conn, int mailboxId) throws ServiceException {
         // no locking check because it's a mailbox-level op done before the Mailbox object is instantiated...
