@@ -3854,10 +3854,12 @@ abstract class ImapHandler {
     }
 
     private void fetchException(Throwable cause) throws ImapIOException {
+        final String msg = "IOException fetching IMAP message (" +
+                (cause != null ? cause.getMessage() : "null") + "), closing connection";
         if (ZimbraLog.imap.isDebugEnabled()) {
-            ZimbraLog.imap.debug("IOException fetching IMAP message, closing connection",cause);
+            ZimbraLog.imap.debug(msg, cause);
         } else {
-            ZimbraLog.imap.warn("IOException fetching IMAP message, closing connection");
+            ZimbraLog.imap.warn(msg);
         }
         throw new ImapIOException("IOException during message fetch", cause);
     }
