@@ -175,6 +175,18 @@ $ sudo visudo
 ---
 
 
+## Give nopasswd access to cacerts //required for importing the self signed jetty certificate in truststore.
+
+````
+$ sudo visudo
+{username}  ALL=NOPASSWD:/bin/chmod a+w /opt/zimbra/java/lib/security/cacerts
+````
+
+{username} is your local username. Be sure to insert a [TAB] between {username} and "ALL".
+
+
+---
+
 FOSS Edition - Build & Deploy
 =============================
 
