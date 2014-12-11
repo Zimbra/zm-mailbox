@@ -495,7 +495,7 @@ public class CalendarCollection extends Collection {
                 if (!itemEtag.equals(etag)) {
                     throw new DavException(
                             String.format("CalDAV client has stale event: event has different etag (%s) vs %s",
-                                    itemEtag, etag), HttpServletResponse.SC_CONFLICT);
+                                    itemEtag, etag), HttpServletResponse.SC_PRECONDITION_FAILED);
                 }
                 isNewItem = false;
             }

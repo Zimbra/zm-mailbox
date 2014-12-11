@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -19,8 +19,6 @@ package com.zimbra.cs.dav.resource;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.Map;
@@ -99,7 +97,7 @@ public class AddressObject extends MailItemResource {
         }
         return null;
     }
-        
+
     private static void constructContactGroupFromAppleXProps(DavContext ctxt, Account ownerAccount, VCard vcard, Contact existingContact, int folderId) {
         Map<String, String> xprops = Contact.decodeXProps(vcard.fields.get(ContactConstants.A_vCardXProps));
         String kind = xprops.get(XABSKIND);
@@ -113,16 +111,16 @@ public class AddressObject extends MailItemResource {
                     contactGroup = ContactGroup.init(existingContact, true);
                     // remove all the contacts of type CONTACT_REF that belong to the collection same as the group
                     ArrayList<Member> membersToRemove = new ArrayList<Member>();
-                    for (Member member : contactGroup.getMembers()) {                        
+                    for (Member member : contactGroup.getMembers()) {
                         if (Member.Type.CONTACT_REF.equals(member.getType())) {
                             ItemId itemId = new ItemId(member.getValue(), existingContact.getAccount().getId());
                             if (itemId.belongsTo(existingContact.getAccount())) {
                                 // make sure member belongs to the same collection as the group.
                                 Contact c = getContactByUID(ctxt, itemId.toString(), existingContact.getAccount(), folderId);
                                 if (c != null)
-                                    membersToRemove.add(member);                                    
+                                    membersToRemove.add(member);
                             }
-                        }                            
+                        }
                     }
                     for (Member member : membersToRemove)
                         contactGroup.removeMember(member.getType(), member.getValue());
@@ -132,7 +130,7 @@ public class AddressObject extends MailItemResource {
                         String[] members = Contact.parseMultiValueAttr(memberList);
                         for (String uidStr : members) {
                             if (uidStr.startsWith("urn:uuid:"))
-                                uidStr = uidStr.substring(9);                            
+                                uidStr = uidStr.substring(9);
                             Contact c = getContactByUID(ctxt, uidStr, ownerAccount, folderId);
                             if (c != null) {
                                 // add to the group as a CONTACT_REF
@@ -156,7 +154,7 @@ public class AddressObject extends MailItemResource {
             }
         }
     }
-    
+
     private static void populateContactGroupAppleXProps(DavContext ctxt, Contact contact) {
         if (contact.isContactGroup() == false)
             return;
@@ -169,7 +167,7 @@ public class AddressObject extends MailItemResource {
         // get the x-props first.
         Map<String, String> xprops = contact.getXProps();
         xprops.put(XABSKIND, "group");
-        if (contactGroup != null) {            
+        if (contactGroup != null) {
             ArrayList<String> memberList = new ArrayList<String>(contactGroup.getMembers().size());
             try {
                 for (Member member : contactGroup.getMembers()) {
@@ -177,12 +175,12 @@ public class AddressObject extends MailItemResource {
                         ItemId itemId = new ItemId(member.getValue(), contact.getAccount().getId());
                         if (itemId.belongsTo(contact.getAccount())) {
                             // make sure member belongs to the same collection as the group.
-                            Contact c = getContactByUID(ctxt, itemId.toString(), contact.getAccount(), contact.getFolderId());                             
+                            Contact c = getContactByUID(ctxt, itemId.toString(), contact.getAccount(), contact.getFolderId());
                             if (c != null)
-                                memberList.add("urn:uuid:" + VCard.getUid(c));   
+                                memberList.add("urn:uuid:" + VCard.getUid(c));
                         }
                     }
-                }            
+                }
                 xprops.put(XABSMEMBER, Contact.encodeMultiValueAttr(memberList.toArray(new String[0])));
             } catch (JSONException e) {
                 ZimbraLog.dav.warn("can't create group members xprops for Contact %d", contact.getId(), e);
@@ -231,9 +229,6 @@ public class AddressObject extends MailItemResource {
                     res = UrlNamespace.getResourceAt(ctxt, ctxt.getUser(), ctxt.getPath());
                 }
                 if (res == null) {
-                    String ifnonematch = ctxt.getRequest().getHeader(DavProtocol.HEADER_IF_NONE_MATCH);
-                    if (ifnonematch == null)
-                        throw new DavException("item does not exists", HttpServletResponse.SC_CONFLICT);
                     // Convert Apple contact group to Zimbra contact group.
                     constructContactGroupFromAppleXProps(ctxt, ownerAccount, vcard, null, where.getId());
                     c = mbox.createContact(ctxt.getOperationContext(), vcard.asParsedContact(), where.mId, null);
@@ -242,8 +237,13 @@ public class AddressObject extends MailItemResource {
                 } else {
                     String etag = ctxt.getRequest().getHeader(DavProtocol.HEADER_IF_MATCH);
                     String itemEtag = res.getEtag();
-                    if (etag != null && !etag.equals(itemEtag))
-                        throw new DavException("item etag does not match", HttpServletResponse.SC_CONFLICT);
+                    if (etag != null && !etag.equals(itemEtag)) {
+                        throw new DavException("item etag does not match", HttpServletResponse.SC_PRECONDITION_FAILED);
+                    }
+                    String ifnonematch = ctxt.getRequest().getHeader(DavProtocol.HEADER_IF_NONE_MATCH);
+                    if ((ifnonematch != null) && ifnonematch.equals("*")) {
+                        throw new DavException("item already exists", HttpServletResponse.SC_PRECONDITION_FAILED);
+                    }
                     MailItemResource mir = (MailItemResource) res;
                     constructContactGroupFromAppleXProps(ctxt, ownerAccount, vcard, (Contact) mir.getMailItem(ctxt), where.getId());
                     vcard.merge((Contact) mir.getMailItem(ctxt));
@@ -265,7 +265,7 @@ public class AddressObject extends MailItemResource {
             return null;
         return new AddressObject(ctxt, c);
     }
-    
+
     public static AddressObject getAddressObjectByUID(DavContext ctxt, String uid, Account account) throws ServiceException {
         return getAddressObjectByUID(ctxt, uid, account, null);
     }
@@ -320,10 +320,10 @@ public class AddressObject extends MailItemResource {
                 Closeables.closeQuietly(zqr);
             }
         }
-        
+
         if ((item != null) && (folderId >= 0) && (item.getFolderId() != folderId))
             item = null;
-        
+
         return item;
     }
 }

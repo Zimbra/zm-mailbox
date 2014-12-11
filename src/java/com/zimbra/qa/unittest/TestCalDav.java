@@ -797,8 +797,7 @@ public class TestCalDav extends TestCase {
         String body = androidSeriesMeetingTemplate.replace("%%ORG%%", dav1.getName())
                 .replace("%%ATT%%", dav2.getName())
                 .replace("%%UID%%", androidSeriesMeetingUid);
-        putMethod.setRequestEntity(new ByteArrayRequestEntity(body.getBytes(),
-                MimeConstants.CT_TEXT_CALENDAR));
+        putMethod.setRequestEntity(new ByteArrayRequestEntity(body.getBytes(), MimeConstants.CT_TEXT_CALENDAR));
         HttpMethodExecutor.execute(client, putMethod, HttpStatus.SC_CREATED);
 
         String inboxhref = TestCalDav.waitForNewSchedulingRequestByUID(dav2, androidSeriesMeetingUid);
@@ -806,7 +805,22 @@ public class TestCalDav extends TestCase {
 
         GetMethod getMethod = new GetMethod(url);
         addBasicAuthHeaderForUser(getMethod, dav1);
-        HttpMethodExecutor.execute(client, getMethod, HttpStatus.SC_OK);
+        HttpMethodExecutor exe = HttpMethodExecutor.execute(client, getMethod, HttpStatus.SC_OK);
+        String etag = null;
+        for (Header hdr : exe.respHeaders) {
+            if (DavProtocol.HEADER_ETAG.equals(hdr.getName())) {
+                etag = hdr.getValue();
+            }
+        }
+        assertNotNull("ETag from get", etag);
+
+        // Check that we fail if the etag is wrong
+        putMethod = new PutMethod(url);
+        addBasicAuthHeaderForUser(putMethod, dav1);
+        putMethod.addRequestHeader("Content-Type", "text/calendar");
+        putMethod.addRequestHeader(DavProtocol.HEADER_IF_MATCH, "willNotMatch");
+        putMethod.setRequestEntity(new ByteArrayRequestEntity(body.getBytes(), MimeConstants.CT_TEXT_CALENDAR));
+        HttpMethodExecutor.execute(client, putMethod, HttpStatus.SC_PRECONDITION_FAILED);
 
         PropFindMethod propFindMethod = new PropFindMethod(getFolderUrl(dav1, "Calendar"));
         addBasicAuthHeaderForUser(propFindMethod, dav1);
@@ -1199,6 +1213,39 @@ public class TestCalDav extends TestCase {
 
     public void testAttendeeSuppressedAutoDecline() throws Exception {
         attendeeDeleteFromCalendar(true /* suppressReply */);
+    }
+
+    public static String simpleVcard = "BEGIN:VCARD\r\n" +
+                                        "VERSION:3.0\r\n" +
+                                        "FN:TestCal\r\n" +
+                                        "N:Dog;Scruffy\r\n" +
+                                        "EMAIL;TYPE=INTERNET,PREF:scruffy@example.com\r\n" +
+                                        "UID:SCRUFF1\r\n" +
+                                        "END:VCARD\r\n";
+
+    public void testCreateContactWithIfNoneMatchTesting() throws ServiceException, IOException {
+        Account dav1 = TestUtil.createAccount(DAV1);
+        String davBaseName = "SCRUFF1.vcf";  // Based on UID
+        String contactsFolderUrl = getFolderUrl(dav1, "Contacts");
+        String url = String.format("%s%s", contactsFolderUrl, davBaseName);
+        HttpClient client = new HttpClient();
+        PutMethod putMethod = new PutMethod(url);
+        addBasicAuthHeaderForUser(putMethod, dav1);
+        putMethod.addRequestHeader("Content-Type", "text/vcard");
+
+        putMethod.setRequestEntity(new ByteArrayRequestEntity(simpleVcard.getBytes(), MimeConstants.CT_TEXT_VCARD));
+        // Bug 84246 this used to fail with 409 Conflict because we used to require an If-None-Match header
+        HttpMethodExecutor.execute(client, putMethod, HttpStatus.SC_CREATED);
+
+        // Check that trying to put the same thing again when we don't expect it to exist (i.e. Using If-None-Match
+        // header) will fail.
+        putMethod = new PutMethod(url);
+        addBasicAuthHeaderForUser(putMethod, dav1);
+        putMethod.addRequestHeader("Content-Type", "text/vcard");
+        putMethod.addRequestHeader(DavProtocol.HEADER_IF_NONE_MATCH, "*");
+        putMethod.setRequestEntity(new ByteArrayRequestEntity(simpleVcard.getBytes(), MimeConstants.CT_TEXT_VCARD));
+        HttpMethodExecutor.execute(client, putMethod, HttpStatus.SC_PRECONDITION_FAILED);
+
     }
 
     @Override
