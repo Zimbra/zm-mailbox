@@ -738,6 +738,8 @@ public abstract class SolrIndexBase extends IndexStore {
                 processRequest(solrServer, req);
             } catch (RemoteSolrException | SolrServerException e) {
                 ZimbraLog.index.error("Problem indexing documents", e);
+            }  finally {
+                shutdown(solrServer);
             }
         }
 
@@ -774,6 +776,8 @@ public abstract class SolrIndexBase extends IndexStore {
                     ZimbraLog.index.error("Problem indexing document with id=%d", item.getId(),e);
                 } catch (RemoteSolrException e) {
                     ZimbraLog.index.error("Problem indexing document with id=%d", item.getId(),e);
+                }  finally {
+                    shutdown(solrServer);
                 }
             }
         }

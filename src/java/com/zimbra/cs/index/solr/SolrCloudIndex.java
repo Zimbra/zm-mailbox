@@ -5,13 +5,17 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrRequest;
 import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.CloudSolrServer;
 import org.apache.solr.client.solrj.impl.HttpSolrServer.RemoteSolrException;
+import org.apache.solr.client.solrj.impl.LBHttpSolrServer;
 import org.apache.solr.client.solrj.request.CoreAdminRequest;
 import org.apache.solr.client.solrj.request.QueryRequest;
 import org.apache.solr.client.solrj.request.UpdateRequest;
@@ -32,8 +36,10 @@ import com.zimbra.cs.index.ZimbraIndexSearcher;
 //TODO let Solr control batching of documents instead of MailboxIndex class
 public class SolrCloudIndex extends SolrIndexBase {
     private boolean solrCollectionProvisioned = false;
-    private SolrCloudIndex(String accountId) {
+    private CloudSolrServer solrServer = null;
+    private SolrCloudIndex(String accountId, CloudSolrServer cloudSolrServer) {
         this.accountId = accountId;
+        this.solrServer = cloudSolrServer;
     }
 
     @Override
@@ -42,21 +48,15 @@ public class SolrCloudIndex extends SolrIndexBase {
             //TODO switch to using collections?action=LIST when it is released (Solr 4.8 or 5). JIRA issue #SOLR-5466
             SolrQuery q = new SolrQuery().setParam("collection", accountId).setQuery("*:*").setRows(0);
             QueryRequest req = new QueryRequest(q);
-            SolrServer solrServer = null;
             try {
-                solrServer = getSolrServer();
                 processRequest(solrServer, req);
                 solrCollectionProvisioned = true;
             } catch (SolrServerException e) {
                 ZimbraLog.index.error("Problem checking if Solr collection exists for account %s" ,accountId, e);
             } catch (SolrException e) {
                 ZimbraLog.index.info("Solr collection for account %s does not exist", accountId);
-            }  catch (ServiceException e) {
+            }  catch (IOException e) {
                 ZimbraLog.index.error("Problem checking if Solr collection exists for account %s" ,accountId, e);
-            } catch (IOException e) {
-                ZimbraLog.index.error("Problem checking if Solr collection exists for account %s" ,accountId, e);
-            } finally {
-                shutdown (solrServer);
             }
         }
         return solrCollectionProvisioned;
@@ -74,19 +74,16 @@ public class SolrCloudIndex extends SolrIndexBase {
         params.set(CommonParams.QT, "/replication");
         params.set("collection", accountId);
         QueryRequest req = new QueryRequest(params);
-        SolrServer solrServer = getSolrServer();
         setupRequest(req, solrServer);
         @SuppressWarnings("rawtypes")
         NamedList rsp;
         try {
-            ((CloudSolrServer)solrServer).setZkClientTimeout(60000);
-            ((CloudSolrServer)solrServer).setZkConnectTimeout(15000);
+            //solrServer.setZkClientTimeout(60000);
+            //solrServer.setZkConnectTimeout(15000);
             rsp = solrServer.request(req);
             version = (Long) rsp.get(GENERATION);
         } catch (SolrServerException | IOException e) {
           throw ServiceException.FAILURE(e.getMessage(),e);
-        } finally {
-            shutdown(solrServer);
         }
         return version;
     }
@@ -106,11 +103,10 @@ public class SolrCloudIndex extends SolrIndexBase {
         params.set(CommonParams.QT, "/replication");
         params.set("collection", accountId);
         QueryRequest req = new QueryRequest(params);
-        SolrServer solrServer = getSolrServer();
         setupRequest(req, solrServer);
         try {
-            ((CloudSolrServer)solrServer).setZkClientTimeout(60000);
-            ((CloudSolrServer)solrServer).setZkConnectTimeout(15000);
+            //solrServer.setZkClientTimeout(60000);
+            //solrServer.setZkConnectTimeout(15000);
             @SuppressWarnings("rawtypes")
             NamedList response = solrServer.request(req);
 
@@ -126,14 +122,11 @@ public class SolrCloudIndex extends SolrIndexBase {
             }
         } catch (SolrServerException | IOException e) {
             throw ServiceException.FAILURE(e.getMessage(), e);
-        } finally {
-            shutdown(solrServer);
         }
     }
     @Override
     public void initIndex() throws IOException, ServiceException {
         if (!indexExists()) {
-            SolrServer solrServer = getSolrServer();
             try {
                 ModifiableSolrParams params = new ModifiableSolrParams();
                 params.set("action", CollectionAction.CREATE.toString());
@@ -163,8 +156,6 @@ public class SolrCloudIndex extends SolrIndexBase {
                 String errorMsg = String.format("Problem creating new Solr collection for account %s",accountId);
                 ZimbraLog.index.error(errorMsg, e);
                 throw new IOException(errorMsg,e);
-            } finally {
-                shutdown(solrServer);
             }
 
             //TODO: remove this test code. Added, to give ZooKeeper time to update cluster state when running multiple Solr instances on one laptop
@@ -210,7 +201,7 @@ public class SolrCloudIndex extends SolrIndexBase {
     @Override
     public void deleteIndex() throws IOException, ServiceException {
         if (indexExists()) {
-            SolrServer solrServer = getSolrServer();
+
             try {
                 ModifiableSolrParams params = new ModifiableSolrParams();
                 params.set("action", CollectionAction.DELETE.toString());
@@ -225,22 +216,23 @@ public class SolrCloudIndex extends SolrIndexBase {
                 ZimbraLog.index.error("Problem deleting Solr collection" , e);
             } catch (IOException e) {
                 ZimbraLog.index.error("Problem deleting Solr collection" , e);
-            } finally {
-                shutdown (solrServer);
             }
         }
 
     }
 
     public static final class Factory implements IndexStore.Factory {
-
+        PoolingHttpClientConnectionManager cm = null;
+        CloudSolrServer cloudSolrServer = null;
         public Factory() {
+            cm = new PoolingHttpClientConnectionManager();
             ZimbraLog.index.info("Created SolrlIndexStore\n");
         }
 
         @Override
-        public SolrIndexBase getIndexStore(String accountId) {
-            return new SolrCloudIndex(accountId);
+        public SolrIndexBase getIndexStore(String accountId) throws ServiceException {
+            cloudSolrServer = new CloudSolrServer(Provisioning.getInstance().getLocalServer().getAttr(Provisioning.A_zimbraSolrURLBase, true), new LBHttpSolrServer(HttpClients.createMinimal(cm)));
+            return new SolrCloudIndex(accountId,  cloudSolrServer);
         }
 
         /**
@@ -248,7 +240,8 @@ public class SolrCloudIndex extends SolrIndexBase {
          */
         @Override
         public void destroy() {
-            //solrServer.shutdown();
+            cm.closeIdleConnections(0, TimeUnit.MILLISECONDS);
+            cloudSolrServer.shutdown();
         }
     }
 
@@ -258,7 +251,6 @@ public class SolrCloudIndex extends SolrIndexBase {
         public int maxDocs() {
             SolrServer solrServer = null;
             try {
-                solrServer = getSolrServer();
                 CoreAdminResponse resp = CoreAdminRequest.getStatus(null, solrServer);
                 Iterator<Map.Entry<String, NamedList<Object>>> iter = resp.getCoreStatus().iterator();
                 while(iter.hasNext()) {
@@ -276,10 +268,6 @@ public class SolrCloudIndex extends SolrIndexBase {
                 ZimbraLog.index.error("Cought SolrServerException retrieving maxDocs for mailbox %s", accountId,e);
             } catch (RemoteSolrException e) {
                 ZimbraLog.index.error("Cought RemoteSolrException retrieving maxDocs for mailbox %s", accountId,e);
-            } catch (ServiceException e) {
-                ZimbraLog.index.error("Cought ServiceException retrieving maxDocs for mailbox %s", accountId,e );
-            } finally {
-                shutdown(solrServer);
             }
             return 0;
         }
@@ -291,7 +279,6 @@ public class SolrCloudIndex extends SolrIndexBase {
         public int numDeletedDocs() {
             SolrServer solrServer = null;
             try {
-                solrServer = getSolrServer();
                 CoreAdminResponse resp = CoreAdminRequest.getStatus(null, solrServer);
                 Iterator<Map.Entry<String, NamedList<Object>>> iter = resp.getCoreStatus().iterator();
                 while(iter.hasNext()) {
@@ -306,10 +293,6 @@ public class SolrCloudIndex extends SolrIndexBase {
                 ZimbraLog.index.error("Cought SolrServerException retrieving number of deleted documents in mailbox %s", accountId,e);
             } catch (RemoteSolrException e) {
                 ZimbraLog.index.error("Cought SolrServerException retrieving number of deleted documents in mailbox %s", accountId,e);
-            } catch (ServiceException e) {
-                ZimbraLog.index.error("Cought ServiceException retrieving number of deleted documents in mailbox %s", accountId,e);
-            } finally {
-                shutdown(solrServer);
             }
             return 0;
         }
@@ -327,13 +310,12 @@ public class SolrCloudIndex extends SolrIndexBase {
 
     @Override
     public SolrServer getSolrServer() throws ServiceException {
-        return new CloudSolrServer(Provisioning.getInstance().getLocalServer().getAttr(Provisioning.A_zimbraSolrURLBase, true));
+        return solrServer;
     }
 
     @Override
     public void shutdown(SolrServer server) {
-        ((CloudSolrServer)server).shutdown();
-
+        //do nothing. CloudSolrServer is thread safe and should not be shut down after each request
     }
 }
 
