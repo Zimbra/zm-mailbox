@@ -22,6 +22,7 @@ import org.apache.lucene.index.Term;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.TermRangeQuery;
 import org.apache.lucene.util.BytesRef;
+import org.apache.lucene.util.BytesRefBuilder;
 import org.apache.lucene.util.NumericUtils;
 
 import com.zimbra.common.service.ServiceException;
@@ -117,47 +118,46 @@ public final class FieldQuery extends TextQuery {
         @Override
         public QueryOperation compile(Mailbox mbox, boolean bool) {
             org.apache.lucene.search.Query query = null;
-            int BUF_SIZE_INT = 31/7 + 2;
-        	BytesRef encodedNumBytes = new BytesRef(BUF_SIZE_INT);
-        	BytesRef encodedMaxBytes;
-        	BytesRef encodedMinBytes;
+        	BytesRefBuilder encodedNumBytes = new BytesRefBuilder();
+        	BytesRefBuilder encodedMaxBytes;
+        	BytesRefBuilder encodedMinBytes;
         	NumericUtils.intToPrefixCoded(number, 0, encodedNumBytes);
 
             switch (range) {
                 case EQ:
                     query = new TermQuery(new Term(LuceneFields.L_FIELD,
-                            name + "#:" + encodedNumBytes.utf8ToString()));
+                            name + "#:" + encodedNumBytes.get().utf8ToString()));
                     break;
                 case GT:
-                	encodedMaxBytes = new BytesRef(BUF_SIZE_INT);
+                	encodedMaxBytes = new BytesRefBuilder();
                 	NumericUtils.intToPrefixCoded(Integer.MAX_VALUE, 0, encodedMaxBytes);
                     query = new TermRangeQuery(LuceneFields.L_FIELD,
-                            new BytesRef(name + "#:" + encodedNumBytes.utf8ToString()),
-                            new BytesRef(name + "#:" + encodedMaxBytes.utf8ToString()),
+                            new BytesRef(name + "#:" + encodedNumBytes.get().utf8ToString()),
+                            new BytesRef(name + "#:" + encodedMaxBytes.get().utf8ToString()),
                             false, true);
                     break;
                 case GT_EQ:
-                	encodedMaxBytes = new BytesRef(BUF_SIZE_INT);
+                	encodedMaxBytes = new BytesRefBuilder();
                 	NumericUtils.intToPrefixCoded(Integer.MAX_VALUE, 0, encodedMaxBytes);
                     query = new TermRangeQuery(LuceneFields.L_FIELD,
-                            new BytesRef(name + "#:" + encodedNumBytes.utf8ToString()),
-                            new BytesRef(name + "#:" + encodedMaxBytes.utf8ToString()),
+                            new BytesRef(name + "#:" + encodedNumBytes.get().utf8ToString()),
+                            new BytesRef(name + "#:" + encodedMaxBytes.get().utf8ToString()),
                             true, true);
                     break;
                 case LT:
-                	encodedMinBytes = new BytesRef(BUF_SIZE_INT);
+                	encodedMinBytes = new BytesRefBuilder();
                 	NumericUtils.intToPrefixCoded(Integer.MIN_VALUE, 0, encodedMinBytes);
                     query = new TermRangeQuery(LuceneFields.L_FIELD,
-                            new BytesRef(name + "#:" + encodedMinBytes.utf8ToString()),
-                            new BytesRef(name + "#:" + encodedNumBytes.utf8ToString()),
+                            new BytesRef(name + "#:" + encodedMinBytes.get().utf8ToString()),
+                            new BytesRef(name + "#:" + encodedNumBytes.get().utf8ToString()),
                             true, false);
                     break;
                 case LT_EQ:
-                	encodedMinBytes = new BytesRef(BUF_SIZE_INT);
+                	encodedMinBytes = new BytesRefBuilder();
                 	NumericUtils.intToPrefixCoded(Integer.MIN_VALUE, 0, encodedMinBytes);
                     query = new TermRangeQuery(LuceneFields.L_FIELD,
-                            new BytesRef(name + "#:" + encodedMinBytes.utf8ToString()),
-                            new BytesRef(name + "#:" + encodedNumBytes.utf8ToString()),
+                            new BytesRef(name + "#:" + encodedMinBytes.get().utf8ToString()),
+                            new BytesRef(name + "#:" + encodedNumBytes.get().utf8ToString()),
                             true, true);
                     break;
                 default:

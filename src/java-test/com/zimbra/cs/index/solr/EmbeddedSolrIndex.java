@@ -75,7 +75,7 @@ public class EmbeddedSolrIndex  extends SolrIndexBase {
             container.getCoresLocator().create(container, cd);
             try {
                 SolrCore c = container.create(cd);
-                container.register(accountId, c, false);
+                //container.register(accountId, c, false);
             } catch (SolrException e) {
                 //already may be created by another thread
             }
@@ -304,7 +304,7 @@ public class EmbeddedSolrIndex  extends SolrIndexBase {
                        CoreDescriptor cd = new CoreDescriptor(coreContainer, "solrtestcore", "solrtestcore", props);
                        SolrCore c = coreContainer.create(cd);
                        coreContainer.getCoresLocator().create(coreContainer, cd);
-                       coreContainer.register("solrtestcore", c, false);
+                      // coreContainer.register("solrtestcore", c, false);
                     }
                } finally {
                    unlock();

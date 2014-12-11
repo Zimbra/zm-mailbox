@@ -1,16 +1,15 @@
 package com.zimbra.cs.index.solr;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.lucene.util.BytesRef;
+import org.apache.lucene.util.BytesRefBuilder;
 import org.apache.lucene.util.NumericUtils;
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.base.Strings;
@@ -26,11 +25,11 @@ public class FieldTokenizerTest extends SolrPluginTestBase {
         tokens.addAll(getTokens("zmheaders",String.format("%s:%s", "test3", "zzz")));
         tokens.addAll(getTokens("zmheaders",String.format("%s:%s", "#calendarItemClass", "public")));
         tokens.addAll(getTokens("zmheaders",String.format("%s:%s", "zimbraCalResCapacity", "10")));
- 
-        BytesRef bytes = new BytesRef(31/7 + 2);
+
+        BytesRefBuilder bytes = new BytesRefBuilder();
         NumericUtils.intToPrefixCoded(10, 0, bytes);
-        String intCoded = bytes.utf8ToString();
-        
+        String intCoded = bytes.get().utf8ToString();
+
         assertEquals(Arrays.asList(
             "test1:val1", "test1:val2", "test1:val3", "test1:val4", "test1:test", "test1:val5",
             "#test2:2val1", "#test2:2val2:_123", "#test2:2val3", "test3:zzz", "#calendaritemclass:public",
@@ -44,7 +43,7 @@ public class FieldTokenizerTest extends SolrPluginTestBase {
         src.append(String.format("%s:%s",Strings.repeat("k", 50), Strings.repeat("v", 50)));
         Assert.assertEquals(Collections.emptyList(), getTokens("zmheaders", src.toString()));
 
-        src = new StringBuilder();  
+        src = new StringBuilder();
         src.append("k:");
         for (int i = 0; i < 1001; i++) {
             src.append(" v");
