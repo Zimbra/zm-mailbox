@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -16,11 +16,14 @@
  */
 package com.zimbra.qa.unittest.server;
 
+import static org.junit.Assert.assertTrue;
+
 import java.util.HashMap;
 import java.util.Map;
 
-import junit.framework.Assert;
-import junit.framework.TestCase;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.ProvisioningConstants;
@@ -35,7 +38,7 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.qa.unittest.TestUtil;
 import com.zimbra.soap.admin.type.DataSourceType;
 
-public class TestCalDavImportServer extends TestCase {
+public class TestCalDavImportServer {
     private static final String NAME_PREFIX = TestCalDavImportServer.class.getSimpleName();
     private static final String USER_NAME = NAME_PREFIX + "user1";
     private static final String DATA_SOURCE_NAME = NAME_PREFIX;
@@ -44,7 +47,7 @@ public class TestCalDavImportServer extends TestCase {
     private Account account = null;
     private Mailbox mbox = null;
 
-    @Override
+    @Before
     public void setUp() throws Exception {
         cleanUp();
         Provisioning prov = Provisioning.getInstance();
@@ -59,16 +62,17 @@ public class TestCalDavImportServer extends TestCase {
         createDataSource();
     }
 
+    @Test
     public void testRootFolderSyncToken() throws Exception {
-        Assert.assertTrue(rootFolder.getLastSyncDate() == 0);
+        assertTrue(rootFolder.getLastSyncDate() == 0);
         // sync data source
         CalDavDataImport davDataImport = new CalDavDataImport(getDataSource());
         davDataImport.importData(null, true);
         // make sure sync token is updated on root folder
-        Assert.assertTrue(rootFolder.getLastSyncDate() > 0);
+        assertTrue(rootFolder.getLastSyncDate() > 0);
     }
 
-    @Override
+    @After
     public void tearDown() throws Exception {
         cleanUp();
     }

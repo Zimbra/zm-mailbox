@@ -16,10 +16,14 @@
  */
 package com.zimbra.qa.unittest;
 
+import static org.junit.Assert.assertNotNull;
+
 import java.io.File;
 import java.util.Date;
 
-import junit.framework.TestCase;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 import com.zimbra.client.ZMailbox;
 import com.zimbra.client.ZMessage;
@@ -47,15 +51,15 @@ import com.zimbra.soap.mail.type.MsgSpec;
 import com.zimbra.soap.mail.type.MsgWithGroupInfo;
 import com.zimbra.soap.mail.type.NewMountpointSpec;
 
-public class TestInvite extends TestCase {
+public class TestInvite  {
 
     private SoapProvisioning prov = null;
     private static String NAME_PREFIX = "TestInvite";
-    private static String USER_NAME = "user1";
     private static String ORGANIZER = "tiorganizer";
     private static String ATTENDEE = "tiattendee";
     private static String DELEGATE = "tidelegate";
 
+    @Test
     public void testBug86864DelegateInboxInviteLooksLikeInvite() throws Exception {
         TestUtil.createAccount(ORGANIZER);
         Account attendee = TestUtil.createAccount(ATTENDEE);
@@ -115,7 +119,7 @@ public class TestInvite extends TestCase {
         assertNotNull("null invite in message in GetMsgResponse in delegate inbox regression to Bug 86864?", invite);
     }
 
-    @Override
+    @Before
     public void setUp() throws Exception {
         if (!TestUtil.fromRunUnitTests) {
             TestUtil.cliSetup();
@@ -129,7 +133,7 @@ public class TestInvite extends TestCase {
         tearDown();
     }
 
-    @Override
+    @After
     public void tearDown() throws Exception {
         if (prov == null) {
             prov = TestUtil.newSoapProvisioning();

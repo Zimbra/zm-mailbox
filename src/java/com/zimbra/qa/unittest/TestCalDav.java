@@ -16,6 +16,12 @@
  */
 package com.zimbra.qa.unittest;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
@@ -38,7 +44,6 @@ import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
-import junit.framework.TestCase;
 import net.fortuna.ical4j.model.TimeZoneRegistry;
 import net.fortuna.ical4j.model.TimeZoneRegistryFactory;
 
@@ -52,6 +57,8 @@ import org.apache.commons.httpclient.methods.EntityEnclosingMethod;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.httpclient.methods.PutMethod;
+import org.junit.Before;
+import org.junit.Test;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -93,7 +100,7 @@ import com.zimbra.cs.dav.DavProtocol;
 import com.zimbra.cs.dav.resource.UrlNamespace;
 import com.zimbra.cs.dav.service.DavServlet;
 
-public class TestCalDav extends TestCase {
+public class TestCalDav  {
 
     static final TimeZoneRegistry tzRegistry = TimeZoneRegistryFactory.getInstance().createRegistry();
     private static String NAME_PREFIX = "TestCalDav";
@@ -472,6 +479,7 @@ public class TestCalDav extends TestCase {
         return waitForItemInCalendarCollectionByUID(url, acct, UID, true, 10000);
     }
 
+    @Test
     public void testCalendarQueryOnInbox() throws Exception {
         Account dav1 = TestUtil.createAccount(DAV1);
         String url = getSchedulingInboxUrl(dav1, dav1);
@@ -491,7 +499,7 @@ public class TestCalDav extends TestCase {
         rootElem = doc.getDocumentElement();
         assertTrue("response should have child elements", rootElem.hasChildNodes());
     }
-
+    @Test
     public void testCalendarQueryOnOutbox() throws Exception {
         Account dav1 = TestUtil.createAccount(DAV1);
         ZMailbox dav1mbox = TestUtil.getZMailbox(USER_NAME);
@@ -514,13 +522,13 @@ public class TestCalDav extends TestCase {
         assertFalse("response for items in outbox should have no child elements, even though we sent an invite",
         rootElem.hasChildNodes());
     }
-
+    @Test
     public void testPropFindSupportedReportSetOnInbox() throws Exception {
         Account user1 = TestUtil.getAccount(USER_NAME);
         checkPropFindSupportedReportSet(user1, getSchedulingInboxUrl(user1, user1),
                 UrlNamespace.getSchedulingInboxUrl(user1.getName(), user1.getName()));
     }
-
+    @Test
     public void testPropFindSupportedReportSetOnOutbox() throws Exception {
         Account user1 = TestUtil.getAccount(USER_NAME);
         checkPropFindSupportedReportSet(user1, getSchedulingOutboxUrl(user1, user1),
@@ -533,6 +541,7 @@ public class TestCalDav extends TestCase {
             "    <x0:supported-report-set/>\n" +
             "  </x0:prop>\n" +
             "</x0:propfind>";
+
     public void checkPropFindSupportedReportSet(Account user, String fullurl, String shorturl) throws Exception {
         PropFindMethod method = new PropFindMethod(fullurl);
         addBasicAuthHeaderForUser(method, user);
@@ -644,24 +653,25 @@ public class TestCalDav extends TestCase {
     private final String[] componentsForBothTasksAndEvents = {"VEVENT", "VTODO", "VFREEBUSY"};
     private final String[] eventComponents = {"VEVENT", "VFREEBUSY"};
     private final String[] todoComponents = {"VTODO", "VFREEBUSY"};
+    @Test
     public void testPropFindSupportedCalendarComponentSetOnInbox() throws Exception {
         Account user1 = TestUtil.getAccount(USER_NAME);
         checkPropFindSupportedCalendarComponentSet(user1, getSchedulingInboxUrl(user1, user1),
                 UrlNamespace.getSchedulingInboxUrl(user1.getName(), user1.getName()), componentsForBothTasksAndEvents);
     }
-
+    @Test
     public void testPropFindSupportedCalendarComponentSetOnOutbox() throws Exception {
         Account user1 = TestUtil.getAccount(USER_NAME);
         checkPropFindSupportedCalendarComponentSet(user1, getSchedulingOutboxUrl(user1, user1),
                 UrlNamespace.getSchedulingOutboxUrl(user1.getName(), user1.getName()), componentsForBothTasksAndEvents);
     }
-
+    @Test
     public void testPropFindSupportedCalendarComponentSetOnCalendar() throws Exception {
         Account user1 = TestUtil.getAccount(USER_NAME);
         checkPropFindSupportedCalendarComponentSet(user1, getFolderUrl(user1, "Calendar"),
                 UrlNamespace.getFolderUrl(user1.getName(), "Calendar"), eventComponents);
     }
-
+    @Test
     public void testPropFindSupportedCalendarComponentSetOnTasks() throws Exception {
         Account user1 = TestUtil.getAccount(USER_NAME);
         checkPropFindSupportedCalendarComponentSet(user1, getFolderUrl(user1, "Tasks"),
@@ -677,6 +687,7 @@ public class TestCalDav extends TestCase {
      *      at com.zimbra.cs.dav.service.method.Put.handle(Put.java:49)
      *      at com.zimbra.cs.dav.service.DavServlet.service(DavServlet.java:322)
      */
+    @Test
     public void testCreateUsingClientChosenName() throws ServiceException, IOException {
         Account dav1 = TestUtil.createAccount(DAV1);
         String davBaseName = "clientInvented.now";
@@ -784,6 +795,7 @@ public class TestCalDav extends TestCase {
             "END:VEVENT\n" +
             "END:VCALENDAR\n";
             public String androidSeriesMeetingUid = "6db50587-d283-49a1-9cf4-63aa27406829";
+    @Test
     public void testAndroidMeetingSeries() throws Exception {
         Account dav1 = TestUtil.createAccount(DAV1);
         Account dav2 = TestUtil.createAccount(DAV2);
@@ -892,6 +904,7 @@ public class TestCalDav extends TestCase {
         return icalString;
     }
 
+    @Test
     public void testSimpleMkcol() throws Exception {
         Account dav1 = TestUtil.createAccount(DAV1);
         StringBuilder url = getLocalServerRoot();
@@ -902,6 +915,7 @@ public class TestCalDav extends TestCase {
         HttpMethodExecutor.execute(client, method, HttpStatus.SC_CREATED);
     }
 
+    @Test
     public void testMkcol4addressBook() throws Exception {
         String xml = "<D:mkcol xmlns:D=\"DAV:\" xmlns:C=\"urn:ietf:params:xml:ns:carddav\">" +
                 "     <D:set>" +
@@ -1002,6 +1016,7 @@ public class TestCalDav extends TestCase {
      * If the list is not empty, each listed calendar affects freebusy.
      * Bug 85275 - Apple Calendar specifies URLs with "@" encoded as %40 - causing us to drop all calendar from FB set
      */
+    @Test
     public void testPropPatchCalendarFreeBusySetSettingUsingEscapedUrls() throws Exception {
         String disableFreeBusyXml =
                 "<A:propertyupdate xmlns:A=\"DAV:\">" +
@@ -1090,6 +1105,7 @@ public class TestCalDav extends TestCase {
             "END:DAYLIGHT\n" +
             "END:VTIMEZONE\n" +
             "END:VCALENDAR\n";
+    @Test
     public void testFuzzyTimeZoneMatchNotesWEurope() throws Exception {
         try (ByteArrayInputStream bais = new ByteArrayInputStream(VtimeZoneLotusNotesWEurope.getBytes())) {
             ZVCalendar tzcal = ZCalendar.ZCalendarBuilder.build(bais, MimeConstants.P_CHARSET_UTF8);
@@ -1120,6 +1136,7 @@ public class TestCalDav extends TestCase {
             "END:DAYLIGHT\n" +
             "END:VTIMEZONE\n" +
             "END:VCALENDAR\n";
+    @Test
     public void testFuzzyTimeZoneMatchGMT_06() throws Exception {
         try (ByteArrayInputStream bais = new ByteArrayInputStream(VtimeZoneGMT_0600_0500.getBytes())) {
             ZVCalendar tzcal = ZCalendar.ZCalendarBuilder.build(bais, MimeConstants.P_CHARSET_UTF8);
@@ -1150,6 +1167,7 @@ public class TestCalDav extends TestCase {
             "END:DAYLIGHT\n" +
             "END:VTIMEZONE\n" +
             "END:VCALENDAR\n";
+    @Test
     public void testFuzzyTimeZoneMatchGMT_08() throws Exception {
         try (ByteArrayInputStream bais = new ByteArrayInputStream(VtimeZoneGMT_0800_0700.getBytes())) {
             ZVCalendar tzcal = ZCalendar.ZCalendarBuilder.build(bais, MimeConstants.P_CHARSET_UTF8);
@@ -1206,14 +1224,15 @@ public class TestCalDav extends TestCase {
             assertNotNull("inbox DECLINE reply msg invite", msgs.get(0).getInvite());
         }
     }
-
+    @Test
     public void testAttendeeAutoDecline() throws Exception {
         attendeeDeleteFromCalendar(false /* suppressReply */);
     }
-
+    @Test
     public void testAttendeeSuppressedAutoDecline() throws Exception {
         attendeeDeleteFromCalendar(true /* suppressReply */);
     }
+
 
     public static String simpleVcard = "BEGIN:VCARD\r\n" +
                                         "VERSION:3.0\r\n" +
@@ -1222,7 +1241,7 @@ public class TestCalDav extends TestCase {
                                         "EMAIL;TYPE=INTERNET,PREF:scruffy@example.com\r\n" +
                                         "UID:SCRUFF1\r\n" +
                                         "END:VCARD\r\n";
-
+	@Test
     public void testCreateContactWithIfNoneMatchTesting() throws ServiceException, IOException {
         Account dav1 = TestUtil.createAccount(DAV1);
         String davBaseName = "SCRUFF1.vcf";  // Based on UID
@@ -1248,7 +1267,8 @@ public class TestCalDav extends TestCase {
 
     }
 
-    @Override
+
+    @Before
     public void setUp() throws Exception {
         if (!TestUtil.fromRunUnitTests) {
             TestUtil.cliSetup();
