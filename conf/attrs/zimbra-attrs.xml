@@ -8471,6 +8471,7 @@ TODO: delete them permanently from here
 
 <attr id="1685" name="zimbraReverseProxyBlockedUserAgents" type="string" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="nginxproxy" since="9.0">
   <desc>User Agents that need to be blocked by the proxy (Case insensitive eg. Firefox, chrome, SAFARI etc)</desc>
+</attr>
 
 <attr id="1686" name="zimbraFeatureAdminPreferencesEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="8.7.0">
   <defaultCOSValue>FALSE</defaultCOSValue>
