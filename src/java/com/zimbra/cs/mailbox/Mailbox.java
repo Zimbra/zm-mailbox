@@ -490,11 +490,17 @@ public class Mailbox {
             if (recent != NO_CHANGE || size != NO_CHANGE || contacts != NO_CHANGE) {
                 return true;
             }
-            if (itemId != NO_CHANGE && itemId / DbMailbox.ITEM_CHECKPOINT_INCREMENT > data.lastItemId / DbMailbox.ITEM_CHECKPOINT_INCREMENT) {
-                return true;
+            if (itemId != NO_CHANGE) {
+                int itemCheckpointInc = DbMailbox.getItemCheckpointIncrement();
+                if (itemId / itemCheckpointInc > data.lastItemId / itemCheckpointInc) {
+                    return true;
+                }
             }
-            if (changeId != NO_CHANGE && changeId / DbMailbox.CHANGE_CHECKPOINT_INCREMENT > data.lastChangeId / DbMailbox.CHANGE_CHECKPOINT_INCREMENT) {
-                return true;
+            if (changeId != NO_CHANGE) {
+                int changeCheckpointInc = DbMailbox.getChangeCheckpointIncrement();
+                if (changeId / changeCheckpointInc > data.lastChangeId / changeCheckpointInc) {
+                    return true;
+                }
             }
             return false;
         }

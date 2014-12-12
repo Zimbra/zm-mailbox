@@ -849,8 +849,15 @@ public final class DbMailbox {
         }
     }
 
-    public static final int CHANGE_CHECKPOINT_INCREMENT = Zimbra.isAlwaysOn() ? 1 : Math.max(1, LC.zimbra_mailbox_change_checkpoint_frequency.intValue());
-    public static final int ITEM_CHECKPOINT_INCREMENT   = Zimbra.isAlwaysOn() ? 1 : 20;
+    private static final int DEFAULT_CHANGE_CHECKPOINT_INCREMENT = Math.max(1, LC.zimbra_mailbox_change_checkpoint_frequency.intValue());
+
+    public static int getChangeCheckpointIncrement() {
+        return Zimbra.isAlwaysOn() ? 1 : DEFAULT_CHANGE_CHECKPOINT_INCREMENT;
+    }
+
+    public static int getItemCheckpointIncrement() {
+        return Zimbra.isAlwaysOn() ? 1 : 20;
+    }
 
     public static Mailbox.MailboxData getMailboxStats(DbConnection conn, int mailboxId) throws ServiceException {
         // no locking check because it's a mailbox-level op done before the Mailbox object is instantiated...
@@ -904,14 +911,14 @@ public final class DbMailbox {
             }
 
             // round lastItemId and lastChangeId up so that they get written on the next change
-            mbd.lastItemId += ITEM_CHECKPOINT_INCREMENT - 1;
-            mbd.lastChangeId += CHANGE_CHECKPOINT_INCREMENT - 1;
-            int rounding = mbd.lastItemId % ITEM_CHECKPOINT_INCREMENT;
-            if (rounding != ITEM_CHECKPOINT_INCREMENT - 1) {
+            mbd.lastItemId += getItemCheckpointIncrement() - 1;
+            mbd.lastChangeId += getChangeCheckpointIncrement() - 1;
+            int rounding = mbd.lastItemId % getItemCheckpointIncrement();
+            if (rounding != getItemCheckpointIncrement() - 1) {
                 mbd.lastItemId -= rounding + 1;
             }
-            rounding = mbd.lastChangeId % CHANGE_CHECKPOINT_INCREMENT;
-            if (rounding != CHANGE_CHECKPOINT_INCREMENT - 1) {
+            rounding = mbd.lastChangeId % getChangeCheckpointIncrement();
+            if (rounding != getChangeCheckpointIncrement() - 1) {
                 mbd.lastChangeId -= rounding + 1;
             }
 
