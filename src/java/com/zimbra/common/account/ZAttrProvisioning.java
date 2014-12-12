@@ -5259,6 +5259,16 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureAdminMailEnabled = "zimbraFeatureAdminMailEnabled";
 
     /**
+     * whether email related property sub-tabs are enabled in the web client even if
+     * zimbraFeatureAdminMailEnabled is set to FALSE (Email tab is disabled), and accessed from 
+     * the admin console.
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1686)
+    public static final String A_zimbraFeatureAdminPreferencesEnabled = "zimbraFeatureAdminPreferencesEnabled";
+
+    /**
      * Deprecated since: 8.0.0. Deprecated as of bug 56924. Orig desc:
      * advanced search button enabled
      */
