@@ -11283,6 +11283,92 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * whether email related property sub-tabs are enabled in the web client even if
+     * zimbraFeatureAdminMailEnabled is set to FALSE (Email tab is hidden), and accessed from 
+     * the admin console.
+     *
+     * @return zimbraFeatureAdminPreferencesEnabled, or false if unset
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1686)
+    public boolean isFeatureAdminPreferencesEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraFeatureAdminPreferencesEnabled, false);
+    }
+
+    /**
+     * whether email related property sub-tabs are enabled in the web client even if
+     * zimbraFeatureAdminMailEnabled is set to FALSE (Email tab is hidden), and accessed from 
+     * the admin console.
+     *
+     * @param zimbraFeatureAdminPreferencesEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1686)
+    public void setFeatureAdminPreferencesEnabled(boolean zimbraFeatureAdminPreferencesEnabled) 
+             throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureAdminPreferencesEnabled, 
+                  zimbraFeatureAdminPreferencesEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+ 
+    /**
+     * whether email related property sub-tabs are enabled in the web client even if
+     * zimbraFeatureAdminMailEnabled is set to FALSE (Email tab is hidden), and accessed from 
+     * the admin console.
+     *
+     * @param zimbraFeatureAdminPreferencesEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0
+     */
+     @ZAttr(id=1686)
+     public Map<String,Object> setFeatureAdminPreferencesEnabled(boolean zimbraFeatureAdminPreferencesEnabled, 
+                                                                 Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureAdminPreferencesEnabled, 
+                  zimbraFeatureAdminPreferencesEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+     }
+ 
+     /**
+      * whether email related property sub-tabs are enabled in the web client even if
+      * zimbraFeatureAdminMailEnabled is set to FALSE (Email tab is hidden), and accessed from 
+      * the admin console.
+      *
+      * @throws com.zimbra.common.service.ServiceException if error during update
+      *
+      * @since ZCS 8.7.0
+      */
+     @ZAttr(id=1686)
+     public void unsetFeatureAdminPreferencesEnabled() throws com.zimbra.common.service.ServiceException {
+         HashMap<String,Object> attrs = new HashMap<String,Object>();
+         attrs.put(Provisioning.A_zimbraFeatureAdminPreferencesEnabled, "");
+         getProvisioning().modifyAttrs(this, attrs);
+     }
+ 
+     /**
+      * whether email related property sub-tabs are enabled in the web client even if
+      * zimbraFeatureAdminMailEnabled is set to FALSE (Email tab is hidden), and accessed from 
+      * the admin console.
+      *
+      * @param attrs existing map to populate, or null to create a new map
+      * @return populated map to pass into Provisioning.modifyAttrs
+      *
+      * @since ZCS 8.7.0
+      */
+     @ZAttr(id=1686)
+     public Map<String,Object> unsetFeatureAdminPreferencesEnabled(Map<String,Object> attrs) {
+         if (attrs == null) attrs = new HashMap<String,Object>();
+         attrs.put(Provisioning.A_zimbraFeatureAdminPreferencesEnabled, "");
+         return attrs;
+     }
+ 
+    /**
      * Deprecated since: 8.0.0. Deprecated as of bug 56924. Orig desc:
      * advanced search button enabled
      *
