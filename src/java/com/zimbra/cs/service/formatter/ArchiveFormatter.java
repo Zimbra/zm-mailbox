@@ -111,6 +111,7 @@ public abstract class ArchiveFormatter extends Formatter {
     private final Pattern ILLEGAL_FILE_CHARS = Pattern.compile("[\\/\\:\\*\\?\\\"\\<\\>\\|\\\0]");
     private final Pattern ILLEGAL_FOLDER_CHARS = Pattern.compile("[\\:\\*\\?\\\"\\<\\>\\|\\\0]");
     private static String UTF8 = "UTF-8";
+    private Map<Integer, List<Contact>> contacts = new HashMap<Integer, List<Contact>>(); 
     public static enum Resolve { Modify, Replace, Reset, Skip }
     public static final String PARAM_RESOLVE = "resolve";
 
@@ -921,6 +922,7 @@ public abstract class ArchiveFormatter extends Formatter {
                 if (ais != null) {
                     ais.close();
                 }
+                contacts.clear();
             }
         } catch (Exception e) {
             ex = e;
@@ -1153,14 +1155,7 @@ public abstract class ArchiveFormatter extends Formatter {
                     fldr = createPath(context, fmap, path, Folder.Type.CONTACT);
                     if (root && r != Resolve.Reset) {
                         Contact oldContact = null;
-
-                        try {
-                            oldContact = mbox.getContactById(octxt, ct.getId());
-                            if (oldContact.getFolderId() != fldr.getId()) {
-                                oldContact = null;
-                            }
-                        } catch (Exception e) {
-                        }
+                        oldContact = findContact(octxt, mbox, ct, fldr);
 
                         if (oldContact != null) {
                             String email = string(ct.get(ContactConstants.A_email));
@@ -1470,6 +1465,38 @@ public abstract class ArchiveFormatter extends Formatter {
         } catch (Exception e) {
             addError(errs, FormatterServiceException.UNKNOWN_ERROR(id.path, e));
         }
+    }
+
+    /**
+     * Find a contact in contact list of a mailbox
+     * @param octxt The operation context
+     * @param mbox The mailbox
+     * @param ct The contact that is to be searched
+     * @param fldr The folder in which contact should be searched
+     * @return The contact if it exists in the contact list else return null
+     */
+    private Contact findContact(OperationContext octxt, Mailbox mbox, Contact ct, Folder fldr) {
+        int folderId = fldr.getId();
+        List<Contact> contactList = contacts.get(folderId);
+        if (contactList == null) {
+            try {
+                contactList = mbox.getContactList(octxt, folderId);
+                contacts.put(folderId, contactList);
+            } catch (ServiceException e) {
+                ZimbraLog.mailbox.info("unable to get contact list for mailbox %s", mbox.getId());
+                return null;
+            }
+        }
+
+        for (Contact contact : contactList) {
+            HashSet<String> emailAdresses = new HashSet<String>(contact.getEmailAddresses());
+            for (String emailId : ct.getEmailAddresses()) {
+                if (emailAdresses.contains(emailId)) {
+                    return contact;
+                }
+            }
+        }
+        return null;
     }
 
     private void addData(UserServletContext context, Folder fldr, Map<Object, Folder> fmap, Set<MailItem.Type> types, Resolve r,
