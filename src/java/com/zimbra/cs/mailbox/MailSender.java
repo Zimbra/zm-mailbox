@@ -917,10 +917,12 @@ public class MailSender {
             String ttopic = mm.getHeader("Thread-Topic", null);
 
             if (!isReply) {
-                if (Strings.isNullOrEmpty(tindex) || Strings.isNullOrEmpty(ttopic)) {
-                    // generate new Thread-Topic and Thread-Index headers
-                    mm.setHeader("Thread-Topic", ThreadIndex.newThreadTopic(mm.getSubject()));
+                // generate new Thread-Topic and Thread-Index headers
+                if (Strings.isNullOrEmpty(tindex)) {
                     mm.setHeader("Thread-Index", ThreadIndex.newThreadIndex());
+                }
+                if (Strings.isNullOrEmpty(ttopic)) {
+                    mm.setHeader("Thread-Topic", ThreadIndex.newThreadTopic(mm.getSubject()));
                 }
                 return;
             }
