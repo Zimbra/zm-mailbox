@@ -131,9 +131,12 @@ public class EmbeddedSolrIndex  extends SolrIndexBase {
                 ZimbraLog.index.warn(String.format("Could not unload solr core %s", accountId), e);
             }
             finally {
-                File f = new File(solrHome, accountId);
-                FileUtils.deleteDirectory(f);
-                unlock();
+                try {
+                    File f = new File(solrHome, accountId);
+                    FileUtils.deleteDirectory(f);
+                } finally {
+                    unlock();
+                }
             }
         }
     }

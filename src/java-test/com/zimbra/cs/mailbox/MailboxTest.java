@@ -80,16 +80,24 @@ public final class MailboxTest {
 
         DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX);
         mbox.addMessage(null, new ParsedMessage("From: test1-1@sub1.zimbra.com".getBytes(), false), dopt, null);
+        MailboxTestUtil.waitUntilIndexingCompleted(mbox);
         mbox.addMessage(null, new ParsedMessage("From: test1-2@sub1.zimbra.com".getBytes(), false), dopt, null);
+        MailboxTestUtil.waitUntilIndexingCompleted(mbox);
         mbox.addMessage(null, new ParsedMessage("From: test1-3@sub1.zimbra.com".getBytes(), false), dopt, null);
+        MailboxTestUtil.waitUntilIndexingCompleted(mbox);
         mbox.addMessage(null, new ParsedMessage("From: test1-4@sub1.zimbra.com".getBytes(), false), dopt, null);
+        MailboxTestUtil.waitUntilIndexingCompleted(mbox);
         mbox.addMessage(null, new ParsedMessage("From: test2-1@sub2.zimbra.com".getBytes(), false), dopt, null);
+        MailboxTestUtil.waitUntilIndexingCompleted(mbox);
         mbox.addMessage(null, new ParsedMessage("From: test2-2@sub2.zimbra.com".getBytes(), false), dopt, null);
+        MailboxTestUtil.waitUntilIndexingCompleted(mbox);
         mbox.addMessage(null, new ParsedMessage("From: test2-3@sub2.zimbra.com".getBytes(), false), dopt, null);
+        MailboxTestUtil.waitUntilIndexingCompleted(mbox);
         mbox.addMessage(null, new ParsedMessage("From: test3-1@sub3.zimbra.com".getBytes(), false), dopt, null);
+        MailboxTestUtil.waitUntilIndexingCompleted(mbox);
         mbox.addMessage(null, new ParsedMessage("From: test3-2@sub3.zimbra.com".getBytes(), false), dopt, null);
+        MailboxTestUtil.waitUntilIndexingCompleted(mbox);
         mbox.addMessage(null, new ParsedMessage("From: test4-1@sub4.zimbra.com".getBytes(), false), dopt, null);
-        mbox.index.indexDeferredItems();
         MailboxTestUtil.waitUntilIndexingCompleted(mbox);
 
         List<BrowseTerm> terms = mbox.browse(null, Mailbox.BrowseBy.domains, null, 100);
@@ -109,16 +117,25 @@ public final class MailboxTest {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
         DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX);
         mbox.addMessage(null, new ParsedMessage("From: test1-1@sub1.zimbra.com".getBytes(), false), dopt, null);
+        MailboxTestUtil.waitUntilIndexingCompleted(mbox);
         mbox.addMessage(null, new ParsedMessage("From: test1-2@sub1.zimbra.com".getBytes(), false), dopt, null);
+        MailboxTestUtil.waitUntilIndexingCompleted(mbox);
         mbox.addMessage(null, new ParsedMessage("From: test1-3@sub1.zimbra.com".getBytes(), false), dopt, null);
+        MailboxTestUtil.waitUntilIndexingCompleted(mbox);
         mbox.addMessage(null, new ParsedMessage("From: test1-4@sub1.zimbra.com".getBytes(), false), dopt, null);
+        MailboxTestUtil.waitUntilIndexingCompleted(mbox);
         mbox.addMessage(null, new ParsedMessage("From: test2-1@sub2.zimbra.com".getBytes(), false), dopt, null);
+        MailboxTestUtil.waitUntilIndexingCompleted(mbox);
         mbox.addMessage(null, new ParsedMessage("From: test2-2@sub2.zimbra.com".getBytes(), false), dopt, null);
+        MailboxTestUtil.waitUntilIndexingCompleted(mbox);
         mbox.addMessage(null, new ParsedMessage("From: test2-3@sub2.zimbra.com".getBytes(), false), dopt, null);
+        MailboxTestUtil.waitUntilIndexingCompleted(mbox);
         mbox.addMessage(null, new ParsedMessage("From: test3-1@sub3.zimbra.com".getBytes(), false), dopt, null);
+        MailboxTestUtil.waitUntilIndexingCompleted(mbox);
         mbox.addMessage(null, new ParsedMessage("From: test3-2@sub3.zimbra.com".getBytes(), false), dopt, null);
+        MailboxTestUtil.waitUntilIndexingCompleted(mbox);
         mbox.addMessage(null, new ParsedMessage("From: test4-1@sub4.zimbra.com".getBytes(), false), dopt, null);
-        mbox.index.indexDeferredItems();
+        MailboxTestUtil.waitUntilIndexingCompleted(mbox);
         String defaultLimit = LC.zimbra_terms_cachesize.value();
         LC.zimbra_terms_cachesize.setDefault("5");
         List<BrowseTerm> terms = mbox.browse(null, Mailbox.BrowseBy.domains, null, 100);
@@ -147,8 +164,8 @@ public final class MailboxTest {
 	        if( i % 3 == 0) {
 	        	mbox.addMessage(null, new ParsedMessage(String.format("From: test1-3@sub%d.zimbra.com",i).getBytes(), false), dopt, null);
 	        }
+	        MailboxTestUtil.waitUntilIndexingCompleted(mbox);
         }
-        mbox.index.indexDeferredItems();
 
         List<BrowseTerm> terms = mbox.browse(null, Mailbox.BrowseBy.domains, null, 100);
         Assert.assertEquals("Number of expected terms", 100, terms.size());
