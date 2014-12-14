@@ -49,6 +49,7 @@ import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.HSQLDB;
 import com.zimbra.cs.index.IndexStore;
 import com.zimbra.cs.index.solr.EmbeddedSolrIndex;
+import com.zimbra.cs.index.solr.EmbeddedSolrIndex.UpdateCounter;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
@@ -242,6 +243,7 @@ public final class MailboxTestUtil {
             MockHttpStore.purge();
         }
         DocumentHandler.resetLocalHost();
+        EmbeddedSolrIndex.UpdateCounter.getInstance().reset();
     }
 
     public static void cleanupAllIndexStores() throws Exception {
@@ -258,7 +260,7 @@ public final class MailboxTestUtil {
         for (int i = 0; i < cores.length; i++) {
             try {
                 cleanupIndexStore(MailboxManager.getInstance().getMailboxByAccountId(cores[i].getName()));
-            } catch (ServiceException e) {
+            } catch (ServiceException | IOException e) {
                 try {
                     deleteIndexDir(cores[i].getName()); //delete core folder anyways
                 } catch (IOException cantDelete) {
@@ -280,7 +282,7 @@ public final class MailboxTestUtil {
 
     public static void cleanupIndexStore(Mailbox mbox) throws ServiceException, IOException {
         if(mbox != null && mbox.index != null) {
-          mbox.index.deleteIndex();
+            mbox.index.deleteIndex();
         }
     }
 
@@ -368,6 +370,7 @@ public final class MailboxTestUtil {
     }
 
     public static synchronized void waitUntilIndexingCompleted(Mailbox mbox) throws Exception {
+        index(mbox);
         int timeWaited = 0;
         int waitIncrement  = 100;
         int maxWaitTime = 5000;
@@ -383,6 +386,7 @@ public final class MailboxTestUtil {
         }
         //now wait until the commits have finished on the SOLR end
         CommitLock lock = ZimbraCommitListener.CommitLock.getInstance();
-        lock.waitUntilCommitFinished();
+        UpdateCounter counter = EmbeddedSolrIndex.UpdateCounter.getInstance();
+        lock.waitUntilCommitFinished(counter.getAndReset());
     }
 }

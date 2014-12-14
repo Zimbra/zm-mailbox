@@ -6,6 +6,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.commons.io.FileUtils;
@@ -245,9 +246,14 @@ public class EmbeddedSolrIndex  extends SolrIndexBase {
             }
             try {
                 processRequest(solrServer, req);
+                incrementUpdateCounter();
             } catch (RemoteSolrException | SolrServerException e) {
                 ZimbraLog.index.error("Problem indexing documents", e);
             }
+        }
+
+        private void incrementUpdateCounter() {
+            UpdateCounter.getInstance().increment();
         }
     }
 
@@ -337,6 +343,34 @@ public class EmbeddedSolrIndex  extends SolrIndexBase {
             return super.processRequest(server, request);
         } finally {
             unlock();
+        }
+    }
+
+    public static class UpdateCounter {
+        private final AtomicInteger num = new AtomicInteger();
+        private static UpdateCounter instance = null;
+
+        private UpdateCounter() {}
+
+        public static UpdateCounter getInstance() {
+            synchronized (UpdateCounter.class) {
+                if (instance == null) {
+                    instance = new UpdateCounter();
+                }
+                return instance;
+            }
+        }
+
+        public void increment() {
+            num.incrementAndGet();
+        }
+
+        public Integer getAndReset() {
+            return num.getAndSet(0);
+        }
+
+        public void reset() {
+           num.set(0);
         }
     }
 }
