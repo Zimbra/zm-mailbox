@@ -121,7 +121,26 @@ public abstract class AutoScheduler {
         this.ctxt = ctxt;
     }
 
+    private static boolean isEmpty(Invite invites[]) {
+        return (invites == null) || (invites.length <= 0);
+    }
+
     public abstract CalendarItem doSchedulingActions() throws ServiceException;
+
+    private static void addSchedulingMsg(List<AutoScheduleMsg> msgs, AutoScheduleMsg msg) {
+        if (msg == null) {
+            return;
+        }
+        if (ZimbraLog.dav.isDebugEnabled()) {
+            Invite inv = msg.calendarInvite;
+            if (inv != null) {
+                String recurId = inv.getRecurId() == null ? "NONE" : inv.getRecurId().toString();
+                ZimbraLog.dav.debug("Will schedule msg with method %s for UID %s Recurrence ID %s\n%s",
+                        msg.msgMethod, inv.getUid(), recurId, ZimbraLog.getStackTrace(5));
+            }
+        }
+        msgs.add(msg);
+    }
 
     /**
      * Used for deletions
@@ -145,8 +164,8 @@ public abstract class AutoScheduler {
         Account organizerAcct = null;
         try {
             if (scidDefault == null || scidDefault.invite == null) {
-                if ((origInvites == null) || (origInvites.length < 1)) {
-                    return null;  // No invites!
+                if (isEmpty(origInvites)) {
+                    return null;  // No new or old invites!
                 }
                 organizer = origInvites[0].getOrganizer();
                 organizerAcct = origInvites[0].getOrganizerAccount();
@@ -295,7 +314,7 @@ public abstract class AutoScheduler {
 
         @Override
         public CalendarItem doSchedulingActions() throws ServiceException {
-            if (origInvites == null) {
+            if (isEmpty(origInvites)) {
                 return doSchedulingActionsForNewCreate();
             } else {
                 return doSchedulingActionsForUpdate();
@@ -310,18 +329,19 @@ public abstract class AutoScheduler {
             if (seriesOrSingletonInvite != null) {
                 seriesAttendees = getRecipientsForAttendees(seriesOrSingletonInvite);
                 if (!seriesAttendees.isEmpty()) {
-                    msgs.add(new AutoScheduleMsg(seriesOrSingletonInvite, ICalTok.REQUEST, seriesAttendees,
-                            seriesOrSingletonInvite.getName() /*subject*/));
+                    addSchedulingMsg(msgs, new AutoScheduleMsg(seriesOrSingletonInvite, ICalTok.REQUEST,
+                            seriesAttendees, seriesOrSingletonInvite.getName() /*subject*/));
                 }
             }
             for (Invite inv : newInvites) {
                 if (inv != seriesOrSingletonInvite) {
                     List<Address> exceptAttendees = getRecipientsForAttendees(inv);
-                    msgs.add(new AutoScheduleMsg(inv, ICalTok.REQUEST, exceptAttendees, inv.getName() /*subject*/));
+                    addSchedulingMsg(msgs,
+                            new AutoScheduleMsg(inv, ICalTok.REQUEST, exceptAttendees, inv.getName() /*subject*/));
                     // Send cancels to any attendees in the series who aren't invited to this.
                     seriesAttendees.removeAll(exceptAttendees);
                     if (!seriesAttendees.isEmpty()) {
-                        msgs.add(new AutoScheduleMsg(inv, ICalTok.CANCEL, seriesAttendees,
+                        addSchedulingMsg(msgs, new AutoScheduleMsg(inv, ICalTok.CANCEL, seriesAttendees,
                                 CANCEL_PREFIX + inv.getName() /*subject*/));
                     }
                 }
@@ -338,7 +358,7 @@ public abstract class AutoScheduler {
                     (oldSeriesOrSingletonInvite == null) ? null : oldSeriesOrSingletonInvite.getRecurId());
             OrganizerInviteChanges changeInfo = new OrganizerInviteChanges(oldSeriesOrSingletonInvite, newInvite);
             if (changeInfo.inviteCanceled()) {
-                msgs.add(new AutoScheduleMsg(oldSeriesOrSingletonInvite, ICalTok.CANCEL,
+                addSchedulingMsg(msgs, new AutoScheduleMsg(oldSeriesOrSingletonInvite, ICalTok.CANCEL,
                         getRecipientsForAttendees(oldSeriesOrSingletonInvite),
                         CANCEL_PREFIX + changeInfo.getSubject()));
             } else {
@@ -348,14 +368,15 @@ public abstract class AutoScheduler {
                                 getRecipientsForAttendees(changeInfo.getAttendeesOnlyInNew());
                     if (!recips.isEmpty()) {
                         bumpSequenceNumberIfNecessary(oldSeriesOrSingletonInvite, newInvite);
-                        msgs.add(new AutoScheduleMsg(newInvite, ICalTok.REQUEST, recips, changeInfo.getSubject()));
+                        addSchedulingMsg(msgs,
+                                new AutoScheduleMsg(newInvite, ICalTok.REQUEST, recips, changeInfo.getSubject()));
                     }
                 }
                 if (oldSeriesOrSingletonInvite != null) {
                     List<Address> uninvited = getRecipientsForAttendees(changeInfo.getAttendeesOnlyInOld());
                     if (!uninvited.isEmpty()) {
-                        msgs.add(new AutoScheduleMsg(oldSeriesOrSingletonInvite, ICalTok.CANCEL, uninvited,
-                                CANCEL_PREFIX + oldSeriesOrSingletonInvite.getName()));
+                        addSchedulingMsg(msgs, new AutoScheduleMsg(oldSeriesOrSingletonInvite, ICalTok.CANCEL,
+                                uninvited, CANCEL_PREFIX + oldSeriesOrSingletonInvite.getName()));
                     }
                 }
                 // handle EXDATEs.  Note:Mac OSX Mavericks Calendar single instance delete doesn't increment sequence
@@ -370,7 +391,7 @@ public abstract class AutoScheduler {
                 }
                 newInvite = Invite.matchingInvite(newInvites, inv.getRecurId());
                 if (newInvite == null) {
-                    msgs.add(new AutoScheduleMsg(inv, ICalTok.CANCEL, getRecipientsForAttendees(inv),
+                    addSchedulingMsg(msgs, new AutoScheduleMsg(inv, ICalTok.CANCEL, getRecipientsForAttendees(inv),
                             CANCEL_PREFIX + inv.getName() /*subject*/));
                 } else if (newInvite.isNewerVersion(inv)) {
                     changeInfo = new OrganizerInviteChanges(inv, newInvite);
@@ -380,12 +401,14 @@ public abstract class AutoScheduler {
                                 getRecipientsForAttendees(changeInfo.getAttendeesOnlyInNew());
                         if (!recips.isEmpty()) {
                             bumpSequenceNumberIfNecessary(inv, newInvite);
-                            msgs.add(new AutoScheduleMsg(newInvite, ICalTok.REQUEST, recips, changeInfo.getSubject()));
+                            addSchedulingMsg(msgs,
+                                    new AutoScheduleMsg(newInvite, ICalTok.REQUEST, recips, changeInfo.getSubject()));
                         }
                     }
                     List<Address> uninvited = getRecipientsForAttendees(changeInfo.getAttendeesOnlyInOld());
                     if (!uninvited.isEmpty()) {
-                        msgs.add(new AutoScheduleMsg(inv, ICalTok.CANCEL, uninvited, CANCEL_PREFIX + inv.getName()));
+                        addSchedulingMsg(msgs,
+                                new AutoScheduleMsg(inv, ICalTok.CANCEL, uninvited, CANCEL_PREFIX + inv.getName()));
                     }
                 }
             }
@@ -398,7 +421,7 @@ public abstract class AutoScheduler {
                     continue;
                 }
                 List<Address> recips = getRecipientsForAttendees(inv);
-                msgs.add(new AutoScheduleMsg(inv, ICalTok.REQUEST, recips, inv.getName() /*subject*/));
+                addSchedulingMsg(msgs, new AutoScheduleMsg(inv, ICalTok.REQUEST, recips, inv.getName() /*subject*/));
                 List<Address> cancelRecips = getRecipientsForAttendees(newSeriesOrSingletonInvite);
                 // Send a CANCEL to any ATTENDEES for the series that have been removed for this NEW instance
                 for (Address addr: recips) {
@@ -411,7 +434,8 @@ public abstract class AutoScheduler {
                     }
                 }
                 if (!cancelRecips.isEmpty()) {
-                    msgs.add(new AutoScheduleMsg(inv, ICalTok.CANCEL, cancelRecips, CANCEL_PREFIX + inv.getName()));
+                    addSchedulingMsg(msgs,
+                            new AutoScheduleMsg(inv, ICalTok.CANCEL, cancelRecips, CANCEL_PREFIX + inv.getName()));
                 }
             }
             return processSchedulingMessages(msgs);
@@ -449,7 +473,7 @@ public abstract class AutoScheduler {
                 cancel.setDtStart(start);
                 cancel.setRecurId(new RecurId(start, RecurId.RANGE_NONE));
                 cancel.setDtEnd(ParsedDateTime.fromUTCTime(exdateOnlyInNew.getEnd()));
-                msgs.add(new AutoScheduleMsg(cancel, ICalTok.CANCEL, getRecipientsForAttendees(cancel),
+                addSchedulingMsg(msgs, new AutoScheduleMsg(cancel, ICalTok.CANCEL, getRecipientsForAttendees(cancel),
                         CANCEL_PREFIX + cancel.getName() /*subject*/));
             }
         }
@@ -528,7 +552,7 @@ public abstract class AutoScheduler {
                 if ((partStat == null) || !REPLY_PARTSTAT_SUBJECT_MAP.containsKey(partStat)) {
                     continue;
                 }
-                if (origInvites != null) {
+                if (!isEmpty(origInvites)) {
                     Invite origInvite = Invite.matchingInvite(origInvites, inv.getRecurId());
                     if (origInvite != null) {
                         ZAttendee origAttendee = getMatchingAttendee(origInvite.getAttendees());
@@ -541,7 +565,7 @@ public abstract class AutoScheduler {
                 }
                 StringBuilder subject = new StringBuilder();
                 subject.append(REPLY_PARTSTAT_SUBJECT_MAP.get(partStat)).append(inv.getName());
-                msgs.add(new AutoScheduleMsg(inv, ICalTok.REPLY, Lists.newArrayList(organizerAddress),
+                addSchedulingMsg(msgs, new AutoScheduleMsg(inv, ICalTok.REPLY, Lists.newArrayList(organizerAddress),
                         subject.toString()));
             }
             // Process deletions
@@ -563,7 +587,8 @@ public abstract class AutoScheduler {
                             REPLY_PARTSTAT_SUBJECT_MAP.get(IcalXmlStrMap.PARTSTAT_DECLINED))
                             .append(decline.getName()).toString();
                     decline.setName(subject);
-                    msgs.add(new AutoScheduleMsg(decline, ICalTok.REPLY, Lists.newArrayList(organizerAddress), subject));
+                    addSchedulingMsg(msgs,
+                            new AutoScheduleMsg(decline, ICalTok.REPLY, Lists.newArrayList(organizerAddress), subject));
                 }
             }
             return processSchedulingMessages(msgs);
