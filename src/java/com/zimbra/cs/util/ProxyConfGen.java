@@ -1865,7 +1865,11 @@ class WebUpstreamBlockedURLsVar extends ProxyConfVar {
             BlockedURLsStr.append("|");
         }
 
-        return BlockedURLsStr.toString();
+        int len = BlockedURLsStr.length();
+        if (len > 0)
+            return BlockedURLsStr.substring(0, len - 1);
+        else
+            return BlockedURLsStr.toString();
     }
 }
 
@@ -1925,7 +1929,11 @@ class WebBlockedUserAgentsVar extends ProxyConfVar {
             BlockedUAStr.append("|");
         }
 
-        return BlockedUAStr.toString();
+        int len = BlockedUAStr.length();
+        if (len > 0)
+            return BlockedUAStr.substring(0, len - 1);
+        else
+            return BlockedUAStr.toString();
     }
 }
 
