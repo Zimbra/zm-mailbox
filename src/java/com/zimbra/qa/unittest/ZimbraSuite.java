@@ -122,20 +122,20 @@ public class ZimbraSuite extends TestSuite
         sClasses.add(TestMinusOperator.class);
         sClasses.add(TestInvite.class);
         sClasses.add(TestSearchJunkTrash.class);
-        sClasses.add(TestCommunityIntegration.class);
-        sClasses.add(TestBug89152.class);
         sClasses.add(TestJaxb.class);
         sClasses.add(TestCollectConfigServletsAccess.class);
+        sClasses.add(TestCommunityIntegration.class);
+        sClasses.add(TestSearchSortByDate.class);
     }
 
     /**
      * Used by extensions to add additional tests to the main test suite.
      */
-    public static void addTest(Class<? extends TestCase> clazz) {
+    public static void addTest(Class clazz) {
         sClasses.add(clazz);
     }
 
-    public static void removeTest(Class<? extends TestCase> clazz) {
+    public static void removeTest(Class clazz) {
         sClasses.remove(clazz);
     }
 
