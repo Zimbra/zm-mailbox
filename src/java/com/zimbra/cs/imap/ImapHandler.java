@@ -2128,8 +2128,12 @@ abstract class ImapHandler {
         if (iid == null) {
             attrs.append(attrs.length() == 0 ? "" : " ").append("\\NonExistent");
         }
-        if ((returnOptions & RETURN_SUBSCRIBED) != 0 && isPathSubscribed(path, subscriptions)) {
-            attrs.append(attrs.length() == 0 ? "" : " ").append("\\Subscribed");
+        try {
+            if ((returnOptions & RETURN_SUBSCRIBED) != 0 && isPathSubscribed(path, subscriptions)) {
+                attrs.append(attrs.length() == 0 ? "" : " ").append("\\Subscribed");
+            }
+        } catch (NoSuchItemException nsie) {
+            ZimbraLog.imap.debug("Subscribed path \"%s\" is not available on server.", path.asImapPath());
         }
         if (iid == null) {
             return attrs.toString();
