@@ -32,7 +32,42 @@ public class CatalogRegistration {
     @JsonProperty("Node") public String node;
     @JsonProperty("Address") public String address;
     @JsonProperty("Service") public Service service;
-    @JsonProperty("Check") public Void check;
+    @JsonProperty("Check") public Check check;
+
+
+    @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
+    public static class Check {
+        @JsonProperty("id") public String id;
+        @JsonProperty("name") public String name;
+        @JsonProperty("script") public String script;
+        @JsonProperty("interval") public String interval;
+        @JsonProperty("notes") public String notes;
+        @JsonProperty("ttl") public String ttl;
+
+        public Check() {
+        }
+
+        public Check(String name) {
+            this.name = name;
+        }
+
+        public Check(String id, String name) {
+            this(name);
+            this.id = id;
+        }
+
+        @Override
+        public String toString() {
+            return Objects.toStringHelper(this)
+                .add("id", id)
+                .add("name", name)
+                .add("script", script)
+                .add("interval", interval)
+                .add("notes", notes)
+                .add("ttl", ttl)
+                .toString();
+        }
+    }
 
 
     @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
@@ -41,6 +76,7 @@ public class CatalogRegistration {
         @JsonProperty("Name") public String name;
         @JsonProperty("Tags") public List<String> tags = new ArrayList<>();
         @JsonProperty("Port") public Integer port;
+        @JsonProperty("Check") public Check check;
 
         public Service() {
         }
@@ -71,6 +107,7 @@ public class CatalogRegistration {
                 .add("Name", name)
                 .add("Tags", tags)
                 .add("Port", port)
+                .add("Check", check)
                 .toString();
         }
     }
