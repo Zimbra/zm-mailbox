@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -17,15 +17,14 @@
 
 package com.zimbra.cs.pop3;
 
+import static com.zimbra.cs.account.Provisioning.*;
+
 import com.zimbra.common.localconfig.LC;
-import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.server.ServerConfig;
 import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.util.Config;
-
-import static com.zimbra.cs.account.Provisioning.*;
 
 public class Pop3Config extends ServerConfig {
     private static final String PROTOCOL = "POP3";
@@ -104,5 +103,10 @@ public class Pop3Config extends ServerConfig {
 
     public boolean isSaslGssapiEnabled() {
         return getBooleanAttr(A_zimbraPop3SaslGssapiEnabled, false);
+    }
+
+    @Override
+    protected String getUrlScheme() {
+        return isSslEnabled() ? "pops" : "pop";
     }
 }

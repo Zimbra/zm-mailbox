@@ -16,6 +16,9 @@
  */
 package com.zimbra.cs.server;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Provisioning;
@@ -58,26 +61,30 @@ public final class ServerManager {
         ZimbraApplication app = ZimbraApplication.getInstance();
         if (app.supports(LmtpServer.class)) {
             lmtpServer = startLmtpServer();
-            registerWithServiceLocator(lmtpServer);
+            registerWithServiceLocator(lmtpServer, "zmhealthcheck-lmtp");
         }
         if (app.supports(Pop3Server.class)) {
             if (isEnabled(Provisioning.A_zimbraPop3ServerEnabled)) {
-                pop3Server = startPop3Server(false);
-                registerWithServiceLocator(pop3Server);
+                boolean ssl = false;
+                pop3Server = startPop3Server(ssl);
+                registerWithServiceLocator(pop3Server, "zmhealthcheck-pop");
             }
             if (isEnabled(Provisioning.A_zimbraPop3SSLServerEnabled)) {
-                pop3SSLServer = startPop3Server(true);
-                registerWithServiceLocator(pop3SSLServer);
+                boolean ssl = true;
+                pop3SSLServer = startPop3Server(ssl);
+                registerWithServiceLocator(pop3SSLServer, "zmhealthcheck-pop");
             }
         }
         if (app.supports(ImapServer.class)) {
             if (isEnabled(Provisioning.A_zimbraImapServerEnabled)) {
-                imapServer = startImapServer(false);
-                registerWithServiceLocator(imapServer);
+                boolean ssl = false;
+                imapServer = startImapServer(ssl);
+                registerWithServiceLocator(imapServer, "zmhealthcheck-imap");
             }
             if (isEnabled(Provisioning.A_zimbraImapSSLServerEnabled)) {
-                imapSSLServer = startImapServer(true);
-                registerWithServiceLocator(imapSSLServer);
+                boolean ssl = true;
+                imapSSLServer = startImapServer(ssl);
+                registerWithServiceLocator(imapSSLServer, "zmhealthcheck-imap");
             }
         }
 
@@ -155,21 +162,34 @@ public final class ServerManager {
 
     /**
      * Register with service locator.
-     *
-     * @see https://www.consul.io/docs/agent/http.html#_v1_catalog_register
      */
-    public static CatalogRegistration.Service registerWithServiceLocator(Server server) {
+    public static CatalogRegistration.Service registerWithServiceLocator(Server server, String script) throws ServiceException {
         String name = "zimbra:" + server.getName();
         String id = name + ":" + server.getConfig().getBindPort();
-        CatalogRegistration.Service serviceLocatorService = new CatalogRegistration.Service(id, name, server.getConfig().getBindPort());
-        Zimbra.getAppContext().getBean(ServiceLocator.class).registerSilent(serviceLocatorService);
-        return serviceLocatorService;
+        CatalogRegistration.Service service = new CatalogRegistration.Service(id, name, server.getConfig().getBindPort());
+
+        if (script != null) {
+            CatalogRegistration.Check check = new CatalogRegistration.Check(id + ":health", name);
+            String bindAddress = server.getConfig().getBindAddress();
+            if (bindAddress == null) {
+                try {
+                    bindAddress = InetAddress.getLocalHost().getHostAddress();
+                } catch (UnknownHostException e) {
+                    throw ServiceException.FAILURE("Failed determining local host address", e);
+                }
+            }
+            String url = server.getConfig().getUrl();
+            check.script = "/opt/zimbra/libexec/" + script + " -url " + url;
+            check.interval = "1m";
+            service.check = check;
+        }
+
+        Zimbra.getAppContext().getBean(ServiceLocator.class).registerSilent(service);
+        return service;
     }
 
     /**
      * De-register with service locator.
-     *
-     * @see https://www.consul.io/docs/agent/http.html#_v1_catalog_deregister
      */
     public static void deregisterWithServiceLocator(Server server) {
         String name = "zimbra:" + server.getName();

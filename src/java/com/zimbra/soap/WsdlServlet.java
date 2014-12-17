@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -41,7 +41,7 @@ import com.zimbra.soap.util.WsdlServiceInfo;
 public class WsdlServlet extends ZimbraServlet {
 
     /**
-     * 
+     *
      */
     private static final long serialVersionUID = -2727046288266393825L;
 
@@ -94,8 +94,8 @@ public class WsdlServlet extends ZimbraServlet {
             ZimbraLog.clearContext();
         }
     }
-    
-    private static String getSoapAdminURL() {
+
+    public static String getSoapAdminURL() {
         try {
             return URLUtil.getAdminURL(Provisioning.getInstance().getLocalServer());
         } catch (ServiceException e) {
@@ -103,7 +103,7 @@ public class WsdlServlet extends ZimbraServlet {
         }
     }
 
-    private static String getSoapURL() {
+    public static String getSoapURL() {
         try {
             return URLUtil.getServiceURL(Provisioning.getInstance().getLocalServer(),
                     AccountConstants.USER_SERVICE_URI, true);

@@ -122,4 +122,9 @@ public class LmtpConfig extends ServerConfig {
     public boolean isLHLORequired(){
         return getBooleanAttr(A_zimbraLmtpLHLORequired, true);
     }
+
+    @Override
+    protected String getUrlScheme() {
+        return isSslEnabled() ? "smtps" : "smtp";
+    }
 }

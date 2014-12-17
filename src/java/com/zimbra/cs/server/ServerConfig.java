@@ -17,7 +17,9 @@
 
 package com.zimbra.cs.server;
 
+import java.net.InetAddress;
 import java.net.ServerSocket;
+import java.net.UnknownHostException;
 import java.nio.channels.ServerSocketChannel;
 import java.util.ArrayList;
 
@@ -257,4 +259,20 @@ public abstract class ServerConfig {
         }
         return addrList.toArray(new String[addrList.size()]);
     }
+
+    /** Returns a URL that can be used to connect to the bind address and port */
+    public String getUrl() throws ServiceException {
+        try {
+            String bindAddress = getBindAddress();
+            if (bindAddress == null) {
+                bindAddress = InetAddress.getLocalHost().getHostAddress();
+            }
+            String url = getUrlScheme() + "://" + bindAddress + ":" + getBindPort();
+            return url;
+        } catch (UnknownHostException e) {
+            throw ServiceException.FAILURE("Failed looking up local host address", e);
+        }
+    }
+
+    protected abstract String getUrlScheme();
 }
