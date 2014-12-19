@@ -48,7 +48,8 @@ public class GetDomainInfo extends AdminDocumentHandler {
             ZAttrProvisioning.A_zimbraWebClientLogoutURL,
             ZAttrProvisioning.A_zimbraWebClientLogoutURLAllowedUA,
             ZAttrProvisioning.A_zimbraWebClientLogoutURLAllowedIP,
-            ZAttrProvisioning.A_zimbraWebClientMaxInputBufferLength);
+            ZAttrProvisioning.A_zimbraWebClientMaxInputBufferLength,
+            ZAttrProvisioning.A_zimbraWebClientStaySignedInDisabled);
 
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
