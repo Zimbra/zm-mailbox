@@ -1389,6 +1389,7 @@
         <delete failonerror="no">
             <fileset dir="${zimbra.home.dir}/log" includes="*.log"/>
         </delete>
+    	<delete failonerror="no" dir="${zimbra.home.dir}/solr/solr"/>
       <antcall target="dir-init-jetty"/>
 
 
