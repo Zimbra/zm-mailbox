@@ -14351,6 +14351,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraWebClientShowOfflineLink = "zimbraWebClientShowOfflineLink";
 
     /**
+     * Whether the Stay Signed In checkbox should be disabled on the login
+     * screen
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1687)
+    public static final String A_zimbraWebClientStaySignedInDisabled = "zimbraWebClientStaySignedInDisabled";
+
+    /**
      * weclient URL to directly connect when making service to JS calls from
      * mail server in split mode
      *
