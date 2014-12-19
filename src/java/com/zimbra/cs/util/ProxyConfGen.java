@@ -1692,9 +1692,10 @@ class DomainAttrItem {
     public Boolean useDomainClientCert;
     public String clientCertMode;
     public String clientCertCa;
+    public String DomainAllowedIPs;
 
     public DomainAttrItem(String dn, String vhn, String vip, String scrt, String spk,
-            String ccm, String cca) {
+            String ccm, String cca, String aip) {
         this.domainName = dn;
         this.virtualHostname = vhn;
         this.virtualIPAddress = vip;
@@ -1702,6 +1703,7 @@ class DomainAttrItem {
         this.sslPrivateKey = spk;
         this.clientCertMode = ccm;
         this.clientCertCa = cca;
+        this.DomainAllowedIPs = aip;
     }
 }
 
@@ -1712,7 +1714,7 @@ class DomainAttrItem {
  */
 class DomainAttrExceptionItem extends DomainAttrItem {
     public DomainAttrExceptionItem(ProxyConfException e) {
-        super(null, null, null, null, null, null, null);
+        super(null, null, null, null, null, null, null, null);
         this.exception = e;
     }
 
@@ -2060,6 +2062,7 @@ public class ProxyConfGen
         attrsNeeded.add(Provisioning.A_zimbraReverseProxyClientCertMode);
         attrsNeeded.add(Provisioning.A_zimbraReverseProxyClientCertCA);
         attrsNeeded.add(Provisioning.A_zimbraWebClientLoginURL);
+        attrsNeeded.add(Provisioning.A_zimbraReverseProxyDomainAllowedIPs);
 
         final List<DomainAttrItem> result = new ArrayList<DomainAttrItem>();
 
@@ -2082,6 +2085,8 @@ public class ProxyConfGen
                     .getAttr(Provisioning.A_zimbraReverseProxyClientCertMode);
                 String clientCertCA = entry
                     .getAttr(Provisioning.A_zimbraReverseProxyClientCertCA);
+                String[] DomainAllowedIPs = entry
+                    .getMultiAttr(Provisioning.A_zimbraReverseProxyDomainAllowedIPs);
 
                 // no need to check whether clientCertMode or clientCertCA == null,
 
@@ -2103,7 +2108,7 @@ public class ProxyConfGen
                     lookupVIP = false;
                 }
 
-                //Here assume virtualHostnames and virtualIPAddresses are
+                //Here assume virtualHostnames, virtualIPAddresses & DomainAllowedIPs are
                 //same in number
                 int i = 0;
 
@@ -2116,12 +2121,13 @@ public class ProxyConfGen
                         vip = virtualIPAddresses[i];
                     }
 
+                    String daip = DomainAllowedIPs[i];
                     if (!ProxyConfUtil.isEmptyString(clientCertCA)){
                         createDomainSSLDirIfNotExists();
                     }
                     result.add(new DomainAttrItem(domainName,
                             virtualHostnames[i], vip, certificate, privateKey,
-                            clientCertMode, clientCertCA));
+                            clientCertMode, clientCertCA, daip));
                 }
             }
         };
@@ -2506,6 +2512,13 @@ public class ProxyConfGen
         else{
             defaultVal = mVars.get("ssl.clientcertca.default");
             mVars.put("ssl.clientcertca", defaultVal);
+        }
+
+        if (item.DomainAllowedIPs != null) {
+            mVars.put("daip.enabled", "");
+            mVars.put("daip", item.DomainAllowedIPs);
+        } else {
+            mVars.put("daip.enabled", "#");
         }
     }
 

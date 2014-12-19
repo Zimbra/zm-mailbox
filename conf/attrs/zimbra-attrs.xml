@@ -8649,4 +8649,9 @@ TODO: delete them permanently from here
   <desc>Max no of elements in admin acl target cache</desc>
 </attr>
 
+<attr id="1721" name="zimbraReverseProxyDomainAllowedIPs" type="string" max="256" cardinality="multi" optionalIn="domain" requiresRestart="nginxproxy" since="9.0">
+  <desc>Client network or IP whitelist for this domain. If configured, all IPs outside this whitelist will be blocked.
+        If unset, all IPs are allowed</desc>  
+</attr>
+
 </attrs>
