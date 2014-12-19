@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -16,7 +16,6 @@
  */
 package com.zimbra.cs.account.accesscontrol;
 
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -29,7 +28,14 @@ import com.zimbra.soap.admin.type.CacheEntryType;
 
 public class PermissionCache {
 
-    private static boolean cacheEnabled = LC.acl_cache_enabled.booleanValue();
+    private static boolean cacheEnabled;
+    static {
+        try {
+            cacheEnabled = Provisioning.getInstance().getLocalServer().isAdminAclCacheEnabled();
+        } catch (ServiceException e) {
+            ZimbraLog.cache.error("Error while fetching acl cache enabled or disabled", e);
+        }
+    }
 
     enum CachedPermission {
         NOT_CACHED(null, (short)0),

@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -15,6 +15,13 @@
  * ***** END LICENSE BLOCK *****
  */
 package com.zimbra.cs.datasource.imap;
+
+import java.io.IOException;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.security.auth.login.LoginException;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.net.SocketFactories;
@@ -43,21 +50,21 @@ import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.soap.type.DataSource.ConnectionType;
 
-import javax.security.auth.login.LoginException;
-import java.io.IOException;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-
 final class ConnectionManager {
     private Map<String, ImapConnection> connections =
         Collections.synchronizedMap(new HashMap<String, ImapConnection>());
 
     private static final ConnectionManager INSTANCE = new ConnectionManager();
 
-    private static final boolean REUSE_CONNECTIONS =
-        LC.data_source_imap_reuse_connections.booleanValue();
-
+    private static boolean REUSE_CONNECTIONS;
+    static {
+        try {
+            REUSE_CONNECTIONS = Provisioning.getInstance().getLocalServer().isImapReuseDataSourceConnections();
+        } catch (ServiceException e) {
+            ZimbraLog.imap.error("Error while getting attribute zimbraImapReuseDataSourceConnections", e);
+            REUSE_CONNECTIONS = false;
+        }
+    }
     private static final int IDLE_READ_TIMEOUT = 30 * 60; // 30 minutes
 
     private static final Log LOG = ZimbraLog.datasource;

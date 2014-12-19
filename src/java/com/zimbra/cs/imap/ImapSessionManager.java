@@ -31,13 +31,13 @@ import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
 import com.zimbra.common.localconfig.DebugConfig;
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.util.memcached.ZimbraMemcachedClient;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.imap.ImapHandler.ImapExtension;
 import com.zimbra.cs.index.SearchParams;
 import com.zimbra.cs.index.SortBy;
@@ -90,7 +90,14 @@ final class ImapSessionManager {
             Zimbra.sTimer.schedule(new SessionSerializerTask(), SERIALIZER_INTERVAL_MSEC, SERIALIZER_INTERVAL_MSEC);
             ZimbraLog.imap.debug("initializing IMAP session serializer task");
         }
-        if (LC.imap_use_ehcache.booleanValue()) {
+        boolean useCache = false;
+        try {
+            useCache = Provisioning.getInstance().getLocalServer().isImapUseEhcache();
+        } catch (ServiceException e) {
+            ZimbraLog.imap.error("Error while fetching attribute imapUseCache", e);
+        }
+
+        if (useCache) {
             activeSessionCache = new EhcacheImapCache(EhcacheManager.IMAP_ACTIVE_SESSION_CACHE, true);
             Preconditions.checkState(activeSessionCache != null);
         } else {
@@ -98,7 +105,7 @@ final class ImapSessionManager {
         }
         //inactive preference order memcache, ehcache, diskcache
         inactiveSessionCache = Zimbra.getAppContext().getBean(ZimbraMemcachedClient.class).isConnected() ?
-                new MemcachedImapCache() : (LC.imap_use_ehcache.booleanValue() ?
+                new MemcachedImapCache() : (useCache ?
                 new EhcacheImapCache(EhcacheManager.IMAP_INACTIVE_SESSION_CACHE, false) :
                 activeSessionCache);
         Zimbra.getAppContext().getAutowireCapableBeanFactory().autowireBean(inactiveSessionCache);

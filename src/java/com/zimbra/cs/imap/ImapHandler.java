@@ -57,7 +57,6 @@ import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.calendar.WellKnownTimeZones;
 import com.zimbra.common.localconfig.DebugConfig;
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.AccessBoundedRegex;
@@ -144,7 +143,13 @@ abstract class ImapHandler {
         this.config = config;
         startedTLS = config.isSslEnabled();
         reqThrottle = ServerThrottle.getThrottle(config.getProtocol());
-        commandThrottle = new ImapCommandThrottle(LC.imap_throttle_command_limit.intValue());
+        int limit;
+        try {
+            limit = Provisioning.getInstance().getLocalServer().getImapThrottleCommandLimit();
+        } catch (ServiceException e) {
+            limit = 25;
+        }
+        commandThrottle = new ImapCommandThrottle(limit);
     }
 
     abstract void sendLine(String line, boolean flush) throws IOException;
@@ -3732,7 +3737,7 @@ abstract class ImapHandler {
                     MailItem item = null;
                     MimeMessage mm;
                     if (!fullMessage.isEmpty() || (parts != null && !parts.isEmpty()) || (attributes & ~FETCH_FROM_CACHE) != 0) {
-                        if (lock == null && LC.imap_throttle_fetch.booleanValue()) {
+                        if (lock == null && Provisioning.getInstance().getLocalServer().isImapThrottleFetch()) {
                             lock = commandThrottle.lock(credentials.getAccountId());
                         }
                         try {

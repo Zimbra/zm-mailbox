@@ -75,7 +75,6 @@ import com.zimbra.znative.Util;
 public final class Zimbra {
     private static boolean sInited = false;
     private static boolean sIsMailboxd = false;
-    private static String alwaysOnClusterId = null;
     private static AbstractApplicationContext appContext = null;
 
     /** Sets system properties before the server fully starts up.  Note that
@@ -267,8 +266,6 @@ public final class Zimbra {
         }
 
         Server localServer = prov.getLocalServer();
-        alwaysOnClusterId = localServer.getAlwaysOnClusterId();
-
         if (localServer.isMailSSLClientCertOCSPEnabled()) {
             // Activate OCSP
             Security.setProperty("ocsp.enable", "true");
@@ -509,11 +506,19 @@ public final class Zimbra {
     }
 
     public static String getAlwaysOnClusterId() {
-        return alwaysOnClusterId;
+        Provisioning prov = Provisioning.getInstance();
+        Server localServer;
+        try {
+            localServer = prov.getLocalServer();
+            return localServer.getAlwaysOnClusterId();
+        } catch (ServiceException e) {
+            Zimbra.halt("Exception during getAlwaysOnClusterId, aborting server, please check your logs", e);
+        }
+        return null;
     }
 
     public static boolean isAlwaysOn() {
-        return alwaysOnClusterId != null;
+        return getAlwaysOnClusterId() != null;
     }
 
     private static void dbSessionCleanup() throws ServiceException {

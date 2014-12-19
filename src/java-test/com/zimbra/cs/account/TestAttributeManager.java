@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -62,30 +62,30 @@ public class TestAttributeManager  {
                 AttributeClass.groupDynamicUnit,
                 AttributeClass.groupStaticUnit);
         Set<AttributeFlag> flags = Sets.newHashSet(AttributeFlag.accountInfo);
-        AttributeInfo ai = new AttributeInfo("zimbraId", 1, null, 0, null, AttributeType.TYPE_ID, null, "", true, null, null, AttributeCardinality.single, requiredIn, null, flags, null, null, null, null, null, "Zimbra Systems Unique ID", null, null, null);
+        AttributeInfo ai = new AttributeInfo("zimbraId", 1, null, 0, null, AttributeType.TYPE_ID, null, "", true, null, null, AttributeCardinality.single, requiredIn, null, flags, null, null, null, null, null, "Zimbra Systems Unique ID", null, null, null,null);
         am.addAttribute(ai);
 
         requiredIn = null;
         Set<AttributeClass> optionalIn = Sets.newHashSet(AttributeClass.domain,AttributeClass.globalConfig);
         flags = Sets.newHashSet(AttributeFlag.domainInherited);
         List<Version> since = Lists.newArrayList(new Version("5.0.10"));
-        ai = new AttributeInfo("zimbraZimletDomainAvailableZimlets", 710, null, 0, new AvailableZimlets(), AttributeType.TYPE_STRING, null, "", false, null, "256", AttributeCardinality.multi, requiredIn, optionalIn, flags, null, null, null, null, null, "List of Zimlets available to this domain.", null, since, null);
+        ai = new AttributeInfo("zimbraZimletDomainAvailableZimlets", 710, null, 0, new AvailableZimlets(), AttributeType.TYPE_STRING, null, "", false, null, "256", AttributeCardinality.multi, requiredIn, optionalIn, flags, null, null, null, null, null, "List of Zimlets available to this domain.", null, null, since, null);
         am.addAttribute(ai);
 
         requiredIn = null;
         optionalIn = null;
         flags = null;
         since = Lists.newArrayList(new Version("8.0.8"), new Version("8.5.1"));
-        ai = new AttributeInfo(ATTR_TWO_SINCE, 99996, null, 0, null, AttributeType.TYPE_STRING, null, "", false, null, null, AttributeCardinality.multi, requiredIn, optionalIn, flags, null, null, null, null, null, "test two since", null, since, null);
+        ai = new AttributeInfo(ATTR_TWO_SINCE, 99996, null, 0, null, AttributeType.TYPE_STRING, null, "", false, null, null, AttributeCardinality.multi, requiredIn, optionalIn, flags, null, null, null, null, null, "test two since", null, null, since, null);
         am.addAttribute(ai);;
 
         since = Lists.newArrayList(new Version("9.0.0"), new Version("8.0.8"), new Version("7.2.8"), new Version("8.5.2"));
         //out of order intentionally; attributeinfo class should handle that so we don't have bugs if someone no-brains this
-        ai = new AttributeInfo(ATTR_MULTI_SINCE, 99997, null, 0, null, AttributeType.TYPE_STRING, null, "", false, null, null, AttributeCardinality.multi, requiredIn, optionalIn, flags, null, null, null, null, null, "test multi since", null, since, null);
+        ai = new AttributeInfo(ATTR_MULTI_SINCE, 99997, null, 0, null, AttributeType.TYPE_STRING, null, "", false, null, null, AttributeCardinality.multi, requiredIn, optionalIn, flags, null, null, null, null, null, "test multi since", null, null, since, null);
         am.addAttribute(ai);;
 
         since = Lists.newArrayList(new Version(Version.FUTURE));
-        ai = new AttributeInfo(ATTR_FUTURE, 99998, null, 0, null, AttributeType.TYPE_STRING, null, "", false, null, null, AttributeCardinality.single, requiredIn, optionalIn, flags, null, null, null, null, null, "test future", null, since, null);
+        ai = new AttributeInfo(ATTR_FUTURE, 99998, null, 0, null, AttributeType.TYPE_STRING, null, "", false, null, null, AttributeCardinality.single, requiredIn, optionalIn, flags, null, null, null, null, null, "test future", null, null, since, null);
         am.addAttribute(ai);
     }
 

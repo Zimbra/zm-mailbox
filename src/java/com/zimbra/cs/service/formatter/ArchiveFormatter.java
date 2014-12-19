@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -64,6 +64,7 @@ import com.zimbra.common.util.HttpUtil;
 import com.zimbra.common.util.HttpUtil.Browser;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.mailbox.ACL;
@@ -1582,7 +1583,7 @@ public abstract class ArchiveFormatter extends Formatter {
 
                 try {
                     if (aie.getSize() <=
-                        LC.calendar_ics_import_full_parse_max_size.intValue()) {
+                        Provisioning.getInstance().getLocalServer().getCalendarIcsImportFullParseMaxSize()) {
                         List<ZVCalendar> icals = ZCalendarBuilder.buildMulti(is, UTF8);
                         ImportInviteVisitor visitor = new ImportInviteVisitor(oc,
                             fldr, preserveExistingAlarms);

@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -31,9 +31,9 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.zimbra.client.ZMailbox;
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailclient.CommandFailedException;
 import com.zimbra.cs.mailclient.imap.CAtom;
 import com.zimbra.cs.mailclient.imap.Flags;
@@ -50,13 +50,12 @@ public class TestImapThrottle {
     private static final int PORT = 7143;
     private static final String USER = "imap-test-user";
     private static final String PASS = "test123";
-
-    private int LOOP_LIMIT = LC.imap_throttle_command_limit.intValue();
-
     private ImapConnection connection;
+    private int LOOP_LIMIT ;
 
     @Before
     public void createData() throws ServiceException, IOException {
+        LOOP_LIMIT = Provisioning.getInstance().getLocalServer().getImapThrottleCommandLimit();
         TestUtil.createAccount(USER);
         connection = connect();
     }

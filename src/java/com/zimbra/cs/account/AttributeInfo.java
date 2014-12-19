@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -37,6 +37,23 @@ import com.zimbra.common.util.Version;
 import com.zimbra.common.util.ZimbraLog;
 
 public class AttributeInfo {
+
+    public static enum Service {
+        all,
+        antivirus,
+        antispam,
+        archiving,
+        convertd,
+        mta,
+        mailbox,
+        logger,
+        snmp,
+        ldap,
+        spell,
+        memcached,
+        nginxproxy,
+        stats
+    };
 
     //  8        4  4     4      12
     //8cf3db5d-cfd7-11d9-884f-e7b38f15492d
@@ -96,6 +113,8 @@ public class AttributeInfo {
 
     private List<String> mDefaultCOSValuesUpgrade;
 
+    private Set<Service> mAffectsServices;
+
     private long mMin = Long.MIN_VALUE, mMax = Long.MAX_VALUE;
 
     private String mMinDuration = null, mMaxDuration = null;
@@ -153,6 +172,7 @@ public class AttributeInfo {
             List<String> globalConfigValues, List<String> defaultCOSValues,
             List<String> defaultExternalCOSValues, List<String> globalConfigValuesUpgrade,
             List<String> defaultCOSValuesUpgrade, String description, List<AttributeServerType> requiresRestart,
+            Set<Service> affectsServices,
             List<Version> since, Version deprecatedSince) {
         mName = attrName;
         mImmutable = immutable;
@@ -174,6 +194,7 @@ public class AttributeInfo {
         mDefaultCOSValuesUpgrade = defaultCOSValuesUpgrade;
         mDescription = description;
         mRequiresRestart = requiresRestart;
+        mAffectsServices = affectsServices;
         mSince = since;
         if (mSince != null && mSince.size() > 1) {
             //just in case someone specifies order incorrectly
@@ -559,5 +580,13 @@ public class AttributeInfo {
      */
     public boolean isCaseInsensitive() {
         return AttributeType.TYPE_STRING == mType || AttributeType.TYPE_ASTRING == mType;
+    }
+
+    public Set<Service> getAffectsServices() {
+        return mAffectsServices;
+    }
+
+    public void setAffectsServices(Set<Service> mAffectsServices) {
+        this.mAffectsServices = mAffectsServices;
     }
 }

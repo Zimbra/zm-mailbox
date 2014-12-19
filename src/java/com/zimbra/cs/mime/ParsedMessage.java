@@ -69,6 +69,7 @@ import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.zmime.ZMimeMessage;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.convert.ConversionException;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.index.Fragment;
@@ -1078,7 +1079,7 @@ public final class ParsedMessage {
             ignoreCalendar = true;
         }
         String methodParam = (new ContentType(mpi.getMimePart().getContentType())).getParameter("method");
-        if (methodParam == null && !LC.calendar_allow_invite_without_method.booleanValue()) {
+        if (methodParam == null && !Provisioning.getInstance().getLocalServer().isCalendarAllowInviteWithoutMethod()) {
             ignoreCalendar = true;
         }
         String toRet = "";

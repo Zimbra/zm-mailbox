@@ -17,18 +17,32 @@
 
 package com.zimbra.cs.imap;
 
+import static com.zimbra.common.account.ZAttrProvisioning.A_zimbraImapAdvertisedName;
+import static com.zimbra.common.account.ZAttrProvisioning.A_zimbraImapBindAddress;
+import static com.zimbra.common.account.ZAttrProvisioning.A_zimbraImapBindPort;
+import static com.zimbra.common.account.ZAttrProvisioning.A_zimbraImapCleartextLoginEnabled;
+import static com.zimbra.common.account.ZAttrProvisioning.A_zimbraImapDisabledCapability;
+import static com.zimbra.common.account.ZAttrProvisioning.A_zimbraImapExposeVersionOnBanner;
+import static com.zimbra.common.account.ZAttrProvisioning.A_zimbraImapMaxConnections;
+import static com.zimbra.common.account.ZAttrProvisioning.A_zimbraImapMaxRequestSize;
+import static com.zimbra.common.account.ZAttrProvisioning.A_zimbraImapNumThreads;
+import static com.zimbra.common.account.ZAttrProvisioning.A_zimbraImapSSLBindAddress;
+import static com.zimbra.common.account.ZAttrProvisioning.A_zimbraImapSSLBindPort;
+import static com.zimbra.common.account.ZAttrProvisioning.A_zimbraImapSSLDisabledCapability;
+import static com.zimbra.common.account.ZAttrProvisioning.A_zimbraImapSaslGssapiEnabled;
+import static com.zimbra.common.account.ZAttrProvisioning.A_zimbraImapShutdownGraceSeconds;
+import static com.zimbra.common.account.ZAttrProvisioning.A_zimbraMtaMaxMessageSize;
+
+import java.util.Arrays;
+
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
-import static com.zimbra.cs.account.Provisioning.*;
-
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.server.ServerConfig;
 import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.util.Config;
-
-import java.util.Arrays;
 
 public class ImapConfig extends ServerConfig {
     private static final String PROTOCOL = "IMAP4rev1";
@@ -62,12 +76,26 @@ public class ImapConfig extends ServerConfig {
 
     @Override
     public int getWriteTimeout() {
-        return LC.imap_write_timeout.intValue();
+        int time;
+        try {
+            time = Provisioning.getInstance().getLocalServer().getImapWriteTimeout();
+        } catch (ServiceException e) {
+            ZimbraLog.imap.error("Error while fetching attribute ImapWriteTimeout", e);
+            time  = 10;
+        }
+        return time;
     }
 
     @Override
     public int getWriteChunkSize() {
-        return LC.imap_write_chunk_size.intValue();
+        int chunkSize;
+        try {
+            chunkSize = Provisioning.getInstance().getLocalServer().getImapWriteChunkSize();
+        } catch (ServiceException e) {
+            ZimbraLog.imap.error("Error while fetching attribute ImapWriteChunkSize", e);
+            chunkSize  = 10;
+        }
+        return chunkSize;
     }
 
     /**
@@ -77,7 +105,12 @@ public class ImapConfig extends ServerConfig {
      */
     @Override
     public int getMaxIdleTime() {
-        return LC.imap_max_idle_time.intValue();
+        try {
+            return Provisioning.getInstance().getLocalServer().getImapMaxIdleTime();
+        } catch (ServiceException e) {
+            ZimbraLog.imap.error("Error while fetching attribute ImapMaxIdleTime", e);
+        }
+        return 60;
     }
 
     /**
@@ -86,7 +119,14 @@ public class ImapConfig extends ServerConfig {
      * @return max idle timeout in seconds
      */
     public int getAuthenticatedMaxIdleTime() {
-        return LC.imap_authenticated_max_idle_time.intValue();
+        int maxIdleTime;
+        try {
+            maxIdleTime = Provisioning.getInstance().getLocalServer().getImapAuthenticatedMaxIdleTime();
+        } catch (ServiceException e) {
+            ZimbraLog.imap.error("Error while fetching attribute imap authentication max idle time", e);
+            maxIdleTime = 1800;
+        }
+        return maxIdleTime;
     }
 
     @Override
@@ -116,7 +156,14 @@ public class ImapConfig extends ServerConfig {
 
     @Override
     public int getThreadKeepAliveTime() {
-        return LC.imap_thread_keep_alive_time.intValue();
+        int keepAliveTime;
+        try {
+            keepAliveTime = Provisioning.getInstance().getLocalServer().getImapThreadKeepAliveTime();
+        } catch (ServiceException e) {
+            ZimbraLog.imap.error("Error while fetching attribute imap authentication max idle time", e);
+            keepAliveTime = 60;
+        }
+        return keepAliveTime;
     }
 
     public boolean isCleartextLoginEnabled() {

@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -31,12 +31,13 @@ import javax.servlet.ServletException;
 import com.zimbra.common.calendar.ZCalendar.ZCalendarBuilder;
 import com.zimbra.common.calendar.ZCalendar.ZICalendarParseHandler;
 import com.zimbra.common.calendar.ZCalendar.ZVCalendar;
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.FileBufferedWriter;
 import com.zimbra.common.util.HttpUtil;
 import com.zimbra.common.util.HttpUtil.Browser;
+import com.zimbra.common.util.RangeUtil;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.CalendarItem.Instance;
 import com.zimbra.cs.mailbox.Folder;
@@ -136,7 +137,7 @@ public class IcsFormatter extends Formatter {
         OperationContext octxt = new OperationContext(context.getAuthAccount(), context.isUsingAdminPrivileges());
         FileBufferedWriter fileBufferedWriter = new FileBufferedWriter(
                 context.resp.getWriter(),
-                LC.calendar_ics_export_buffer_size.intValueWithinRange(0, FileBufferedWriter.MAX_BUFFER_SIZE));
+                RangeUtil.intValueWithinRange(Provisioning.getInstance().getLocalServer().getCalendarIcsExportBufferSize(), 0, FileBufferedWriter.MAX_BUFFER_SIZE));
         try {
             if (htmlFormat)
                 fileBufferedWriter.write("<html><body><pre>");
@@ -183,7 +184,7 @@ public class IcsFormatter extends Formatter {
         }
 
         try {
-            if (context.req.getContentLength() <= LC.calendar_ics_import_full_parse_max_size.intValue()) {
+            if (context.req.getContentLength() <= Provisioning.getInstance().getLocalServer().getCalendarIcsImportFullParseMaxSize()) {
                 // Build a list of ZVCalendar objects by fully parsing the ics file, then iterate them
                 // and add them one by one.  Memory hungry if there are very many events/tasks, but it allows
                 // TZID reference before VTIMEZONE of that timezone appears in the ics file.

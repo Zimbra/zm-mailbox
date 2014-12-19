@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -30,30 +30,15 @@ import junit.framework.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.zimbra.common.localconfig.LC;
-import com.zimbra.cs.imap.AbstractListCommand;
-import com.zimbra.cs.imap.AppendCommand;
-import com.zimbra.cs.imap.AppendMessage;
-import com.zimbra.cs.imap.CopyCommand;
-import com.zimbra.cs.imap.ExamineCommand;
-import com.zimbra.cs.imap.FetchCommand;
-import com.zimbra.cs.imap.ImapCommand;
-import com.zimbra.cs.imap.ImapCommandThrottle;
-import com.zimbra.cs.imap.ImapHandler;
-import com.zimbra.cs.imap.ImapPartSpecifier;
-import com.zimbra.cs.imap.ImapPath;
-import com.zimbra.cs.imap.ListCommand;
-import com.zimbra.cs.imap.Literal;
-import com.zimbra.cs.imap.QResyncInfo;
-import com.zimbra.cs.imap.SearchCommand;
-import com.zimbra.cs.imap.SelectCommand;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.imap.AppendMessage.Part;
 import com.zimbra.cs.imap.ImapHandler.StoreAction;
-import com.zimbra.cs.imap.ImapSearch.SequenceSearch;
-import com.zimbra.cs.imap.ImapSearch.FlagSearch;
-import com.zimbra.cs.imap.ImapSearch.AndOperation;
-import com.zimbra.cs.imap.ImapSearch.OrOperation;
 import com.zimbra.cs.imap.ImapSearch.AllSearch;
+import com.zimbra.cs.imap.ImapSearch.AndOperation;
+import com.zimbra.cs.imap.ImapSearch.FlagSearch;
+import com.zimbra.cs.imap.ImapSearch.OrOperation;
+import com.zimbra.cs.imap.ImapSearch.SequenceSearch;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
 
 public class ImapCommandThrottleTest {
@@ -435,7 +420,13 @@ public class ImapCommandThrottleTest {
         create2 = new CreateCommand(new ImapPath("foo", null));
         Assert.assertFalse("different path", create.isDuplicate(create2));
 
-        for (int repeats = 0; repeats < LC.imap_throttle_command_limit.intValue(); repeats++) {
+        int limit;
+        try {
+            limit = Provisioning.getInstance().getLocalServer().getImapThrottleCommandLimit();
+        } catch (ServiceException e) {
+            limit = 25;
+        }
+        for (int repeats = 0; repeats < limit; repeats++) {
             create2 = new CreateCommand(new ImapPath("foo"+repeats, null));
             Assert.assertFalse(create2.throttle(create));
             create = create2;

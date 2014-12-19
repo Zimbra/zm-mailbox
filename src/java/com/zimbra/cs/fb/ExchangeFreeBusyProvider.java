@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -16,9 +16,9 @@
  */
 package com.zimbra.cs.fb;
 
-import java.net.URLEncoder;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -29,20 +29,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.httpclient.auth.AuthPolicy;
 import org.apache.commons.httpclient.Credentials;
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.HttpState;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
+import org.apache.commons.httpclient.auth.AuthPolicy;
 import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.methods.ByteArrayRequestEntity;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
 
+import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.httpclient.HttpClientUtil;
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.XmlParseException;
@@ -54,7 +54,6 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.cs.httpclient.HttpProxyUtil;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
@@ -253,7 +252,7 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
         }
         return getServerInfo(email) != null;
     }
-    
+
     private long getTimeInterval(String attr, String accountId, long defaultValue) throws ServiceException {
         Provisioning prov = Provisioning.getInstance();
         if (accountId != null) {
@@ -264,7 +263,7 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
         }
         return prov.getConfig().getTimeInterval(attr, defaultValue);
     }
-    
+
     @Override
     public long cachedFreeBusyStartTime(String accountId) {
         Calendar cal = GregorianCalendar.getInstance();
@@ -303,7 +302,7 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
         cal.set(Calendar.SECOND, 0);
         return cal.getTimeInMillis();
     }
-    
+
     @Override
     public long cachedFreeBusyStartTime() {
         return cachedFreeBusyStartTime(null);
@@ -400,7 +399,13 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
         buf.append("&flags=0");
         buf.append("&SubmitCreds=Log On");
         buf.append("&trusted=0");
-        String url = info.url + LC.calendar_exchange_form_auth_url.value();
+        String url;
+        try {
+            url = info.url + Provisioning.getInstance().getLocalServer().getCalendarExchangeFormAuthURL();
+        } catch (ServiceException e) {
+            ZimbraLog.fb.error("can't get attr calendarExchangeFormAuthUrl", e);
+            throw new IOException(e);
+        }
         PostMethod method = new PostMethod(url);
         ByteArrayRequestEntity re = new ByteArrayRequestEntity(buf.toString().getBytes(), "x-www-form-urlencoded");
         method.setRequestEntity(re);

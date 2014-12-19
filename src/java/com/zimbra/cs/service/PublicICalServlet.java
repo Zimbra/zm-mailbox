@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -24,21 +24,20 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapProtocol;
+import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
+import com.zimbra.common.util.RangeUtil;
 import com.zimbra.common.util.ZimbraLog;
-
-import com.zimbra.common.util.Constants;
-import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.cs.fb.FreeBusy;
 import com.zimbra.cs.fb.FreeBusyQuery;
 import com.zimbra.cs.servlet.ZimbraServlet;
@@ -50,6 +49,7 @@ public class PublicICalServlet extends ZimbraServlet {
 
     private static Log sLog = LogFactory.getLog(PublicICalServlet.class);
 
+    @Override
     public final void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException {
         ZimbraLog.clearContext();
         String pathInfo = req.getPathInfo();
@@ -74,9 +74,9 @@ public class PublicICalServlet extends ZimbraServlet {
     private static final String QP_END_TIME   = "e";
 
     /**
-     * 
+     *
      * http://localhost:7070/service/pubcal/freebusy.ifb?acct=user@host.com
-     * 
+     *
      * @param req
      * @param resp
      * @throws IOException
@@ -95,7 +95,7 @@ public class PublicICalServlet extends ZimbraServlet {
         long now = new Date().getTime();
 
         long rangeStart = now - Constants.MILLIS_PER_WEEK;
-        long rangeEnd = now + (2 * Constants.MILLIS_PER_MONTH); 
+        long rangeEnd = now + (2 * Constants.MILLIS_PER_MONTH);
 
         if (startStr != null)
             rangeStart = Long.parseLong(startStr);
@@ -109,7 +109,12 @@ public class PublicICalServlet extends ZimbraServlet {
         }
 
         long days = (rangeEnd - rangeStart) / Constants.MILLIS_PER_DAY;
-        long maxDays = LC.calendar_freebusy_max_days.longValueWithinRange(0, 36600);
+        int maxDays;
+        try {
+            maxDays = RangeUtil.intValueWithinRange(Provisioning.getInstance().getLocalServer().getCalendarFreeBusyMaxDays(), 0, 36600);
+        } catch (ServiceException ex) {
+            throw new ServletException("Error while fetching attribute calendarFreeBusyMaxDays", ex);
+        }
         if (days > maxDays) {
             resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Requested range is too large (max " + maxDays + " days)");
             return;
@@ -172,33 +177,33 @@ public class PublicICalServlet extends ZimbraServlet {
 //        String recur = req.getParameter(PARAM_RECUR);
 //        String verbStr = req.getParameter(PARAM_VERB);
 //        String oldInvId = req.getParameter(PARAM_INVID);
-//        
+//
 //        if (checkBlankOrNull(resp, PARAM_ORG, org)
 //                || checkBlankOrNull(resp, PARAM_UID, uid)
-//                || checkBlankOrNull(resp, PARAM_AT, at) 
-//                || checkBlankOrNull(resp, PARAM_VERB, verbStr) 
-//                || checkBlankOrNull(resp, PARAM_INVID, oldInvId)) 
+//                || checkBlankOrNull(resp, PARAM_AT, at)
+//                || checkBlankOrNull(resp, PARAM_VERB, verbStr)
+//                || checkBlankOrNull(resp, PARAM_INVID, oldInvId))
 //            return;
-//        
+//
 //        try {
 //
 //            Account acct = Provisioning.getInstance().getAccountByName(org);
 //            if (acct == null) {
 //                 resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Account "+org+" not found");
-//                return;             
+//                return;
 //            }
-//            
+//
 //            Mailbox mbox = Mailbox.getMailboxByAccountId(acct.getId());
 //            if (mbox == null) {
 //                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "mailbox not found");
-//                return;             
+//                return;
 //            }
-//            
+//
 //            int calItemId;
 //            int inviteMsgId;
 //            CalendarItem calItem;
 //            Invite oldInv;
-//            
+//
 //            ItemId iid = new ItemId(oldInvId, null);
 //            // the user could be accepting EITHER the original-mail-item (id="nnn") OR the
 //            // calendar item (id="aaaa-nnnn") --- work in both cases
@@ -210,19 +215,19 @@ public class PublicICalServlet extends ZimbraServlet {
 //                oldInv = calItem.getInvite(inviteMsgId, 0);
 //            } else {
 //                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid invId: "+oldInvId);
-//                return;             
+//                return;
 //            }
-//            
+//
 //            if (!calItem.getUid().equals(uid)) {
 //                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Wrong UID");
-//                return;             
+//                return;
 //            }
-//            
+//
 //            SendInviteReply.ParsedVerb verb = SendInviteReply.parseVerb(verbStr);
 //            String replySubject = SendInviteReply.getReplySubject(verb, oldInv);
 //            Invite reply = new Invite(Method.REPLY, new TimeZoneMap(oldInv.getTimeZoneMap().getLocalTimeZone()));
 //            reply.getTimeZoneMap().add(oldInv.getTimeZoneMap());
-//            
+//
 //            // ATTENDEE -- send back this attendee with the proper status
 //            ZAttendee meReply = null;
 //            ZAttendee me = oldInv.getMatchingAttendee(at);
@@ -234,18 +239,18 @@ public class PublicICalServlet extends ZimbraServlet {
 //                reply.addAttendee(meReply);
 //            } else {
 //                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, at+" not on Attendee list");
-//                return;             
+//                return;
 //            }
-//            
+//
 //            // DTSTART (outlook seems to require this, even though it shouldn't)
 //            reply.setDtStart(oldInv.getStartTime());
-//            
+//
 //            // ORGANIZER
 //            reply.setOrganizer(oldInv.getOrganizer());
-//            
+//
 //            // UID
 //            reply.setUid(oldInv.getUid());
-//                
+//
 //            // RECURRENCE-ID (if necessary)
 //            if (recur != null && !recur.equals("")) {
 //                ParsedDateTime exceptDt = ParsedDateTime.parse(recur, reply.getTimeZoneMap());
@@ -253,10 +258,10 @@ public class PublicICalServlet extends ZimbraServlet {
 //            } else if (oldInv.hasRecurId()) {
 //                reply.setRecurId(oldInv.getRecurId());
 //            }
-//            
-//            // SEQUENCE        
+//
+//            // SEQUENCE
 //            reply.setSeqNo(oldInv.getSeqNo());
-//            
+//
 //            // DTSTAMP
 //            // we should pick "now" -- but the dtstamp MUST be >= the one sent by the organizer,
 //            // so we'll use theirs if it is after "now"...
@@ -266,17 +271,17 @@ public class PublicICalServlet extends ZimbraServlet {
 //                dtStampDate = now;
 //            }
 //            reply.setDtStamp(dtStampDate.getTime());
-//            
-//            
+//
+//
 //            // SUMMARY
 //            reply.setName(replySubject);
-//            
+//
 //            Calendar iCal = reply.toICalendar();
-//            
+//
 //            // send the message via SMTP
 //            try {
 //                MimeMessage mm = SendInviteReply.createDefaultReply(at, oldInv, replySubject, verb, iCal);
-//                
+//
 //                String replyTo = acct.getAttr(Provisioning.A_zimbraPrefReplyToAddress);
 //                mm.setFrom(AccountUtil.getOutgoingFromAddress(acct));
 //                mm.setSentDate(new Date());
@@ -284,7 +289,7 @@ public class PublicICalServlet extends ZimbraServlet {
 //                    mm.setHeader("Reply-To", replyTo);
 //                mm.saveChanges();
 //                mm.addRecipient(Message.RecipientType.TO, new InternetAddress(at));
-//                
+//
 //                if (mm.getAllRecipients() != null) {
 //                    Transport.send(mm);
 //                }
@@ -295,7 +300,7 @@ public class PublicICalServlet extends ZimbraServlet {
 //                e.printStackTrace();
 //                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Caught exception: "+e);
 //            }
-//            
+//
 //            resp.setContentType(Mime.CT_TEXT_PLAIN);
 //
 //            StringBuffer body = new StringBuffer();
@@ -306,12 +311,12 @@ public class PublicICalServlet extends ZimbraServlet {
 //            } else if (verb.equals(SendInviteReply.VERB_DECLINE)) {
 //                body.append("DECLINED");
 //            } if (verb.equals(SendInviteReply.VERB_TENTATIVE)) {
-//                body.append("TENTATIVE");                
+//                body.append("TENTATIVE");
 //            }
 //            body.append('\n');
-//            
+//
 //            resp.getOutputStream().write(body.toString().getBytes());
-//            
+//
 //        } catch (ServiceException e) {
 //            e.printStackTrace();
 //            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Caught exception: "+e);
@@ -322,7 +327,7 @@ public class PublicICalServlet extends ZimbraServlet {
     }
 
     static boolean checkBlankOrNull(HttpServletResponse resp, String field, String value) throws IOException {
-        if (value == null || value.equals("")) { 
+        if (value == null || value.equals("")) {
             resp.sendError(HttpServletResponse.SC_BAD_REQUEST, field + " required");
             return true;
         } else {

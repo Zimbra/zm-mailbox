@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -20,17 +20,18 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Set;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import net.sf.ehcache.CacheException;
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Ehcache;
 import net.sf.ehcache.Element;
 
-import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Provisioning;
 
 /**
  * IMAP cache using Ehcache's DiskStore.
@@ -50,7 +51,13 @@ final class EhcacheImapCache implements ImapSessionManager.Cache {
         if (active) {
             activeCacheUpdateTimes = new LinkedHashMap<String, Long>(ACTIVE_CACHE_THRESHOLD, 0.75f, true) {
                 private boolean isExpired(long timestamp) {
-                    return (timestamp < (System.currentTimeMillis() - (LC.imap_authenticated_max_idle_time.intValue() * Constants.MILLIS_PER_SECOND + 5 * Constants.MILLIS_PER_MINUTE)));
+                    int authMaxIdleTime;
+                    try {
+                        authMaxIdleTime = Provisioning.getInstance().getLocalServer().getImapAuthenticatedMaxIdleTime();
+                    } catch (ServiceException e) {
+                        authMaxIdleTime = 1800;
+                    }
+                    return (timestamp < (System.currentTimeMillis() - (authMaxIdleTime * Constants.MILLIS_PER_SECOND + 5 * Constants.MILLIS_PER_MINUTE)));
                 }
 
                 private boolean removeIfExpired(Entry<String, Long> entry) {

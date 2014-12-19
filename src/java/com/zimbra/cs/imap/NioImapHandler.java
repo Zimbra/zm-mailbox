@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -22,8 +22,9 @@ import java.net.InetSocketAddress;
 import org.apache.mina.filter.codec.ProtocolDecoderException;
 import org.apache.mina.filter.codec.RecoverableProtocolDecoderException;
 
-import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.server.NioConnection;
 import com.zimbra.cs.server.NioHandler;
 import com.zimbra.cs.server.NioOutputStream;
@@ -70,7 +71,14 @@ final class NioImapHandler extends ImapHandler implements NioHandler {
                     request = null;
                 }
             }
-            if (LC.imap_max_consecutive_error.intValue() > 0 && consecutiveError >= LC.imap_max_consecutive_error.intValue()) {
+            int imapMaxConsecutiveError;
+            try {
+                imapMaxConsecutiveError = Provisioning.getInstance().getLocalServer().getImapMaxConsecutiveError();
+            } catch (ServiceException e) {
+                ZimbraLog.imap.error("Exception while fetching imap max consecutive error",e);
+                imapMaxConsecutiveError = 5;
+            }
+            if (imapMaxConsecutiveError > 0 && consecutiveError >= imapMaxConsecutiveError) {
                 dropConnection();
             }
         }

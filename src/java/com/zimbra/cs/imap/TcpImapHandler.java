@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -28,10 +28,11 @@ import javax.net.ssl.SSLSocketFactory;
 
 import com.google.common.io.Closeables;
 import com.zimbra.common.io.TcpServerInputStream;
-import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.NetUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.server.ProtocolHandler;
 import com.zimbra.cs.stats.ZimbraPerf;
 
@@ -123,7 +124,14 @@ final class TcpImapHandler extends ProtocolHandler {
             } else {
                 ZimbraLog.imap.info("(unknown) elapsed=%d", elapsed);
             }
-            return keepGoing && (LC.imap_max_consecutive_error.intValue() <= 0 || delegate.consecutiveError < LC.imap_max_consecutive_error.intValue());
+            int imapMaxConsecutiveError;
+            try {
+                imapMaxConsecutiveError = Provisioning.getInstance().getLocalServer().getImapMaxConsecutiveError();
+            } catch (ServiceException e) {
+                ZimbraLog.imap.error("Exception while fetching imap max consecutive error",e);
+                imapMaxConsecutiveError = 5;
+            }
+            return keepGoing && (imapMaxConsecutiveError <= 0 || delegate.consecutiveError < imapMaxConsecutiveError);
         } catch (TcpImapRequest.ImapContinuationException e) {
             request.rewind();
             complete = false; // skip clearRequest()
@@ -135,7 +143,14 @@ final class TcpImapHandler extends ProtocolHandler {
             return false;
         } catch (ImapParseException e) {
             delegate.handleParseException(e);
-            return LC.imap_max_consecutive_error.intValue() <= 0 || delegate.consecutiveError < LC.imap_max_consecutive_error.intValue();
+            int maxConsecutiveError;
+            try {
+                maxConsecutiveError = Provisioning.getInstance().getLocalServer().getImapMaxConsecutiveError();
+            } catch (ServiceException ex) {
+                ZimbraLog.imap.error("Error while fetching attribute ImapMaxConsecutiveError", ex);
+                maxConsecutiveError = 5;
+            }
+            return maxConsecutiveError <= 0 || delegate.consecutiveError < maxConsecutiveError;
         } catch (ImapException e) { // session closed
             ZimbraLog.imap.debug("stop processing", e);
             return false;

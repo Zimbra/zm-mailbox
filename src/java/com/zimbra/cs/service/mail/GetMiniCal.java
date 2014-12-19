@@ -27,9 +27,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
+import com.zimbra.client.ZMailbox;
+import com.zimbra.client.ZMailbox.ZGetMiniCalResult;
+import com.zimbra.client.ZMailbox.ZMiniCalError;
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.calendar.ICalTimeZone;
 import com.zimbra.common.calendar.WellKnownTimeZones;
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
@@ -39,8 +43,6 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
-import com.zimbra.common.account.Key;
-import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
@@ -51,18 +53,15 @@ import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mailbox.calendar.Util;
 import com.zimbra.cs.mailbox.calendar.cache.CalSummaryCache;
+import com.zimbra.cs.mailbox.calendar.cache.CalSummaryCache.CalendarDataResult;
 import com.zimbra.cs.mailbox.calendar.cache.CalendarCacheManager;
 import com.zimbra.cs.mailbox.calendar.cache.CalendarData;
 import com.zimbra.cs.mailbox.calendar.cache.CalendarItemData;
 import com.zimbra.cs.mailbox.calendar.cache.InstanceData;
-import com.zimbra.cs.mailbox.calendar.cache.CalSummaryCache.CalendarDataResult;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.Zimbra;
-import com.zimbra.client.ZMailbox;
-import com.zimbra.client.ZMailbox.ZGetMiniCalResult;
-import com.zimbra.client.ZMailbox.ZMiniCalError;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /*
@@ -121,7 +120,7 @@ public class GetMiniCal extends CalendarRequest {
             Search.groupByServer(groupFoldersByAccount(resolved));
 
         // Look up in calendar cache first.
-        if (LC.calendar_cache_enabled.booleanValue()) {
+        if (Provisioning.getInstance().getLocalServer().isCalendarCacheEnabled()) {
             CalSummaryCache calSummaryCache = Zimbra.getAppContext().getBean(CalendarCacheManager.class).getSummaryCache();
             Calendar cal = new GregorianCalendar(tz);
             for (Iterator<Map.Entry<Server, Map<String, List<Integer>>>> serverIter = groupedByServer.entrySet().iterator();

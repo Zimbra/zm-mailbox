@@ -32,7 +32,6 @@ import com.zimbra.client.ZMailbox;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.auth.ZAuthToken;
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
@@ -75,9 +74,17 @@ public class CalendarCacheManager {
         Zimbra.getAppContext().getAutowireCapableBeanFactory().autowireBean(mCtagResponseCache);
 
         int summaryLRUSize = 0;
-        mSummaryCacheEnabled = LC.calendar_cache_enabled.booleanValue();
+        try {
+            mSummaryCacheEnabled = Provisioning.getInstance().getLocalServer().isCalendarCacheEnabled();
+        } catch (ServiceException e) {
+            ZimbraLog.cache.error("Error while fetching the attribute calendarCacheEnabled");
+        }
         if (mSummaryCacheEnabled) {
-            summaryLRUSize = LC.calendar_cache_lru_size.intValue();
+            try {
+                summaryLRUSize = Provisioning.getInstance().getLocalServer().getCalendarCacheLRUSize();
+            } catch (ServiceException e) {
+                ZimbraLog.cache.error("Error while fetching attribute calendarCacheLRUSize");
+            }
         }
         mSummaryCache = new CalSummaryCache(summaryLRUSize);
         Zimbra.getAppContext().getAutowireCapableBeanFactory().autowireBean(mSummaryCache);

@@ -60,6 +60,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
+import com.zimbra.common.util.RangeUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -297,8 +298,13 @@ public class Invite {
     private static final String FN_DONT_INDEX_MM   = "noidxmm";
     private static final String FN_URL             = "url";
 
-    public static int getMaxDescInMeta() {
-        return LC.calendar_max_desc_in_metadata.intValueWithinRange(0, 1048576);
+    public static int getMaxDescInMeta(){
+        try {
+            return RangeUtil.intValueWithinRange(Provisioning.getInstance().getLocalServer().getCalendarMaxDescInMetadata(), 0, 1048576);
+        } catch (ServiceException e) {
+            ZimbraLog.calendar.error("Error while fetching Max Desc in metatdata. Taking default max size: 1048576 ", e);
+        }
+        return 1048576;
     }
 
     /**

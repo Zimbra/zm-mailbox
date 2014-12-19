@@ -27,9 +27,9 @@ import javax.annotation.PostConstruct;
 
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.calendar.ParsedDateTime;
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Pair;
+import com.zimbra.common.util.RangeUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.util.memcached.ZimbraMemcachedClient;
 import com.zimbra.cs.account.Account;
@@ -346,20 +346,40 @@ public class CalSummaryCache {
     }
 
 
-    private static final int sRangeMonthFrom;
-    private static final int sRangeNumMonths;
-    private static final int sMaxStaleItems;
+    private static int sRangeMonthFrom;
+    private static int sRangeNumMonths;
+    private static int sMaxStaleItems;
     private static final int sMaxStaleItemsBeforeInvalidatingCalendar;
-    private static final int sMaxSearchDays;
+    private static int sMaxSearchDays;
 
     private static final long MSEC_PER_DAY = 1000 * 60 * 60 * 24;
 
     static {
-        sRangeMonthFrom = LC.calendar_cache_range_month_from.intValue();
-        sRangeNumMonths = LC.calendar_cache_range_months.intValue();
-        sMaxStaleItems = LC.calendar_cache_max_stale_items.intValue();
+        try {
+            sRangeMonthFrom = Provisioning.getInstance().getLocalServer().getCalendarCacheRangeMonthFrom();
+        } catch (ServiceException e) {
+            sRangeMonthFrom = 0;
+            ZimbraLog.cache.error("Error while fetching calendar attribute CalendarCacheRangeMonthFrom", e);
+        }
+        try {
+            sRangeNumMonths = Provisioning.getInstance().getLocalServer().getCalendarCacheRangeMonths();
+        } catch (ServiceException e) {
+            sRangeNumMonths = 3;
+            ZimbraLog.cache.error("Error while fetching calendar attribute CalendarCacheRangeMonth", e);
+        }
+        try {
+            sMaxStaleItems = Provisioning.getInstance().getLocalServer().getCalendarMaxStaleItems();
+        } catch (ServiceException e) {
+            sMaxStaleItems =  10;
+            ZimbraLog.cache.error("Error while fetching calendar attribute CalendarCacheMaxStaleItem", e);
+        }
+        try {
+            sMaxSearchDays = RangeUtil.intValueWithinRange(Provisioning.getInstance().getLocalServer().getCalendarSearchMaxDays(), 0, 3660);
+        } catch (ServiceException e) {
+            sMaxSearchDays = 3660;
+            ZimbraLog.cache.error("Error while fetching calendar attribute CalendarSearchMaxDays", e);
+        }
         sMaxStaleItemsBeforeInvalidatingCalendar = 100;
-        sMaxSearchDays = LC.calendar_search_max_days.intValueWithinRange(0, 3660);
     }
 
     // LRU cache containing range-limited calendar summary by calendar folder
@@ -402,7 +422,7 @@ public class CalSummaryCache {
 
         CalendarDataResult result = new CalendarDataResult();
 
-        if (!LC.calendar_cache_enabled.booleanValue()) {
+        if (!Provisioning.getInstance().getLocalServer().isCalendarCacheEnabled()) {
             ZimbraPerf.COUNTER_CALENDAR_CACHE_HIT.increment(0);
             ZimbraPerf.COUNTER_CALENDAR_CACHE_MEM_HIT.increment(0);
             if (!targetAcctOnLocalServer)
@@ -613,7 +633,7 @@ public class CalSummaryCache {
     }
 
     private void invalidateSummary(Mailbox mbox, int folderId) throws ServiceException {
-        if (!LC.calendar_cache_enabled.booleanValue())
+        if (!Provisioning.getInstance().getLocalServer().isCalendarCacheEnabled())
             return;
         int mboxId = mbox.getId();
         CalendarDataCache.Key key = new CalendarDataCache.Key(mbox.getAccountId(), folderId);
@@ -628,7 +648,7 @@ public class CalSummaryCache {
     }
 
     private void invalidateItem(Mailbox mbox, int folderId, int calItemId) throws ServiceException {
-        if (!LC.calendar_cache_enabled.booleanValue())
+        if (!Provisioning.getInstance().getLocalServer().isCalendarCacheEnabled())
             return;
         CalendarDataCache.Key key = new CalendarDataCache.Key(mbox.getAccountId(), folderId);
         CalendarData calData = null;

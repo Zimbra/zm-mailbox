@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -17,7 +17,8 @@
 
 package com.zimbra.cs.imap;
 
-import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.account.Provisioning;
 
 public class CreateCommand extends ImapCommand {
 
@@ -35,7 +36,13 @@ public class CreateCommand extends ImapCommand {
         // this prevents client from continuously creating new folders
         if (previousCommand instanceof CreateCommand) {
             repeats = ((CreateCommand) previousCommand).repeats + 1;
-            return repeats > LC.imap_throttle_command_limit.intValue();
+            int limit;
+            try {
+                limit = Provisioning.getInstance().getLocalServer().getImapThrottleCommandLimit();
+            } catch (ServiceException e) {
+                limit = 5000;
+            }
+            return repeats > limit;
         } else {
             repeats++;
             return false;

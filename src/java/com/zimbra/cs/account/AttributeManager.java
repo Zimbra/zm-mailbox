@@ -39,6 +39,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.SetUtil;
 import com.zimbra.common.util.Version;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.AttributeInfo.Service;
 import com.zimbra.cs.account.callback.CallbackContext;
 import com.zimbra.cs.account.callback.IDNCallback;
 import com.zimbra.cs.account.ldap.LdapProv;
@@ -66,6 +67,7 @@ public class AttributeManager {
     private static final String A_REQUIRED_IN = "requiredIn";
     private static final String A_OPTIONAL_IN = "optionalIn";
     private static final String A_FLAGS = "flags";
+    private static final String A_AFFECTS_SERVICES = "affectsServices";
     private static final String A_DEPRECATED_SINCE = "deprecatedSince";
     private static final String A_SINCE = "since";
     private static final String A_REQUIRES_RESTART = "requiresRestart";
@@ -342,6 +344,7 @@ public class AttributeManager {
             Set<AttributeClass> requiredIn = null;
             Set<AttributeClass> optionalIn = null;
             Set<AttributeFlag> flags = null;
+            Set<Service> affectsServices= null;
 
             String canonicalName = null;
             String name = eattr.attributeValue(A_NAME);
@@ -401,6 +404,8 @@ public class AttributeManager {
                     optionalIn = parseClasses(name, file, attr.getValue());
                 } else if (aname.equals(A_FLAGS)) {
                     flags = parseFlags(name, file, attr.getValue());
+                }else if (aname.equals(A_AFFECTS_SERVICES)) {
+                    affectsServices = parseAffectsServices(name, file, attr.getValue());
                 } else if (aname.equals(A_ORDER)) {
                     try {
                         order = AttributeOrder.valueOf(attr.getValue());
@@ -546,7 +551,7 @@ public class AttributeManager {
                     name, id, parentOid, groupId, callback, type, order, value, immutable, min, max,
                     cardinality, requiredIn, optionalIn, flags, globalConfigValues, defaultCOSValues,
                     defaultExternalCOSValues, globalConfigValuesUpgrade, defaultCOSValuesUpgrade,
-                    mMinimize ? null : description, requiresRestart, sinceVer, deprecatedSinceVer);
+                    mMinimize ? null : description, requiresRestart, affectsServices, sinceVer, deprecatedSinceVer);
 
             if (mAttrs.get(canonicalName) != null) {
                 error(name, file, "duplicate definiton");
@@ -594,12 +599,13 @@ public class AttributeManager {
             List<String> globalConfigValues, List<String> defaultCOSValues,
             List<String> defaultExternalCOSValues, List<String> globalConfigValuesUpgrade,
             List<String> defaultCOSValuesUpgrade, String description, List<AttributeServerType> requiresRestart,
+            Set<Service> affectsServices,
             List<Version> sinceVer, Version deprecatedSinceVer) {
         return new AttributeInfo(
                 name, id, parentOid, groupId, callback, type, order, value, immutable, min, max,
                 cardinality, requiredIn, optionalIn, flags, globalConfigValues, defaultCOSValues,
                 defaultExternalCOSValues, globalConfigValuesUpgrade, defaultCOSValuesUpgrade,
-                description, requiresRestart, sinceVer, deprecatedSinceVer);
+                description, requiresRestart, affectsServices, sinceVer, deprecatedSinceVer);
     }
 
     private enum ObjectClassType {
@@ -811,6 +817,23 @@ public class AttributeManager {
                 result.add(ac);
             } catch (IllegalArgumentException iae) {
                 error(attrName, file, "invalid class: " + cname);
+            }
+        }
+        return result;
+    }
+
+    private Set<Service> parseAffectsServices(String attrName, File file, String value) {
+        Set<Service> result = new HashSet<Service>();
+        String[] affectedServices = value.split(",");
+        for (String affectedService : affectedServices) {
+            try {
+                Service ac = Service.valueOf(affectedService);
+                if (result.contains(ac)) {
+                    error(attrName, file, "duplicate service: " + affectedService);
+                }
+                result.add(ac);
+            } catch (IllegalArgumentException iae) {
+                error(attrName, file, "invalid service: " + affectedService);
             }
         }
         return result;

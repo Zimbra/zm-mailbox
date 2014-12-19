@@ -32,7 +32,6 @@ import com.zimbra.client.ZMailbox;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.auth.ZAuthToken;
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
@@ -94,7 +93,7 @@ public class Search extends MailDocumentHandler  {
             throw ServiceException.INVALID_REQUEST("cannot search for conversations in dumpster", null);
         }
 
-        if (LC.calendar_cache_enabled.booleanValue()) {
+        if (Provisioning.getInstance().getLocalServer().isCalendarCacheEnabled()) {
             List<String> apptFolderIds = getFolderIdListIfSimpleAppointmentsQuery(params, zsc);
             if (apptFolderIds != null) {
                 Account authAcct = getAuthenticatedAccount(zsc);
@@ -288,7 +287,7 @@ public class Search extends MailDocumentHandler  {
             groupByServer(ItemId.groupFoldersByAccount(octxt, mbox, folderIids));
 
         // Look up in calendar cache first.
-        if (LC.calendar_cache_enabled.booleanValue()) {
+        if (Provisioning.getInstance().getLocalServer().isCalendarCacheEnabled()) {
             CalSummaryCache calSummaryCache = Zimbra.getAppContext().getBean(CalendarCacheManager.class).getSummaryCache();
             long rangeStart = params.getCalItemExpandStart();
             long rangeEnd = params.getCalItemExpandEnd();

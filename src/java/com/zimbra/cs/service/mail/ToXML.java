@@ -1649,7 +1649,7 @@ public final class ToXML {
      */
     public static Element encodeCalendarItemSummary(Element parent, ItemIdFormatter ifmt, OperationContext octxt,
             CalendarItem calItem, int fields, boolean includeInvites, boolean includeContent) throws ServiceException {
-        final int MAX_RETRIES = LC.calendar_item_get_max_retries.intValue();
+        final int MAX_RETRIES = Provisioning.getInstance().getLocalServer().getCalendarItemGetMaxRetries();
         Element elem = null;
         Mailbox mbox = calItem.getMailbox();
         int changeId = calItem.getSavedSequence();

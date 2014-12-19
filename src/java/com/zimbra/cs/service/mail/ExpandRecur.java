@@ -1,11 +1,11 @@
 /* ***** BEGIN LICENSE BLOCK *****
 /* Zimbra Collaboration Suite Server
 /* Copyright (C) 2009, 2010, 2011, 2013, 2014 Zimbra, Inc.
-/* 
+/*
 /* This program is free software: you can redistribute it and/or modify it under
 /* the terms of the GNU General Public License as published by the Free Software Foundation,
 /* version 2 of the License.
-/* 
+/*
 /* This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
 /* without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 /* See the GNU General Public License for more details.
@@ -23,12 +23,13 @@ import java.util.Map;
 import com.zimbra.common.calendar.ParsedDateTime;
 import com.zimbra.common.calendar.ParsedDuration;
 import com.zimbra.common.calendar.TimeZoneMap;
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.Constants;
+import com.zimbra.common.util.RangeUtil;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.CalendarItem.Instance;
 import com.zimbra.cs.mailbox.calendar.RecurId;
 import com.zimbra.cs.mailbox.calendar.Recurrence.CancellationRule;
@@ -49,7 +50,7 @@ public class ExpandRecur extends MailDocumentHandler {
         long rangeStart = request.getAttributeLong(MailConstants.A_CAL_START_TIME);
         long rangeEnd = request.getAttributeLong(MailConstants.A_CAL_END_TIME);
         long days = (rangeEnd-rangeStart)/Constants.MILLIS_PER_DAY;
-        long maxDays = LC.calendar_freebusy_max_days.longValueWithinRange(0, 36600);
+        int maxDays = RangeUtil.intValueWithinRange(Provisioning.getInstance().getLocalServer().getCalendarFreeBusyMaxDays(), 0, 36600);
         if (days > maxDays)
             throw ServiceException.INVALID_REQUEST("Requested range is too large (Maximum " + maxDays + " days)", null);
 
@@ -121,7 +122,7 @@ public class ExpandRecur extends MailDocumentHandler {
                 exceptions.add(new CancellationRule(recurId));
             }
         }
-        
+
         ParsedRecurrence parsed = new ParsedRecurrence();
         if (recurrence instanceof RecurrenceRule) {
             RecurrenceRule rrule = (RecurrenceRule) recurrence;
