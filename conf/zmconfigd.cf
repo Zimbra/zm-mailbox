@@ -374,6 +374,7 @@ SECTION proxy
 	VAR zimbraReverseProxyRestrictedIPs
 	VAR zimbraReverseProxyBlockedURLs
 	VAR zimbraReverseProxyBlockedUserAgents
+	VAR zimbraReverseProxyDomainAllowedIPs
 	PROXYGEN
 	RESTART proxy
 
