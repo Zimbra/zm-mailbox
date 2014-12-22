@@ -54474,6 +54474,78 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * Hostname of the upstream ZSS server being reverse-proxied
+     *
+     * @return zimbraReverseProxyZSSHostname, or null if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1722)
+    public String getReverseProxyZSSHostname() {
+        return getAttr(Provisioning.A_zimbraReverseProxyZSSHostname, null);
+    }
+
+    /**
+     * Hostname of the upstream ZSS server being reverse-proxied
+     *
+     * @param zimbraReverseProxyZSSHostname new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1722)
+    public void setReverseProxyZSSHostname(String zimbraReverseProxyZSSHostname) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyZSSHostname, zimbraReverseProxyZSSHostname);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Hostname of the upstream ZSS server being reverse-proxied
+     *
+     * @param zimbraReverseProxyZSSHostname new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1722)
+    public Map<String,Object> setReverseProxyZSSHostname(String zimbraReverseProxyZSSHostname, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyZSSHostname, zimbraReverseProxyZSSHostname);
+        return attrs;
+    }
+
+    /**
+     * Hostname of the upstream ZSS server being reverse-proxied
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1722)
+    public void unsetReverseProxyZSSHostname() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyZSSHostname, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Hostname of the upstream ZSS server being reverse-proxied
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1722)
+    public Map<String,Object> unsetReverseProxyZSSHostname(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyZSSHostname, "");
+        return attrs;
+    }
+
+    /**
      * LDAP attribute(s) for public key lookup for S/MIME via external LDAP.
      * Multiple attributes can be separated by comma. All SMIME attributes
      * are in the format of {config-name}:{value}. A &#039;SMIME config&#039;

@@ -1939,6 +1939,26 @@ class WebBlockedUserAgentsVar extends ProxyConfVar {
     }
 }
 
+class WebZSSUpstreamEnablerVar extends WebEnablerVar {
+
+    public WebZSSUpstreamEnablerVar() {
+        super("web.zss.upstream.disable", "#",
+                "Indicates whether zss location block should be populated " +
+                "(false unless zimbraReverseProxyZSSHostname is set)");
+    }
+
+
+    @Override
+    public String format(Object o)  {
+        String hostname = serverSource.getAttr("zimbraReverseProxyZSSHostname");
+        if (hostname.length()  == 0) {
+            return "#";
+        } else {
+            return "";
+        }
+    }
+}
+
 public class ProxyConfGen
 {
     private static final int DEFAULT_SERVERS_NAME_HASH_MAX_SIZE = 512;
@@ -2748,6 +2768,8 @@ public class ProxyConfGen
 	    mConfVars.put("web.upstream.blocked.urls", new WebUpstreamBlockedURLsVar());
 	    mConfVars.put("web.blocked.user.agents.enabled", new WebBlockedUserAgentsEnablerVar());
 	    mConfVars.put("web.blocked.user.agents", new WebBlockedUserAgentsVar());
+	    mConfVars.put("web.zss.upstream.disable", new WebZSSUpstreamEnablerVar());
+	    mConfVars.put("web.zss.upstream.hostname", new ProxyConfVar("web.zss.upstream.hostname", "zimbraReverseProxyZSSHostname", "", ProxyConfValueType.STRING, ProxyConfOverride.SERVER, "Hostname of the upstream ZSS server being reverse-proxied"));
     }
 
     /* update the default variable map from the active configuration */

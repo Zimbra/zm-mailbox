@@ -8654,4 +8654,8 @@ TODO: delete them permanently from here
         If unset, all IPs are allowed</desc>  
 </attr>
 
+<attr id="1722" name="zimbraReverseProxyZSSHostname" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="nginxproxy" since="9.0">
+  <desc>Hostname of the upstream ZSS server being reverse-proxied</desc>
+</attr>
+
 </attrs>
