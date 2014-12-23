@@ -16653,7 +16653,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @return zimbraReverseProxyDomainAllowedIPs, or empty array if unset
      *
-     * @since ZCS 9.0
+     * @since ZCS 8.7.0
      */
     @ZAttr(id=1721)
     public String[] getReverseProxyDomainAllowedIPs() {
@@ -16667,7 +16667,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * @param zimbraReverseProxyDomainAllowedIPs new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.0
+     * @since ZCS 8.7.0
      */
     @ZAttr(id=1721)
     public void setReverseProxyDomainAllowedIPs(String[] zimbraReverseProxyDomainAllowedIPs) throws com.zimbra.common.service.ServiceException {
@@ -16684,7 +16684,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.0
+     * @since ZCS 8.7.0
      */
     @ZAttr(id=1721)
     public Map<String,Object> setReverseProxyDomainAllowedIPs(String[] zimbraReverseProxyDomainAllowedIPs, Map<String,Object> attrs) {
@@ -16700,7 +16700,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * @param zimbraReverseProxyDomainAllowedIPs new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.0
+     * @since ZCS 8.7.0
      */
     @ZAttr(id=1721)
     public void addReverseProxyDomainAllowedIPs(String zimbraReverseProxyDomainAllowedIPs) throws com.zimbra.common.service.ServiceException {
@@ -16717,7 +16717,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.0
+     * @since ZCS 8.7.0
      */
     @ZAttr(id=1721)
     public Map<String,Object> addReverseProxyDomainAllowedIPs(String zimbraReverseProxyDomainAllowedIPs, Map<String,Object> attrs) {
@@ -16733,7 +16733,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * @param zimbraReverseProxyDomainAllowedIPs existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.0
+     * @since ZCS 8.7.0
      */
     @ZAttr(id=1721)
     public void removeReverseProxyDomainAllowedIPs(String zimbraReverseProxyDomainAllowedIPs) throws com.zimbra.common.service.ServiceException {
@@ -16750,7 +16750,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.0
+     * @since ZCS 8.7.0
      */
     @ZAttr(id=1721)
     public Map<String,Object> removeReverseProxyDomainAllowedIPs(String zimbraReverseProxyDomainAllowedIPs, Map<String,Object> attrs) {
@@ -16765,7 +16765,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.0
+     * @since ZCS 8.7.0
      */
     @ZAttr(id=1721)
     public void unsetReverseProxyDomainAllowedIPs() throws com.zimbra.common.service.ServiceException {
@@ -16781,7 +16781,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.0
+     * @since ZCS 8.7.0
      */
     @ZAttr(id=1721)
     public Map<String,Object> unsetReverseProxyDomainAllowedIPs(Map<String,Object> attrs) {

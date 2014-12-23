@@ -54478,7 +54478,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @return zimbraReverseProxyZSSHostname, or null if unset
      *
-     * @since ZCS 9.0
+     * @since ZCS 8.7.0
      */
     @ZAttr(id=1722)
     public String getReverseProxyZSSHostname() {
@@ -54491,7 +54491,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param zimbraReverseProxyZSSHostname new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.0
+     * @since ZCS 8.7.0
      */
     @ZAttr(id=1722)
     public void setReverseProxyZSSHostname(String zimbraReverseProxyZSSHostname) throws com.zimbra.common.service.ServiceException {
@@ -54507,7 +54507,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.0
+     * @since ZCS 8.7.0
      */
     @ZAttr(id=1722)
     public Map<String,Object> setReverseProxyZSSHostname(String zimbraReverseProxyZSSHostname, Map<String,Object> attrs) {
@@ -54521,7 +54521,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.0
+     * @since ZCS 8.7.0
      */
     @ZAttr(id=1722)
     public void unsetReverseProxyZSSHostname() throws com.zimbra.common.service.ServiceException {
@@ -54536,7 +54536,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.0
+     * @since ZCS 8.7.0
      */
     @ZAttr(id=1722)
     public Map<String,Object> unsetReverseProxyZSSHostname(Map<String,Object> attrs) {
