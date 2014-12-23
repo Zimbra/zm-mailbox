@@ -89,6 +89,10 @@ public class RemoteManager {
         return mDescription;
     }
 
+    public Integer getPort() {
+	return mPort;
+    }
+
     private synchronized void executeBackground0(String command, RemoteBackgroundHandler handler) {
         Session s = null;
         try {
