@@ -16648,6 +16648,149 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
+     * Client network or IP whitelist for this domain. If configured, all IPs
+     * outside this whitelist will be blocked. If unset, all IPs are allowed
+     *
+     * @return zimbraReverseProxyDomainAllowedIPs, or empty array if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1721)
+    public String[] getReverseProxyDomainAllowedIPs() {
+        return getMultiAttr(Provisioning.A_zimbraReverseProxyDomainAllowedIPs);
+    }
+
+    /**
+     * Client network or IP whitelist for this domain. If configured, all IPs
+     * outside this whitelist will be blocked. If unset, all IPs are allowed
+     *
+     * @param zimbraReverseProxyDomainAllowedIPs new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1721)
+    public void setReverseProxyDomainAllowedIPs(String[] zimbraReverseProxyDomainAllowedIPs) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyDomainAllowedIPs, zimbraReverseProxyDomainAllowedIPs);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Client network or IP whitelist for this domain. If configured, all IPs
+     * outside this whitelist will be blocked. If unset, all IPs are allowed
+     *
+     * @param zimbraReverseProxyDomainAllowedIPs new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1721)
+    public Map<String,Object> setReverseProxyDomainAllowedIPs(String[] zimbraReverseProxyDomainAllowedIPs, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyDomainAllowedIPs, zimbraReverseProxyDomainAllowedIPs);
+        return attrs;
+    }
+
+    /**
+     * Client network or IP whitelist for this domain. If configured, all IPs
+     * outside this whitelist will be blocked. If unset, all IPs are allowed
+     *
+     * @param zimbraReverseProxyDomainAllowedIPs new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1721)
+    public void addReverseProxyDomainAllowedIPs(String zimbraReverseProxyDomainAllowedIPs) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraReverseProxyDomainAllowedIPs, zimbraReverseProxyDomainAllowedIPs);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Client network or IP whitelist for this domain. If configured, all IPs
+     * outside this whitelist will be blocked. If unset, all IPs are allowed
+     *
+     * @param zimbraReverseProxyDomainAllowedIPs new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1721)
+    public Map<String,Object> addReverseProxyDomainAllowedIPs(String zimbraReverseProxyDomainAllowedIPs, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraReverseProxyDomainAllowedIPs, zimbraReverseProxyDomainAllowedIPs);
+        return attrs;
+    }
+
+    /**
+     * Client network or IP whitelist for this domain. If configured, all IPs
+     * outside this whitelist will be blocked. If unset, all IPs are allowed
+     *
+     * @param zimbraReverseProxyDomainAllowedIPs existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1721)
+    public void removeReverseProxyDomainAllowedIPs(String zimbraReverseProxyDomainAllowedIPs) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraReverseProxyDomainAllowedIPs, zimbraReverseProxyDomainAllowedIPs);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Client network or IP whitelist for this domain. If configured, all IPs
+     * outside this whitelist will be blocked. If unset, all IPs are allowed
+     *
+     * @param zimbraReverseProxyDomainAllowedIPs existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1721)
+    public Map<String,Object> removeReverseProxyDomainAllowedIPs(String zimbraReverseProxyDomainAllowedIPs, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraReverseProxyDomainAllowedIPs, zimbraReverseProxyDomainAllowedIPs);
+        return attrs;
+    }
+
+    /**
+     * Client network or IP whitelist for this domain. If configured, all IPs
+     * outside this whitelist will be blocked. If unset, all IPs are allowed
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1721)
+    public void unsetReverseProxyDomainAllowedIPs() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyDomainAllowedIPs, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Client network or IP whitelist for this domain. If configured, all IPs
+     * outside this whitelist will be blocked. If unset, all IPs are allowed
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1721)
+    public Map<String,Object> unsetReverseProxyDomainAllowedIPs(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyDomainAllowedIPs, "");
+        return attrs;
+    }
+
+    /**
      * During migrations Nginx lookup handler rewrites non-qualified username
      * to fully qualified breaking proxy to external legacy mail platform.
      * When zimbraReverseProxyUseExternalRoute is set to TRUE and

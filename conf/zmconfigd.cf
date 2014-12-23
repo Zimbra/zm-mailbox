@@ -364,6 +364,7 @@ SECTION proxy
 	VAR zimbraReverseProxyUpstreamLoginServers
 	VAR zimbraReverseProxyUpstreamEwsServers
 	VAR zimbraReverseProxySSLProtocols
+	VAR zimbraReverseProxyDomainAllowedIPs
 	PROXYGEN
 	RESTART proxy
 

@@ -8382,4 +8382,9 @@ TODO: delete them permanently from here
   <globalConfigValue>FALSE</globalConfigValue>
   <desc>Whether the Stay Signed In checkbox should be disabled on the login screen</desc>
 </attr>
+<attr id="1721" name="zimbraReverseProxyDomainAllowedIPs" type="string" max="256" cardinality="multi" optionalIn="domain" requiresRestart="nginxproxy" since="9.0">
+  <desc>Client network or IP whitelist for this domain. If configured, all IPs outside this whitelist will be blocked.
+        If unset, all IPs are allowed</desc>  
+</attr>
+
 </attrs>
