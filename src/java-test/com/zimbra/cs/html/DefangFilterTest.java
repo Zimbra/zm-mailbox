@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
 import com.zimbra.common.mime.MimeConstants;
@@ -49,16 +50,21 @@ import com.zimbra.soap.RequestContext;
 public class DefangFilterTest {
     private static final String EMAIL_BASE_DIR = "./data/unittest/email/";
 
+
+    @Before
+    public void setup(){
+        //zimbraSmtpUseZimbraClient server attribute is read by JMSession class used by getHtmlBody method
+        MockProvisioning mockProv = new MockProvisioning();
+        Provisioning.setInstance(mockProv);
+
+    }
+
     /**
      * Check to makes sure ftp:// urls are passed through...
      * @throws Exception
      */
     @Test
     public void testBug37098() throws Exception {
-        //zimbraSmtpUseZimbraClient server attribute is read by JMSession class used by getHtmlBody method
-        MockProvisioning mockProv = new MockProvisioning();
-        Provisioning.setInstance(mockProv);
-
         String fileName = "bug_37098.txt";
         InputStream htmlStream = getHtmlBody(fileName);
 
