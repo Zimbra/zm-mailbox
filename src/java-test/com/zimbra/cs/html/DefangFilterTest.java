@@ -2,11 +2,11 @@
   * ***** BEGIN LICENSE BLOCK *****
   * Zimbra Collaboration Suite Server
   * Copyright (C) 2011, 2012, 2013, 2014 Zimbra, Inc.
-  * 
+  *
   * This program is free software: you can redistribute it and/or modify it under
   * the terms of the GNU General Public License as published by the Free Software Foundation,
   * version 2 of the License.
-  * 
+  *
   * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
   * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
   * See the GNU General Public License for more details.
@@ -32,6 +32,8 @@ import org.junit.Test;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.cs.account.MockProvisioning;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mime.MPartInfo;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
@@ -53,6 +55,10 @@ public class DefangFilterTest {
      */
     @Test
     public void testBug37098() throws Exception {
+        //zimbraSmtpUseZimbraClient server attribute is read by JMSession class used by getHtmlBody method
+        MockProvisioning mockProv = new MockProvisioning();
+        Provisioning.setInstance(mockProv);
+
         String fileName = "bug_37098.txt";
         InputStream htmlStream = getHtmlBody(fileName);
 
