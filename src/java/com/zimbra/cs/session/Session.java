@@ -21,13 +21,14 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import com.google.common.base.Objects;
-import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.account.ZAttrProvisioning;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxPubSubAdapter;
+import com.zimbra.cs.util.ProvisioningUtil;
 import com.zimbra.cs.util.Zimbra;
 
 /**
@@ -60,11 +61,11 @@ public abstract class Session {
      */
     public enum Type {
         NULL(0, 0), // unused dummy session type
-        SOAP(1, LC.zimbra_session_limit_soap.intValue()),
-        IMAP(2, Math.max(0, LC.zimbra_session_limit_imap.intValue())),
-        ADMIN(3, LC.zimbra_session_limit_admin.intValue()),
+        SOAP(1, ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraAdminSessionLimit, 5)),
+        IMAP(2, Math.max(0, ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraImapSessionLimit, 5))),
+        ADMIN(3, ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraAdminSessionLimit, 5)),
         WIKI(4, 0),
-        SYNCLISTENER(5, LC.zimbra_session_limit_sync.intValue()),
+        SYNCLISTENER(5, ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraSyncSessionLimit, 5)),
         WAITSET(6, 0)
         ;
 

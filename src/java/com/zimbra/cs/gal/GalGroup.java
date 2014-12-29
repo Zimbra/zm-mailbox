@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -24,6 +24,7 @@ import java.util.Set;
 import com.google.common.collect.ImmutableMap;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.ZAttrProvisioning;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.service.ServiceException;
@@ -32,6 +33,7 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.Constants;
+import com.zimbra.common.util.RangeUtil;
 import com.zimbra.common.util.ThreadPool;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccessManager;
@@ -47,6 +49,7 @@ import com.zimbra.cs.account.Provisioning.CacheEntry;
 import com.zimbra.cs.account.accesscontrol.Rights.User;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.service.AuthProvider;
+import com.zimbra.cs.util.ProvisioningUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.type.GalSearchType;
 
@@ -179,7 +182,7 @@ public abstract class GalGroup {
 
         if (galGroup == null) {
             // see if there is room for a new domain
-            int maxDomains = LC.gal_group_cache_maxsize_domains.intValue();
+            int maxDomains = ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraGalGroupCacheMaxSizeDomains, 1000);
             if (groups.size() >= maxDomains) {
                 String msg = "GalGroup - group cache has reached maxsize of " +
                         maxDomains + " domains, group indicator for messages are temporarily unavailable " +
@@ -312,8 +315,7 @@ public abstract class GalGroup {
 
         private DomainGalGroupCache(String domainName) {
             lifeTime = 0;  // life starts when the sync is completed
-            max = LC.gal_group_cache_maxsize_per_domain.intValue(); // 0 is unlimited
-
+            max = ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraGalGroupCacheMaxSizePerDomain, 0);
             this.domainName = domainName;
             isSyncing = true;
             internalGroups = new HashSet<String>();
@@ -332,7 +334,8 @@ public abstract class GalGroup {
             isSyncing = false;
 
             // start life, refresh interval must be between 15 min and 30 days
-            lifeTime = System.currentTimeMillis() + (LC.gal_group_cache_maxage.intValueWithinRange(15, 43200) * Constants.MILLIS_PER_MINUTE);
+
+            lifeTime = System.currentTimeMillis() + RangeUtil.intValueWithinRange(ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraGalGroupCacheMaxAge,10080), 15, 43200) * Constants.MILLIS_PER_MINUTE;
         }
 
         // no need to synchronize because it can only be called from the syncing thread

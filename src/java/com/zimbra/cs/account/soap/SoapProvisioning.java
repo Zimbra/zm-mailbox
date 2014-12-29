@@ -62,6 +62,7 @@ import com.zimbra.common.soap.SoapTransport.DebugListener;
 import com.zimbra.common.util.AccountLogger;
 import com.zimbra.common.util.Log.Level;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.zclient.ZClientException;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
@@ -308,12 +309,19 @@ public class SoapProvisioning extends Provisioning {
     public static String getLocalConfigURI() {
         String server = LC.zimbra_zmprov_default_soap_server.value();
         int port = LC.zimbra_admin_service_port.intValue();
-        return LC.zimbra_admin_service_scheme.value()+server+":"+port+ AdminConstants.ADMIN_SERVICE_URI;
+        String scheme;
+        try {
+            scheme = Provisioning.getInstance().getLocalServer().getAdminServiceScheme();
+        } catch (ServiceException e) {
+            ZimbraLog.soap.error("Error while getting admin service scheme", e);
+            scheme = "https://";
+        }
+        return scheme+server+":"+port+ AdminConstants.ADMIN_SERVICE_URI;
     }
 
     /**
      * Construct and return a SoapProvisioning instance using values from localconfig:
-     * zimbra_zmprov_default_soap_server, zimbra_admin_service_port, zimbra_admin_service_scheme
+     * zimbra_zmprov_default_soap_server, zimbra_admin_service_port, zimbra_admin_server_scheme
      * and calling soapZimbraAdminAuthenticate.
      * @return new SoapProvisionig instance
      *

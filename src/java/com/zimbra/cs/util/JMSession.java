@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -29,6 +29,7 @@ import javax.mail.NoSuchProviderException;
 import javax.mail.PasswordAuthentication;
 import javax.mail.Session;
 
+import com.zimbra.common.account.ZAttrProvisioning;
 import com.zimbra.common.account.ZAttrProvisioning.ShareNotificationMtaConnectionType;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
@@ -71,7 +72,7 @@ public final class JMSession {
      * @param session JavaMail {@link Session}
      */
     public static void setProviders(Session session) {
-        if (LC.javamail_zsmtp.booleanValue()) {
+        if (ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraSmtpUseZimbraClient, true)) {
             try {
                 session.setProvider(SmtpTransport.PROVIDER);
                 session.setProvider(SmtpsTransport.PROVIDER);
@@ -136,7 +137,7 @@ public final class JMSession {
         Properties props = getJavaMailSessionProperties(server, domain);
         Session session = Session.getInstance(props);
         setProviders(session);
-        if (LC.javamail_smtp_debug.booleanValue()) {
+        if (ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraSmtpEnableDebug, false)) {
             session.setDebug(true);
         }
         return session;
@@ -191,7 +192,7 @@ public final class JMSession {
 
         Session session = (auth == null) ? Session.getInstance(props) : Session.getInstance(props, auth);
         setProviders(session);
-        if (LC.javamail_smtp_debug.booleanValue()) {
+        if (ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraSmtpEnableDebug, false)) {
             session.setDebug(true);
         }
         return session;

@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -40,6 +40,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.MapMaker;
 import com.google.common.collect.Multimap;
 import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.ZAttrProvisioning;
 import com.zimbra.common.lmtp.LmtpClient;
 import com.zimbra.common.lmtp.LmtpProtocolException;
 import com.zimbra.common.localconfig.DebugConfig;
@@ -77,6 +78,7 @@ import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.BlobInputStream;
 import com.zimbra.cs.store.MailboxBlob;
 import com.zimbra.cs.store.StoreManager;
+import com.zimbra.cs.util.ProvisioningUtil;
 import com.zimbra.cs.util.Zimbra;
 
 public class ZimbraLmtpBackend implements LmtpBackend {
@@ -564,7 +566,7 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                             boolean acquiredLock;
                             try {
                                 // Wait for the lock, up to the timeout
-                                acquiredLock = lock.tryLock(LC.zimbra_mailbox_lock_timeout.intValue(), TimeUnit.SECONDS);
+                                acquiredLock = lock.tryLock(ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraMailBoxLockTimeout, 60), TimeUnit.SECONDS);
                             } catch (InterruptedException e) {
                                 acquiredLock = false;
                             }

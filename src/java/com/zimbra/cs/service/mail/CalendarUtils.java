@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -29,6 +29,7 @@ import java.util.Set;
 import com.google.common.base.Objects;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.ZAttrProvisioning;
 import com.zimbra.common.calendar.CalendarUtil;
 import com.zimbra.common.calendar.Geo;
 import com.zimbra.common.calendar.ICalTimeZone;
@@ -45,7 +46,6 @@ import com.zimbra.common.calendar.ZCalendar.ZParameter;
 import com.zimbra.common.calendar.ZCalendar.ZProperty;
 import com.zimbra.common.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.common.localconfig.DebugConfig;
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
@@ -80,6 +80,7 @@ import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.mailbox.calendar.ZRecur;
 import com.zimbra.cs.mailbox.util.TypedIdList;
 import com.zimbra.cs.util.AccountUtil.AccountAddressMatcher;
+import com.zimbra.cs.util.ProvisioningUtil;
 import com.zimbra.soap.base.CalTZInfoInterface;
 import com.zimbra.soap.type.TzOnsetInfo;
 
@@ -528,7 +529,7 @@ public class CalendarUtils {
             return list;
 
         //bug 68728, skip checking in ZD
-        checkListMembership = checkListMembership && LC.check_dl_membership_enabled.booleanValue();
+        checkListMembership = checkListMembership && ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraDesktopCalendarCheckDLMembership, true);
         // Find out which of the new attendees are local distribution lists or GAL groups.
         if (checkListMembership) {
             List<DistributionList> newAtsDL = new ArrayList<DistributionList>();

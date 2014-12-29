@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2009, 2010, 2011, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -16,15 +16,11 @@
  */
 package com.zimbra.cs.servlet;
 
-import com.zimbra.cs.account.soap.SoapProvisioning;
-import com.zimbra.cs.account.Entry;
-import com.zimbra.common.account.ZAttrProvisioning;
-import com.zimbra.common.account.Key;
-import com.zimbra.common.localconfig.LC;
-import com.zimbra.common.soap.AdminConstants;
-import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.common.util.HttpUtil;
-import com.zimbra.common.util.Log;
+import java.io.IOException;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -34,11 +30,17 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.regex.Pattern;
-import java.util.regex.Matcher;
+
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.ZAttrProvisioning;
+import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.common.util.HttpUtil;
+import com.zimbra.common.util.Log;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Entry;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.soap.SoapProvisioning;
 
 /** Sets headers for request. */
 public class SetHeaderFilter implements Filter {
@@ -103,7 +105,7 @@ public class SetHeaderFilter implements Filter {
             headers = NO_HEADERS;
             try {
                 SoapProvisioning provisioning = new SoapProvisioning();
-                String soapUri = LC.zimbra_admin_service_scheme.value() + LC.zimbra_zmprov_default_soap_server.value() +
+                String soapUri = Provisioning.getInstance().getLocalServer().getAdminServiceScheme() + LC.zimbra_zmprov_default_soap_server.value() +
                     ':' + LC.zimbra_admin_service_port.intValue() + AdminConstants.ADMIN_SERVICE_URI;
                 provisioning.soapSetURI(soapUri);
                 Entry info = provisioning.getDomainInfo(Key.DomainBy.virtualHostname, serverName);

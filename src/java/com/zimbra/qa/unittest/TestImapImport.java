@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2008, 2009, 2010, 2011, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -29,11 +29,12 @@ import com.zimbra.client.ZImapDataSource;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.client.ZMessage;
 import com.zimbra.common.account.ProvisioningConstants;
-import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.account.ZAttrProvisioning;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.util.ProvisioningUtil;
 import com.zimbra.soap.type.DataSource.ConnectionType;
 
 public final class TestImapImport extends TestCase {
@@ -101,8 +102,8 @@ public final class TestImapImport extends TestCase {
         TestUtil.setServerAttr(Provisioning.A_zimbraImapCleartextLoginEnabled, ProvisioningConstants.TRUE);
 
         // Turn off STARTTLS support so that unit tests don't bomb on Linux (see bug 33683).
-        mOriginalEnableStarttls = LC.javamail_imap_enable_starttls.booleanValue();
-        LC.javamail_imap_enable_starttls.setDefault(Boolean.toString(false));
+        mOriginalEnableStarttls = ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraImapEnableStartTls, true);
+        Provisioning.getInstance().getLocalServer().setImapEnableStartTls(false);
     }
 
     public void testImapImport() throws Exception {
@@ -353,7 +354,7 @@ public final class TestImapImport extends TestCase {
     public void tearDown() throws Exception {
         cleanUp();
         TestUtil.setServerAttr(Provisioning.A_zimbraImapCleartextLoginEnabled, mOriginalCleartextValue);
-        LC.javamail_imap_enable_starttls.setDefault(Boolean.toString(mOriginalEnableStarttls));
+        Provisioning.getInstance().getLocalServer().setImapEnableStartTls(mOriginalEnableStarttls);
     }
 
     public void cleanUp() throws Exception {

@@ -972,6 +972,78 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * Size of the thread pool executor used by ComputeAggregateQuota call
+     *
+     * @return zimbraAdminComputeAggregateQuotaThreadPoolSize, or 10 if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1744)
+    public int getAdminComputeAggregateQuotaThreadPoolSize() {
+        return getIntAttr(Provisioning.A_zimbraAdminComputeAggregateQuotaThreadPoolSize, 10);
+    }
+
+    /**
+     * Size of the thread pool executor used by ComputeAggregateQuota call
+     *
+     * @param zimbraAdminComputeAggregateQuotaThreadPoolSize new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1744)
+    public void setAdminComputeAggregateQuotaThreadPoolSize(int zimbraAdminComputeAggregateQuotaThreadPoolSize) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAdminComputeAggregateQuotaThreadPoolSize, Integer.toString(zimbraAdminComputeAggregateQuotaThreadPoolSize));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Size of the thread pool executor used by ComputeAggregateQuota call
+     *
+     * @param zimbraAdminComputeAggregateQuotaThreadPoolSize new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1744)
+    public Map<String,Object> setAdminComputeAggregateQuotaThreadPoolSize(int zimbraAdminComputeAggregateQuotaThreadPoolSize, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAdminComputeAggregateQuotaThreadPoolSize, Integer.toString(zimbraAdminComputeAggregateQuotaThreadPoolSize));
+        return attrs;
+    }
+
+    /**
+     * Size of the thread pool executor used by ComputeAggregateQuota call
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1744)
+    public void unsetAdminComputeAggregateQuotaThreadPoolSize() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAdminComputeAggregateQuotaThreadPoolSize, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Size of the thread pool executor used by ComputeAggregateQuota call
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1744)
+    public Map<String,Object> unsetAdminComputeAggregateQuotaThreadPoolSize(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAdminComputeAggregateQuotaThreadPoolSize, "");
+        return attrs;
+    }
+
+    /**
      * whether to show catchall addresses in admin console
      *
      * @return zimbraAdminConsoleCatchAllAddressEnabled, or false if unset
@@ -1842,6 +1914,155 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * zimbra admin url scheme
+     *
+     * @return zimbraAdminServiceScheme, or "https://" if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1728)
+    public String getAdminServiceScheme() {
+        return getAttr(Provisioning.A_zimbraAdminServiceScheme, "https://");
+    }
+
+    /**
+     * zimbra admin url scheme
+     *
+     * @param zimbraAdminServiceScheme new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1728)
+    public void setAdminServiceScheme(String zimbraAdminServiceScheme) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAdminServiceScheme, zimbraAdminServiceScheme);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * zimbra admin url scheme
+     *
+     * @param zimbraAdminServiceScheme new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1728)
+    public Map<String,Object> setAdminServiceScheme(String zimbraAdminServiceScheme, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAdminServiceScheme, zimbraAdminServiceScheme);
+        return attrs;
+    }
+
+    /**
+     * zimbra admin url scheme
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1728)
+    public void unsetAdminServiceScheme() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAdminServiceScheme, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * zimbra admin url scheme
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1728)
+    public Map<String,Object> unsetAdminServiceScheme(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAdminServiceScheme, "");
+        return attrs;
+    }
+
+    /**
+     * Maximum number of admin SOAP sessions a single user can have open at
+     * once
+     *
+     * @return zimbraAdminSessionLimit, or 5 if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1736)
+    public int getAdminSessionLimit() {
+        return getIntAttr(Provisioning.A_zimbraAdminSessionLimit, 5);
+    }
+
+    /**
+     * Maximum number of admin SOAP sessions a single user can have open at
+     * once
+     *
+     * @param zimbraAdminSessionLimit new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1736)
+    public void setAdminSessionLimit(int zimbraAdminSessionLimit) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAdminSessionLimit, Integer.toString(zimbraAdminSessionLimit));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of admin SOAP sessions a single user can have open at
+     * once
+     *
+     * @param zimbraAdminSessionLimit new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1736)
+    public Map<String,Object> setAdminSessionLimit(int zimbraAdminSessionLimit, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAdminSessionLimit, Integer.toString(zimbraAdminSessionLimit));
+        return attrs;
+    }
+
+    /**
+     * Maximum number of admin SOAP sessions a single user can have open at
+     * once
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1736)
+    public void unsetAdminSessionLimit() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAdminSessionLimit, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of admin SOAP sessions a single user can have open at
+     * once
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1736)
+    public Map<String,Object> unsetAdminSessionLimit(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAdminSessionLimit, "");
+        return attrs;
+    }
+
+    /**
      * URL prefix for where the zimbraAdmin app resides on this server
      *
      * @return zimbraAdminURL, or "/zimbraAdmin" if unset
@@ -1900,6 +2121,222 @@ public abstract class ZAttrConfig extends Entry {
     public Map<String,Object> unsetAdminURL(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAdminURL, "");
+        return attrs;
+    }
+
+    /**
+     * Default timeout in seconds for zimbra admin wait set request
+     *
+     * @return zimbraAdminWaitsetDefaultRequestTimeout, or 300 if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1729)
+    public int getAdminWaitsetDefaultRequestTimeout() {
+        return getIntAttr(Provisioning.A_zimbraAdminWaitsetDefaultRequestTimeout, 300);
+    }
+
+    /**
+     * Default timeout in seconds for zimbra admin wait set request
+     *
+     * @param zimbraAdminWaitsetDefaultRequestTimeout new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1729)
+    public void setAdminWaitsetDefaultRequestTimeout(int zimbraAdminWaitsetDefaultRequestTimeout) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAdminWaitsetDefaultRequestTimeout, Integer.toString(zimbraAdminWaitsetDefaultRequestTimeout));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Default timeout in seconds for zimbra admin wait set request
+     *
+     * @param zimbraAdminWaitsetDefaultRequestTimeout new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1729)
+    public Map<String,Object> setAdminWaitsetDefaultRequestTimeout(int zimbraAdminWaitsetDefaultRequestTimeout, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAdminWaitsetDefaultRequestTimeout, Integer.toString(zimbraAdminWaitsetDefaultRequestTimeout));
+        return attrs;
+    }
+
+    /**
+     * Default timeout in seconds for zimbra admin wait set request
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1729)
+    public void unsetAdminWaitsetDefaultRequestTimeout() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAdminWaitsetDefaultRequestTimeout, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Default timeout in seconds for zimbra admin wait set request
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1729)
+    public Map<String,Object> unsetAdminWaitsetDefaultRequestTimeout(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAdminWaitsetDefaultRequestTimeout, "");
+        return attrs;
+    }
+
+    /**
+     * Maximum timeout in seconds for zimbra admin waitset request
+     *
+     * @return zimbraAdminWaitsetMaxRequestTimeout, or 3600 if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1730)
+    public int getAdminWaitsetMaxRequestTimeout() {
+        return getIntAttr(Provisioning.A_zimbraAdminWaitsetMaxRequestTimeout, 3600);
+    }
+
+    /**
+     * Maximum timeout in seconds for zimbra admin waitset request
+     *
+     * @param zimbraAdminWaitsetMaxRequestTimeout new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1730)
+    public void setAdminWaitsetMaxRequestTimeout(int zimbraAdminWaitsetMaxRequestTimeout) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAdminWaitsetMaxRequestTimeout, Integer.toString(zimbraAdminWaitsetMaxRequestTimeout));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum timeout in seconds for zimbra admin waitset request
+     *
+     * @param zimbraAdminWaitsetMaxRequestTimeout new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1730)
+    public Map<String,Object> setAdminWaitsetMaxRequestTimeout(int zimbraAdminWaitsetMaxRequestTimeout, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAdminWaitsetMaxRequestTimeout, Integer.toString(zimbraAdminWaitsetMaxRequestTimeout));
+        return attrs;
+    }
+
+    /**
+     * Maximum timeout in seconds for zimbra admin waitset request
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1730)
+    public void unsetAdminWaitsetMaxRequestTimeout() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAdminWaitsetMaxRequestTimeout, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum timeout in seconds for zimbra admin waitset request
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1730)
+    public Map<String,Object> unsetAdminWaitsetMaxRequestTimeout(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAdminWaitsetMaxRequestTimeout, "");
+        return attrs;
+    }
+
+    /**
+     * Minimum timeout for zimbra admin waitset request
+     *
+     * @return zimbraAdminWaitsetMinRequestTimeout, or 0 if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1731)
+    public int getAdminWaitsetMinRequestTimeout() {
+        return getIntAttr(Provisioning.A_zimbraAdminWaitsetMinRequestTimeout, 0);
+    }
+
+    /**
+     * Minimum timeout for zimbra admin waitset request
+     *
+     * @param zimbraAdminWaitsetMinRequestTimeout new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1731)
+    public void setAdminWaitsetMinRequestTimeout(int zimbraAdminWaitsetMinRequestTimeout) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAdminWaitsetMinRequestTimeout, Integer.toString(zimbraAdminWaitsetMinRequestTimeout));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Minimum timeout for zimbra admin waitset request
+     *
+     * @param zimbraAdminWaitsetMinRequestTimeout new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1731)
+    public Map<String,Object> setAdminWaitsetMinRequestTimeout(int zimbraAdminWaitsetMinRequestTimeout, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAdminWaitsetMinRequestTimeout, Integer.toString(zimbraAdminWaitsetMinRequestTimeout));
+        return attrs;
+    }
+
+    /**
+     * Minimum timeout for zimbra admin waitset request
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1731)
+    public void unsetAdminWaitsetMinRequestTimeout() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAdminWaitsetMinRequestTimeout, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Minimum timeout for zimbra admin waitset request
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1731)
+    public Map<String,Object> unsetAdminWaitsetMinRequestTimeout(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAdminWaitsetMinRequestTimeout, "");
         return attrs;
     }
 
@@ -4118,6 +4555,78 @@ public abstract class ZAttrConfig extends Entry {
     public Map<String,Object> unsetAutoProvBatchSize(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAutoProvBatchSize, "");
+        return attrs;
+    }
+
+    /**
+     * Initial sleep for the auto provision thread in millis
+     *
+     * @return zimbraAutoProvInitialSleepInMillis, or 300000 if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1757)
+    public int getAutoProvInitialSleepInMillis() {
+        return getIntAttr(Provisioning.A_zimbraAutoProvInitialSleepInMillis, 300000);
+    }
+
+    /**
+     * Initial sleep for the auto provision thread in millis
+     *
+     * @param zimbraAutoProvInitialSleepInMillis new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1757)
+    public void setAutoProvInitialSleepInMillis(int zimbraAutoProvInitialSleepInMillis) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAutoProvInitialSleepInMillis, Integer.toString(zimbraAutoProvInitialSleepInMillis));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Initial sleep for the auto provision thread in millis
+     *
+     * @param zimbraAutoProvInitialSleepInMillis new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1757)
+    public Map<String,Object> setAutoProvInitialSleepInMillis(int zimbraAutoProvInitialSleepInMillis, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAutoProvInitialSleepInMillis, Integer.toString(zimbraAutoProvInitialSleepInMillis));
+        return attrs;
+    }
+
+    /**
+     * Initial sleep for the auto provision thread in millis
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1757)
+    public void unsetAutoProvInitialSleepInMillis() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAutoProvInitialSleepInMillis, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Initial sleep for the auto provision thread in millis
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1757)
+    public Map<String,Object> unsetAutoProvInitialSleepInMillis(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAutoProvInitialSleepInMillis, "");
         return attrs;
     }
 
@@ -7421,6 +7930,88 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * Activates the hack that converts standalone VEVENT/VTODO components
+     * with STATUS:CANCELLED into EXDATEs on the series component. (bug
+     * 36434)
+     *
+     * @return zimbraCalendarAppleICalCompatibleCanceledInstances, or true if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1758)
+    public boolean isCalendarAppleICalCompatibleCanceledInstances() {
+        return getBooleanAttr(Provisioning.A_zimbraCalendarAppleICalCompatibleCanceledInstances, true);
+    }
+
+    /**
+     * Activates the hack that converts standalone VEVENT/VTODO components
+     * with STATUS:CANCELLED into EXDATEs on the series component. (bug
+     * 36434)
+     *
+     * @param zimbraCalendarAppleICalCompatibleCanceledInstances new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1758)
+    public void setCalendarAppleICalCompatibleCanceledInstances(boolean zimbraCalendarAppleICalCompatibleCanceledInstances) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCalendarAppleICalCompatibleCanceledInstances, zimbraCalendarAppleICalCompatibleCanceledInstances ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Activates the hack that converts standalone VEVENT/VTODO components
+     * with STATUS:CANCELLED into EXDATEs on the series component. (bug
+     * 36434)
+     *
+     * @param zimbraCalendarAppleICalCompatibleCanceledInstances new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1758)
+    public Map<String,Object> setCalendarAppleICalCompatibleCanceledInstances(boolean zimbraCalendarAppleICalCompatibleCanceledInstances, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCalendarAppleICalCompatibleCanceledInstances, zimbraCalendarAppleICalCompatibleCanceledInstances ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Activates the hack that converts standalone VEVENT/VTODO components
+     * with STATUS:CANCELLED into EXDATEs on the series component. (bug
+     * 36434)
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1758)
+    public void unsetCalendarAppleICalCompatibleCanceledInstances() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCalendarAppleICalCompatibleCanceledInstances, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Activates the hack that converts standalone VEVENT/VTODO components
+     * with STATUS:CANCELLED into EXDATEs on the series component. (bug
+     * 36434)
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1758)
+    public Map<String,Object> unsetCalendarAppleICalCompatibleCanceledInstances(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCalendarAppleICalCompatibleCanceledInstances, "");
+        return attrs;
+    }
+
+    /**
      * Enable calendar cache.
      *
      * @return zimbraCalendarCacheEnabled, or true if unset
@@ -9566,6 +10157,78 @@ public abstract class ZAttrConfig extends Entry {
     public Map<String,Object> unsetCalendarResourceExtraObjectClass(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraCalendarResourceExtraObjectClass, "");
+        return attrs;
+    }
+
+    /**
+     * Max ldap search size for calendar resource
+     *
+     * @return zimbraCalendarResourceLdapSearchMaxSize, or 1000 if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1742)
+    public int getCalendarResourceLdapSearchMaxSize() {
+        return getIntAttr(Provisioning.A_zimbraCalendarResourceLdapSearchMaxSize, 1000);
+    }
+
+    /**
+     * Max ldap search size for calendar resource
+     *
+     * @param zimbraCalendarResourceLdapSearchMaxSize new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1742)
+    public void setCalendarResourceLdapSearchMaxSize(int zimbraCalendarResourceLdapSearchMaxSize) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCalendarResourceLdapSearchMaxSize, Integer.toString(zimbraCalendarResourceLdapSearchMaxSize));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Max ldap search size for calendar resource
+     *
+     * @param zimbraCalendarResourceLdapSearchMaxSize new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1742)
+    public Map<String,Object> setCalendarResourceLdapSearchMaxSize(int zimbraCalendarResourceLdapSearchMaxSize, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCalendarResourceLdapSearchMaxSize, Integer.toString(zimbraCalendarResourceLdapSearchMaxSize));
+        return attrs;
+    }
+
+    /**
+     * Max ldap search size for calendar resource
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1742)
+    public void unsetCalendarResourceLdapSearchMaxSize() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCalendarResourceLdapSearchMaxSize, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Max ldap search size for calendar resource
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1742)
+    public Map<String,Object> unsetCalendarResourceLdapSearchMaxSize(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCalendarResourceLdapSearchMaxSize, "");
         return attrs;
     }
 
@@ -13752,6 +14415,83 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * Flag to skip checking DL membership when removing appoitment
+     * atttendees in ZD. Introduced in bug 68728&quot;
+     *
+     * @return zimbraDesktopCalendarCheckDLMembership, or true if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1745)
+    public boolean isDesktopCalendarCheckDLMembership() {
+        return getBooleanAttr(Provisioning.A_zimbraDesktopCalendarCheckDLMembership, true);
+    }
+
+    /**
+     * Flag to skip checking DL membership when removing appoitment
+     * atttendees in ZD. Introduced in bug 68728&quot;
+     *
+     * @param zimbraDesktopCalendarCheckDLMembership new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1745)
+    public void setDesktopCalendarCheckDLMembership(boolean zimbraDesktopCalendarCheckDLMembership) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDesktopCalendarCheckDLMembership, zimbraDesktopCalendarCheckDLMembership ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Flag to skip checking DL membership when removing appoitment
+     * atttendees in ZD. Introduced in bug 68728&quot;
+     *
+     * @param zimbraDesktopCalendarCheckDLMembership new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1745)
+    public Map<String,Object> setDesktopCalendarCheckDLMembership(boolean zimbraDesktopCalendarCheckDLMembership, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDesktopCalendarCheckDLMembership, zimbraDesktopCalendarCheckDLMembership ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Flag to skip checking DL membership when removing appoitment
+     * atttendees in ZD. Introduced in bug 68728&quot;
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1745)
+    public void unsetDesktopCalendarCheckDLMembership() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDesktopCalendarCheckDLMembership, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Flag to skip checking DL membership when removing appoitment
+     * atttendees in ZD. Introduced in bug 68728&quot;
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1745)
+    public Map<String,Object> unsetDesktopCalendarCheckDLMembership(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDesktopCalendarCheckDLMembership, "");
+        return attrs;
+    }
+
+    /**
      * Deprecated since: 5.0. deprecated in favor of the
      * domainAdminAdminModifiable flag. Orig desc: account attributes that a
      * domain administrator is allowed to modify
@@ -15253,6 +15993,150 @@ public abstract class ZAttrConfig extends Entry {
     public Map<String,Object> unsetErrorReportUrl(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraErrorReportUrl, "");
+        return attrs;
+    }
+
+    /**
+     * File path for ews logs
+     *
+     * @return zimbraEwsServiceLogFile, or "/opt/zimbra/log/ews.log" if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1747)
+    public String getEwsServiceLogFile() {
+        return getAttr(Provisioning.A_zimbraEwsServiceLogFile, "/opt/zimbra/log/ews.log");
+    }
+
+    /**
+     * File path for ews logs
+     *
+     * @param zimbraEwsServiceLogFile new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1747)
+    public void setEwsServiceLogFile(String zimbraEwsServiceLogFile) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEwsServiceLogFile, zimbraEwsServiceLogFile);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * File path for ews logs
+     *
+     * @param zimbraEwsServiceLogFile new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1747)
+    public Map<String,Object> setEwsServiceLogFile(String zimbraEwsServiceLogFile, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEwsServiceLogFile, zimbraEwsServiceLogFile);
+        return attrs;
+    }
+
+    /**
+     * File path for ews logs
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1747)
+    public void unsetEwsServiceLogFile() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEwsServiceLogFile, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * File path for ews logs
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1747)
+    public Map<String,Object> unsetEwsServiceLogFile(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEwsServiceLogFile, "");
+        return attrs;
+    }
+
+    /**
+     * Path specifying the location of ews wsdl
+     *
+     * @return zimbraEwsWsdlLocation, or "/opt/zimbra/lib/ext/zimbraews/" if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1746)
+    public String getEwsWsdlLocation() {
+        return getAttr(Provisioning.A_zimbraEwsWsdlLocation, "/opt/zimbra/lib/ext/zimbraews/");
+    }
+
+    /**
+     * Path specifying the location of ews wsdl
+     *
+     * @param zimbraEwsWsdlLocation new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1746)
+    public void setEwsWsdlLocation(String zimbraEwsWsdlLocation) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEwsWsdlLocation, zimbraEwsWsdlLocation);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Path specifying the location of ews wsdl
+     *
+     * @param zimbraEwsWsdlLocation new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1746)
+    public Map<String,Object> setEwsWsdlLocation(String zimbraEwsWsdlLocation, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEwsWsdlLocation, zimbraEwsWsdlLocation);
+        return attrs;
+    }
+
+    /**
+     * Path specifying the location of ews wsdl
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1746)
+    public void unsetEwsWsdlLocation() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEwsWsdlLocation, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Path specifying the location of ews wsdl
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1746)
+    public Map<String,Object> unsetEwsWsdlLocation(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEwsWsdlLocation, "");
         return attrs;
     }
 
@@ -17049,6 +17933,252 @@ public abstract class ZAttrConfig extends Entry {
     public Map<String,Object> unsetGalAutoCompleteLdapFilter(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraGalAutoCompleteLdapFilter, "");
+        return attrs;
+    }
+
+    /**
+     * Maximum age in minutes of GAL group email addresses in cache.
+     * Applicable for a domain only when LDAP domain attribute
+     * zimbraGalGroupIndicatorEnabled in TRUE.Default is 7 days
+     *
+     * @return zimbraGalGroupCacheMaxAge, or 10080 if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1748)
+    public int getGalGroupCacheMaxAge() {
+        return getIntAttr(Provisioning.A_zimbraGalGroupCacheMaxAge, 10080);
+    }
+
+    /**
+     * Maximum age in minutes of GAL group email addresses in cache.
+     * Applicable for a domain only when LDAP domain attribute
+     * zimbraGalGroupIndicatorEnabled in TRUE.Default is 7 days
+     *
+     * @param zimbraGalGroupCacheMaxAge new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1748)
+    public void setGalGroupCacheMaxAge(int zimbraGalGroupCacheMaxAge) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraGalGroupCacheMaxAge, Integer.toString(zimbraGalGroupCacheMaxAge));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum age in minutes of GAL group email addresses in cache.
+     * Applicable for a domain only when LDAP domain attribute
+     * zimbraGalGroupIndicatorEnabled in TRUE.Default is 7 days
+     *
+     * @param zimbraGalGroupCacheMaxAge new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1748)
+    public Map<String,Object> setGalGroupCacheMaxAge(int zimbraGalGroupCacheMaxAge, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraGalGroupCacheMaxAge, Integer.toString(zimbraGalGroupCacheMaxAge));
+        return attrs;
+    }
+
+    /**
+     * Maximum age in minutes of GAL group email addresses in cache.
+     * Applicable for a domain only when LDAP domain attribute
+     * zimbraGalGroupIndicatorEnabled in TRUE.Default is 7 days
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1748)
+    public void unsetGalGroupCacheMaxAge() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraGalGroupCacheMaxAge, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum age in minutes of GAL group email addresses in cache.
+     * Applicable for a domain only when LDAP domain attribute
+     * zimbraGalGroupIndicatorEnabled in TRUE.Default is 7 days
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1748)
+    public Map<String,Object> unsetGalGroupCacheMaxAge(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraGalGroupCacheMaxAge, "");
+        return attrs;
+    }
+
+    /**
+     * Maximum number of domains that can be put into the GAL group cache.
+     * Applicable for a domain only when LDAP domain attribute
+     * zimbraGalGroupIndicatorEnabled in TRUE.
+     *
+     * @return zimbraGalGroupCacheMaxSizeDomains, or 10 if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1749)
+    public int getGalGroupCacheMaxSizeDomains() {
+        return getIntAttr(Provisioning.A_zimbraGalGroupCacheMaxSizeDomains, 10);
+    }
+
+    /**
+     * Maximum number of domains that can be put into the GAL group cache.
+     * Applicable for a domain only when LDAP domain attribute
+     * zimbraGalGroupIndicatorEnabled in TRUE.
+     *
+     * @param zimbraGalGroupCacheMaxSizeDomains new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1749)
+    public void setGalGroupCacheMaxSizeDomains(int zimbraGalGroupCacheMaxSizeDomains) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraGalGroupCacheMaxSizeDomains, Integer.toString(zimbraGalGroupCacheMaxSizeDomains));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of domains that can be put into the GAL group cache.
+     * Applicable for a domain only when LDAP domain attribute
+     * zimbraGalGroupIndicatorEnabled in TRUE.
+     *
+     * @param zimbraGalGroupCacheMaxSizeDomains new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1749)
+    public Map<String,Object> setGalGroupCacheMaxSizeDomains(int zimbraGalGroupCacheMaxSizeDomains, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraGalGroupCacheMaxSizeDomains, Integer.toString(zimbraGalGroupCacheMaxSizeDomains));
+        return attrs;
+    }
+
+    /**
+     * Maximum number of domains that can be put into the GAL group cache.
+     * Applicable for a domain only when LDAP domain attribute
+     * zimbraGalGroupIndicatorEnabled in TRUE.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1749)
+    public void unsetGalGroupCacheMaxSizeDomains() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraGalGroupCacheMaxSizeDomains, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of domains that can be put into the GAL group cache.
+     * Applicable for a domain only when LDAP domain attribute
+     * zimbraGalGroupIndicatorEnabled in TRUE.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1749)
+    public Map<String,Object> unsetGalGroupCacheMaxSizeDomains(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraGalGroupCacheMaxSizeDomains, "");
+        return attrs;
+    }
+
+    /**
+     * Maximum number of GAL group email addresses cached per domain.
+     * Applicable for a domain only when LDAP domain attribute
+     * zimbraGalGroupIndicatorEnabled in TRUE.
+     *
+     * @return zimbraGalGroupCacheMaxSizePerDomain, or 0 if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1750)
+    public int getGalGroupCacheMaxSizePerDomain() {
+        return getIntAttr(Provisioning.A_zimbraGalGroupCacheMaxSizePerDomain, 0);
+    }
+
+    /**
+     * Maximum number of GAL group email addresses cached per domain.
+     * Applicable for a domain only when LDAP domain attribute
+     * zimbraGalGroupIndicatorEnabled in TRUE.
+     *
+     * @param zimbraGalGroupCacheMaxSizePerDomain new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1750)
+    public void setGalGroupCacheMaxSizePerDomain(int zimbraGalGroupCacheMaxSizePerDomain) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraGalGroupCacheMaxSizePerDomain, Integer.toString(zimbraGalGroupCacheMaxSizePerDomain));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of GAL group email addresses cached per domain.
+     * Applicable for a domain only when LDAP domain attribute
+     * zimbraGalGroupIndicatorEnabled in TRUE.
+     *
+     * @param zimbraGalGroupCacheMaxSizePerDomain new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1750)
+    public Map<String,Object> setGalGroupCacheMaxSizePerDomain(int zimbraGalGroupCacheMaxSizePerDomain, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraGalGroupCacheMaxSizePerDomain, Integer.toString(zimbraGalGroupCacheMaxSizePerDomain));
+        return attrs;
+    }
+
+    /**
+     * Maximum number of GAL group email addresses cached per domain.
+     * Applicable for a domain only when LDAP domain attribute
+     * zimbraGalGroupIndicatorEnabled in TRUE.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1750)
+    public void unsetGalGroupCacheMaxSizePerDomain() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraGalGroupCacheMaxSizePerDomain, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of GAL group email addresses cached per domain.
+     * Applicable for a domain only when LDAP domain attribute
+     * zimbraGalGroupIndicatorEnabled in TRUE.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1750)
+    public Map<String,Object> unsetGalGroupCacheMaxSizePerDomain(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraGalGroupCacheMaxSizePerDomain, "");
         return attrs;
     }
 
@@ -21248,6 +22378,150 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * Enable debug for IMAP
+     *
+     * @return zimbraImapEnableDebug, or false if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1755)
+    public boolean isImapEnableDebug() {
+        return getBooleanAttr(Provisioning.A_zimbraImapEnableDebug, false);
+    }
+
+    /**
+     * Enable debug for IMAP
+     *
+     * @param zimbraImapEnableDebug new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1755)
+    public void setImapEnableDebug(boolean zimbraImapEnableDebug) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraImapEnableDebug, zimbraImapEnableDebug ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Enable debug for IMAP
+     *
+     * @param zimbraImapEnableDebug new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1755)
+    public Map<String,Object> setImapEnableDebug(boolean zimbraImapEnableDebug, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraImapEnableDebug, zimbraImapEnableDebug ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Enable debug for IMAP
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1755)
+    public void unsetImapEnableDebug() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraImapEnableDebug, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Enable debug for IMAP
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1755)
+    public Map<String,Object> unsetImapEnableDebug(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraImapEnableDebug, "");
+        return attrs;
+    }
+
+    /**
+     * Enable STARTTLS for Imap
+     *
+     * @return zimbraImapEnableStartTls, or true if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1756)
+    public boolean isImapEnableStartTls() {
+        return getBooleanAttr(Provisioning.A_zimbraImapEnableStartTls, true);
+    }
+
+    /**
+     * Enable STARTTLS for Imap
+     *
+     * @param zimbraImapEnableStartTls new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1756)
+    public void setImapEnableStartTls(boolean zimbraImapEnableStartTls) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraImapEnableStartTls, zimbraImapEnableStartTls ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Enable STARTTLS for Imap
+     *
+     * @param zimbraImapEnableStartTls new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1756)
+    public Map<String,Object> setImapEnableStartTls(boolean zimbraImapEnableStartTls, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraImapEnableStartTls, zimbraImapEnableStartTls ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Enable STARTTLS for Imap
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1756)
+    public void unsetImapEnableStartTls() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraImapEnableStartTls, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Enable STARTTLS for Imap
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1756)
+    public Map<String,Object> unsetImapEnableStartTls(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraImapEnableStartTls, "");
+        return attrs;
+    }
+
+    /**
      * Whether to expose version on IMAP banner
      *
      * @return zimbraImapExposeVersionOnBanner, or false if unset
@@ -21475,7 +22749,7 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * If greater than 0, drop the imap connection if
-     * imap_max_consecutive_error valueis reached.
+     * zimbraImapMaxConsecutiveError value is reached.
      *
      * @return zimbraImapMaxConsecutiveError, or 5 if unset
      *
@@ -21488,7 +22762,7 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * If greater than 0, drop the imap connection if
-     * imap_max_consecutive_error valueis reached.
+     * zimbraImapMaxConsecutiveError value is reached.
      *
      * @param zimbraImapMaxConsecutiveError new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -21504,7 +22778,7 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * If greater than 0, drop the imap connection if
-     * imap_max_consecutive_error valueis reached.
+     * zimbraImapMaxConsecutiveError value is reached.
      *
      * @param zimbraImapMaxConsecutiveError new value
      * @param attrs existing map to populate, or null to create a new map
@@ -21521,7 +22795,7 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * If greater than 0, drop the imap connection if
-     * imap_max_consecutive_error valueis reached.
+     * zimbraImapMaxConsecutiveError value is reached.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -21536,7 +22810,7 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * If greater than 0, drop the imap connection if
-     * imap_max_consecutive_error valueis reached.
+     * zimbraImapMaxConsecutiveError value is reached.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -21860,7 +23134,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * flag to enable or disable to reuse imap data source connection
+     * Flag to enable or disable to reuse imap data source connection
      *
      * @return zimbraImapReuseDataSourceConnections, or false if unset
      *
@@ -21872,7 +23146,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * flag to enable or disable to reuse imap data source connection
+     * Flag to enable or disable to reuse imap data source connection
      *
      * @param zimbraImapReuseDataSourceConnections new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -21887,7 +23161,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * flag to enable or disable to reuse imap data source connection
+     * Flag to enable or disable to reuse imap data source connection
      *
      * @param zimbraImapReuseDataSourceConnections new value
      * @param attrs existing map to populate, or null to create a new map
@@ -21903,7 +23177,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * flag to enable or disable to reuse imap data source connection
+     * Flag to enable or disable to reuse imap data source connection
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -21917,7 +23191,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * flag to enable or disable to reuse imap data source connection
+     * Flag to enable or disable to reuse imap data source connection
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -22531,6 +23805,78 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * Maximum number of IMAP folders a single user can have open at once
+     *
+     * @return zimbraImapSessionLimit, or 5 if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1737)
+    public int getImapSessionLimit() {
+        return getIntAttr(Provisioning.A_zimbraImapSessionLimit, 5);
+    }
+
+    /**
+     * Maximum number of IMAP folders a single user can have open at once
+     *
+     * @param zimbraImapSessionLimit new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1737)
+    public void setImapSessionLimit(int zimbraImapSessionLimit) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraImapSessionLimit, Integer.toString(zimbraImapSessionLimit));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of IMAP folders a single user can have open at once
+     *
+     * @param zimbraImapSessionLimit new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1737)
+    public Map<String,Object> setImapSessionLimit(int zimbraImapSessionLimit, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraImapSessionLimit, Integer.toString(zimbraImapSessionLimit));
+        return attrs;
+    }
+
+    /**
+     * Maximum number of IMAP folders a single user can have open at once
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1737)
+    public void unsetImapSessionLimit() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraImapSessionLimit, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of IMAP folders a single user can have open at once
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1737)
+    public Map<String,Object> unsetImapSessionLimit(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraImapSessionLimit, "");
+        return attrs;
+    }
+
+    /**
      * number of seconds to wait before forcing IMAP server shutdown
      *
      * @return zimbraImapShutdownGraceSeconds, or 10 if unset
@@ -22963,7 +24309,79 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * flag to enable or disable imap cache
+     * Timeout for imap in seconds
+     *
+     * @return zimbraImapTimeout, or 60 if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1723)
+    public int getImapTimeout() {
+        return getIntAttr(Provisioning.A_zimbraImapTimeout, 60);
+    }
+
+    /**
+     * Timeout for imap in seconds
+     *
+     * @param zimbraImapTimeout new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1723)
+    public void setImapTimeout(int zimbraImapTimeout) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraImapTimeout, Integer.toString(zimbraImapTimeout));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Timeout for imap in seconds
+     *
+     * @param zimbraImapTimeout new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1723)
+    public Map<String,Object> setImapTimeout(int zimbraImapTimeout, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraImapTimeout, Integer.toString(zimbraImapTimeout));
+        return attrs;
+    }
+
+    /**
+     * Timeout for imap in seconds
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1723)
+    public void unsetImapTimeout() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraImapTimeout, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Timeout for imap in seconds
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1723)
+    public Map<String,Object> unsetImapTimeout(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraImapTimeout, "");
+        return attrs;
+    }
+
+    /**
+     * Flag to enable or disable imap cache
      *
      * @return zimbraImapUseEhcache, or true if unset
      *
@@ -22975,7 +24393,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * flag to enable or disable imap cache
+     * Flag to enable or disable imap cache
      *
      * @param zimbraImapUseEhcache new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -22990,7 +24408,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * flag to enable or disable imap cache
+     * Flag to enable or disable imap cache
      *
      * @param zimbraImapUseEhcache new value
      * @param attrs existing map to populate, or null to create a new map
@@ -23006,7 +24424,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * flag to enable or disable imap cache
+     * Flag to enable or disable imap cache
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -23020,7 +24438,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * flag to enable or disable imap cache
+     * Flag to enable or disable imap cache
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -23035,7 +24453,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Imap write chunk size
+     * Imap write chunk size in bytes
      *
      * @return zimbraImapWriteChunkSize, or 8192 if unset
      *
@@ -23047,7 +24465,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Imap write chunk size
+     * Imap write chunk size in bytes
      *
      * @param zimbraImapWriteChunkSize new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -23062,7 +24480,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Imap write chunk size
+     * Imap write chunk size in bytes
      *
      * @param zimbraImapWriteChunkSize new value
      * @param attrs existing map to populate, or null to create a new map
@@ -23078,7 +24496,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Imap write chunk size
+     * Imap write chunk size in bytes
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -23092,7 +24510,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Imap write chunk size
+     * Imap write chunk size in bytes
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -25349,6 +26767,150 @@ public abstract class ZAttrConfig extends Entry {
     public Map<String,Object> unsetMailAddressValidationRegex(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailAddressValidationRegex, "");
+        return attrs;
+    }
+
+    /**
+     * Mailbox lock read write flag
+     *
+     * @return zimbraMailBoxLockReadWrite, or true if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1733)
+    public boolean isMailBoxLockReadWrite() {
+        return getBooleanAttr(Provisioning.A_zimbraMailBoxLockReadWrite, true);
+    }
+
+    /**
+     * Mailbox lock read write flag
+     *
+     * @param zimbraMailBoxLockReadWrite new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1733)
+    public void setMailBoxLockReadWrite(boolean zimbraMailBoxLockReadWrite) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailBoxLockReadWrite, zimbraMailBoxLockReadWrite ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Mailbox lock read write flag
+     *
+     * @param zimbraMailBoxLockReadWrite new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1733)
+    public Map<String,Object> setMailBoxLockReadWrite(boolean zimbraMailBoxLockReadWrite, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailBoxLockReadWrite, zimbraMailBoxLockReadWrite ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Mailbox lock read write flag
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1733)
+    public void unsetMailBoxLockReadWrite() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailBoxLockReadWrite, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Mailbox lock read write flag
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1733)
+    public Map<String,Object> unsetMailBoxLockReadWrite(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailBoxLockReadWrite, "");
+        return attrs;
+    }
+
+    /**
+     * Maximum timeout in seconds for mailbox lock
+     *
+     * @return zimbraMailBoxLockTimeout, or 60 if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1734)
+    public int getMailBoxLockTimeout() {
+        return getIntAttr(Provisioning.A_zimbraMailBoxLockTimeout, 60);
+    }
+
+    /**
+     * Maximum timeout in seconds for mailbox lock
+     *
+     * @param zimbraMailBoxLockTimeout new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1734)
+    public void setMailBoxLockTimeout(int zimbraMailBoxLockTimeout) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailBoxLockTimeout, Integer.toString(zimbraMailBoxLockTimeout));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum timeout in seconds for mailbox lock
+     *
+     * @param zimbraMailBoxLockTimeout new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1734)
+    public Map<String,Object> setMailBoxLockTimeout(int zimbraMailBoxLockTimeout, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailBoxLockTimeout, Integer.toString(zimbraMailBoxLockTimeout));
+        return attrs;
+    }
+
+    /**
+     * Maximum timeout in seconds for mailbox lock
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1734)
+    public void unsetMailBoxLockTimeout() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailBoxLockTimeout, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum timeout in seconds for mailbox lock
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1734)
+    public Map<String,Object> unsetMailBoxLockTimeout(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailBoxLockTimeout, "");
         return attrs;
     }
 
@@ -28685,6 +30247,78 @@ public abstract class ZAttrConfig extends Entry {
     public Map<String,Object> unsetMailUseDirectBuffers(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailUseDirectBuffers, "");
+        return attrs;
+    }
+
+    /**
+     * Maximum allowed waiting threads on a mailbox lock
+     *
+     * @return zimbraMailboxLockMaxWaitingThreads, or 15 if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1732)
+    public int getMailboxLockMaxWaitingThreads() {
+        return getIntAttr(Provisioning.A_zimbraMailboxLockMaxWaitingThreads, 15);
+    }
+
+    /**
+     * Maximum allowed waiting threads on a mailbox lock
+     *
+     * @param zimbraMailboxLockMaxWaitingThreads new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1732)
+    public void setMailboxLockMaxWaitingThreads(int zimbraMailboxLockMaxWaitingThreads) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxLockMaxWaitingThreads, Integer.toString(zimbraMailboxLockMaxWaitingThreads));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum allowed waiting threads on a mailbox lock
+     *
+     * @param zimbraMailboxLockMaxWaitingThreads new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1732)
+    public Map<String,Object> setMailboxLockMaxWaitingThreads(int zimbraMailboxLockMaxWaitingThreads, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxLockMaxWaitingThreads, Integer.toString(zimbraMailboxLockMaxWaitingThreads));
+        return attrs;
+    }
+
+    /**
+     * Maximum allowed waiting threads on a mailbox lock
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1732)
+    public void unsetMailboxLockMaxWaitingThreads() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxLockMaxWaitingThreads, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum allowed waiting threads on a mailbox lock
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1732)
+    public Map<String,Object> unsetMailboxLockMaxWaitingThreads(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxLockMaxWaitingThreads, "");
         return attrs;
     }
 
@@ -43409,6 +45043,150 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * Enable debug for pop3
+     *
+     * @return zimbraPop3EnableDebug, or false if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1727)
+    public boolean isPop3EnableDebug() {
+        return getBooleanAttr(Provisioning.A_zimbraPop3EnableDebug, false);
+    }
+
+    /**
+     * Enable debug for pop3
+     *
+     * @param zimbraPop3EnableDebug new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1727)
+    public void setPop3EnableDebug(boolean zimbraPop3EnableDebug) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPop3EnableDebug, zimbraPop3EnableDebug ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Enable debug for pop3
+     *
+     * @param zimbraPop3EnableDebug new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1727)
+    public Map<String,Object> setPop3EnableDebug(boolean zimbraPop3EnableDebug, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPop3EnableDebug, zimbraPop3EnableDebug ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Enable debug for pop3
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1727)
+    public void unsetPop3EnableDebug() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPop3EnableDebug, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Enable debug for pop3
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1727)
+    public Map<String,Object> unsetPop3EnableDebug(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPop3EnableDebug, "");
+        return attrs;
+    }
+
+    /**
+     * Enable STARTTLS for POP3
+     *
+     * @return zimbraPop3EnableStartTls, or true if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1725)
+    public boolean isPop3EnableStartTls() {
+        return getBooleanAttr(Provisioning.A_zimbraPop3EnableStartTls, true);
+    }
+
+    /**
+     * Enable STARTTLS for POP3
+     *
+     * @param zimbraPop3EnableStartTls new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1725)
+    public void setPop3EnableStartTls(boolean zimbraPop3EnableStartTls) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPop3EnableStartTls, zimbraPop3EnableStartTls ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Enable STARTTLS for POP3
+     *
+     * @param zimbraPop3EnableStartTls new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1725)
+    public Map<String,Object> setPop3EnableStartTls(boolean zimbraPop3EnableStartTls, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPop3EnableStartTls, zimbraPop3EnableStartTls ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Enable STARTTLS for POP3
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1725)
+    public void unsetPop3EnableStartTls() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPop3EnableStartTls, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Enable STARTTLS for POP3
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1725)
+    public Map<String,Object> unsetPop3EnableStartTls(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPop3EnableStartTls, "");
+        return attrs;
+    }
+
+    /**
      * Whether to expose version on POP3 banner
      *
      * @return zimbraPop3ExposeVersionOnBanner, or false if unset
@@ -44265,6 +46043,78 @@ public abstract class ZAttrConfig extends Entry {
     public Map<String,Object> unsetPop3ShutdownGraceSeconds(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPop3ShutdownGraceSeconds, "");
+        return attrs;
+    }
+
+    /**
+     * Pop3 timeout in seconds
+     *
+     * @return zimbraPop3Timeout, or 60 if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1726)
+    public int getPop3Timeout() {
+        return getIntAttr(Provisioning.A_zimbraPop3Timeout, 60);
+    }
+
+    /**
+     * Pop3 timeout in seconds
+     *
+     * @param zimbraPop3Timeout new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1726)
+    public void setPop3Timeout(int zimbraPop3Timeout) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPop3Timeout, Integer.toString(zimbraPop3Timeout));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Pop3 timeout in seconds
+     *
+     * @param zimbraPop3Timeout new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1726)
+    public Map<String,Object> setPop3Timeout(int zimbraPop3Timeout, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPop3Timeout, Integer.toString(zimbraPop3Timeout));
+        return attrs;
+    }
+
+    /**
+     * Pop3 timeout in seconds
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1726)
+    public void unsetPop3Timeout() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPop3Timeout, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Pop3 timeout in seconds
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1726)
+    public Map<String,Object> unsetPop3Timeout(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPop3Timeout, "");
         return attrs;
     }
 
@@ -57341,6 +59191,78 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * Maximum pending notifications allowed
+     *
+     * @return zimbraSessionMaxPendingNotifications, or 400 if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1740)
+    public int getSessionMaxPendingNotifications() {
+        return getIntAttr(Provisioning.A_zimbraSessionMaxPendingNotifications, 400);
+    }
+
+    /**
+     * Maximum pending notifications allowed
+     *
+     * @param zimbraSessionMaxPendingNotifications new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1740)
+    public void setSessionMaxPendingNotifications(int zimbraSessionMaxPendingNotifications) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSessionMaxPendingNotifications, Integer.toString(zimbraSessionMaxPendingNotifications));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum pending notifications allowed
+     *
+     * @param zimbraSessionMaxPendingNotifications new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1740)
+    public Map<String,Object> setSessionMaxPendingNotifications(int zimbraSessionMaxPendingNotifications, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSessionMaxPendingNotifications, Integer.toString(zimbraSessionMaxPendingNotifications));
+        return attrs;
+    }
+
+    /**
+     * Maximum pending notifications allowed
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1740)
+    public void unsetSessionMaxPendingNotifications() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSessionMaxPendingNotifications, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum pending notifications allowed
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1740)
+    public Map<String,Object> unsetSessionMaxPendingNotifications(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSessionMaxPendingNotifications, "");
+        return attrs;
+    }
+
+    /**
      * Account name for authenticating to share notification MTA.
      *
      * @return zimbraShareNotificationMtaAuthAccount, or null if unset
@@ -58602,6 +60524,150 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * Enable smtp debug
+     *
+     * @return zimbraSmtpEnableDebug, or true if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1724)
+    public boolean isSmtpEnableDebug() {
+        return getBooleanAttr(Provisioning.A_zimbraSmtpEnableDebug, true);
+    }
+
+    /**
+     * Enable smtp debug
+     *
+     * @param zimbraSmtpEnableDebug new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1724)
+    public void setSmtpEnableDebug(boolean zimbraSmtpEnableDebug) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSmtpEnableDebug, zimbraSmtpEnableDebug ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Enable smtp debug
+     *
+     * @param zimbraSmtpEnableDebug new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1724)
+    public Map<String,Object> setSmtpEnableDebug(boolean zimbraSmtpEnableDebug, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSmtpEnableDebug, zimbraSmtpEnableDebug ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Enable smtp debug
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1724)
+    public void unsetSmtpEnableDebug() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSmtpEnableDebug, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Enable smtp debug
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1724)
+    public Map<String,Object> unsetSmtpEnableDebug(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSmtpEnableDebug, "");
+        return attrs;
+    }
+
+    /**
+     * Enable STARTTLS for smtp
+     *
+     * @return zimbraSmtpEnableStartTls, or true if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1743)
+    public boolean isSmtpEnableStartTls() {
+        return getBooleanAttr(Provisioning.A_zimbraSmtpEnableStartTls, true);
+    }
+
+    /**
+     * Enable STARTTLS for smtp
+     *
+     * @param zimbraSmtpEnableStartTls new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1743)
+    public void setSmtpEnableStartTls(boolean zimbraSmtpEnableStartTls) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSmtpEnableStartTls, zimbraSmtpEnableStartTls ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Enable STARTTLS for smtp
+     *
+     * @param zimbraSmtpEnableStartTls new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1743)
+    public Map<String,Object> setSmtpEnableStartTls(boolean zimbraSmtpEnableStartTls, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSmtpEnableStartTls, zimbraSmtpEnableStartTls ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Enable STARTTLS for smtp
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1743)
+    public void unsetSmtpEnableStartTls() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSmtpEnableStartTls, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Enable STARTTLS for smtp
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1743)
+    public Map<String,Object> unsetSmtpEnableStartTls(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSmtpEnableStartTls, "");
+        return attrs;
+    }
+
+    /**
      * the SMTP server to connect to when sending mail
      *
      * @return zimbraSmtpHostname, or empty array if unset
@@ -59161,6 +61227,78 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * Flag to enable zimbra client for SMTP
+     *
+     * @return zimbraSmtpUseZimbraClient, or true if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1735)
+    public boolean isSmtpUseZimbraClient() {
+        return getBooleanAttr(Provisioning.A_zimbraSmtpUseZimbraClient, true);
+    }
+
+    /**
+     * Flag to enable zimbra client for SMTP
+     *
+     * @param zimbraSmtpUseZimbraClient new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1735)
+    public void setSmtpUseZimbraClient(boolean zimbraSmtpUseZimbraClient) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSmtpUseZimbraClient, zimbraSmtpUseZimbraClient ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Flag to enable zimbra client for SMTP
+     *
+     * @param zimbraSmtpUseZimbraClient new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1735)
+    public Map<String,Object> setSmtpUseZimbraClient(boolean zimbraSmtpUseZimbraClient, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSmtpUseZimbraClient, zimbraSmtpUseZimbraClient ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Flag to enable zimbra client for SMTP
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1735)
+    public void unsetSmtpUseZimbraClient() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSmtpUseZimbraClient, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Flag to enable zimbra client for SMTP
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1735)
+    public Map<String,Object> unsetSmtpUseZimbraClient(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSmtpUseZimbraClient, "");
+        return attrs;
+    }
+
+    /**
      * If TRUE, enables support for GetVersionInfo for account SOAP requests.
      * If FALSE, GetVersionInfoRequest returns a SOAP fault.
      *
@@ -59306,6 +61444,160 @@ public abstract class ZAttrConfig extends Entry {
     public Map<String,Object> unsetSoapRequestMaxSize(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraSoapRequestMaxSize, "");
+        return attrs;
+    }
+
+    /**
+     * Maximum number of active soap sessions per account. Carefully increase
+     * this.value to avoid &quot;Too many SOAP sessions” errors in
+     * mailbox.log.
+     *
+     * @return zimbraSoapSessionLimit, or 5 if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1738)
+    public int getSoapSessionLimit() {
+        return getIntAttr(Provisioning.A_zimbraSoapSessionLimit, 5);
+    }
+
+    /**
+     * Maximum number of active soap sessions per account. Carefully increase
+     * this.value to avoid &quot;Too many SOAP sessions” errors in
+     * mailbox.log.
+     *
+     * @param zimbraSoapSessionLimit new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1738)
+    public void setSoapSessionLimit(int zimbraSoapSessionLimit) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSoapSessionLimit, Integer.toString(zimbraSoapSessionLimit));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of active soap sessions per account. Carefully increase
+     * this.value to avoid &quot;Too many SOAP sessions” errors in
+     * mailbox.log.
+     *
+     * @param zimbraSoapSessionLimit new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1738)
+    public Map<String,Object> setSoapSessionLimit(int zimbraSoapSessionLimit, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSoapSessionLimit, Integer.toString(zimbraSoapSessionLimit));
+        return attrs;
+    }
+
+    /**
+     * Maximum number of active soap sessions per account. Carefully increase
+     * this.value to avoid &quot;Too many SOAP sessions” errors in
+     * mailbox.log.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1738)
+    public void unsetSoapSessionLimit() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSoapSessionLimit, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of active soap sessions per account. Carefully increase
+     * this.value to avoid &quot;Too many SOAP sessions” errors in
+     * mailbox.log.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1738)
+    public Map<String,Object> unsetSoapSessionLimit(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSoapSessionLimit, "");
+        return attrs;
+    }
+
+    /**
+     * Idle timeout in seconds for SOAP sessions
+     *
+     * @return zimbraSoapSessionTimeout, or 600 if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1741)
+    public int getSoapSessionTimeout() {
+        return getIntAttr(Provisioning.A_zimbraSoapSessionTimeout, 600);
+    }
+
+    /**
+     * Idle timeout in seconds for SOAP sessions
+     *
+     * @param zimbraSoapSessionTimeout new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1741)
+    public void setSoapSessionTimeout(int zimbraSoapSessionTimeout) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSoapSessionTimeout, Integer.toString(zimbraSoapSessionTimeout));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Idle timeout in seconds for SOAP sessions
+     *
+     * @param zimbraSoapSessionTimeout new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1741)
+    public Map<String,Object> setSoapSessionTimeout(int zimbraSoapSessionTimeout, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSoapSessionTimeout, Integer.toString(zimbraSoapSessionTimeout));
+        return attrs;
+    }
+
+    /**
+     * Idle timeout in seconds for SOAP sessions
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1741)
+    public void unsetSoapSessionTimeout() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSoapSessionTimeout, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Idle timeout in seconds for SOAP sessions
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1741)
+    public Map<String,Object> unsetSoapSessionTimeout(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSoapSessionTimeout, "");
         return attrs;
     }
 
@@ -61495,6 +63787,396 @@ public abstract class ZAttrConfig extends Entry {
     public Map<String,Object> unsetStatThreadNamePrefix(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraStatThreadNamePrefix, "");
+        return attrs;
+    }
+
+    /**
+     * Maximum number of bytes to keep in ExternalStoreManager&#039;s local
+     * file cache
+     *
+     * @return zimbraStoreExternalLocalCacheMaxBytes, or 1073741824 if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1752)
+    public int getStoreExternalLocalCacheMaxBytes() {
+        return getIntAttr(Provisioning.A_zimbraStoreExternalLocalCacheMaxBytes, 1073741824);
+    }
+
+    /**
+     * Maximum number of bytes to keep in ExternalStoreManager&#039;s local
+     * file cache
+     *
+     * @param zimbraStoreExternalLocalCacheMaxBytes new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1752)
+    public void setStoreExternalLocalCacheMaxBytes(int zimbraStoreExternalLocalCacheMaxBytes) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraStoreExternalLocalCacheMaxBytes, Integer.toString(zimbraStoreExternalLocalCacheMaxBytes));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of bytes to keep in ExternalStoreManager&#039;s local
+     * file cache
+     *
+     * @param zimbraStoreExternalLocalCacheMaxBytes new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1752)
+    public Map<String,Object> setStoreExternalLocalCacheMaxBytes(int zimbraStoreExternalLocalCacheMaxBytes, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraStoreExternalLocalCacheMaxBytes, Integer.toString(zimbraStoreExternalLocalCacheMaxBytes));
+        return attrs;
+    }
+
+    /**
+     * Maximum number of bytes to keep in ExternalStoreManager&#039;s local
+     * file cache
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1752)
+    public void unsetStoreExternalLocalCacheMaxBytes() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraStoreExternalLocalCacheMaxBytes, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of bytes to keep in ExternalStoreManager&#039;s local
+     * file cache
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1752)
+    public Map<String,Object> unsetStoreExternalLocalCacheMaxBytes(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraStoreExternalLocalCacheMaxBytes, "");
+        return attrs;
+    }
+
+    /**
+     * Maximum number of files to keep in ExternalStoreManager&#039;s local
+     * file cache
+     *
+     * @return zimbraStoreExternalLocalCacheMaxFiles, or 10000 if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1753)
+    public int getStoreExternalLocalCacheMaxFiles() {
+        return getIntAttr(Provisioning.A_zimbraStoreExternalLocalCacheMaxFiles, 10000);
+    }
+
+    /**
+     * Maximum number of files to keep in ExternalStoreManager&#039;s local
+     * file cache
+     *
+     * @param zimbraStoreExternalLocalCacheMaxFiles new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1753)
+    public void setStoreExternalLocalCacheMaxFiles(int zimbraStoreExternalLocalCacheMaxFiles) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraStoreExternalLocalCacheMaxFiles, Integer.toString(zimbraStoreExternalLocalCacheMaxFiles));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of files to keep in ExternalStoreManager&#039;s local
+     * file cache
+     *
+     * @param zimbraStoreExternalLocalCacheMaxFiles new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1753)
+    public Map<String,Object> setStoreExternalLocalCacheMaxFiles(int zimbraStoreExternalLocalCacheMaxFiles, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraStoreExternalLocalCacheMaxFiles, Integer.toString(zimbraStoreExternalLocalCacheMaxFiles));
+        return attrs;
+    }
+
+    /**
+     * Maximum number of files to keep in ExternalStoreManager&#039;s local
+     * file cache
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1753)
+    public void unsetStoreExternalLocalCacheMaxFiles() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraStoreExternalLocalCacheMaxFiles, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of files to keep in ExternalStoreManager&#039;s local
+     * file cache
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1753)
+    public Map<String,Object> unsetStoreExternalLocalCacheMaxFiles(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraStoreExternalLocalCacheMaxFiles, "");
+        return attrs;
+    }
+
+    /**
+     * Minimum time in millis to keep idle entries in
+     * ExternalStoreManager&#039;s local file cache
+     *
+     * @return zimbraStoreExternalLocalCacheMinLifetime, or 60000 if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1754)
+    public int getStoreExternalLocalCacheMinLifetime() {
+        return getIntAttr(Provisioning.A_zimbraStoreExternalLocalCacheMinLifetime, 60000);
+    }
+
+    /**
+     * Minimum time in millis to keep idle entries in
+     * ExternalStoreManager&#039;s local file cache
+     *
+     * @param zimbraStoreExternalLocalCacheMinLifetime new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1754)
+    public void setStoreExternalLocalCacheMinLifetime(int zimbraStoreExternalLocalCacheMinLifetime) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraStoreExternalLocalCacheMinLifetime, Integer.toString(zimbraStoreExternalLocalCacheMinLifetime));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Minimum time in millis to keep idle entries in
+     * ExternalStoreManager&#039;s local file cache
+     *
+     * @param zimbraStoreExternalLocalCacheMinLifetime new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1754)
+    public Map<String,Object> setStoreExternalLocalCacheMinLifetime(int zimbraStoreExternalLocalCacheMinLifetime, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraStoreExternalLocalCacheMinLifetime, Integer.toString(zimbraStoreExternalLocalCacheMinLifetime));
+        return attrs;
+    }
+
+    /**
+     * Minimum time in millis to keep idle entries in
+     * ExternalStoreManager&#039;s local file cache
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1754)
+    public void unsetStoreExternalLocalCacheMinLifetime() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraStoreExternalLocalCacheMinLifetime, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Minimum time in millis to keep idle entries in
+     * ExternalStoreManager&#039;s local file cache
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1754)
+    public Map<String,Object> unsetStoreExternalLocalCacheMinLifetime(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraStoreExternalLocalCacheMinLifetime, "");
+        return attrs;
+    }
+
+    /**
+     * Maximum number of consecutive IOExceptions before aborting during
+     * mailbox deletion
+     *
+     * @return zimbraStoreExternalMaxIOExceptionsForDelete, or 25 if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1751)
+    public int getStoreExternalMaxIOExceptionsForDelete() {
+        return getIntAttr(Provisioning.A_zimbraStoreExternalMaxIOExceptionsForDelete, 25);
+    }
+
+    /**
+     * Maximum number of consecutive IOExceptions before aborting during
+     * mailbox deletion
+     *
+     * @param zimbraStoreExternalMaxIOExceptionsForDelete new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1751)
+    public void setStoreExternalMaxIOExceptionsForDelete(int zimbraStoreExternalMaxIOExceptionsForDelete) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraStoreExternalMaxIOExceptionsForDelete, Integer.toString(zimbraStoreExternalMaxIOExceptionsForDelete));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of consecutive IOExceptions before aborting during
+     * mailbox deletion
+     *
+     * @param zimbraStoreExternalMaxIOExceptionsForDelete new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1751)
+    public Map<String,Object> setStoreExternalMaxIOExceptionsForDelete(int zimbraStoreExternalMaxIOExceptionsForDelete, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraStoreExternalMaxIOExceptionsForDelete, Integer.toString(zimbraStoreExternalMaxIOExceptionsForDelete));
+        return attrs;
+    }
+
+    /**
+     * Maximum number of consecutive IOExceptions before aborting during
+     * mailbox deletion
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1751)
+    public void unsetStoreExternalMaxIOExceptionsForDelete() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraStoreExternalMaxIOExceptionsForDelete, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of consecutive IOExceptions before aborting during
+     * mailbox deletion
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1751)
+    public Map<String,Object> unsetStoreExternalMaxIOExceptionsForDelete(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraStoreExternalMaxIOExceptionsForDelete, "");
+        return attrs;
+    }
+
+    /**
+     * Maximum number of per session sync listeners for ActiveSync. Carefully
+     * increase this value to avoid &quot;Too many SYNCLISTENER
+     * sessions&quot; errors in sync.log.
+     *
+     * @return zimbraSyncSessionLimit, or 5 if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1739)
+    public int getSyncSessionLimit() {
+        return getIntAttr(Provisioning.A_zimbraSyncSessionLimit, 5);
+    }
+
+    /**
+     * Maximum number of per session sync listeners for ActiveSync. Carefully
+     * increase this value to avoid &quot;Too many SYNCLISTENER
+     * sessions&quot; errors in sync.log.
+     *
+     * @param zimbraSyncSessionLimit new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1739)
+    public void setSyncSessionLimit(int zimbraSyncSessionLimit) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSyncSessionLimit, Integer.toString(zimbraSyncSessionLimit));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of per session sync listeners for ActiveSync. Carefully
+     * increase this value to avoid &quot;Too many SYNCLISTENER
+     * sessions&quot; errors in sync.log.
+     *
+     * @param zimbraSyncSessionLimit new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1739)
+    public Map<String,Object> setSyncSessionLimit(int zimbraSyncSessionLimit, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSyncSessionLimit, Integer.toString(zimbraSyncSessionLimit));
+        return attrs;
+    }
+
+    /**
+     * Maximum number of per session sync listeners for ActiveSync. Carefully
+     * increase this value to avoid &quot;Too many SYNCLISTENER
+     * sessions&quot; errors in sync.log.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1739)
+    public void unsetSyncSessionLimit() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSyncSessionLimit, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of per session sync listeners for ActiveSync. Carefully
+     * increase this value to avoid &quot;Too many SYNCLISTENER
+     * sessions&quot; errors in sync.log.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1739)
+    public Map<String,Object> unsetSyncSessionLimit(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSyncSessionLimit, "");
         return attrs;
     }
 

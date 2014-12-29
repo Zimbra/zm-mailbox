@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -29,6 +29,7 @@ import java.util.Set;
 import com.google.common.io.Closeables;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.ZAttrProvisioning;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
@@ -68,6 +69,7 @@ import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.session.PendingModifications.ModificationKey;
 import com.zimbra.cs.util.BuildInfo;
+import com.zimbra.cs.util.ProvisioningUtil;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.ProxyTarget;
@@ -440,11 +442,10 @@ public class SoapSession extends Session {
         void clearMailboxChanges() {
             mMailboxChanges = null;
             mRemoteChanges = null;
-            // note that mHasLocalChanges does *not* get reset when we trigger a <refresh> condition...
         }
     }
 
-    static final long SOAP_SESSION_TIMEOUT_MSEC = Math.max(5, LC.zimbra_session_timeout_soap.intValue()) * Constants.MILLIS_PER_SECOND;
+    static final long SOAP_SESSION_TIMEOUT_MSEC = Math.max(5, ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraSoapSessionTimeout, 5)) * Constants.MILLIS_PER_SECOND;
     // if a keepalive request to a remote session failed, how long to wait before a new ping is permitted
     private static final long MINIMUM_PING_RETRY_TIME = 30 * Constants.MILLIS_PER_SECOND;
     private static final int MAX_QUEUED_NOTIFICATIONS = LC.zimbra_session_max_pending_notifications.intValue();

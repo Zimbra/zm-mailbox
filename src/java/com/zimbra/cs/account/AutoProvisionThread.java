@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -19,10 +19,10 @@ package com.zimbra.cs.account;
 import java.util.Set;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.util.ProvisioningUtil;
 import com.zimbra.cs.util.Zimbra;
 
 public class AutoProvisionThread extends Thread implements Provisioning.EagerAutoProvisionScheduler{
@@ -97,29 +97,29 @@ public class AutoProvisionThread extends Thread implements Provisioning.EagerAut
             }
         }
     }
-    
+
     public synchronized static void switchAutoProvThreadIfNecessary() throws ServiceException {
         Server localServer = Provisioning.getInstance().getLocalServer();
-        
+
         long interval = localServer.getTimeInterval(Provisioning.A_zimbraAutoProvPollingInterval, 0);
-        
-        Set<String> scheduledDomains = 
+
+        Set<String> scheduledDomains =
             localServer.getMultiAttrSet(Provisioning.A_zimbraAutoProvScheduledDomains);
-        
+
         boolean needRunning = interval > 0 && !scheduledDomains.isEmpty();
-        
+
         if (needRunning && !AutoProvisionThread.isRunning()) {
             AutoProvisionThread.startup();
         } else if (!needRunning && AutoProvisionThread.isRunning()) {
             AutoProvisionThread.shutdown();
         }
     }
-    
+
     /**
-     * Provision accounts for all domain scheduled for auto provision on this server, 
+     * Provision accounts for all domain scheduled for auto provision on this server,
      * sleep for configured amount of time between iterations.
-     * 
-     * If an iteration takes longer than the sleep interval, the next iteration will start 
+     *
+     * If an iteration takes longer than the sleep interval, the next iteration will start
      * immediately.
      */
     @Override public void run() {
@@ -143,9 +143,9 @@ public class AutoProvisionThread extends Thread implements Provisioning.EagerAut
                 ZimbraLog.autoprov.info("Shutting down auto provision thread.");
                 return;
             }
-            
+
             long iterStartedAt = System.currentTimeMillis();
-            
+
             try {
                 prov.autoProvAccountEager(this);
             } catch (Throwable t) {
@@ -155,11 +155,11 @@ public class AutoProvisionThread extends Thread implements Provisioning.EagerAut
                     ZimbraLog.autoprov.warn("Unable to auto provision accounts", t);
                 }
             }
-            
+
             long iterEndedAt = System.currentTimeMillis();
             long elapsedMillis = iterEndedAt - iterStartedAt;
 
-            // If this iteration took longer than the sleep interval, 
+            // If this iteration took longer than the sleep interval,
             // go back to work immediately without sleeping
             long sleepInterval = getSleepInterval();
             if (sleepInterval == 0) {
@@ -167,17 +167,18 @@ public class AutoProvisionThread extends Thread implements Provisioning.EagerAut
             } else if (elapsedMillis < sleepInterval) {
                 sleep();
             } else {
-                ZimbraLog.autoprov.debug("Iteration took %d seconds, starting next iteration immediately without sleeping", 
-                        elapsedMillis/Constants.MILLIS_PER_SECOND);   
+                ZimbraLog.autoprov.debug("Iteration took %d seconds, starting next iteration immediately without sleeping",
+                        elapsedMillis/Constants.MILLIS_PER_SECOND);
             }
         }
     }
 
     @VisibleForTesting
     protected long getInitialDelay() {
-        return LC.autoprov_initial_sleep_ms.longValue();
+        long def = 5*60*1000; // 5 minutes
+        return ProvisioningUtil.getServerAttribute(Provisioning.A_zimbraAutoProvInitialSleepInMillis, def);
     }
-    
+
     /**
      * Sleeps for the time interval specified by {@link Provisioning#A_zimbraAutoProvPollingInterval}.
      * If sleep is interrupted, sets {@link #mShutdownRequested} to <tt>true</tt>.
@@ -197,22 +198,22 @@ public class AutoProvisionThread extends Thread implements Provisioning.EagerAut
             shutdownRequested = true;
         }
     }
-    
+
     private void requestShutdown() {
         shutdownRequested = true;
     }
-    
+
     @Override
     public boolean isShutDownRequested() {
         return shutdownRequested;
     }
-    
+
     /**
      * Stores the sleep interval, so that the auto provision thread doesn't
      * die if there's a problem talking to LDAP.  See bug 32639.
      */
     private static long sleepInterval = 0;
-    
+
     /**
      * Returns the current value of {@link Provisioning#A_zimbraAutoProvPollingInterval},
      * or <tt>0</tt> if it cannot be determined.
@@ -225,7 +226,7 @@ public class AutoProvisionThread extends Thread implements Provisioning.EagerAut
             ZimbraLog.autoprov.warn("Unable to determine value of %s.  Using previous value: %d.",
                 Provisioning.A_zimbraAutoProvPollingInterval, sleepInterval, e);
         }
-        
+
         return sleepInterval;
     }
 

@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -26,7 +26,7 @@ import java.util.regex.Pattern;
 import javax.mail.MessagingException;
 import javax.security.auth.login.LoginException;
 
-import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.account.ZAttrProvisioning;
 import com.zimbra.common.net.SocketFactories;
 import com.zimbra.common.service.RemoteServiceException;
 import com.zimbra.common.service.ServiceException;
@@ -46,6 +46,7 @@ import com.zimbra.cs.mailclient.pop3.Pop3Capabilities;
 import com.zimbra.cs.mailclient.pop3.Pop3Config;
 import com.zimbra.cs.mailclient.pop3.Pop3Connection;
 import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.util.ProvisioningUtil;
 import com.zimbra.soap.type.DataSource.ConnectionType;
 
 public class Pop3Sync extends MailItemImport {
@@ -75,8 +76,8 @@ public class Pop3Sync extends MailItemImport {
         }
         config.setSocketFactory(SocketFactories.defaultSocketFactory());
         config.setSSLSocketFactory(SocketFactories.defaultSSLSocketFactory());
-        config.setConnectTimeout(ds.getConnectTimeout(LC.javamail_pop3_timeout.intValue()));
-        config.setReadTimeout(ds.getReadTimeout(LC.javamail_pop3_timeout.intValue()));
+        config.setConnectTimeout(ds.getConnectTimeout(ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraPop3Timeout, 60)));
+        config.setReadTimeout(ds.getReadTimeout(ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraPop3Timeout, 60)));
         return config;
     }
 
@@ -92,7 +93,7 @@ public class Pop3Sync extends MailItemImport {
             // TLS. This maintains compatibility with 5.0.x since there is
             // still no UI setting to explicitly enable TLS. For desktop
             // this forced a plaintext connection since we have the UI options.
-            return !dataSource.isOffline() && LC.javamail_pop3_enable_starttls.booleanValue() ?
+            return !dataSource.isOffline() && ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraPop3EnableStartTls, true) ?
                 MailConfig.Security.TLS_IF_AVAILABLE : MailConfig.Security.NONE;
         case ssl:
             return MailConfig.Security.SSL;

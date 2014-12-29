@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -26,7 +26,7 @@ import java.util.Set;
 import javax.security.auth.login.LoginException;
 
 import com.google.common.collect.ImmutableSet;
-import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.account.ZAttrProvisioning;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.ZimbraLog;
@@ -43,6 +43,7 @@ import com.zimbra.cs.mailclient.imap.ImapConnection;
 import com.zimbra.cs.security.sasl.ZimbraAuthenticator;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.util.BuildInfo;
+import com.zimbra.cs.util.ProvisioningUtil;
 
 final class ImapProxy {
     private static final Set<String> UNSTRUCTURED_CODES = ImmutableSet.of("OK", "NO", "BAD", "PREAUTH", "BYE");
@@ -74,7 +75,7 @@ final class ImapProxy {
         config.setAuthenticationId(acct.getName());
         config.setMechanism(ZimbraAuthenticator.MECHANISM);
         config.setAuthenticatorFactory(AUTH_FACTORY);
-        config.setReadTimeout(LC.javamail_imap_timeout.intValue());
+        config.setReadTimeout(Provisioning.getInstance().getLocalServer().getImapTimeout());
         config.setConnectTimeout(config.getReadTimeout());
         config.setHost(host);
         if (server.isImapServerEnabled()) {
@@ -212,7 +213,7 @@ final class ImapProxy {
                 throw new ImapProxyException("proxy connection already closed");
             }
             ImapConfig config = conn.getImapConfig();
-            final int oldTimeout = config != null ? config.getReadTimeout() : LC.javamail_imap_timeout.intValue();
+            final int oldTimeout = config != null ? config.getReadTimeout() : ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraImapTimeout, 60);
             // necessary because of subsequent race condition with req.cleanup()
             final byte[] payload = req.toByteArray();
 

@@ -28,14 +28,16 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.zimbra.common.account.ZAttrProvisioning;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.mailbox.Mailbox.FolderNode;
 import com.zimbra.cs.mailbox.LocalMailboxLock.LockFailedException;
+import com.zimbra.cs.mailbox.Mailbox.FolderNode;
 import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.cs.util.ProvisioningUtil;
 
 public class LocalMailboxLockTest {
     @BeforeClass
@@ -308,7 +310,7 @@ public class LocalMailboxLockTest {
             Assert.fail();
         }
 
-        int threads = LC.zimbra_mailbox_lock_max_waiting_threads.intValue();
+        int threads  = ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraMailboxLockMaxWaitingThreads, 15);
         final AtomicBoolean done = new AtomicBoolean(false);
         final Set<Thread> waitThreads = new HashSet<Thread>();
         for (int i = 0; i < threads; i++) {
@@ -358,7 +360,7 @@ public class LocalMailboxLockTest {
 
         writeThread.start();
 
-        while (((LocalMailboxLock)mbox.lock).getQueueLength() < LC.zimbra_mailbox_lock_max_waiting_threads.intValue()) {
+        while (((LocalMailboxLock)mbox.lock).getQueueLength() < ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraMailboxLockMaxWaitingThreads, 15)) {
             try {
                 Thread.sleep(100);
             } catch (InterruptedException e) {
@@ -394,7 +396,7 @@ public class LocalMailboxLockTest {
             Assert.fail();
         }
 
-        int threads = LC.zimbra_mailbox_lock_max_waiting_threads.intValue();
+        int threads = ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraMailboxLockMaxWaitingThreads, 15);
         final AtomicBoolean done = new AtomicBoolean(false);
         final Set<Thread> waitThreads = new HashSet<Thread>();
         for (int i = 0; i < threads; i++) {
@@ -449,7 +451,7 @@ public class LocalMailboxLockTest {
 
         readThread.start();
 
-        while (((LocalMailboxLock)mbox.lock).getQueueLength() < LC.zimbra_mailbox_lock_max_waiting_threads.intValue()) {
+        while (((LocalMailboxLock)mbox.lock).getQueueLength() < ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraMailboxLockMaxWaitingThreads, 15)) {
             try {
                 Thread.sleep(100);
             } catch (InterruptedException e) {
@@ -486,7 +488,7 @@ public class LocalMailboxLockTest {
             Assert.fail();
         }
 
-        int threads = LC.zimbra_mailbox_lock_max_waiting_threads.intValue();
+        int threads = ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraMailboxLockMaxWaitingThreads, 15);
         final AtomicBoolean done = new AtomicBoolean(false);
         final Set<Thread> waitThreads = new HashSet<Thread>();
         for (int i = 0; i < threads; i++) {
@@ -576,7 +578,7 @@ public class LocalMailboxLockTest {
 
         lastReadThread.start();
 
-        while (((LocalMailboxLock)mbox.lock).getQueueLength() < LC.zimbra_mailbox_lock_max_waiting_threads.intValue()) {
+        while (((LocalMailboxLock)mbox.lock).getQueueLength() < ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraMailboxLockMaxWaitingThreads, 15)) {
             try {
                 Thread.sleep(100);
             } catch (InterruptedException e) {

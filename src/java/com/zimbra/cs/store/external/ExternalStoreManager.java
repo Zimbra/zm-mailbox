@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -33,6 +33,7 @@ import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.FileCache;
 import com.zimbra.common.util.FileUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MessageCache;
 import com.zimbra.cs.store.Blob;
@@ -65,18 +66,18 @@ public abstract class ExternalStoreManager extends StoreManager implements Exter
         FileUtil.deleteDir(localCacheDir);
         FileUtil.ensureDirExists(localCacheDir);
         localCache = FileCache.Builder.createWithStringKey(localCacheDir, false)
-            .maxFiles(LC.external_store_local_cache_max_files.intValue())
-            .maxBytes(LC.external_store_local_cache_max_bytes.longValue())
-            .minLifetime(LC.external_store_local_cache_min_lifetime.longValue())
+            .maxFiles(Provisioning.getInstance().getLocalServer().getStoreExternalLocalCacheMaxFiles())
+            .maxBytes(Provisioning.getInstance().getLocalServer().getStoreExternalLocalCacheMaxBytes())
+            .minLifetime(Provisioning.getInstance().getLocalServer().getStoreExternalLocalCacheMinLifetime())
             .removeCallback(new MessageCacheChecker()).build();
 
         // initialize file uncompressed file cache and file descriptor cache
         File ufCacheDir = new File(tmpDir, "uncompressed");
         FileUtil.ensureDirExists(ufCacheDir);
         FileCache<String> ufCache = FileCache.Builder.createWithStringKey(ufCacheDir, false)
-            .maxFiles(LC.external_store_local_cache_max_files.intValue())
-            .maxBytes(LC.external_store_local_cache_max_bytes.longValue())
-            .minLifetime(LC.external_store_local_cache_min_lifetime.longValue())
+            .maxFiles(Provisioning.getInstance().getLocalServer().getStoreExternalLocalCacheMaxFiles())
+            .maxBytes(Provisioning.getInstance().getLocalServer().getStoreExternalLocalCacheMaxBytes())
+            .minLifetime(Provisioning.getInstance().getLocalServer().getStoreExternalLocalCacheMinLifetime())
             .removeCallback(new MessageCacheChecker()).build();
         BlobInputStream.setFileDescriptorCache(new FileDescriptorCache(ufCache).loadSettings());
 
@@ -146,7 +147,7 @@ public abstract class ExternalStoreManager extends StoreManager implements Exter
                 consecutiveIoExceptions++;
                 ZimbraLog.store.warn("IOException during deleteStore() for mbox [%d] item [%d] revision [%d] locator [%s]"
                     , mbox.getId(), mbinfo.itemId, mbinfo.revision, mbinfo.locator, ioe);
-                if (consecutiveIoExceptions > LC.external_store_delete_max_ioexceptions.intValue()) {
+                if (consecutiveIoExceptions > Provisioning.getInstance().getLocalServer().getStoreExternalMaxIOExceptionsForDelete()) {
                     ZimbraLog.store.error("too many consecutive IOException during delete store, bailing");
                     break;
                 }

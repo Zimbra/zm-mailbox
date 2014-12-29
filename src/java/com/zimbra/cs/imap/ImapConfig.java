@@ -93,7 +93,7 @@ public class ImapConfig extends ServerConfig {
             chunkSize = Provisioning.getInstance().getLocalServer().getImapWriteChunkSize();
         } catch (ServiceException e) {
             ZimbraLog.imap.error("Error while fetching attribute ImapWriteChunkSize", e);
-            chunkSize  = 10;
+            chunkSize  = 8192;
         }
         return chunkSize;
     }
@@ -185,7 +185,7 @@ public class ImapConfig extends ServerConfig {
     }
 
     public int getMaxRequestSize() {
-        return getIntAttr(A_zimbraImapMaxRequestSize, LC.imap_max_request_size.intValue());
+        return getIntAttr(A_zimbraImapMaxRequestSize, 10*1024);
     }
 
     /**

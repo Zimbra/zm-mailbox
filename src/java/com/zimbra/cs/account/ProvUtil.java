@@ -807,7 +807,7 @@ public class ProvUtil implements HttpDebugListener {
             prov = Provisioning.getInstance();
         } else {
             SoapProvisioning sp = new SoapProvisioning();
-            sp.soapSetURI(LC.zimbra_admin_service_scheme.value() + serverHostname +
+            sp.soapSetURI(Provisioning.getInstance().getLocalServer().getAdminServiceScheme() + serverHostname +
                     ":" + serverPort + AdminConstants.ADMIN_SERVICE_URI);
             if (debugLevel != SoapDebugLevel.none) {
                 sp.soapSetHttpTransportDebugListener(this);
@@ -4327,7 +4327,7 @@ public class ProvUtil implements HttpDebugListener {
             boolean success = false;
             try {
                 SoapProvisioning sp = new SoapProvisioning();
-                sp.soapSetURI(LC.zimbra_admin_service_scheme.value() + hostname + ":" + port + AdminConstants.ADMIN_SERVICE_URI);
+                sp.soapSetURI(Provisioning.getInstance().getLocalServer().getAdminServiceScheme() + hostname + ":" + port + AdminConstants.ADMIN_SERVICE_URI);
                 if (debugLevel != SoapDebugLevel.none) {
                     sp.soapSetHttpTransportDebugListener(this);
                 }
@@ -4371,7 +4371,7 @@ public class ProvUtil implements HttpDebugListener {
             int port = server.getSecond();
             try {
                 SoapProvisioning sp = new SoapProvisioning();
-                sp.soapSetURI(LC.zimbra_admin_service_scheme.value() + hostname + ":" + port + AdminConstants.ADMIN_SERVICE_URI);
+                sp.soapSetURI(Provisioning.getInstance().getLocalServer().getAdminServiceScheme() + hostname + ":" + port + AdminConstants.ADMIN_SERVICE_URI);
                 if (debugLevel != SoapDebugLevel.none) {
                     sp.soapSetHttpTransportDebugListener(this);
                 }

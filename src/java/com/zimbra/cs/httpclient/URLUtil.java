@@ -27,6 +27,7 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.MailMode;
@@ -70,7 +71,14 @@ public class URLUtil {
         String hostname = server.getAttr(Provisioning.A_zimbraServiceHostname);
         int port = server.getIntAttr(Provisioning.A_zimbraAdminPort, 0);
         StringBuffer sb = new StringBuffer(128);
-        sb.append(LC.zimbra_admin_service_scheme.value()).append(hostname).append(":").append(port).append(path);
+        String scheme;
+        try {
+            scheme = Provisioning.getInstance().getLocalServer().getAdminServiceScheme();
+        } catch (ServiceException e) {
+            ZimbraLog.soap.error("Error while getting admin service scheme", e);
+            scheme = "https://";
+        }
+        sb.append(scheme).append(hostname).append(":").append(port).append(path);
         return sb.toString();
     }
 
@@ -88,7 +96,14 @@ public class URLUtil {
         if (checkPort && port <= 0)
             throw ServiceException.FAILURE("server " + server.getName() + " does not have admin port enabled", null);
         StringBuffer sb = new StringBuffer(128);
-        sb.append(LC.zimbra_admin_service_scheme.value()).append(hostname).append(":").append(port).append(path);
+        String scheme;
+        try {
+            scheme = Provisioning.getInstance().getLocalServer().getAdminServiceScheme();
+        } catch (ServiceException e) {
+            ZimbraLog.soap.error("Error while getting admin service scheme", e);
+            scheme = "https://";
+        }
+        sb.append(scheme).append(hostname).append(":").append(port).append(path);
         return sb.toString();
     }
 
@@ -102,7 +117,14 @@ public class URLUtil {
     public static String getAdminURL(String hostname) {
         int port = (int) LC.zimbra_admin_service_port.longValue();
         StringBuffer sb = new StringBuffer(128);
-        sb.append(LC.zimbra_admin_service_scheme.value()).append(hostname).append(":").append(port).append(AdminConstants.ADMIN_SERVICE_URI);
+        String scheme;
+        try {
+            scheme = Provisioning.getInstance().getLocalServer().getAdminServiceScheme();
+        } catch (ServiceException e) {
+            ZimbraLog.soap.error("Error while getting admin service scheme", e);
+            scheme = "https://";
+        }
+        sb.append(scheme).append(hostname).append(":").append(port).append(AdminConstants.ADMIN_SERVICE_URI);
         return sb.toString();
     }
 

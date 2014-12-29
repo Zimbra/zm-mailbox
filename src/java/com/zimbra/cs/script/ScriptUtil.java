@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2009, 2010, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -35,13 +35,13 @@ public class ScriptUtil {
     throws ServiceException {
         initProvisioning(null);
     }
-    
+
     /**
      * Initializes the default {@link Provisioning} configuration,
      * based on values that were passed to the methods in this class.
      * By default, connects to <tt>https://localhost:7071/service/admin/soap</tt>
      * with <tt>zimbra_ldap_user</tt> and <tt>zimbra_ldap_password</tt>.
-     * 
+     *
      * @param options provisioning options, or <tt>null</tt> for default options
      */
     public static void initProvisioning(ProvisioningOptions options)
@@ -59,24 +59,24 @@ public class ScriptUtil {
             userAgentVersion = BuildInfo.VERSION;
         }
         SoapTransport.setDefaultUserAgent(userAgent, userAgentVersion);
-        
+
         String uri = options.getSoapURI();
         if (uri == null) {
-            uri = LC.zimbra_admin_service_scheme.value() + "localhost:7071" + AdminConstants.ADMIN_SERVICE_URI;
+            uri = Provisioning.getInstance().getLocalServer().getAdminServiceScheme() + "localhost:7071" + AdminConstants.ADMIN_SERVICE_URI;
         }
         sp.soapSetURI(uri);
-        
+
         String user = options.getUsername();
         if (user == null) {
             user = LC.zimbra_ldap_user.value();
         }
-        
+
         String password = options.getPassword();
         if (password == null) {
             password = LC.zimbra_ldap_password.value();
         }
         sp.soapAdminAuthenticate(user, password);
-        
+
         Provisioning.setInstance(sp);
     }
 }

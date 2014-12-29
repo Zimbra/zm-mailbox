@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -31,11 +31,13 @@ import org.eclipse.jetty.continuation.ContinuationSupport;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.ZAttrProvisioning;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.Constants;
+import com.zimbra.common.util.RangeUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -51,6 +53,7 @@ import com.zimbra.cs.session.WaitSetAccount;
 import com.zimbra.cs.session.WaitSetCallback;
 import com.zimbra.cs.session.WaitSetError;
 import com.zimbra.cs.session.WaitSetMgr;
+import com.zimbra.cs.util.ProvisioningUtil;
 import com.zimbra.soap.SoapServlet;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -69,13 +72,18 @@ public class WaitSetRequest extends MailDocumentHandler {
     private static final long NODATA_SLEEP_TIME_MILLIS;
 
     static {
-        DEFAULT_TIMEOUT = LC.zimbra_waitset_default_request_timeout.longValueWithinRange(1, Constants.SECONDS_PER_DAY);
+    	DEFAULT_TIMEOUT = LC.zimbra_waitset_default_request_timeout.longValueWithinRange(1, Constants.SECONDS_PER_DAY);
         MIN_TIMEOUT = LC.zimbra_waitset_min_request_timeout.longValueWithinRange(1, Constants.SECONDS_PER_DAY);
         MAX_TIMEOUT = LC.zimbra_waitset_max_request_timeout.longValueWithinRange(1, Constants.SECONDS_PER_DAY);
-
-        DEFAULT_ADMIN_TIMEOUT = LC.zimbra_admin_waitset_default_request_timeout.longValueWithinRange(1, Constants.SECONDS_PER_DAY);
-        MIN_ADMIN_TIMEOUT = LC.zimbra_admin_waitset_min_request_timeout.longValueWithinRange(1, Constants.SECONDS_PER_DAY);
-        MAX_ADMIN_TIMEOUT = LC.zimbra_admin_waitset_max_request_timeout.longValueWithinRange(1, Constants.SECONDS_PER_DAY);
+        DEFAULT_ADMIN_TIMEOUT = RangeUtil.longValueWithinRange(
+                ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraAdminWaitsetDefaultRequestTimeout, 3000),
+                1, Constants.SECONDS_PER_DAY);
+        MIN_ADMIN_TIMEOUT = RangeUtil.longValueWithinRange(
+                ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraAdminWaitsetMinRequestTimeout, 0), 1,
+                Constants.SECONDS_PER_DAY);
+        MAX_ADMIN_TIMEOUT = RangeUtil.longValueWithinRange(
+                ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraAdminWaitsetMaxRequestTimeout, 3600), 1,
+                Constants.SECONDS_PER_DAY);
 
         INITIAL_SLEEP_TIME_MILLIS = LC.zimbra_waitset_initial_sleep_time.longValueWithinRange(1, 5 * Constants.SECONDS_PER_MINUTE * 1000);
         NODATA_SLEEP_TIME_MILLIS = LC.zimbra_waitset_nodata_sleep_time.longValueWithinRange(1, 5 * Constants.SECONDS_PER_MINUTE * 1000);

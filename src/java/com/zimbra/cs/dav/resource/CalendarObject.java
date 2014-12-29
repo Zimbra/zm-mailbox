@@ -43,7 +43,6 @@ import com.zimbra.common.calendar.ZCalendar.ZParameter;
 import com.zimbra.common.calendar.ZCalendar.ZProperty;
 import com.zimbra.common.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.common.localconfig.DebugConfig;
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -448,7 +447,7 @@ public interface CalendarObject {
                 ZimbraLog.dav.warn("cannot determine private access status", se);
             }
             boolean delegated = !acct.getId().equalsIgnoreCase(mOwnerId);
-            if (!LC.calendar_apple_ical_compatible_canceled_instances.booleanValue()) {
+            if (!Provisioning.getInstance().getLocalServer().isCalendarAppleICalCompatibleCanceledInstances()) {
                 for (Invite inv : mInvites) {
                     Invite fixedInv = getFixedUpCopy(ctxt, inv, acct, delegated, false);
                     ZComponent vcomp = fixedInv.newToVComponent(false, allowPrivateAccess);
@@ -461,7 +460,7 @@ public interface CalendarObject {
                 for (int i = 0; i < mInvites.length; ++i) {
                     fixedInvs[i] = getFixedUpCopy(ctxt, mInvites[i], acct, delegated, false);
                 }
-                boolean appleICalExdateHack = LC.calendar_apple_ical_compatible_canceled_instances.booleanValue();
+                boolean appleICalExdateHack = Provisioning.getInstance().getLocalServer().isCalendarAppleICalCompatibleCanceledInstances();
                 ZComponent[] vcomps = Invite.toVComponents(fixedInvs, allowPrivateAccess, false, appleICalExdateHack);
                 if (vcomps != null) {
                     for (ZComponent vcomp : vcomps) {

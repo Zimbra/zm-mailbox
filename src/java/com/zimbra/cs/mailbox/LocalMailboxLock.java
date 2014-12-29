@@ -21,11 +21,12 @@ import java.util.Stack;
 import java.util.concurrent.TimeUnit;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.zimbra.common.account.ZAttrProvisioning;
 import com.zimbra.common.localconfig.DebugConfig;
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.lock.DebugZLock;
 import com.zimbra.cs.mailbox.lock.ZLock;
+import com.zimbra.cs.util.ProvisioningUtil;
 
 /**
  * {@link LocalMailboxLock} is a replacement of the implicit monitor lock using {@code synchronized} methods or statements on
@@ -45,14 +46,17 @@ public class LocalMailboxLock implements MailboxLock {
         this.mbox = mbox;
     }
 
+    @Override
     public int getHoldCount() {
         return zLock.getReadHoldCount() + zLock.getWriteHoldCount();
     }
 
+    @Override
     public boolean isWriteLockedByCurrentThread() {
         return zLock.isWriteLockedByCurrentThread();
     }
 
+    @Override
     public boolean isUnlocked() {
         return !isWriteLockedByCurrentThread() && zLock.getReadHoldCount() == 0;
     }
@@ -67,9 +71,9 @@ public class LocalMailboxLock implements MailboxLock {
 
     private boolean tryLockWithTimeout(boolean write) throws InterruptedException {
         if (write) {
-            return zLock.writeLock().tryLock(LC.zimbra_mailbox_lock_timeout.intValue(), TimeUnit.SECONDS);
+            return zLock.writeLock().tryLock(ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraMailBoxLockTimeout, 60), TimeUnit.SECONDS);
         } else {
-            return zLock.readLock().tryLock(LC.zimbra_mailbox_lock_timeout.intValue(), TimeUnit.SECONDS);
+            return zLock.readLock().tryLock(ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraMailBoxLockTimeout, 60), TimeUnit.SECONDS);
         }
     }
 
@@ -113,10 +117,12 @@ public class LocalMailboxLock implements MailboxLock {
         return zLock.hasQueuedThreads();
     }
 
+    @Override
     public void lock() {
         lock(true);
     }
 
+    @Override
     public void lock(boolean write) {
         write = write || mbox.requiresWriteLock();
         ZimbraLog.mailbox.trace("LOCK %s", (write ? "WRITE" : "READ"));
@@ -132,7 +138,7 @@ public class LocalMailboxLock implements MailboxLock {
                 return;
             }
             int queueLength = zLock.getQueueLength();
-            if (queueLength >= LC.zimbra_mailbox_lock_max_waiting_threads.intValue()) {
+            if (queueLength >= ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraMailboxLockMaxWaitingThreads, 15)) {
                 // Too many threads are already waiting for the lock, can't let you queued. We don't want to log stack trace
                 // here because once requests back up, each new incoming request falls into here, which creates too much
                 // noise in the logs. Unless debug switch is enabled
@@ -162,6 +168,7 @@ public class LocalMailboxLock implements MailboxLock {
         }
     }
 
+    @Override
     public void release() {
         Boolean write = false;
         try {

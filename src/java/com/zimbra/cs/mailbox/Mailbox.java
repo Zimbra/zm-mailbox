@@ -56,6 +56,7 @@ import com.zimbra.client.ZMailbox;
 import com.zimbra.client.ZMailbox.Options;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.ZAttrProvisioning;
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.calendar.ICalTimeZone;
 import com.zimbra.common.calendar.ParsedDateTime;
@@ -238,6 +239,7 @@ import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.store.StoreManager.StoreFeature;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.AccountUtil.AccountAddressMatcher;
+import com.zimbra.cs.util.ProvisioningUtil;
 import com.zimbra.cs.util.SpoolingCache;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.soap.admin.type.DataSourceType;
@@ -684,7 +686,8 @@ public class Mailbox {
         //1. pending tag/flag reload; i.e. cache flush or initial mailbox load
         //2. this is an always on node (distributed lock does not support read/write currently)
         //3. read/write disabled by LC for debugging
-        return requiresWriteLock || Zimbra.isAlwaysOn() || !LC.zimbra_mailbox_lock_readwrite.booleanValue();
+
+        return requiresWriteLock || Zimbra.isAlwaysOn() || !ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraMailBoxLockReadWrite, true);
     }
 
     /**
@@ -4570,7 +4573,7 @@ public class Mailbox {
                 }
                 Invite[] invites = calItem.getInvites();
                 if (invites != null && invites.length > 0) {
-                    boolean appleICalExdateHack = LC.calendar_apple_ical_compatible_canceled_instances.booleanValue();
+                    boolean appleICalExdateHack = Provisioning.getInstance().getLocalServer().isCalendarAppleICalCompatibleCanceledInstances();
                     ZComponent[] comps = null;
                     try {
                         comps = Invite.toVComponents(invites, allowPrivateAccess, useOutlookCompatMode,

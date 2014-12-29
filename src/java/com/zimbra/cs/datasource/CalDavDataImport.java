@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -30,7 +30,6 @@ import com.zimbra.common.calendar.ICalTimeZone;
 import com.zimbra.common.calendar.ZCalendar;
 import com.zimbra.common.calendar.ZCalendar.ZComponent;
 import com.zimbra.common.calendar.ZCalendar.ZProperty;
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.DataSource;
@@ -456,7 +455,7 @@ public class CalDavDataImport extends MailItemImport {
             buf.append(wr.toCharArray());
             wr.close();
         }
-        boolean appleICalExdateHack = LC.calendar_apple_ical_compatible_canceled_instances.booleanValue();
+        boolean appleICalExdateHack = Provisioning.getInstance().getLocalServer().isCalendarAppleICalCompatibleCanceledInstances();
         ZComponent[] vcomps = Invite.toVComponents(calItem.getInvites(), true, false, appleICalExdateHack);
         if (vcomps != null) {
             CharArrayWriter wr = new CharArrayWriter();

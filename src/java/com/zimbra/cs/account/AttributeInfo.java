@@ -45,14 +45,19 @@ public class AttributeInfo {
         archiving,
         convertd,
         mta,
-        mailbox,
         logger,
         snmp,
         ldap,
         spell,
         memcached,
         nginxproxy,
-        stats
+        stats,
+        dnscache,
+        zimlet,
+        zimbra,
+        zimbraAdmin,
+        service,
+        solr;
     };
 
     //  8        4  4     4      12

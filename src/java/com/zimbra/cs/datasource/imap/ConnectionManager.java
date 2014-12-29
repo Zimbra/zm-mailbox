@@ -23,7 +23,7 @@ import java.util.Map;
 
 import javax.security.auth.login.LoginException;
 
-import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.account.ZAttrProvisioning;
 import com.zimbra.common.net.SocketFactories;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
@@ -47,6 +47,7 @@ import com.zimbra.cs.mailclient.imap.ImapData;
 import com.zimbra.cs.mailclient.imap.ImapResponse;
 import com.zimbra.cs.mailclient.imap.ResponseHandler;
 import com.zimbra.cs.util.BuildInfo;
+import com.zimbra.cs.util.ProvisioningUtil;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.soap.type.DataSource.ConnectionType;
 
@@ -236,8 +237,8 @@ final class ConnectionManager {
         }
         config.setSocketFactory(SocketFactories.defaultSocketFactory());
         config.setSSLSocketFactory(SocketFactories.defaultSSLSocketFactory());
-        config.setConnectTimeout(ds.getConnectTimeout(LC.javamail_imap_timeout.intValue()));
-        config.setReadTimeout(ds.getReadTimeout(LC.javamail_imap_timeout.intValue()));
+        config.setConnectTimeout(ds.getConnectTimeout(ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraImapTimeout,60)));
+        config.setReadTimeout(ds.getReadTimeout(ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraImapTimeout,60)));
         LOG.debug("Connect timeout = %d, read timeout = %d",
                   config.getConnectTimeout(), config.getReadTimeout());
         return config;
@@ -256,7 +257,7 @@ final class ConnectionManager {
             // TLS. This maintains compatibility with 5.0.x since there is
             // still no UI setting to explicitly enable TLS. For desktop
             // this forced a plaintext connection since we have the UI options.
-            return !ds.isOffline() && LC.javamail_imap_enable_starttls.booleanValue() ?
+            return !ds.isOffline() && ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraImapEnableStartTls, true) ?
                 Security.TLS_IF_AVAILABLE : Security.NONE;
         case ssl:
             return Security.SSL;
