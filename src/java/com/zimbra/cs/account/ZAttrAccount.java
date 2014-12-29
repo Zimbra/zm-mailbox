@@ -21471,6 +21471,83 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * whether or not an account represents a temporary/hidden mobile gateway
+     * app
+     *
+     * @return zimbraIsMobileGatewayAppAccount, or false if unset
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1760)
+    public boolean isIsMobileGatewayAppAccount() {
+        return getBooleanAttr(Provisioning.A_zimbraIsMobileGatewayAppAccount, false);
+    }
+
+    /**
+     * whether or not an account represents a temporary/hidden mobile gateway
+     * app
+     *
+     * @param zimbraIsMobileGatewayAppAccount new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1760)
+    public void setIsMobileGatewayAppAccount(boolean zimbraIsMobileGatewayAppAccount) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIsMobileGatewayAppAccount, zimbraIsMobileGatewayAppAccount ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether or not an account represents a temporary/hidden mobile gateway
+     * app
+     *
+     * @param zimbraIsMobileGatewayAppAccount new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1760)
+    public Map<String,Object> setIsMobileGatewayAppAccount(boolean zimbraIsMobileGatewayAppAccount, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIsMobileGatewayAppAccount, zimbraIsMobileGatewayAppAccount ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * whether or not an account represents a temporary/hidden mobile gateway
+     * app
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1760)
+    public void unsetIsMobileGatewayAppAccount() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIsMobileGatewayAppAccount, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether or not an account represents a temporary/hidden mobile gateway
+     * app
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1760)
+    public Map<String,Object> unsetIsMobileGatewayAppAccount(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIsMobileGatewayAppAccount, "");
+        return attrs;
+    }
+
+    /**
      * Indicates the account is an account used by the system such as spam
      * accounts or Notebook accounts. System accounts cannot be deleted in
      * admin console.

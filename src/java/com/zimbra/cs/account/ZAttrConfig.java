@@ -32059,6 +32059,83 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * id of the doamin under which temporary/hidden accounts for apps would
+     * be created
+     *
+     * @return zimbraMobileGatewayDefaultAppAccountDomainId, or null if unset
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1759)
+    public String getMobileGatewayDefaultAppAccountDomainId() {
+        return getAttr(Provisioning.A_zimbraMobileGatewayDefaultAppAccountDomainId, null);
+    }
+
+    /**
+     * id of the doamin under which temporary/hidden accounts for apps would
+     * be created
+     *
+     * @param zimbraMobileGatewayDefaultAppAccountDomainId new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1759)
+    public void setMobileGatewayDefaultAppAccountDomainId(String zimbraMobileGatewayDefaultAppAccountDomainId) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileGatewayDefaultAppAccountDomainId, zimbraMobileGatewayDefaultAppAccountDomainId);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * id of the doamin under which temporary/hidden accounts for apps would
+     * be created
+     *
+     * @param zimbraMobileGatewayDefaultAppAccountDomainId new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1759)
+    public Map<String,Object> setMobileGatewayDefaultAppAccountDomainId(String zimbraMobileGatewayDefaultAppAccountDomainId, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileGatewayDefaultAppAccountDomainId, zimbraMobileGatewayDefaultAppAccountDomainId);
+        return attrs;
+    }
+
+    /**
+     * id of the doamin under which temporary/hidden accounts for apps would
+     * be created
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1759)
+    public void unsetMobileGatewayDefaultAppAccountDomainId() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileGatewayDefaultAppAccountDomainId, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * id of the doamin under which temporary/hidden accounts for apps would
+     * be created
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1759)
+    public Map<String,Object> unsetMobileGatewayDefaultAppAccountDomainId(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileGatewayDefaultAppAccountDomainId, "");
+        return attrs;
+    }
+
+    /**
      * Max size of items in a folder that server tracks, categorized by
      * collection type (Email,Calendar,Contacts,Tasks). e.g. Email:3000 makes
      * the max size of items to track for an Email folder to be 3000. If not
