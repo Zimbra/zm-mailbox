@@ -23,43 +23,43 @@ import com.zimbra.cs.account.Provisioning;
 /**
  * @author sankumar
  * Utility methods which handle service exception and return default value, rather the propagating this bloat in all java files.
- * Crated while moving lc attributes to ldap.
+ * Created while moving lc attributes to ldap.
  *
  */
 public class ProvisioningUtil {
-    public static  boolean getServerAttribute(String name, boolean def){
+    public static  boolean getServerAttribute(String name, boolean defaultValue) {
         try {
-            return Provisioning.getInstance().getLocalServer().getBooleanAttr(name, def);
+            return Provisioning.getInstance().getLocalServer().getBooleanAttr(name, defaultValue);
         } catch (ServiceException e) {
             ZimbraLog.misc.error(e);
-            return def;
+            return defaultValue;
         }
     }
 
-    public static int getServerAttribute(String name, int def){
+    public static int getServerAttribute(String name, int defaultValue) {
         try {
-            return Provisioning.getInstance().getLocalServer().getIntAttr(name, def);
+            return Provisioning.getInstance().getLocalServer().getIntAttr(name, defaultValue);
         } catch (ServiceException e) {
             ZimbraLog.misc.error(e);
-            return def;
+            return defaultValue;
         }
     }
 
-    public static long getServerAttribute(String name, long def){
+    public static long getServerAttribute(String name, long defaultValue) {
         try {
-            return Provisioning.getInstance().getLocalServer().getLongAttr(name, def);
+            return Provisioning.getInstance().getLocalServer().getLongAttr(name, defaultValue);
         } catch (ServiceException e) {
             ZimbraLog.misc.error(e);
-            return def;
+            return defaultValue;
         }
     }
 
-    public static String getServerAttribute(String name, String def){
+    public static String getServerAttribute(String name, String defaultValue) {
         try {
-            return Provisioning.getInstance().getLocalServer().getAttr(name, def);
+            return Provisioning.getInstance().getLocalServer().getAttr(name, defaultValue);
         } catch (ServiceException e) {
             ZimbraLog.misc.error(e);
-            return def;
+            return defaultValue;
         }
     }
 }
