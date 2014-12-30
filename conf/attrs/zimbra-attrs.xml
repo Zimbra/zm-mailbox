@@ -8378,8 +8378,19 @@ TODO: delete them permanently from here
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>Whether email related configuration categories in Preference tab are enabled in the web client even if the zimbraFeatureAdminMailEnabled is set to FALSE (Email tab is disabled), and accessed from the admin console.  If the zimbraFeatureAdminMailEnabled is TRUE, this key is ignored.</desc>
 </attr>
+
 <attr id="1687" name="zimbraWebClientStaySignedInDisabled" type="boolean" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainInfo,domainAdminModifiable" since="8.7.0">
   <globalConfigValue>FALSE</globalConfigValue>
   <desc>Whether the Stay Signed In checkbox should be disabled on the login screen</desc>
 </attr>
+
+<attr id="1759" name="zimbraMobileGatewayDefaultAppAccountDomainId" type="id" cardinality="single" optionalIn="globalConfig" since="8.7.0">
+  <desc>id of the doamin under which temporary/hidden accounts for apps would be created</desc>
+</attr>
+
+<attr id="1760" name="zimbraIsMobileGatewayAppAccount" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.7.0">
+  <defaultCOSValue>FALSE</defaultCOSValue>
+  <desc>whether or not an account represents a temporary/hidden mobile gateway app</desc>
+</attr>
+
 </attrs>

@@ -325,6 +325,16 @@ public final class MockProvisioning extends Provisioning {
     }
 
     @Override
+    public Domain getDefaultZMGDomain() throws ServiceException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Account createZMGAppAccount(String accountId, String appCredsDigest) throws ServiceException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public List<Account> getAllAdminAccounts() {
         throw new UnsupportedOperationException();
     }

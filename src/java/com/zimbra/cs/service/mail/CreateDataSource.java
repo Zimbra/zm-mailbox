@@ -20,6 +20,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.soap.admin.type.DataSourceType;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
@@ -44,6 +46,12 @@ public class CreateDataSource extends MailDocumentHandler {
     throws ServiceException, SoapFaultException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
+
+        Element eDataSource = getDataSourceElement(request);
+        DataSourceType type = DataSourceType.fromString(eDataSource.getName());
+
+        doZMGAppProvisioningIfReq(zsc, prov, eDataSource, type);
+
         Account account = getRequestedAccount(zsc);
 
         if (!canModifyOptions(zsc, account))
@@ -52,14 +60,24 @@ public class CreateDataSource extends MailDocumentHandler {
         Mailbox mbox = getRequestedMailbox(zsc);
         
         // Create the data source
-        Element eDataSource = getDataSourceElement(request);
-        DataSourceType type = DataSourceType.fromString(eDataSource.getName());
+
+        String folderIdStr = eDataSource.getAttribute(MailConstants.A_FOLDER);
+        int folderId = Integer.valueOf(folderIdStr);
+        String name = eDataSource.getAttribute(MailConstants.A_NAME);
+        boolean returnFolderId = false;
+        if (folderId == -1) {
+            folderId = mbox.createFolder(null, "/" + name, new Folder.FolderOptions()).
+                    getId();
+            folderIdStr = String.valueOf(folderId);
+            returnFolderId = true;
+        } else {
+            validateFolderId(account, mbox, eDataSource, type);
+        }
+
         Map<String, Object> dsAttrs = new HashMap<String, Object>();
 
         // Common attributes
-        validateFolderId(account, mbox, eDataSource, type);
-        String name = eDataSource.getAttribute(MailConstants.A_NAME);
-        dsAttrs.put(Provisioning.A_zimbraDataSourceFolderId, eDataSource.getAttribute(MailConstants.A_FOLDER));
+        dsAttrs.put(Provisioning.A_zimbraDataSourceFolderId, folderIdStr);
         dsAttrs.put(Provisioning.A_zimbraDataSourceEnabled,
             LdapUtil.getLdapBooleanString(eDataSource.getAttributeBool(MailConstants.A_DS_IS_ENABLED)));
         dsAttrs.put(Provisioning.A_zimbraDataSourceImportOnly,
@@ -105,10 +123,41 @@ public class CreateDataSource extends MailDocumentHandler {
         Element response = zsc.createElement(MailConstants.CREATE_DATA_SOURCE_RESPONSE);
         eDataSource = response.addElement(type.toString());
         eDataSource.addAttribute(MailConstants.A_ID, ds.getId());
-        
+        if (returnFolderId) {
+            eDataSource.addAttribute(MailConstants.A_FOLDER, folderId);
+        }
+
         return response;
     }
-    
+
+    private static synchronized void doZMGAppProvisioningIfReq(ZimbraSoapContext zsc, Provisioning prov,
+            Element eDataSource, DataSourceType type)
+            throws ServiceException {
+        String acctId = zsc.getAuthtokenAccountId();
+        AuthToken authToken = zsc.getAuthToken();
+        if (authToken.isZMGApp() && prov.getAccountById(acctId) == null) {
+            Account acct = prov.createZMGAppAccount(acctId, authToken.getDigest());
+
+            // test the data source to make sure it is a valid one
+            String error = TestDataSource.testDataSource(prov, acct, eDataSource, type);
+            if (error != null) {
+                prov.deleteAccount(acctId);
+                throw ServiceException.INVALID_REQUEST("DataSource test failed with error: " + error, null);
+            }
+
+            MailboxManager mailboxManager = MailboxManager.getInstance();
+            if (mailboxManager.getMailboxByAccountId(acctId, false) ==  null) {
+                try {
+                    mailboxManager.createMailbox(null, acct);
+                } catch (ServiceException e) {
+                    // Rollback account creation
+                    prov.deleteAccount(acctId);
+                    throw e;
+                }
+            }
+        }
+    }
+
     /**
      * Gets the data source element from the given request.
      */
@@ -129,7 +178,7 @@ public class CreateDataSource extends MailDocumentHandler {
      */
     static void validateFolderId(Account account, Mailbox mbox, Element eDataSource, DataSourceType dsType)
     throws ServiceException {
-        int folderId = (int) eDataSource.getAttributeLong(MailConstants.A_FOLDER);
+        int folderId = eDataSource.getAttributeInt(MailConstants.A_FOLDER);
         String id = eDataSource.getAttribute(MailConstants.A_ID, null);
 
         try {

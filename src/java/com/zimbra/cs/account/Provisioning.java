@@ -489,6 +489,25 @@ public abstract class Provisioning extends ZAttrProvisioning {
     }
 
     /**
+     * @return the default COS object for this domain
+     *
+     * @throws ServiceException
+     */
+    public Cos getDefaultCOS(Domain domain) throws ServiceException {
+        // CACHE. If we get reloaded from LDAP, cached data is cleared
+        Cos cos = (Cos) domain.getCachedData(EntryCacheDataKey.DOMAIN_DEFAULT_COS);
+        if (cos == null) {
+            String domainCosId = domain.getDomainDefaultCOSId();
+            cos = domainCosId != null ? get(Key.CosBy.id, domainCosId) :
+                    get(Key.CosBy.name, Provisioning.DEFAULT_COS_NAME);
+            if (cos != null) {
+                domain.setCachedData(EntryCacheDataKey.DOMAIN_DEFAULT_COS, cos);
+            }
+        }
+        return cos;
+    }
+
+    /**
      * @return the AlwaysOnCluster object for this server, or null if server has no AlwaysOnCluster
      *
      * @throws ServiceException
@@ -948,6 +967,23 @@ public abstract class Provisioning extends ZAttrProvisioning {
      * @throws ServiceException
      */
     public abstract void renameAccount(String zimbraId, String newName) throws ServiceException;
+
+    /**
+     * Returns the domain under which ZMG app accounts are created by default.
+     *
+     * @return
+     * @throws ServiceException
+     */
+    public abstract Domain getDefaultZMGDomain() throws ServiceException;
+
+    /**
+     * Creates an account for an app that interfaces with the Mobile Gateway features.
+     *
+     * @param accountId id to use for the new account
+     * @param appCredsDigest a string representing the unique set of credentials of the app
+     * @return
+     */
+    public abstract Account createZMGAppAccount(String accountId, String appCredsDigest) throws ServiceException;
 
     /**
      * Looks up an account by the specified key.

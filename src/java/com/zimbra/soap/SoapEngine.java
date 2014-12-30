@@ -527,9 +527,10 @@ public class SoapEngine {
             }
 
             if (!isGuestAccount) {
+                Account acct = null;
                 if (needsAuth || needsAdminAuth) {
                     try {
-                        AuthProvider.validateAuthToken(prov, at, false);
+                        acct = AuthProvider.validateAuthToken(prov, at, false);
                     } catch (ServiceException e) {
                         return soapFault(soapProto, null, e);
                     }
@@ -556,7 +557,7 @@ public class SoapEngine {
                 context.put(ZIMBRA_SESSION, handler.getSession(zsc));
 
                 // try to proxy the request if necessary (don't proxy commands that don't require auth)
-                if (needsAuth || needsAdminAuth) {
+                if ((needsAuth || needsAdminAuth) && (acct != null || !at.isZMGApp())) {
                     response = handler.proxyIfNecessary(request, context);
                 }
             }

@@ -124,6 +124,10 @@ public abstract class AuthToken {
 
     public abstract String getCrumb() throws AuthTokenException;
 
+    public boolean isZMGApp() {
+        return false;
+    }
+
     public boolean isCsrfTokenEnabled() {
         return false;
     }
