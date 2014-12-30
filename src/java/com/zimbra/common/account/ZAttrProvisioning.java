@@ -5259,9 +5259,11 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureAdminMailEnabled = "zimbraFeatureAdminMailEnabled";
 
     /**
-     * whether email related property sub-tabs are enabled in the web client even if
-     * zimbraFeatureAdminMailEnabled is set to FALSE (Email tab is disabled), and accessed from 
-     * the admin console.
+     * Whether email related configuration categories in Preference tab are
+     * enabled in the web client even if the zimbraFeatureAdminMailEnabled is
+     * set to FALSE (Email tab is disabled), and accessed from the admin
+     * console. If the zimbraFeatureAdminMailEnabled is TRUE, this key is
+     * ignored.
      *
      * @since ZCS 8.7.0
      */
@@ -7204,6 +7206,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraIsExternalVirtualAccount = "zimbraIsExternalVirtualAccount";
 
     /**
+     * whether or not an account represents a temporary/hidden mobile gateway
+     * app
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1760)
+    public static final String A_zimbraIsMobileGatewayAppAccount = "zimbraIsMobileGatewayAppAccount";
+
+    /**
      * true if this server is the monitor host
      */
     @ZAttr(id=132)
@@ -8369,6 +8380,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1572)
     public static final String A_zimbraMobileForceSamsungProtocol25 = "zimbraMobileForceSamsungProtocol25";
+
+    /**
+     * id of the doamin under which temporary/hidden accounts for apps would
+     * be created
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1759)
+    public static final String A_zimbraMobileGatewayDefaultAppAccountDomainId = "zimbraMobileGatewayDefaultAppAccountDomainId";
 
     /**
      * Max size of items in a folder that server tracks, categorized by

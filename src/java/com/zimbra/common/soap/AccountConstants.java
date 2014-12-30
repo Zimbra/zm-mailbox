@@ -130,6 +130,12 @@ public class AccountConstants {
     public static final String E_CHECK_LICENSE_REQUEST = "CheckLicenseRequest";
     public static final String E_CHECK_LICENSE_RESPONSE = "CheckLicenseResponse";
 
+    // Zimbra Mobile Gateway
+    public static final String E_BOOTSTRAP_MOBILE_GATEWAY_APP_REQUEST = "BootstrapMobileGatewayAppRequest";
+    public static final String E_BOOTSTRAP_MOBILE_GATEWAY_APP_RESPONSE = "BootstrapMobileGatewayAppResponse";
+    public static final String E_RENEW_MOBILE_GATEWAY_APP_TOKEN_REQUEST = "RenewMobileGatewayAppTokenRequest";
+    public static final String E_RENEW_MOBILE_GATEWAY_APP_TOKEN_RESPONSE = "RenewMobileGatewayAppTokenResponse";
+
     // auth
     public static final QName AUTH_REQUEST = QName.get(E_AUTH_REQUEST, NAMESPACE);
     public static final QName AUTH_RESPONSE = QName.get(E_AUTH_RESPONSE, NAMESPACE);
@@ -233,6 +239,12 @@ public class AccountConstants {
     // ZimbraLicenseExtension - LicenseService
     public static final QName CHECK_LICENSE_REQUEST = QName.get(E_CHECK_LICENSE_REQUEST, NAMESPACE);
     public static final QName CHECK_LICENSE_RESPONSE = QName.get(E_CHECK_LICENSE_RESPONSE, NAMESPACE);
+
+    // Zimbra Mobile Gateway
+    public static final QName BOOTSTRAP_MOBILE_GATEWAY_APP_REQUEST = QName.get(E_BOOTSTRAP_MOBILE_GATEWAY_APP_REQUEST, NAMESPACE);
+    public static final QName BOOTSTRAP_MOBILE_GATEWAY_APP_RESPONSE = QName.get(E_BOOTSTRAP_MOBILE_GATEWAY_APP_RESPONSE, NAMESPACE);
+    public static final QName RENEW_MOBILE_GATEWAY_APP_TOKEN_REQUEST = QName.get(E_RENEW_MOBILE_GATEWAY_APP_TOKEN_REQUEST, NAMESPACE);
+    public static final QName RENEW_MOBILE_GATEWAY_APP_TOKEN_RESPONSE = QName.get(E_RENEW_MOBILE_GATEWAY_APP_TOKEN_RESPONSE, NAMESPACE);
 
     public static final String E_ACTION = "action";
     public static final String E_ALIAS = "alias";
@@ -436,4 +448,8 @@ public class AccountConstants {
 
     //auth
     public static final String A_LOG_OFF = "logoff";
+
+    // Zimbra Mobile Gateway
+    public static final String E_APP_ID = "appId";
+    public static final String E_APP_KEY = "appKey";
 }
