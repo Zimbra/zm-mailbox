@@ -969,8 +969,7 @@ public class MailSender {
                 mm.setHeader("References", "<" + Joiner.on("> <").join(parentRefs) + ">");
             }
             if (Strings.isNullOrEmpty(ttopic)) {
-                String parentTopic = hblock.getHeader("Thread-Topic", null);
-                mm.setHeader("Thread-Topic", Strings.isNullOrEmpty(parentTopic) ? ThreadIndex.newThreadTopic(mm.getSubject()) : parentTopic);
+                mm.setHeader("Thread-Topic", ThreadIndex.newThreadTopic(mm.getSubject()));
             }
             if (Strings.isNullOrEmpty(tindex)) {
                 byte[] parentIndex = ThreadIndex.parseHeader(hblock.getHeader("Thread-Index", null));
