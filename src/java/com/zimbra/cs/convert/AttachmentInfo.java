@@ -23,9 +23,12 @@ package com.zimbra.cs.convert;
 
 import java.io.File;
 import java.io.InputStream;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import com.zimbra.common.util.ZimbraLog;
 
 /**
  * Represents an attachment to a message or a piece of content within an archive-type
@@ -41,8 +44,9 @@ public class AttachmentInfo {
     private String mDigest;
     private String mFilename;
     private long mLength;
+    private Charset charset;
     
-    public AttachmentInfo(InputStream in, String digest, String ct, String p, String filename, long length, List<String> seq) {
+    public AttachmentInfo(InputStream in, String digest, String ct, String p, String filename, long length, List<String> seq, String cset) {
         mInstream = in;
         mDigest = digest;
         mContentType = ct;
@@ -51,14 +55,36 @@ public class AttachmentInfo {
         mLength = length;
         mSeqInArchive = new ArrayList<String>(seq.size());
         mSeqInArchive.addAll(seq);
+        try {
+            charset = Charset.forName(cset);
+        } catch (Exception e) {
+            charset = Charset.forName("UTF-8");
+            ZimbraLog.mailbox.error("Invalid character set - %s", cset);;
+        }
+    }
+    
+    public AttachmentInfo(InputStream in, String digest, String ct, String p, String filename, long length, List<String> seq) {
+        this(in, digest, ct, p, filename, length, seq, "UTF-8");
     }
     
     public AttachmentInfo(InputStream in, String digest, String ct, String p, String filename, long length, String[] seq) {
-        this(in, digest, ct, p, filename, length, Arrays.asList(seq));
+        this(in, digest, ct, p, filename, length, Arrays.asList(seq), "UTF-8");
+    }
+    
+    public AttachmentInfo(InputStream in, String digest, String ct, String p, String filename, long length, String[] seq, String cset) {
+        this(in, digest, ct, p, filename, length, Arrays.asList(seq), cset);
     }
    
     public AttachmentInfo(InputStream in, String digest, String ct, String p, String filename, long length) {
         this(in, digest, ct, p, filename, length, new String[0]);
+    }
+
+    
+    /**
+     * @return the charset
+     */
+    public Charset getCharset() {
+        return charset;
     }
 
     /**
