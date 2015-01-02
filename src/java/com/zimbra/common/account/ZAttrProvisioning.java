@@ -229,6 +229,7 @@ public class ZAttrProvisioning {
     public static enum DataSourceAuthMechanism {
         GSSAPI("GSSAPI"),
         PLAIN("PLAIN"),
+        XOAUTH2("XOAUTH2"),
         CRAM_MD5("CRAM-MD5");
         private String mValue;
         private DataSourceAuthMechanism(String value) { mValue = value; }
@@ -241,6 +242,7 @@ public class ZAttrProvisioning {
         }
         public boolean isGSSAPI() { return this == GSSAPI;}
         public boolean isPLAIN() { return this == PLAIN;}
+        public boolean isXOAUTH2() { return this == XOAUTH2;}
         public boolean isCRAM_MD5() { return this == CRAM_MD5;}
     }
 
@@ -4511,6 +4513,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=418)
     public static final String A_zimbraDataSourceName = "zimbraDataSourceName";
+
+    /**
+     * OAuth token for authentication using OAuth
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1761)
+    public static final String A_zimbraDataSourceOAuthToken = "zimbraDataSourceOAuthToken";
 
     /**
      * Password on server
