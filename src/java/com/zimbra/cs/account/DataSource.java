@@ -146,6 +146,8 @@ public class DataSource extends AccountProperty {
     public String getAuthId() { return getAttr(Provisioning.A_zimbraDataSourceAuthorizationId); }
 
     public String getAuthMechanism() { return getAttr(Provisioning.A_zimbraDataSourceAuthMechanism); }
+    
+    public String getOAuthToken() {return getAttr(Provisioning.A_zimbraDataSourceOAuthToken); }
 
     public String getDomain() {
         String domain = getAttr(Provisioning.A_zimbraDataSourceDomain, null);

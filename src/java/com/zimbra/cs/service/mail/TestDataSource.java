@@ -18,6 +18,7 @@ package com.zimbra.cs.service.mail;
 
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.DataSourceBy;
+import com.zimbra.common.account.ZAttrProvisioning.DataSourceAuthMechanism;
 import com.zimbra.soap.admin.type.DataSourceType;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
@@ -113,6 +114,11 @@ public class TestDataSource extends MailDocumentHandler {
         value = eDataSource.getAttribute(MailConstants.A_FOLDER, null);
         if (value != null) {
             testAttrs.put(Provisioning.A_zimbraDataSourceFolderId, value);
+        }
+        value = eDataSource.getAttribute(MailConstants.A_DS_OAUTH_TOKEN, null);
+        if (value != null) {
+            testAttrs.put(Provisioning.A_zimbraDataSourceOAuthToken, value);
+            testAttrs.put(Provisioning.A_zimbraDataSourceAuthMechanism, DataSourceAuthMechanism.XOAUTH2.name());
         }
 
         if (password != null) {

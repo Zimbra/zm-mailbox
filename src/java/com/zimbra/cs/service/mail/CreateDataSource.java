@@ -23,6 +23,7 @@ import java.util.Map;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.soap.admin.type.DataSourceType;
+import com.zimbra.common.account.ZAttrProvisioning.DataSourceAuthMechanism;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
@@ -86,7 +87,10 @@ public class CreateDataSource extends MailDocumentHandler {
         dsAttrs.put(Provisioning.A_zimbraDataSourcePort, eDataSource.getAttribute(MailConstants.A_DS_PORT));
         dsAttrs.put(Provisioning.A_zimbraDataSourceConnectionType, eDataSource.getAttribute(MailConstants.A_DS_CONNECTION_TYPE));
         dsAttrs.put(Provisioning.A_zimbraDataSourceUsername, eDataSource.getAttribute(MailConstants.A_DS_USERNAME));
-        dsAttrs.put(Provisioning.A_zimbraDataSourcePassword, eDataSource.getAttribute(MailConstants.A_DS_PASSWORD));
+        String value = eDataSource.getAttribute(MailConstants.A_DS_PASSWORD, null);
+        if (value != null) {
+            dsAttrs.put(Provisioning.A_zimbraDataSourcePassword, value);
+        }
         
         String defaultSignature = eDataSource.getAttribute(MailConstants.A_DS_DEFAULT_SIGNATURE, null);
         if (defaultSignature != null) {
@@ -114,6 +118,12 @@ public class CreateDataSource extends MailDocumentHandler {
         if (type == DataSourceType.pop3) {
             dsAttrs.put(Provisioning.A_zimbraDataSourceLeaveOnServer,
                 LdapUtil.getLdapBooleanString(eDataSource.getAttributeBool(MailConstants.A_DS_LEAVE_ON_SERVER, true)));
+        }
+        
+        value = eDataSource.getAttribute(MailConstants.A_DS_OAUTH_TOKEN, null);
+        if (value != null) {
+            dsAttrs.put(Provisioning.A_zimbraDataSourceOAuthToken, value);
+            dsAttrs.put(Provisioning.A_zimbraDataSourceAuthMechanism, DataSourceAuthMechanism.XOAUTH2.name());
         }
         
         DataSource ds = prov.createDataSource(account, type, name, dsAttrs);
