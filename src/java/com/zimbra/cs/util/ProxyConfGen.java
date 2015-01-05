@@ -1951,7 +1951,7 @@ class WebZSSUpstreamEnablerVar extends WebEnablerVar {
     @Override
     public String format(Object o)  {
         String hostname = serverSource.getAttr("zimbraReverseProxyZSSHostname");
-        if (hostname.length()  == 0) {
+        if (hostname == null || ProxyConfUtil.isEmptyString(hostname)) {
             return "#";
         } else {
             return "";
