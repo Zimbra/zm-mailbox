@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -17,13 +17,13 @@
 
 package com.zimbra.soap.mail.message;
 
-import com.google.common.base.Objects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.google.common.base.Objects;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.mail.type.Msg;
 
@@ -81,7 +81,18 @@ public class CounterAppointmentRequest {
 
     public CounterAppointmentRequest() {
     }
-    
+
+    public static CounterAppointmentRequest createForMsgModseqRevIdCompnum(
+            Msg msg, Integer modifiedSeq, Integer rev, String id, Integer compNum) {
+        CounterAppointmentRequest req = new CounterAppointmentRequest();
+        req.setMsg(msg);
+        req.setModifiedSequence(modifiedSeq);
+        req.setRevision(rev);
+        req.setId(id);
+        req.setComponentNum(compNum);
+        return req;
+    }
+
     public void setId(String id) { this.id = id; }
     public void setComponentNum(Integer componentNum) { this.componentNum = componentNum; }
     public void setModifiedSequence(Integer modifiedSequence) { this.modifiedSequence = modifiedSequence; }
