@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -98,17 +98,22 @@ public class SendInviteReply extends CalendarRequest {
         Verb verb = CalendarMailSender.parseVerb(verbStr);
         boolean isDecline = CalendarMailSender.VERB_DECLINE.equals(verb);
 
-        boolean updateOrg = request.getAttributeBool(MailConstants.A_CAL_UPDATE_ORGANIZER, true);
 
         // Get the identity/persona being used in the reply.  It is set at the request level, but
         // let's also look for it in the <m> child element too, because that is the precedent in
         // the SendMsg request.  For SendInviteReply we have to insist it at request level because
         // <m> is an optional element.
         String identityId = request.getAttribute(MailConstants.A_IDENTITY_ID, null);
+        Element msgElem = request.getOptionalElement(MailConstants.E_MSG);
         if (identityId == null) {
-            Element msgElem = request.getOptionalElement(MailConstants.E_MSG);
             if (msgElem != null)
                 identityId = msgElem.getAttribute(MailConstants.A_IDENTITY_ID, null);
+        }
+        boolean updateOrg = request.getAttributeBool(MailConstants.A_CAL_UPDATE_ORGANIZER, true);
+        if (msgElem != null) {
+            // API documentation states that If a msg element is specified it implies that we DO want to update the
+            // organizer, and any value specified in "updateOrganizer" is ignored.
+            updateOrg = true;
         }
 
         Element response = getResponseElement(zsc);
@@ -339,7 +344,6 @@ public class SendInviteReply extends CalendarRequest {
                 ParseMimeMessage.MimeMessageData parsedMessageData = new ParseMimeMessage.MimeMessageData();
 
                 // did they specify a custom <m> message?  If so, then we don't have to build one...
-                Element msgElem = request.getOptionalElement(MailConstants.E_MSG);
                 if (msgElem != null) {
                     String text = ParseMimeMessage.getTextPlainContent(msgElem);
                     String html = ParseMimeMessage.getTextHtmlContent(msgElem);
