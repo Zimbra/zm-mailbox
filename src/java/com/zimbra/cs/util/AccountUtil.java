@@ -371,31 +371,35 @@ public class AccountUtil {
             this.matchSendAs = matchSendAs;
 
             addresses = new HashSet<String>();
-            String mainAddr = account.getName();
-            if (!StringUtil.isNullOrEmpty(mainAddr)) {
-                addresses.add(mainAddr.toLowerCase());
-            }
-            String canonAddr = getCanonicalAddress(account);
-            if (!StringUtil.isNullOrEmpty(canonAddr)) {
-                addresses.add(canonAddr.toLowerCase());
-            }
-            String[] aliases = account.getMailAlias();
-            if (aliases != null) {
-                for (String alias : aliases) {
-                    if (!StringUtil.isNullOrEmpty(alias)) {
-                        addresses.add(alias.toLowerCase());
-                    }
+            if (account != null) {
+                String mainAddr = account.getName();
+                if (!StringUtil.isNullOrEmpty(mainAddr)) {
+                    addresses.add(mainAddr.toLowerCase());
                 }
-            }
-            if (!internalOnly) {
-                String[] addrs = account.getMultiAttr(Provisioning.A_zimbraAllowFromAddress);
-                if (addrs != null) {
-                    for (String addr : addrs) {
-                        if (!StringUtil.isNullOrEmpty(addr)) {
-                            addresses.add(addr.toLowerCase());
+                String canonAddr = getCanonicalAddress(account);
+                if (!StringUtil.isNullOrEmpty(canonAddr)) {
+                    addresses.add(canonAddr.toLowerCase());
+                }
+                String[] aliases = account.getMailAlias();
+                if (aliases != null) {
+                    for (String alias : aliases) {
+                        if (!StringUtil.isNullOrEmpty(alias)) {
+                            addresses.add(alias.toLowerCase());
                         }
                     }
                 }
+                if (!internalOnly) {
+                    String[] addrs = account.getMultiAttr(Provisioning.A_zimbraAllowFromAddress);
+                    if (addrs != null) {
+                        for (String addr : addrs) {
+                            if (!StringUtil.isNullOrEmpty(addr)) {
+                                addresses.add(addr.toLowerCase());
+                            }
+                        }
+                    }
+                }
+            } else {
+                ZimbraLog.account.warn("Account is null.");
             }
         }
 
@@ -405,6 +409,9 @@ public class AccountUtil {
 
         private boolean matches(String address, boolean checkDomainAlias) throws ServiceException {
             if (StringUtil.isNullOrEmpty(address)) {
+                return false;
+            }
+            if (this.account == null) {
                 return false;
             }
             if (addresses.contains(address.toLowerCase())) {
