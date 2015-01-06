@@ -38,6 +38,7 @@ import org.dom4j.io.DocumentResult;
 import org.junit.Assert;
 import org.junit.Test;
 
+import com.zimbra.client.ZDateTime;
 import com.zimbra.client.ZInvite;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.client.ZMessage;
@@ -48,14 +49,19 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.soap.W3cDomUtil;
+import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.mail.message.BrowseRequest;
 import com.zimbra.soap.mail.message.BrowseResponse;
+import com.zimbra.soap.mail.message.CounterAppointmentRequest;
+import com.zimbra.soap.mail.message.CounterAppointmentResponse;
 import com.zimbra.soap.mail.message.CreateAppointmentRequest;
 import com.zimbra.soap.mail.message.CreateAppointmentResponse;
 import com.zimbra.soap.mail.message.GetMsgRequest;
 import com.zimbra.soap.mail.message.GetMsgResponse;
+import com.zimbra.soap.mail.message.ModifyAppointmentRequest;
+import com.zimbra.soap.mail.message.ModifyAppointmentResponse;
 import com.zimbra.soap.mail.message.SearchRequest;
 import com.zimbra.soap.mail.message.SearchResponse;
 import com.zimbra.soap.mail.message.SendInviteReplyRequest;
@@ -113,6 +119,219 @@ public class TestJaxb extends TestCase {
             cn = mbox.getName();
         }
         return cn;
+    }
+
+    /**
+     * Bug 96748:
+     * 1. user1 sends meeting invite to user2
+     * 2. user2 proposes new time
+     * 3. user1 accepts the proposed new time and new invite is sent to user2
+     * 4. user2 accepts the new invite
+     * At step 4, no acceptance message was being generated
+     */
+    @Test
+    public void testProposeNewTimeWorkflow()
+    throws Exception
+    {
+        String subject = NAME_PREFIX + " attendee will cause time to change";
+        ZMailbox organizerBox = TestUtil.getZMailbox(ORGANIZER);
+        ZMailbox attendeeBox = TestUtil.getZMailbox(ATTENDEE1);
+        String organizerEmail = organizerBox.getName();
+
+        // Create and send the meeting request
+        InviteComponent inviteComp = new InviteComponent();
+        inviteComp.addAttendee(
+                CalendarAttendee.createForAddressDisplaynameRolePartstatRsvp(
+                        attendeeBox.getName(), getCN(attendeeBox), "REQ", "NE", true));
+        inviteComp.setStatus("CONF");
+        inviteComp.setFreeBusy("B");
+        inviteComp.setCalClass("PUB");
+        inviteComp.setTransparency("O");
+        inviteComp.setIsDraft(false);
+        inviteComp.setIsAllDay(false);
+        Date startDate = new Date(System.currentTimeMillis() + Constants.MILLIS_PER_DAY);
+        ZDateTime start = new ZDateTime(startDate.getTime(), false, organizerBox.getPrefs().getTimeZone());
+        Date endDate = new Date(startDate.getTime() + Constants.MILLIS_PER_HOUR);
+        ZDateTime end = new ZDateTime(endDate.getTime(), false, organizerBox.getPrefs().getTimeZone());
+        Date newStartDate = new Date(System.currentTimeMillis() + 2 * Constants.MILLIS_PER_DAY);
+        ZDateTime newStart = new ZDateTime(newStartDate.getTime(), false, organizerBox.getPrefs().getTimeZone());
+        Date newEndDate = new Date(newStartDate.getTime() + Constants.MILLIS_PER_HOUR);
+        ZDateTime newEnd = new ZDateTime(newEndDate.getTime(), false, organizerBox.getPrefs().getTimeZone());
+        inviteComp.setDtStart(DtTimeInfo.createForDatetimeAndZone(start.getDateTime(), start.getTimeZoneId()));
+        inviteComp.setDtEnd(DtTimeInfo.createForDatetimeAndZone(end.getDateTime(), end.getTimeZoneId()));
+        inviteComp.setName(subject);
+        inviteComp.setLocation("room 101");
+        inviteComp.setOrganizer(CalOrganizer.createForAddress(organizerEmail));
+        InvitationInfo invite = new InvitationInfo();
+        invite.setInviteComponent(inviteComp);
+        EmailAddrInfo attendeeAddr = EmailAddrInfo.createForAddressPersonalAndAddressType(
+                attendeeBox.getName(), getCN(attendeeBox), "t");
+        MimePartInfo mimePart = MimePartInfo.createForContentType("multipart/alternative");
+        mimePart.addMimePart(MimePartInfo.createForContentTypeAndContent("text/plain", "invite body"));
+        mimePart.addMimePart(MimePartInfo.createForContentTypeAndContent(
+                "text/html", "<html><body><p><b>invite</b> body</p></body></html>"));
+        Msg msg = new Msg();
+        msg.setFolderId("10");
+        msg.setInvite(invite);
+        msg.addEmailAddress(attendeeAddr);
+        msg.setSubject(subject);
+        msg.setMimePart(mimePart);
+        CreateAppointmentRequest createApptReq = CreateAppointmentRequest.create(msg);
+        CreateAppointmentResponse caResp = organizerBox.invokeJaxb(createApptReq);
+        Assert.assertNotNull("JAXB CreateAppointmentResponse object", caResp);
+        Assert.assertNotNull("JAXB CreateAppointmentResponse calItemId", caResp.getCalItemId());
+        Assert.assertNotNull("JAXB CreateAppointmentResponse invId", caResp.getCalInvId());
+        Assert.assertNotNull("JAXB CreateAppointmentResponse modified sequence ms", caResp.getModifiedSequence());
+        Assert.assertNotNull("JAXB CreateAppointmentResponse rev", caResp.getRevision());
+        ZMessage seriesInviteMsg = TestUtil.waitForMessage(attendeeBox, subject);
+        Assert.assertNotNull("ZMessage for series invite", seriesInviteMsg);
+        ZInvite seriesInvite = seriesInviteMsg.getInvite();
+        Assert.assertNotNull("ZInvite for series invite", seriesInvite);
+        AppointmentHitInfo hit = findMatchingAppointment(attendeeBox, startDate, endDate, subject);
+        // User 1 proposes new time for meeting
+        ZMessage propNewTimeMsg = attendeeProposeNewTimeForMeeting(attendeeBox, organizerBox,
+                newStart, newEnd, hit, subject);
+        Assert.assertNotNull("ZMessage for propose new time", propNewTimeMsg);
+        hit = findMatchingAppointment(organizerBox, startDate, endDate, subject);
+        // Organizer changes the meeting to the new proposed time
+        subject = NAME_PREFIX + " attendee CAUSED time to change"; // easier to find unique inbox entry
+        ZMessage attendee2ndInvite = organizerChangeTimeForMeeting(attendeeBox, organizerBox,
+                newStart, newEnd, hit, subject);
+        Assert.assertNotNull("attendee 2nd invite", attendee2ndInvite);
+        hit = findMatchingAppointment(attendeeBox, newStartDate, newEndDate, "inid:10");
+        acceptInvite(attendeeBox, organizerBox, attendee2ndInvite, subject);
+    }
+
+    private ZMessage acceptInvite(ZMailbox attendeeBox, ZMailbox organizerBox, ZMessage inviteMsg, String subject)
+    throws Exception {
+        SendInviteReplyRequest sirReq = new SendInviteReplyRequest(inviteMsg.getId(), 0 /* componentNum */, "ACCEPT");
+        sirReq.setIdentityId(attendeeBox.getAccountInfo(false).getId());
+        // This is what ZWC currently does - which is odd.  However, SOAP docs claim this is ignored if a message is
+        // provided (it is) - so we should honor that.
+        sirReq.setUpdateOrganizer(false);
+        MimePartInfo mimePart = MimePartInfo.createForContentType("multipart/alternative");
+        mimePart.addMimePart(MimePartInfo.createForContentTypeAndContent("text/plain", "Accepting"));
+        mimePart.addMimePart(MimePartInfo.createForContentTypeAndContent(
+                "text/html", "<html><body><p><b>Accepting</b></p></body></html>"));
+        Msg msg = new Msg();
+        msg.setReplyType("r");
+        msg.setIdentityId(attendeeBox.getAccountInfo(false).getId());
+        EmailAddrInfo orgAddr = EmailAddrInfo.createForAddressPersonalAndAddressType(
+                organizerBox.getName(), organizerBox.getName(), "t");
+        EmailAddrInfo attendeeAddr = EmailAddrInfo.createForAddressPersonalAndAddressType(
+                attendeeBox.getName(), getCN(attendeeBox), "f");
+        msg.addEmailAddress(orgAddr);
+        msg.addEmailAddress(attendeeAddr);
+        String acceptSubject = "Accept: " + subject;
+        msg.setSubject(acceptSubject);
+        msg.setMimePart(mimePart);
+        sirReq.setMsg(msg);
+        SendInviteReplyResponse sirResp = attendeeBox.invokeJaxb(sirReq);
+        Assert.assertNotNull("JAXB SendInviteReplyResponse object", sirResp);
+        ZMessage inboxMsg = TestUtil.waitForMessage(
+                organizerBox, String.format("subject:\"%s\"", acceptSubject));
+        Assert.assertNotNull("ZMessage for accept", inboxMsg);
+        return inboxMsg;
+    }
+
+    /**
+     * @param hit - From search response - represents the organizer's calendar copy
+     * @throws ServiceException
+     */
+    private ZMessage organizerChangeTimeForMeeting(ZMailbox attendeeBox, ZMailbox organizerBox,
+            ZDateTime newStart, ZDateTime newEnd, AppointmentHitInfo hit, String subject)
+    throws Exception
+    {
+        String organizerEmail = organizerBox.getName();
+        InviteComponent inviteComp = new InviteComponent();
+        inviteComp.addAttendee(
+                CalendarAttendee.createForAddressDisplaynameRolePartstatRsvp(attendeeBox.getName(), getCN(attendeeBox),
+                        "REQ", "NE", true));   /* Note Tentative, not Needs action */
+        inviteComp.setStatus("CONF");
+        inviteComp.setFreeBusy("B");
+        inviteComp.setCalClass("PUB");
+        inviteComp.setTransparency("O");
+        inviteComp.setIsDraft(false);
+        inviteComp.setIsAllDay(false);
+        inviteComp.setDtStart(DtTimeInfo.createForDatetimeAndZone(newStart.getDateTime(), newStart.getTimeZoneId()));
+        inviteComp.setDtEnd(DtTimeInfo.createForDatetimeAndZone(newEnd.getDateTime(), newEnd.getTimeZoneId()));
+        inviteComp.setName(subject);
+        inviteComp.setLocation("room 101");
+        inviteComp.setOrganizer(CalOrganizer.createForAddress(organizerEmail));
+        InvitationInfo invite = new InvitationInfo();
+        invite.setUid(hit.getUid());
+        invite.setInviteComponent(inviteComp);
+        MimePartInfo mimePart = MimePartInfo.createForContentType("multipart/alternative");
+        String bodyText =
+                String.format("The following meeting has been modified:\n\n%s",subject);
+        mimePart.addMimePart(MimePartInfo.createForContentTypeAndContent("text/plain", bodyText));
+        Msg msg = new Msg();
+        msg.setFolderId(hit.getFolderId());
+        msg.setInvite(invite);
+        EmailAddrInfo attendeeAddr = EmailAddrInfo.createForAddressPersonalAndAddressType(
+                attendeeBox.getName(), getCN(attendeeBox), "t");
+        msg.addEmailAddress(attendeeAddr);
+        msg.setSubject(subject);
+        msg.setMimePart(mimePart);
+        ModifyAppointmentRequest maReq = ModifyAppointmentRequest.createForIdModseqRevCompnumMsg(
+                hit.getInvId(), hit.getModifiedSequence(), hit.getRevision(), hit.getComponentNum(), msg);
+        ModifyAppointmentResponse maResp = organizerBox.invokeJaxb(maReq);
+        Assert.assertNotNull("JAXB ModifyAppointmentResponse", maResp);
+        return TestUtil.waitForMessage(attendeeBox, String.format("subject:\"%s\"", subject));
+    }
+
+    private AppointmentHitInfo findMatchingAppointment(ZMailbox mbox,
+        Date startDate, Date endDate, String subject) throws ServiceException {
+        SearchRequest searchRequest = new SearchRequest();
+        searchRequest.setSortBy("none");
+        searchRequest.setLimit(500);
+        searchRequest.setLocale("en_US");
+        searchRequest.setCalItemExpandStart(startDate.getTime() - 1000);
+        searchRequest.setCalItemExpandEnd(endDate.getTime() + 1000);
+        searchRequest.setSearchTypes("appointment");
+        searchRequest.setOffset(0);
+        searchRequest.setQuery(subject);
+        SearchResponse searchResp = mbox.invokeJaxb(searchRequest);
+        Assert.assertNotNull("JAXB SearchResponse object", searchResp);
+        List<SearchHit> hits = searchResp.getSearchHits();
+        Assert.assertNotNull("JAXB SearchResponse hits", hits);
+        Assert.assertEquals("JAXB SearchResponse hits", 1, hits.size());
+        return (AppointmentHitInfo) hits.get(0);
+    }
+
+    /**
+     * @param hit - From search response - represents the attendee's calendar copy
+     * @return Message representing the Organizer's intray copy of the new proposal, once it has arrived
+     */
+    private ZMessage attendeeProposeNewTimeForMeeting(ZMailbox attendeeBox, ZMailbox organizerBox,
+            ZDateTime newStart, ZDateTime newEnd, AppointmentHitInfo hit, String subjectSuffix)
+    throws Exception {
+        EmailAddrInfo orgAddr = EmailAddrInfo.createForAddressPersonalAndAddressType(
+                organizerBox.getName(), organizerBox.getName(), "t");
+        MimePartInfo mimePart = MimePartInfo.createForContentType("multipart/alternative");
+        String plainText = "New Time Proposed.";
+        String subject = "New Time Proposed: " + subjectSuffix;
+        String htmlText = String.format("<html><body><p><b>%s</b></p></body></html>", plainText);
+        mimePart.addMimePart(MimePartInfo.createForContentTypeAndContent("text/plain", plainText));
+        mimePart.addMimePart(MimePartInfo.createForContentTypeAndContent("text/html", htmlText));
+        Msg msg = new Msg();
+        InviteComponent compo = new InviteComponent();
+        compo.setName(subjectSuffix);
+        compo.setUid(hit.getUid());
+        compo.setIsAllDay(hit.getAllDay());
+        compo.setOrganizer(CalOrganizer.createForAddress(organizerBox.getName()));
+        compo.setDtStart(DtTimeInfo.createForDatetimeAndZone(newStart.getDateTime(), newStart.getTimeZoneId()));
+        compo.setDtEnd(DtTimeInfo.createForDatetimeAndZone(newEnd.getDateTime(), newEnd.getTimeZoneId()));
+        InvitationInfo invite = InvitationInfo.create(compo);
+        msg.addEmailAddress(orgAddr);  /* replying to the organizer */
+        msg.setSubject(subject);
+        msg.setMimePart(mimePart);
+        msg.setInvite(invite);
+        CounterAppointmentResponse sirResp = attendeeBox.invokeJaxb(
+             CounterAppointmentRequest.createForMsgModseqRevIdCompnum(
+                 msg, hit.getModifiedSequence(), hit.getRevision(), hit.getInvId(), hit.getComponentNum()));
+        Assert.assertNotNull("JAXB CounterAppointmentResponse object", sirResp);
+        return TestUtil.waitForMessage(organizerBox, String.format("subject:\"%s\"", subject));
     }
 
     /**
@@ -396,7 +615,7 @@ public class TestJaxb extends TestCase {
         DocumentResult dr = new DocumentResult();
         marshaller.marshal(browseRequest, dr);
         Document doc = dr.getDocument();
-        ZimbraLog.test.info(doc.getRootElement().asXML());
+        ZimbraLog.test.debug(doc.getRootElement().asXML());
         return (BrowseResponse) sendReq(envelope(authToken, doc.getRootElement().asXML()), "BrowseRequest");
     }
 
@@ -444,7 +663,7 @@ public class TestJaxb extends TestCase {
         DocumentResult dr = new DocumentResult();
         marshaller.marshal(browseRequest, dr);
         Document doc = dr.getDocument();
-        ZimbraLog.test.info(doc.getRootElement().asXML());
+        ZimbraLog.test.debug(doc.getRootElement().asXML());
         return sendReqExpectingFail(envelope(authToken, doc.getRootElement().asXML()), "BrowseRequest", 500);
     }
 
