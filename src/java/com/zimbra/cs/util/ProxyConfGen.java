@@ -1683,6 +1683,26 @@ class MailSSLProtocolsVar extends ProxyConfVar {
     }
 }
 
+class WebZSSUpstreamEnablerVar extends WebEnablerVar {
+
+    public WebZSSUpstreamEnablerVar() {
+        super("web.zss.upstream.disable", "#",
+                "Indicates whether zss location block should be populated " +
+                "(false unless zimbraReverseProxyZSSHostname is set)");
+    }
+
+
+    @Override
+    public String format(Object o)  {
+        String hostname = serverSource.getAttr("zimbraReverseProxyZSSHostname");
+        if (hostname == null || ProxyConfUtil.isEmptyString(hostname)) {
+            return "#";
+        } else {
+            return "";
+        }
+    }
+}
+
 public class ProxyConfGen
 {
     private static final int DEFAULT_SERVERS_NAME_HASH_MAX_SIZE = 512;
@@ -2460,6 +2480,8 @@ public class ProxyConfGen
 	    mConfVars.put("web.login.upstream.url", new ProxyConfVar("web.login.upstream.url", "zimbraMailURL", "/", ProxyConfValueType.STRING, ProxyConfOverride.SERVER, "Zimbra Login URL"));
 	    mConfVars.put("web.upstream.login.target", new WebProxyUpstreamLoginTargetVar());
 	    mConfVars.put("web.upstream.ews.target", new WebProxyUpstreamEwsTargetVar());
+	    mConfVars.put("web.zss.upstream.disable", new WebZSSUpstreamEnablerVar());
+	    mConfVars.put("web.zss.upstream.hostname", new ProxyConfVar("web.zss.upstream.hostname", "zimbraReverseProxyZSSHostname", "", ProxyConfValueType.STRING, ProxyConfOverride.SERVER, "Hostname of the upstream ZSS server being reverse-proxied"));
     }
 
     /* update the default variable map from the active configuration */
