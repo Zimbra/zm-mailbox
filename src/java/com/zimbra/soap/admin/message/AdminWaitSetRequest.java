@@ -59,9 +59,14 @@ import com.zimbra.soap.type.ZmBoolean;
  * zimbra_waitset_default_request_timeout,
  * zimbra_waitset_min_request_timeout,
  * zimbra_waitset_max_request_timeout,
+ * </pre>
+ * <p>
+ * See ServerConfig values:
+ * </p>
+ * <pre>
  * zimbraAdminWaitsetDefaultRequestTimeout,
  * zimbraAdminWaitsetMinRequestTimeout, and
- * zimbra_admin_waitset_max_request_timeout
+ * zimbraAdminWaitsetMaxRequestTimeout
  * </pre>
  * <p>
  * WaitSet: scalable mechanism for listening for changes to one or more accounts
