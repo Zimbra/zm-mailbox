@@ -13085,6 +13085,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraReverseProxyWorkerProcesses = "zimbraReverseProxyWorkerProcesses";
 
     /**
+     * Hostname of the upstream ZSS server being reverse-proxied
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1722)
+    public static final String A_zimbraReverseProxyZSSHostname = "zimbraReverseProxyZSSHostname";
+
+    /**
      * whether TLS is required for IMAP/POP GSSAPI auth
      *
      * @since ZCS 5.0.20
