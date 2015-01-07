@@ -66,7 +66,7 @@ class PermCacheManager {
                 ACL_CACHE_TARGET_MAXAGE = Provisioning.getInstance().getLocalServer().getAdminAclCacheTargetMaxAge()* Constants.MILLIS_PER_MINUTE;
                 ACL_CACHE_CREDENTIAL_MAXSIZE = Provisioning.getInstance().getLocalServer().getAdminAclCacheTargetMaxsize();
             } catch (ServiceException e) {
-                ZimbraLog.cache.error("Error while fetching acl cache config from ldap", e);
+                ZimbraLog.cache.error("Error while fetching acl cache config attributes from ldap", e);
                 ACL_CACHE_TARGET_MAXSIZE = 1024 ;
                 ACL_CACHE_TARGET_MAXAGE = 15;
                 ACL_CACHE_CREDENTIAL_MAXSIZE = 512;

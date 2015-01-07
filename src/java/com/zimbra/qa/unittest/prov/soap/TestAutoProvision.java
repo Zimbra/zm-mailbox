@@ -111,7 +111,7 @@ public class TestAutoProvision extends SoapTest {
 
         Server localServer = prov.getLocalServer();
         localServer.setAutoProvPollingInterval(DEFAULT_AUTOPROV_POLLING_INTERVAL);
-        localServer.setAutoProvInitialSleepInMillis(5 * (int)Constants.MILLIS_PER_MINUTE);
+        localServer.setAutoProvInitialSleep(5 * (int)Constants.MILLIS_PER_MINUTE);
         localServer.unsetAutoProvScheduledDomains();
     }
 
@@ -487,7 +487,7 @@ public class TestAutoProvision extends SoapTest {
          */
 
         Server localServer = prov.getLocalServer();
-        localServer.setAutoProvInitialSleepInMillis(0);
+        localServer.setAutoProvInitialSleep(0);
         long sleepInterval = 3 * Constants.MILLIS_PER_SECOND; // 3 seconds
         localServer.setAutoProvPollingInterval("3s");
 
@@ -537,7 +537,7 @@ public class TestAutoProvision extends SoapTest {
         /*
          * done test, set the initial wait LC key and polling interval back
          */
-        localServer.setAutoProvInitialSleepInMillis(DEFAULT_AUTOPROV_INITIAL_SLEEP_MS);
+        localServer.setAutoProvInitialSleep(DEFAULT_AUTOPROV_INITIAL_SLEEP_MS);
         localServer.setAutoProvPollingInterval(DEFAULT_AUTOPROV_POLLING_INTERVAL);
     }
 
@@ -673,7 +673,7 @@ public class TestAutoProvision extends SoapTest {
         // schedule the domain on local server
         Server localServer = prov.getLocalServer();
         localServer.addAutoProvScheduledDomains(zimbraDomain.getName());
-        localServer.setAutoProvInitialSleepInMillis(0);
+        localServer.setAutoProvInitialSleep(0);
 
 
         /*
@@ -717,7 +717,7 @@ public class TestAutoProvision extends SoapTest {
         /*
          * done test, set the serverKeyback
          */
-        Provisioning.getInstance().getLocalServer().setAutoProvInitialSleepInMillis(DEFAULT_AUTOPROV_INITIAL_SLEEP_MS);
+        Provisioning.getInstance().getLocalServer().setAutoProvInitialSleep(DEFAULT_AUTOPROV_INITIAL_SLEEP_MS);
     }
 
     @Test

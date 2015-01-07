@@ -117,13 +117,15 @@ The client may specify a custom timeout-length for their request if
 they know something about the particular underlying network.  The
 server may or may not honor this request (depending on server
 configured max/min values).  The server will allow a wider range of
-requested timeouts from admin auth tokens. See LocalConfig values:
+requested timeouts from admin auth tokens. 
+See LocalConfig values:
 zimbra_waitset_default_request_timeout,
 zimbra_waitset_min_request_timeout, 
 zimbra_waitset_max_request_timeout,
-zimbra_admin_waitset_default_request_timeout,
-zimbra_admin_waitset_min_request_timeout, and
-zimbra_admin_waitset_max_request_timeout
+See ServerConfig values:
+zimbraAdminWaitsetDefaultRequestTimeout,
+zimbraAdminWaitsetMaxRequestTimeout, and
+zimbraAdminWaitsetMinRequestTimeout
 
 
 ================

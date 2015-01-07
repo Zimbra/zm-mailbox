@@ -2990,43 +2990,43 @@ public abstract class ZAttrServer extends NamedEntry {
     /**
      * Initial sleep for the auto provision thread in millis
      *
-     * @return zimbraAutoProvInitialSleepInMillis, or 300000 if unset
+     * @return zimbraAutoProvInitialSleep, or 300000 if unset
      *
      * @since ZCS 9.0
      */
     @ZAttr(id=1757)
-    public int getAutoProvInitialSleepInMillis() {
-        return getIntAttr(Provisioning.A_zimbraAutoProvInitialSleepInMillis, 300000);
+    public int getAutoProvInitialSleep() {
+        return getIntAttr(Provisioning.A_zimbraAutoProvInitialSleep, 300000);
     }
 
     /**
      * Initial sleep for the auto provision thread in millis
      *
-     * @param zimbraAutoProvInitialSleepInMillis new value
+     * @param zimbraAutoProvInitialSleep new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
      * @since ZCS 9.0
      */
     @ZAttr(id=1757)
-    public void setAutoProvInitialSleepInMillis(int zimbraAutoProvInitialSleepInMillis) throws com.zimbra.common.service.ServiceException {
+    public void setAutoProvInitialSleep(int zimbraAutoProvInitialSleep) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraAutoProvInitialSleepInMillis, Integer.toString(zimbraAutoProvInitialSleepInMillis));
+        attrs.put(Provisioning.A_zimbraAutoProvInitialSleep, Integer.toString(zimbraAutoProvInitialSleep));
         getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
      * Initial sleep for the auto provision thread in millis
      *
-     * @param zimbraAutoProvInitialSleepInMillis new value
+     * @param zimbraAutoProvInitialSleep new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
      * @since ZCS 9.0
      */
     @ZAttr(id=1757)
-    public Map<String,Object> setAutoProvInitialSleepInMillis(int zimbraAutoProvInitialSleepInMillis, Map<String,Object> attrs) {
+    public Map<String,Object> setAutoProvInitialSleep(int zimbraAutoProvInitialSleep, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraAutoProvInitialSleepInMillis, Integer.toString(zimbraAutoProvInitialSleepInMillis));
+        attrs.put(Provisioning.A_zimbraAutoProvInitialSleep, Integer.toString(zimbraAutoProvInitialSleep));
         return attrs;
     }
 
@@ -3038,9 +3038,9 @@ public abstract class ZAttrServer extends NamedEntry {
      * @since ZCS 9.0
      */
     @ZAttr(id=1757)
-    public void unsetAutoProvInitialSleepInMillis() throws com.zimbra.common.service.ServiceException {
+    public void unsetAutoProvInitialSleep() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraAutoProvInitialSleepInMillis, "");
+        attrs.put(Provisioning.A_zimbraAutoProvInitialSleep, "");
         getProvisioning().modifyAttrs(this, attrs);
     }
 
@@ -3053,9 +3053,9 @@ public abstract class ZAttrServer extends NamedEntry {
      * @since ZCS 9.0
      */
     @ZAttr(id=1757)
-    public Map<String,Object> unsetAutoProvInitialSleepInMillis(Map<String,Object> attrs) {
+    public Map<String,Object> unsetAutoProvInitialSleep(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraAutoProvInitialSleepInMillis, "");
+        attrs.put(Provisioning.A_zimbraAutoProvInitialSleep, "");
         return attrs;
     }
 
@@ -6102,8 +6102,8 @@ public abstract class ZAttrServer extends NamedEntry {
 
     /**
      * Activates the hack that converts standalone VEVENT/VTODO components
-     * with STATUS:CANCELLED into EXDATEs on the series component. (bug
-     * 36434)
+     * with STATUS:CANCELLED into EXDATEs on the series component. Introduced
+     * in bug 36434
      *
      * @return zimbraCalendarAppleICalCompatibleCanceledInstances, or true if unset
      *
@@ -6116,8 +6116,8 @@ public abstract class ZAttrServer extends NamedEntry {
 
     /**
      * Activates the hack that converts standalone VEVENT/VTODO components
-     * with STATUS:CANCELLED into EXDATEs on the series component. (bug
-     * 36434)
+     * with STATUS:CANCELLED into EXDATEs on the series component. Introduced
+     * in bug 36434
      *
      * @param zimbraCalendarAppleICalCompatibleCanceledInstances new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -6133,8 +6133,8 @@ public abstract class ZAttrServer extends NamedEntry {
 
     /**
      * Activates the hack that converts standalone VEVENT/VTODO components
-     * with STATUS:CANCELLED into EXDATEs on the series component. (bug
-     * 36434)
+     * with STATUS:CANCELLED into EXDATEs on the series component. Introduced
+     * in bug 36434
      *
      * @param zimbraCalendarAppleICalCompatibleCanceledInstances new value
      * @param attrs existing map to populate, or null to create a new map
@@ -6151,8 +6151,8 @@ public abstract class ZAttrServer extends NamedEntry {
 
     /**
      * Activates the hack that converts standalone VEVENT/VTODO components
-     * with STATUS:CANCELLED into EXDATEs on the series component. (bug
-     * 36434)
+     * with STATUS:CANCELLED into EXDATEs on the series component. Introduced
+     * in bug 36434
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -6167,8 +6167,8 @@ public abstract class ZAttrServer extends NamedEntry {
 
     /**
      * Activates the hack that converts standalone VEVENT/VTODO components
-     * with STATUS:CANCELLED into EXDATEs on the series component. (bug
-     * 36434)
+     * with STATUS:CANCELLED into EXDATEs on the series component. Introduced
+     * in bug 36434
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -14836,13 +14836,13 @@ public abstract class ZAttrServer extends NamedEntry {
     /**
      * Maximum number of IMAP folders a single user can have open at once
      *
-     * @return zimbraImapSessionLimit, or 5 if unset
+     * @return zimbraImapSessionLimit, or 15 if unset
      *
      * @since ZCS 9.0
      */
     @ZAttr(id=1737)
     public int getImapSessionLimit() {
-        return getIntAttr(Provisioning.A_zimbraImapSessionLimit, 5);
+        return getIntAttr(Provisioning.A_zimbraImapSessionLimit, 15);
     }
 
     /**
@@ -44287,13 +44287,13 @@ public abstract class ZAttrServer extends NamedEntry {
     /**
      * Enable smtp debug
      *
-     * @return zimbraSmtpEnableDebug, or true if unset
+     * @return zimbraSmtpEnableDebug, or false if unset
      *
      * @since ZCS 9.0
      */
     @ZAttr(id=1724)
     public boolean isSmtpEnableDebug() {
-        return getBooleanAttr(Provisioning.A_zimbraSmtpEnableDebug, true);
+        return getBooleanAttr(Provisioning.A_zimbraSmtpEnableDebug, false);
     }
 
     /**
@@ -46147,83 +46147,6 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Maximum number of bytes to keep in ExternalStoreManager&#039;s local
-     * file cache
-     *
-     * @return zimbraStoreExternalLocalCacheMaxBytes, or 1073741824 if unset
-     *
-     * @since ZCS 9.0
-     */
-    @ZAttr(id=1752)
-    public int getStoreExternalLocalCacheMaxBytes() {
-        return getIntAttr(Provisioning.A_zimbraStoreExternalLocalCacheMaxBytes, 1073741824);
-    }
-
-    /**
-     * Maximum number of bytes to keep in ExternalStoreManager&#039;s local
-     * file cache
-     *
-     * @param zimbraStoreExternalLocalCacheMaxBytes new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 9.0
-     */
-    @ZAttr(id=1752)
-    public void setStoreExternalLocalCacheMaxBytes(int zimbraStoreExternalLocalCacheMaxBytes) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraStoreExternalLocalCacheMaxBytes, Integer.toString(zimbraStoreExternalLocalCacheMaxBytes));
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * Maximum number of bytes to keep in ExternalStoreManager&#039;s local
-     * file cache
-     *
-     * @param zimbraStoreExternalLocalCacheMaxBytes new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 9.0
-     */
-    @ZAttr(id=1752)
-    public Map<String,Object> setStoreExternalLocalCacheMaxBytes(int zimbraStoreExternalLocalCacheMaxBytes, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraStoreExternalLocalCacheMaxBytes, Integer.toString(zimbraStoreExternalLocalCacheMaxBytes));
-        return attrs;
-    }
-
-    /**
-     * Maximum number of bytes to keep in ExternalStoreManager&#039;s local
-     * file cache
-     *
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 9.0
-     */
-    @ZAttr(id=1752)
-    public void unsetStoreExternalLocalCacheMaxBytes() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraStoreExternalLocalCacheMaxBytes, "");
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * Maximum number of bytes to keep in ExternalStoreManager&#039;s local
-     * file cache
-     *
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 9.0
-     */
-    @ZAttr(id=1752)
-    public Map<String,Object> unsetStoreExternalLocalCacheMaxBytes(Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraStoreExternalLocalCacheMaxBytes, "");
-        return attrs;
-    }
-
-    /**
      * Maximum number of files to keep in ExternalStoreManager&#039;s local
      * file cache
      *
@@ -46297,6 +46220,83 @@ public abstract class ZAttrServer extends NamedEntry {
     public Map<String,Object> unsetStoreExternalLocalCacheMaxFiles(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraStoreExternalLocalCacheMaxFiles, "");
+        return attrs;
+    }
+
+    /**
+     * Maximum number of bytes to keep in ExternalStoreManager&#039;s local
+     * file cache. Default value is 1GB
+     *
+     * @return zimbraStoreExternalLocalCacheMaxSize, or 1073741824 if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1752)
+    public int getStoreExternalLocalCacheMaxSize() {
+        return getIntAttr(Provisioning.A_zimbraStoreExternalLocalCacheMaxSize, 1073741824);
+    }
+
+    /**
+     * Maximum number of bytes to keep in ExternalStoreManager&#039;s local
+     * file cache. Default value is 1GB
+     *
+     * @param zimbraStoreExternalLocalCacheMaxSize new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1752)
+    public void setStoreExternalLocalCacheMaxSize(int zimbraStoreExternalLocalCacheMaxSize) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraStoreExternalLocalCacheMaxSize, Integer.toString(zimbraStoreExternalLocalCacheMaxSize));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of bytes to keep in ExternalStoreManager&#039;s local
+     * file cache. Default value is 1GB
+     *
+     * @param zimbraStoreExternalLocalCacheMaxSize new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1752)
+    public Map<String,Object> setStoreExternalLocalCacheMaxSize(int zimbraStoreExternalLocalCacheMaxSize, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraStoreExternalLocalCacheMaxSize, Integer.toString(zimbraStoreExternalLocalCacheMaxSize));
+        return attrs;
+    }
+
+    /**
+     * Maximum number of bytes to keep in ExternalStoreManager&#039;s local
+     * file cache. Default value is 1GB
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1752)
+    public void unsetStoreExternalLocalCacheMaxSize() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraStoreExternalLocalCacheMaxSize, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of bytes to keep in ExternalStoreManager&#039;s local
+     * file cache. Default value is 1GB
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1752)
+    public Map<String,Object> unsetStoreExternalLocalCacheMaxSize(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraStoreExternalLocalCacheMaxSize, "");
         return attrs;
     }
 

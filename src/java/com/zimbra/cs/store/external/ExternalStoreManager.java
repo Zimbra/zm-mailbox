@@ -67,7 +67,7 @@ public abstract class ExternalStoreManager extends StoreManager implements Exter
         FileUtil.ensureDirExists(localCacheDir);
         localCache = FileCache.Builder.createWithStringKey(localCacheDir, false)
             .maxFiles(Provisioning.getInstance().getLocalServer().getStoreExternalLocalCacheMaxFiles())
-            .maxBytes(Provisioning.getInstance().getLocalServer().getStoreExternalLocalCacheMaxBytes())
+            .maxBytes(Provisioning.getInstance().getLocalServer().getStoreExternalLocalCacheMaxSize())
             .minLifetime(Provisioning.getInstance().getLocalServer().getStoreExternalLocalCacheMinLifetime())
             .removeCallback(new MessageCacheChecker()).build();
 
@@ -76,7 +76,7 @@ public abstract class ExternalStoreManager extends StoreManager implements Exter
         FileUtil.ensureDirExists(ufCacheDir);
         FileCache<String> ufCache = FileCache.Builder.createWithStringKey(ufCacheDir, false)
             .maxFiles(Provisioning.getInstance().getLocalServer().getStoreExternalLocalCacheMaxFiles())
-            .maxBytes(Provisioning.getInstance().getLocalServer().getStoreExternalLocalCacheMaxBytes())
+            .maxBytes(Provisioning.getInstance().getLocalServer().getStoreExternalLocalCacheMaxSize())
             .minLifetime(Provisioning.getInstance().getLocalServer().getStoreExternalLocalCacheMinLifetime())
             .removeCallback(new MessageCacheChecker()).build();
         BlobInputStream.setFileDescriptorCache(new FileDescriptorCache(ufCache).loadSettings());

@@ -31,7 +31,6 @@ import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.ZAttrProvisioning;
 import com.zimbra.common.localconfig.DebugConfig;
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
@@ -448,7 +447,7 @@ public class SoapSession extends Session {
     static final long SOAP_SESSION_TIMEOUT_MSEC = Math.max(5, ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraSoapSessionTimeout, 5)) * Constants.MILLIS_PER_SECOND;
     // if a keepalive request to a remote session failed, how long to wait before a new ping is permitted
     private static final long MINIMUM_PING_RETRY_TIME = 30 * Constants.MILLIS_PER_SECOND;
-    private static final int MAX_QUEUED_NOTIFICATIONS = LC.zimbra_session_max_pending_notifications.intValue();
+    private static final int MAX_QUEUED_NOTIFICATIONS;
 
     // Read/write access to all these members requires synchronizing on "this".
     private String queryString = "";
@@ -470,6 +469,10 @@ public class SoapSession extends Session {
     private final boolean asAdmin;
     private boolean isOffline = false;
     private final SoapProtocol responseProtocol;
+
+    static {
+        MAX_QUEUED_NOTIFICATIONS= ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraSessionMaxPendingNotifications, 400);
+    }
 
     /** Creates a <tt>SoapSession</tt> owned by the given account and
      *  listening on its {@link Mailbox}.

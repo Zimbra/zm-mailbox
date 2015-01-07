@@ -8682,7 +8682,7 @@ TODO: delete them permanently from here
 </attr>
 
 <attr id="1724" name="zimbraSmtpEnableDebug" type="boolean" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
-  <globalConfigValue>TRUE</globalConfigValue>
+  <globalConfigValue>FALSE</globalConfigValue>
   <desc> Enable smtp debug</desc>
 </attr>
 
@@ -8748,7 +8748,7 @@ TODO: delete them permanently from here
 </attr>
 
 <attr id="1737" name="zimbraImapSessionLimit" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
-  <globalConfigValue>5</globalConfigValue>
+  <globalConfigValue>15</globalConfigValue>
   <desc> Maximum number of IMAP folders a single user can have open at once </desc>
 </attr>
 
@@ -8822,9 +8822,9 @@ TODO: delete them permanently from here
   <desc>Maximum number of consecutive IOExceptions before aborting during mailbox deletion</desc>
 </attr>
 
-<attr id="1752" name="zimbraStoreExternalLocalCacheMaxBytes" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
+<attr id="1752" name="zimbraStoreExternalLocalCacheMaxSize" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
   <globalConfigValue>1073741824</globalConfigValue>
-  <desc> Maximum number of bytes to keep in ExternalStoreManager's local file cache</desc>
+  <desc> Maximum number of bytes to keep in ExternalStoreManager's local file cache. Default value is 1GB</desc>
 </attr>
 
 <attr id="1753" name="zimbraStoreExternalLocalCacheMaxFiles" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
@@ -8847,14 +8847,14 @@ TODO: delete them permanently from here
   <desc> Enable STARTTLS for Imap</desc>
 </attr>
 
-<attr id="1757" name="zimbraAutoProvInitialSleepInMillis" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
+<attr id="1757" name="zimbraAutoProvInitialSleep" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
   <globalConfigValue>300000</globalConfigValue>
   <desc> Initial sleep for the auto provision thread in millis</desc>
 </attr>
 
 <attr id="1758" name="zimbraCalendarAppleICalCompatibleCanceledInstances" type="boolean" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
   <globalConfigValue>TRUE</globalConfigValue>
-  <desc> Activates the hack that converts standalone VEVENT/VTODO components with STATUS:CANCELLED into EXDATEs on the series component. (bug 36434) </desc>
+  <desc> Activates the hack that converts standalone VEVENT/VTODO components with STATUS:CANCELLED into EXDATEs on the series component. Introduced in bug 36434 </desc>
 </attr>
 
 <attr id="1759" name="zimbraMobileGatewayDefaultAppAccountDomainId" type="id" cardinality="single" optionalIn="globalConfig" since="8.7.0">

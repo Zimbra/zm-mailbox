@@ -176,7 +176,7 @@ public class AutoProvisionThread extends Thread implements Provisioning.EagerAut
     @VisibleForTesting
     protected long getInitialDelay() {
         long def = 5*60*1000; // 5 minutes
-        return ProvisioningUtil.getServerAttribute(Provisioning.A_zimbraAutoProvInitialSleepInMillis, def);
+        return ProvisioningUtil.getServerAttribute(Provisioning.A_zimbraAutoProvInitialSleep, def);
     }
 
     /**
