@@ -557,7 +557,7 @@ public class SoapEngine {
                 context.put(ZIMBRA_SESSION, handler.getSession(zsc));
 
                 // try to proxy the request if necessary (don't proxy commands that don't require auth)
-                if ((needsAuth || needsAdminAuth) && (acct != null || !at.isZMGApp())) {
+                if ((needsAuth || needsAdminAuth) && acct != null) {
                     response = handler.proxyIfNecessary(request, context);
                 }
             }

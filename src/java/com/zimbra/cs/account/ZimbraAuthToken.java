@@ -355,7 +355,9 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
 
     @Override
     public boolean isZimbraUser() {
-        return type == null || type.compareTo(C_TYPE_ZIMBRA_USER) == 0;
+        return type == null || C_TYPE_ZIMBRA_USER.equals(type) || C_TYPE_ZMG_APP.equals(type);
+        // C_TYPE_ZMG_APP type indicates the bootstrap auth token issued for ZMG app. Technically
+        // that too represents a Zimbra account/user
     }
 
     @Override
@@ -380,7 +382,7 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
 
 
     private void register() {
-        if (!isZimbraUser()) {
+        if (!isZimbraUser() || isZMGAppBootstrap()) {
             return;
         }
         try {
@@ -501,7 +503,7 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
 
     @Override
     public boolean isRegistered() {
-        if (!isZimbraUser()) {
+        if (!isZimbraUser() || isZMGAppBootstrap()) {
             return true;
         }
         try {
@@ -642,7 +644,7 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
          this.register();
     }
 
-    public boolean isZMGApp() {
+    public boolean isZMGAppBootstrap() {
         return C_TYPE_ZMG_APP.equals(type);
     }
 

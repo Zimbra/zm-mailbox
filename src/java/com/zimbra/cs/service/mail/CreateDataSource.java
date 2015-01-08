@@ -145,7 +145,7 @@ public class CreateDataSource extends MailDocumentHandler {
             throws ServiceException {
         String acctId = zsc.getAuthtokenAccountId();
         AuthToken authToken = zsc.getAuthToken();
-        if (authToken.isZMGApp() && prov.getAccountById(acctId) == null) {
+        if (authToken.isZMGAppBootstrap() && prov.getAccountById(acctId) == null) {
             Account acct = prov.createZMGAppAccount(acctId, authToken.getDigest());
 
             // test the data source to make sure it is a valid one
