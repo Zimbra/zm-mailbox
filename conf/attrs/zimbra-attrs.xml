@@ -5121,7 +5121,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>indicates that this datasource is used for one way (incoming) import vs. two-way sync</desc>
 </attr>
 
-<attr id="1107" name="zimbraDataSourceAuthMechanism" type="enum" value="PLAIN,GSSAPI,CRAM-MD5" cardinality="single" optionalIn="imapDataSource" since="7.0.0">
+<attr id="1107" name="zimbraDataSourceAuthMechanism" type="enum" value="PLAIN,GSSAPI,CRAM-MD5,XOAUTH2" cardinality="single" optionalIn="imapDataSource" since="7.0.0">
   <desc>Which SASL authentication mechanism  to use for authenticating to IMAP server.</desc>
 </attr>
 
@@ -8864,6 +8864,10 @@ TODO: delete them permanently from here
 <attr id="1760" name="zimbraIsMobileGatewayAppAccount" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.7.0">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>whether or not an account represents a temporary/hidden mobile gateway app</desc>
+</attr>
+
+<attr id="1761" name="zimbraDataSourceOAuthToken" type="string" cardinality="single" optionalIn="imapDataSource" since="8.7.0">
+  <desc>OAuth token for authentication using OAuth</desc>
 </attr>
 
 </attrs>

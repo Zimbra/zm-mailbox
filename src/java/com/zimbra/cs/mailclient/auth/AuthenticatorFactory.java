@@ -44,6 +44,7 @@ public final class AuthenticatorFactory {
         register(SaslAuthenticator.GSSAPI, SaslAuthenticator.class, false);
         register(SaslAuthenticator.CRAM_MD5, SaslAuthenticator.class);
         register(SaslAuthenticator.DIGEST_MD5, SaslAuthenticator.class);
+        register(OAuth2Authenticator.XOAUTH2, OAuth2Authenticator.class, false);
     }
 
     public Authenticator newAuthenticator(MailConfig config, String password)

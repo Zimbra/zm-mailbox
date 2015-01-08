@@ -24,6 +24,7 @@ import java.util.Map;
 import javax.security.auth.login.LoginException;
 
 import com.zimbra.common.account.ZAttrProvisioning;
+import com.zimbra.common.account.ZAttrProvisioning.DataSourceAuthMechanism;
 import com.zimbra.common.net.SocketFactories;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
@@ -156,7 +157,11 @@ final class ConnectionManager {
             ic.connect();
             try {
                 if(config.getMechanism() != null) {
-                    auth = AuthenticatorFactory.getDefault().newAuthenticator(config, ds.getDecryptedPassword());
+                    if (DataSourceAuthMechanism.XOAUTH2.name().equals(config.getMechanism())) {
+                        auth = AuthenticatorFactory.getDefault().newAuthenticator(config, ds.getOAuthToken());
+                    } else {
+                        auth = AuthenticatorFactory.getDefault().newAuthenticator(config, ds.getDecryptedPassword());
+                    }
                 }
                 if (auth == null) {
                     ic.login(ds.getDecryptedPassword());
