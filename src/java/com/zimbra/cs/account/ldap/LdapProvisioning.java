@@ -19,6 +19,7 @@ package com.zimbra.cs.account.ldap;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -207,6 +208,7 @@ import com.zimbra.soap.admin.type.GranteeSelector.GranteeBy;
 import com.zimbra.soap.type.AutoProvPrincipalBy;
 import com.zimbra.soap.type.GalSearchType;
 import com.zimbra.soap.type.TargetBy;
+import org.apache.commons.codec.binary.Hex;
 
 
 /**
@@ -3219,6 +3221,37 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         if (domainChanged) {
             PermissionCache.invalidateCache(renamedAcct);
         }
+    }
+
+    @Override
+    public Domain getDefaultZMGDomain() throws ServiceException {
+        String domainId = getConfig().getMobileGatewayDefaultAppAccountDomainId();
+        return domainId == null ? null : getDomainById(domainId);
+    }
+
+    @Override
+    public Account createZMGAppAccount(String accountId, String appCredsDigest) throws ServiceException {
+        Domain domain = getDefaultZMGDomain();
+        if (domain == null) {
+            ZimbraLog.account.error("zimbraMobileGatewayDefaultAppAccountDomainId has not been configured. It is " +
+                    "required for enabling Mobile Gateway features.");
+            throw ServiceException.FAILURE("Missing server configuration", null);
+        }
+
+        Map<String, Object> attrs = new HashMap<String, Object>();
+        attrs.put(Provisioning.A_zimbraIsMobileGatewayAppAccount, ProvisioningConstants.TRUE);
+        attrs.put(Provisioning.A_zimbraId, accountId);
+        attrs.put(Provisioning.A_zimbraForeignPrincipal, "zmgappcreds:" + appCredsDigest);
+        attrs.put(Provisioning.A_zimbraHideInGal, ProvisioningConstants.TRUE);
+        attrs.put(Provisioning.A_zimbraMailStatus, Provisioning.MailStatus.disabled.toString());
+        attrs.put(Provisioning.A_zimbraMailHost, getLocalServer().getServiceHostname());
+
+        SecureRandom random = new SecureRandom();
+        byte[] keyBytes = new byte[10];
+        random.nextBytes(keyBytes);
+        String dummyEmailAddr = String.valueOf(Hex.encodeHex(keyBytes)) + "@" + domain.getName();
+
+        return createAccount(dummyEmailAddr, null, attrs);
     }
 
     @Override

@@ -63,6 +63,7 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
     private static final String C_TYPE = "type";
     private static final String C_TYPE_ZIMBRA_USER = "zimbra";
     private static final String C_TYPE_EXTERNAL_USER = "external";
+    private static final String C_TYPE_ZMG_APP = "zmgapp";
     private static final String C_EXTERNAL_USER_EMAIL = "email";
     private static final String C_DIGEST = "digest";
     private static final String C_VALIDITY_VALUE  = "vv";
@@ -288,14 +289,16 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
         register();
     }
 
-
-
     public ZimbraAuthToken(String acctId, String externalEmail, String pass, String digest, long expires)  {
+        this(acctId, false, externalEmail, pass, digest, expires);
+    }
+
+    public ZimbraAuthToken(String acctId, boolean zmgApp, String externalEmail, String pass, String digest, long expires)  {
         accountId = acctId;
         this.expires = expires;
-        externalUserEmail = externalEmail == null ? "public" : externalEmail;
+        externalUserEmail = externalEmail == null && !zmgApp ? "public" : externalEmail;
         this.digest = digest != null ? digest : generateDigest(externalEmail, pass);
-        type = C_TYPE_EXTERNAL_USER;
+        this.type = zmgApp ? C_TYPE_ZMG_APP : C_TYPE_EXTERNAL_USER;
         tokenID = new Random().nextInt(Integer.MAX_VALUE-1) + 1;
         try {
             Account acct = Provisioning.getInstance().getAccountById(accountId);
@@ -352,7 +355,9 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
 
     @Override
     public boolean isZimbraUser() {
-        return type == null || type.compareTo(C_TYPE_ZIMBRA_USER) == 0;
+        return type == null || C_TYPE_ZIMBRA_USER.equals(type) || C_TYPE_ZMG_APP.equals(type);
+        // C_TYPE_ZMG_APP type indicates the bootstrap auth token issued for ZMG app. Technically
+        // that too represents a Zimbra account/user
     }
 
     @Override
@@ -377,17 +382,18 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
 
 
     private void register() {
+        if (!isZimbraUser() || isZMGAppBootstrap()) {
+            return;
+        }
         try {
             Account acct = Provisioning.getInstance().get(AccountBy.id, accountId);
-            if(!type.equalsIgnoreCase(C_TYPE_EXTERNAL_USER)) {
-                if (Provisioning.getInstance().getLocalServer().getLowestSupportedAuthVersion() > 1) {
-                    try {
-                        acct.cleanExpiredTokens(); //house keeping. If we are issuing a new token, clean up old ones.
-                    } catch (ServiceException e) {
-                        LOG.error("unable to de-register auth token", e);
-                    }
-                    acct.addAuthTokens(String.format("%d|%d|%s", tokenID, this.expires, server_version));
+            if (Provisioning.getInstance().getLocalServer().getLowestSupportedAuthVersion() > 1) {
+                try {
+                    acct.cleanExpiredTokens(); //house keeping. If we are issuing a new token, clean up old ones.
+                } catch (ServiceException e) {
+                    LOG.error("unable to de-register auth token", e);
                 }
+                acct.addAuthTokens(String.format("%d|%d|%s", tokenID, this.expires, server_version));
             }
         } catch (ServiceException e) {
             LOG.error("unable to register auth token", e);
@@ -497,7 +503,7 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
 
     @Override
     public boolean isRegistered() {
-        if (type.equalsIgnoreCase(C_TYPE_EXTERNAL_USER)) {
+        if (!isZimbraUser() || isZMGAppBootstrap()) {
             return true;
         }
         try {
@@ -632,10 +638,14 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
      * same as of authtoken from which it is cloned.
      * Cached encoded string is also reset as the due to change in TokenID.
      */
-    public void resetTokenId(){
+    public void resetTokenId() {
          tokenID = new Random().nextInt(Integer.MAX_VALUE-1) + 1;
          encoded = null;
          this.register();
+    }
+
+    public boolean isZMGAppBootstrap() {
+        return C_TYPE_ZMG_APP.equals(type);
     }
 
 

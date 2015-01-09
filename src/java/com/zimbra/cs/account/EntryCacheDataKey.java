@@ -59,6 +59,7 @@ public enum EntryCacheDataKey {
     DOMAIN_FOREIGN_NAME_HANDLERS,
     DOMAIN_GROUP_CACHE_FULL_HAD_BEEN_WARNED,
     DOMAIN_AUTO_PROVISION_DATA,
+    DOMAIN_DEFAULT_COS,
 
     /*
      * server

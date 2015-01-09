@@ -614,6 +614,10 @@ public abstract class AuthProvider {
         String acctId = at.getAccountId();
         Account acct = prov.get(AccountBy.id, acctId, at);
 
+        if (acct == null && at.isZMGAppBootstrap()) {
+            return null;
+        }
+
         if (acct == null) {
             throw ServiceException.AUTH_EXPIRED("account " + acctId + " not found");
         }

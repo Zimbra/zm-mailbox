@@ -27,6 +27,8 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.cs.service.account.zmg.BootstrapMobileGatewayApp;
+import com.zimbra.cs.service.account.zmg.RenewMobileGatewayAppToken;
 import com.zimbra.soap.DocumentDispatcher;
 import com.zimbra.soap.DocumentService;
 import com.zimbra.common.soap.Element;
@@ -102,7 +104,11 @@ public class AccountService implements DocumentService {
         dispatcher.registerHandler(AccountConstants.GET_RIGHTS_REQUEST, new GetRights());
         dispatcher.registerHandler(AccountConstants.GRANT_RIGHTS_REQUEST, new GrantRights());
         dispatcher.registerHandler(AccountConstants.REVOKE_RIGHTS_REQUEST, new RevokeRights());
-        
+
+        // mobile gateway
+        dispatcher.registerHandler(AccountConstants.BOOTSTRAP_MOBILE_GATEWAY_APP_REQUEST, new BootstrapMobileGatewayApp());
+        dispatcher.registerHandler(AccountConstants.RENEW_MOBILE_GATEWAY_APP_TOKEN_REQUEST, new RenewMobileGatewayAppToken());
+
         // misc
         dispatcher.registerHandler(AccountConstants.GET_VERSION_INFO_REQUEST, new GetVersionInfo());
     }

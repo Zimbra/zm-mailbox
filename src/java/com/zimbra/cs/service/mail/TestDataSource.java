@@ -47,18 +47,34 @@ public class TestDataSource extends MailDocumentHandler {
         if (!canModifyOptions(zsc, account))
             throw ServiceException.PERM_DENIED("can not modify options");
 
-        Map<String, Object> testAttrs = new HashMap<String, Object>();
-        String testId = "TestId";
-        
         // Parse request
         Element eDataSource = CreateDataSource.getDataSourceElement(request);
         DataSourceType type = DataSourceType.fromString(eDataSource.getName());
+
+        String error = testDataSource(prov, account, eDataSource, type);
+
+        Element response = zsc.createElement(MailConstants.TEST_DATA_SOURCE_RESPONSE);
+        eDataSource = response.addElement(type.toString());
+        if (error == null) {
+            eDataSource.addAttribute(MailConstants.A_DS_SUCCESS, true);
+        } else {
+            eDataSource.addAttribute(MailConstants.A_DS_SUCCESS, false);
+            eDataSource.addAttribute(MailConstants.A_DS_ERROR, error);
+        }
+        
+        return response;
+    }
+
+    static String testDataSource(Provisioning prov, Account account, Element eDataSource, DataSourceType type)
+            throws ServiceException {
+        Map<String, Object> testAttrs = new HashMap<String, Object>();
+        String testId = "TestId";
 
         String id = eDataSource.getAttribute(MailConstants.A_ID, null);
         String password = null;
         if (id != null) {
             // Testing existing data source
-            DataSource dsOrig = prov.get(account, Key.DataSourceBy.id, id);
+            DataSource dsOrig = prov.get(account, DataSourceBy.id, id);
             Map<String, Object> origAttrs = dsOrig.getAttrs();
             for (String key : origAttrs.keySet()) {
                 if (key.equals(Provisioning.A_zimbraDataSourcePassword)) {
@@ -111,29 +127,20 @@ public class TestDataSource extends MailDocumentHandler {
             // the DataSource is saved.
             testAttrs.put(Provisioning.A_zimbraDataSourcePassword, DataSource.encryptData(testId, password));
         }
-        
+
         // import class
         value = eDataSource.getAttribute(MailConstants.A_DS_IMPORT_CLASS, DataSourceManager.getDefaultImportClass(type));
         if (value != null) {
         	testAttrs.put(Provisioning.A_zimbraDataSourceImportClassName, value);
         }
-        
+
         // Common optional attributes
         ModifyDataSource.processCommonOptionalAttrs(testAttrs, eDataSource);
-        
+
         // Perform test and assemble response
+
         DataSource ds = new DataSource(account, type, "Test", testId, testAttrs, null);
-        Element response = zsc.createElement(MailConstants.TEST_DATA_SOURCE_RESPONSE);
-        
-        /*
-        if (type == DataSource.Type.imap) {
-            eDataSource = response.addElement(MailConstants.E_DS_IMAP);
-        } else {
-            eDataSource = response.addElement(MailConstants.E_DS_POP3);
-        }
-        */
-        eDataSource = response.addElement(type.toString());
-        
+
         String error = null;
         try {
         	DataSourceManager.test(ds);
@@ -143,13 +150,6 @@ public class TestDataSource extends MailDocumentHandler {
         	if (error == null)
         		error = "datasource test failed";
         }
-        if (error == null) {
-            eDataSource.addAttribute(MailConstants.A_DS_SUCCESS, true);
-        } else {
-            eDataSource.addAttribute(MailConstants.A_DS_SUCCESS, false);
-            eDataSource.addAttribute(MailConstants.A_DS_ERROR, error);
-        }
-        
-        return response;
+        return error;
     }
 }
