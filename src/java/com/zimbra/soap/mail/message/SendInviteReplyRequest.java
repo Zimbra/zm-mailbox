@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -17,17 +17,17 @@
 
 package com.zimbra.soap.mail.message;
 
-import com.google.common.base.Objects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.google.common.base.Objects;
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.soap.mail.type.Msg;
 import com.zimbra.soap.mail.type.CalTZInfo;
 import com.zimbra.soap.mail.type.DtTimeInfo;
+import com.zimbra.soap.mail.type.Msg;
 import com.zimbra.soap.type.ZmBoolean;
 
 /**
@@ -64,8 +64,9 @@ public class SendInviteReplyRequest {
 
     /**
      * @zm-api-field-tag update-organizer
-     * @zm-api-field-description Update organizer. Set by default. if unset then only make the update locally.
-     * This parameter has no effect if an <b>&lt;m></b> element is present.
+     * @zm-api-field-description Update organizer. true by default. if false then only make the update locally.
+     * <br />Note that earlier documentation implied incorrectly that if this was false it would be ignored and treated
+     * as being true if an <b>&lt;m></b> element is present.
      */
     @XmlAttribute(name=MailConstants.A_CAL_UPDATE_ORGANIZER /* updateOrganizer */, required=false)
     private ZmBoolean updateOrganizer;
