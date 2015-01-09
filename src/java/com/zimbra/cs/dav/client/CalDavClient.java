@@ -29,9 +29,9 @@ import org.dom4j.Document;
 import org.dom4j.Element;
 import org.dom4j.QName;
 
+import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.cs.dav.DavContext.Depth;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
@@ -96,30 +96,39 @@ public class CalDavClient extends WebDavClient {
     }
     public void login(String defaultPrincipalUrl) throws IOException, DavException {
         String principalUrl = getCurrentUserPrincipal();
-        if (principalUrl == null)
+        if (principalUrl == null) {
             principalUrl = defaultPrincipalUrl;
+        }
         DavRequest propfind = DavRequest.PROPFIND(principalUrl);
         propfind.addRequestProp(DavElements.E_DISPLAYNAME);
         propfind.addRequestProp(DavElements.E_CALENDAR_HOME_SET);
         propfind.addRequestProp(DavElements.E_SCHEDULE_INBOX_URL);
         propfind.addRequestProp(DavElements.E_SCHEDULE_OUTBOX_URL);
         Collection<DavObject> response = sendMultiResponseRequest(propfind);
-        if (response.size() != 1)
-            throw new DavException("invalid response to propfind on principal url", null);
+        if (response.size() != 1) {
+            throw new DavException(
+                    String.format("invalid response to propfind on principal url '%s'", principalUrl), null);
+        }
         DavObject resp = response.iterator().next();
         mCalendarHomeSet = new HashSet<String>();
         Element homeSet = resp.getProperty(DavElements.E_CALENDAR_HOME_SET);
-        if (homeSet != null)
-            for (Object href : homeSet.elements(DavElements.E_HREF))
-                mCalendarHomeSet.add(((Element)href).getText());
-        if (mCalendarHomeSet.isEmpty())
+        if (homeSet != null) {
+            for (Object href : homeSet.elements(DavElements.E_HREF)) {
+                String hrefVal = ((Element)href).getText();
+                mCalendarHomeSet.add(hrefVal);
+            }
+        }
+        if (mCalendarHomeSet.isEmpty()) {
             throw new DavException("dav response from principal url does not contain calendar-home-set", null);
+        }
         Element elem = resp.getProperty(DavElements.E_SCHEDULE_INBOX_URL);
-        if (elem != null && elem.element(DavElements.E_HREF) != null)
+        if (elem != null && elem.element(DavElements.E_HREF) != null) {
             mScheduleInbox = elem.element(DavElements.E_HREF).getText();
+        }
         elem = resp.getProperty(DavElements.E_SCHEDULE_OUTBOX_URL);
-        if (elem != null && elem.element(DavElements.E_HREF) != null)
+        if (elem != null && elem.element(DavElements.E_HREF) != null) {
             mScheduleOutbox = elem.element(DavElements.E_HREF).getText();
+        }
     }
 
     public Collection<String> getCalendarHomeSet() {

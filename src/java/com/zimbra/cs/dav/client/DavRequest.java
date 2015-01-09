@@ -19,6 +19,8 @@ package com.zimbra.cs.dav.client;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 
 import org.apache.commons.httpclient.HttpMethod;
@@ -163,7 +165,16 @@ public class DavRequest {
     public HttpMethod getHttpMethod(String baseUrl) {
         String url = mRedirectUrl;
         if (url == null) {
-            url = baseUrl + mUri;
+            // Normally, mUri is a relative URL but sometimes it is a full URL.
+            // For instance iCloud currently specifies a full URL instead of a relative one for calendar-home-set
+            // in a PROPFIND result, even though it specifies relative ones for schedule-inbox-URL and
+            // schedule-outbox-URL in the same report.
+            try {
+                new URL(mUri);  // This will throw an exception when the URL is a relative one.
+                url = mUri;
+            } catch (MalformedURLException e) {
+                url = baseUrl + mUri;
+            }
         }
 
         if (mDoc == null)

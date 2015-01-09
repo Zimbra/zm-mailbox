@@ -41,6 +41,8 @@ import org.dom4j.DocumentException;
 import org.dom4j.Element;
 import org.dom4j.QName;
 
+import com.google.common.base.Strings;
+import com.google.common.net.HttpHeaders;
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.util.Pair;
@@ -175,19 +177,66 @@ public class WebDavClient {
         return method;
     }
 
-    protected HttpMethod execute(DavRequest req) throws IOException {
-        if (mDebugEnabled) {
-            ZimbraLog.dav.debug("Request payload: \n"+req.getRequestMessageString());
+    private void logRequestInfo(HttpMethod method, String body) throws IOException {
+        if (!mDebugEnabled) {
+            return;
         }
+        StringBuilder reqLog = new StringBuilder();
+        reqLog.append("WebDAV request:\n").append(method.getName()).append(" ").append(method.getURI().toString());
+        reqLog.append('\n');
+        Header headers[] = method.getRequestHeaders();
+        if (headers != null && headers.length > 0) {
+            for (Header hdr : headers) {
+                String hdrName = hdr.getName();
+                reqLog.append(hdrName).append('=');
+                if (hdrName.contains("Auth")  || (hdrName.contains(HttpHeaders.COOKIE))) {
+                    reqLog.append("*** REPLACED ***\n");
+                } else {
+                    reqLog.append(hdr.getValue()).append('\n');
+                }
+            }
+        }
+        if (Strings.isNullOrEmpty(body) || !ZimbraLog.dav.isTraceEnabled()) {
+            ZimbraLog.dav.debug(reqLog.toString());
+        } else {
+            ZimbraLog.dav.debug("%s\n%s", reqLog.toString(), body);
+        }
+    }
+
+    private void logResponseInfo(HttpMethod method) throws IOException {
+        if (!mDebugEnabled) {
+            return;
+        }
+        StringBuilder responseLog = new StringBuilder();
+        responseLog.append("WebDAV response:\n").append(method.getStatusLine()).append('\n');
+        Header headers[] = method.getResponseHeaders();
+        if (headers != null && headers.length > 0) {
+            for (Header hdr : headers) {
+                String hdrName = hdr.getName();
+                responseLog.append(hdrName).append('=');
+                if (hdrName.contains("Auth")  || (hdrName.contains(HttpHeaders.COOKIE))) {
+                    responseLog.append("*** REPLACED ***\n");
+                } else {
+                    responseLog.append(hdr.getValue()).append('\n');
+                }
+            }
+        }
+        if (method.getResponseBody() == null || !ZimbraLog.dav.isTraceEnabled()) {
+            ZimbraLog.dav.debug(responseLog.toString());
+        } else {
+            ZimbraLog.dav.debug("%s\n%s", responseLog.toString(), new String(method.getResponseBody(), "UTF-8"));
+        }
+    }
+
+    protected HttpMethod execute(DavRequest req) throws IOException {
         HttpMethod m = req.getHttpMethod(mBaseUrl);
         for (Pair<String,String> header : req.getRequestHeaders()) {
             m.addRequestHeader(header.getFirst(), header.getSecond());
         }
-        return executeMethod(m, req.getDepth());
+        return executeMethod(m, req.getDepth(), req.getRequestMessageString());
     }
-    protected HttpMethod executeMethod(HttpMethod m, Depth d) throws IOException {
-        ZimbraLog.dav.debug("WebDAV request (depth="+d+"): "+m.getPath());
 
+    protected HttpMethod executeMethod(HttpMethod m, Depth d, String bodyForLogging) throws IOException {
         HttpMethodParams p = m.getParams();
         if ( p != null )
             p.setCredentialCharset("UTF-8");
@@ -202,14 +251,21 @@ public class WebDavClient {
         case infinity:
             depth = "infinity";
             break;
+        case zero:
+            break;
+        default:
+            break;
         }
         m.setRequestHeader("Depth", depth);
+        logRequestInfo(m, bodyForLogging);
         HttpClientUtil.executeMethod(mClient, m);
-        if (mDebugEnabled && m.getResponseBody() != null) {
-            ZimbraLog.dav.debug("WebDAV response:\n"+new String(m.getResponseBody(), "UTF-8"));
-        }
+        logResponseInfo(m);
 
         return m;
+    }
+
+    protected HttpMethod executeMethod(HttpMethod m, Depth d) throws IOException {
+        return executeMethod(m, d, null);
     }
 
     public void setCredential(String user, String pass) {
