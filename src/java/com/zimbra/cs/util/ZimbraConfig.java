@@ -23,6 +23,7 @@ import java.net.URISyntaxException;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
+import org.springframework.context.annotation.Lazy;
 
 import redis.clients.jedis.JedisPool;
 
@@ -75,6 +76,7 @@ import com.zimbra.soap.SoapSessionFactory;
  */
 @Configuration
 @EnableAspectJAutoProxy
+@Lazy
 public class ZimbraConfig {
 
     @Bean(name="calendarCacheManager")

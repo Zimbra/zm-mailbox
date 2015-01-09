@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -32,17 +32,16 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
-import com.zimbra.common.util.Constants;
-import com.zimbra.common.util.ZimbraLog;
-
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.Constants;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.redolog.CommitId;
+import com.zimbra.cs.redolog.FileRedoLogManager;
+import com.zimbra.cs.redolog.FileRolloverManager;
 import com.zimbra.cs.redolog.RedoCommitCallback;
 import com.zimbra.cs.redolog.RedoConfig;
-import com.zimbra.cs.redolog.RedoLogManager;
-import com.zimbra.cs.redolog.RolloverManager;
 import com.zimbra.cs.redolog.op.CommitTxn;
 import com.zimbra.cs.redolog.op.RedoableOp;
 import com.zimbra.cs.util.Zimbra;
@@ -65,7 +64,7 @@ public class FileLogWriter implements LogWriter {
         }
     }
 
-    protected RedoLogManager mRedoLogMgr;
+    protected FileRedoLogManager mRedoLogMgr;
 
     // Synchronizes access to mRAF, mFileSize, mLogSeq, mFsyncSeq, mLogCount, and mFsyncCount.
     private final Object mLock = new Object();
@@ -97,7 +96,7 @@ public class FileLogWriter implements LogWriter {
 
     private CommitNotifyQueue mCommitNotifyQueue;
 
-    public FileLogWriter(RedoLogManager redoLogMgr,
+    public FileLogWriter(FileRedoLogManager redoLogMgr,
                          File logfile,
                          long fsyncIntervalMS) {
         mRedoLogMgr = redoLogMgr;
@@ -160,20 +159,6 @@ public class FileLogWriter implements LogWriter {
      */
     @Override public boolean exists() {
         return mFile.exists();
-    }
-
-    /* (non-Javadoc)
-     * @see com.zimbra.cs.redolog.LogWriter#getAbsolutePath()
-     */
-    @Override public String getAbsolutePath() {
-        return mFile.getAbsolutePath();
-    }
-
-    /* (non-Javadoc)
-     * @see com.zimbra.cs.redolog.LogWriter#renameTo()
-     */
-    @Override public boolean renameTo(File dest) {
-        return mFile.renameTo(dest);
     }
 
     /* (non-Javadoc)
@@ -250,10 +235,10 @@ public class FileLogWriter implements LogWriter {
     /**
      * Log the supplied bytes.  Depending on the value of synchronous argument
      * and the setting of fsync interval, this method can do one of 3 things:
-     * 
+     *
      * case 1: !synchronous
      * action: write() only; no flush/fsync
-     * 
+     *
      * case 2: synchronous && fsyncInterval > 0
      * action: write(), then wait() until notified by fsync thread
      * Current thread only calls write() on the RandomAccessFile, and blocks to
@@ -263,7 +248,7 @@ public class FileLogWriter implements LogWriter {
      * log items before each fsync, and results in greater throughput than
      * calling fsync after each log item because fsync to physical disk is
      * a high-latency operation.
-     * 
+     *
      * case 3: synchronous && fsyncInterval <= 0
      * action: write(), then fsync() in the current thread
      * Fsync is required, but the sleep interval for fsync thread is 0.  We
@@ -367,10 +352,11 @@ public class FileLogWriter implements LogWriter {
     }
 
     @SuppressWarnings("unchecked")
-    @Override public synchronized File rollover(LinkedHashMap /*<TxnId, RedoableOp>*/ activeOps)
+    @Override
+    public synchronized void rollover(LinkedHashMap /*<TxnId, RedoableOp>*/ activeOps)
     throws IOException {
-        RolloverManager romgr = mRedoLogMgr.getRolloverManager();
-
+        FileRolloverManager romgr = (FileRolloverManager) mRedoLogMgr.getRolloverManager();
+        //cast OK since file writer depends on file rollover...but could be cleaner code
         long lastSeq = getSequence();
 
         // Close current log, so it's impossible for its content to change.
@@ -378,7 +364,7 @@ public class FileLogWriter implements LogWriter {
         close();
 
         romgr.incrementSequence();
-        
+
         String currentPath = mFile.getAbsolutePath();
 
         // Open a temporary logger.
@@ -423,7 +409,7 @@ public class FileLogWriter implements LogWriter {
         open();
         noStat(false);
 
-        return rolloverFile;
+        return;
     }
 
     public synchronized void enableFsync() throws IOException {

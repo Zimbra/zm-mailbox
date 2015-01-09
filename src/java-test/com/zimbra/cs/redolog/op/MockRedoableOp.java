@@ -14,33 +14,27 @@
  * If not, see <http://www.gnu.org/licenses/>.
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.cs.redolog;
 
-import java.io.IOException;
+package com.zimbra.cs.redolog.op;
 
-public interface RolloverManager {
+import com.zimbra.cs.mailbox.Folder.FolderOptions;
 
-    /**
-     * Recovers from a previous process crash in the middle of
-     * RolloverManager.rollover().
-     */
-    public abstract void crashRecovery() throws IOException;
+/**
+ * Mock redo op for testing. Exposes serverId and other internals for testing purposes
+ *
+ */
+public class MockRedoableOp extends CreateFolder {
 
-    /**
-     * Get the current log sequence number
-     */
-    public abstract long getCurrentSequence();
+    public MockRedoableOp(int mailboxId, String name, int parentId,
+            FolderOptions fopt) {
+        super(mailboxId, name, parentId, fopt);
+    }
 
-    /**
-     * Initialize to a given sequence number
-     * @param seq
-     */
-    public abstract void initSequence(long seq);
+    public void setServerId(String serverId) {
+        this.serverId = serverId;
+    }
 
-    /**
-     * Increment the sequence number
-     * @return the new current number
-     */
-    public abstract long incrementSequence();
-
+    public static String getLocalServerId() {
+        return RedoableOp.LOCAL_SERVER_ID;
+    }
 }

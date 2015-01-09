@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -77,7 +77,7 @@ extends TestCase {
         Map<Integer, Integer> idMap = new HashMap<Integer, Integer>();
         Mailbox destMbox = MailboxManager.getInstance().getMailboxByAccount(destAccount);
         idMap.put(sourceMbox.getId(), destMbox.getId());
-        player.scanLog(getRedoLogFile(), true, idMap, startTime, Long.MAX_VALUE);
+        player.scanLog(getRedoLogFile(), true, idMap, startTime, Long.MAX_VALUE, null);
 
         // Get destination message and compare content.
         List<Integer> destIds = TestUtil.search(destMbox, "in:inbox " + NAME_PREFIX, MailItem.Type.MESSAGE);

@@ -34,8 +34,11 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.redolog.RedoCommitCallback;
@@ -61,6 +64,20 @@ public abstract class RedoableOp {
     // but is needed by all mailboxes
     public static final int MAILBOX_ID_ALL = -1;
 
+    @VisibleForTesting
+    static String LOCAL_SERVER_ID;
+    //this is visible because Prov.getLocalServer() can change within a JVM run for unit tests, but not expected in normal operation
+    //therefore tests need a way to make sure they're using the correct local server ID
+
+    static {
+        try {
+            LOCAL_SERVER_ID = Provisioning.getInstance().getLocalServer().getId();
+        } catch (ServiceException e) {
+            LOCAL_SERVER_ID = "unknown";
+            mLog.error("could not determine local server id, redo ops marked incorrectly",e );
+        }
+    }
+
     protected MailboxOperation mOperation;
     private Version mVersion;
     private TransactionId mTxnId;
@@ -69,6 +86,7 @@ public abstract class RedoableOp {
     private int mChangeId = -1;
     private int mChangeConstraint;
     private int mMailboxId;
+    String serverId;
     private RedoLogManager mRedoLogMgr;
     private boolean mUnloggedReplay;  // true if redo of this op is not redo-logged
     RedoCommitCallback mCommitCallback;
@@ -76,6 +94,7 @@ public abstract class RedoableOp {
     protected RedoableOp(MailboxOperation op) {
         mOperation = op;
         mRedoLogMgr = RedoLogProvider.getInstance().getRedoLogManager();
+        serverId = LOCAL_SERVER_ID;
         mVersion = new Version();
         mTxnId = null;
         mActive = false;
@@ -240,6 +259,10 @@ public abstract class RedoableOp {
         mMailboxId = mboxId;
     }
 
+    public String getServerId() {
+        return serverId;
+    }
+
     protected void serializeHeader(RedoLogOutput out) throws IOException {
         out.write(REDO_MAGIC.getBytes());
         mVersion.serialize(out);
@@ -251,6 +274,7 @@ public abstract class RedoableOp {
         mTxnId.serialize(out);
         // still writing and reading long mailbox IDs for backwards compatibility, even though they're ints again
         out.writeLong(mMailboxId);
+        out.writeUTF(serverId);
     }
 
     private void deserialize(RedoLogInput in) throws IOException {
@@ -263,10 +287,14 @@ public abstract class RedoableOp {
         mTxnId = new TransactionId();
         mTxnId.deserialize(in);
         // still writing and reading long mailbox IDs for backwards compatibility, even though they're ints again
-        if (getVersion().atLeast(1, 26)) {
+        if (getVersion().atLeast(Version.VERSION_ALTER_ITEM_ID_INT)) {
             mMailboxId = (int) in.readLong();
         } else {
             mMailboxId = in.readInt();
+        }
+
+        if (getVersion().atLeast(Version.VERSION_ADD_SERVER_ID)) {
+            serverId = in.readUTF();
         }
 
         // Deserialize the subclass.
@@ -285,10 +313,13 @@ public abstract class RedoableOp {
         String data = getPrintableData();
         if (mMailboxId != UNKNOWN_ID) {
             sb.append(", mailbox=").append(mMailboxId);
-            if (data != null)
-                sb.append(", ").append(data);
-        } else if (data != null)
+        }
+        if (serverId != null) {
+            sb.append(", serverId=").append(serverId);
+        }
+        if (data != null) {
             sb.append(", ").append(data);
+        }
         return sb.toString();
     }
 
@@ -345,9 +376,9 @@ public abstract class RedoableOp {
         byte[] magicBuf = new byte[REDO_MAGIC.length()];
         in.readFully(magicBuf, 0, magicBuf.length);
         String magic = new String(magicBuf);
-        if (magic.compareTo(REDO_MAGIC) != 0)
+        if (magic.compareTo(REDO_MAGIC) != 0) {
             throw new IOException("Missing redo item magic marker");
-
+        }
         Version ver = new Version();
         ver.deserialize(in);
         if (ver.tooHigh())

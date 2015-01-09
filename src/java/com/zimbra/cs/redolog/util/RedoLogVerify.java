@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -42,13 +42,16 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
+import com.google.common.collect.Sets;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.CliUtil;
-import com.zimbra.cs.redolog.RolloverManager;
+import com.zimbra.cs.redolog.FileRolloverManager;
 import com.zimbra.cs.redolog.logger.FileHeader;
 import com.zimbra.cs.redolog.logger.FileLogReader;
 import com.zimbra.cs.redolog.op.RedoableOp;
 import com.zimbra.cs.redolog.op.StoreIncomingBlob;
+import com.zimbra.cs.util.Zimbra;
 
 /**
  * @author jhahm
@@ -62,6 +65,9 @@ public class RedoLogVerify {
     private static final String OPT_SHOW_BLOB = "show-blob";
     private static final String OPT_NO_OFFSET = "no-offset";
     private static final String OPT_MAILBOX_IDS = "m";
+    private static final String OPT_SERVER_IDS = "s";
+
+    static final String HEADER_MARKER = "------";
 
     static {
         sOptions.addOption(OPT_HELP, "help", false, "show this output");
@@ -73,6 +79,10 @@ public class RedoLogVerify {
                 "one or more mailbox ids separated by comma or white space.  The entire list must be " +
                 "quoted if using space as separator.  If this option is given, only redo ops for the " +
                 "specified mailboxes are dumped.  Omit this option to dump redo ops for all mailboxes.");
+        sOptions.addOption(null, OPT_SERVER_IDS, true,
+                "one or more server ids separated by comma or white space.  The entire list must be " +
+                "quoted if using space as separator.  If this option is given, only redo ops for the " +
+                "specified servers are dumped.  Omit this option to dump redo ops for all servers.");
         sOptions.addOption(null, OPT_SHOW_BLOB, false,
                 "show blob content.  Item's blob is printed, surrounded by <START OF BLOB> and <END OF BLOB> " +
                 "markers.  The last newline before end marker is not part of the blob.");
@@ -102,8 +112,9 @@ public class RedoLogVerify {
         return cl;
     }
 
-    private static class Params {
+   static class Params {
         public Set<Integer> mboxIds = new HashSet<Integer>();
+        public Set<String> serverIds = new HashSet<String>();
         public boolean quiet = false;
         public boolean hideOffset = false;
         public boolean showBlob = false;
@@ -140,6 +151,10 @@ public class RedoLogVerify {
             }
         }
 
+        String serverIdList = cl.getOptionValue(OPT_SERVER_IDS);
+        if (serverIdList != null) {
+            params.serverIds = Sets.newHashSet(serverIdList.split("[, ]+"));
+        }
         return params;
     }
 
@@ -169,12 +184,13 @@ public class RedoLogVerify {
         if (!mParams.quiet) {
             FileHeader header = logReader.getHeader();
             mOut.println("HEADER");
-            mOut.println("------");
+            mOut.println(HEADER_MARKER);
             mOut.print(header);
-            mOut.println("------");
+            mOut.println(HEADER_MARKER);
         }
 
         boolean hasMailboxIdsFilter = !mParams.mboxIds.isEmpty();
+        boolean hasServerIdsFilter = !mParams.serverIds.isEmpty();
 
         RedoableOp op = null;
         long lastPosition = 0;
@@ -201,6 +217,12 @@ public class RedoLogVerify {
                         // If list==null, it's a store incoming blob op targeted at unknown set of mailboxes.
                         // It applies to our filtered mailboxes.
                     } else if (!mParams.mboxIds.contains(mboxId)) {
+                        continue;
+                    }
+                }
+                if (hasServerIdsFilter) {
+                    String serverId = op.getServerId();
+                    if (!mParams.serverIds.contains(serverId)) {
                         continue;
                     }
                 }
@@ -259,7 +281,7 @@ public class RedoLogVerify {
                 if (raf != null)
                     raf.close();
             }
-            
+
 
             throw e;
         } finally {
@@ -319,7 +341,7 @@ public class RedoLogVerify {
 
         File[] files = new File[fileList.size()];
         fileList.toArray(files);
-        RolloverManager.sortArchiveLogFiles(files);
+        FileRolloverManager.sortArchiveLogFiles(files);
         return verifyFiles(files);
     }
 
@@ -348,7 +370,7 @@ public class RedoLogVerify {
             out.printf("%08x: ", offsetLineStart);
             for (int i = 0; i < bytesPerLine; i++) {
                 if (i < bytes)
-                    out.printf("%02x", ((int) data[offset + i]) & 0x000000ff);
+                    out.printf("%02x", (data[offset + i]) & 0x000000ff);
                 else
                     out.print("  ");
                 out.print(" ");
@@ -358,7 +380,7 @@ public class RedoLogVerify {
             out.print(" ");
             for (int i = 0; i < bytesPerLine; i++) {
                 if (i < bytes) {
-                    int ch = ((int) data[offset + i]) & 0x000000ff;
+                    int ch = (data[offset + i]) & 0x000000ff;
                     if (ch >= 33 && ch <= 126)  // printable ASCII range
                         out.printf("%c", (char) ch);
                     else
@@ -375,9 +397,10 @@ public class RedoLogVerify {
             offset += bytes;
         }
     }
-    
-    public static void main(String[] cmdlineargs) {
+
+    public static void main(String[] cmdlineargs) throws ServiceException {
         CliUtil.toolSetup();
+        Zimbra.startupCLI();
         CommandLine cl = parseArgs(cmdlineargs);
         Params params = initParams(cl);
         if (params.help)
@@ -400,7 +423,7 @@ public class RedoLogVerify {
                 good = verify.verifyFile(f);
             allGood = allGood && good;
         }
-
+        Zimbra.shutdown();
         if (!allGood) {
             verify.listErrors();
             System.exit(1);

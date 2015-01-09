@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -25,8 +25,8 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -66,7 +66,7 @@ public class RedoPlayer {
         this(writable, false, false, false, false);
     }
 
-    public RedoPlayer(boolean writable, boolean unloggedReplay, boolean ignoreReplayErrors, boolean skipDeleteOps, 
+    public RedoPlayer(boolean writable, boolean unloggedReplay, boolean ignoreReplayErrors, boolean skipDeleteOps,
         boolean handleMailboxConflict) {
         mOpsMap = new LinkedHashMap<TransactionId, RedoableOp>(INITIAL_MAP_SIZE);
         mWritable = writable;
@@ -81,9 +81,9 @@ public class RedoPlayer {
     }
 
     public void scanLog(File logfile, boolean redoCommitted, Map<Integer, Integer> mboxIDsMap,
-            long startTime, long endTime)
+            long startTime, long endTime, Set<String> serverIds)
     throws IOException, ServiceException {
-        scanLog(logfile, redoCommitted, mboxIDsMap, startTime, endTime, Long.MAX_VALUE);
+        scanLog(logfile, redoCommitted, mboxIDsMap, startTime, endTime, Long.MAX_VALUE, serverIds);
     }
 
     /**
@@ -112,7 +112,7 @@ public class RedoPlayer {
      * @throws IOException
      */
     private void scanLog(File logfile, boolean redoCommitted, Map<Integer, Integer> mboxIDsMap,
-            long startTime, long endTime, long ignoreCommitsAtOrAfter)
+            long startTime, long endTime, long ignoreCommitsAtOrAfter, Set<String> serverIds)
     throws IOException, ServiceException {
         FileLogReader logReader = new FileLogReader(logfile, mWritable);
         logReader.open();
@@ -134,7 +134,7 @@ public class RedoPlayer {
                 if (ZimbraLog.redolog.isDebugEnabled())
                     ZimbraLog.redolog.debug("Read: " + op);
 
-                processOp(op, redoCommitted, mboxIDsMap, startTime, endTime, ignoreCommitsAtOrAfter);
+                processOp(op, redoCommitted, mboxIDsMap, startTime, endTime, ignoreCommitsAtOrAfter, serverIds);
             }
         } catch (IOException e) {
             // The IOException could be a real I/O problem or it could mean
@@ -176,9 +176,14 @@ public class RedoPlayer {
             Map<Integer, Integer> mboxIDsMap,
             long startTime,
             long endTime,
-            long ignoreCommitsAtOrAfter)
+            long ignoreCommitsAtOrAfter,
+            Set<String> serverIds)
     throws ServiceException {
 
+        if (serverIds != null && (op.getServerId() == null || !serverIds.contains(op.getServerId()))) {
+            //check servers if necessary; do nothing if not in provided list
+            return;
+        }
         if (op.isStartMarker()) {
             synchronized (mOpsMapGuard) {
                 mOpsMap.put(op.getTransactionId(), op);
@@ -252,12 +257,12 @@ public class RedoPlayer {
                     // corresponding op from map, and optionally execute the committed op.
                     RedoableOp prepareOp;
                     synchronized (mOpsMapGuard) {
-                        prepareOp = (RedoableOp) mOpsMap.remove(op.getTransactionId());
+                        prepareOp = mOpsMap.remove(op.getTransactionId());
                         if (prepareOp == null) {
                             mHasOrphanOps = true;
                             ZimbraLog.redolog.error("Commit/abort record encountered before corresponding change record (" + op + ")");
                             TransactionId tid = op.getTransactionId();
-                            RedoableOp x = (RedoableOp) mOrphanOps.get(tid);
+                            RedoableOp x = mOrphanOps.get(tid);
                             if (x != null)
                                 ZimbraLog.redolog.error("Op [" + op + "] is already in orphans map: value=" + x);
                             mOrphanOps.put(tid, op);
@@ -356,11 +361,11 @@ public class RedoPlayer {
             op.redo();
         }
     }
-    
+
     protected void redoOpWithMboxConflict(RedoableOp op) throws Exception {
         try {
             Integer newId = mailboxConflicts.get(op.getMailboxId());
-            
+
             if (newId != null) {
                 ZimbraLog.redolog.warn("mailbox conflict, mapping old ID %d to %d", op.getMailboxId(), newId);
                 op.setMailboxId(newId);
@@ -382,7 +387,7 @@ public class RedoPlayer {
      * @throws Exception
      */
     public int runCrashRecovery(RedoLogManager redoLogMgr,
-            List<RedoableOp> postStartupRecoveryOps)
+            List<RedoableOp> postStartupRecoveryOps, Set<String> serverIds)
     throws Exception {
         File redoLog = redoLogMgr.getLogFile();
         if (!redoLog.exists())
@@ -406,7 +411,7 @@ public class RedoPlayer {
         // so we don't accidentally undo the truncation on the next write to the log.
         LogWriter logWriter = redoLogMgr.getLogWriter();
         logWriter.close();
-        scanLog(redoLog, false, null, Long.MIN_VALUE, Long.MAX_VALUE, lookBackTstamp);
+        scanLog(redoLog, false, null, Long.MIN_VALUE, Long.MAX_VALUE, lookBackTstamp, serverIds);
         logWriter.open();
 
         int numOps;

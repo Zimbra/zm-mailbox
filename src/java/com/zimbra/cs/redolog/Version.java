@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -30,7 +30,10 @@ public class Version {
 
     // These should be incremented with changes to serialization format.
     private static final short CURRENT_MAJOR = 1;   // range: 0 - Short.MAX_VALUE
-    private static final short CURRENT_MINOR = 42;  // range: 0 - Short.MAX_VALUE
+    private static final short CURRENT_MINOR = 43;  // range: 0 - Short.MAX_VALUE
+
+    public static Version VERSION_ADD_SERVER_ID = new Version(1, 43);
+    public static Version VERSION_ALTER_ITEM_ID_INT = new Version(1, 26);
 
     /**
      * Returns a version object with latest major and minor version

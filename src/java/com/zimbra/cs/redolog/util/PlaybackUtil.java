@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2008, 2009, 2010, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -29,6 +29,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -41,6 +42,7 @@ import org.apache.log4j.Appender;
 import org.apache.log4j.ConsoleAppender;
 import org.apache.log4j.Logger;
 
+import com.google.common.collect.Sets;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.CliUtil;
@@ -48,8 +50,8 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.db.DbPool;
+import com.zimbra.cs.redolog.FileRolloverManager;
 import com.zimbra.cs.redolog.RedoPlayer;
-import com.zimbra.cs.redolog.RolloverManager;
 import com.zimbra.cs.redolog.logger.FileHeader;
 import com.zimbra.cs.redolog.logger.FileLogReader;
 import com.zimbra.cs.util.Config;
@@ -119,6 +121,7 @@ public class PlaybackUtil {
     private static final String OPT_THREADS = "threads";
     private static final String OPT_QUEUE_CAPACITY = "queueCapacity";
     private static final String OPT_HELP = "h";
+    private static final String OPT_SERVER_IDS = "s";
 
     private static Options sOptions = new Options();
 
@@ -130,6 +133,7 @@ public class PlaybackUtil {
         sOptions.addOption(null, OPT_MAILBOX_ID, true, "Replay for this mailbox only");
         sOptions.addOption(null, OPT_THREADS, true, "Number of parallel redo threads; default=50");
         sOptions.addOption(null, OPT_QUEUE_CAPACITY, true, "Queue capacity per player thread; default=100");
+        sOptions.addOption(null, OPT_SERVER_IDS, true, "Replay for this comma-separated list of servers only");
 
         Option logfilesOpt = new Option(null, OPT_LOGFILES, true, "Replay these logfiles, in order");
         logfilesOpt.setArgs(Option.UNLIMITED_VALUES);
@@ -187,6 +191,7 @@ public class PlaybackUtil {
         public File[] logfiles;
         public boolean stopOnError = false;
         public boolean help = false;
+        public Set<String> serverIds = null;
     }
 
     private static Params initParams(CommandLine cl) throws ServiceException, IOException {
@@ -253,6 +258,11 @@ public class PlaybackUtil {
             System.out.println("Replaying operations for all mailboxes");
         }
 
+        String serverIdList = cl.getOptionValue(OPT_SERVER_IDS);
+        if (serverIdList != null) {
+            params.serverIds = Sets.newHashSet(serverIdList.split("[, ]+"));
+        }
+
         if (cl.hasOption(OPT_THREADS))
             params.threads = Integer.parseInt(cl.getOptionValue(OPT_THREADS));
         System.out.printf("Using %d redo player threads\n", params.threads);
@@ -285,7 +295,7 @@ public class PlaybackUtil {
 
             File archiveDir = new File(archiveDirPath);
             if (archiveDir.exists()) {
-                File[] archiveLogs = RolloverManager.getArchiveLogs(archiveDir, params.fromSeq, params.toSeq);
+                File[] archiveLogs = FileRolloverManager.getArchiveLogs(archiveDir, params.fromSeq, params.toSeq);
                 for (File f : archiveLogs) {
                     logList.add(f);
                 }
@@ -341,7 +351,7 @@ public class PlaybackUtil {
                         mboxIdMap = new HashMap<Integer, Integer>(1);
                         mboxIdMap.put(mParams.mboxId, mParams.mboxId);
                     }
-                    mPlayer.scanLog(redolog, true, mboxIdMap, mParams.fromTime, until);
+                    mPlayer.scanLog(redolog, true, mboxIdMap, mParams.fromTime, until, mParams.serverIds);
                 } catch (OutOfMemoryError oome) {
                     Zimbra.halt("OutOfMemoryError while replaying redolog: " + oome.getMessage(), oome);
                 } catch (Throwable t) {

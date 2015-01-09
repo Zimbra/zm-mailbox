@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2009, 2010, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -23,7 +23,6 @@
  */
 package com.zimbra.cs.redolog.logger;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.LinkedHashMap;
@@ -63,7 +62,7 @@ public interface LogWriter {
 	 * @throws IOException
 	 */
 	public void log(RedoableOp op, InputStream data, boolean synchronous) throws IOException;
-    
+
     /**
      * Make sure all writes are committed to disk, or whatever the log
      * destination medium is.  This is mainly useful only when we need to
@@ -106,19 +105,6 @@ public interface LogWriter {
 	public boolean exists();
 
 	/**
-	 * Returns the absolute pathname for the underlying logfile.
-	 * @return
-	 */
-	public String getAbsolutePath();
-
-	/**
-	 * Renames the underlying logfile.
-	 * @param dest
-	 * @return true if and only if the renaming succeeded; false otherwise
-	 */
-	public boolean renameTo(File dest);
-
-	/**
 	 * Deletes the underlying logfile.  The logger should be closed first
 	 * if open.
 	 * @return true if and only if the deletion succeeded; false otherwise
@@ -129,10 +115,9 @@ public interface LogWriter {
      * Performs log rollover.
      * @param activeOps map of pending transactions; these should be logged
      *                  at the beginning of new log file
-     * @return java.io.File object for rolled over logfile
      * @throws IOException
      */
-    public File rollover(LinkedHashMap /*<TxnId, RedoableOp>*/ activeOps)
+    public void rollover(LinkedHashMap /*<TxnId, RedoableOp>*/ activeOps)
     throws IOException;
 
     /**

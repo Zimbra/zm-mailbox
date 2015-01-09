@@ -135,6 +135,7 @@ public final class MailboxTestUtil {
         LC.zimbra_class_soapsessionfactory.setDefault(DefaultSoapSessionFactory.class.getName());
         setupEmbeddedSolrDirs(false);
         Zimbra.startupTest(configClass);
+        MailboxManager.setInstance(Zimbra.getAppContext().getBean(MailboxManager.class));
         StoreManager.getInstance().startup();
     }
 

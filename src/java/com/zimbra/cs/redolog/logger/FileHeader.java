@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2009, 2010, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -41,7 +41,7 @@ import com.zimbra.cs.redolog.Version;
  *
  * Header for a redolog file.  Redolog header is exactly 512 bytes long.
  * The fields are:
- * 
+ *
  *   MAGIC          7 bytes containing "ZM_REDO"
  *   open           1 byte (1 or 0)
  *                  0 means file was closed normally
@@ -261,7 +261,7 @@ public class FileHeader {
             mFileSize = in.readLong();
             mSeq = in.readLong();
 
-            int serverIdLen = (int) in.readByte();
+            int serverIdLen = in.readByte();
             if (serverIdLen > SERVER_ID_FIELD_LEN)
                 throw new IOException("ServerId too long (" + serverIdLen +
                                       " bytes) in redolog header");
@@ -290,6 +290,7 @@ public class FileHeader {
 
     private static String DATE_FORMAT = "EEE, yyyy/MM/dd HH:mm:ss.SSS z";
 
+    @Override
     public String toString() {
         SimpleDateFormat fmt = new SimpleDateFormat(DATE_FORMAT);
         StringBuilder sb = new StringBuilder(100);
