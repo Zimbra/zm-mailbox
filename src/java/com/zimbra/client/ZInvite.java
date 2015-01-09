@@ -94,7 +94,9 @@ public class ZInvite implements ToZJSONObject {
     }
 
     public boolean getHasAcceptableComponent(){
-        if (ListUtil.isEmpty(mComponents)) return false;
+        if (ListUtil.isEmpty(mComponents)) {
+            return false;
+        }
         for (int i = 0 ; i < mComponents.size(); i++) {
             if (mComponents.get(i) != null && !mComponents.get(i).getStatus().isCancelled()) {
                 return true;
@@ -112,10 +114,12 @@ public class ZInvite implements ToZJSONObject {
 
     public Element toElement(Element parent) {
         Element invEl = parent.addElement(MailConstants.E_INVITE);
-        for (ZTimeZone tz : mTimeZones)
+        for (ZTimeZone tz : mTimeZones) {
             tz.toElement(invEl);
-        for (ZComponent comp : mComponents)
+        }
+        for (ZComponent comp : mComponents) {
             comp.toElement(invEl);
+        }
         return invEl;
     }
 
@@ -241,8 +245,9 @@ public class ZInvite implements ToZJSONObject {
                 mContacts = contacts;
             }
             Element geoElem = e.getOptionalElement(MailConstants.E_CAL_GEO);
-            if (geoElem != null)
+            if (geoElem != null) {
                 mGeo = Geo.parse(geoElem);
+            }
             mUrl = e.getAttribute(MailConstants.A_CAL_URL, null);
 
             mIsException = e.getAttributeBool(MailConstants.A_CAL_IS_EXCEPTION, false);
@@ -262,18 +267,22 @@ public class ZInvite implements ToZJSONObject {
                 }
             }
             Element startEl = e.getOptionalElement(MailConstants.E_CAL_START_TIME);
-            if (startEl != null)
+            if (startEl != null) {
                 mStart = new ZDateTime(startEl);
+            }
 
             Element endEl = e.getOptionalElement(MailConstants.E_CAL_END_TIME);
-            if (endEl != null)
+            if (endEl != null) {
                 mEnd = new ZDateTime(endEl);
+            }
             Element durEl = e.getOptionalElement(MailConstants.E_CAL_DURATION);
-            if (durEl != null)
+            if (durEl != null) {
                 mDuration = new ZDuration(durEl);
+            }
             Element orEl = e.getOptionalElement(MailConstants.E_CAL_ORGANIZER);
-            if (orEl != null)
+            if (orEl != null) {
                 mOrganizer = new ZOrganizer(orEl);
+            }
             mAttendees = new ArrayList<ZAttendee>();
             for (Element attendeeEl : e.listElements(MailConstants.E_CAL_ATTENDEE)) {
                 mAttendees.add(new ZAttendee(attendeeEl));
@@ -282,8 +291,9 @@ public class ZInvite implements ToZJSONObject {
             mRecurrenceIdZ = e.getAttribute(MailConstants.A_CAL_RECURRENCE_ID_Z, null);
 
             Element recurEl = e.getOptionalElement(MailConstants.E_CAL_RECUR);
-            if (recurEl != null)
+            if (recurEl != null) {
                 mRecurrence = new ZRecurrence(recurEl);
+            }
             Element alarmEl = e.getOptionalElement(MailConstants.A_CAL_ALARM);
             if (alarmEl != null) {
                 for (Element alarm : e.listElements(MailConstants.A_CAL_ALARM)) {
@@ -305,15 +315,33 @@ public class ZInvite implements ToZJSONObject {
 
         public Element toElement(Element parent) {
             Element compEl = parent.addElement(MailConstants.E_INVITE_COMPONENT);
-            if (mStatus != null) compEl.addAttribute(MailConstants.A_CAL_STATUS, mStatus.name());
-            if (mClass != null) compEl.addAttribute(MailConstants.A_CAL_CLASS, mClass.name());
-            if (mFreeBusyStatus != null) compEl.addAttribute(MailConstants.A_APPT_FREEBUSY, mFreeBusyStatus.name());
-            if (mActualFreeBusyStatus != null) compEl.addAttribute(MailConstants.A_APPT_FREEBUSY_ACTUAL, mActualFreeBusyStatus.name());
-            if (mTransparency != null) compEl.addAttribute(MailConstants.A_APPT_TRANSPARENCY, mTransparency.name());
-            if (mIsAllDay) compEl.addAttribute(MailConstants.A_CAL_ALLDAY, mIsAllDay);
-            if (mDraft) compEl.addAttribute(MailConstants.A_CAL_DRAFT, mDraft);
-            if (mName != null) compEl.addAttribute(MailConstants.A_NAME, mName);
-            if (mLocation != null) compEl.addAttribute(MailConstants.A_CAL_LOCATION, mLocation);
+            if (mStatus != null) {
+                compEl.addAttribute(MailConstants.A_CAL_STATUS, mStatus.name());
+            }
+            if (mClass != null) {
+                compEl.addAttribute(MailConstants.A_CAL_CLASS, mClass.name());
+            }
+            if (mFreeBusyStatus != null) {
+                compEl.addAttribute(MailConstants.A_APPT_FREEBUSY, mFreeBusyStatus.name());
+            }
+            if (mActualFreeBusyStatus != null) {
+                compEl.addAttribute(MailConstants.A_APPT_FREEBUSY_ACTUAL, mActualFreeBusyStatus.name());
+            }
+            if (mTransparency != null) {
+                compEl.addAttribute(MailConstants.A_APPT_TRANSPARENCY, mTransparency.name());
+            }
+            if (mIsAllDay) {
+                compEl.addAttribute(MailConstants.A_CAL_ALLDAY, mIsAllDay);
+            }
+            if (mDraft) {
+                compEl.addAttribute(MailConstants.A_CAL_DRAFT, mDraft);
+            }
+            if (mName != null) {
+                compEl.addAttribute(MailConstants.A_NAME, mName);
+            }
+            if (mLocation != null) {
+                compEl.addAttribute(MailConstants.A_CAL_LOCATION, mLocation);
+            }
             if (mCategories != null) {
                 for (String cat : mCategories) {
                     compEl.addElement(MailConstants.E_CAL_CATEGORY).setText(cat);
@@ -329,17 +357,31 @@ public class ZInvite implements ToZJSONObject {
                     compEl.addElement(MailConstants.E_CAL_CONTACT).setText(cn);
                 }
             }
-            if (mGeo != null)
+            if (mGeo != null) {
                 mGeo.toXml(compEl);
-            if (mUrl != null)
+            }
+            if (mUrl != null) {
                 compEl.addAttribute(MailConstants.A_CAL_URL, mUrl);
+            }
 
-            if (mIsOrganizer) compEl.addAttribute(MailConstants.A_CAL_ISORG, mIsOrganizer);
-            if (mSequenceNumber > 0) compEl.addAttribute(MailConstants.A_CAL_SEQUENCE, mSequenceNumber);
-            if (mPriority != null) compEl.addAttribute(MailConstants.A_CAL_PRIORITY, mPriority);
-            if (mPercentCompleted != null)  compEl.addAttribute(MailConstants.A_TASK_PERCENT_COMPLETE, mPercentCompleted);
-            if (mCompleted != null)  compEl.addAttribute(MailConstants.A_TASK_COMPLETED, mCompleted);
-            if (mMethod != null)  compEl.addAttribute(MailConstants.A_CAL_METHOD, mMethod.name());
+            if (mIsOrganizer) {
+                compEl.addAttribute(MailConstants.A_CAL_ISORG, mIsOrganizer);
+            }
+            if (mSequenceNumber > 0) {
+                compEl.addAttribute(MailConstants.A_CAL_SEQUENCE, mSequenceNumber);
+            }
+            if (mPriority != null) {
+                compEl.addAttribute(MailConstants.A_CAL_PRIORITY, mPriority);
+            }
+            if (mPercentCompleted != null) {
+                compEl.addAttribute(MailConstants.A_TASK_PERCENT_COMPLETE, mPercentCompleted);
+            }
+            if (mCompleted != null) {
+                compEl.addAttribute(MailConstants.A_TASK_COMPLETED, mCompleted);
+            }
+            if (mMethod != null) {
+                compEl.addAttribute(MailConstants.A_CAL_METHOD, mMethod.name());
+            }
 
 
             if (mReplies != null && !mReplies.isEmpty()) {
@@ -349,26 +391,32 @@ public class ZInvite implements ToZJSONObject {
                 }
             }
 
-            if (mStart != null)
+            if (mStart != null) {
                 mStart.toElement(MailConstants.E_CAL_START_TIME, compEl);
-            if (mEnd != null)
+            }
+            if (mEnd != null) {
                 mEnd.toElement(MailConstants.E_CAL_END_TIME, compEl);
-            else if (mDuration != null)
+            } else if (mDuration != null) {
                 mDuration.toElement(compEl);
-
-            if (mOrganizer != null)
-                mOrganizer.toElement(compEl);
-
-            if (mAttendees != null && !mAttendees.isEmpty()) {
-                for (ZAttendee attendee : mAttendees)
-                    attendee.toElement(compEl);
             }
 
-            if (mRecurrence != null)
-                mRecurrence.toElement(compEl);
+            if (mOrganizer != null) {
+                mOrganizer.toElement(compEl);
+            }
 
-            for (ZAlarm alarm : mAlarms)
+            if (mAttendees != null && !mAttendees.isEmpty()) {
+                for (ZAttendee attendee : mAttendees) {
+                    attendee.toElement(compEl);
+                }
+            }
+
+            if (mRecurrence != null) {
+                mRecurrence.toElement(compEl);
+            }
+
+            for (ZAlarm alarm : mAlarms) {
                 alarm.toElement(compEl);
+            }
 
             if (!StringUtil.isNullOrEmpty(mDescription)) {
                 Element desc = compEl.addUniqueElement(MailConstants.E_CAL_DESCRIPTION);
@@ -574,12 +622,13 @@ public class ZInvite implements ToZJSONObject {
         }
 
         public Date getComputedEndDate() {
-            if (getEnd() != null)
+            if (getEnd() != null) {
                 return getEnd().getDate();
-            else if (getDuration() != null)
+            } else if (getDuration() != null) {
                 return getDuration().addToDate(getStart().getDate());
-            else // simply return the start date
+            } else {
                 return getStart().getDate();
+            }
         }
 
         public ZDateTime getEnd() {
@@ -642,6 +691,10 @@ public class ZInvite implements ToZJSONObject {
             return mRecurrenceIdZ;
         }
 
+        public void setRecurrenceIdZ(String recurId) {
+            this.mRecurrenceIdZ = recurId;
+        }
+
         public String getDescription() {
             return mDescription;
         }
@@ -683,8 +736,12 @@ public class ZInvite implements ToZJSONObject {
             zjo.putList("categories", mCategories);
             zjo.putList("comments", mComments);
             zjo.putList("contacts", mContacts);
-            if (mGeo != null) zjo.put("geo", mGeo.toString());
-            if (mUrl != null) zjo.put("url", mUrl);
+            if (mGeo != null) {
+                zjo.put("geo", mGeo.toString());
+            }
+            if (mUrl != null) {
+                zjo.put("url", mUrl);
+            }
             zjo.put("isOrganizer", mIsOrganizer);
             zjo.put("sequenceNumber", mSequenceNumber);
             zjo.put("priority", mPriority);
@@ -756,11 +813,19 @@ public class ZInvite implements ToZJSONObject {
             public Element toElement(Element parent) {
                 Element replyEl = parent.addElement(MailConstants.E_CAL_REPLY);
                 replyEl.addAttribute(MailConstants.A_DATE, mDate);
-                if (mAttendee != null) replyEl.addAttribute(MailConstants.A_CAL_ATTENDEE, mAttendee);
-                if (mParticipantStatus != null) replyEl.addAttribute(MailConstants.A_CAL_PARTSTAT, mParticipantStatus.name());
+                if (mAttendee != null) {
+                    replyEl.addAttribute(MailConstants.A_CAL_ATTENDEE, mAttendee);
+                }
+                if (mParticipantStatus != null) {
+                    replyEl.addAttribute(MailConstants.A_CAL_PARTSTAT, mParticipantStatus.name());
+                }
                 replyEl.addAttribute(MailConstants.A_CAL_RECURRENCE_RANGE_TYPE, mRangeType);
-                if (mRecurrenceId != null) replyEl.addAttribute(MailConstants.A_CAL_RECURRENCE_ID, mRecurrenceId);
-                if (mTimeZone != null) replyEl.addAttribute(MailConstants.A_CAL_TIMEZONE, mTimeZone);
+                if (mRecurrenceId != null) {
+                    replyEl.addAttribute(MailConstants.A_CAL_RECURRENCE_ID, mRecurrenceId);
+                }
+                if (mTimeZone != null) {
+                    replyEl.addAttribute(MailConstants.A_CAL_TIMEZONE, mTimeZone);
+                }
                 return replyEl;
             }
 
@@ -837,11 +902,13 @@ public class ZInvite implements ToZJSONObject {
             mStandardOffset = e.getAttributeLong(MailConstants.A_CAL_TZ_STDOFFSET, 0);
             mDaylightSavingsOffset = e.getAttributeLong(MailConstants.A_CAL_TZ_DAYOFFSET, -1);
             Element standardEl = e.getOptionalElement(MailConstants.E_CAL_TZ_STANDARD);
-            if (standardEl != null)
+            if (standardEl != null) {
                 mStandard = new ZTransitionRule(standardEl);
+            }
             Element daylightEl = e.getOptionalElement(MailConstants.E_CAL_TZ_DAYLIGHT);
-            if (daylightEl != null)
+            if (daylightEl != null) {
                 mDaylight = new ZTransitionRule(daylightEl);
+            }
         }
 
         public Element toElement(Element parent) {
@@ -850,13 +917,16 @@ public class ZInvite implements ToZJSONObject {
             tzEl.addAttribute(MailConstants.A_CAL_TZ_STDNAME, mStandardTzname);
             tzEl.addAttribute(MailConstants.A_CAL_TZ_DAYNAME, mDaylightTzname);
             tzEl.addAttribute(MailConstants.A_CAL_TZ_STDOFFSET, mStandardOffset);
-            if (mDaylightSavingsOffset != -1)
+            if (mDaylightSavingsOffset != -1) {
                 tzEl.addAttribute(MailConstants.A_CAL_TZ_DAYOFFSET, mDaylightSavingsOffset);
-            if (mStandard != null)
+            }
+            if (mStandard != null) {
                 mStandard.toElement(MailConstants.E_CAL_TZ_STANDARD, tzEl);
+            }
 
-            if (mDaylight != null)
+            if (mDaylight != null) {
                 mDaylight.toElement(MailConstants.E_CAL_TZ_DAYLIGHT, tzEl);
+            }
 
             return tzEl;
         }
@@ -977,9 +1047,15 @@ public class ZInvite implements ToZJSONObject {
 
             public Element toElement(String name, Element parent) {
                 Element trEl = parent.addElement(name);
-                if (mWeek != 0) trEl.addAttribute(MailConstants.A_CAL_TZ_WEEK, mWeek);
-                if (mDayOfWeek != 0) trEl.addAttribute(MailConstants.A_CAL_TZ_DAYOFWEEK, mDayOfWeek);
-                if (mDayOfMonth != 0) trEl.addAttribute(MailConstants.A_CAL_TZ_DAYOFMONTH, mMonth);
+                if (mWeek != 0) {
+                    trEl.addAttribute(MailConstants.A_CAL_TZ_WEEK, mWeek);
+                }
+                if (mDayOfWeek != 0) {
+                    trEl.addAttribute(MailConstants.A_CAL_TZ_DAYOFWEEK, mDayOfWeek);
+                }
+                if (mDayOfMonth != 0) {
+                    trEl.addAttribute(MailConstants.A_CAL_TZ_DAYOFMONTH, mMonth);
+                }
                 trEl.addAttribute(MailConstants.A_CAL_TZ_MONTH, mMonth);
                 trEl.addAttribute(MailConstants.A_CAL_TZ_HOUR, mHour);
                 trEl.addAttribute(MailConstants.A_CAL_TZ_MINUTE, mMinute);
@@ -1108,13 +1184,21 @@ public class ZInvite implements ToZJSONObject {
         public Element toElement(Element parent) {
             Element durEl = parent.addElement(MailConstants.E_CAL_DURATION);
             durEl.addAttribute(MailConstants.A_CAL_DURATION_NEGATIVE, mNegative);
-            if (mWeeks != 0)
+            if (mWeeks != 0) {
                 durEl.addAttribute(MailConstants.A_CAL_DURATION_WEEKS, mWeeks);
-            else {
-                if (mDays != 0) durEl.addAttribute(MailConstants.A_CAL_DURATION_DAYS, mDays);
-                if (mHours != 0) durEl.addAttribute(MailConstants.A_CAL_DURATION_HOURS, mHours);
-                if (mMinutes != 0) durEl.addAttribute(MailConstants.A_CAL_DURATION_MINUTES, mMinutes);
-                if (mSeconds != 0) durEl.addAttribute(MailConstants.A_CAL_DURATION_SECONDS, mSeconds);
+            } else {
+                if (mDays != 0) {
+                    durEl.addAttribute(MailConstants.A_CAL_DURATION_DAYS, mDays);
+                }
+                if (mHours != 0) {
+                    durEl.addAttribute(MailConstants.A_CAL_DURATION_HOURS, mHours);
+                }
+                if (mMinutes != 0) {
+                    durEl.addAttribute(MailConstants.A_CAL_DURATION_MINUTES, mMinutes);
+                }
+                if (mSeconds != 0) {
+                    durEl.addAttribute(MailConstants.A_CAL_DURATION_SECONDS, mSeconds);
+                }
             }
             return durEl;
         }
@@ -1456,12 +1540,24 @@ public class ZInvite implements ToZJSONObject {
         public Element toElement(Element parent) {
             Element orEl = parent.addElement(MailConstants.E_CAL_ORGANIZER);
 
-            if (getAddress() != null) orEl.addAttribute(MailConstants.A_ADDRESS, getAddress());
-            if (getUrl() != null) orEl.addAttribute(MailConstants.A_URL, getUrl());
-            if (getPersonalName() != null) orEl.addAttribute(MailConstants.A_DISPLAY, getPersonalName());
-            if (getSentBy() != null) orEl.addAttribute(MailConstants.A_CAL_SENTBY, getSentBy());
-            if (getDirectoryUrl() != null) orEl.addAttribute(MailConstants.A_CAL_DIR, getDirectoryUrl());
-            if (getLanguage() != null) orEl.addAttribute(MailConstants.A_CAL_LANGUAGE, getLanguage());
+            if (getAddress() != null) {
+                orEl.addAttribute(MailConstants.A_ADDRESS, getAddress());
+            }
+            if (getUrl() != null) {
+                orEl.addAttribute(MailConstants.A_URL, getUrl());
+            }
+            if (getPersonalName() != null) {
+                orEl.addAttribute(MailConstants.A_DISPLAY, getPersonalName());
+            }
+            if (getSentBy() != null) {
+                orEl.addAttribute(MailConstants.A_CAL_SENTBY, getSentBy());
+            }
+            if (getDirectoryUrl() != null) {
+                orEl.addAttribute(MailConstants.A_CAL_DIR, getDirectoryUrl());
+            }
+            if (getLanguage() != null) {
+                orEl.addAttribute(MailConstants.A_CAL_LANGUAGE, getLanguage());
+            }
             CalendarUtil.encodeXParams(orEl, xparamsIterator());
             return orEl;
         }
@@ -1500,19 +1596,45 @@ public class ZInvite implements ToZJSONObject {
         public Element toElement(Element parent) {
             Element attEl = parent.addElement(MailConstants.E_CAL_ATTENDEE);
 
-            if (getAddress() != null) attEl.addAttribute(MailConstants.A_ADDRESS, getAddress());
-            if (getUrl() != null) attEl.addAttribute(MailConstants.A_URL, getUrl());
-            if (getPersonalName() != null) attEl.addAttribute(MailConstants.A_DISPLAY, getPersonalName());
-            if (getSentBy() != null) attEl.addAttribute(MailConstants.A_CAL_SENTBY, getSentBy());
-            if (getDirectoryUrl() != null) attEl.addAttribute(MailConstants.A_CAL_DIR, getDirectoryUrl());
-            if (getLanguage() != null) attEl.addAttribute(MailConstants.A_CAL_LANGUAGE, getLanguage());
-            if (mRole != null) attEl.addAttribute(MailConstants.A_CAL_ROLE, mRole.name());
-            if (mParticipantStatus != null) attEl.addAttribute(MailConstants.A_CAL_PARTSTAT, mParticipantStatus.name());
-            if (mRSVP) attEl.addAttribute(MailConstants.A_CAL_RSVP, mRSVP);
-            if (mCalendarUserType != null && mCalendarUserType != ZCalendarUserType.IND) attEl.addAttribute(MailConstants.A_CAL_CUTYPE, mCalendarUserType.name());
-            if (mMember != null) attEl.addAttribute(MailConstants.A_CAL_MEMBER, mMember);
-            if (mDelegatedTo != null) attEl.addAttribute(MailConstants.A_CAL_DELEGATED_TO, mDelegatedTo);
-            if (mDelegatedFrom != null) attEl.addAttribute(MailConstants.A_CAL_DELEGATED_FROM, mDelegatedFrom);
+            if (getAddress() != null) {
+                attEl.addAttribute(MailConstants.A_ADDRESS, getAddress());
+            }
+            if (getUrl() != null) {
+                attEl.addAttribute(MailConstants.A_URL, getUrl());
+            }
+            if (getPersonalName() != null) {
+                attEl.addAttribute(MailConstants.A_DISPLAY, getPersonalName());
+            }
+            if (getSentBy() != null) {
+                attEl.addAttribute(MailConstants.A_CAL_SENTBY, getSentBy());
+            }
+            if (getDirectoryUrl() != null) {
+                attEl.addAttribute(MailConstants.A_CAL_DIR, getDirectoryUrl());
+            }
+            if (getLanguage() != null) {
+                attEl.addAttribute(MailConstants.A_CAL_LANGUAGE, getLanguage());
+            }
+            if (mRole != null) {
+                attEl.addAttribute(MailConstants.A_CAL_ROLE, mRole.name());
+            }
+            if (mParticipantStatus != null) {
+                attEl.addAttribute(MailConstants.A_CAL_PARTSTAT, mParticipantStatus.name());
+            }
+            if (mRSVP) {
+                attEl.addAttribute(MailConstants.A_CAL_RSVP, mRSVP);
+            }
+            if (mCalendarUserType != null && mCalendarUserType != ZCalendarUserType.IND) {
+                attEl.addAttribute(MailConstants.A_CAL_CUTYPE, mCalendarUserType.name());
+            }
+            if (mMember != null) {
+                attEl.addAttribute(MailConstants.A_CAL_MEMBER, mMember);
+            }
+            if (mDelegatedTo != null) {
+                attEl.addAttribute(MailConstants.A_CAL_DELEGATED_TO, mDelegatedTo);
+            }
+            if (mDelegatedFrom != null) {
+                attEl.addAttribute(MailConstants.A_CAL_DELEGATED_FROM, mDelegatedFrom);
+            }
             CalendarUtil.encodeXParams(attEl, xparamsIterator());
             return attEl;
         }
@@ -1610,20 +1732,23 @@ public class ZInvite implements ToZJSONObject {
         public ZRecurrenceDate(Element e) throws ServiceException {
             mStart = new ZDateTime(e.getElement(MailConstants.E_CAL_START_TIME));
             Element endEl = e.getOptionalElement(MailConstants.E_CAL_END_TIME);
-            if (endEl != null)
+            if (endEl != null) {
                 mEnd = new ZDateTime(endEl);
+            }
             Element durEl = e.getOptionalElement(MailConstants.E_CAL_DURATION);
-            if (durEl != null)
+            if (durEl != null) {
                 mDuration = new ZDuration(durEl);
+            }
         }
 
         public Element toElement(Element parent) {
             Element dtvalEl = parent.addElement(MailConstants.E_CAL_DATE_VAL);
             mStart.toElement(MailConstants.E_CAL_START_TIME, dtvalEl);
-            if (mEnd != null)
+            if (mEnd != null) {
                 mEnd.toElement(MailConstants.E_CAL_END_TIME, dtvalEl);
-            else if (mDuration != null)
+            } else if (mDuration != null) {
                 mDuration.toElement(dtvalEl);
+            }
             return dtvalEl;
         }
 
@@ -1688,8 +1813,9 @@ public class ZInvite implements ToZJSONObject {
 
         public Element toElement(Element parent) {
             Element datesEl = parent.addElement(MailConstants.E_CAL_DATES);
-            if (mTimeZoneId != null)
+            if (mTimeZoneId != null) {
                 datesEl.addAttribute(MailConstants.A_CAL_TIMEZONE, mTimeZoneId);
+            }
             for (ZRecurrenceDate rdate : mDates) {
                 rdate.toElement(datesEl);
             }
@@ -1764,10 +1890,11 @@ public class ZInvite implements ToZJSONObject {
         public int getOrdinal() { return ordinal(); }
 
         public static ZWeekDay fromOrdinal(int ord) throws ServiceException {
-            if (ord < 0 || ord >= ZWeekDay.values().length)
+            if (ord < 0 || ord >= ZWeekDay.values().length) {
                 throw ZClientException.CLIENT_ERROR("invalid weekday ordinal: "+ord, null);
-            else
+            } else {
                 return ZWeekDay.values()[ord];
+            }
         }
 
         public boolean isSunday() { return equals(SU); }
@@ -1808,15 +1935,17 @@ public class ZInvite implements ToZJSONObject {
 
         public static List<ZByDayWeekDay> getList(ZWeekDay... days) {
             List<ZByDayWeekDay> result = new ArrayList<ZByDayWeekDay>(days.length);
-            for (ZWeekDay day : days)
+            for (ZWeekDay day : days) {
                 result.add(new ZByDayWeekDay(day, 0));
+            }
             return result;
         }
 
         public static List<ZByDayWeekDay> getList(List<ZWeekDay> days) {
             List<ZByDayWeekDay> result = new ArrayList<ZByDayWeekDay>(days.size());
-            for (ZWeekDay day : days)
+            for (ZWeekDay day : days) {
                 result.add(new ZByDayWeekDay(day, 0));
+            }
             return result;
         }
 
@@ -1837,8 +1966,9 @@ public class ZInvite implements ToZJSONObject {
 
         public Element toElement(Element parent) {
             Element wkdayEl = parent.addElement(MailConstants.E_CAL_RULE_BYDAY_WKDAY);
-            if (mWeekOrd != 0)
+            if (mWeekOrd != 0) {
                 wkdayEl.addAttribute(MailConstants.A_CAL_RULE_BYDAY_WKDAY_ORDWK, mWeekOrd);
+            }
             wkdayEl.addAttribute(MailConstants.A_CAL_RULE_DAY, mDay.name());
             return wkdayEl;
         }
@@ -1985,7 +2115,9 @@ public class ZInvite implements ToZJSONObject {
             }
 
             Element byEl = parent.addElement(elName);
-            if (mList != null && listName != null) byEl.addAttribute(listName, mList);
+            if (mList != null && listName != null) {
+                byEl.addAttribute(listName, mList);
+            }
             if (mType == ZByType.BY_DAY) {
                 if (mWeekDays != null) {
                     for (ZByDayWeekDay wd : mWeekDays) {
@@ -2006,10 +2138,11 @@ public class ZInvite implements ToZJSONObject {
         }
 
         public String[] getList() {
-            if (mList == null || mList.length() == 0)
+            if (mList == null || mList.length() == 0) {
                 return new String[0];
-            else
+            } else {
                 return mList.split(",");
+            }
         }
 
         /**
@@ -2078,7 +2211,9 @@ public class ZInvite implements ToZJSONObject {
             zjo.put("count", mCount);
             zjo.put("interval", mInterval);
             zjo.put("byRules", mByRules);
-            if (mWeekStart != null) zjo.put("weekStart", mWeekStart.name());
+            if (mWeekStart != null) {
+                zjo.put("weekStart", mWeekStart.name());
+            }
             return zjo;
         }
 
@@ -2093,16 +2228,20 @@ public class ZInvite implements ToZJSONObject {
 
         public Element toElement(Element parent) {
             Element ruleEl = parent.addElement(MailConstants.E_CAL_RULE);
-            if (mFrequency != null)
+            if (mFrequency != null) {
                 ruleEl.addAttribute(MailConstants.A_CAL_RULE_FREQ, mFrequency.name());
-            if (mUntilDate != null)
+            }
+            if (mUntilDate != null) {
                 mUntilDate.toElement(MailConstants.E_CAL_RULE_UNTIL, ruleEl);
-            else if (mCount != 0)
+            } else if (mCount != 0) {
                 ruleEl.addElement(MailConstants.E_CAL_RULE_COUNT).addAttribute(MailConstants.A_CAL_RULE_COUNT_NUM, mCount);
-            if (mInterval != 0)
+            }
+            if (mInterval != 0) {
                 ruleEl.addElement(MailConstants.E_CAL_RULE_INTERVAL).addAttribute(MailConstants.A_CAL_RULE_INTERVAL_IVAL, mInterval);
-            if (mWeekStart != null)
+            }
+            if (mWeekStart != null) {
                 ruleEl.addElement(MailConstants.E_CAL_RULE_WKST).addAttribute(MailConstants.A_CAL_RULE_DAY, mWeekStart.name());
+            }
             if (mByRules != null && !mByRules.isEmpty()) {
                 for (ZByRule rule : mByRules) {
                     rule.toElement(ruleEl);
@@ -2182,19 +2321,23 @@ public class ZInvite implements ToZJSONObject {
             mExDates = new ArrayList<ZRecurrenceDates>();
 
             for (Element addEl : e.listElements(MailConstants.E_CAL_ADD)) {
-                for (Element ruleEl : addEl.listElements(MailConstants.E_CAL_RULE))
+                for (Element ruleEl : addEl.listElements(MailConstants.E_CAL_RULE)) {
                     mRules.add(new ZRecurrenceRule(ruleEl));
+                }
 
-                for (Element datesEl : addEl.listElements(MailConstants.E_CAL_DATES))
+                for (Element datesEl : addEl.listElements(MailConstants.E_CAL_DATES)) {
                     mDates.add(new ZRecurrenceDates(datesEl));
+                }
             }
 
             for (Element excludeEl : e.listElements(MailConstants.E_CAL_EXCLUDE)) {
-                for (Element ruleEl : excludeEl.listElements(MailConstants.E_CAL_RULE))
+                for (Element ruleEl : excludeEl.listElements(MailConstants.E_CAL_RULE)) {
                     mExRules.add(new ZRecurrenceRule(ruleEl));
+                }
 
-                for (Element datesEl : excludeEl.listElements(MailConstants.E_CAL_DATES))
+                for (Element datesEl : excludeEl.listElements(MailConstants.E_CAL_DATES)) {
                     mExDates.add(new ZRecurrenceDates(datesEl));
+                }
             }
         }
 

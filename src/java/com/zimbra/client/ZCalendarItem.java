@@ -23,13 +23,13 @@ import java.util.List;
 import org.json.JSONException;
 
 import com.zimbra.client.ZInvite.ZComponent;
-import com.zimbra.client.ZInvite.ZRecurrence;
 import com.zimbra.client.event.ZModifyEvent;
 import com.zimbra.client.event.ZModifyMessageEvent;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.Pair;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 
 public class ZCalendarItem implements ZItem, ToZJSONObject {
@@ -43,7 +43,9 @@ public class ZCalendarItem implements ZItem, ToZJSONObject {
         public char getFlagChar() { return mFlagChar; }
 
         public static String toNameList(String flags) {
-            if (flags == null || flags.length() == 0) return "";
+            if (flags == null || flags.length() == 0) {
+                return "";
+            }
             StringBuilder sb = new StringBuilder();
             for (int i=0; i < flags.length(); i++) {
                 String v = null;
@@ -53,7 +55,9 @@ public class ZCalendarItem implements ZItem, ToZJSONObject {
                         break;
                     }
                 }
-                if (sb.length() > 0) sb.append(", ");
+                if (sb.length() > 0) {
+                    sb.append(", ");
+                }
                 sb.append(v == null ? flags.substring(i, i+1) : v);
             }
             return sb.toString();
@@ -122,8 +126,8 @@ public class ZCalendarItem implements ZItem, ToZJSONObject {
         for (ZInvite invite : mInvites) {
             List<ZComponent> comps = invite.getComponents();
             for (ZComponent comp : comps) {
-                ZRecurrence recur = comp.getRecurrence();
-                if (recur == null) {
+                String recurId = comp.getRecurrenceIdZ(); //main invite doesn't have recurId
+                if (StringUtil.isNullOrEmpty(recurId)) {
                     return new Pair<>(invite, comp);
                 }
                 if (first == null) {
