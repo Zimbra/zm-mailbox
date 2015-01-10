@@ -1005,15 +1005,15 @@ creation, an INVITE_OUT_OF_DATE exception will be thrown.
 
     -- if id is specified, gets iCalendar representation for one
        Invite
-       
+
     -- if id is not specified, then start/end MUST be, Calendar data
        is returned for entire specified range
 
-<GetICalResponse>               
+<GetICalResponse>
    <ical>
       ICALENDAR DATA
    </ical>
-</GetICalResponse>               
+</GetICalResponse>
 
 
 
@@ -1038,8 +1038,9 @@ creation, an INVITE_OUT_OF_DATE exception will be thrown.
                    The client is responsible for setting the message recipient list in
                    this case (which should include Organizer, if the client wants to tell
                    the organizer about this response)
-  updateOrganizer: yes by default, if no then only make the update locally.  This parameter
-                   has no effect if an <m> element is present.
+  updateOrganizer: true by default. if false then only make the update locally.
+                   Note that earlier documentation implied incorrectly that if this was false it would be ignored and
+                   treated as being true if an <m> element is present.
   
 <SendInviteReplyResponse status="STATUS"/>
 

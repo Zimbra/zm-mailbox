@@ -206,9 +206,8 @@ public class TestJaxb extends TestCase {
     throws Exception {
         SendInviteReplyRequest sirReq = new SendInviteReplyRequest(inviteMsg.getId(), 0 /* componentNum */, "ACCEPT");
         sirReq.setIdentityId(attendeeBox.getAccountInfo(false).getId());
-        // This is what ZWC currently does - which is odd.  However, SOAP docs claim this is ignored if a message is
-        // provided (it is) - so we should honor that.
-        sirReq.setUpdateOrganizer(false);
+        // ZWC 8.6 and earlier used to set this to false.  Now sets it to true.
+        sirReq.setUpdateOrganizer(true);
         MimePartInfo mimePart = MimePartInfo.createForContentType("multipart/alternative");
         mimePart.addMimePart(MimePartInfo.createForContentTypeAndContent("text/plain", "Accepting"));
         mimePart.addMimePart(MimePartInfo.createForContentTypeAndContent(
