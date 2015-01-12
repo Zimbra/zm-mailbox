@@ -3445,7 +3445,7 @@ public class Mailbox {
     public List<Integer> listItemIds(OperationContext octxt, MailItem.Type type, int folderId) throws ServiceException {
         boolean success = false;
         try {
-            beginTransaction("listItemIds", octxt);
+            beginReadTransaction("listItemIds", octxt);
             Folder folder = getFolderById(folderId);
             List<Integer> ids = DbMailItem.listByFolder(folder, type, true);
             success = true;
@@ -3458,7 +3458,7 @@ public class Mailbox {
     public TypedIdList getItemIds(OperationContext octxt, int folderId) throws ServiceException {
         boolean success = false;
         try {
-            beginTransaction("listAllItemIds", octxt);
+            beginReadTransaction("listAllItemIds", octxt);
             Folder folder = getFolderById(folderId);
             TypedIdList ids = DbMailItem.listByFolder(folder, true);
             success = true;
