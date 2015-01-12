@@ -8668,8 +8668,9 @@ TODO: delete them permanently from here
   <desc>Max no of elements in admin acl target cache</desc>
 </attr>
 
-<attr id="1721" name="zimbraReverseProxyDomainAllowedIPs" type="string" max="256" cardinality="multi" optionalIn="domain" requiresRestart="nginxproxy" since="8.7.0">
-  <desc>Client network or IP whitelist for this domain. If configured, all IPs outside this whitelist will be blocked. If unset, all IPs are allowed</desc>  
+<attr id="1721" name="zimbraDomainAllowedIPs" type="string" max="256" cardinality="multi" optionalIn="domain" since="8.7.0">
+  <desc>Client IP/IPRange whitelist for this domain (IPRange needs to be in CIDR notation e.g:192.168.1.0/24). 
+        If configured, all IPs outside this whitelist will be blocked. If unset, all IPs are allowed</desc>  
 </attr>
 
 <attr id="1722" name="zimbraReverseProxyZSSHostname" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="nginxproxy" since="8.7.0">
