@@ -5497,6 +5497,158 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
+     * Client IP/IPRange whitelist for this domain (IPRange needs to be in
+     * CIDR notation e.g:192.168.1.0/24). If configured, all IPs outside this
+     * whitelist will be blocked. If unset, all IPs are allowed
+     *
+     * @return zimbraDomainAllowedIPs, or empty array if unset
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1721)
+    public String[] getDomainAllowedIPs() {
+        return getMultiAttr(Provisioning.A_zimbraDomainAllowedIPs);
+    }
+
+    /**
+     * Client IP/IPRange whitelist for this domain (IPRange needs to be in
+     * CIDR notation e.g:192.168.1.0/24). If configured, all IPs outside this
+     * whitelist will be blocked. If unset, all IPs are allowed
+     *
+     * @param zimbraDomainAllowedIPs new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1721)
+    public void setDomainAllowedIPs(String[] zimbraDomainAllowedIPs) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDomainAllowedIPs, zimbraDomainAllowedIPs);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Client IP/IPRange whitelist for this domain (IPRange needs to be in
+     * CIDR notation e.g:192.168.1.0/24). If configured, all IPs outside this
+     * whitelist will be blocked. If unset, all IPs are allowed
+     *
+     * @param zimbraDomainAllowedIPs new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1721)
+    public Map<String,Object> setDomainAllowedIPs(String[] zimbraDomainAllowedIPs, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDomainAllowedIPs, zimbraDomainAllowedIPs);
+        return attrs;
+    }
+
+    /**
+     * Client IP/IPRange whitelist for this domain (IPRange needs to be in
+     * CIDR notation e.g:192.168.1.0/24). If configured, all IPs outside this
+     * whitelist will be blocked. If unset, all IPs are allowed
+     *
+     * @param zimbraDomainAllowedIPs new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1721)
+    public void addDomainAllowedIPs(String zimbraDomainAllowedIPs) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraDomainAllowedIPs, zimbraDomainAllowedIPs);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Client IP/IPRange whitelist for this domain (IPRange needs to be in
+     * CIDR notation e.g:192.168.1.0/24). If configured, all IPs outside this
+     * whitelist will be blocked. If unset, all IPs are allowed
+     *
+     * @param zimbraDomainAllowedIPs new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1721)
+    public Map<String,Object> addDomainAllowedIPs(String zimbraDomainAllowedIPs, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraDomainAllowedIPs, zimbraDomainAllowedIPs);
+        return attrs;
+    }
+
+    /**
+     * Client IP/IPRange whitelist for this domain (IPRange needs to be in
+     * CIDR notation e.g:192.168.1.0/24). If configured, all IPs outside this
+     * whitelist will be blocked. If unset, all IPs are allowed
+     *
+     * @param zimbraDomainAllowedIPs existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1721)
+    public void removeDomainAllowedIPs(String zimbraDomainAllowedIPs) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraDomainAllowedIPs, zimbraDomainAllowedIPs);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Client IP/IPRange whitelist for this domain (IPRange needs to be in
+     * CIDR notation e.g:192.168.1.0/24). If configured, all IPs outside this
+     * whitelist will be blocked. If unset, all IPs are allowed
+     *
+     * @param zimbraDomainAllowedIPs existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1721)
+    public Map<String,Object> removeDomainAllowedIPs(String zimbraDomainAllowedIPs, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraDomainAllowedIPs, zimbraDomainAllowedIPs);
+        return attrs;
+    }
+
+    /**
+     * Client IP/IPRange whitelist for this domain (IPRange needs to be in
+     * CIDR notation e.g:192.168.1.0/24). If configured, all IPs outside this
+     * whitelist will be blocked. If unset, all IPs are allowed
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1721)
+    public void unsetDomainAllowedIPs() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDomainAllowedIPs, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Client IP/IPRange whitelist for this domain (IPRange needs to be in
+     * CIDR notation e.g:192.168.1.0/24). If configured, all IPs outside this
+     * whitelist will be blocked. If unset, all IPs are allowed
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1721)
+    public Map<String,Object> unsetDomainAllowedIPs(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDomainAllowedIPs, "");
+        return attrs;
+    }
+
+    /**
      * maximum number of accounts allowed to be assigned to specified COSes
      * in a domain. Values are in the format of
      * {zimbraId-of-a-cos}:{max-accounts}

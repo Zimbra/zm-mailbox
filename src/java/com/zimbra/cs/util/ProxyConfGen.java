@@ -2482,6 +2482,7 @@ public class ProxyConfGen
 	    mConfVars.put("web.upstream.ews.target", new WebProxyUpstreamEwsTargetVar());
 	    mConfVars.put("web.zss.upstream.disable", new WebZSSUpstreamEnablerVar());
 	    mConfVars.put("web.zss.upstream.hostname", new ProxyConfVar("web.zss.upstream.hostname", "zimbraReverseProxyZSSHostname", "", ProxyConfValueType.STRING, ProxyConfOverride.SERVER, "Hostname of the upstream ZSS server being reverse-proxied"));
+	    mConfVars.put("web.zss.resolver.file", new ProxyConfVar("web.zss.resolver.file", null, mConfDir + "/nginx/resolvers.conf", ProxyConfValueType.STRING, ProxyConfOverride.SERVER, "DNS resolver file used by nginx (contains all name servers from /etc/resolv.conf)"));
     }
 
     /* update the default variable map from the active configuration */

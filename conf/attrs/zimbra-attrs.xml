@@ -8384,6 +8384,11 @@ TODO: delete them permanently from here
   <desc>Whether the Stay Signed In checkbox should be disabled on the login screen</desc>
 </attr>
 
+<attr id="1721" name="zimbraDomainAllowedIPs" type="string" max="256" cardinality="multi" optionalIn="domain" since="8.7.0">
+  <desc>Client IP/IPRange whitelist for this domain (IPRange needs to be in CIDR notation e.g:192.168.1.0/24). 
+        If configured, all IPs outside this whitelist will be blocked. If unset, all IPs are allowed</desc>  
+</attr>
+
 <attr id="1722" name="zimbraReverseProxyZSSHostname" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="nginxproxy" since="8.7.0">
   <desc>Hostname of the upstream ZSS server being reverse-proxied</desc>
 </attr>
