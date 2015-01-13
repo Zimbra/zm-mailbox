@@ -21,7 +21,6 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.EnumSet;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -83,10 +82,14 @@ public class ContactAutoComplete {
                 return;
             }
             if (entry.mRanking == 0) {
-                // if the match comes from gal or folder search
-                // check the ranking table for matching email
-                // address
-                int ranking = rankings.query(key);
+                int ranking = 0;
+                if (!StringUtil.isNullOrEmpty(entry.mEmail)) {
+                    //This covers local contact,GAL contact, Distribution lists as well.
+                    ranking = rankings.query(entry.mEmail);
+                } else {
+                    // This is for contact group i.e. without email address.
+                    ranking = rankings.query(key);
+                }
                 if (ranking > 0) {
                     entry.mRanking = ranking;
                 }
@@ -353,17 +356,6 @@ public class ContactAutoComplete {
 
         if (result.entries.size() >= limit) {
             return result;
-        }
-
-        // query ranking table
-        Collection<ContactEntry> rankingTableMatches = result.rankings.search(str);
-
-        if (!rankingTableMatches.isEmpty()) {
-            for (ContactEntry entry : rankingTableMatches) {
-                String emailAddr = entry.getKey();
-                resolveGroupInfo(entry, emailAddr);
-                result.addEntry(entry);
-            }
         }
 
         long t1 = System.currentTimeMillis();

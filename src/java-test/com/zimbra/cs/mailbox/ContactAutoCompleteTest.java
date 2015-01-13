@@ -17,8 +17,11 @@
 
 package com.zimbra.cs.mailbox;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+
+import javax.mail.internet.InternetAddress;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -30,6 +33,8 @@ import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.mailbox.ContactAutoComplete.AutoCompleteResult;
+import com.zimbra.cs.mailbox.ContactAutoComplete.ContactEntry;
 import com.zimbra.cs.mime.ParsedContact;
 
 /**
@@ -220,4 +225,46 @@ public final class ContactAutoCompleteTest {
         Assert.assertEquals(1, result.entries.size());
         result.clear();
     }
+
+    @Test
+    public void rankingTestContactWithSameEmailDifferentDisplayName() throws Exception {
+        // Autocomplete should show same ranking for a email address present in difference contacts.
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        Map<String, Object> fields = new HashMap<String, Object>();
+        fields.put(ContactConstants.A_firstName, "Pal");
+        fields.put(ContactConstants.A_lastName, "One");
+        fields.put(ContactConstants.A_email, "testauto@zimbra.com");
+        mbox.createContact(null, new ParsedContact(fields), Mailbox.ID_FOLDER_CONTACTS, null);
+
+        Map<String, Object> fields1 = new HashMap<String, Object>();
+        fields1.put(ContactConstants.A_email, "testauto@zimbra.com");
+        mbox.createContact(null, new ParsedContact(fields1), Mailbox.ID_FOLDER_CONTACTS, null);
+
+        ContactRankings.increment(mbox.getAccountId(), Collections.singleton(new InternetAddress("testauto@zimbra.com")));
+        ContactRankings.increment(mbox.getAccountId(), Collections.singleton(new InternetAddress("testauto@zimbra.com")));
+
+        ContactAutoComplete autocomplete = new ContactAutoComplete(mbox.getAccount(), new OperationContext(mbox));
+        AutoCompleteResult result = autocomplete.query("Pal", null, 10);
+        Assert.assertEquals(1, result.entries.size());
+        for (ContactEntry ce : result.entries) {
+            Assert.assertEquals(2, ce.mRanking);
+        }
+        result.clear();
+
+        result = autocomplete.query("testauto", null, 10);
+        Assert.assertEquals(2, result.entries.size());
+        for (ContactEntry ce : result.entries) {
+            Assert.assertEquals(2, ce.mRanking);
+        }
+    }
+
+    @Test
+    public void autocompleteTestNonExistingContact() throws Exception {
+        //AutoComplete should not return entry present in ranking table but contact does not exist.
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        ContactRankings.increment(mbox.getAccountId(), Collections.singleton(new InternetAddress("noex@zimbra.com")));
+        ContactRankings.increment(mbox.getAccountId(), Collections.singleton(new InternetAddress("noex@zimbra.com")));
+        ContactAutoComplete autocomplete = new ContactAutoComplete(mbox.getAccount(), new OperationContext(mbox));
+        Assert.assertEquals(0, autocomplete.query("noex", null, 10).entries.size());
+     }
 }
