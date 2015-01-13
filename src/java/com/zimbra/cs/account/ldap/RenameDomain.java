@@ -33,6 +33,7 @@ import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Alias;
+import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
@@ -573,7 +574,7 @@ public class RenameDomain {
             String newDn = null;
 
             try {
-                if (Entry.EntryType.ACCOUNT == entryType) {
+                if (Entry.EntryType.ACCOUNT == entryType || Entry.EntryType.CALRESOURCE == entryType) {
                     newDn = mProv.getDIT().accountDNRename(ldapEntry.getDN(), parts[0], mNewDomainName);
                 } else if (Entry.EntryType.DISTRIBUTIONLIST == entryType) {
                     newDn = mProv.getDIT().distributionListDNRename(ldapEntry.getDN(), parts[0], mNewDomainName);
@@ -593,6 +594,8 @@ public class RenameDomain {
 
             if (Entry.EntryType.ACCOUNT == entryType) {
                 aliases = ((Account)entry).getAliases();
+            } else if (Entry.EntryType.CALRESOURCE == entryType) {
+                aliases = ((CalendarResource)entry).getAliases();
             } else if (Entry.EntryType.DISTRIBUTIONLIST == entryType) {
                 aliases = ((DistributionList)entry).getAliases();
             } else if (Entry.EntryType.DYNAMICGROUP == entryType) {
@@ -678,7 +681,7 @@ public class RenameDomain {
                 // do not catch here, if we can't refresh - we can't modify,
                 // just let it throw and proceed to the next entry
                 try {
-                    if (Entry.EntryType.ACCOUNT == entryType) {
+                    if (Entry.EntryType.ACCOUNT == entryType || Entry.EntryType.CALRESOURCE == entryType) {
                         refreshedEntry = mLdapHelper.getAccountById(entryId);
                     } else if (Entry.EntryType.DISTRIBUTIONLIST == entryType) {
                         refreshedEntry = mLdapHelper.getDistributionListById(entryId);
