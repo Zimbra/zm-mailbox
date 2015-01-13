@@ -99,6 +99,7 @@ import com.zimbra.cs.service.FileUploadServlet.Upload;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.util.AccountUtil;
+import com.zimbra.cs.util.BuildInfo;
 
 @SuppressWarnings("serial")
 public class DavServlet extends ZimbraServlet {
@@ -175,11 +176,11 @@ public class DavServlet extends ZimbraServlet {
         hdrs.append("DAV REQUEST:\n");
         hdrs.append(req.getMethod()).append(" ").append(req.getRequestURL().toString())
             .append(" ").append(req.getProtocol());
-        Enumeration paramNames = req.getParameterNames();
+        Enumeration<String> paramNames = req.getParameterNames();
         if (paramNames != null && paramNames.hasMoreElements()) {
             hdrs.append("\nDAV REQUEST PARAMS:");
             while (paramNames.hasMoreElements()) {
-                String paramName = (String)paramNames.nextElement();
+                String paramName = paramNames.nextElement();
                 if (paramName.contains("Auth")) {
                     hdrs.append("\n").append(paramName).append("=*** REPLACED ***");
                     continue;
@@ -195,18 +196,18 @@ public class DavServlet extends ZimbraServlet {
         /* Headers can include vital information which affects the request like "If-None-Match" headers,
          * so useful to be able to log them, skipping authentication related headers to avoid leaking passwords
          */
-        Enumeration namesEn = req.getHeaderNames();
+        Enumeration<String> namesEn = req.getHeaderNames();
         if (namesEn != null && namesEn.hasMoreElements()) {
             hdrs.append("\nDAV REQUEST HEADERS:");
             while (namesEn.hasMoreElements()) {
-                String hdrName = (String)namesEn.nextElement();
+                String hdrName = namesEn.nextElement();
                 if (hdrName.contains("Auth")  || (hdrName.contains(HttpHeaders.COOKIE))) {
                     hdrs.append("\n").append(hdrName).append(": *** REPLACED ***");
                     continue;
                 }
-                Enumeration vals = req.getHeaders(hdrName);
+                Enumeration<String> vals = req.getHeaders(hdrName);
                 while (vals.hasMoreElements()) {
-                    hdrs.append("\n").append(hdrName).append(": ").append((String)vals.nextElement());
+                    hdrs.append("\n").append(hdrName).append(": ").append(vals.nextElement());
                 }
             }
         }
@@ -421,7 +422,6 @@ public class DavServlet extends ZimbraServlet {
         return getServiceUrl(account, DAV_PATH);
     }
 
-    @SuppressWarnings("unchecked")
     private boolean isCtagRequest(DavContext ctxt) throws DavException {
         String httpMethod = ctxt.getRequest().getMethod();
         if (PropFind.PROPFIND.equalsIgnoreCase(httpMethod) && ctxt.hasRequestMessage()) {
@@ -644,18 +644,22 @@ public class DavServlet extends ZimbraServlet {
         String extraPath = null;
         String requestPath = ctxt.getPath();
         try {
-            if (ctxt.getUser() == null)
+            if (ctxt.getUser() == null) {
                 return false;
-            if (requestPath == null || requestPath.length() < 2)
+            }
+            if (requestPath == null || requestPath.length() < 2) {
                 return false;
+            }
             Account account = prov.getAccountByName(ctxt.getUser());
-            if (account == null)
+            if (account == null) {
                 return false;
+            }
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
             Pair<Folder, String> match = mbox.getFolderByPathLongestMatch(ctxt.getOperationContext(), Mailbox.ID_FOLDER_USER_ROOT, requestPath);
             Folder targetFolder = match.getFirst();
-            if (!(targetFolder instanceof Mountpoint))
+            if (!(targetFolder instanceof Mountpoint)) {
                 return false;
+            }
             Mountpoint mp = (Mountpoint) targetFolder;
             target = new ItemId(mp.getOwnerId(), mp.getRemoteId());
             extraPath = match.getSecond();
@@ -671,24 +675,29 @@ public class DavServlet extends ZimbraServlet {
         if (extraPath == null
             && (m.getName().equals(PropFind.PROPFIND) && ctxt.getDepth() == DavContext.Depth.zero
                 || m.getName().equals(PropPatch.PROPPATCH)
-                || m.getName().equals(Delete.DELETE)))
+                || m.getName().equals(Delete.DELETE))) {
             return false;
+        }
 
         String prefix = ctxt.getPath();
-        if (extraPath != null)
+        if (extraPath != null) {
             prefix = prefix.substring(0, prefix.indexOf(extraPath));
+        }
         prefix = HttpUtil.urlEscape(DAV_PATH + "/" + ctxt.getUser() + prefix);
 
-        if (!prefix.endsWith("/"))
+        if (!prefix.endsWith("/")) {
             prefix += "/";
+        }
 
         // make sure the target account exists.
         Account acct = prov.getAccountById(target.getAccountId());
-        if (acct == null)
+        if (acct == null) {
             return false;
+        }
         Server server = prov.getServer(acct);
-        if (server == null)
+        if (server == null) {
             return false;
+        }
 
         // get the path to the target mail item
         AuthToken authToken = AuthProvider.getAuthToken(ctxt.getAuthAccount());
@@ -698,8 +707,9 @@ public class DavServlet extends ZimbraServlet {
         zoptions.setTargetAccountBy(Key.AccountBy.id);
         ZMailbox zmbx = ZMailbox.getMailbox(zoptions);
         ZFolder f = zmbx.getFolderById("" + target.toString());
-        if (f == null)
+        if (f == null) {
             return false;
+        }
         String path = f.getPath();
         String newPrefix = HttpUtil.urlEscape(DAV_PATH + "/" + acct.getName() + f.getPath());
 
@@ -707,8 +717,9 @@ public class DavServlet extends ZimbraServlet {
             // replace the path in <href> of the request with the path to the target mail item.
             Document req = ctxt.getRequestMessage();
             for (Object hrefObj : req.getRootElement().elements(DavElements.E_HREF)) {
-                if (!(hrefObj instanceof Element))
+                if (!(hrefObj instanceof Element)) {
                     continue;
+                }
                 Element href = (Element) hrefObj;
                 String v = href.getText();
                 // prefix matching is not as straightforward as we have jetty redirect from /dav to /home/dav.
@@ -723,10 +734,12 @@ public class DavServlet extends ZimbraServlet {
         HttpClient client = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
         client.setState(state);
         HttpMethod method = m.toHttpMethod(ctxt, url);
+        method.setRequestHeader(new Header("User-Agent", "Zimbra-DAV/" + BuildInfo.VERSION));
         for (String h : PROXY_REQUEST_HEADERS) {
             String hval = ctxt.getRequest().getHeader(h);
-            if (hval != null)
+            if (hval != null) {
                 method.addRequestHeader(h, hval);
+            }
         }
         int statusCode = HttpClientUtil.executeMethod(client, method);
         for (String h : PROXY_RESPONSE_HEADERS) {
@@ -736,36 +749,41 @@ public class DavServlet extends ZimbraServlet {
         }
         ctxt.getResponse().setStatus(statusCode);
         ctxt.setStatus(statusCode);
-        InputStream in = method.getResponseBodyAsStream();
-        switch (statusCode) {
-        case DavProtocol.STATUS_MULTI_STATUS:
-            // rewrite the <href> element in the response to point to local mountpoint.
-            try {
-                Document response = com.zimbra.common.soap.Element.getSAXReader().read(in);
-                Element top = response.getRootElement();
-                for (Object responseObj : top.elements(DavElements.E_RESPONSE)) {
-                    if (!(responseObj instanceof Element))
-                        continue;
-                    Element href = ((Element)responseObj).element(DavElements.E_HREF);
-                    String v = href.getText();
-                    if (v.startsWith(newPrefix))
-                        href.setText(prefix + v.substring(newPrefix.length()+1));
+        try (InputStream in = method.getResponseBodyAsStream()) {
+            switch (statusCode) {
+            case DavProtocol.STATUS_MULTI_STATUS:
+                // rewrite the <href> element in the response to point to local mountpoint.
+                try {
+                    Document response = com.zimbra.common.soap.Element.getSAXReader().read(in);
+                    Element top = response.getRootElement();
+                    for (Object responseObj : top.elements(DavElements.E_RESPONSE)) {
+                        if (!(responseObj instanceof Element)) {
+                            continue;
+                        }
+                        Element href = ((Element)responseObj).element(DavElements.E_HREF);
+                        String v = href.getText();
+                        if (v.startsWith(newPrefix)) {
+                            href.setText(prefix + v.substring(newPrefix.length()+1));
+                        }
+                    }
+                    if (ZimbraLog.dav.isDebugEnabled()) {
+                        ZimbraLog.dav.debug("PROXY RESPONSE:\n"+new String(DomUtil.getBytes(response), "UTF-8"));
+                    }
+                    DomUtil.writeDocumentToStream(response, ctxt.getResponse().getOutputStream());
+                    ctxt.responseSent();
+                } catch (DocumentException e) {
+                    ZimbraLog.dav.warn("proxy request failed", e);
+                    return false;
                 }
-                if (ZimbraLog.dav.isDebugEnabled())
-                    ZimbraLog.dav.debug("PROXY RESPONSE:\n"+new String(DomUtil.getBytes(response), "UTF-8"));
-                DomUtil.writeDocumentToStream(response, ctxt.getResponse().getOutputStream());
+                break;
+            default:
+                if (in != null) {
+                    ByteUtil.copy(in, true, ctxt.getResponse().getOutputStream(), false);
+                }
                 ctxt.responseSent();
-            } catch (DocumentException e) {
-                ZimbraLog.dav.warn("proxy request failed", e);
-                return false;
+                break;
             }
-            break;
-        default:
-            if (in != null)
-                ByteUtil.copy(in, true, ctxt.getResponse().getOutputStream(), false);
-            ctxt.responseSent();
-            break;
+            return true;
         }
-        return true;
     }
 }
