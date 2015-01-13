@@ -7820,6 +7820,11 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
                 String encrypted = passwdAlreadyEncrypted ? password : DataSource.encryptData(dsId, password);
                 entry.setAttr(A_zimbraDataSourcePassword, encrypted);
             }
+            String oauthToken = entry.getAttrString(A_zimbraDataSourceOAuthToken);
+            if (oauthToken != null) {
+                String encrypted = passwdAlreadyEncrypted ? oauthToken : DataSource.encryptData(dsId, oauthToken);
+                entry.setAttr(A_zimbraDataSourceOAuthToken, encrypted);
+            }
             entry.setAttr(Provisioning.A_zimbraCreateTimestamp, DateUtil.toGeneralizedTime(new Date()));
 
             zlc.createEntry(entry);
@@ -7915,6 +7920,11 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         String password = (String) attrs.get(A_zimbraDataSourcePassword);
         if (password != null) {
             attrs.put(A_zimbraDataSourcePassword, DataSource.encryptData(ds.getId(), password));
+        }
+        
+        String oauthToken = (String) attrs.get(A_zimbraDataSourceOAuthToken);
+        if (oauthToken != null) {
+            attrs.put(A_zimbraDataSourceOAuthToken, DataSource.encryptData(ds.getId(), oauthToken));
         }
 
         modifyAttrs(ds, attrs, true);

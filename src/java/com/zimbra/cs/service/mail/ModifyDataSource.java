@@ -97,6 +97,10 @@ public class ModifyDataSource extends MailDocumentHandler {
         value = eDataSource.getAttribute(MailConstants.A_DS_PASSWORD, null);
         if (value != null)
         	dsAttrs.put(Provisioning.A_zimbraDataSourcePassword, value);
+        
+        value = eDataSource.getAttribute(MailConstants.A_DS_OAUTH_TOKEN, null);
+        if (value != null)
+            dsAttrs.put(Provisioning.A_zimbraDataSourceOAuthToken, value);
 
         value = eDataSource.getAttribute(MailConstants.A_DS_LEAVE_ON_SERVER, null);
         if (value != null) {
