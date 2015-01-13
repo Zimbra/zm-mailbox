@@ -1938,7 +1938,8 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
             ZAttributes attrs = (ZAttributes)ldapAttrs;
 
-            if (objectclass == null || objectclass.contains(AttributeClass.OC_zimbraAccount)) {
+            if (objectclass == null || objectclass.contains(AttributeClass.OC_zimbraAccount)
+                || objectclass.contains(AttributeClass.OC_zimbraCalendarResource)) {
                 visitor.visit(prov.makeAccount(dn, attrs, makeObjOpt));
             } else if (objectclass.contains(AttributeClass.OC_zimbraAlias)) {
                 visitor.visit(prov.makeAlias(dn, attrs));
