@@ -4863,6 +4863,16 @@ public class ZAttrProvisioning {
     public static final String A_zimbraDomainAliasTargetId = "zimbraDomainAliasTargetId";
 
     /**
+     * Client IP/IPRange whitelist for this domain (IPRange needs to be in
+     * CIDR notation e.g:192.168.1.0/24). If configured, all IPs outside this
+     * whitelist will be blocked. If unset, all IPs are allowed
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1721)
+    public static final String A_zimbraDomainAllowedIPs = "zimbraDomainAllowedIPs";
+
+    /**
      * maximum number of accounts allowed to be assigned to specified COSes
      * in a domain. Values are in the format of
      * {zimbraId-of-a-cos}:{max-accounts}
