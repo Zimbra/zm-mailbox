@@ -198,11 +198,24 @@ public final class CsrfUtil {
        String reqUrl = req.getRequestURI();
         if (ZimbraLog.misc.isDebugEnabled()) {
             ZimbraLog.misc.debug("ReqURL : " + reqUrl
-                + (csrfReq ? " does not need " : " needs to ")
-                + "to pass through CSRF check");
+                + (csrfReq ? " needs to " : " does not need to ")
+                + "pass through CSRF check");
         }
 
         return csrfReq;
+    }
+
+    /**
+     * @return
+     */
+    public static boolean isPostReq(HttpServletRequest req) {
+        boolean postReq = false;
+        String method = req.getMethod();
+        if (!method.equalsIgnoreCase("POST") && !method.equalsIgnoreCase("PUT")
+            && !method.equalsIgnoreCase("DELETE")) {
+            postReq = true;
+        }
+        return postReq;
     }
 
 
@@ -212,8 +225,9 @@ public final class CsrfUtil {
      */
     public static boolean isCsrfTokenCreated(AuthToken authToken) {
         boolean csrfTokenCreated = false;
+        ZimbraLog.misc.debug("isCsrfTokenCreated()");
        try {
-            Account account = authToken.getAccount();
+            Account account = getAccount(authToken, Boolean.TRUE);
             String crumb = authToken.getCrumb();
             String[] validCsrfTokens = account.getMultiAttr(Provisioning.A_zimbraCsrfTokenData);
             List<String> validCsrfTokenList = Arrays.asList(validCsrfTokens);
@@ -230,6 +244,23 @@ public final class CsrfUtil {
         return csrfTokenCreated;
     }
 
+    /**
+     * @param authToken
+     * @return
+     * @throws ServiceException
+     */
+    public static Account getAccount(AuthToken authToken, boolean loadFromLdap) throws ServiceException {
+        Account account = null;
+
+        if (loadFromLdap) {
+            Provisioning prov = Provisioning.getInstance();
+            account = prov.get(AccountBy.id, authToken.getAccountId(), Boolean.TRUE);
+            prov.reload(account);
+        } else {
+            account = authToken.getAccount();
+        }
+        return account;
+    }
 
     public static boolean isValidCsrfToken(String csrfToken, AuthToken authToken) {
         if (StringUtil.isNullOrEmpty(csrfToken)) {
@@ -239,30 +270,25 @@ public final class CsrfUtil {
         String hmacFromToken = null;
         String crumb = null;
         String keyVersion = null;
-        String csrfTokenData = null;
         boolean validToken = false;
+        boolean loadFromLdap = false;
 
         try {
             Pair<String, String> data = parseCsrfToken(csrfToken);
             hmacFromToken = data.getFirst();
             keyVersion = data.getSecond();
             crumb  = authToken.getCrumb();
-            csrfTokenData  = getTokenDataFromLdap(crumb, authToken.getAccount());
-            if (csrfTokenData != null) {
-
-                CsrfTokenKey key = CsrfTokenKey.getVersion(keyVersion);
-                if (key == null) {
-                    throw new AuthTokenException("unknown key version");
-                }
-                String computedHmac = ZimbraAuthToken.getHmac(csrfTokenData, key.getKey());
-
-                if (computedHmac.equals(hmacFromToken)) {
-                    Map<?,?> decodedData = getAttrs(csrfTokenData);
-                    long expirationTime = Long.parseLong((String) decodedData.get(C_EXP));
-                    long currentTime = System.currentTimeMillis();
-                    if (currentTime < expirationTime) {
-                        validToken = true;
-                    }
+            Account account = getAccount(authToken, loadFromLdap);
+            validToken = validateCsrfToken(hmacFromToken, crumb, keyVersion, validToken, account);
+            if (!validToken) {
+                // just recheck that we are looking at the latest Account object
+                // cache of this server might be stale
+                ZimbraLog.misc.info("CSRF token was invalid, rechecking with account object from LDAP.");
+                loadFromLdap = true;
+                account = getAccount(authToken, loadFromLdap);
+                validToken = validateCsrfToken(hmacFromToken, crumb, keyVersion, validToken, account);
+                if (ZimbraLog.misc.isDebugEnabled()) {
+                    ZimbraLog.misc.debug("The csrfToken second check: " + (validToken ? "is valid." : " is invalid."));
                 }
             }
         } catch (AuthTokenException | ServiceException e) {
@@ -273,6 +299,39 @@ public final class CsrfUtil {
 
         if (ZimbraLog.misc.isDebugEnabled() ) {
             ZimbraLog.misc.debug("The csrfToken: " + (validToken ? "is valid." : " is invalid."));
+        }
+        return validToken;
+    }
+
+    /**
+     * @param hmacFromToken
+     * @param crumb
+     * @param keyVersion
+     * @param validToken
+     * @param account
+     * @return
+     * @throws ServiceException
+     * @throws AuthTokenException
+     */
+    private static boolean validateCsrfToken(String hmacFromToken, String crumb, String keyVersion,
+        boolean validToken, Account account) throws ServiceException, AuthTokenException {
+        String csrfTokenData;
+        csrfTokenData  = getTokenDataFromLdap(crumb, account);
+        if (csrfTokenData != null) {
+            CsrfTokenKey key = CsrfTokenKey.getVersion(keyVersion);
+            if (key == null) {
+                throw new AuthTokenException("unknown key version");
+            }
+            String computedHmac = ZimbraAuthToken.getHmac(csrfTokenData, key.getKey());
+
+            if (computedHmac.equals(hmacFromToken)) {
+                Map<?,?> decodedData = getAttrs(csrfTokenData);
+                long expirationTime = Long.parseLong((String) decodedData.get(C_EXP));
+                long currentTime = System.currentTimeMillis();
+                if (currentTime < expirationTime) {
+                    validToken = true;
+                }
+            }
         }
         return validToken;
     }
@@ -305,7 +364,11 @@ public final class CsrfUtil {
     private static String getTokenDataFromLdap(String crumb, Account account) throws ServiceException {
         String csrfTokenData = null;
         String [] validCsrfTokens = account.getMultiAttr(Provisioning.A_zimbraCsrfTokenData);
+
         List<String> validCsrfTokenList = Arrays.asList(validCsrfTokens);
+        if (ZimbraLog.misc.isDebugEnabled()) {
+            ZimbraLog.misc.debug("Existing CSRF token data: " +  validCsrfTokenList);
+        }
         validCsrfTokenList = purgeOldCsrfTokens(validCsrfTokenList, account);
         for (String validCsrfToken : validCsrfTokenList) {
             String [] temp = validCsrfToken.split(":");
@@ -378,21 +441,19 @@ public final class CsrfUtil {
 
         try {
             String crumb = at.getCrumb();
-            String tokenData = getExistingCsrfTokenForThisAuthToken(accountId, crumb);
+            String tokenData = getExistingCsrfTokenForThisAuthToken(at, crumb);
             if (tokenData == null) {
 
                 StringBuilder encodedBuff = new StringBuilder(64);
                 BlobMetaData.encodeMetaData(C_ID, accountId, encodedBuff);
                 BlobMetaData.encodeMetaData(C_EXP, Long.toString(authTokenExpiration), encodedBuff);
                 BlobMetaData.encodeMetaData(C_SALT_ID, tokenSalt, encodedBuff);
-
-
                 tokenData = new String(Hex.encodeHex(encodedBuff.toString().getBytes()));
             }
             CsrfTokenKey key = getCurrentKey();
             String hmac = ZimbraAuthToken.getHmac(tokenData, key.getKey());
             String encoded = key.getVersion() + "_" + hmac;
-            storeTokenData(tokenData, accountId, authTokenExpiration, crumb);
+            storeTokenData(tokenData, at, authTokenExpiration, crumb);
             return encoded;
         } catch (AuthTokenException e) {
             throw ServiceException.FAILURE("Error generating Auth Token, "
@@ -407,8 +468,8 @@ public final class CsrfUtil {
      * @return
      * @throws ServiceException
      */
-    private static String getExistingCsrfTokenForThisAuthToken(String accountId, String crumb) throws ServiceException {
-        Account account = Provisioning.getInstance().get(AccountBy.id, accountId);
+    private static String getExistingCsrfTokenForThisAuthToken(AuthToken authToken, String crumb) throws ServiceException {
+        Account account = getAccount(authToken, Boolean.TRUE);
         return getTokenDataFromLdap(crumb, account);
     }
 
@@ -428,12 +489,11 @@ public final class CsrfUtil {
      * @param accountId
      * @param authTokenExpiration
      * @param crumb
+     * @throws ServiceException
      */
-    private static void storeTokenData(String data, String accountId, long authTokenExpiration,
-        String crumb) {
-        try {
-            Provisioning prov = Provisioning.getInstance();
-            Account account = prov.get(AccountBy.id, accountId);
+    private static void storeTokenData(String data, AuthToken authToken, long authTokenExpiration,
+        String crumb) throws ServiceException {
+            Account account = getAccount(authToken, Boolean.TRUE);
             String [] validCsrfTokens = account.getMultiAttr(Provisioning.A_zimbraCsrfTokenData);
 //            CSRF token data:Auth token Key crumb:Auth Token Key expiration
             String newToken = data + ":" + crumb + ":" + authTokenExpiration ;
@@ -457,9 +517,6 @@ public final class CsrfUtil {
             if (mods.size() > 0) {
                 account.modify(mods);
             }
-        } catch (ServiceException e) {
-            ZimbraLog.misc.info("Error storing CSRF token valid salt.", e);
-        }
     }
 
     public static CsrfTokenKey getCsrfTokenKey() throws ServiceException {
@@ -503,34 +560,6 @@ public final class CsrfUtil {
         return encoded;
 
     }
-
-    public static String getCsrfToken(AuthToken authToken) {
-        String accountId = authToken.getAccountId();
-        try {
-            String crumb = authToken.getCrumb();
-            ZimbraLog.security.info("Session ended clearing tokens");
-            Provisioning prov = Provisioning.getInstance();
-            Account account = prov.get(AccountBy.id, accountId);
-            String[] validCsrfTokens = account.getMultiAttr(Provisioning.A_zimbraCsrfTokenData);
-            List<String> validCsrfTokenList = Arrays.asList(validCsrfTokens);
-            String tokenData = null;
-            for (String validCsrfToken : validCsrfTokenList) {
-                String[] tokenParts = validCsrfToken.split(":");
-                if (crumb.equalsIgnoreCase(tokenParts[1])) {
-                    tokenData = tokenParts[0];
-                    break;
-                }
-            }
-            CsrfTokenKey key = CsrfUtil.getCurrentKey();
-            String hmac = ZimbraAuthToken.getHmac(tokenData, key.getKey());
-            String encoded = key.getVersion() + "_" + hmac;
-            return encoded;
-        } catch (ServiceException | AuthTokenException e) {
-            ZimbraLog.misc.info("Error storing CSRF token valid salt.");
-            return null;
-        }
-    }
-
 
     public static void main(String args[])
     {
