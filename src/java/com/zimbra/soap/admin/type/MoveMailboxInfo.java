@@ -135,6 +135,8 @@ public class MoveMailboxInfo {
     public void setMaxSyncs(Integer maxSyncs) { this.maxSyncs = maxSyncs; }
     public void setSyncFinishThreshold(Long syncFinishThreshold) { this.syncFinishThreshold = syncFinishThreshold; }
     public void setSync(Boolean sync) { this.sync = ZmBoolean.fromBool(sync); }
+    public void setSkipRemoteLockout(Boolean skipRemoteLockout) { this.skipRemoteLockout = ZmBoolean.fromBool(skipRemoteLockout); }
+    public void setSkipMemcachePurge(Boolean skipMemcachePurge) { this.skipMemcachePurge = ZmBoolean.fromBool(skipMemcachePurge); }
     public String getName() { return name; }
     public String getTarget() { return target; }
     public String getSource() { return source; }
@@ -144,6 +146,9 @@ public class MoveMailboxInfo {
     public Integer getMaxSyncs() { return maxSyncs; }
     public Long getSyncFinishThreshold() { return syncFinishThreshold; }
     public Boolean getSync() { return ZmBoolean.toBool(sync); }
+    public Boolean getSkipRemoteLockout() { return ZmBoolean.toBool(skipRemoteLockout); }
+    public Boolean getSkipMemcachePurge() { return ZmBoolean.toBool(skipMemcachePurge); }
+
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
@@ -156,7 +161,9 @@ public class MoveMailboxInfo {
             .add("searchIndex", searchIndex)
             .add("maxSyncs", maxSyncs)
             .add("syncFinishThreshold", syncFinishThreshold)
-            .add("sync", sync);
+            .add("sync", sync)
+            .add("skipRemoteLockout", skipRemoteLockout)
+            .add("skipMemcachePurge", skipMemcachePurge);
     }
 
     @Override
