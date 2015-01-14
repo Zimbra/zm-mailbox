@@ -23,6 +23,7 @@ import net.sf.ehcache.config.CacheConfiguration;
 import net.sf.ehcache.config.Configuration;
 import net.sf.ehcache.config.DiskStoreConfiguration;
 
+import com.zimbra.common.account.ZAttrProvisioning;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -101,9 +102,9 @@ public final class EhcacheManager {
         conf.setName(SYNC_STATE_ITEM_CACHE);
         conf.setOverflowToDisk(true);
         conf.setDiskPersistent(true);
-        conf.setMaxBytesLocalHeap(LC.zimbra_activesync_syncstate_item_cache_heap_size.value());
+        conf.setMaxBytesLocalHeap( ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraActiveSyncSyncStateItemCacheHeapSize, "10M") );
         conf.setMaxElementsOnDisk(0); //infinite
-        conf.setTimeToLiveSeconds(LC.zimbra_activesync_metadata_cache_expiration.intValue());
+        conf.setTimeToLiveSeconds(ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraActiveSyncMetadataCacheExpiration, 3600*1000L)/1000);
         return conf;
     }
 

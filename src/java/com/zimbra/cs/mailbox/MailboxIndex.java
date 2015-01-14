@@ -44,6 +44,7 @@ import com.google.common.collect.Multimaps;
 import com.google.common.collect.SetMultimap;
 import com.google.common.io.Closeables;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.zimbra.common.account.ZAttrProvisioning;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.InternetAddress;
 import com.zimbra.common.service.ServiceException;
@@ -72,6 +73,7 @@ import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.mailbox.MailItem.Type;
 import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 import com.zimbra.cs.mailbox.Mailbox.IndexItemEntry;
+import com.zimbra.cs.util.ProvisioningUtil;
 import com.zimbra.cs.util.Zimbra;
 
 /**
@@ -83,10 +85,10 @@ import com.zimbra.cs.util.Zimbra;
 public final class MailboxIndex {
     private static final long MAX_TX_BYTES = LC.zimbra_index_max_transaction_bytes.longValue();
     private static final int MAX_TX_ITEMS = LC.zimbra_index_max_transaction_items.intValue();
-    private static final long FAILURE_DELAY = LC.zimbra_index_deferred_items_failure_delay.intValue() * 1000;
+    private static final long FAILURE_DELAY = ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraIndexDeferredItemsFailureDelay, 300*1000L);
 
     private static final ThreadPoolExecutor INDEX_EXECUTOR = new ThreadPoolExecutor(
-            LC.zimbra_index_threads.intValue(), LC.zimbra_index_threads.intValue(),
+            ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraIndexThreads, 10), ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraIndexThreads, 10),
             Long.MAX_VALUE, TimeUnit.NANOSECONDS, new SynchronousQueue<Runnable>(),
             new ThreadFactoryBuilder().setNameFormat("Index-%d").setDaemon(true).build());
     // Re-index threads are created on demand basis. The number of threads are capped.

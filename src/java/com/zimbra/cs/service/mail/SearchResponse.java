@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -19,13 +19,13 @@ package com.zimbra.cs.service.mail;
 import java.util.Collection;
 import java.util.List;
 
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.index.CalendarItemHit;
 import com.zimbra.cs.index.ContactHit;
 import com.zimbra.cs.index.ConversationHit;
@@ -138,7 +138,7 @@ final class SearchResponse {
      */
     void add(ZimbraHit zimbraHit) throws ServiceException{
 		add(zimbraHit,false);
-		
+
 	}
     /* We need to pass in a boolean signifying whether to expand the message or not (bug 75990)
     */
@@ -258,7 +258,7 @@ final class SearchResponse {
         if (expandMsg) {
             el = ToXML.encodeMessageAsMP(element, ifmt, octxt, msg, null, params.getMaxInlinedLength(),
                     params.getWantHtml(), params.getNeuterImages(), params.getInlinedHeaders(), true,
-                    params.getWantExpandGroupInfo(), LC.mime_encode_missing_blob.booleanValue());
+                    params.getWantExpandGroupInfo(), Provisioning.getInstance().getLocalServer().isMimeEncodeMissingBlob());
         } else {
             el = ToXML.encodeMessageSummary(element, ifmt, octxt, msg, params.getWantRecipients(),
                     params.isQuick() ? PendingModifications.Change.CONTENT : ToXML.NOTIFY_FIELDS);

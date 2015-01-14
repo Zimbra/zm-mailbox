@@ -8871,4 +8871,103 @@ TODO: delete them permanently from here
   <desc>OAuth token for authentication using OAuth</desc>
 </attr>
 
+<attr id="1762" name="zimbraIndexDeferredItemsFailureDelay" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="solr,service"  since="9.0">
+  <globalConfigValue>300</globalConfigValue>
+  <desc>If indexing of an item is failed. It can be tried after the delay specified in seconds</desc>
+</attr>
+
+<attr id="1763" name="zimbraMimeEncodeMissingBlob" type="boolean" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
+  <globalConfigValue>TRUE</globalConfigValue>
+  <desc> Flag to enable or disable encoding the missing blob in mime part </desc>
+</attr>
+
+<attr id="1764" name="zimbraMimeExcludeEmptyContent" type="boolean" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
+  <globalConfigValue>TRUE</globalConfigValue>
+  <desc> Flag to disable empty content in mime message</desc>
+</attr>
+
+<attr id="1765" name="zimbraActiveSyncParallelSyncEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
+  <globalConfigValue>FALSE</globalConfigValue>
+  <desc> Flag to enable or disable to allow parallel syncing of folders</desc>
+</attr>
+
+<attr id="1766" name="zimbraActiveSyncSearchMaxResults" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
+  <globalConfigValue>500</globalConfigValue>
+  <desc> Maximum results allowed for ActiveSync results.</desc>
+</attr>
+
+<attr id="1767" name="zimbraActiveSyncGeneralCacheSize" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
+  <globalConfigValue>500</globalConfigValue>
+  <desc>General cache size for ActiveSync. It is used by active sync in pingLockCache, syncLockCache, syncRequest and syncResponse cache. </desc>
+</attr>
+
+<attr id="1768" name="zimbraActiveSyncSyncStateItemCacheHeapSize" type="string" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
+  <globalConfigValue>10M</globalConfigValue>
+  <desc> ActiveSync SyncState cache heap size. Use suffixes B, K, M, G for bytes, kilobytes, megabytes and gigabytes respectively</desc>
+</attr>
+
+<attr id="1769" name="zimbraMilterMaxIdleTime" type="duration" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
+  <globalConfigValue>3630s</globalConfigValue>service
+  <desc> Milter server drops client connection which are inactive for more than zimbraMilterMaxIdleTIme seconds. postfix 2.11 has 2 timeouts which affect whether to accept a message when DATA is coming slowly from the remote system.  One is every 300s (smtpd_timeout?) which fires when not data arrives for that time.The other gets noticed once all data has been read if more than 3600s (ipc_timeout?) has passed since the connection was initiated and results in '451 4.3.0 Error: queue file write error'.Commands are sent to milter for "mail from" and "rcpt to" entries, then potentially no further communication is made until all data for the message has been read, so milter_max_idle_time needs to be long enough for that.  The value of milter_max_idle_time is to ensure we drop the connection if there is a problem at the MTA end - hence the default value is slightly longer than the max time the MTA should need. </desc>
+</attr>
+
+<attr id="1770" name="zimbraMilterThreadKeepAliveTime" type="duration" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
+  <globalConfigValue>60s</globalConfigValue>
+  <desc> Milter server keep alive time in seconds for threads in threadpool</desc>
+</attr>
+
+<attr id="1771" name="zimbraMilterWriteChunkSize" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
+  <globalConfigValue>1024</globalConfigValue>
+  <desc>Write chunk size in bytes for Milter server output stream</desc>
+</attr>
+
+<attr id="1772" name="zimbraMilterWriteTimeout" type="duration" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
+  <globalConfigValue>10s</globalConfigValue>
+  <desc> Write timeout in seconds for Milter server output stream</desc>
+</attr>
+
+<attr id="1773" name="zimbraActiveSyncVersions" type="string" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
+  <globalConfigValue>2.0,2.1,2.5,12.0,12.1</globalConfigValue>
+  <desc> Supported ActiveSync versions by zimbra </desc>
+</attr>
+
+<attr id="1774" name="zimbraActiveSyncContactImageSize" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
+  <globalConfigValue>2097152</globalConfigValue>
+  <desc> Maximum allowed contact image size in bytes. Default value in 2MB</desc>
+</attr>
+
+<attr id="1775" name="zimbraActiveSyncAutoDiscoveryUrl" type="string" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
+  <desc> ActiveSync auto discovery url </desc>
+</attr>
+
+<attr id="1776" name="zimbraActiveSyncAutoDiscoverUseServiceUrl" type="boolean" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
+  <globalConfigValue>FALSE</globalConfigValue>
+  <desc> Flag to use AutoDiscover service url </desc>
+</attr>
+
+<attr id="1777" name="zimbraActiveSyncMetadataCacheExpiration" type="duration" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
+  <globalConfigValue>3600s</globalConfigValue>
+  <desc>ActiveSync metadata cache expiration time in seconds</desc>
+</attr>
+
+<attr id="1778" name="zimbraActiveSyncMetadataCacheMaxSize" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
+  <globalConfigValue>5000</globalConfigValue>
+  <desc>ActiveSync metadata cache max size</desc>
+</attr>
+
+<attr id="1779" name="zimbraActiveSyncHeartbeatIntervalMin" type="duration" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
+  <globalConfigValue>300s</globalConfigValue>
+  <desc> ActiveSync minimum value for heartbeat interval in seconds</desc>
+</attr>
+
+<attr id="1780" name="zimbraActiveSyncHeartbeatIntervalMax" type="duration" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
+  <globalConfigValue>3540s</globalConfigValue>
+  <desc> ActiveSync maximum value for heartbeat interval in seconds. Make sure it's less than nginx's zimbraReverseProxyUpstreamPollingTimeout, which is now 3600 seconds</desc>
+</attr>
+
+<attr id="1781" name="zimbraIndexThreads" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service,solr"  since="9.0">
+  <globalConfigValue>10</globalConfigValue>
+  <desc> No of threads used by lucene indexer</desc>
+</attr>
+
 </attrs>

@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -545,7 +545,7 @@ public final class ParseMimeMessage {
         // the client's nice and simple body right here
         String text = elem.getAttribute(MailConstants.E_CONTENT, "");
         byte[] raw = text.getBytes(Charsets.UTF_8);
-        if (raw.length > 0 || !LC.mime_exclude_empty_content.booleanValue() || ctype.getPrimaryType().equals("text")) {
+        if (raw.length > 0 || !Provisioning.getInstance().getLocalServer().isMimeExcludeEmptyContent() || ctype.getPrimaryType().equals("text")) {
             ctxt.incrementSize("message body", raw.length);
 
             // if the user has specified an alternative charset, make sure it exists and can encode the content

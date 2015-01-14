@@ -45,6 +45,7 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 
 import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.ZAttrProvisioning;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
@@ -59,6 +60,7 @@ import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.util.AccountUtil;
+import com.zimbra.cs.util.ProvisioningUtil;
 
 public class AutoDiscoverServlet extends ZimbraServlet {
 
@@ -99,7 +101,7 @@ public class AutoDiscoverServlet extends ZimbraServlet {
         String serviceUrl = "";
 
         if (!isEwsClient(client)) {
-	        if (LC.zimbra_activesync_autodiscover_use_service_url.booleanValue()) {
+	        if (Provisioning.getInstance().getLocalServer().isActiveSyncAutoDiscoverUseServiceUrl()) {
 	            serviceUrl = URLUtil.getServiceURL(server, AutoDiscoverServlet.MS_ACTIVESYNC_PATH, true);
 	        } else {
 	            serviceUrl = URLUtil.getPublicURLForDomain(server, domain, AutoDiscoverServlet.MS_ACTIVESYNC_PATH, true);
@@ -141,7 +143,7 @@ public class AutoDiscoverServlet extends ZimbraServlet {
                     return;
                 }
             } else {
-                resp.sendRedirect(LC.zimbra_activesync_autodiscover_url.value());
+                resp.sendRedirect(ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraActiveSyncAutoDiscoveryUrl, null));
             }
         }
     }

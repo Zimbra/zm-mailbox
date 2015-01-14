@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -25,7 +25,6 @@ import java.util.Map;
 import com.google.common.base.Strings;
 import com.google.common.io.Closeables;
 import com.zimbra.common.account.Key.AccountBy;
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
@@ -292,7 +291,7 @@ public final class SearchConv extends Search {
         Element el;
         if (inline) {
             el = ToXML.encodeMessageAsMP(response, ifmt, octxt, msg, null, params.getMaxInlinedLength(),
-                    params.getWantHtml(), params.getNeuterImages(), null, true, params.getWantExpandGroupInfo(), LC.mime_encode_missing_blob.booleanValue());
+                    params.getWantHtml(), params.getNeuterImages(), null, true, params.getWantExpandGroupInfo(), Provisioning.getInstance().getLocalServer().isMimeEncodeMissingBlob());
             if (!Strings.isNullOrEmpty(msg.getFragment())) {
                 el.addAttribute(MailConstants.E_FRAG, msg.getFragment(), Element.Disposition.CONTENT);
             }
