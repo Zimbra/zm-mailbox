@@ -17,16 +17,43 @@
 
 package com.zimbra.soap.mail.type;
 
+import javax.xml.bind.annotation.XmlAttribute;
+
+import com.google.common.base.Objects;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.type.ImapDataSource;
 
 public class MailImapDataSource
 extends MailDataSource
 implements ImapDataSource {
+    
+    /**
+     * @zm-api-field-tag data-source-oauthToken
+     * @zm-api-field-description oauthToken for data source
+     */
+    @XmlAttribute(name=MailConstants.A_DS_OAUTH_TOKEN /* oauthToken */, required=false)
+    private String oauthToken;
 
     public MailImapDataSource() {
     }
 
     public MailImapDataSource(ImapDataSource data) {
         super(data);
+        setOAuthToken(((MailImapDataSource)data).getOAuthToken());
+    }
+    
+    public void setOAuthToken(String oauthToken) { this.oauthToken = oauthToken; }
+    public String getOAuthToken() { return oauthToken; }
+
+    @Override
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
+        helper = super.addToStringInfo(helper);
+        return helper
+            .add("oauthToken", oauthToken);
+    }
+
+    @Override
+    public String toString() {
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }
