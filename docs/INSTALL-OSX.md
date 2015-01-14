@@ -120,6 +120,8 @@ $ vi ~/Library/LaunchAgents/consul.plist
       <string>-server</string>
       <string>-bootstrap-expect</string>
       <string>1</string>
+      <string>-log-level</string>
+      <string>debug</string>
       <string>-data-dir</string>
       <string>/tmp/consul</string>
     </array>
