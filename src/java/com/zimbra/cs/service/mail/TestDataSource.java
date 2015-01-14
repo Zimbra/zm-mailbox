@@ -72,6 +72,7 @@ public class TestDataSource extends MailDocumentHandler {
 
         String id = eDataSource.getAttribute(MailConstants.A_ID, null);
         String password = null;
+        String oauthToken = null;
         if (id != null) {
             // Testing existing data source
             DataSource dsOrig = prov.get(account, DataSourceBy.id, id);
@@ -79,6 +80,8 @@ public class TestDataSource extends MailDocumentHandler {
             for (String key : origAttrs.keySet()) {
                 if (key.equals(Provisioning.A_zimbraDataSourcePassword)) {
                     password = dsOrig.getDecryptedPassword();
+                } else if (key.equals(Provisioning.A_zimbraDataSourceOAuthToken)) {
+                    oauthToken = dsOrig.getDecryptedOAuthToken();
                 } else {
                     testAttrs.put(key, dsOrig.getAttr(key));
                 }
@@ -117,8 +120,7 @@ public class TestDataSource extends MailDocumentHandler {
         }
         value = eDataSource.getAttribute(MailConstants.A_DS_OAUTH_TOKEN, null);
         if (value != null) {
-            testAttrs.put(Provisioning.A_zimbraDataSourceOAuthToken, value);
-            testAttrs.put(Provisioning.A_zimbraDataSourceAuthMechanism, DataSourceAuthMechanism.XOAUTH2.name());
+            oauthToken = value;
         }
         
         if (password != null) {
@@ -126,6 +128,12 @@ public class TestDataSource extends MailDocumentHandler {
             // The current implementation of LdapDataSource doesn't perform encryption until
             // the DataSource is saved.
             testAttrs.put(Provisioning.A_zimbraDataSourcePassword, DataSource.encryptData(testId, password));
+        }
+        
+        if (oauthToken != null) {
+            //encryt oauthToken as we do for passwords
+            testAttrs.put(Provisioning.A_zimbraDataSourceOAuthToken, DataSource.encryptData(testId, oauthToken));
+            testAttrs.put(Provisioning.A_zimbraDataSourceAuthMechanism, DataSourceAuthMechanism.XOAUTH2.name());
         }
 
         // import class

@@ -3372,6 +3372,18 @@ or
     [username="mylogin"] [password="mypassword"]/>
 </TestDataSourceRequest>
 
+or
+
+<TestDataSourceRequest>
+  <imap host="imap.myisp.com" port="993" connectionType="ssl"
+    username="mylogin" oauthToken="myOAuthToken"/>
+    
+    or
+    
+  <imap id="{id}" [host="imap.myisp.com"] [port="993"] [connectionType="ssl"]
+    [username="mylogin"] [oauthToken="myOAuthToken"]/>    
+</TestDataSourceRequest>
+
 <TestDataSourceResponse>
    <pop3 success="0|1" [error="Error message"]/>
 
@@ -3418,6 +3430,22 @@ emailAddress="changed-phoebe@google.com"
     [fromDisplay="{from-display}"]
     [replyToAddress="{replyto-address}"]
     [replyToDisplay="{replyto-display}"]/>
+</CreateDataSourceRequest>
+
+or
+
+<CreateDataSourceRequest/>
+	   <imap name="My IMAP Account" isEnabled="0|1"
+        host="imap.myisp.com" port="993" 
+	    connectionType="ssl" username="mylogin" l="{folder-id}"
+	    oauthToken="myOAuthToken"
+	    [pollingInterval="10m"]
+	    [emailAddress="{email-address}"]
+	    [useAddressForForwardReply="0|1"]
+	    [defaultSignature="{default-signature-id}"]
+	    [fromDisplay="{from-display}"]
+	    [replyToAddress="{replyto-address}"]
+	    [replyToDisplay="{replyto-display}"]/>
 </CreateDataSourceRequest>
 
 <CreateDataSourceResponse>
@@ -3467,6 +3495,13 @@ lastError: the error message from the most recent sync for this data source.
 failingSince: if the most recent sync(s) failed, this attribute specifies
   the timestamp of the first failure.  This attribute is not returned
   if the last sync was successful.
+  
+--------------------------
+Note: OAuthToken is temporaray and it expires after a certain time interval
+Client can refresh the OAuthToken in two ways
+1. Refresh and update OAuthToken periodically
+2. Refresh and update OAuthToken if the client gets the response as - error=" Invalid credentials (Failure)"
+---------------------------
 
 ---------------------------
 
@@ -3484,6 +3519,22 @@ failingSince: if the most recent sync(s) failed, this attribute specifies
     [replyToDisplay="{replyto-display}"]/>
   *[<imap name="My IMAP Account" isEnabled="0|1" host="imap.myisp.com" port="143"
     connectionType="cleartext|ssl" username="mylogin" password="mypassword" l="{folder-id}"
+    [pollingInterval="10m"]
+    [emailAddress="{email-address}"]
+    [useAddressForForwardReply="0|1"]
+    [defaultSignature="{default-signature-id}"]
+    [forwardReplySignature="{forward-reply-signature-id}"]
+    [fromDisplay="{from-display}"]
+    [replyToAddress="{replyto-address}"]
+    [replyToDisplay="{replyto-display}"]/>
+</ModifyDataSourceRequest>
+
+or
+
+<ModifyDataSourceRequest>
+  *[<imap name="My IMAP Account" isEnabled="0|1" host="imap.myisp.com" port="143"
+    connectionType="cleartext|ssl" username="mylogin" password="mypassword" l="{folder-id}"
+    oauthToken="myOAuthToken"
     [pollingInterval="10m"]
     [emailAddress="{email-address}"]
     [useAddressForForwardReply="0|1"]

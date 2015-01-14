@@ -158,7 +158,7 @@ final class ConnectionManager {
             try {
                 if(config.getMechanism() != null) {
                     if (DataSourceAuthMechanism.XOAUTH2.name().equals(config.getMechanism())) {
-                        auth = AuthenticatorFactory.getDefault().newAuthenticator(config, ds.getOAuthToken());
+                        auth = AuthenticatorFactory.getDefault().newAuthenticator(config, ds.getDecryptedOAuthToken());
                     } else {
                         auth = AuthenticatorFactory.getDefault().newAuthenticator(config, ds.getDecryptedPassword());
                     }

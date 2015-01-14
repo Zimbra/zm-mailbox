@@ -147,8 +147,6 @@ public class DataSource extends AccountProperty {
 
     public String getAuthMechanism() { return getAttr(Provisioning.A_zimbraDataSourceAuthMechanism); }
     
-    public String getOAuthToken() {return getAttr(Provisioning.A_zimbraDataSourceOAuthToken); }
-
     public String getDomain() {
         String domain = getAttr(Provisioning.A_zimbraDataSourceDomain, null);
         if (domain == null) {
@@ -166,6 +164,11 @@ public class DataSource extends AccountProperty {
 
     public String getDecryptedPassword() throws ServiceException {
         String data = getAttr(Provisioning.A_zimbraDataSourcePassword);
+        return data == null ? null : decryptData(getId(), data);
+    }
+    
+    public String getDecryptedOAuthToken() throws ServiceException {
+        String data = getAttr(Provisioning.A_zimbraDataSourceOAuthToken);
         return data == null ? null : decryptData(getId(), data);
     }
 
