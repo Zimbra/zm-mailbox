@@ -21321,6 +21321,78 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Value for postconf lmtp_tls_mandatory_protocols
+     *
+     * @return zimbraMtaLmtpTlsMandatoryProtocols, or "!SSLv2, !SSLv3" if unset
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1784)
+    public String getMtaLmtpTlsMandatoryProtocols() {
+        return getAttr(Provisioning.A_zimbraMtaLmtpTlsMandatoryProtocols, "!SSLv2, !SSLv3");
+    }
+
+    /**
+     * Value for postconf lmtp_tls_mandatory_protocols
+     *
+     * @param zimbraMtaLmtpTlsMandatoryProtocols new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1784)
+    public void setMtaLmtpTlsMandatoryProtocols(String zimbraMtaLmtpTlsMandatoryProtocols) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaLmtpTlsMandatoryProtocols, zimbraMtaLmtpTlsMandatoryProtocols);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf lmtp_tls_mandatory_protocols
+     *
+     * @param zimbraMtaLmtpTlsMandatoryProtocols new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1784)
+    public Map<String,Object> setMtaLmtpTlsMandatoryProtocols(String zimbraMtaLmtpTlsMandatoryProtocols, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaLmtpTlsMandatoryProtocols, zimbraMtaLmtpTlsMandatoryProtocols);
+        return attrs;
+    }
+
+    /**
+     * Value for postconf lmtp_tls_mandatory_protocols
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1784)
+    public void unsetMtaLmtpTlsMandatoryProtocols() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaLmtpTlsMandatoryProtocols, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf lmtp_tls_mandatory_protocols
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1784)
+    public Map<String,Object> unsetMtaLmtpTlsMandatoryProtocols(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaLmtpTlsMandatoryProtocols, "");
+        return attrs;
+    }
+
+    /**
      * Value for postconf lmtp_tls_protocols
      *
      * @return zimbraMtaLmtpTlsProtocols, or "!SSLv2, !SSLv3" if unset
@@ -24998,6 +25070,78 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Value for postconf smtp_tls_mandatory_protocols
+     *
+     * @return zimbraMtaSmtpTlsMandatoryProtocols, or "!SSLv2, !SSLv3" if unset
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1782)
+    public String getMtaSmtpTlsMandatoryProtocols() {
+        return getAttr(Provisioning.A_zimbraMtaSmtpTlsMandatoryProtocols, "!SSLv2, !SSLv3");
+    }
+
+    /**
+     * Value for postconf smtp_tls_mandatory_protocols
+     *
+     * @param zimbraMtaSmtpTlsMandatoryProtocols new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1782)
+    public void setMtaSmtpTlsMandatoryProtocols(String zimbraMtaSmtpTlsMandatoryProtocols) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpTlsMandatoryProtocols, zimbraMtaSmtpTlsMandatoryProtocols);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf smtp_tls_mandatory_protocols
+     *
+     * @param zimbraMtaSmtpTlsMandatoryProtocols new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1782)
+    public Map<String,Object> setMtaSmtpTlsMandatoryProtocols(String zimbraMtaSmtpTlsMandatoryProtocols, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpTlsMandatoryProtocols, zimbraMtaSmtpTlsMandatoryProtocols);
+        return attrs;
+    }
+
+    /**
+     * Value for postconf smtp_tls_mandatory_protocols
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1782)
+    public void unsetMtaSmtpTlsMandatoryProtocols() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpTlsMandatoryProtocols, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf smtp_tls_mandatory_protocols
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1782)
+    public Map<String,Object> unsetMtaSmtpTlsMandatoryProtocols(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpTlsMandatoryProtocols, "");
+        return attrs;
+    }
+
+    /**
      * Value for postconf smtp_tls_protocols
      *
      * @return zimbraMtaSmtpTlsProtocols, or "!SSLv2, !SSLv3" if unset
@@ -27509,6 +27653,78 @@ public abstract class ZAttrServer extends NamedEntry {
     public Map<String,Object> unsetMtaSmtpdTlsMandatoryCiphers(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMtaSmtpdTlsMandatoryCiphers, "");
+        return attrs;
+    }
+
+    /**
+     * Value for postconf smtpd_tls_mandatory_protocols
+     *
+     * @return zimbraMtaSmtpdTlsMandatoryProtocols, or "!SSLv2, !SSLv3" if unset
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1783)
+    public String getMtaSmtpdTlsMandatoryProtocols() {
+        return getAttr(Provisioning.A_zimbraMtaSmtpdTlsMandatoryProtocols, "!SSLv2, !SSLv3");
+    }
+
+    /**
+     * Value for postconf smtpd_tls_mandatory_protocols
+     *
+     * @param zimbraMtaSmtpdTlsMandatoryProtocols new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1783)
+    public void setMtaSmtpdTlsMandatoryProtocols(String zimbraMtaSmtpdTlsMandatoryProtocols) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpdTlsMandatoryProtocols, zimbraMtaSmtpdTlsMandatoryProtocols);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf smtpd_tls_mandatory_protocols
+     *
+     * @param zimbraMtaSmtpdTlsMandatoryProtocols new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1783)
+    public Map<String,Object> setMtaSmtpdTlsMandatoryProtocols(String zimbraMtaSmtpdTlsMandatoryProtocols, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpdTlsMandatoryProtocols, zimbraMtaSmtpdTlsMandatoryProtocols);
+        return attrs;
+    }
+
+    /**
+     * Value for postconf smtpd_tls_mandatory_protocols
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1783)
+    public void unsetMtaSmtpdTlsMandatoryProtocols() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpdTlsMandatoryProtocols, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf smtpd_tls_mandatory_protocols
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1783)
+    public Map<String,Object> unsetMtaSmtpdTlsMandatoryProtocols(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSmtpdTlsMandatoryProtocols, "");
         return attrs;
     }
 
