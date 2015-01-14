@@ -9305,6 +9305,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMtaLmtpTlsMandatoryCiphers = "zimbraMtaLmtpTlsMandatoryCiphers";
 
     /**
+     * Value for postconf lmtp_tls_mandatory_protocols
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1784)
+    public static final String A_zimbraMtaLmtpTlsMandatoryProtocols = "zimbraMtaLmtpTlsMandatoryProtocols";
+
+    /**
      * Value for postconf lmtp_tls_protocols
      *
      * @since ZCS 8.6.0
@@ -9735,6 +9743,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMtaSmtpdTlsMandatoryCiphers = "zimbraMtaSmtpdTlsMandatoryCiphers";
 
     /**
+     * Value for postconf smtpd_tls_mandatory_protocols
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1783)
+    public static final String A_zimbraMtaSmtpdTlsMandatoryProtocols = "zimbraMtaSmtpdTlsMandatoryProtocols";
+
+    /**
      * Value for postconf smtpd_tls_protocols
      *
      * @since ZCS 8.5.0
@@ -9838,6 +9854,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1514)
     public static final String A_zimbraMtaSmtpTlsMandatoryCiphers = "zimbraMtaSmtpTlsMandatoryCiphers";
+
+    /**
+     * Value for postconf smtp_tls_mandatory_protocols
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1782)
+    public static final String A_zimbraMtaSmtpTlsMandatoryProtocols = "zimbraMtaSmtpTlsMandatoryProtocols";
 
     /**
      * Value for postconf smtp_tls_protocols
