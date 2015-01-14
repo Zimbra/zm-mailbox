@@ -8406,4 +8406,19 @@ TODO: delete them permanently from here
   <desc>OAuth token for authentication using OAuth</desc>
 </attr>
 
+<attr id="1782" name="zimbraMtaSmtpTlsMandatoryProtocols" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.7.0">
+  <globalConfigValue>!SSLv2, !SSLv3</globalConfigValue>
+  <desc>Value for postconf smtp_tls_mandatory_protocols</desc>
+</attr>
+
+<attr id="1783" name="zimbraMtaSmtpdTlsMandatoryProtocols" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.7.0">
+  <globalConfigValue>!SSLv2, !SSLv3</globalConfigValue>
+  <desc>Value for postconf smtpd_tls_mandatory_protocols</desc>
+</attr>
+
+<attr id="1784" name="zimbraMtaLmtpTlsMandatoryProtocols" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.7.0">
+  <globalConfigValue>!SSLv2, !SSLv3</globalConfigValue>
+  <desc>Value for postconf lmtp_tls_mandatory_protocols</desc>
+</attr>
+
 </attrs>

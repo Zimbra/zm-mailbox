@@ -172,6 +172,7 @@ SECTION mta DEPENDS amavis
 	POSTCONF smtpd_tls_key_file			/opt/zimbra/conf/smtpd.key
 	POSTCONF smtpd_tls_loglevel			VAR zimbraMtaSmtpdTlsLoglevel
 	POSTCONF smtpd_tls_mandatory_ciphers		VAR zimbraMtaSmtpdTlsMandatoryCiphers
+	POSTCONF smtpd_tls_mandatory_protocols		VAR zimbraMtaSmtpdTlsMandatoryProtocols
 	POSTCONF smtpd_tls_protocols			VAR zimbraMtaSmtpdTlsProtocols
 	POSTCONF smtpd_tls_security_level		VAR zimbraMtaTlsSecurityLevel
 	POSTCONF smtpd_error_sleep_time			VAR zimbraMtaSmtpdErrorSleepTime
@@ -185,11 +186,12 @@ SECTION mta DEPENDS amavis
 	POSTCONF lmtp_connection_cache_destinations	VAR zimbraMtaLmtpConnectionCacheDestinations
 	POSTCONF lmtp_connection_cache_time_limit	VAR zimbraMtaLmtpConnectionCacheTimeLimit
 	POSTCONF lmtp_host_lookup			VAR zimbraMtaLmtpHostLookup
+	POSTCONF lmtp_tls_ciphers			VAR zimbraMtaLmtpTlsCiphers
+	POSTCONF lmtp_tls_mandatory_ciphers		VAR zimbraMtaLmtpTlsMandatoryCiphers
+	POSTCONF lmtp_tls_mandatory_protocols		VAR zimbraMtaLmtpTlsMandatoryProtocols
 	POSTCONF lmtp_tls_protocols			VAR zimbraMtaLmtpTlsProtocols
 	POSTCONF lmtp_tls_exclude_ciphers		VAR zimbraMtaLmtpTlsExcludeCiphers
 	POSTCONF lmtp_tls_security_level		VAR zimbraMtaLmtpTlsSecurityLevel
-	POSTCONF lmtp_tls_ciphers			VAR zimbraMtaLmtpTlsCiphers
-	POSTCONF lmtp_tls_mandatory_ciphers		VAR zimbraMtaLmtpTlsMandatoryCiphers
 	POSTCONF lmtp_tls_CAfile			VAR zimbraMtaLmtpTlsCAfile
 	POSTCONF lmtp_tls_CApath			VAR zimbraMtaLmtpTlsCApath
 	POSTCONF lmtp_tls_loglevel			VAR zimbraMtaLmtpTlsLoglevel
@@ -215,6 +217,7 @@ SECTION mta DEPENDS amavis
 	POSTCONF smtp_tls_loglevel			VAR zimbraMtaSmtpTlsLoglevel
 	POSTCONF smtp_tls_ciphers			VAR zimbraMtaSmtpTlsCiphers
 	POSTCONF smtp_tls_mandatory_ciphers		VAR zimbraMtaSmtpTlsMandatoryCiphers
+	POSTCONF smtp_tls_mandatory_protocols		VAR zimbraMtaSmtpMandatoryTlsProtocols
 	POSTCONF smtp_tls_protocols			VAR zimbraMtaSmtpTlsProtocols
 	POSTCONF smtp_sasl_mechanism_filter		VAR zimbraMtaSmtpSaslMechanismFilter
 	POSTCONF smtp_sasl_password_maps		VAR zimbraMtaSmtpSaslPasswordMaps
