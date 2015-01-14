@@ -16,12 +16,14 @@
  */
 package com.zimbra.cs.milter;
 
+import com.zimbra.common.account.ZAttrProvisioning;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.server.ServerConfig;
 import com.zimbra.cs.util.Config;
+import com.zimbra.cs.util.ProvisioningUtil;
 
 public class MilterConfig extends ServerConfig {
     private static final String PROTOCOL = "MILTER";
@@ -59,22 +61,22 @@ public class MilterConfig extends ServerConfig {
 
     @Override
     public int getMaxIdleTime() {
-        return LC.milter_max_idle_time.intValue();
+        return (int) (ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraMilterMaxIdleTime, 3630*1000L)/1000);
     }
 
     @Override
     public int getWriteTimeout() {
-        return LC.milter_write_timeout.intValue();
+        return (int)  (ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraMilterWriteTimeout, 10*1000L)/1000);
     }
 
     @Override
     public int getWriteChunkSize() {
-        return LC.milter_write_chunk_size.intValue();
+        return ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraMilterWriteChunkSize, 1024);
     }
 
     @Override
     public int getThreadKeepAliveTime() {
-        return LC.milter_thread_keep_alive_time.intValue();
+        return (int) ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraMilterThreadKeepAliveTime, 60*1000L)/1000;
     }
 
     @Override
