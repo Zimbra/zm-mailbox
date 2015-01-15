@@ -17,8 +17,10 @@
 package com.zimbra.cs.consul;
 
 import java.io.IOException;
+import java.util.List;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.Triple;
 
 
 /**
@@ -30,6 +32,13 @@ public interface ServiceLocator {
     public void deregister(String serviceID) throws IOException, ServiceException;
 
     public void deregisterSilent(String serviceID);
+
+    /**
+     * Find service instances.
+     *
+     * @return the Host Name, Host Address, and Service Port of all the instances of a service.
+     */
+    public List<Triple<String,String,Integer>> find(String serviceID, boolean healthyOnly) throws IOException, ServiceException;
 
     /** Contact the service locator to determine whether it is reachable and responsive */
     public void ping() throws IOException;

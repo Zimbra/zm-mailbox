@@ -17,6 +17,8 @@
 package com.zimbra.cs.consul;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpException;
@@ -25,8 +27,10 @@ import org.apache.commons.httpclient.methods.HeadMethod;
 import org.apache.commons.httpclient.methods.PutMethod;
 import org.apache.commons.httpclient.methods.StringRequestEntity;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.type.JavaType;
 
 import com.zimbra.common.util.ZimbraHttpConnectionManager;
+import com.zimbra.qless.JSON;
 
 
 public class ConsulClient {
@@ -73,6 +77,16 @@ public class ConsulClient {
         }
     }
 
+    public List<HealthResponse> health(String serviceID, boolean passingOnly) throws IOException {
+        HttpMethod method = put(url + "/v1/health/service/" + serviceID + (passingOnly ? "?passing" : ""), "");
+        if (method.getStatusCode() != 200) {
+            throw new IOException(method.getStatusLine().toString());
+        }
+        JavaType javaType = objectMapper.getTypeFactory().constructCollectionType(ArrayList.class, HealthResponse.class);
+        List<HealthResponse> result = JSON.parse(method.getResponseBodyAsString(), javaType);
+        return result;
+    }
+
     /** Contact the Consul agent to determine whether it is reachable and responsive */
     public void ping() throws IOException {
         HttpMethod method = new HeadMethod(url + "/v1/agent/self");
@@ -82,4 +96,3 @@ public class ConsulClient {
         }
     }
 }
-
