@@ -159,6 +159,8 @@ public class UserServlet extends ZimbraServlet {
 
     public static final String QP_QUERY = "query"; // query query param
 
+    public static final String QP_SORT = "sort"; //sort query param
+    
     public static final String QP_VIEW = "view"; // view query param
 
     public static final String QP_TYPES = "types"; // types

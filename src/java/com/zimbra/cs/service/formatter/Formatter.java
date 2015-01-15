@@ -201,7 +201,7 @@ public abstract class Formatter {
                 }
             }
             ZimbraQueryResults results = context.targetMailbox.index.search(context.opContext, query, types,
-                    SortBy.DATE_DESC, context.getOffset() + context.getLimit());
+                    context.sortBy, context.getOffset() + context.getLimit());
             return new QueryResultIterator(results);
         } else if (context.target instanceof Folder) {
             Collection<? extends MailItem> items = getMailItemsFromFolder(context, (Folder) context.target, startTime, endTime, chunkSize);
@@ -225,7 +225,7 @@ public abstract class Formatter {
             case WIKI:
                 return context.targetMailbox.getDocumentList(context.opContext, folder.getId(), SortBy.NAME_ASC);
             default:
-                return context.targetMailbox.getItemList(context.opContext, MailItem.Type.MESSAGE, folder.getId());
+                return context.targetMailbox.getItemList(context.opContext, MailItem.Type.MESSAGE, folder.getId(), context.sortBy);
         }
     }
 

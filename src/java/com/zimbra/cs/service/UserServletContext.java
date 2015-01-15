@@ -52,6 +52,7 @@ import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.fb.FreeBusyQuery;
+import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.OperationContext;
@@ -77,6 +78,7 @@ public class UserServletContext {
     public String extraPath;
     public ItemId itemId;
     public MailItem target;
+    public SortBy sortBy;
     public FakeFolder fakeTarget = null;
     public int[] reqListIds;
     public ArrayList<Item> requestedItems;
@@ -174,6 +176,7 @@ public class UserServletContext {
         this.resp = response;
         this.servlet = srvlt;
         this.params = HttpUtil.getURIParams(request);
+        this.sortBy = getSortBy();
 
         //rest url override for locale
         String language = this.params.get(UserServlet.QP_LANGUAGE);
@@ -369,7 +372,21 @@ public class UserServletContext {
     public String getQueryString() {
         return params.get(UserServlet.QP_QUERY);
     }
-
+    
+    private SortBy getSortBy() throws UserServletException {
+        String sort = params.get(UserServlet.QP_SORT);
+        if (sort == null) {
+            return SortBy.DATE_DESC;
+        } else {
+            SortBy sortBy = SortBy.of(sort);
+            if (sortBy == null) {
+                throw UserServletException.badRequest(sort + " is not a valid sort order");
+            } else {
+                return sortBy;
+            }
+        }
+    }
+    
     /**
      * Shortcut to {@code params.get("charset")}.
      *
