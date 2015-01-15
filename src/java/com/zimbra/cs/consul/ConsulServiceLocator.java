@@ -17,11 +17,14 @@
 package com.zimbra.cs.consul;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.codehaus.jackson.map.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.Triple;
 import com.zimbra.common.util.ZimbraLog;
 
 
@@ -52,6 +55,22 @@ public class ConsulServiceLocator implements ServiceLocator {
         } catch (IOException | ServiceException e) {
             ZimbraLog.misc.error("Failed deregistering %s with service locator", serviceID, e);
         }
+    }
+
+    /**
+     * Returns matching service instances.
+     *
+     * @return the Host Name, Host Address, and Service Port of all the instances of a service.
+     */
+    @Override
+    public List<Triple<String,String,Integer>> find(String serviceID, boolean healthyOnly) throws IOException, ServiceException {
+        List<HealthResponse> list = consulClient.health(serviceID, healthyOnly);
+
+        List<Triple<String,String,Integer>> result = new ArrayList<>();
+        for (HealthResponse health: list) {
+            result.add(new Triple<String,String,Integer>(health.node.name, health.node.address, new Integer(health.service.port)));
+        }
+        return result;
     }
 
     /** Contact the service locator to determine whether it is reachable and responsive */

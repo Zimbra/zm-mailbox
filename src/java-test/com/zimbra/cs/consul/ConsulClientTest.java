@@ -13,13 +13,23 @@
  */
 package com.zimbra.cs.consul;
 
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
+import junit.framework.Assert;
+
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.RandomStringUtils;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.type.JavaType;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
+
+import com.zimbra.qless.JSON;
 
 /**
  * Unit test for {@link ConsulClient}.
@@ -37,7 +47,7 @@ public final class ConsulClientTest {
     }
 
     @Test
-    public void testCatalogRegisterCRUD() throws IOException {
+    public void catalogRegisterCRUD() throws IOException {
 
         // Prepare test data
         CatalogRegistration.Service service = new CatalogRegistration.Service();
@@ -50,5 +60,38 @@ public final class ConsulClientTest {
 
         // Deregister
         consulClient.agentDeregister(service.id);
+    }
+
+    @Test
+    public void parseHealthResponse() throws IOException {
+        String json = IOUtils.toString(new FileInputStream("./data/unittest/consulHealthResponse.json"));
+        JavaType javaType = new ObjectMapper().getTypeFactory().constructCollectionType(ArrayList.class, HealthResponse.class);
+        List<HealthResponse> result = JSON.parse(json, javaType);
+        Assert.assertEquals(1, result.size());
+        HealthResponse hr = result.get(0);
+        Assert.assertEquals("Davids-MacBook-Pro.local", hr.node.name);
+        Assert.assertEquals("10.0.1.7", hr.node.address);
+        Assert.assertEquals("zimbra:LmtpServer:7025", hr.service.id);
+        Assert.assertEquals("zimbra:LmtpServer", hr.service.name);
+        Assert.assertEquals("7025", hr.service.port);
+        Assert.assertEquals(2, hr.checks.size());
+        HealthResponse.Check check = hr.checks.get(0);
+        Assert.assertEquals("Davids-MacBook-Pro.local", check.node);
+        Assert.assertEquals("service:zimbra:LmtpServer:7025", check.id);
+        Assert.assertEquals("Service 'zimbra:LmtpServer' check", check.name);
+        Assert.assertEquals("passing", check.status);
+        Assert.assertEquals("", check.notes);
+        Assert.assertEquals("smtp://10.0.1.7:7025... OK\n", check.output);
+        Assert.assertEquals("zimbra:LmtpServer:7025", check.serviceID);
+        Assert.assertEquals("zimbra:LmtpServer", check.serviceName);
+        check = hr.checks.get(1);
+        Assert.assertEquals("Davids-MacBook-Pro.local", check.node);
+        Assert.assertEquals("serfHealth", check.id);
+        Assert.assertEquals("Serf Health Status", check.name);
+        Assert.assertEquals("passing", check.status);
+        Assert.assertEquals("", check.notes);
+        Assert.assertEquals("Agent alive and reachable", check.output);
+        Assert.assertEquals("", check.serviceID);
+        Assert.assertEquals("", check.serviceName);
     }
 }
