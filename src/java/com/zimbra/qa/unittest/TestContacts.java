@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -15,6 +15,9 @@
  * ***** END LICENSE BLOCK *****
  */
 package com.zimbra.qa.unittest;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.InputStream;
 import java.util.HashMap;
@@ -25,9 +28,10 @@ import java.util.Set;
 import javax.activation.DataHandler;
 import javax.mail.util.ByteArrayDataSource;
 
-import junit.framework.TestCase;
-
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
 
 import com.zimbra.client.ZContact;
 import com.zimbra.client.ZMailbox;
@@ -36,6 +40,7 @@ import com.zimbra.client.ZMailbox.ZAttachmentInfo;
 import com.zimbra.client.ZMailbox.ZImportContactsResult;
 import com.zimbra.client.ZSearchParams;
 import com.zimbra.common.account.Key;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Constants;
@@ -49,22 +54,27 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 
 
-public class TestContacts
-extends TestCase {
+public class TestContacts {
 
     private static final String NAME_PREFIX = TestContacts.class.getSimpleName();
-    private static final String USER_NAME = "user1";
+    private static final String USER_NAME = NAME_PREFIX + "_user1";
+    private static final String USER2_NAME = NAME_PREFIX + "_user2";
     String mOriginalMaxContacts;
-
-    @Override public void setUp()
+    private boolean originalLCSetting = false;
+    @Before public void setUp()
     throws Exception {
         cleanUp();
+        originalLCSetting = LC.zimbra_index_manual_commit.booleanValue();
+        LC.zimbra_index_manual_commit.setDefault(true);
+        TestUtil.createAccount(USER_NAME);
+        TestUtil.createAccount(USER2_NAME);
         mOriginalMaxContacts = TestUtil.getAccountAttr(USER_NAME, Provisioning.A_zimbraContactMaxNumEntries);
     }
 
     /**
      * Confirms that {@link Provisioning#A_zimbraContactMaxNumEntries} is enforced (bug 29627).
      */
+    @Test
     public void testMaxContacts()
     throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
@@ -88,6 +98,7 @@ extends TestCase {
     /**
      * Tests the server-side {@link Attachment} class.
      */
+    @Test
     public void testServerAttachment()
     throws Exception {
         // Specify the attachment size.
@@ -116,6 +127,7 @@ extends TestCase {
         assertEquals("attachment.txt", attach.getFilename());
     }
 
+    @Test
     public void testContactAttachments()
     throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
@@ -211,9 +223,9 @@ extends TestCase {
         assertEquals(attachment4Text, new String(data));
     }
 
+    @Test
     public void testMoveContact()
     throws Exception {
-        String USER2_NAME = "user2";
         ZMailbox zmbx = TestUtil.getZMailbox(USER_NAME);
         Account acct = Provisioning.getInstance().get(Key.AccountBy.name, TestUtil.getAddress(USER_NAME));
 
@@ -245,7 +257,9 @@ extends TestCase {
         // move the contact to user2
         zmbx.moveContact(contact.getId(), acct2.getId() + ":" + Mailbox.ID_FOLDER_CONTACTS);
         ZMailbox remoteZmbx = TestUtil.getZMailbox(USER2_NAME);
-        String idStr = TestUtil.search(remoteZmbx, "in:Contacts testMoveContact" , ZSearchParams.TYPE_CONTACT).get(0);
+        List<String> idStrings = TestUtil.search(remoteZmbx, "in:Contacts testMoveContact" , ZSearchParams.TYPE_CONTACT);
+        Assert.assertFalse("did not find testMoveContact in the target mailbox", idStrings.isEmpty());
+        String idStr = idStrings.get(0);
         Contact ct = remoteMbox.getContactById(null, Integer.parseInt(idStr));
         // make sure contact has attachment
         List<Attachment> list = ct.getAttachments();
@@ -260,7 +274,8 @@ extends TestCase {
         // reset the access
         remoteMbox.revokeAccess(null, Mailbox.ID_FOLDER_CONTACTS, acct.getId());
         mbox1.revokeAccess(null, Mailbox.ID_FOLDER_CONTACTS, acct2.getId());
-
+        idStrings = TestUtil.search(zmbx, "in:Contacts testMoveContact", ZSearchParams.TYPE_CONTACT);
+        Assert.assertFalse("did not testMoveContact in the original mailbox", idStrings.isEmpty());
         idStr = TestUtil.search(zmbx, "in:Contacts testMoveContact", ZSearchParams.TYPE_CONTACT).get(0);
 
         ct = mbox1.getContactById(null, Integer.parseInt(idStr));
@@ -282,6 +297,7 @@ extends TestCase {
     /**
      * test zclient contact import
      */
+    @Test
     public void testImportContacts()
     throws Exception {
         int timeout = (int) Constants.MILLIS_PER_MINUTE;
@@ -295,15 +311,21 @@ extends TestCase {
         Assert.assertEquals("Number of contacts imported", contactNum, res.getCount());
     }
 
-    @Override public void tearDown()
+    @After public void tearDown()
     throws Exception {
         TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraContactMaxNumEntries, mOriginalMaxContacts);
         cleanUp();
+        LC.zimbra_index_manual_commit.setDefault(originalLCSetting);
     }
 
     private void cleanUp()
     throws Exception {
-        TestUtil.deleteTestData(USER_NAME, NAME_PREFIX);
+        if(TestUtil.accountExists(USER_NAME)) {
+            TestUtil.deleteAccount(USER_NAME);
+        }
+        if(TestUtil.accountExists(USER2_NAME)) {
+            TestUtil.deleteAccount(USER2_NAME);
+        }
     }
 
     public static void main(String[] args)

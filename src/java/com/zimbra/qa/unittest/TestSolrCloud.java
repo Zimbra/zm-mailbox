@@ -1,5 +1,5 @@
 /**
- * 
+ *
  */
 package com.zimbra.qa.unittest;
 
@@ -19,6 +19,7 @@ import org.apache.solr.common.util.NamedList;
 import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.zimbra.common.localconfig.LC;
@@ -33,11 +34,12 @@ import com.zimbra.cs.mailbox.MailItem;
  * @author Greg Solovyev
  *
  */
+@Ignore ("run this test manually in cloud setting only")
 public class TestSolrCloud {
 
-	protected static final String BASE_DOMAIN_NAME = TestLdap.baseDomainName(TestSolrCloud.class); 
+	protected static final String BASE_DOMAIN_NAME = TestLdap.baseDomainName(TestSolrCloud.class);
 	protected static final String USER_NAME = "TestSolrCloud-user1";
-    
+
 	@Before
     public void setUp() throws Exception {
     	Assume.assumeTrue("com.zimbra.cs.index.solr.SolrCloudIndex$Factory".equals(LC.zimbra_class_index_store_factory.value()));
@@ -45,17 +47,17 @@ public class TestSolrCloud {
         //create test domain
         TestUtil.createDomain(BASE_DOMAIN_NAME);
     }
-   
+
     @After
     public void tearDown() throws Exception {
     	cleanUp();
     }
-    
+
     private void cleanUp() throws Exception {
     	TestUtil.deleteAccount(genAccountName());
     	TestUtil.deleteDomain(BASE_DOMAIN_NAME);
     }
-    
+
 	@Test
 	public void testCreateIndex() throws Exception {
 		//check that index store factory is set to com.zimbra.cs.index.solr.SolrCloudIndex$Factory
@@ -73,10 +75,9 @@ public class TestSolrCloud {
 		assertTrue("failed to create an account", TestUtil.accountExists(acctName));
 		TestUtil.addMessage(TestUtil.getMailbox(acctName), "chorus at end by pupils from the Fourth Form Music Class Islington Green School, London");
 		TestUtil.search(TestUtil.getMailbox(acctName), "chorus", MailItem.Type.MESSAGE);
-		Thread.sleep(1000);
 		IndexStore indexStore = indexStoreFactory.getIndexStore(acct.getId());
 		assertTrue("failed to create an index", indexStore.indexExists());
-		
+
 		//check number of shards and replicas
 		SolrCloudIndex cloudIndex = (SolrCloudIndex)indexStore;
 		ModifiableSolrParams params = new ModifiableSolrParams();
@@ -99,7 +100,7 @@ public class TestSolrCloud {
 		Map<String, Object> shardStatus = (Map<String, Object>) collection.get("shards");
 		assertEquals("should have only one shard", 1, shardStatus.size());
 		Map<String, Object> selectedShardStatus = (Map<String, Object>) shardStatus.get("shard1");
-		assertNotNull("shard1 status should not be null", selectedShardStatus);		
+		assertNotNull("shard1 status should not be null", selectedShardStatus);
 		Map<String, Object> replicas = (Map<String, Object>) selectedShardStatus.get("replicas");
 		assertNotNull("replicas should not be null", replicas);
 		Map<String,Object> replica1 = (Map<String,Object>)replicas.get("core_node1");
@@ -111,7 +112,7 @@ public class TestSolrCloud {
 		assertFalse("should be provisioned on different nodes", node1Name.equalsIgnoreCase(node2Name));
 	}
 
-      
+
     private String genAccountName() {
         return USER_NAME + "@" + BASE_DOMAIN_NAME;
     }

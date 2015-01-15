@@ -30,6 +30,7 @@ import com.zimbra.client.ZMailbox;
 import com.zimbra.client.ZMessage;
 import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.common.account.ZAttrProvisioning;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
@@ -63,11 +64,22 @@ public final class TestImapImport extends TestCase {
     private String mOriginalCleartextValue;
     private ZDataSource mDataSource;
     private boolean mOriginalEnableStarttls;
-
+    private boolean originalLCSetting = false;
     @Override
     public void setUp() throws Exception {
         cleanUp();
 
+        //turn on synchronous indexing
+        originalLCSetting = LC.zimbra_index_manual_commit.booleanValue();
+        LC.zimbra_index_manual_commit.setDefault(true);
+
+        // Turn on cleartext login
+        mOriginalCleartextValue = TestUtil.getServerAttr(Provisioning.A_zimbraImapCleartextLoginEnabled);
+        TestUtil.setServerAttr(Provisioning.A_zimbraImapCleartextLoginEnabled, ProvisioningConstants.TRUE);
+
+        // Turn off STARTTLS support so that unit tests don't bomb on Linux (see bug 33683).
+        mOriginalEnableStarttls = ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraImapEnableStartTls, true);
+        Provisioning.getInstance().getLocalServer().setImapEnableStartTls(false);
         // Get mailbox references
         if (!TestUtil.accountExists(LOCAL_USER_NAME)) {
             TestUtil.createAccount(LOCAL_USER_NAME);
@@ -96,14 +108,6 @@ public final class TestImapImport extends TestCase {
             }
         }
         assertNotNull(mDataSource);
-
-        // Turn on cleartext login
-        mOriginalCleartextValue = TestUtil.getServerAttr(Provisioning.A_zimbraImapCleartextLoginEnabled);
-        TestUtil.setServerAttr(Provisioning.A_zimbraImapCleartextLoginEnabled, ProvisioningConstants.TRUE);
-
-        // Turn off STARTTLS support so that unit tests don't bomb on Linux (see bug 33683).
-        mOriginalEnableStarttls = ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraImapEnableStartTls, true);
-        Provisioning.getInstance().getLocalServer().setImapEnableStartTls(false);
     }
 
     public void testImapImport() throws Exception {
@@ -353,6 +357,9 @@ public final class TestImapImport extends TestCase {
     @Override
     public void tearDown() throws Exception {
         cleanUp();
+
+        //reset configs to pre-test values
+        LC.zimbra_index_manual_commit.setDefault(originalLCSetting);
         TestUtil.setServerAttr(Provisioning.A_zimbraImapCleartextLoginEnabled, mOriginalCleartextValue);
         Provisioning.getInstance().getLocalServer().setImapEnableStartTls(mOriginalEnableStarttls);
     }

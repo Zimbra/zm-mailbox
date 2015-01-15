@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2009, 2010, 2011, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -17,19 +17,25 @@
 
 package com.zimbra.qa.unittest;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import junit.framework.TestCase;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log.Level;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.db.DbPool;
-import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Conversation;
@@ -38,9 +44,7 @@ import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
-import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.stats.ZimbraPerf;
@@ -48,15 +52,17 @@ import com.zimbra.cs.stats.ZimbraPerf;
 /**
  * @author bburtin
  */
-public class TestTags extends TestCase {
-    private DbConnection mConn;
+public class TestTags {
     private Mailbox mMbox;
     private Account mAccount;
-    private String remoteUser;
-    private Mountpoint mountpoint;
+    private Mailbox mRemoteMbox;
+    private Account mRemoteAccount;
 
     private static String TAG_PREFIX = "TestTags";
     private static String MSG_SUBJECT = "Test tags";
+    private static final String NAME_PREFIX = TestTags.class.getSimpleName();
+    private static final String USER_NAME = NAME_PREFIX + "_user1";
+    private static final String REMOTE_USER_NAME = NAME_PREFIX + "_remote_user";
 
     private Message mMessage1;
     private Message mMessage2;
@@ -64,22 +70,25 @@ public class TestTags extends TestCase {
     private Message mMessage4;
     private Conversation mConv;
     private Tag[] mTags = new Tag[0];
-
+    private boolean originalLCSetting = false;
     /**
      * Creates the message used for tag tests
      */
-    @Override
-    protected void setUp() throws Exception {
-        ZimbraLog.test.debug("TestTags.setUp()");
-        super.setUp();
-
-        remoteUser = "test.tags.user@" + TestUtil.getDomain();
-        mAccount = TestUtil.getAccount("user1");
-        mMbox = MailboxManager.getInstance().getMailboxByAccount(mAccount);
-        mConn = DbPool.getConnection();
-
+    @Before
+    public void setUp() throws Exception {
         // Clean up, in case the last test didn't exit cleanly
         cleanUp();
+
+        originalLCSetting = LC.zimbra_index_manual_commit.booleanValue();
+        LC.zimbra_index_manual_commit.setDefault(true);
+
+        ZimbraLog.test.debug("TestTags.setUp()");
+
+        mAccount = TestUtil.createAccount(USER_NAME);
+        mMbox = TestUtil.getMailbox(USER_NAME);
+
+        mRemoteAccount = TestUtil.createAccount(REMOTE_USER_NAME);
+        mRemoteMbox = TestUtil.getMailbox(REMOTE_USER_NAME);
 
         mMessage1 = TestUtil.addMessage(mMbox, MSG_SUBJECT + " 1");
         mMessage2 = TestUtil.addMessage(mMbox, MSG_SUBJECT + " 2");
@@ -90,15 +99,8 @@ public class TestTags extends TestCase {
         refresh();
     }
 
-    public void testManyTags()
+    @Test public void testManyTags()
     throws Exception {
-        // xxx bburtin: Don't run this test as part of the regular test suite,
-        // since it takes almost 20 seconds to run.
-        boolean runTest = false;
-        if (!runTest) {
-            return;
-        }
-
         int numPrepares = ZimbraPerf.getPrepareCount();
 
         // Create the maximum number of tags, based on the number that already exist
@@ -123,7 +125,7 @@ public class TestTags extends TestCase {
         ZimbraLog.test.debug("testManyTags generated %d SQL statements.", numPrepares);
     }
 
-    public void testRemoveTag() throws Exception {
+    @Test public void testRemoveTag() throws Exception {
         // Create tags
         mTags = new Tag[4];
         for (int i = 0; i < mTags.length; i++) {
@@ -144,13 +146,13 @@ public class TestTags extends TestCase {
         assertEquals("0: result size", 0, ids.size());
     }
 
-    public void testNonExistentTagSearch()
+    @Test public void testNonExistentTagSearch()
     throws Exception {
         Set<Integer> ids = search("tag:nonexistent", MailItem.Type.MESSAGE);
         assertEquals("search for tag:nonexistent result size", 0, ids.size());
     }
 
-    public void testTagSearch()
+    @Test public void testTagSearch()
     throws Exception {
         // Create tags
         mTags = new Tag[4];
@@ -221,27 +223,24 @@ public class TestTags extends TestCase {
     /**
      * Bug 79576 was seeing extra (wrong) hits from shared folder when click on a tag.
      */
-    public void testRemoteTagSearch()
+    @Test public void testRemoteTagSearch()
     throws Exception {
-        Account remoteAcct = TestUtil.createAccount(remoteUser);
-        remoteAcct = TestUtil.getAccount(remoteUser);
-        Mailbox remoteMbox = MailboxManager.getInstance().getMailboxByAccount(remoteAcct);
-        remoteMbox.grantAccess(null, Mailbox.ID_FOLDER_INBOX, mAccount.getId(),
+        mRemoteMbox.grantAccess(null, Mailbox.ID_FOLDER_INBOX, mAccount.getId(),
                 ACL.GRANTEE_USER,(short) (ACL.RIGHT_READ | ACL.RIGHT_WRITE | ACL.RIGHT_INSERT), null);
-        mountpoint = mMbox.createMountpoint(null, Mailbox.ID_FOLDER_USER_ROOT, "remoteInbox", remoteAcct.getId(),
+        mMbox.createMountpoint(null, Mailbox.ID_FOLDER_USER_ROOT, "remoteInbox", mRemoteAccount.getId(),
                 Mailbox.ID_FOLDER_INBOX, null, MailItem.Type.MESSAGE, Flag.ID_CHECKED, (byte) 2, false);
-        Message remoteMsg1 = TestUtil.addMessage(remoteMbox, MSG_SUBJECT + " in shared inbox tagged with shared TAG");
-        Message remoteMsg2 = TestUtil.addMessage(remoteMbox, MSG_SUBJECT + " in shared inbox tagged remOnly");
+        Message remoteMsg1 = TestUtil.addMessage(mRemoteMbox, MSG_SUBJECT + " in shared inbox tagged with shared TAG");
+        Message remoteMsg2 = TestUtil.addMessage(mRemoteMbox, MSG_SUBJECT + " in shared inbox tagged remOnly");
         Tag[] remoteTags = new Tag[2];
-        remoteTags[0] = remoteMbox.createTag(null, TAG_PREFIX + 1, (byte)0);
-        remoteTags[1] = remoteMbox.createTag(null, TAG_PREFIX + "remOnly", (byte)0);
+        remoteTags[0] = mRemoteMbox.createTag(null, TAG_PREFIX + 1, (byte)0);
+        remoteTags[1] = mRemoteMbox.createTag(null, TAG_PREFIX + "remOnly", (byte)0);
         mTags = new Tag[2];
         for (int i = 0; i < mTags.length; i++) {
             mTags[i] = mMbox.createTag(null, TAG_PREFIX + (i + 1), (byte)0);
         }
         refresh();
-        remoteMbox.alterTag(null, remoteMsg1.getId(), remoteMsg1.getType(), remoteTags[0].getName(), true, null);
-        remoteMbox.alterTag(null, remoteMsg2.getId(), remoteMsg2.getType(), remoteTags[1].getName(), true, null);
+        mRemoteMbox.alterTag(null, remoteMsg1.getId(), remoteMsg1.getType(), remoteTags[0].getName(), true, null);
+        mRemoteMbox.alterTag(null, remoteMsg2.getId(), remoteMsg2.getType(), remoteTags[1].getName(), true, null);
         mMbox.alterTag(null, mMessage2.getId(), mMessage2.getType(), mTags[0].getName(), true, null);
         mMbox.alterTag(null, mMessage3.getId(), mMessage3.getType(), mTags[1].getName(), true, null);
         Folder sharedFolder = mMbox.getFolderByName(null, Mailbox.ID_FOLDER_USER_ROOT, "remoteInbox");
@@ -259,7 +258,7 @@ public class TestTags extends TestCase {
             if (parsedId.belongsTo(mAccount) && hit.getItemId() == mMessage2.getId()) {
                 gotLocalHit = true;
             }
-            if (parsedId.belongsTo(remoteAcct) && hit.getItemId() == remoteMsg1.getId()) {
+            if (parsedId.belongsTo(mRemoteAccount) && hit.getItemId() == remoteMsg1.getId()) {
                 gotRemoteHit = true;
             }
         }
@@ -273,7 +272,7 @@ public class TestTags extends TestCase {
         assertTrue("2nd search should contain message 3", ids.contains(new Integer(mMessage3.getId())));
     }
 
-    public void testFlagSearch() throws Exception {
+    @Test public void testFlagSearch() throws Exception {
         // First assign T1 to the entire conversation, then remove it from M2-M4
         mMbox.alterTag(null, mConv.getId(), mConv.getType(), Flag.FlagInfo.REPLIED, true, null);
         mMbox.alterTag(null, mMessage2.getId(), mMessage2.getType(), Flag.FlagInfo.REPLIED, false, null);
@@ -345,7 +344,7 @@ public class TestTags extends TestCase {
         //        assertFalse("6: contains message 4", ids.contains(new Integer(mMessage4.getId())));
     }
 
-    public void testSearchUnreadAsTag() throws Exception {
+    @Test public void testSearchUnreadAsTag() throws Exception {
         boolean unseenSearchSucceeded = false;
         try {
             search("tag:\\Unseen", MailItem.Type.MESSAGE);
@@ -391,42 +390,23 @@ public class TestTags extends TestCase {
         }
     }
 
-    @Override
-    protected void tearDown() throws Exception {
+    @After
+    public void tearDown() throws Exception {
         ZimbraLog.test.debug("TestTags.tearDown()");
 
         cleanUp();
-
-        DbPool.quietClose(mConn);
-        super.tearDown();
+        LC.zimbra_index_manual_commit.setDefault(originalLCSetting);
     }
 
     private void cleanUp() throws Exception {
-        Set<Integer> messageIds = search("subject:\"Test tags\"", MailItem.Type.MESSAGE);
-        for (int id : messageIds) {
-            mMbox.delete(null, id, MailItem.Type.MESSAGE);
-        }
-
-        List<Tag> tags = mMbox.getTagList(null);
-        if (tags == null) {
-            return;
-        }
-
-        for (Tag tag : tags) {
-            if (tag.getName().startsWith(TAG_PREFIX)) {
-                mMbox.delete(null, tag.getId(), tag.getType());
-            }
-        }
-        if (mountpoint != null) {
+        if(TestUtil.accountExists(REMOTE_USER_NAME)) {
             try {
-                mMbox.delete(null, mountpoint.getId(), MailItem.Type.MOUNTPOINT);
+                TestUtil.deleteAccount(REMOTE_USER_NAME);
             } catch (Exception e) {
             }
-            mountpoint = null;
         }
-        try {
-            TestUtil.deleteAccount(remoteUser);
-        } catch (Exception e) {
+        if(TestUtil.accountExists(USER_NAME)) {
+            TestUtil.deleteAccount(USER_NAME);
         }
     }
 

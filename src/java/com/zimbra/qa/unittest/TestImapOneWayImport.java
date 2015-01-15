@@ -29,6 +29,7 @@ import com.zimbra.client.ZImapDataSource;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.client.ZMessage;
 import com.zimbra.common.account.ProvisioningConstants;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
@@ -59,11 +60,23 @@ public class TestImapOneWayImport extends TestCase {
     private ZMailbox mLocalMbox;
     private String mOriginalCleartextValue;
     private ZDataSource mDataSource;
-    private boolean mOriginalEnableStarttls;
-
+    private boolean originalLCSetting = false;
+    private boolean mOriginalEnableStarttls = false;
     @Override
     public void setUp() throws Exception {
         cleanUp();
+        // Turn on cleartext login
+        mOriginalCleartextValue = TestUtil.getServerAttr(Provisioning.A_zimbraImapCleartextLoginEnabled);
+        TestUtil.setServerAttr(Provisioning.A_zimbraImapCleartextLoginEnabled, ProvisioningConstants.TRUE);
+
+        // Turn off STARTTLS support so that unit tests don't bomb on Linux
+        // (see bug 33683).
+        mOriginalEnableStarttls = Provisioning.getInstance().getLocalServer().isImapEnableStartTls();
+        Provisioning.getInstance().getLocalServer().setImapEnableStartTls(false);
+
+        //turn on synchronous indexing
+        originalLCSetting = LC.zimbra_index_manual_commit.booleanValue();
+        LC.zimbra_index_manual_commit.setDefault(true);
 
         // Get mailbox references
         if (!TestUtil.accountExists(LOCAL_USER_NAME)) {
@@ -94,15 +107,6 @@ public class TestImapOneWayImport extends TestCase {
             }
         }
         assertNotNull(mDataSource);
-        // Turn on cleartext login
-        mOriginalCleartextValue = TestUtil.getServerAttr(Provisioning.A_zimbraImapCleartextLoginEnabled);
-        TestUtil.setServerAttr(
-            Provisioning.A_zimbraImapCleartextLoginEnabled, ProvisioningConstants.TRUE);
-
-        // Turn off STARTTLS support so that unit tests don't bomb on Linux
-        // (see bug 33683).
-        mOriginalEnableStarttls = Provisioning.getInstance().getLocalServer().isImapEnableStartTls();
-        Provisioning.getInstance().getLocalServer().setImapEnableStartTls(false);
     }
 
     public void testImapOneWayImport() throws Exception {
@@ -346,9 +350,11 @@ public class TestImapOneWayImport extends TestCase {
         @Override
         public void tearDown() throws Exception {
             cleanUp();
-            TestUtil.setServerAttr(
-                Provisioning.A_zimbraImapCleartextLoginEnabled, mOriginalCleartextValue);
-            Provisioning.getInstance().getLocalServer().setImapEnableStartTls(false);
+
+            //reset config settings to pre-test values
+            LC.zimbra_index_manual_commit.setDefault(originalLCSetting);
+            Provisioning.getInstance().getLocalServer().setImapEnableStartTls(mOriginalEnableStarttls);
+            TestUtil.setServerAttr(Provisioning.A_zimbraImapCleartextLoginEnabled, mOriginalCleartextValue);
         }
 
         public void cleanUp()

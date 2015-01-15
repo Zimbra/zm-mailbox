@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2008, 2009, 2010, 2011, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -22,15 +22,16 @@ import java.util.List;
 import junit.framework.TestCase;
 
 import com.zimbra.client.ZFilterAction;
+import com.zimbra.client.ZFilterAction.ZTagAction;
 import com.zimbra.client.ZFilterCondition;
+import com.zimbra.client.ZFilterCondition.HeaderOp;
+import com.zimbra.client.ZFilterCondition.ZHeaderCondition;
 import com.zimbra.client.ZFilterRule;
 import com.zimbra.client.ZFilterRules;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.client.ZMessage;
 import com.zimbra.client.ZTag;
-import com.zimbra.client.ZFilterAction.ZTagAction;
-import com.zimbra.client.ZFilterCondition.HeaderOp;
-import com.zimbra.client.ZFilterCondition.ZHeaderCondition;
+import com.zimbra.common.localconfig.LC;
 
 public class TestTagFilterRules
 extends TestCase
@@ -40,16 +41,19 @@ extends TestCase
     private static final String TAG_NAME = NAME_PREFIX;
     private static final String TAG2_NAME = NAME_PREFIX + "2";
     private static final String NEW_TAG_NAME = TAG_NAME + " new";
-    
+
     private ZMailbox mMbox;
     private ZTag mTag;
     private ZTag mTag2;
     private ZFilterRules mOriginalRules;
-    
+    private boolean originalLCSetting = false;
+
+    @Override
     public void setUp()
     throws Exception {
         cleanUp();
-        
+        originalLCSetting = LC.zimbra_index_manual_commit.booleanValue();
+        LC.zimbra_index_manual_commit.setDefault(true);
         mMbox = TestUtil.getZMailbox(USER_NAME);
         mTag = mMbox.createTag(TAG_NAME, ZTag.Color.purple);
         mTag2 = mMbox.createTag(TAG2_NAME, ZTag.Color.green);
@@ -62,27 +66,27 @@ extends TestCase
      */
     public void testRenameTag()
     throws Exception {
-        // Send message 
+        // Send message
         String sender = TestUtil.getAddress(USER_NAME);
         String recipient = TestUtil.getAddress(USER_NAME);
         String subject = NAME_PREFIX + " testRenameTag 1";
         TestUtil.addMessageLmtp(subject, recipient, sender);
-        
+
         // Confirm that the original tag was applied
         ZMessage msg = TestUtil.getMessage(mMbox, "tag:" + TAG_NAME);
         TestUtil.verifyTag(mMbox, msg, TAG_NAME);
-        
+
         // Rename tag
         mMbox.renameTag(mTag.getId(), NEW_TAG_NAME);
 
         // Confirm filter rules were updated
         ZTagAction action = (ZTagAction) mMbox.getIncomingFilterRules(true).getRules().get(0).getActions().get(0);
         assertEquals("Tag name didn't change", NEW_TAG_NAME, action.getTagName());
-        
+
         // Send another message
         subject = NAME_PREFIX + " testRenameTag 2";
         TestUtil.addMessageLmtp(subject, recipient, sender);
-        
+
         // Confirm that the new tag name is now applied to both messages
         List<ZMessage> messages = TestUtil.search(mMbox, "tag:\"" + NEW_TAG_NAME + "\"");
         assertEquals("Incorrect number of tagged messages", 2, messages.size());
@@ -90,35 +94,37 @@ extends TestCase
             TestUtil.verifyTag(mMbox, msg2, NEW_TAG_NAME);
         }
     }
-    
+
     /**
-     * Verifies that filter rules are disabled when a tag is deleted. 
+     * Verifies that filter rules are disabled when a tag is deleted.
      */
     public void testDeleteTag()
     throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         mbox.deleteTag(mTag.getId());
-        
+
         // Deliver message that used to match the tag rule and make sure
         // that the message is not tagged.
         String subject = NAME_PREFIX + " testDeleteTag";
         TestUtil.addMessageLmtp(subject, USER_NAME, USER_NAME);
         ZMessage msg = TestUtil.getMessage(mbox, "in:inbox subject:\"" + subject + "\"");
         assertEquals(mTag2.getId(), msg.getTagIds());
-        
+
         // Confirm that the first rule was disabled and the second was not.
         ZFilterRule rule1 = TestUtil.getFilterRule(mbox, TAG_NAME);
         assertFalse(rule1.isActive());
         ZFilterRule rule2 = TestUtil.getFilterRule(mbox, TAG2_NAME);
         assertTrue(rule2.isActive());
     }
-    
+
+    @Override
     public void tearDown()
     throws Exception {
         mMbox.saveIncomingFilterRules(mOriginalRules);
         cleanUp();
+        LC.zimbra_index_manual_commit.setDefault(originalLCSetting);
     }
-    
+
     public void cleanUp()
     throws Exception {
         TestUtil.deleteTestData(USER_NAME, NAME_PREFIX);
@@ -134,14 +140,14 @@ extends TestCase
         conditions.add(new ZHeaderCondition("subject", HeaderOp.CONTAINS, NAME_PREFIX));
         actions.add(new ZTagAction(TAG_NAME));
         rules.add(new ZFilterRule(TAG_NAME, true, false, conditions, actions));
-        
+
         // if subject contains "TestTagFilterRules", tag TestTagFilterRules2
         conditions = new ArrayList<ZFilterCondition>();
         actions = new ArrayList<ZFilterAction>();
         conditions.add(new ZHeaderCondition("subject", HeaderOp.CONTAINS, NAME_PREFIX));
         actions.add(new ZTagAction(TAG2_NAME));
         rules.add(new ZFilterRule(TAG2_NAME, true, false, conditions, actions));
-        
+
         return new ZFilterRules(rules);
     }
 

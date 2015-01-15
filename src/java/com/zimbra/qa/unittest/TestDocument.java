@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -16,15 +16,20 @@
  */
 package com.zimbra.qa.unittest;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.util.List;
 
-import junit.framework.TestCase;
-
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.methods.GetMethod;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 import com.zimbra.client.ZDocument;
 import com.zimbra.client.ZItem;
@@ -32,6 +37,7 @@ import com.zimbra.client.ZMailbox;
 import com.zimbra.client.ZSearchParams;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.httpclient.HttpClientUtil;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.ZimbraHttpConnectionManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
@@ -42,19 +48,27 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 
-public class TestDocument extends TestCase {
+public class TestDocument {
 
     private static final String NAME_PREFIX = TestDocument.class.getSimpleName();
-    private static final String USER_NAME = "user1";
+    private static final String USER_NAME = NAME_PREFIX + "user1";
+    private static final String USER2_NAME = NAME_PREFIX + "user2";
+    private boolean originalLCSetting = false;
 
-    @Override public void setUp()
+    @Before
+    public void setUp()
     throws Exception {
         cleanUp();
+        originalLCSetting = LC.zimbra_index_manual_commit.booleanValue();
+        LC.zimbra_index_manual_commit.setDefault(true);
+        TestUtil.createAccount(USER_NAME);
+        TestUtil.createAccount(USER2_NAME);
     }
 
     /**
      * Tests documents created with the {@code Note} flag set.
      */
+    @Test
     public void testNote()
     throws Exception {
         // Create a document and a note.
@@ -80,9 +94,10 @@ public class TestDocument extends TestCase {
     /**
      * Tests moving of documents created with the {@code Note} flag set.
      */
+    @Test
     public void testMoveNote()
     throws Exception {
-        String USER2_NAME = "user2";
+
         String filename = NAME_PREFIX + "-testMoveNote.txt";
         Account acct = Provisioning.getInstance().get(Key.AccountBy.name, TestUtil.getAddress(USER_NAME));
         Account acct2 = Provisioning.getInstance().get(Key.AccountBy.name, TestUtil.getAddress(USER2_NAME));
@@ -135,6 +150,7 @@ public class TestDocument extends TestCase {
     /**
      * Tests deletion of blob when document revision is deleted.
      */
+    @Test
     public void testPurgeRevision()
     throws Exception {
         // Create document
@@ -160,6 +176,7 @@ public class TestDocument extends TestCase {
     /**
      * Tests deletion of blobs when document revisions are deleted.
      */
+    @Test
     public void testPurgeRevisions()
     throws Exception {
         // Create document
@@ -185,6 +202,7 @@ public class TestDocument extends TestCase {
     /**
      * Tests the content-type based on file extension.
      */
+    @Test
     public void testContentType()
     throws Exception {
         // Create two documents.
@@ -202,6 +220,7 @@ public class TestDocument extends TestCase {
      * Test REST access to publicly shared folder
      * @throws Exception
      */
+    @Test
     public void testPublicShare()
     throws Exception {
         Mailbox mbox = TestUtil.getMailbox(USER_NAME);
@@ -220,14 +239,22 @@ public class TestDocument extends TestCase {
         assertFalse("Should not contain AUTH_EXPIRED", respStr.contains("AUTH_EXPIRED"));
         assertTrue("Should contain shared content ", respStr.contains("test2.txt"));
     }
-    @Override public void tearDown()
+
+    @After
+    public void tearDown()
     throws Exception {
         cleanUp();
+        LC.zimbra_index_manual_commit.setDefault(originalLCSetting);
     }
 
     private void cleanUp()
     throws Exception {
-        TestUtil.deleteTestData(USER_NAME, NAME_PREFIX);
+        if(TestUtil.accountExists(USER_NAME)) {
+            TestUtil.deleteAccount(USER_NAME);
+        }
+        if(TestUtil.accountExists(USER2_NAME)) {
+            TestUtil.deleteAccount(USER2_NAME);
+        }
     }
 
     public static void main(String[] args)

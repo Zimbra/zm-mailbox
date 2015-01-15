@@ -28,7 +28,6 @@ public class TestSearchIsAnywhere {
         mbox = TestUtil.getZMailbox(USER_NAME);
         remote_mbox = TestUtil.getZMailbox(REMOTE_USER_NAME);
         TestUtil.sendMessage(remote_mbox, USER_NAME, subject);
-        Thread.sleep(1000);
         ZMessage msg = TestUtil.search(mbox, subject).get(0);
         msg.move(ZFolder.ID_TRASH);
     }

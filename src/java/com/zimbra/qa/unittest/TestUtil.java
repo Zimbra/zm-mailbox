@@ -39,6 +39,10 @@ import javax.mail.util.SharedByteArrayInputStream;
 
 import junit.framework.Assert;
 
+import org.apache.http.conn.HttpClientConnectionManager;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.solr.client.solrj.SolrServer;
+import org.apache.solr.client.solrj.impl.HttpSolrServer;
 import org.junit.runner.JUnitCore;
 
 import com.google.common.collect.Lists;
@@ -305,12 +309,10 @@ extends Assert {
         if (!StringUtil.isNullOrEmpty(sender)) {
             senderAddress = addDomainIfNecessary(sender);
         }
+
         boolean success = lmtp.sendMessage(new ByteArrayInputStream(data), recipWithDomain, senderAddress, "TestUtil", (long) data.length);
         lmtp.close();
-        if(LC.zimbra_class_index_store_factory.value().contains("Solr") || LC.zimbra_class_index_store_factory.value().contains("ElasticSearchIndex")) {
-            Thread.sleep(500);
-            //when running solr and tests on the same machine, next search request may come before Solr updates the index
-        }
+        Thread.sleep(100);
         return success;
     }
 
@@ -541,6 +543,16 @@ extends Assert {
     throws Exception {
         List<ZMessage> msgs = waitForMessages(mbox, query, 1, 10000);
         return msgs.get(0);
+    }
+
+    /**
+     * return an instance of SolrJ client for a given account
+     * @param accountId
+     * @return
+     * @throws ServiceException
+     */
+    public static SolrServer getSolrServer(String accountId, HttpClientConnectionManager cm) throws ServiceException {
+        return new HttpSolrServer(Provisioning.getInstance().getLocalServer().getSolrURLBase() + "/" + accountId, HttpClients.createMinimal(cm));
     }
 
     /**
@@ -781,7 +793,7 @@ extends Assert {
             prov.deleteDomain(domain.getId());
         }
     }
-    
+
     public static String getServerAttr(String attrName)
     throws ServiceException {
         Provisioning prov = Provisioning.getInstance();

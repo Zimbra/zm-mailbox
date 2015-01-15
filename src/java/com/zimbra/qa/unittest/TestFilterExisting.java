@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -16,29 +16,21 @@
  */
 package com.zimbra.qa.unittest;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
-import junit.framework.TestCase;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
-import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.MailConstants;
-import com.zimbra.common.soap.Element.XMLElement;
-import com.zimbra.common.soap.SoapFaultException;
-import com.zimbra.common.util.StringUtil;
-import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.filter.RuleManager;
-import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.client.ZFilterAction;
-import com.zimbra.client.ZFilterCondition;
-import com.zimbra.client.ZFilterRule;
-import com.zimbra.client.ZFilterRules;
-import com.zimbra.client.ZFolder;
-import com.zimbra.client.ZMailbox;
-import com.zimbra.client.ZMessage;
-import com.zimbra.client.ZTag;
 import com.zimbra.client.ZFilterAction.MarkOp;
 import com.zimbra.client.ZFilterAction.ZDiscardAction;
 import com.zimbra.client.ZFilterAction.ZFileIntoAction;
@@ -46,13 +38,29 @@ import com.zimbra.client.ZFilterAction.ZKeepAction;
 import com.zimbra.client.ZFilterAction.ZMarkAction;
 import com.zimbra.client.ZFilterAction.ZRedirectAction;
 import com.zimbra.client.ZFilterAction.ZTagAction;
+import com.zimbra.client.ZFilterCondition;
 import com.zimbra.client.ZFilterCondition.HeaderOp;
 import com.zimbra.client.ZFilterCondition.ZHeaderCondition;
+import com.zimbra.client.ZFilterRule;
+import com.zimbra.client.ZFilterRules;
+import com.zimbra.client.ZFolder;
+import com.zimbra.client.ZMailbox;
+import com.zimbra.client.ZMessage;
+import com.zimbra.client.ZTag;
+import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.Element.XMLElement;
+import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.soap.SoapFaultException;
+import com.zimbra.common.util.StringUtil;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.filter.RuleManager;
+import com.zimbra.cs.mailbox.Mailbox;
 
-public class TestFilterExisting extends TestCase {
+public class TestFilterExisting  {
 
-    private static final String USER_NAME = "user1";
     private static final String NAME_PREFIX = "TestFilterExisting";
+    private static final String USER_NAME = NAME_PREFIX + "user1";
     private static final String FOLDER1_NAME = NAME_PREFIX + "-folder1";
     private static final String FOLDER2_NAME = NAME_PREFIX + "-folder2";
     private static final String FOLDER3_NAME = NAME_PREFIX + "-folder3";
@@ -70,21 +78,16 @@ public class TestFilterExisting extends TestCase {
     private static final String FOLDER3_RULE_NAME = NAME_PREFIX + " folder3";
     private static final String DISCARD_RULE_NAME = NAME_PREFIX + " discard";
     private static final String REDIRECT_RULE_NAME = NAME_PREFIX + " redirect";
+    private boolean originalLCSetting = false;
 
-    private ZFilterRules originalRules;
-    private String originalBatchSize;
-    private String originalSleepInterval;
-    
-    @Override
+    @Before
     public void setUp() throws Exception {
         cleanUp();
-
-        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
-        originalRules = mbox.getIncomingFilterRules();
-        originalBatchSize = TestUtil.getAccountAttr(USER_NAME, Provisioning.A_zimbraFilterBatchSize);
-        originalSleepInterval = TestUtil.getAccountAttr(USER_NAME, Provisioning.A_zimbraFilterSleepInterval);
+        originalLCSetting = LC.zimbra_index_manual_commit.booleanValue();
+        LC.zimbra_index_manual_commit.setDefault(true);
+        TestUtil.createAccount(USER_NAME);
         saveNewRules();
-        
+
         // Speed up the test.
         TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraFilterSleepInterval, "0");
     }
@@ -92,6 +95,7 @@ public class TestFilterExisting extends TestCase {
     /**
      * Tests {@link RuleManager#getRuleByName}.
      */
+    @Test
     public void testGetRule() throws Exception {
         String rule1 = "# Rule 1\r\nabc\r\n";
         String rule2 = "# Rule 2\r\ndef\r\n";
@@ -100,6 +104,7 @@ public class TestFilterExisting extends TestCase {
         assertEquals(rule2, RuleManager.getRuleByName(script, "Rule 2"));
     }
 
+    @Test
     public void testKeep() throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         String subject = NAME_PREFIX + " test keep";
@@ -133,6 +138,7 @@ public class TestFilterExisting extends TestCase {
         TestUtil.getMessage(mbox, query);
     }
 
+    @Test
     public void testFileInto() throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         TestUtil.createFolder(mbox, FOLDER1_PATH);
@@ -172,6 +178,7 @@ public class TestFilterExisting extends TestCase {
         TestUtil.getMessage(mbox, "in:" + FOLDER2_NAME + " subject:\"" + subject + "\"");
     }
 
+    @Test
     public void testTag() throws Exception {
         // Add message
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
@@ -194,6 +201,7 @@ public class TestFilterExisting extends TestCase {
         assertEquals(tag.getId(), msg.getTagIds());
     }
 
+    @Test
     public void testFlag() throws Exception {
         // Add message
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
@@ -213,6 +221,7 @@ public class TestFilterExisting extends TestCase {
         assertTrue(msg.isFlagged());
     }
 
+    @Test
     public void testMarkRead() throws Exception {
         // Add message
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
@@ -229,6 +238,7 @@ public class TestFilterExisting extends TestCase {
         assertFalse(msg.isUnread());
     }
 
+    @Test
     public void testDiscard() throws Exception {
         // Add message
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
@@ -254,6 +264,7 @@ public class TestFilterExisting extends TestCase {
         assertEquals(0, messages.size());
     }
 
+    @Test
     public void testRedirect() throws Exception {
         // Add message
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
@@ -300,6 +311,7 @@ public class TestFilterExisting extends TestCase {
     /**
      * Simultaneously flags and discards the same set of messages (bug 41609).
      */
+    @Test
     public void testSimultaneous() throws Exception {
         // Add messages.
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
@@ -334,6 +346,7 @@ public class TestFilterExisting extends TestCase {
      * Confirms that filing into the same folder doesn't result in a duplicate copy
      * of the message (bug 42051).
      */
+    @Test
     public void testFileIntoSameFolder() throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         ZFolder folder3 = TestUtil.createFolder(mbox, FOLDER3_PATH);
@@ -350,6 +363,7 @@ public class TestFilterExisting extends TestCase {
      * Confirms that a flag rule runs when a message is filed into the same
      * folder (bug 44588).
      */
+    @Test
     public void testFileIntoSameFolderAndFlag() throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         ZFolder folder1 = TestUtil.createFolder(mbox, FOLDER1_PATH);
@@ -368,9 +382,10 @@ public class TestFilterExisting extends TestCase {
     /**
      * Confirms that we're enforcing {@code zimbraFilterBatchSize}.
      */
+    @Test
     public void testBatchSize() throws Exception {
         TestUtil.getAccount(USER_NAME).setFilterBatchSize(1);
-        
+
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         String subject = NAME_PREFIX + " testBatchSize flag";
         String msg1Id = TestUtil.addMessage(mbox, subject + " 1");
@@ -383,7 +398,7 @@ public class TestFilterExisting extends TestCase {
             assertTrue(msg.contains("2 messages"));
             assertTrue(msg.contains("limit of 1"));
         }
-        
+
         // Make sure the rule was not executed.
         ZMessage msg = mbox.getMessageById(msg1Id);
         if (msg.hasFlags()) {
@@ -399,6 +414,7 @@ public class TestFilterExisting extends TestCase {
      * Confirms that {@code zimbraFilterSleepInterval slows down
      * {@code ApplyFilterRules}.
      */
+    @Test
     public void testSleepInterval() throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         String subject = NAME_PREFIX + " testSleepInterval";
@@ -410,7 +426,7 @@ public class TestFilterExisting extends TestCase {
         runRules(new String[] { KEEP_RULE_NAME }, null, "subject: \'" + subject + "\'");
         assertTrue(System.currentTimeMillis() - startTime > 500);
     }
-    
+
     private void assertMoved(String sourceFolderName, String destFolderName, String subject)
     throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
@@ -539,17 +555,16 @@ public class TestFilterExisting extends TestCase {
         mbox.saveIncomingFilterRules(new ZFilterRules(rules));
     }
 
-    @Override
-    protected void tearDown() throws Exception {
-        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
-        mbox.saveIncomingFilterRules(originalRules);
-        TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraFilterBatchSize, originalBatchSize);
-        TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraFilterSleepInterval, originalSleepInterval);
+    @After
+    public void tearDown() throws Exception {
         cleanUp();
+        LC.zimbra_index_manual_commit.setDefault(originalLCSetting);
     }
 
     private void cleanUp() throws Exception {
-        TestUtil.deleteTestData(USER_NAME, NAME_PREFIX);
+        if(TestUtil.accountExists(USER_NAME)) {
+            TestUtil.deleteAccount(USER_NAME);
+        }
     }
 
     public static void main(String[] args) throws Exception {

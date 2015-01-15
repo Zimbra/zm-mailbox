@@ -49,7 +49,6 @@ import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.HSQLDB;
 import com.zimbra.cs.index.IndexStore;
 import com.zimbra.cs.index.solr.EmbeddedSolrIndex;
-import com.zimbra.cs.index.solr.EmbeddedSolrIndex.UpdateCounter;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
@@ -62,8 +61,6 @@ import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.util.ZimbraConfig;
 import com.zimbra.soap.DefaultSoapSessionFactory;
 import com.zimbra.soap.DocumentHandler;
-import com.zimbra.solr.ZimbraCommitListener;
-import com.zimbra.solr.ZimbraCommitListener.CommitLock;
 
 public final class MailboxTestUtil {
 
@@ -129,6 +126,7 @@ public final class MailboxTestUtil {
         LC.zimbra_class_database.setDefault(HSQLDB.class.getName());
         DbPool.startup();
         HSQLDB.createDatabase(zimbraServerDir, false);
+        LC.zimbra_index_manual_commit.setDefault(true);
         LC.zimbra_class_index_store_factory.setDefault(EmbeddedSolrIndex.Factory.class.getName());
         IndexStore.setFactory(LC.zimbra_class_index_store_factory.value());
         LC.zimbra_class_store.setDefault(storeManagerClass.getName());
@@ -244,7 +242,7 @@ public final class MailboxTestUtil {
             MockHttpStore.purge();
         }
         DocumentHandler.resetLocalHost();
-        EmbeddedSolrIndex.UpdateCounter.getInstance().reset();
+        //EmbeddedSolrIndex.UpdateCounter.getInstance().reset();
     }
 
     public static void cleanupAllIndexStores() throws Exception {
@@ -370,9 +368,9 @@ public final class MailboxTestUtil {
         return invites.get(0);
     }
 
-    public static synchronized void waitUntilIndexingCompleted(Mailbox mbox) throws Exception {
+    public static synchronized void forceIndexing(Mailbox mbox) throws Exception {
         index(mbox);
-        int timeWaited = 0;
+        /*int timeWaited = 0;
         int waitIncrement  = 100;
         int maxWaitTime = 5000;
         while (mbox.index.indexTasksRunning() && timeWaited < maxWaitTime) {
@@ -388,6 +386,6 @@ public final class MailboxTestUtil {
         //now wait until the commits have finished on the SOLR end
         CommitLock lock = ZimbraCommitListener.CommitLock.getInstance();
         UpdateCounter counter = EmbeddedSolrIndex.UpdateCounter.getInstance();
-        lock.waitUntilCommitFinished(counter.getAndReset());
+        lock.waitUntilCommitFinished(counter.getAndReset());*/
     }
 }

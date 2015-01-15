@@ -70,9 +70,12 @@ public class TestSendAndReceive extends TestCase {
     private String[] mOriginalSmtpHostname;
     public static final String PUBLIC_LIST_HEADER = "X-ZTest-PublicFile";
     private TestSendMailListener listener;
+    private boolean originalLCSetting = false;
     @Override
     public void setUp() throws Exception {
         cleanUp();
+        originalLCSetting = LC.zimbra_index_manual_commit.booleanValue();
+        LC.zimbra_index_manual_commit.setDefault(true);
         Provisioning.getInstance().getConfig().addCustomMimeHeaderNameAllowed(MailSender.PRE_SEND_HEADER);
         Provisioning.getInstance().getConfig().addCustomMimeHeaderNameAllowed(PUBLIC_LIST_HEADER);
         listener = new TestSendMailListener();
@@ -552,6 +555,7 @@ public class TestSendAndReceive extends TestCase {
     @Override
     public void tearDown() throws Exception {
         cleanUp();
+        LC.zimbra_index_manual_commit.setDefault(originalLCSetting);
         TestUtil.setConfigAttr(Provisioning.A_zimbraSmtpSendAddAuthenticatedUser, mOriginalSmtpSendAddAuthenticatedUser);
         TestUtil.setDomainAttr(USER_NAME, Provisioning.A_zimbraSmtpPort, mOriginalDomainSmtpPort);
         Provisioning.getInstance().getLocalServer().setSmtpHostname(mOriginalSmtpHostname);

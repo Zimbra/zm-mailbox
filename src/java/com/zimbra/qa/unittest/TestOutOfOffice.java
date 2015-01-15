@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2009, 2010, 2011, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -24,6 +24,7 @@ import junit.framework.TestCase;
 import com.zimbra.client.ZEmailAddress;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.client.ZMessage;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -57,11 +58,12 @@ extends TestCase {
     private static String SENDER_NAME = "user2";
     private static String RECIPIENT1_ADDRESS = "TestOutOfOffice1@example.zimbra.com";
     private static String RECIPIENT2_ADDRESS = "TestOutOfOffice2@example.zimbra.com";
-
+    private boolean originalLCSetting = false;
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-
+        originalLCSetting = LC.zimbra_index_manual_commit.booleanValue();
+        LC.zimbra_index_manual_commit.setDefault(true);
         mMbox = TestUtil.getMailbox(RECIPIENT_NAME);
         mConn = DbPool.getConnection();
 
@@ -204,6 +206,7 @@ extends TestCase {
     public void tearDown()
     throws Exception {
         cleanUp();
+        LC.zimbra_index_manual_commit.setDefault(originalLCSetting);
         DbPool.quietClose(mConn);
 
         Account recipient = TestUtil.getAccount(RECIPIENT_NAME);

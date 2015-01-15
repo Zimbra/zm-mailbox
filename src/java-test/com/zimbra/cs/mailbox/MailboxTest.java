@@ -113,7 +113,7 @@ public final class MailboxTest {
         mbox.addMessage(null,
                 new ParsedMessage("From: test4-1@sub4.zimbra.com".getBytes(),
                         false), dopt, null);
-        MailboxTestUtil.waitUntilIndexingCompleted(mbox);
+        MailboxTestUtil.forceIndexing(mbox);
         List<BrowseTerm> terms = mbox.browse(null, Mailbox.BrowseBy.domains,
                 null, 100);
         Assert.assertEquals("Number of expected terms", 4, terms.size());
@@ -163,7 +163,7 @@ public final class MailboxTest {
         mbox.addMessage(null,
                 new ParsedMessage("From: test4-1@sub4.zimbra.com".getBytes(),
                         false), dopt, null);
-        MailboxTestUtil.waitUntilIndexingCompleted(mbox);
+        MailboxTestUtil.forceIndexing(mbox);
         String defaultLimit = LC.zimbra_terms_cachesize.value();
         LC.zimbra_terms_cachesize.setDefault("5");
         List<BrowseTerm> terms = mbox.browse(null, Mailbox.BrowseBy.domains,
@@ -209,7 +209,7 @@ public final class MailboxTest {
                                         i).getBytes(), false), dopt, null);
             }
         }
-        MailboxTestUtil.waitUntilIndexingCompleted(mbox);
+        MailboxTestUtil.forceIndexing(mbox);
         List<BrowseTerm> terms = mbox.browse(null, Mailbox.BrowseBy.domains,
                 null, 100);
         Assert.assertEquals("Number of expected terms", 100, terms.size());

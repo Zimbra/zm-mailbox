@@ -3,10 +3,8 @@ package com.zimbra.cs.index.solr;
 import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.commons.io.FileUtils;
@@ -22,7 +20,6 @@ import org.apache.solr.client.solrj.request.CoreAdminRequest;
 import org.apache.solr.client.solrj.request.UpdateRequest;
 import org.apache.solr.client.solrj.response.CoreAdminResponse;
 import org.apache.solr.common.SolrException;
-import org.apache.solr.common.SolrInputDocument;
 import org.apache.solr.common.util.NamedList;
 import org.apache.solr.core.CoreContainer;
 import org.apache.solr.core.CoreDescriptor;
@@ -31,11 +28,9 @@ import org.apache.solr.core.SolrCore;
 import com.google.common.annotations.VisibleForTesting;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.index.IndexDocument;
 import com.zimbra.cs.index.IndexStore;
 import com.zimbra.cs.index.Indexer;
 import com.zimbra.cs.index.ZimbraIndexSearcher;
-import com.zimbra.cs.mailbox.Mailbox.IndexItemEntry;
 
 /**
  * Embedded SOLR server used for testing
@@ -216,47 +211,14 @@ public class EmbeddedSolrIndex  extends SolrIndexBase {
             }
             return 0;
         }
-
-        @Override
-        public void add(List<IndexItemEntry> entries) throws IOException, ServiceException {
-            SolrServer solrServer = getSolrServer();
-            UpdateRequest req = new UpdateRequest();
-            setupRequest(req, solrServer);
-            setAction(req);
-            for (IndexItemEntry entry : entries) {
-                if (entry.documents == null) {
-                    ZimbraLog.index.warn("NULL index data item=%s", entry);
-                    continue;
-                }
-                int partNum = 1;
-                for (IndexDocument doc : entry.documents) {
-                    SolrInputDocument solrDoc;
-                    // doc can be shared by multiple threads if multiple mailboxes are referenced in a single email
-                    synchronized (doc) {
-                        setFields(entry.item, doc);
-                        solrDoc = doc.toInputDocument();
-                        solrDoc.addField(SOLR_ID_FIELD, String.format("%d_%d",entry.item.getId(),partNum));
-                        partNum++;
-                        if (ZimbraLog.index.isTraceEnabled()) {
-                            ZimbraLog.index.trace("Adding solr document %s", solrDoc.toString());
-                        }
-                    }
-                    req.add(solrDoc);
-                }
-            }
-            try {
-                processRequest(solrServer, req);
-                incrementUpdateCounter();
-            } catch (RemoteSolrException | SolrServerException e) {
-                ZimbraLog.index.error("Problem indexing documents", e);
-            }
-        }
-
-        private void incrementUpdateCounter() {
-            UpdateCounter.getInstance().increment();
-        }
     }
 
+    public class SolrIndexSearcher extends SolrIndexBase.SolrIndexSearcher {
+        public SolrIndexSearcher(
+                com.zimbra.cs.index.solr.SolrIndexBase.SolrIndexReader reader) {
+            super(reader);
+        }
+    }
     public class SolrIndexReader extends SolrIndexBase.SolrIndexReader {
         @Override
         public int numDeletedDocs() {
@@ -346,7 +308,7 @@ public class EmbeddedSolrIndex  extends SolrIndexBase {
         }
     }
 
-    public static class UpdateCounter {
+    /*public static class UpdateCounter {
         private final AtomicInteger num = new AtomicInteger();
         private static UpdateCounter instance = null;
 
@@ -372,6 +334,6 @@ public class EmbeddedSolrIndex  extends SolrIndexBase {
         public void reset() {
            num.set(0);
         }
-    }
+    }*/
 }
 

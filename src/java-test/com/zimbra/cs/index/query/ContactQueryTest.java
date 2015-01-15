@@ -75,7 +75,7 @@ public final class ContactQueryTest {
         fields.put(ContactConstants.A_lastName, "Smith");
         fields.put(ContactConstants.A_email, "jonathan.smith@zimbra.com");
         Contact contact = mbox.createContact(null, new ParsedContact(fields), Mailbox.ID_FOLDER_CONTACTS, null);
-        MailboxTestUtil.waitUntilIndexingCompleted(mbox);
+        MailboxTestUtil.forceIndexing(mbox);
         ZimbraQueryResults results = mbox.index.search(new OperationContext(mbox), "contact:\"Jon Smith\"",
                 EnumSet.of(MailItem.Type.CONTACT), SortBy.NONE, 100);
         Assert.assertTrue("Expected some hits", results.hasNext());

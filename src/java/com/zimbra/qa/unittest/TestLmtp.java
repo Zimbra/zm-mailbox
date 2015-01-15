@@ -69,7 +69,7 @@ extends TestCase {
     private String originalDedupeCacheSize;
     private String originalDedupeCacheTimeout;
     private String originalDedupingEnabled;
-
+    private boolean originalLCSetting = false;
     private class LmtpClientThread
     implements Runnable {
 
@@ -94,6 +94,8 @@ extends TestCase {
     @Override
     public void setUp()
     throws Exception {
+        originalLCSetting = LC.zimbra_index_manual_commit.booleanValue();
+        LC.zimbra_index_manual_commit.setDefault(true);
         mbox = TestUtil.getZMailbox("user1");
         account = TestUtil.getAccount("user1");
         originalWarnInterval = account.getAttr(Provisioning.A_zimbraQuotaWarnInterval);
@@ -814,6 +816,7 @@ extends TestCase {
         TestUtil.setConfigAttr(Provisioning.A_zimbraMessageIdDedupeCacheTimeout, originalDedupeCacheTimeout);
         TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraPrefMessageIdDedupingEnabled, originalDedupingEnabled);
         cleanUp();
+        LC.zimbra_index_manual_commit.setDefault(originalLCSetting);
     }
 
     private void cleanUp()

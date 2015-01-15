@@ -27,15 +27,15 @@ import java.util.TimeZone;
 
 import javax.xml.bind.Marshaller;
 
-import junit.framework.TestCase;
-
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.httpclient.methods.StringRequestEntity;
 import org.dom4j.Document;
 import org.dom4j.io.DocumentResult;
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
 import com.zimbra.client.ZDateTime;
@@ -44,6 +44,7 @@ import com.zimbra.client.ZMailbox;
 import com.zimbra.client.ZMessage;
 import com.zimbra.client.ZSearchParams;
 import com.zimbra.common.httpclient.HttpClientUtil;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
@@ -86,31 +87,44 @@ import com.zimbra.soap.mail.type.RecurrenceInfo;
 import com.zimbra.soap.mail.type.SimpleRepeatingRule;
 import com.zimbra.soap.type.SearchHit;
 
-public class TestJaxb extends TestCase {
+public class TestJaxb  {
 
-    private static final String USER_NAME = "user1";
-    private static final String ATTENDEE1 = USER_NAME;
-    private static final String ATTENDEE2 = "user2";
-    private static final String ORGANIZER = "user3";
     private static final String NAME_PREFIX = TestJaxb.class.getSimpleName();
+    private static final String USER_NAME = NAME_PREFIX + "user1";
+    private static final String ATTENDEE1 = USER_NAME;
+    private static final String ATTENDEE2 = NAME_PREFIX + "user2";
+    private static final String ORGANIZER = NAME_PREFIX + "user3";
 
+    private boolean originalLCSetting = false;
     private Marshaller marshaller;
 
-    @Override
+    @Before
     public void setUp() throws Exception {
         cleanUp();
+        TestUtil.createAccount(ATTENDEE1);
+        TestUtil.createAccount(ATTENDEE2);
+        TestUtil.createAccount(ORGANIZER);
+        originalLCSetting = LC.zimbra_index_manual_commit.booleanValue();
+        LC.zimbra_index_manual_commit.setDefault(true);
         marshaller = JaxbUtil.createMarshaller();
     }
 
-    @Override
+    @After
     public void tearDown() throws Exception {
         cleanUp();
+        LC.zimbra_index_manual_commit.setDefault(originalLCSetting);
     }
 
     private void cleanUp() throws Exception {
-        TestUtil.deleteTestData(ORGANIZER, NAME_PREFIX);
-        TestUtil.deleteTestData(ATTENDEE1, NAME_PREFIX);
-        TestUtil.deleteTestData(ATTENDEE2, NAME_PREFIX);
+        if(TestUtil.accountExists(ATTENDEE1)) {
+            TestUtil.deleteAccount(ATTENDEE1);
+        }
+        if(TestUtil.accountExists(ATTENDEE2)) {
+            TestUtil.deleteAccount(ATTENDEE2);
+        }
+        if(TestUtil.accountExists(ORGANIZER)) {
+            TestUtil.deleteAccount(ORGANIZER);
+        }
     }
 
     private static String getCN(ZMailbox mbox) throws ServiceException {
@@ -653,7 +667,7 @@ public class TestJaxb extends TestCase {
         Assert.assertNotNull("JAXB BrowseResponse object", browseResponse);
         List<BrowseData> datas = browseResponse.getBrowseDatas();
         Assert.assertNotNull("JAXB BrowseResponse datas", datas);
-        Assert.assertTrue("BrowseDatas size should be greater than 1", datas.size() >= 1);
+        Assert.assertTrue("BrowseDatas size should be greater than 0", datas.size() >= 1);
     }
 
     public Element doBadBrowseRequest(BrowseRequest browseRequest) throws Exception {

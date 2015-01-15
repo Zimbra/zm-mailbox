@@ -66,12 +66,12 @@ public final class AddressBookTestTest {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
         mbox.createContact(null, new ParsedContact(Collections.<String, Object>singletonMap(
                 ContactConstants.A_email, "test1@zimbra.com")), Mailbox.ID_FOLDER_CONTACTS, null);
-        MailboxTestUtil.waitUntilIndexingCompleted(mbox);
+        MailboxTestUtil.forceIndexing(mbox);
         account.setMailSieveScript("if addressbook :in \"From\" { tag \"Priority\"; }");
         List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
                 new ParsedMessage("From: test1@zimbra.com".getBytes(), false), 0, account.getName(),
                 new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
-        MailboxTestUtil.waitUntilIndexingCompleted(mbox);
+        MailboxTestUtil.forceIndexing(mbox);
         Assert.assertEquals(1, ids.size());
         Message msg = mbox.getMessageById(null, ids.get(0).getId());
         Assert.assertEquals("Priority", ArrayUtil.getFirstElement(msg.getTags()));

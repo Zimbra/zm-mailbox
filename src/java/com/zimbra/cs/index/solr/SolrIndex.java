@@ -193,9 +193,9 @@ public class SolrIndex extends SolrIndexBase {
 
     @Override
     public ZimbraIndexSearcher openSearcher() throws IOException, ServiceException {
-        if(!indexExists()) {
+        /*if(!indexExists()) {
             initIndex();
-        }
+        }*/
         final SolrIndexReader reader = new SolrIndexReader();
         return new SolrIndexSearcher(reader);
     }

@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -16,14 +16,17 @@
  */
 package com.zimbra.qa.unittest;
 
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.Map;
 
-import junit.framework.TestCase;
-
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
 
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.ProvisioningConstants;
@@ -34,7 +37,8 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 
-public class TestCommunityIntegration extends TestCase {
+@Ignore ("Community integration is suspended")
+public class TestCommunityIntegration {
     private Provisioning mProv  = Provisioning.getInstance();
     private String DOMAIN_NAME = "testcommunity.domain.com";
     private String USER_NAME = "user1";
@@ -45,7 +49,6 @@ public class TestCommunityIntegration extends TestCase {
     Domain domain = null;
     Account testUser = null;
 
-    @Override
     @Before
     public void setUp() throws Exception {
         cleanup();
@@ -64,7 +67,6 @@ public class TestCommunityIntegration extends TestCase {
     }
 
 
-    @Override
     @After
     public void tearDown() throws Exception {
         cleanup();
@@ -81,6 +83,7 @@ public class TestCommunityIntegration extends TestCase {
         }
     }
 
+    @Test
     public void testGetInfo()
     throws Exception {
         SoapHttpTransport transport = new SoapHttpTransport(TestUtil.getSoapUrl());

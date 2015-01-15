@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -41,11 +41,11 @@ import com.zimbra.client.ZFilterRules;
 import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.client.ZMessage;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.zmime.ZMimeMessage;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Server;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.util.SpamHandler;
@@ -63,11 +63,12 @@ public class TestSpam extends TestCase {
     private String mOriginalSpamAccount;
     private String mOriginalHamAccount;
     private String mOriginalSieveScript;
-
+    private boolean originalLCSetting = false;
     @Override
     public void setUp() throws Exception {
         cleanUp();
-
+        originalLCSetting = LC.zimbra_index_manual_commit.booleanValue();
+        LC.zimbra_index_manual_commit.setDefault(true);
         Config config = Provisioning.getInstance().getConfig();
         mOriginalSpamHeaderValue = config.getSpamHeaderValue();
         mOriginalSpamAccount = config.getSpamIsSpamAccount();
@@ -208,6 +209,7 @@ public class TestSpam extends TestCase {
         account.setMailSieveScript(mOriginalSieveScript);
 
         cleanUp();
+        LC.zimbra_index_manual_commit.setDefault(originalLCSetting);
     }
 
     private void cleanUp()

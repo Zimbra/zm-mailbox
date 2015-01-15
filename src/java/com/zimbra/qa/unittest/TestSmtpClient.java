@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -26,6 +26,7 @@ import junit.framework.TestCase;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.client.ZMessage;
 import com.zimbra.client.ZMessage.ZMimePart;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.common.zmime.ZMimeMessage;
 import com.zimbra.cs.account.Provisioning;
@@ -41,7 +42,7 @@ public class TestSmtpClient extends TestCase {
 
     private final String mHost;
     private final int mPort;
-
+    private boolean originalLCSetting = false;
     public TestSmtpClient() throws Exception {
         mHost = TestUtil.getServerAttr(Provisioning.A_zimbraSmtpHostname);
         mPort = Integer.parseInt(TestUtil.getServerAttr(Provisioning.A_zimbraSmtpPort));
@@ -50,6 +51,8 @@ public class TestSmtpClient extends TestCase {
     @Override
     public void setUp() throws Exception {
         cleanUp();
+        originalLCSetting = LC.zimbra_index_manual_commit.booleanValue();
+        LC.zimbra_index_manual_commit.setDefault(true);
     }
 
     public void testSimple() throws Exception {
@@ -145,6 +148,7 @@ public class TestSmtpClient extends TestCase {
     @Override
     public void tearDown() throws Exception {
         cleanUp();
+        LC.zimbra_index_manual_commit.setDefault(originalLCSetting);
     }
 
     public void cleanUp() throws Exception {

@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -28,7 +28,6 @@ import java.util.zip.ZipInputStream;
 import javax.mail.internet.MimeMessage;
 import javax.mail.util.SharedByteArrayInputStream;
 
-import junit.framework.TestCase;
 import net.fortuna.ical4j.data.CalendarOutputter;
 import net.fortuna.ical4j.model.Date;
 import net.fortuna.ical4j.model.Property;
@@ -48,11 +47,16 @@ import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.InputStreamRequestEntity;
 import org.apache.commons.httpclient.methods.PostMethod;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
 
 import com.zimbra.client.ZDocument;
 import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.common.httpclient.HttpClientUtil;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
@@ -61,30 +65,29 @@ import com.zimbra.common.util.tar.TarEntry;
 import com.zimbra.common.util.tar.TarInputStream;
 import com.zimbra.common.zmime.ZMimeMessage;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.util.JMSession;
 
 
-public class TestUserServlet
-extends TestCase {
+public class TestUserServlet {
 
     private static final String NAME_PREFIX = TestUserServlet.class.getSimpleName();
-    private static final String USER_NAME = "user1";
+    private static final String USER_NAME = NAME_PREFIX  + "_user1";
+    private static final String USER_2_NAME = NAME_PREFIX + "_user2";
+    private boolean originalLCSetting = false;
 
-    private String originalSanitizeHtml;
-
-    @Override
+    @Before
     public void setUp()
     throws Exception {
         cleanUp();
-
+        originalLCSetting = LC.zimbra_index_manual_commit.booleanValue();
+        LC.zimbra_index_manual_commit.setDefault(true);
+        TestUtil.createAccount(USER_NAME);
         // Add a test message, in case the account is empty.
-        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
-        TestUtil.addMessage(mbox, NAME_PREFIX);
-        originalSanitizeHtml = TestUtil.getAccountAttr(USER_NAME, Provisioning.A_zimbraNotebookSanitizeHtml);
+        TestUtil.addMessageLmtp(NAME_PREFIX, USER_NAME, USER_2_NAME);
     }
 
+    @Test
     public void testTarFormatter()
     throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
@@ -105,29 +108,30 @@ extends TestCase {
         boolean foundMessage = false;
         while ((entry = tarIn.getNextEntry()) != null) {
             if (entry.getName().endsWith(".meta")) {
-                assertTrue("Fround " + entry.getName(), hasMeta);
+                Assert.assertTrue("Fround " + entry.getName(), hasMeta);
                 foundMeta = true;
             }
             if (entry.getName().endsWith(".eml")) {
                 byte[] content = new byte[(int) entry.getSize()];
-                assertEquals(content.length, tarIn.read(content));
+                Assert.assertEquals(content.length, tarIn.read(content));
                 MimeMessage message = new ZMimeMessage(JMSession.getSession(), new SharedByteArrayInputStream(content));
                 byte[] body = ByteUtil.getContent(message.getInputStream(), 0);
                 if (hasBody) {
-                    assertTrue(entry.getName() + " has no body", body.length > 0);
+                    Assert.assertTrue(entry.getName() + " has no body", body.length > 0);
                 } else {
-                    assertEquals(entry.getName() + " has a body", 0, body.length);
+                    Assert.assertEquals(entry.getName() + " has a body", 0, body.length);
                 }
                 foundMessage = true;
             }
         }
         tarIn.close();
-        assertTrue(foundMessage);
+        Assert.assertTrue(foundMessage);
         if (hasMeta) {
-            assertTrue(foundMeta);
+            Assert.assertTrue(foundMeta);
         }
     }
 
+    @Test
     public void testZipFormatter()
     throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
@@ -142,6 +146,7 @@ extends TestCase {
      * Test that it is possible to export calendar entry with an attachment with the attachment
      * inlined if icalAttach=inline or ignoring the attachment if icalAttach=none
      */
+    @Test
     public void testIcsImportExport() throws IOException, ValidationException, ServiceException {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         String calName = NAME_PREFIX + "2ndCalendar";
@@ -180,21 +185,21 @@ extends TestCase {
         String respIcal = new String(executor.responseBodyBytes, MimeConstants.P_CHARSET_UTF8);
         ZimbraLog.test.info("testIcsImportExport:ICS exported (with icalAttach=inline):%s", respIcal);
         int attachNdx = respIcal.indexOf("ATTACH;");
-        assertTrue("ATTACH should be present", -1 != attachNdx);
+        Assert.assertTrue("ATTACH should be present", -1 != attachNdx);
         String fromAttach = respIcal.substring(attachNdx);
-        assertTrue("BINARY should be present", -1 != fromAttach.indexOf("VALUE=BINARY"));
+        Assert.assertTrue("BINARY should be present", -1 != fromAttach.indexOf("VALUE=BINARY"));
         uri = mbox.getRestURI(calUri + "&icalAttach=none");
         get = new GetMethod(uri.toString());
         executor = new TestCalDav.HttpMethodExecutor(client, get, HttpStatus.SC_OK);
         respIcal = new String(executor.responseBodyBytes, MimeConstants.P_CHARSET_UTF8);
         ZimbraLog.test.info("testIcsImportExport:ICS exported (with icalAttach=none):%s", respIcal);
-        assertTrue("ATTACH should be present", -1 == respIcal.indexOf("ATTACH;"));
+        Assert.assertTrue("ATTACH should be present", -1 == respIcal.indexOf("ATTACH;"));
         uri = mbox.getRestURI(calUri);
         get = new GetMethod(uri.toString());
         executor = new TestCalDav.HttpMethodExecutor(client, get, HttpStatus.SC_OK);
         respIcal = new String(executor.responseBodyBytes, MimeConstants.P_CHARSET_UTF8);
         ZimbraLog.test.info("testIcsImportExport:ICS exported (default - same as icalAttach=none):%s", respIcal);
-        assertTrue("ATTACH should be present", -1 == respIcal.indexOf("ATTACH;"));
+        Assert.assertTrue("ATTACH should be present", -1 == respIcal.indexOf("ATTACH;"));
     }
 
     private void verifyZipFile(ZMailbox mbox, String relativePath, boolean hasBody)
@@ -211,21 +216,22 @@ extends TestCase {
                 MimeMessage message = new ZMimeMessage(JMSession.getSession(), new SharedByteArrayInputStream(content));
                 byte[] body = ByteUtil.getContent(message.getInputStream(), 0);
                 if (hasBody) {
-                    assertTrue(entry.getName() + " has no body", body.length > 0);
+                    Assert.assertTrue(entry.getName() + " has no body", body.length > 0);
                 } else {
-                    assertEquals(entry.getName() + " has a body", 0, body.length);
+                    Assert.assertEquals(entry.getName() + " has a body", 0, body.length);
                 }
                 foundMessage = true;
             }
         }
         zipIn.close();
-        assertTrue(foundMessage);
+        Assert.assertTrue(foundMessage);
     }
 
     /**
      * Verifies that the value of {@code zimbraNotebookSanitizeHtml} does not
      * affect the {@code Content-Type} header (bug 67752).
      */
+    @Test
     public void testSanitizeHtmlContentType() throws ServiceException, IOException {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         ZDocument doc = TestUtil.createDocument(mbox,
@@ -245,20 +251,25 @@ extends TestCase {
         GetMethod get = new GetMethod(uri.toString());
         int statusCode = HttpClientUtil.executeMethod(client, get);
         get.releaseConnection();
-        assertEquals(200, statusCode);
-        assertEquals("text/plain", get.getResponseHeader("Content-Type").getValue());
+        Assert.assertEquals(200, statusCode);
+        Assert.assertEquals("text/plain", get.getResponseHeader("Content-Type").getValue());
     }
 
-    @Override
+    @After
     public void tearDown()
     throws Exception {
-        TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraNotebookSanitizeHtml, originalSanitizeHtml);
         cleanUp();
+        LC.zimbra_index_manual_commit.setDefault(originalLCSetting);
     }
 
     private void cleanUp()
     throws Exception {
-        TestUtil.deleteTestData(USER_NAME, NAME_PREFIX);
+        if(TestUtil.accountExists(USER_NAME)) {
+            TestUtil.deleteAccount(USER_NAME);
+        }
+        if(TestUtil.accountExists(USER_2_NAME)) {
+            TestUtil.deleteAccount(USER_2_NAME);
+        }
     }
 
     public static void main(String[] args)

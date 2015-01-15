@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2008, 2009, 2010, 2011, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -16,28 +16,28 @@
  */
 package com.zimbra.qa.unittest;
 
-import com.google.common.base.Strings;
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.StringReader;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
+import java.util.TimeZone;
 
-import com.zimbra.common.filter.Sieve;
-import com.zimbra.common.mime.MimeConstants;
-import com.zimbra.common.mime.MimeMessage;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.SoapFaultException;
-import com.zimbra.common.util.ByteUtil;
-import com.zimbra.common.util.Constants;
-import com.zimbra.common.util.StringUtil;
-import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.Config;
-import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Server;
-import com.zimbra.cs.filter.FilterUtil;
-import com.zimbra.cs.filter.RuleManager;
-import com.zimbra.cs.filter.RuleRewriter;
-import com.zimbra.cs.filter.SieveToSoap;
-import com.zimbra.cs.filter.SoapToSieve;
-import com.zimbra.cs.ldap.LdapConstants;
-import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.calendar.Util;
+import junit.framework.TestCase;
+
+import org.apache.jsieve.parser.generated.Node;
+import org.apache.jsieve.parser.generated.ParseException;
+
+import com.google.common.base.Strings;
 import com.zimbra.client.ZEmailAddress;
 import com.zimbra.client.ZFilterAction;
 import com.zimbra.client.ZFilterAction.MarkOp;
@@ -61,29 +61,31 @@ import com.zimbra.client.ZFilterCondition.ZMimeHeaderCondition;
 import com.zimbra.client.ZFilterRule;
 import com.zimbra.client.ZFilterRules;
 import com.zimbra.client.ZFolder;
+import com.zimbra.client.ZItem.Flag;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.client.ZMessage;
-import com.zimbra.client.ZItem.Flag;
 import com.zimbra.client.ZTag;
-import junit.framework.TestCase;
-import org.apache.jsieve.parser.generated.Node;
-import org.apache.jsieve.parser.generated.ParseException;
-
-import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.StringReader;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
-import java.util.TimeZone;
+import com.zimbra.common.filter.Sieve;
+import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.mime.MimeConstants;
+import com.zimbra.common.mime.MimeMessage;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.SoapFaultException;
+import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.Constants;
+import com.zimbra.common.util.StringUtil;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Config;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
+import com.zimbra.cs.filter.FilterUtil;
+import com.zimbra.cs.filter.RuleManager;
+import com.zimbra.cs.filter.RuleRewriter;
+import com.zimbra.cs.filter.SieveToSoap;
+import com.zimbra.cs.filter.SoapToSieve;
+import com.zimbra.cs.ldap.LdapConstants;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.calendar.Util;
 
 public final class TestFilter extends TestCase {
 
@@ -99,7 +101,7 @@ public final class TestFilter extends TestCase {
     private static String MOUNTPOINT_FOLDER_NAME = NAME_PREFIX + " mountpoint";
     private static String MOUNTPOINT_SUBFOLDER_NAME = NAME_PREFIX + " mountpoint subfolder";
     private static String MOUNTPOINT_SUBFOLDER_PATH = "/" + MOUNTPOINT_FOLDER_NAME + "/" + MOUNTPOINT_SUBFOLDER_NAME;
-
+    private boolean originalLCSetting = false;
     private ZMailbox mMbox;
     private ZFilterRules mOriginalIncomingRules;
     private ZFilterRules mOriginalOutgoingRules;
@@ -112,7 +114,8 @@ public final class TestFilter extends TestCase {
     @Override
     public void setUp() throws Exception {
         cleanUp();
-
+        originalLCSetting = LC.zimbra_index_manual_commit.booleanValue();
+        LC.zimbra_index_manual_commit.setDefault(true);
         mMbox = TestUtil.getZMailbox(USER_NAME);
         mTag1 = mMbox.createTag(TAG1_NAME, null);
         mTag2 = mMbox.createTag(TAG2_NAME, null);
@@ -1535,6 +1538,7 @@ public final class TestFilter extends TestCase {
         TestUtil.setServerAttr(Provisioning.A_zimbraSmtpPort, mOriginalSmtpPort);
         TestUtil.setServerAttr(Provisioning.A_zimbraMailRedirectSetEnvelopeSender, mOriginalSetEnvelopeSender);
         cleanUp();
+        LC.zimbra_index_manual_commit.setDefault(originalLCSetting);
     }
 
     private void cleanUp()

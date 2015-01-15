@@ -415,11 +415,14 @@ public abstract class SolrIndexBase extends IndexStore {
 
         @Override
         public Document doc(ZimbraIndexDocumentID docID) throws IOException, ServiceException {
-            if (docID == null) {
+            if (docID == null || !indexExists()) {
                 return null;
             }
             SolrServer solrServer = getSolrServer();
             try {
+                if(LC.zimbra_index_manual_commit.booleanValue()) {
+                    waitForIndexCommit(solrServer);
+                }
                 if (docID instanceof ZimbraSolrDocumentID) {
                     SolrQuery q = new SolrQuery().setQuery(String.format("%s:%s",LuceneFields.L_MAILBOX_BLOB_ID,((ZimbraSolrDocumentID) docID).getDocID())).setRows(1);
                     q.setFields(LuceneFields.L_PARTNAME, LuceneFields.L_FILENAME, LuceneFields.L_SORT_SIZE,
@@ -451,8 +454,14 @@ public abstract class SolrIndexBase extends IndexStore {
 
         @Override
         public int docFreq(Term term) throws IOException, ServiceException {
-             SolrServer solrServer = getSolrServer();
+            if(!indexExists()) {
+                return 0;
+            }
+            SolrServer solrServer = getSolrServer();
             try {
+                if(LC.zimbra_index_manual_commit.booleanValue()) {
+                    waitForIndexCommit(solrServer);
+                }
                 SolrQuery q = new SolrQuery().setQuery(TermToQuery(term)).setRows(0);
                 setupRequest(q, solrServer);
                 QueryRequest req = new QueryRequest(q);
@@ -493,13 +502,23 @@ public abstract class SolrIndexBase extends IndexStore {
             List<IndexDocument> indexDocs = Lists.newArrayList();
             float maxScore = 0;
             int totalHits = 0;
+
+            if(!indexExists()) {
+                return ZimbraTopDocs.create(totalHits, scoreDocs, maxScore, indexDocs);
+            }
+
+            SolrServer solrServer = getSolrServer();
+            if(LC.zimbra_index_manual_commit.booleanValue()) {
+                waitForIndexCommit(solrServer);
+            }
+
             if (sort != null) {
                 Collections.addAll(sortFields, sort.getSort());
             }
             Query optimized = optimizeQueryOps(escapeSpecialChars(query));
             String szq = queryToString(optimized);
             SolrQuery q = new SolrQuery().setQuery(szq).setRows(n);
-            SolrServer solrServer = getSolrServer();
+
             setupRequest(q, solrServer);
             if(filter != null) {
                 q.addFilterQuery(TermsToQuery(filter.getTerms()));
@@ -579,6 +598,9 @@ public abstract class SolrIndexBase extends IndexStore {
 
         @Override
         public int numDocs() throws ServiceException {
+            if(!indexExists()) {
+                return 0;
+            }
             SolrServer solrServer = getSolrServer();
             try {
                 SolrQuery q = new SolrQuery().setQuery("*:*").setRows(0);
@@ -615,8 +637,15 @@ public abstract class SolrIndexBase extends IndexStore {
             private String last = null;
 
             private void primeTermsComponent(String firstTermValue, boolean includeLower) throws IOException, ServiceException, SolrServerException {
-                SolrQuery q = new SolrQuery().setRequestHandler("/terms");
+                if(!indexExists()) {
+                    return;
+                }
                 SolrServer solrServer = getSolrServer();
+                if(LC.zimbra_index_manual_commit.booleanValue()) {
+                    waitForIndexCommit(solrServer);
+                }
+                SolrQuery q = new SolrQuery().setRequestHandler("/terms");
+
                 setupRequest(q, solrServer);
                 q.setTerms(true);
                 q.addTermsField(fieldName);
@@ -702,11 +731,14 @@ public abstract class SolrIndexBase extends IndexStore {
         }
 
         protected void setAction(UpdateRequest req) {
-            req.setAction(ACTION.COMMIT, false, true, true);
+            req.setAction(ACTION.COMMIT, true, true, false);
         }
 
         @Override
         public void add(List<Mailbox.IndexItemEntry> entries) throws IOException, ServiceException {
+            if(!indexExists()) {
+                initIndex();
+            }
             SolrServer solrServer = getSolrServer();
             UpdateRequest req = new UpdateRequest();
             setupRequest(req, solrServer);
@@ -735,6 +767,9 @@ public abstract class SolrIndexBase extends IndexStore {
                 }
             }
             try {
+                if(LC.zimbra_index_manual_commit.booleanValue()) {
+                    incrementUpdateCounter(solrServer);
+                }
                 processRequest(solrServer, req);
             } catch (RemoteSolrException | SolrServerException e) {
                 ZimbraLog.index.error("Problem indexing documents", e);
@@ -746,6 +781,9 @@ public abstract class SolrIndexBase extends IndexStore {
         @Override
         public void addDocument(Folder folder, MailItem item,
                 List<IndexDocument> docs) throws IOException, ServiceException {
+            if(!indexExists()) {
+                initIndex();
+            }
             if (docs == null || docs.isEmpty()) {
                 return;
             }
@@ -771,6 +809,9 @@ public abstract class SolrIndexBase extends IndexStore {
                     setAction(req);
                 }
                 try {
+                    if(LC.zimbra_index_manual_commit.booleanValue()) {
+                        incrementUpdateCounter(solrServer);
+                    }
                     processRequest(solrServer, req);
                 } catch (SolrServerException e) {
                     ZimbraLog.index.error("Problem indexing document with id=%d", item.getId(),e);
@@ -782,8 +823,25 @@ public abstract class SolrIndexBase extends IndexStore {
             }
         }
 
+        protected void incrementUpdateCounter(SolrServer solrServer) throws ServiceException {
+            try {
+                if(!indexExists()) {
+                    return;
+                }
+                SolrQuery q = new SolrQuery().setParam("action", " increment");
+                QueryRequest req = new QueryRequest(q);
+                req.setPath("/commitcount");
+                setupRequest(req, solrServer);
+                req.process(solrServer);
+            } catch (SolrServerException e) {
+                ZimbraLog.index.error("Problem increasing commit counter for Core %s", accountId,e);
+            }
+        }
         @Override
         public void deleteDocument(List<Integer> ids) throws IOException,ServiceException {
+            if(!indexExists()) {
+                return;
+            }
             SolrServer solrServer = getSolrServer();
             try {
                 for (Integer id : ids) {
@@ -793,6 +851,9 @@ public abstract class SolrIndexBase extends IndexStore {
                         setAction(req);
                     }
                     try {
+                        if(LC.zimbra_index_manual_commit.booleanValue()) {
+                            incrementUpdateCounter(solrServer);
+                        }
                         processRequest(solrServer, req);
                         ZimbraLog.index.debug("Deleted document id=%d", id);
                     } catch (SolrServerException e) {
@@ -820,5 +881,33 @@ public abstract class SolrIndexBase extends IndexStore {
     protected SolrResponse processRequest(SolrServer server, SolrRequest request)
             throws SolrServerException, IOException {
         return request.process(server);
+    }
+
+    public void waitForIndexCommit(SolrServer solrServer) throws ServiceException  {
+        int timeout_millis = LC.zimbra_index_commit_wait.intValue();
+        while (timeout_millis > 0) {
+            SolrQuery q = new SolrQuery().setParam("action", "get");
+            QueryRequest req = new QueryRequest(q);
+            req.setPath("/commitcount");
+            setupRequest(req, solrServer);
+            QueryResponse resp;
+            try {
+                resp = req.process(solrServer);
+                Integer outstandingCommits = (Integer)resp.getResponse().get("count");
+                if(outstandingCommits == null || outstandingCommits == 0) {
+                    break;
+                } else {
+                    try {
+                        Thread.sleep(100);
+                    } catch (InterruptedException e) {
+                        break;
+                    }
+                    timeout_millis = timeout_millis - 100;
+                }
+            } catch (SolrServerException e) {
+                ZimbraLog.index.error("Problem waiting for index commit count to go to zero for Core: %s", accountId,e);
+                break;
+            }
+        }
     }
 }

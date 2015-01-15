@@ -57,6 +57,7 @@ import org.apache.commons.httpclient.methods.EntityEnclosingMethod;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.httpclient.methods.PutMethod;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.w3c.dom.Document;
@@ -108,7 +109,7 @@ public class TestCalDav  {
     private static String DAV1 = "dav1";
     private static String DAV2 = "dav2";
     private static String DAV3 = "dav3";
-
+    private boolean originalLCSetting = false;
     public static class MkColMethod extends EntityEnclosingMethod {
         @Override
         public String getName() {
@@ -1270,12 +1271,20 @@ public class TestCalDav  {
 
     @Before
     public void setUp() throws Exception {
+        originalLCSetting = LC.zimbra_index_manual_commit.booleanValue();
+        LC.zimbra_index_manual_commit.setDefault(true);
         if (!TestUtil.fromRunUnitTests) {
             TestUtil.cliSetup();
             String tzFilePath = LC.timezone_file.value();
             File tzFile = new File(tzFilePath);
             WellKnownTimeZones.loadFromFile(tzFile);
         }
+        cleanUp();
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        LC.zimbra_index_manual_commit.setDefault(originalLCSetting);
         cleanUp();
     }
 

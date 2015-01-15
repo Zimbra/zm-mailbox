@@ -58,7 +58,7 @@ public class TestInvite  {
     private static String ORGANIZER = "tiorganizer";
     private static String ATTENDEE = "tiattendee";
     private static String DELEGATE = "tidelegate";
-
+    private boolean originalLCSetting = false;
     @Test
     public void testBug86864DelegateInboxInviteLooksLikeInvite() throws Exception {
         TestUtil.createAccount(ORGANIZER);
@@ -103,6 +103,7 @@ public class TestInvite  {
         assertNotNull("null ModifyPrefs Response for forwarding calendar invites", createMpResp);
 
         TestUtil.createAppointment(mboxOrganizer, subject, attendee.getName(), startDate, endDate);
+        Thread.sleep(10000);
         ZMessage inviteMsg = TestUtil.waitForMessage(mboxDelegate, "in:inbox " + subject);
         assertNotNull("null inviteMsg in delegate inbox", inviteMsg);
 
@@ -121,6 +122,8 @@ public class TestInvite  {
 
     @Before
     public void setUp() throws Exception {
+        originalLCSetting = LC.zimbra_index_manual_commit.booleanValue();
+        LC.zimbra_index_manual_commit.setDefault(true);
         if (!TestUtil.fromRunUnitTests) {
             TestUtil.cliSetup();
             String tzFilePath = LC.timezone_file.value();
@@ -130,17 +133,22 @@ public class TestInvite  {
         if (prov == null) {
             prov = TestUtil.newSoapProvisioning();
         }
-        tearDown();
+        cleanup();
     }
 
-    @After
-    public void tearDown() throws Exception {
+    private void cleanup() throws Exception {
         if (prov == null) {
             prov = TestUtil.newSoapProvisioning();
         }
         TestUtil.deleteAccount(ORGANIZER);
         TestUtil.deleteAccount(ATTENDEE);
         TestUtil.deleteAccount(DELEGATE);
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        cleanup();
+        LC.zimbra_index_manual_commit.setDefault(originalLCSetting);
     }
 
     /**

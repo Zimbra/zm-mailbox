@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2008, 2009, 2010, 2011, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -23,6 +23,7 @@ import junit.framework.TestCase;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.client.ZMessage;
 import com.zimbra.client.ZSearchParams;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -33,11 +34,13 @@ public class TestIndex extends TestCase {
 
     private static final String NAME_PREFIX = TestIndex.class.getSimpleName();
     private static final String USER_NAME = "user1";
-
+    private boolean originalLCSetting = false;
     private int mOriginalTextLimit;
     @Override
 	public void setUp()
     throws Exception {
+        originalLCSetting = LC.zimbra_index_manual_commit.booleanValue();
+        LC.zimbra_index_manual_commit.setDefault(true);
         mOriginalTextLimit = Integer.parseInt(TestUtil.getServerAttr(Provisioning.A_zimbraAttachmentsIndexedTextLimit));
         cleanUp();
     }
@@ -50,7 +53,7 @@ public class TestIndex extends TestCase {
             body.append("Walrus walrus walrus walrus walrus walrus walrus.\n");
         }
         body.append("Goo goo goo joob.\n");
-        
+
         // Test text truncated
         setTextLimit(50);
         String subject = NAME_PREFIX + " text attachment 1";
@@ -89,7 +92,7 @@ public class TestIndex extends TestCase {
 
 /*  Stopword-related tests are deprecated for the SOLR branch because stopwords are now managed
     on the SOLR server instead of the mail server.
-    
+
     public void testRemovingStopWords() throws Exception {
     	Provisioning.getInstance().getConfig().removeDefaultAnalyzerStopWords("a");
     	String body = "Walrus walrus walrus walrus walrus walrus walrus is a walrus.\n";
@@ -169,6 +172,7 @@ public class TestIndex extends TestCase {
         setTextLimit(mOriginalTextLimit);
         Provisioning.getInstance().getConfig().addDefaultAnalyzerStopWords("a");
         cleanUp();
+        LC.zimbra_index_manual_commit.setDefault(originalLCSetting);
     }
 
     private void cleanUp()

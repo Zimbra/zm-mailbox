@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -37,6 +37,7 @@ import com.zimbra.client.ZMailbox.ZOutgoingMessage;
 import com.zimbra.client.ZMailbox.ZOutgoingMessage.MessagePart;
 import com.zimbra.client.ZMessage;
 import com.zimbra.client.ZMessage.ZMimePart;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.StringUtil;
@@ -74,13 +75,14 @@ extends TestCase {
     private String mOriginalInterceptSendHeadersOnly;
     private String mOriginalSaveToSent;
     private final boolean mIsServerTest = false;
-
+    private boolean originalLCSetting = false;
     @Override
     protected void setUp() throws Exception
     {
         super.setUp();
         cleanUp();
-
+        originalLCSetting = LC.zimbra_index_manual_commit.booleanValue();
+        LC.zimbra_index_manual_commit.setDefault(true);
         Account account = TestUtil.getAccount(RECIPIENT_NAME);
         mOriginalReplyEnabled = account.getBooleanAttr(Provisioning.A_zimbraPrefOutOfOfficeReplyEnabled, false);
         mOriginalReply = account.getAttr(Provisioning.A_zimbraPrefOutOfOfficeReply, "");
@@ -272,7 +274,7 @@ extends TestCase {
     public void tearDown()
     throws Exception {
         cleanUp();
-
+        LC.zimbra_index_manual_commit.setDefault(originalLCSetting);
         // Revert to original values for out-of-office and notification
         Account account = TestUtil.getAccount(RECIPIENT_NAME);
 

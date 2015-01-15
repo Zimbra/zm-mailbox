@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -17,12 +17,17 @@
 
 package com.zimbra.qa.unittest;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import java.util.EnumSet;
 
-import junit.framework.TestCase;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.Account;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbResults;
 import com.zimbra.cs.db.DbUtil;
@@ -33,7 +38,6 @@ import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.Tag;
@@ -41,13 +45,13 @@ import com.zimbra.cs.mailbox.Tag;
 /**
  * @author bburtin
  */
-public class TestUnread extends TestCase {
+public class TestUnread  {
     private Mailbox mMbox;
-    private Account mAccount;
 
-    private static String USER_NAME = "user1";
+    private static final String NAME_PREFIX = TestUnread.class.getSimpleName();
+    private static String USER_NAME = NAME_PREFIX + "_user1";
     private static String TEST_NAME = "TestUnread";
-
+    private boolean originalLCSetting = false;
     private static String FOLDER1_NAME = TEST_NAME + " Folder 1";
     private static String FOLDER2_NAME = TEST_NAME + " Folder 2";
     private static String TAG1_NAME = TEST_NAME + " Tag 1";
@@ -63,15 +67,6 @@ public class TestUnread extends TestCase {
     private int mTag2Id;
     private int mTag3Id;
     private int mConvId;
-
-    /**
-     * Constructor used for instantiating a <code>TestCase</code> that runs a single test.
-     *
-     * @param testName the name of the method that will be called when the test is executed
-     */
-    public TestUnread(String testName) {
-        super(testName);
-    }
 
     private Message getMessage1() throws Exception { return mMbox.getMessageById(null, mMessage1Id); }
     private Message getMessage2() throws Exception { return mMbox.getMessageById(null, mMessage2Id); }
@@ -92,15 +87,15 @@ public class TestUnread extends TestCase {
      *   <li>T2 is assigned to M1 and M2</li>
      * </ul>
      */
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before
+    public void setUp() throws Exception {
+        cleanUp();
 
-        mAccount = TestUtil.getAccount(USER_NAME);
-        mMbox = MailboxManager.getInstance().getMailboxByAccount(mAccount);
+        originalLCSetting = LC.zimbra_index_manual_commit.booleanValue();
+        LC.zimbra_index_manual_commit.setDefault(true);
+        TestUtil.createAccount(USER_NAME);
 
-        // Clean up data, in case a previous test didn't exit cleanly
-        TestUtil.deleteTestData(USER_NAME, TEST_NAME);
+        mMbox = TestUtil.getMailbox(USER_NAME);
 
         Message msg = TestUtil.addMessage(mMbox, TEST_NAME);
         mMessage1Id = msg.getId();
@@ -140,6 +135,7 @@ public class TestUnread extends TestCase {
         mMbox.alterTag(null, mMessage2Id, getMessage2().getType(), getTag2().getName(), true, null);
     }
 
+    @Test
     public void testReadMessage1()
     throws Exception {
         ZimbraLog.test.debug("testReadMessage1");
@@ -148,6 +144,7 @@ public class TestUnread extends TestCase {
         verifyMessage1Read();
     }
 
+    @Test
     public void testReadMessage2()
     throws Exception {
         ZimbraLog.test.debug("testReadMessage2");
@@ -168,6 +165,7 @@ public class TestUnread extends TestCase {
         verifyAllUnreadFlags();
     }
 
+    @Test
     public void testReadAllMessages()
     throws Exception {
         ZimbraLog.test.debug("testReadAllMessages");
@@ -179,6 +177,7 @@ public class TestUnread extends TestCase {
         verifyAllRead();
     }
 
+    @Test
     public void testReadConversation()
     throws Exception {
         ZimbraLog.test.debug("testReadConversation");
@@ -186,6 +185,7 @@ public class TestUnread extends TestCase {
         verifyAllRead();
     }
 
+    @Test
     public void testReadFolder1()
     throws Exception {
         ZimbraLog.test.debug("testReadFolder1");
@@ -194,6 +194,7 @@ public class TestUnread extends TestCase {
         verifyMessage1Read();
     }
 
+    @Test
     public void testReadFolder2()
     throws Exception {
         ZimbraLog.test.debug("testReadFolder2");
@@ -212,6 +213,7 @@ public class TestUnread extends TestCase {
         assertEquals("getTag3().getUnreadCount()", 0, getTag3().getUnreadCount());
     }
 
+    @Test
     public void testReadAllFolders()
     throws Exception {
         ZimbraLog.test.debug("testReadAllMessages");
@@ -222,6 +224,7 @@ public class TestUnread extends TestCase {
         verifyAllRead();
     }
 
+    @Test
     public void testReadTag1()
     throws Exception {
         ZimbraLog.test.debug("testReadTag1");
@@ -230,6 +233,7 @@ public class TestUnread extends TestCase {
         verifyMessage1Read();
     }
 
+    @Test
     public void testReadTag2()
     throws Exception {
         ZimbraLog.test.debug("testReadTag2");
@@ -250,6 +254,7 @@ public class TestUnread extends TestCase {
         verifyAllUnreadFlags();
     }
 
+    @Test
     public void testMoveMessage()
     throws Exception {
         ZimbraLog.test.debug("testMoveMessage");
@@ -274,6 +279,7 @@ public class TestUnread extends TestCase {
         assertEquals("getFolder2().getUnreadCount()", 1, getFolder2().getUnreadCount());
     }
 
+    @Test
     public void testMoveConversation()
     throws Exception {
         ZimbraLog.test.debug("testMoveConversation");
@@ -299,6 +305,7 @@ public class TestUnread extends TestCase {
         assertEquals("getFolder2().getUnreadCount()", 2, getFolder2().getUnreadCount());
     }
 
+    @Test
     public void testTagMessage()
     throws Exception {
         ZimbraLog.test.debug("testTagMessage");
@@ -317,6 +324,7 @@ public class TestUnread extends TestCase {
         assertEquals("getTag3().getUnreadCount()", 1, getTag3().getUnreadCount());
     }
 
+    @Test
     public void testTagConversation()
     throws Exception {
         ZimbraLog.test.debug("testTagConversation");
@@ -334,6 +342,7 @@ public class TestUnread extends TestCase {
     /**
      * Moves one read message and two unread messages to the trash.
      */
+    @Test
     public void testMoveToTrash()
     throws Exception {
         ZimbraLog.test.debug("testMoveToTrash");
@@ -362,6 +371,7 @@ public class TestUnread extends TestCase {
     /**
      * Makes sure that something comes back when searching for unread items.
      */
+    @Test
     public void testSearch() throws Exception {
         ZimbraLog.test.debug("testSearch");
         verifySetUp();
@@ -372,6 +382,7 @@ public class TestUnread extends TestCase {
         results.close();
     }
 
+    @Test
     public void testDeleteConversation()
     throws Exception {
         ZimbraLog.test.debug("testDeleteConversation");
@@ -386,6 +397,7 @@ public class TestUnread extends TestCase {
         assertEquals("getTag3().getUnreadCount()", 0, getTag3().getUnreadCount());
     }
 
+    @Test
     public void testDeleteFolder2()
     throws Exception {
         ZimbraLog.test.debug("testDeleteFolder2");
@@ -401,6 +413,7 @@ public class TestUnread extends TestCase {
         assertEquals("getTag3().getUnreadCount()", 0, getTag3().getUnreadCount());
     }
 
+    @Test
     public void testDeleteFolder1()
     throws Exception {
         ZimbraLog.test.debug("testDeleteFolder1");
@@ -512,8 +525,16 @@ public class TestUnread extends TestCase {
         assertTrue("getMessage2().isTagged(getTag2())", getMessage2().isTagged(getTag2()));
     }
 
-    @Override
-    protected void tearDown() throws Exception {
-        TestUtil.deleteTestData(USER_NAME, TEST_NAME);
+    @After
+    public void tearDown() throws Exception {
+        cleanUp();
+        LC.zimbra_index_manual_commit.setDefault(originalLCSetting);
+    }
+
+    private void cleanUp()
+    throws Exception {
+        if(TestUtil.accountExists(USER_NAME)) {
+            TestUtil.deleteAccount(USER_NAME);
+        }
     }
 }
