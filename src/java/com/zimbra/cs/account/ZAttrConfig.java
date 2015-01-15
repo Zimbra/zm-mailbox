@@ -58474,6 +58474,78 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * whether nginx should cache upstream routes in memcache
+     *
+     * @return zimbraReverseProxyZmlookupCachingEnabled, or true if unset
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1785)
+    public boolean isReverseProxyZmlookupCachingEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraReverseProxyZmlookupCachingEnabled, true);
+    }
+
+    /**
+     * whether nginx should cache upstream routes in memcache
+     *
+     * @param zimbraReverseProxyZmlookupCachingEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1785)
+    public void setReverseProxyZmlookupCachingEnabled(boolean zimbraReverseProxyZmlookupCachingEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyZmlookupCachingEnabled, zimbraReverseProxyZmlookupCachingEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether nginx should cache upstream routes in memcache
+     *
+     * @param zimbraReverseProxyZmlookupCachingEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1785)
+    public Map<String,Object> setReverseProxyZmlookupCachingEnabled(boolean zimbraReverseProxyZmlookupCachingEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyZmlookupCachingEnabled, zimbraReverseProxyZmlookupCachingEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * whether nginx should cache upstream routes in memcache
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1785)
+    public void unsetReverseProxyZmlookupCachingEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyZmlookupCachingEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether nginx should cache upstream routes in memcache
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1785)
+    public Map<String,Object> unsetReverseProxyZmlookupCachingEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyZmlookupCachingEnabled, "");
+        return attrs;
+    }
+
+    /**
      * LDAP attribute(s) for public key lookup for S/MIME via external LDAP.
      * Multiple attributes can be separated by comma. All SMIME attributes
      * are in the format of {config-name}:{value}. A &#039;SMIME config&#039;
