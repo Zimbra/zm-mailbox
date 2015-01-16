@@ -8994,4 +8994,9 @@ TODO: delete them permanently from here
   <globalConfigValue>10000</globalConfigValue>
   <desc>Maximum number of items that can be held in memory while queued for indexing</desc>
 </attr>
+
+<attr id="1787" name="zimbraPrefShowChatsFolderInMail" type="boolean" cardinality="single" optionalIn="account,cos,domain" flags="accountInfo,accountCosDomainInherited,domainAdminModifiable" since="8.7.0">
+  <defaultCOSValue>FALSE</defaultCOSValue>
+  <desc>Show Chats folder even if zimbraFeatureIMEnabled is false</desc>
+</attr>
 </attrs>
