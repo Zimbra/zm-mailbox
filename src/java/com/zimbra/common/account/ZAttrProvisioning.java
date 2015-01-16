@@ -11922,6 +11922,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefShowCalendarWeek = "zimbraPrefShowCalendarWeek";
 
     /**
+     * Show Chats folder even if zimbraFeatureIMEnabled is false
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1787)
+    public static final String A_zimbraPrefShowChatsFolderInMail = "zimbraPrefShowChatsFolderInMail";
+
+    /**
      * whether or not to show direction buttons in compose toolbar
      *
      * @since ZCS 8.0.0
