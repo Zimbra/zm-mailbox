@@ -13119,6 +13119,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraReverseProxyWorkerProcesses = "zimbraReverseProxyWorkerProcesses";
 
     /**
+     * whether nginx should cache upstream routes in memcache
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1785)
+    public static final String A_zimbraReverseProxyZmlookupCachingEnabled = "zimbraReverseProxyZmlookupCachingEnabled";
+
+    /**
      * Hostname of the upstream ZSS server being reverse-proxied
      *
      * @since ZCS 8.7.0
