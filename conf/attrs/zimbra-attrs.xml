@@ -8421,4 +8421,8 @@ TODO: delete them permanently from here
   <desc>Value for postconf lmtp_tls_mandatory_protocols</desc>
 </attr>
 
+<attr id="1785" name="zimbraReverseProxyZmlookupCachingEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="nginxproxy" since="8.7.0">
+  <globalConfigValue>TRUE</globalConfigValue>
+  <desc>whether nginx should cache upstream routes in memcache</desc>
+</attr>
 </attrs>
