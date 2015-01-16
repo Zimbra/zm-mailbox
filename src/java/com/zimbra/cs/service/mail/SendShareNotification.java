@@ -72,8 +72,8 @@ import com.zimbra.cs.util.Zimbra;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.mail.message.SendShareNotificationRequest;
-import com.zimbra.soap.mail.message.SendShareNotificationRequest.ShareNotifAction;
 import com.zimbra.soap.mail.type.EmailAddrInfo;
+import com.zimbra.soap.mail.type.ShareNotifAction;
 
 public class SendShareNotification extends MailDocumentHandler {
 

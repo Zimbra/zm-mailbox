@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -56,13 +56,13 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.service.util.ItemId;
-import com.zimbra.soap.mail.message.SendShareNotificationRequest;
+import com.zimbra.soap.mail.type.ShareNotifAction;
 
 public class SendShareNotificationTest extends SendShareNotification {
 
     @Override
     protected MimeMessage generateShareNotification(Account authAccount, Account ownerAccount, ShareInfoData sid,
-            String notes, SendShareNotificationRequest.ShareNotifAction action,
+            String notes, ShareNotifAction action,
             Collection<String> internalRecipients, String externalRecipient)
             throws ServiceException, MessagingException {
         MimeMessage mm = super.generateShareNotification(authAccount, ownerAccount,

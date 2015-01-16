@@ -79,7 +79,7 @@ import com.zimbra.cs.mailbox.acl.AclPushSerializer;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.JMSession;
-import com.zimbra.soap.mail.message.SendShareNotificationRequest.ShareNotifAction;
+import com.zimbra.soap.mail.type.ShareNotifAction;
 
 
 public class ShareInfo {

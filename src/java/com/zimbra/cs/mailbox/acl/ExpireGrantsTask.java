@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -15,6 +15,8 @@
  * ***** END LICENSE BLOCK *****
  */
 package com.zimbra.cs.mailbox.acl;
+
+import java.util.List;
 
 import com.google.common.collect.Sets;
 import com.zimbra.client.ZMailbox;
@@ -34,9 +36,8 @@ import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.soap.mail.message.SendShareNotificationRequest;
 import com.zimbra.soap.mail.type.EmailAddrInfo;
+import com.zimbra.soap.mail.type.ShareNotifAction;
 import com.zimbra.soap.type.Id;
-
-import java.util.List;
 
 public class ExpireGrantsTask extends ScheduledTask {
 
@@ -67,6 +68,7 @@ public class ExpireGrantsTask extends ScheduledTask {
      * @throws Exception if unable to compute a result
      * @see ExpireGrantsTaskCallback
      */
+    @Override
     public MailItem call() throws Exception {
         int itemId = Integer.valueOf(getProperty(ITEM_ID_PROP_NAME));
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(getMailboxId());
@@ -120,7 +122,7 @@ public class ExpireGrantsTask extends ScheduledTask {
             throws ServiceException {
         SendShareNotificationRequest req = new SendShareNotificationRequest();
         req.setEmailAddresses(Sets.newHashSet(new EmailAddrInfo(address)));
-        req.setAction(SendShareNotificationRequest.ShareNotifAction.expire);
+        req.setAction(ShareNotifAction.expire);
         req.setItem(new Id(Integer.toString(itemId)));
         zMbox.invokeJaxb(req);
     }
