@@ -378,6 +378,7 @@ SECTION proxy
 	VAR zimbraReverseProxyBlockedURLs
 	VAR zimbraReverseProxyBlockedUserAgents	
 	VAR zimbraReverseProxyZSSHostname
+	VAR zimbraReverseProxyZmlookupCachingEnabled
 	PROXYGEN
 	RESTART proxy
 
