@@ -8989,4 +8989,9 @@ TODO: delete them permanently from here
   <globalConfigValue>TRUE</globalConfigValue>
   <desc>whether nginx should cache upstream routes in memcache</desc>
 </attr>
+
+<attr id="1786" name="zimbraIndexingQueueMaxSize" type="integer" min="0" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="9.0">
+  <globalConfigValue>10000</globalConfigValue>
+  <desc>Maximum number of items that can be held in memory while queued for indexing</desc>
+</attr>
 </attrs>

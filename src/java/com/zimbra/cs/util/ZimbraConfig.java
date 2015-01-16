@@ -37,6 +37,8 @@ import com.zimbra.cs.consul.ConsulClient;
 import com.zimbra.cs.consul.ConsulServiceLocator;
 import com.zimbra.cs.consul.ServiceLocator;
 import com.zimbra.cs.extension.ExtensionUtil;
+import com.zimbra.cs.index.DefaultIndexingQueueAdapter;
+import com.zimbra.cs.index.IndexingQueueAdapter;
 import com.zimbra.cs.mailbox.FoldersAndTagsCache;
 import com.zimbra.cs.mailbox.LocalSharedDeliveryCoordinator;
 import com.zimbra.cs.mailbox.MailboxLockFactory;
@@ -293,6 +295,24 @@ public class ZimbraConfig {
         }
         if (instance == null) {
             instance = new ZimbraApplication();
+        }
+        return instance;
+	}
+
+	@Bean(name="indexingQueueAdapter")
+	public IndexingQueueAdapter indexingQueueAdapterBean() throws Exception {
+	    IndexingQueueAdapter instance = null;
+        String className = LC.zimbra_class_indexing_queue_adapter.value();
+        if (className != null && !className.equals("")) {
+            try {
+                instance = (IndexingQueueAdapter) Class.forName(className).newInstance();
+            } catch (ClassNotFoundException e) {
+                instance = (IndexingQueueAdapter) ExtensionUtil.findClass(className).newInstance();
+            }
+        }
+        if (instance == null) {
+            //TODO: instantiate Redis adapter if Redis is available
+            instance = new DefaultIndexingQueueAdapter();
         }
         return instance;
 	}

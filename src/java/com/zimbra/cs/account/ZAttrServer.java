@@ -16781,6 +16781,83 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Maximum number of items that can be held in memory while queued for
+     * indexing
+     *
+     * @return zimbraIndexingQueueMaxSize, or 10000 if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1786)
+    public int getIndexingQueueMaxSize() {
+        return getIntAttr(Provisioning.A_zimbraIndexingQueueMaxSize, 10000);
+    }
+
+    /**
+     * Maximum number of items that can be held in memory while queued for
+     * indexing
+     *
+     * @param zimbraIndexingQueueMaxSize new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1786)
+    public void setIndexingQueueMaxSize(int zimbraIndexingQueueMaxSize) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIndexingQueueMaxSize, Integer.toString(zimbraIndexingQueueMaxSize));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of items that can be held in memory while queued for
+     * indexing
+     *
+     * @param zimbraIndexingQueueMaxSize new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1786)
+    public Map<String,Object> setIndexingQueueMaxSize(int zimbraIndexingQueueMaxSize, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIndexingQueueMaxSize, Integer.toString(zimbraIndexingQueueMaxSize));
+        return attrs;
+    }
+
+    /**
+     * Maximum number of items that can be held in memory while queued for
+     * indexing
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1786)
+    public void unsetIndexingQueueMaxSize() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIndexingQueueMaxSize, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of items that can be held in memory while queued for
+     * indexing
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1786)
+    public Map<String,Object> unsetIndexingQueueMaxSize(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIndexingQueueMaxSize, "");
+        return attrs;
+    }
+
+    /**
      * This attribute is used for failed authentication requests. It
      * indicates the minimum time between current req and last req from the
      * same IP before this suspended IP will be reinstated
