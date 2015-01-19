@@ -2548,7 +2548,7 @@ public class ProxyConfGen
         }
 
         if ((webEnabled || mailEnabled) && (zmLookupHandlers.size() == 0)) {
-            mLog.info("Proxy is enabled but there are no lookup hanlders (Config will not be written)");
+            mLog.info("Proxy is enabled but there are no lookup handlers (Config will not be written)");
             validConf = false;
         }
 
@@ -2682,7 +2682,7 @@ public class ProxyConfGen
 
         if (!isWorkableConf()) {
             mLog.error("Configuration is not valid because no route lookup handlers exist, or because no HTTP/HTTPS upstream servers were found");
-            mLog.error("Please ensure that the output of 'zmprov garpu/garpb' returns at least one entry in non-split mode and atleast two if this server is in split-mode (just service or zimbra/zimbraAdmin)");
+            mLog.error("Please ensure that the output of 'zmprov garpu/garpb' returns at least one entry");
             exitCode = 1;
             return(exitCode);
         }
