@@ -65,7 +65,6 @@ final class NioImapHandler extends ImapHandler implements NioHandler {
                     dropConnection();
                 }
             } finally {
-                ZimbraLog.clearContext();
                 if (request != null) {
                     request.cleanup();
                     request = null;

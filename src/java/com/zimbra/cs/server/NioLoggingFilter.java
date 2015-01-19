@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2009, 2010, 2011, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -17,8 +17,8 @@
 
 package com.zimbra.cs.server;
 
-import com.google.common.base.CharMatcher;
-import com.zimbra.common.util.Log;
+import java.io.IOException;
+import java.nio.ByteBuffer;
 
 import org.apache.mina.core.buffer.IoBuffer;
 import org.apache.mina.core.filterchain.IoFilterAdapter;
@@ -26,8 +26,9 @@ import org.apache.mina.core.session.IoSession;
 import org.apache.mina.core.write.WriteRequest;
 import org.apache.mina.filter.codec.ProtocolDecoderException;
 
-import java.io.IOException;
-import java.nio.ByteBuffer;
+import com.google.common.base.CharMatcher;
+import com.zimbra.common.util.Log;
+import com.zimbra.common.util.ZimbraLog;
 
 /**
  * Optionally logs all MINA protocol events to the server log.
@@ -44,22 +45,30 @@ final class NioLoggingFilter extends IoFilterAdapter {
     @Override
     public void exceptionCaught(NextFilter next, IoSession session, Throwable cause) {
         NioHandlerDispatcher.getHandler(session).setLoggingContext();
-        if (cause instanceof IOException || cause instanceof ProtocolDecoderException) {
-            // intend to ignore "Connection reset by peer" and "Broken pipe"
-            log.debug(cause, cause);
-        } else {
-            log.error(cause, cause);
+        try {
+            if (cause instanceof IOException || cause instanceof ProtocolDecoderException) {
+                // intend to ignore "Connection reset by peer" and "Broken pipe"
+                log.debug(cause, cause);
+            } else {
+                log.error(cause, cause);
+            }
+            next.exceptionCaught(session, cause);
+        } finally {
+            ZimbraLog.clearContext();
         }
-        next.exceptionCaught(session, cause);
     }
 
     @Override
     public void messageReceived(NextFilter nextFilter, IoSession session, Object message) {
         NioHandlerDispatcher.getHandler(session).setLoggingContext();
-        if (log.isTraceEnabled()) {
-            log.trace("C: %s", pp(message));
+        try {
+            if (log.isTraceEnabled()) {
+                log.trace("C: %s", pp(message));
+            }
+            nextFilter.messageReceived(session, message);
+        } finally {
+            ZimbraLog.clearContext();
         }
-        nextFilter.messageReceived(session, message);
     }
 
     @Override
