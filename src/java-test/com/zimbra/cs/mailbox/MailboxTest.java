@@ -40,6 +40,7 @@ import com.zimbra.common.account.ZAttrProvisioning.MailThreadingAlgorithm;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.InternetAddress;
 import com.zimbra.common.util.ArrayUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
@@ -69,8 +70,6 @@ public final class MailboxTest {
     @Before
     public void setUp() throws Exception {
         MailboxTestUtil.clearData();
-        // MailboxTestUtil.cleanupIndexStore(
-        // MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID));
     }
 
     public static final DeliveryOptions STANDARD_DELIVERY_OPTIONS = new DeliveryOptions()
@@ -116,6 +115,14 @@ public final class MailboxTest {
         MailboxTestUtil.forceIndexing(mbox);
         List<BrowseTerm> terms = mbox.browse(null, Mailbox.BrowseBy.domains,
                 null, 100);
+
+        if(terms.size() != 4) {
+            //we've got some garbage in indexed terms, lets print it out for investigation
+           for(BrowseTerm term : terms) {
+               ZimbraLog.test.error(String.format("found term: %s", term.getText()));
+           }
+        }
+
         Assert.assertEquals("Number of expected terms", 4, terms.size());
         Assert.assertEquals("sub1.zimbra.com", terms.get(0).getText());
         Assert.assertEquals("sub2.zimbra.com", terms.get(1).getText());
@@ -169,6 +176,12 @@ public final class MailboxTest {
         List<BrowseTerm> terms = mbox.browse(null, Mailbox.BrowseBy.domains,
                 null, 100);
         LC.zimbra_terms_cachesize.setDefault(defaultLimit);
+        if(terms.size() != 4) {
+            //we've got some garbage in indexed terms, lets print it out for investigation
+           for(BrowseTerm term : terms) {
+               ZimbraLog.test.error(String.format("found term: %s", term.getText()));
+           }
+        }
         Assert.assertEquals("Number of expected terms", 4, terms.size());
         Assert.assertEquals("sub1.zimbra.com", terms.get(0).getText());
         Assert.assertEquals("sub2.zimbra.com", terms.get(1).getText());
@@ -216,6 +229,13 @@ public final class MailboxTest {
 
         terms = mbox.browse(null, Mailbox.BrowseBy.domains, null,
                 numDomains * 2);
+
+        if(terms.size() != numDomains) {
+            //we've got some garbage in indexed domains, lets print it out for investigation
+           for(BrowseTerm term : terms) {
+               ZimbraLog.test.error(String.format("found term: %s", term.getText()));
+           }
+        }
         Assert.assertEquals("Number of expected terms", numDomains,
                 terms.size());
     }
