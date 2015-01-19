@@ -5,6 +5,8 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import java.util.HashMap;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -16,16 +18,22 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.MailboxTestUtil;
 import com.zimbra.cs.mailbox.MockMailItem;
 
 public class TestIndexQueueAdapter {
 
     @Before
     public void setUp() throws Exception {
+        MailboxTestUtil.initServer();
+        Provisioning prov = Provisioning.getInstance();
+        prov.createAccount("test@zimbra.com", "secret", new HashMap<String, Object>());
+
     }
 
     @After
     public void tearDown() throws Exception {
+        MailboxTestUtil.clearData();
     }
 
     @Test
