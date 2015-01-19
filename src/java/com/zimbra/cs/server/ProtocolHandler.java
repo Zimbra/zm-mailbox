@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -17,22 +17,21 @@
 
 package com.zimbra.cs.server;
 
-import com.google.common.base.Preconditions;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.Log;
-import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.util.Zimbra;
-
-import javax.net.ssl.HandshakeCompletedEvent;
-import javax.net.ssl.HandshakeCompletedListener;
-import javax.net.ssl.SSLException;
-import javax.net.ssl.SSLSocket;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.nio.channels.AsynchronousCloseException;
+
+import javax.net.ssl.HandshakeCompletedEvent;
+import javax.net.ssl.HandshakeCompletedListener;
+import javax.net.ssl.SSLException;
+import javax.net.ssl.SSLSocket;
+
+import com.google.common.base.Preconditions;
+import com.zimbra.common.util.Log;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.util.Zimbra;
 
 /**
  * Protocol-agnostic abstract base class for handling each client connection
@@ -165,7 +164,7 @@ public abstract class ProtocolHandler implements Runnable {
         ZimbraLog.clearContext();
         server.removeActiveHandler(this);
         handlerThread = null;
-        log.info("Handler exiting normally");
+        log.debug("Handler exiting normally");
     }
 
     /*
