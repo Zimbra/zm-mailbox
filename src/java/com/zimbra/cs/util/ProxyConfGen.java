@@ -1970,6 +1970,7 @@ public class ProxyConfGen
     private static String mVhostTemplateDir = mTemplateDir + File.separator + "vhost";
     private static String mWebModeTemplateDir = mTemplateDir + File.separator + "web.mode";
     private static String mConfDir = mWorkingDir + "/conf";
+    private static String mResolverfile = mConfDir + "/nginx/resolvers.conf";
     private static String mIncDir = "nginx/includes";
     private static String mDomainSSLDir = mConfDir + File.separator + "domaincerts";
     private static String mSSLCrtExt = ".crt";
@@ -2755,6 +2756,7 @@ public class ProxyConfGen
 	    mConfVars.put("web.blocked.user.agents", new WebBlockedUserAgentsVar());
 	    mConfVars.put("web.zss.upstream.disable", new WebZSSUpstreamEnablerVar());
 	    mConfVars.put("web.zss.upstream.hostname", new ProxyConfVar("web.zss.upstream.hostname", "zimbraReverseProxyZSSHostname", "", ProxyConfValueType.STRING, ProxyConfOverride.SERVER, "Hostname of the upstream ZSS server being reverse-proxied"));
+	    mConfVars.put("web.zss.resolver.file", new ProxyConfVar("web.zss.resolver.file", null, mResolverfile, ProxyConfValueType.STRING, ProxyConfOverride.CONFIG, "File containing resolver directive with the nameservers from /etc/resolv.conf"));
     }
 
     /* update the default variable map from the active configuration */
@@ -2821,7 +2823,7 @@ public class ProxyConfGen
         }
 
         if ((webEnabled || mailEnabled) && (zmLookupHandlers.size() == 0)) {
-            mLog.info("Proxy is enabled but there are no lookup hanlders (Config will not be written)");
+            mLog.info("Proxy is enabled but there are no lookup handlers (Config will not be written)");
             validConf = false;
         }
 
@@ -2963,7 +2965,7 @@ public class ProxyConfGen
 
         if (!isWorkableConf()) {
             mLog.error("Configuration is not valid because no route lookup handlers exist, or because no HTTP/HTTPS upstream servers were found");
-            mLog.error("Please ensure that the output of 'zmprov garpu/garpb' returns at least one entry in non-split mode and atleast two if this server is in split-mode (just service or zimbra/zimbraAdmin)");
+            mLog.error("Please ensure that the output of 'zmprov garpu/garpb' returns at least one entry");
             exitCode = 1;
             return(exitCode);
         }
