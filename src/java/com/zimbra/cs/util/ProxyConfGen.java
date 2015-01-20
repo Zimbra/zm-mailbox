@@ -1713,6 +1713,7 @@ public class ProxyConfGen
     private static String mWorkingDir = "/opt/zimbra";
     private static String mTemplateDir = mWorkingDir + "/conf/nginx/templates";
     private static String mConfDir = mWorkingDir + "/conf";
+    private static String mResolverfile = mConfDir + "/nginx/resolvers.conf";
     private static String mIncDir = "nginx/includes";
     private static String mDomainSSLDir = mConfDir + File.separator + "domaincerts";
     private static String mSSLCrtExt = ".crt";
@@ -2481,7 +2482,7 @@ public class ProxyConfGen
 	    mConfVars.put("web.upstream.ews.target", new WebProxyUpstreamEwsTargetVar());
 	    mConfVars.put("web.zss.upstream.disable", new WebZSSUpstreamEnablerVar());
 	    mConfVars.put("web.zss.upstream.hostname", new ProxyConfVar("web.zss.upstream.hostname", "zimbraReverseProxyZSSHostname", "", ProxyConfValueType.STRING, ProxyConfOverride.SERVER, "Hostname of the upstream ZSS server being reverse-proxied"));
-	    mConfVars.put("web.zss.resolver.file", new ProxyConfVar("web.zss.resolver.file", null, mConfDir + "/nginx/resolvers.conf", ProxyConfValueType.STRING, ProxyConfOverride.SERVER, "DNS resolver file used by nginx (contains all name servers from /etc/resolv.conf)"));
+	    mConfVars.put("web.zss.resolver.file", new ProxyConfVar("web.zss.resolver.file", null, mResolverfile, ProxyConfValueType.STRING, ProxyConfOverride.CONFIG, "File containing resolver directive with the nameservers from /etc/resolv.conf"));
     }
 
     /* update the default variable map from the active configuration */
