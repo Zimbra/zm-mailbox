@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2006, 2007, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -115,6 +115,16 @@ public class DavException extends Exception {
         public InvalidData(QName prop, String msg) {
             super(msg, HttpServletResponse.SC_FORBIDDEN);
             setError(prop);
+        }
+    }
+
+    public static class UidConflict extends DavExceptionWithErrorMessage {
+        public UidConflict(String msg, String href) {
+            super(msg, HttpServletResponse.SC_PRECONDITION_FAILED);
+            Element errElem = org.dom4j.DocumentHelper.createElement(DavElements.E_NO_UID_CONFLICT);
+            Element hrefE= errElem.addElement(DavElements.E_HREF);
+            hrefE.setText(href);
+            setError(errElem);
         }
     }
 

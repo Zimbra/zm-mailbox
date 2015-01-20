@@ -80,6 +80,8 @@ import com.zimbra.cs.mailbox.calendar.ZAttendee;
 import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.mailbox.calendar.cache.CtagInfo;
 import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.service.FileUploadServlet.Upload;
+import com.zimbra.cs.servlet.ETagHeaderFilter;
 import com.zimbra.cs.util.AccountUtil.AccountAddressMatcher;
 
 /**
@@ -93,6 +95,7 @@ public class CalendarCollection extends Collection {
     public CalendarCollection(DavContext ctxt, Folder f) throws DavException, ServiceException {
         super(ctxt, f);
         Account acct = f.getAccount();
+        addProperty(ResourceProperty.AddMember.create(UrlNamespace.getFolderUrl(ctxt.getUser(), f.getName())));
 
         if (f.getDefaultView() == MailItem.Type.APPOINTMENT || f.getDefaultView() == MailItem.Type.TASK) {
             addResourceType(DavElements.E_CALENDAR);
@@ -372,41 +375,45 @@ public class CalendarCollection extends Collection {
         }
     }
 
+    @Override
+    public void handlePost(DavContext ctxt) throws DavException, IOException, ServiceException {
+        Provisioning prov = Provisioning.getInstance();
+        DavResource rs = null;
+        try {
+            String user = ctxt.getUser();
+            Account account = prov.get(AccountBy.name, user);
+            if (account == null) {
+                throw new DavException("no such account "+user, HttpServletResponse.SC_NOT_FOUND, null);
+            }
+
+            List<Invite> invites = uploadToInvites(ctxt, account);
+            String uid = findEventUid(invites);
+            rs =  createItemFromInvites(ctxt, account, uid + ".ics", invites, false);
+            if (rs.isNewlyCreated()) {
+                ctxt.getResponse().setHeader("Location", rs.getUri());
+                ctxt.setStatus(HttpServletResponse.SC_CREATED);
+            } else {
+                ctxt.setStatus(HttpServletResponse.SC_NO_CONTENT);
+            }
+            if (rs.hasEtag()) {
+                ctxt.getResponse().setHeader(DavProtocol.HEADER_ETAG, rs.getEtag());
+                ctxt.getResponse().setHeader(ETagHeaderFilter.ZIMBRA_ETAG_HEADER, rs.getEtag());
+            }
+        } catch (ServiceException e) {
+            if (e.getCode().equals(ServiceException.FORBIDDEN)) {
+                throw new DavException(e.getMessage(), HttpServletResponse.SC_FORBIDDEN, e);
+            } else {
+                throw new DavException("cannot create icalendar item", HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e);
+            }
+        }
+    }
+
     /**
      * Creates an appointment sent in PUT request in this calendar.
      * @param name - basename (last component) of the path - i.e. the name within this collection
      */
     @Override
     public DavResource createItem(DavContext ctxt, String name) throws DavException, IOException {
-        if (!ctxt.getUpload().getContentType().startsWith(MimeConstants.CT_TEXT_CALENDAR)) {
-            throw new DavException.InvalidData(DavElements.E_SUPPORTED_CALENDAR_DATA,"not a calendar data");
-        }
-        if (ctxt.getUpload().getSize() <= 0) {
-            throw new DavException.InvalidData(DavElements.E_VALID_CALENDAR_DATA,"empty request");
-        }
-
-        /*
-         * Some of the CalDAV clients do not behave very well when it comes to etags.
-         *     chandler doesn't set User-Agent header, doesn't understand If-None-Match or If-Match headers.
-         *     evolution 2.8 always sets If-None-Match although we return etag in REPORT.
-         *     ical correctly understands etag and sets If-Match for existing etags, but does not use If-None-Match
-         *     for new resource creation.
-         */
-        HttpServletRequest req = ctxt.getRequest();
-        String etag = req.getHeader(DavProtocol.HEADER_IF_MATCH);
-        boolean useEtag = (etag != null);
-
-        //String noneMatch = req.getHeader(DavProtocol.HEADER_IF_NONE_MATCH);
-
-        String baseName = HttpUtil.urlUnescape(name);
-        boolean acceptableClientChosenBasename =
-                DebugConfig.enableDAVclientCanChooseResourceBaseName && baseName.equals(name);
-        if (name.endsWith(CalendarObject.CAL_EXTENSION)) {
-            name = name.substring(0, name.length()-CalendarObject.CAL_EXTENSION.length());
-            // Unescape the name (It was encoded in DavContext intentionally)
-            name = HttpUtil.urlUnescape(name);
-        }
-
         Provisioning prov = Provisioning.getInstance();
         try {
             String user = ctxt.getUser();
@@ -415,16 +422,50 @@ public class CalendarCollection extends Collection {
                 throw new DavException("no such account "+user, HttpServletResponse.SC_NOT_FOUND, null);
             }
 
-            List<Invite> invites;
-            try (InputStream is = ctxt.getUpload().getInputStream()) {
-                ZCalendar.ZVCalendar vcalendar = ZCalendar.ZCalendarBuilder.build(is, MimeConstants.P_CHARSET_UTF8);
-                CalDavUtils.removeAttendeeForOrganizer(vcalendar);  // Apple iCal fixup
-                if (ctxt.isIcalClient()) { // Apple iCal fixup for todos
-                    CalDavUtils.adjustPercentCompleteForToDos(vcalendar);
-                }
-                invites = Invite.createFromCalendar(account, findSummary(vcalendar), vcalendar, true);
-            } catch (ServiceException se) {
-                throw new DavException.InvalidData(DavElements.E_VALID_CALENDAR_DATA,"cannot parse ics");
+            List<Invite> invites = uploadToInvites(ctxt, account);
+            return createItemFromInvites(ctxt, account, name, invites, true);
+        } catch (ServiceException e) {
+            if (e.getCode().equals(ServiceException.FORBIDDEN)) {
+                throw new DavException(e.getMessage(), HttpServletResponse.SC_FORBIDDEN, e);
+            } else {
+                throw new DavException("cannot create icalendar item", HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e);
+            }
+        }
+    }
+
+    /**
+     * @param name Preferred DAV basename for the new item - including ".ics" if appropriate.
+     * @param allowUpdate - PUTs are allowed to update a pre-existing item.  POSTs to the containing collection are not.
+     */
+    public DavResource createItemFromInvites(DavContext ctxt, Account account, String name, List<Invite> invites,
+            boolean allowUpdate)
+    throws DavException, IOException {
+
+        boolean useEtag = allowUpdate;
+        try {
+            String user = account.getName();
+            /*
+             * Some of the CalDAV clients do not behave very well when it comes to etags.
+             *     chandler doesn't set User-Agent header, doesn't understand If-None-Match or If-Match headers.
+             *     evolution 2.8 always sets If-None-Match although we return etag in REPORT.
+             *     ical correctly understands etag and sets If-Match for existing etags, but does not use If-None-Match
+             *     for new resource creation.
+             */
+            HttpServletRequest req = ctxt.getRequest();
+
+            String etag = null;
+            if (useEtag) {
+                etag = req.getHeader(DavProtocol.HEADER_IF_MATCH);
+                useEtag = (etag != null);
+            }
+
+            String baseName = HttpUtil.urlUnescape(name);
+            boolean acceptableClientChosenBasename =
+                    DebugConfig.enableDAVclientCanChooseResourceBaseName && baseName.equals(name);
+            if (name.endsWith(CalendarObject.CAL_EXTENSION)) {
+                name = name.substring(0, name.length()-CalendarObject.CAL_EXTENSION.length());
+                // Unescape the name (It was encoded in DavContext intentionally)
+                name = HttpUtil.urlUnescape(name);
             }
 
             String uid = findEventUid(invites);
@@ -458,12 +499,8 @@ public class CalendarCollection extends Collection {
                         } else {
                             // The item exists, but doesn't have this name.
                             // issue a redirect to the URI we want it to be at.
-                            DavName davName = null;
                             if (acceptableClientChosenBasename) {
-                                davName = DavNames.get(this.mMailboxId, origCalItem.getId());
-                            }
-                            if (davName != null) {
-                                redirectUrl = urlForCalendarItem(user, davName.davBaseName);
+                                redirectUrl = hrefForCalendarItem(origCalItem, user, uid);
                             } else {
                                 redirectUrl = defaultUrlForCalendarItem(user, uid);
                             }
@@ -472,7 +509,8 @@ public class CalendarCollection extends Collection {
                     if ((origCalItem == null) && (!DebugConfig.enableDAVclientCanChooseResourceBaseName)) {
                         redirectUrl = defaultUrlForCalendarItem(user, uid);
                     }
-                    if (redirectUrl != null) {
+
+                    if (allowUpdate && (redirectUrl != null)) {
                         /* SC_FOUND - Status code (302) indicating that the resource reside temporarily under a
                          * different URI. Since the redirection might be altered on occasion, the client should
                          * continue to use the Request-URI for future requests.(HTTP/1.1) To represent the status code
@@ -487,6 +525,11 @@ public class CalendarCollection extends Collection {
             }
             if (origCalItem == null && useEtag) {
                 throw new DavException("event not found", HttpServletResponse.SC_NOT_FOUND, null);
+            }
+
+            if (origCalItem != null && !allowUpdate) {
+                throw new DavException.UidConflict("An item with the same UID already exists in the calendar",
+                        hrefForCalendarItem(origCalItem, user, uid));
             }
 
             boolean isNewItem = true;
@@ -582,7 +625,7 @@ public class CalendarCollection extends Collection {
                     origInvites, mId, flags, tags, scidDefault, scidExceptions, replies, ctxt);
             if (autoScheduler == null) {
                 newCalItem = mbox.setCalendarItem(ctxt.getOperationContext(), mId, flags, tags,
-                    scidDefault, scidExceptions, replies, CalendarItem.NEXT_ALARM_KEEP_CURRENT);
+                        scidDefault, scidExceptions, replies, CalendarItem.NEXT_ALARM_KEEP_CURRENT);
             } else {
                 // Note: This also sets the calendar item
                 newCalItem = autoScheduler.doSchedulingActions();
@@ -612,6 +655,49 @@ public class CalendarCollection extends Collection {
             }
         }
     }
+
+    private String hrefForCalendarItem(CalendarItem calItem, String user, String uid)
+    throws DavException, ServiceException {
+        String preexistingHref = null;
+        DavName davName = null;
+        if (DebugConfig.enableDAVclientCanChooseResourceBaseName) {
+            davName = DavNames.get(this.mMailboxId, calItem.getId());
+        }
+        if (davName != null) {
+            preexistingHref = urlForCalendarItem(user, davName.davBaseName);
+        } else {
+            preexistingHref = defaultUrlForCalendarItem(user, uid);
+        }
+        return preexistingHref;
+    }
+
+    private List<Invite> uploadToInvites(DavContext ctxt, Account account)
+    throws DavException, IOException {
+        Upload upload = ctxt.getUpload();
+        String contentType = upload.getContentType();
+        if (!contentType.startsWith(MimeConstants.CT_TEXT_CALENDAR)) {
+            throw new DavException.InvalidData(DavElements.E_SUPPORTED_CALENDAR_DATA,
+                    String.format("Incorrect Content-Type '%s', expected '%s'",
+                            contentType, MimeConstants.CT_TEXT_CALENDAR));
+        }
+        if (upload.getSize() <= 0) {
+            throw new DavException.InvalidData(DavElements.E_VALID_CALENDAR_DATA,"empty request");
+        }
+        List<Invite> invites;
+        try (InputStream is = ctxt.getUpload().getInputStream()) {
+            ZCalendar.ZVCalendar vcalendar = ZCalendar.ZCalendarBuilder.build(is, MimeConstants.P_CHARSET_UTF8);
+            CalDavUtils.removeAttendeeForOrganizer(vcalendar);  // Apple iCal fixup
+            if (ctxt.isIcalClient()) { // Apple iCal fixup for todos
+                CalDavUtils.adjustPercentCompleteForToDos(vcalendar);
+            }
+            invites = Invite.createFromCalendar(account, findSummary(vcalendar), vcalendar, true);
+        } catch (ServiceException se) {
+            throw new DavException.InvalidData(DavElements.E_VALID_CALENDAR_DATA,
+                    String.format("Problem parsing %s data - %s", MimeConstants.CT_TEXT_CALENDAR, se.getMessage()));
+        }
+        return invites;
+    }
+
 
     private String urlForCalendarItem(String user, String basename) throws DavException, ServiceException {
         StringBuilder url = new StringBuilder();
