@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -61,6 +61,7 @@ public class DavElements {
     public static final String P_ADDRESSBOOK_HOME_SET = "addressbook-home-set";
     public static final String P_ADDRESSBOOK_MULTIGET = "addressbook-multiget";
     public static final String P_ADDRESSBOOK_QUERY = "addressbook-query";
+    public static final String P_ADD_MEMBER = "add-member";
     public static final String P_ALL = "all";
     public static final String P_ALLCOMP = "allcomp";
     public static final String P_ALLPROP = "allprop";
@@ -162,6 +163,7 @@ public class DavElements {
     public static final String P_NEED_PRIVILEGES = "need-privileges";
     public static final String P_NO_INVERT = "no-invert";
     public static final String P_NOVALUE = "novalue";
+    public static final String P_NO_UID_CONFLICT = "no-uid-conflict";
 
     public static final String P_OWNER = "owner";
 
@@ -255,6 +257,7 @@ public class DavElements {
     public static final QName E_ACL_PRINCIPAL_PROP_SET = QName.get(P_ACL_PRINCIPAL_PROP_SET, WEBDAV_NS);
     public static final QName E_ACL_RESTRICTIONS = QName.get(P_ACL_RESTRICTIONS, WEBDAV_NS);
     public static final QName E_ACTIVELOCK = QName.get(P_ACTIVELOCK, WEBDAV_NS);
+    public static final QName E_ADD_MEMBER = QName.get(P_ADD_MEMBER, WEBDAV_NS);
     public static final QName E_ALL    = QName.get(P_ALL, WEBDAV_NS);
     public static final QName E_ALLCOMP = QName.get(P_ALLCOMP, CALDAV_NS);
     public static final QName E_ALLPROP = QName.get(P_ALLPROP, WEBDAV_NS);
@@ -415,6 +418,7 @@ public class DavElements {
     public static final QName E_PROPFIND_FINITE_DEPTH = QName.get("propfind-finite-depth", WEBDAV_NS);
     public static final QName E_VALID_CALENDAR_DATA = QName.get(P_VALID_CALENDAR_DATA, CALDAV_NS);
     public static final QName E_VALID_CALENDAR_OBJECT_RESOURCE = QName.get(P_VALID_CALENDAR_OBJECT_RESOURCE, CALDAV_NS);
+    public static final QName E_NO_UID_CONFLICT = QName.get(P_NO_UID_CONFLICT, CALDAV_NS);
 
     public static class CardDav {
         public static final QName E_ADDRESS_DATA = QName.get(P_ADDRESS_DATA, CARDDAV_NS);

@@ -39,7 +39,7 @@ public class ResourceProperty {
     private boolean mProtected;
     private boolean mVisible;
     private boolean mLive;
-    private QName mName;
+    private final QName mName;
     private Locale mLocale;
     private String mValue;
     protected ArrayList<Element> mChildren;
@@ -156,6 +156,17 @@ public class ResourceProperty {
         return e;
     }
 
+    public static class AddMember extends ResourceProperty {
+        private AddMember(String href) {
+            super(DavElements.E_ADD_MEMBER);
+            mChildren.add(createHref(href));
+        }
+        public static AddMember create(String href) {
+            return new AddMember(href);
+        }
+    }
+
+    @Override
     public String toString() {
         return "ResourceProperty: " + mName + ((mValue != null) ? ": '" + mValue + "'" : "");
     }
