@@ -135,10 +135,12 @@ public class CalDavProperty extends ResourceProperty {
      *       xmlns:C="urn:ietf:params:xml:ns:caldav">
      *     <C:comp name="VEVENT"/>
      *     <C:comp name="VTODO"/>
+     *     <C:comp name="VFREEBUSY"/>
      *   </C:supported-calendar-component-set>
      *
      * Earlier versions of Zimbra always included VCALENDAR, VTIMEZONE, VFREEBUSY
-     * My reading of the above text implies that none of these should be included.
+     * My reading of the above text implies that none of these should be included - however, added VFREEBUSY back in
+     * as that affected whether Mac OSX Calendar offers a checkbox for "Events affect availability" in calendar info.
      */
     private static class SupportedCalendarComponentSet extends CalDavProperty {
         public SupportedCalendarComponentSet(MailItem.Type view) {
