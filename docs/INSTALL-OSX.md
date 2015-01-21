@@ -75,6 +75,7 @@ $ p4 sync
 ````
 $ brew install mariadb
 $ sudo ln -s /usr/local/opt/mariadb /opt/zimbra/mysql
+$ sudo ln -s /usr/local/opt/mariadb /opt/zimbra/mariadb
 $ sudo chown {username} /opt/zimbra
 $ sudo vi /usr/local/etc/my.cnf
 ````
@@ -82,12 +83,12 @@ $ sudo vi /usr/local/etc/my.cnf
 ````
 [client-server]
 port = 7306
-socket = /opt/zimbra/mysql/data/mysql.sock
+socket = /opt/zimbra/db/mysql.sock
 ````
 
 ````
 $ mysql.server restart
-$ /opt/zimbra/mysql/bin/mysqladmin -S /opt/zimbra/mysql/data/mysql.sock -u root password zimbra
+$ /opt/zimbra/mariadb/bin/mysqladmin -S /opt/zimbra/db/mysql.sock -u root password zimbra
 ````
 
 ## Install Consul
