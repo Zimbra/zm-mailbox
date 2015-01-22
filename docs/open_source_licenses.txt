@@ -87,7 +87,7 @@ SECTION 1: BSD-STYLE, MIT-STYLE, OR SIMILAR STYLE LICENSES
    >>> perl-socket6-0.25
    >>> perl-termreadkey-2.30.02
    >>> perl-try-tiny-0.19
-   >>> php-5.4.30
+   >>> php-5.6.4
    >>> postfix-logwatch-1.40.01
    >>> sendmail-8.14.8
    >>> slf4j-1.6.4
@@ -20164,7 +20164,7 @@ This program is free software; you can redistribute
 it and/or modify it under the terms of the MIT license.
 
 
->>> php-5.4.30
+>>> php-5.6.4
 
 The PHP License, version 3.01
 
