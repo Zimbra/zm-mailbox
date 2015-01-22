@@ -48,7 +48,7 @@ SECTION 1: BSD-STYLE, MIT-STYLE, OR SIMILAR STYLE LICENSES
    >>> ganymed-ssh2-build210-none
    >>> gifencoder-none
    >>> google-perftools-2.2
-   >>> heimdal-1.5.2
+   >>> heimdal-1.5.3
    >>> ical4j-0.9.16
    >>> icu4j-4.8.1.1
    >>> iscroll-3.5.1
@@ -1445,7 +1445,7 @@ unlimited permission to copy and/or distribute it, with or without
 modifications, as long as this notice is preserved.
 
 
->>> heimdal-1.5.2
+>>> heimdal-1.5.3
 
 Copyright (c) 1997, 1998, 2001 Kungliga Tekniska Hgskolan
 (Royal Institute of Technology, Stockholm, Sweden).
