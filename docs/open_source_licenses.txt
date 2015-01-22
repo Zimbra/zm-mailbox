@@ -298,7 +298,7 @@ SECTION 8: GNU General Public License, V2.0
    >>> perl-io-zlib-1.10
    >>> perl-ip-country-2.28
    >>> perl-ipc-cmd-0.92
-   >>> perl-ldap-0.61
+   >>> perl-ldap-0.64
    >>> perl-libnet-1.25
    >>> perl-list-compare-0.38
    >>> perl-lwp-mediatypes-6.02
@@ -356,8 +356,8 @@ SECTION 8: GNU General Public License, V2.0
    >>> perl-version-0.9908
    >>> perl-www-robotrules-6.02
    >>> perl-xml-sax-expat-0.51
-   >>> perl-zmq-constants-1.03
-   >>> perl-zmq-libzmq3-1.13
+   >>> perl-zmq-constants-1.04
+   >>> perl-zmq-libzmq3-1.19
    >>> pflogsumm-1.1.5
    >>> rrdtool-1.2.30
    >>> swatch-3.2.3
@@ -33686,7 +33686,7 @@ This module is copyright (c) 2002 Jos Boumans <kane@cpan.org>. All rights reserv
 This library is free software; you may redistribute and/or modify it under the same terms as Perl itself.
 
 
->>> perl-ldap-0.61
+>>> perl-ldap-0.64
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 2.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 2.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
@@ -34467,7 +34467,7 @@ FREE SOFTWARE; YOU CAN REDISTRIBUTE IT AND/OR MODIFY IT UNDER THE SAME
 TERMS AS PERL ITSELF.
 
 
->>> perl-zmq-constants-1.03
+>>> perl-zmq-constants-1.04
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 2.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 2.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
@@ -34478,7 +34478,7 @@ it under the same terms as Perl itself, either Perl version 5.8.0 or,
 at your option, any later version of Perl 5 you may have available.
 
 
->>> perl-zmq-libzmq3-1.13
+>>> perl-zmq-libzmq3-1.19
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 2.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 2.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
