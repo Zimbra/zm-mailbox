@@ -60640,7 +60640,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * excluded cipher suites
+     * exact name or regular expression of cipher suites to exclude
      *
      * @return zimbraSSLExcludeCipherSuites, or empty array if unset
      *
@@ -60648,11 +60648,11 @@ public abstract class ZAttrConfig extends Entry {
      */
     @ZAttr(id=639)
     public String[] getSSLExcludeCipherSuites() {
-        String[] value = getMultiAttr(Provisioning.A_zimbraSSLExcludeCipherSuites); return value.length > 0 ? value : new String[] {"SSL_RSA_WITH_DES_CBC_SHA","SSL_DHE_RSA_WITH_DES_CBC_SHA","SSL_DHE_DSS_WITH_DES_CBC_SHA","SSL_RSA_EXPORT_WITH_RC4_40_MD5","SSL_RSA_EXPORT_WITH_DES40_CBC_SHA","SSL_DHE_RSA_EXPORT_WITH_DES40_CBC_SHA","SSL_DHE_DSS_EXPORT_WITH_DES40_CBC_SHA"};
+        String[] value = getMultiAttr(Provisioning.A_zimbraSSLExcludeCipherSuites); return value.length > 0 ? value : new String[] {".*_RC4_.*"};
     }
 
     /**
-     * excluded cipher suites
+     * exact name or regular expression of cipher suites to exclude
      *
      * @param zimbraSSLExcludeCipherSuites new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -60667,7 +60667,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * excluded cipher suites
+     * exact name or regular expression of cipher suites to exclude
      *
      * @param zimbraSSLExcludeCipherSuites new value
      * @param attrs existing map to populate, or null to create a new map
@@ -60683,7 +60683,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * excluded cipher suites
+     * exact name or regular expression of cipher suites to exclude
      *
      * @param zimbraSSLExcludeCipherSuites new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -60698,7 +60698,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * excluded cipher suites
+     * exact name or regular expression of cipher suites to exclude
      *
      * @param zimbraSSLExcludeCipherSuites new to add to existing values
      * @param attrs existing map to populate, or null to create a new map
@@ -60714,7 +60714,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * excluded cipher suites
+     * exact name or regular expression of cipher suites to exclude
      *
      * @param zimbraSSLExcludeCipherSuites existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -60729,7 +60729,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * excluded cipher suites
+     * exact name or regular expression of cipher suites to exclude
      *
      * @param zimbraSSLExcludeCipherSuites existing value to remove
      * @param attrs existing map to populate, or null to create a new map
@@ -60745,7 +60745,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * excluded cipher suites
+     * exact name or regular expression of cipher suites to exclude
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -60759,7 +60759,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * excluded cipher suites
+     * exact name or regular expression of cipher suites to exclude
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
