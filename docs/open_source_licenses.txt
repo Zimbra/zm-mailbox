@@ -263,7 +263,6 @@ SECTION 8: GNU General Public License, V2.0
    >>> perl-convert-tnef-0.18
    >>> perl-crypt-openssl-random-0.06
    >>> perl-crypt-saltedhash-0.09
-   >>> perl-crypt-ssleay-0.64
    >>> perl-data-validate-ip-0.22
    >>> perl-date-calc-6.3
    >>> perl-date-manip-6.42
@@ -33266,16 +33265,6 @@ Copyright (C) 2005 Sascha Kiefer
 
 This library is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.
-
-
->>> perl-crypt-ssleay-0.64
-
-[PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 2.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 2.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
-
-Copyright 1998 Gisle Aas.
-
-This library is free software; you can redistribute it and/or
-modify it under the same terms as Perl itself.
 
 
 >>> perl-data-validate-ip-0.22
