@@ -68,7 +68,7 @@ SECTION 1: BSD-STYLE, MIT-STYLE, OR SIMILAR STYLE LICENSES
    >>> libbsd-0.6.0
    >>> libevent-2.0.21
    >>> libpng-1.5.10
-   >>> libxml2-2.9.1
+   >>> libxml2-2.9.2
    >>> md5.js-2.1
    >>> memcached-1.4.17
    >>> modernizr-2.6.2
@@ -19021,7 +19021,7 @@ supporting documentation. This software is provided "as is" without
 express or implied warranty.
 
 
->>> libxml2-2.9.1
+>>> libxml2-2.9.2
 
 Except where otherwise noted in the source code (e.g. the files hash.c,
 list.c and the trio files, which are covered by a similar licence but
