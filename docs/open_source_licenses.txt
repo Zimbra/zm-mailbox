@@ -232,7 +232,7 @@ SECTION 6: GNU General Public License, V1.0
 SECTION 8: GNU General Public License, V2.0
 
    >>> amavisd-2.9.0
-   >>> clamav-0.98.4
+   >>> clamav-0.98.5
    >>> cluebringer-2.1.0-beta
    >>> innotop-1.9.1
    >>> javax.ws.rs-api-2.0-m10
@@ -30574,7 +30574,7 @@ A copy of the license is included in the section entitled "GNU
 Free Documentation License".
 
 
->>> clamav-0.98.4
+>>> clamav-0.98.5
 
 Copyright (C)2008 Sourcefire, Inc.
 
@@ -30598,7 +30598,7 @@ ADDITIONAL LICENSE INFORMATION :
 
 > BSD
 
-clamav-0.98.3.tar.gz\clamav-0.98.3.tar\clamav-0.98.3\COPYING.bzip2
+clamav-0.98.5.tar.gz\clamav-0.98.5.tar\clamav-0.98.5\COPYING.bzip2
 
 This program, "bzip2", the associated library "libbzip2", and all
 documentation, are copyright (C) 1996-2006 Julian R Seward.  All
@@ -30641,7 +30641,7 @@ bzip2/libbzip2 version 1.0.4 of 20 December 2006
 
 > MIT
 
-clamav-0.98.3.tar.gz\clamav-0.98.3.tar\clamav-0.98.3\COPYING.getopt
+clamav-0.98.5.tar.gz\clamav-0.98.5.tar\clamav-0.98.5\COPYING.getopt
 
 getopt.c - my re-implementation of getopt.
 Copyright 1997, 2000, 2001, 2002, 2006, Benjamin Sittler
@@ -30668,7 +30668,7 @@ DEALINGS IN THE SOFTWARE.
 
 > LLVM License
 
-clamav-0.98.3.tar.gz\clamav-0.98.3.tar\clamav-0.98.3\COPYING.llvm
+clamav-0.98.5.tar.gz\clamav-0.98.5.tar\clamav-0.98.5\COPYING.llvm
 
 LLVM Release License
 ==============================================================================
@@ -30715,7 +30715,7 @@ SOFTWARE.
 
 > Public Domain
 
-clamav-0.98.3.tar.gz\clamav-0.98.3.tar\clamav-0.98.3\COPYING.lzma
+clamav-0.98.5.tar.gz\clamav-0.98.5.tar\clamav-0.98.5\COPYING.lzma
 
 The original lzma.txt license file, a small portion of which is reproduced below,
 is available under libclamav/7z/lzma.txt.
@@ -30727,7 +30727,7 @@ LZMA SDK is written and placed in the public domain by Igor Pavlov
 
 > Unrar License
 
-C:\Documents and Settings\jasdeep.singh\My Documents\Downloads\clamav-0.98.3.tar.gz\clamav-0.98.3.tar\clamav-0.98.3\COPYING.unrar
+C:\Documents and Settings\jasdeep.singh\My Documents\Downloads\clamav-0.98.5.tar.gz\clamav-0.98.5.tar\clamav-0.98.5\COPYING.unrar
 
 The libclamunrar code is based on the work of Alexander L. Roshal (C)
 
@@ -30781,7 +30781,7 @@ Thank you for your interest in RAR and UnRAR.
 
 > LGPL 2.1
 
-clamav-0.98.3.tar.gz\clamav-0.98.3.tar\clamav-0.98.3\libclamunrar_iface\unrar_iface.h
+clamav-0.98.5.tar.gz\clamav-0.98.5.tar\clamav-0.98.5\libclamunrar_iface\unrar_iface.h
 
 Interface to libclamunrar
 Copyright (C) 2007 Sourcefire, Inc.
@@ -30798,7 +30798,7 @@ Lesser General Public License for more details.
 
 > LGPL 2.0
 
-clamav-0.98.3.tar.gz\clamav-0.98.3.tar\clamav-0.98.3\libltdl\argz.c
+clamav-0.98.5.tar.gz\clamav-0.98.5.tar\clamav-0.98.5\libltdl\argz.c
 
 Copyright (C) 2004, 2006, 2007, 2008 Free Software Foundation, Inc.
 Written by Gary V. Vaughan, 2004
