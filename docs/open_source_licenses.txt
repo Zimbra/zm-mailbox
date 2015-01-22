@@ -41,7 +41,7 @@ SECTION 1: BSD-STYLE, MIT-STYLE, OR SIMILAR STYLE LICENSES
    >>> bouncycastle-1.46
    >>> bouncycastle-zimbra-20110708
    >>> chunkin-nginx-module-0.23rc2
-   >>> curl-7.38.0
+   >>> curl-7.40.0
    >>> cyrus-sasl-zimbra-2.1.26
    >>> dom4j-1.5.2
    >>> ext.ux.touchcalendar-0.1
@@ -879,7 +879,7 @@ NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
->>> curl-7.38.0
+>>> curl-7.40.0
 
 COPYRIGHT AND PERMISSION NOTICE
 
@@ -908,7 +908,7 @@ ADDITIONAL LICENSE INFORMATION:
 
 > BSD
 
-curl-7.38.0.tar.gz\curl-7.38.0.tar\curl-7.38.0\lib\security.c
+curl-7.40.0.tar.gz\curl-7.40.0.tar\curl-7.40.0\lib\security.c
 
 
 Copyright (c) 1998, 1999 Kungliga Tekniska Hgskolan
@@ -949,7 +949,7 @@ SUCH DAMAGE.
 > RSA Data Security
 
 
-curl-7.38.0.tar.gz\curl-7.38.0.tar\curl-7.38.0\lib\md4.c
+curl-7.40.0.tar.gz\curl-7.40.0.tar\curl-7.40.0\lib\md4.c
 
 
 Copyright (C) 1990-2, RSA Data Security, Inc. All rights reserved.
