@@ -82,9 +82,9 @@ SECTION 1: BSD-STYLE, MIT-STYLE, OR SIMILAR STYLE LICENSES
    >>> perl-geography-countries-2009041301
    >>> perl-locale-maketext-simple-0.21
    >>> perl-mail-spf-2.9.0
-   >>> perl-net-ssleay-1.64
+   >>> perl-net-ssleay-1.67
    >>> perl-socket6-0.25
-   >>> perl-termreadkey-2.30.02
+   >>> perl-termreadkey-2.32
    >>> perl-try-tiny-0.19
    >>> php-5.6.4
    >>> postfix-logwatch-1.40.01
@@ -197,7 +197,7 @@ SECTION 7: GNU General Public License, V1.0
    >>> perl-cpan-meta-2.133380
    >>> perl-cpan-meta-requirements-2.125
    >>> perl-cpan-meta-yaml-0.010
-   >>> perl-crypt-openssl-rsa-0.27
+   >>> perl-crypt-openssl-rsa-0.28
    >>> perl-data-optlist-0.109
    >>> perl-dbd-sqlite-1.40
    >>> perl-digest-hmac-1.03
@@ -248,7 +248,7 @@ SECTION 8: GNU General Public License, V2.0
    >>> perl-archive-tar-1.96
    >>> perl-archive-zip-1.37
    >>> perl-array-compare-2.02
-   >>> perl-berkeleydb-0.51
+   >>> perl-berkeleydb-0.54
    >>> perl-bit-vector-7.3
    >>> perl-cache-fastmmap-1.40
    >>> perl-carp-1.32
@@ -266,7 +266,7 @@ SECTION 8: GNU General Public License, V2.0
    >>> perl-date-calc-6.3
    >>> perl-date-manip-6.42
    >>> perl-db_file-1.831
-   >>> perl-dbd-mysql-4.0.24
+   >>> perl-dbd-mysql-4.0.29
    >>> perl-dbi-1.631
    >>> perl-devel-globaldestruction-0.12
    >>> perl-devel-symdump-2.11
@@ -328,7 +328,7 @@ SECTION 8: GNU General Public License, V2.0
    >>> perl-net-http-6.06
    >>> perl-net-ip-1.26
    >>> perl-net-ldapapi-3.0.3
-   >>> perl-net-server-2.007
+   >>> perl-net-server-2.008
    >>> perl-net-telnet-3.04
    >>> perl-netaddr-ip-4.072
    >>> perl-package-constants-0.04
@@ -20052,7 +20052,7 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
->>> perl-net-ssleay-1.64
+>>> perl-net-ssleay-1.67
 
 Copyright (c) 1996-2002 Sampo Kellomaki <sampo@iki.fi>
 Copyright (C) 2005 Florian Ragwitz <rafl@debian.org>
@@ -20109,7 +20109,7 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 SUCH DAMAGE.
 
 
->>> perl-termreadkey-2.30.02
+>>> perl-termreadkey-2.32
 
 Copyright (C) 1994-1999 Kenneth Albanowski.
 2001-2005 Jonathan Stowe and others
@@ -30018,7 +30018,7 @@ a) the GNU General Public License as published by the Free
 b) the "Artistic License"
 
 
->>> perl-crypt-openssl-rsa-0.27
+>>> perl-crypt-openssl-rsa-0.28
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 1.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 1.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
@@ -33037,7 +33037,7 @@ This script is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.
 
 
->>> perl-berkeleydb-0.51
+>>> perl-berkeleydb-0.54
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 2.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 2.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
@@ -33280,7 +33280,7 @@ Copyright (c) 1995-2002 Paul Marquess. All rights reserved.
      modify it under the same terms as Perl itself.
 
 
->>> perl-dbd-mysql-4.0.24
+>>> perl-dbd-mysql-4.0.29
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 2.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 2.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
@@ -34126,7 +34126,7 @@ This program is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.
 
 
->>> perl-net-server-2.007
+>>> perl-net-server-2.008
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 2.0 LICENSE.  PLEASE SEE APPENDIX FOR FULL TEXT OF THE GPL 2.0  LICENSE.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
 
