@@ -72,7 +72,7 @@ SECTION 1: BSD-STYLE, MIT-STYLE, OR SIMILAR STYLE LICENSES
    >>> memcached-1.4.17
    >>> modernizr-2.6.2
    >>> net-snmp-5.7.2.1
-   >>> nginx-1.2-zimbra
+   >>> nginx-1.7.1-zimbra
    >>> nist-sip-1.2
    >>> nviennot-nginx-tcp-keepalive-4d7186d
    >>> opendkim-2.9.3
@@ -19384,7 +19384,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
 DAMAGE.
 
 
->>> nginx-1.2-zimbra
+>>> nginx-1.7.1-zimbra
 
 Copyright (C) 2002-2012 Igor Sysoev
 Copyright (C) 2011,2012 Nginx, Inc.
@@ -19416,7 +19416,7 @@ ADDITIONAL LICENSE INFORMATION:
 
 > OpenSSL
 
-nginx-1.2.0.zip\nginx-1.2.0\docs\OpenSSL LICENSE
+nginx-1.7.1.zip\nginx-1.7.1\docs\OpenSSL LICENSE
 
 
   LICENSE ISSUES
@@ -19545,7 +19545,7 @@ nginx-1.2.0.zip\nginx-1.2.0\docs\OpenSSL LICENSE
 
 > MIT
 
-nginx-1.2.0.zip\nginx-1.2.0\docs\zlib.LICENSE
+nginx-1.7.1..zip\nginx-1.7.1.\docs\zlib.LICENSE
 
 
 (C) 1995-2010 Jean-loup Gailly and Mark Adler
