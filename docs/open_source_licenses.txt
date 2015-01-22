@@ -387,7 +387,7 @@ SECTION 10: GNU Lesser General Public License, V2.1
 
 SECTION 11: GNU Lesser General Public License, V3.0
 
-   >>> zeromq-3.2.3
+   >>> zeromq-4.0.5
 
 
 
@@ -35012,7 +35012,7 @@ License.
 GNU Lesser General Public License, V3.0 is applicable to the following component(s).
 
 
->>> zeromq-3.2.3
+>>> zeromq-4.0.5
 
 Copyright (c) 2010-2011 250bpm s.r.o.
     Copyright (c) 2010-2011 Other contributors as noted in the AUTHORS file
@@ -35035,7 +35035,7 @@ ADDITIONAL LICENSE INFORMATION:
 
 > GPL 3.0
 
-C:\Documents and Settings\karabi.d\My Documents\Downloads\zeromq-3.2.3.tar.gz\zeromq-3.2.3.tar\zeromq-3.2.3\COPYING
+C:\Documents and Settings\karabi.d\My Documents\Downloads\zeromq-4.0.5.tar.gz\zeromq-4.0.5.tar\zeromq-4.0.5\COPYING
 
 License: GPL 3.0
 
@@ -35043,7 +35043,7 @@ License: GPL 3.0
 
 > MIT
 
-\zeromq-3.2.3.tar.gz\zeromq-3.2.3.tar\zeromq-3.2.3\config\ltsugar.m4
+\zeromq-4.0.5.tar.gz\zeromq-4.0.5.tar\zeromq-4.0.5\config\ltsugar.m4
 
 Copyright (C) 2004, 2005, 2007, 2008 Free Software Foundation, Inc.
 Written by Gary V. Vaughan, 2004
