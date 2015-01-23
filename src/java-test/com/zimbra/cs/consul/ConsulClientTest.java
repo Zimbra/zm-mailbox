@@ -65,17 +65,17 @@ public final class ConsulClientTest {
     @Test
     public void parseHealthResponse() throws IOException {
         String json = IOUtils.toString(new FileInputStream("./data/unittest/consulHealthResponse.json"));
-        JavaType javaType = new ObjectMapper().getTypeFactory().constructCollectionType(ArrayList.class, HealthResponse.class);
-        List<HealthResponse> result = JSON.parse(json, javaType);
+        JavaType javaType = new ObjectMapper().getTypeFactory().constructCollectionType(ArrayList.class, ServiceHealthResponse.class);
+        List<ServiceHealthResponse> result = JSON.parse(json, javaType);
         Assert.assertEquals(1, result.size());
-        HealthResponse hr = result.get(0);
+        ServiceHealthResponse hr = result.get(0);
         Assert.assertEquals("Davids-MacBook-Pro.local", hr.node.name);
         Assert.assertEquals("10.0.1.7", hr.node.address);
         Assert.assertEquals("zimbra:LmtpServer:7025", hr.service.id);
         Assert.assertEquals("zimbra:LmtpServer", hr.service.name);
         Assert.assertEquals("7025", hr.service.port);
         Assert.assertEquals(2, hr.checks.size());
-        HealthResponse.Check check = hr.checks.get(0);
+        ServiceHealthResponse.Check check = hr.checks.get(0);
         Assert.assertEquals("Davids-MacBook-Pro.local", check.node);
         Assert.assertEquals("service:zimbra:LmtpServer:7025", check.id);
         Assert.assertEquals("Service 'zimbra:LmtpServer' check", check.name);

@@ -77,14 +77,26 @@ public class ConsulClient {
         }
     }
 
-    public List<HealthResponse> health(String serviceID, boolean passingOnly) throws IOException {
+    /** Queries /v1/health/service/<serviceID>[?passing] for all global instances of a service */
+    public List<ServiceHealthResponse> health(String serviceID, boolean passingOnly) throws IOException {
         HttpMethod method = put(url + "/v1/health/service/" + serviceID + (passingOnly ? "?passing" : ""), "");
         if (method.getStatusCode() != 200) {
             throw new IOException(method.getStatusLine().toString());
         }
-        JavaType javaType = objectMapper.getTypeFactory().constructCollectionType(ArrayList.class, HealthResponse.class);
-        List<HealthResponse> result = JSON.parse(method.getResponseBodyAsString(), javaType);
+        JavaType javaType = objectMapper.getTypeFactory().constructCollectionType(ArrayList.class, ServiceHealthResponse.class);
+        List<ServiceHealthResponse> result = JSON.parse(method.getResponseBodyAsString(), javaType);
         return result;
+    }
+
+    /** Queries /v1/health/node/<hostName> for all instances on a node */
+    public List<NodeHealthResponse> health(String hostName) throws IOException {
+        HttpMethod method = put(url + "/v1/health/node/" + hostName, "");
+        if (method.getStatusCode() != 200) {
+            throw new IOException(method.getStatusLine().toString());
+        }
+        JavaType javaType = objectMapper.getTypeFactory().constructCollectionType(ArrayList.class, NodeHealthResponse.class);
+        List<NodeHealthResponse> response = JSON.parse(method.getResponseBodyAsString(), javaType);
+        return response;
     }
 
     /** Contact the Consul agent to determine whether it is reachable and responsive */

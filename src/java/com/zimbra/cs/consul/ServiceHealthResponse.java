@@ -26,7 +26,7 @@ import com.google.common.base.Objects;
 
 
 @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
-public class HealthResponse {
+public class ServiceHealthResponse {
     @JsonProperty("Node") public Node node;
     @JsonProperty("Service") public Service service;
     @JsonProperty("Checks") public List<Check> checks;

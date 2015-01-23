@@ -24,7 +24,6 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.Triple;
 import com.zimbra.common.util.ZimbraLog;
 
 
@@ -57,23 +56,48 @@ public class ConsulServiceLocator implements ServiceLocator {
         }
     }
 
-    /**
-     * Returns matching service instances.
-     *
-     * @return the Host Name, Host Address, and Service Port of all the instances of a service.
-     */
+    /** Returns matching service instances. */
     @Override
-    public List<Triple<String,String,Integer>> find(String serviceID, boolean healthyOnly) throws IOException, ServiceException {
-        List<HealthResponse> list = consulClient.health(serviceID, healthyOnly);
+    public List<Entry> find(String serviceID, boolean healthyOnly) throws IOException, ServiceException {
+        List<ServiceHealthResponse> list = consulClient.health(serviceID, healthyOnly);
 
-        List<Triple<String,String,Integer>> result = new ArrayList<>();
-        for (HealthResponse health: list) {
-            result.add(new Triple<String,String,Integer>(health.node.name, health.node.address, new Integer(health.service.port)));
+        List<Entry> result = new ArrayList<>();
+        for (ServiceHealthResponse health: list) {
+            result.add(new Entry(health.node.name, health.node.address, new Integer(health.service.port)));
         }
         return result;
     }
 
-    /** Contact the service locator to determine whether it is reachable and responsive */
+    /** Determines whether a given service instance is healthy. */
+    @Override
+    public boolean isHealthy(String serviceID, String hostName) throws IOException, ServiceException {
+
+//        The following code would perform better, but isn't currently convenient to use due to
+//        ZCS internals lowercasing hostnames, and Consul being node name case-sensitive.
+//
+//        List<NodeHealthResponse> list = consulClient.health(hostName);
+//        for (NodeHealthResponse health: list) {
+//            if (!Objects.equal(serviceID, health.serviceID)) {
+//                continue;
+//            }
+//            return "passing".equals(health.status);
+//        }
+
+        List<ServiceHealthResponse> list = consulClient.health(serviceID, false);
+        for (ServiceHealthResponse health: list) {
+            if (!hostName.equalsIgnoreCase(health.node.name)) {
+                continue;
+            }
+            if (health.checks.isEmpty()) {
+                throw ServiceException.NOT_FOUND("Service has never been health checked");
+            }
+            ServiceHealthResponse.Check lastCheck = health.checks.get(health.checks.size() - 1);
+            return "passing".equals(lastCheck.status);
+        }
+        throw ServiceException.NOT_FOUND("No such service in node health response");
+    }
+
+    /** Contact the service locator to determine whether it is reachable and responsive. */
     @Override
     public void ping() throws IOException {
         consulClient.ping();
