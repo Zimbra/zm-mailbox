@@ -106,7 +106,7 @@ public class EmbeddedSolrIndex  extends SolrIndexBase {
         lock.lock();
     }
 
-    private static synchronized void unlock() {
+    private static void unlock() {
         lockReason = null;
         lock.unlock();
     }
