@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -40,12 +40,12 @@ import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.common.service.ServiceException;
 
-/** @author mansoor peerbhoy 
+/** @author mansoor peerbhoy
  */
 public class ProxyPurgeUtil
 {
     static final String memcachedPort = "11211";
-    
+
     public static void main (String[] args) throws ServiceException
     {
         CommandLine         commandLine;
@@ -64,8 +64,8 @@ public class ProxyPurgeUtil
             commandLine = null;
         }
 
-        if ((commandLine == null) || 
-            commandLine.hasOption ("h") || 
+        if ((commandLine == null) ||
+            commandLine.hasOption ("h") ||
             commandLine.hasOption ("u")
            ) {
             usage ();
@@ -116,67 +116,67 @@ public class ProxyPurgeUtil
         } else {
             outputformat = "[%1$s] %2$s -- %3$s";
         }
-        
+
         purgeAccounts(servers, accounts, purge, outputformat);
     }
-    
+
     /**
-     * Purges or, prints all the routes for the accounts supplied. 
-     * @param servers list of memcached servers supplied, if null the function gets all the  
+     * Purges or, prints all the routes for the accounts supplied.
+     * @param servers list of memcached servers supplied, if null the function gets all the
      *                memcached servers from provisioning
      * @param accounts list of accounts (qualified or, unqualified)
      * @param purge true for the account routes purging, false for printing the routes
      * @param outputformat format of the output in case of printing
-     * @throws ServiceException 
+     * @throws ServiceException
      */
     public static void purgeAccounts(List<String> servers, List<String> accounts, boolean purge, String outputformat) throws ServiceException {
-        
+
         Provisioning prov = Provisioning.getInstance();
-        
-        // Some sanity checks. 
+
+        // Some sanity checks.
         if (accounts == null || accounts.isEmpty()) {
             System.err.println("No account supplied");
             System.exit(1);
         }
-        
+
         if (!purge) {
-            // the outputformat must be supplied. 
+            // the outputformat must be supplied.
             if (outputformat == null || outputformat.length() == 0) {
                 System.err.println("outputformat must be supplied for info");
                 System.exit(1);
             }
         }
-        
+
         if (servers == null) {
             List<Server> memcachedServers = prov.getAllServers(Provisioning.SERVICE_MEMCACHED);
             servers = new ArrayList<String> ();
-            
+
             for (Iterator<Server> it=memcachedServers.iterator(); it.hasNext();) {
                 Server s = it.next();
                 String serverName = s.getAttr (Provisioning.A_zimbraServiceHostname, "localhost");
                 String servicePort = s.getAttr (Provisioning.A_zimbraMemcachedBindPort, memcachedPort);
                 servers.add (serverName + ":" + servicePort);
             }
-            
+
         }
-        
+
         // Connect to all memcached servers.
         int numServers = servers.size();
         ArrayList<ZimbraMemcachedClient> zmcs = new ArrayList<ZimbraMemcachedClient>();
-        
+
         for (int i = 0; i < numServers; ++i) {
             ZimbraMemcachedClient zmc = new ZimbraMemcachedClient();
             zmc.connect(new String[] { servers.get(i) }, false, null, 0, 5000);
             zmcs.add(zmc);
         }
-        
+
         for (String a: accounts) {
             // Bug 24463
-            // The route keying in memcached is governed by the following rules: 
+            // The route keying in memcached is governed by the following rules:
             // 1. if login name is fully qualified, use that as the route key
             // 2. otherwise, if memcache_entry_allow_unqualified is true, then use the bare login as the route key
             // 3. else, append the IP address of the proxy interface to the login and use that as the route key
-            // 4. for the login store all the user's alias, append the ip address of the proxy interface. 
+            // 4. for the login store all the user's alias, append the ip address of the proxy interface.
             //
             // For accounts authenticating without domain, NGINX internally suffixes @domain
             // to the login name, by first looking up an existing domain by the IP address of
@@ -184,23 +184,23 @@ public class ProxyPurgeUtil
             // then NGINX falls back to the default domain name specified by the config
             // attribute zimbraDefaultDomainName.
             // The IP to domain mapping is done based on the zimbraVirtualIPAddress attribute
-            // of the domain (The IP-to-domain mapping is a many-to-one relationship.) 
+            // of the domain (The IP-to-domain mapping is a many-to-one relationship. This is obsolete since 9.0 as per bug 56178)
             //
             // For the zmproxypurge utility if the account supplied (-a option) is:
             //    1. For fully qualified account with @domain; it will find all the virtual IP
             //        addresses for that domain and will delete all the entries on all memcached servers:
-            //        i) with the user@domain (case 1 as described above) 
-            //        ii) with just the user (case 2 as described above) 
+            //        i) with the user@domain (case 1 as described above)
+            //        ii) with just the user (case 2 as described above)
             //        iii) with all the virtual IP addresses configured for the domain
-            //        iv) find all the alias for the account and repeat (i) to (iii) 
+            //        iv) find all the alias for the account and repeat (i) to (iii)
             //    2. For the account supplied with the IP address; the utility will only try to
-            //       purge the entries with the user@IP. 
+            //       purge the entries with the user@IP.
             //    3. If there is a single domain and the account supplied is not fully qualified;
             //       the utility will append the default domain to that entry and will execute step 1.
             //       (In this case the provisioning lookup will return the correct domain)
-                        
+
             ArrayList<String> routes = new ArrayList<String> ();
-            
+
             // Lookup the account; at this point we don't whether the user is fully qualified.
             Account account = prov.get(Key.AccountBy.name, a);
             if (account == null) {
@@ -234,17 +234,6 @@ public class ProxyPurgeUtil
                 routes.add("alias:user=" + uid + ";ip=" + domain);
 
                 Domain d = prov.get(Key.DomainBy.name, domain);
-                String[] vips = d.getVirtualIPAddress();
-                for (String vip : vips) {
-                    // for each virtual ip add the routes to the list.
-                    routes.add("route:proto=http;user=" + uid + "@" + vip);
-                    routes.add("route:proto=imap;user=" + uid + "@" + vip);
-                    routes.add("route:proto=pop3;user=" + uid + "@" + vip);
-                    routes.add("route:proto=httpssl;user=" + uid + "@" + vip);
-                    routes.add("route:proto=imapssl;user=" + uid + "@" + vip);
-                    routes.add("route:proto=pop3ssl;user=" + uid + "@" + vip);
-                    routes.add("alias:user=" + uid + ";ip=" + vip);
-                }
                 String[] vhostnames = d.getVirtualHostname();
                 for (String vhost : vhostnames) {
                     // for each virtual host name add the alias to the list
@@ -284,7 +273,7 @@ public class ProxyPurgeUtil
                     }
                 }
 
-                // for each alias add routes for it's domain and all virtual IPs for that domain
+                // for each alias add routes for it's domain
                 // I haven't found any alias in the http/httpssl routes. Hence skipping it.
                 // bug:79940 says Active Sync routes are stored as http/https - alias@domain.com
                 for (String alias : aliases) {
@@ -302,22 +291,12 @@ public class ProxyPurgeUtil
                         // for each virtual host name add the alias to the alias user
                         routes.add("alias:user=" + alias + ";vhost=" + vhost);
                     }
-                    for (String vip : vips) {
-                        // for each virtual ip add the routes to the list.
-                        routes.add("route:proto=http;user=" + alias + "@" + vip);
-                        routes.add("route:proto=imap;user=" + alias + "@" + vip);
-                        routes.add("route:proto=pop3;user=" + alias + "@" + vip);
-                        routes.add("route:proto=httpssl;user=" + alias + "@" + vip);
-                        routes.add("route:proto=imapssl;user=" + alias + "@" + vip);
-                        routes.add("route:proto=pop3ssl;user=" + alias + "@" + vip);
-                        routes.add("alias:user=" + alias + ";ip=" + vip);
-                    }
                 }
             }
- 
+
             for (int i = 0; i < numServers; ++i) {
                 ZimbraMemcachedClient zmc = zmcs.get(i);
-                
+
                 for (String route : routes) {
                     if (purge) {
                         // Note: there is no guarantee that all the routes will be present.
@@ -354,7 +333,7 @@ public class ProxyPurgeUtil
             }
         }
 
-        /* Other accounts may be read from a list file specified with -L 
+        /* Other accounts may be read from a list file specified with -L
            Each line of input will contain one account name
          */
         if (filename != null) {
@@ -375,8 +354,8 @@ public class ProxyPurgeUtil
                 String s;
                 do {
                     try { s = br.readLine(); }
-                    catch (IOException e) { 
-                        s = null; 
+                    catch (IOException e) {
+                        s = null;
                     }
 
                     if (s != null) {
