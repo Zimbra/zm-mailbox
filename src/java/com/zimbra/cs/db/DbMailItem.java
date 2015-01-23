@@ -1598,10 +1598,6 @@ public class DbMailItem {
      */
     public static void delete(Mailbox mbox, MailItem item, PendingDelete info, boolean fromDumpster)
     throws ServiceException {
-        delete(mbox, item, info, fromDumpster, false);
-    }
-    public static void delete(Mailbox mbox, MailItem item, PendingDelete info, boolean fromDumpster, boolean unsetDeletedFlag)
-            throws ServiceException {
         if (item instanceof Tag) {
             return;
         }
@@ -1612,7 +1608,7 @@ public class DbMailItem {
         // first delete the Comments
         List<Integer> allComments = info.itemIds.getIds(MailItem.Type.COMMENT);
         if (allComments != null && allComments.size() != 0) {
-            delete(mbox, allComments, fromDumpster, unsetDeletedFlag);
+            delete(mbox, allComments, fromDumpster);
             allIds.removeAll(allComments);
         }
         // delete all non-folder items
@@ -1620,9 +1616,9 @@ public class DbMailItem {
         if (allFolders != null) {
             allIds.removeAll(allFolders);
         }
-        delete(mbox, allIds, fromDumpster, unsetDeletedFlag);
+        delete(mbox, allIds, fromDumpster);
         // then delete the folders
-        delete(mbox, allFolders, fromDumpster, unsetDeletedFlag);
+        delete(mbox, allFolders, fromDumpster);
         if (item instanceof VirtualConversation) {
             return;
         }
@@ -1631,7 +1627,7 @@ public class DbMailItem {
         }
         // delete the item itself
         if (item != null) {
-            delete(mbox, Collections.singletonList(item.getId()), fromDumpster, unsetDeletedFlag);
+            delete(mbox, Collections.singletonList(item.getId()), fromDumpster);
         }
     }
 
@@ -1640,10 +1636,6 @@ public class DbMailItem {
      * table.  Assumes that there is no data referencing the specified id's.
      */
     public static void delete(Mailbox mbox, Collection<Integer> ids, boolean fromDumpster) throws ServiceException {
-        delete(mbox, ids, fromDumpster, false);
-     }
-
-     public static void delete(Mailbox mbox, Collection<Integer> ids, boolean fromDumpster, boolean unsetDeletedFlag) throws ServiceException {
         // trim out any non-persisted items
         if (ids == null || ids.size() == 0) {
             return;
@@ -1664,7 +1656,7 @@ public class DbMailItem {
             try {
                 int count = Math.min(Db.getINClauseBatchSize(), targets.size() - offset);
                 if (!fromDumpster && mbox.dumpsterEnabled()) {
-                    copyToDumpster(conn, mbox, targets, offset, count, unsetDeletedFlag);
+                    copyToDumpster(conn, mbox, targets, offset, count);
                 }
                 stmt = conn.prepareStatement("DELETE FROM " + getMailItemTableName(mbox, fromDumpster) +
                             " WHERE " + IN_THIS_MAILBOX_AND + DbUtil.whereIn("id", count));
@@ -1686,11 +1678,11 @@ public class DbMailItem {
     private static String MAIL_ITEM_DUMPSTER_COPY_SRC_FIELDS =
         (DebugConfig.disableMailboxGroups ? "" : "mailbox_id, ") +
         "id, type, parent_id, folder_id, prev_folders, index_id, imap_id, date, size, locator, blob_digest, " +
-        "unread, tag_names, sender, recipients, subject, name, metadata, mod_metadata, ?, mod_content, uuid, ";
+        "unread, flags, tag_names, sender, recipients, subject, name, metadata, mod_metadata, ?, mod_content, uuid";
     private static String MAIL_ITEM_DUMPSTER_COPY_DEST_FIELDS =
         (DebugConfig.disableMailboxGroups ? "" : "mailbox_id, ") +
         "id, type, parent_id, folder_id, prev_folders, index_id, imap_id, date, size, locator, blob_digest, " +
-        "unread, tag_names, sender, recipients, subject, name, metadata, mod_metadata, change_date, mod_content, uuid, flags";
+        "unread, flags, tag_names, sender, recipients, subject, name, metadata, mod_metadata, change_date, mod_content, uuid";
 
     /**
      * Copy rows from mail_item, appointment and revision table to the corresponding dumpster tables.
@@ -1699,11 +1691,10 @@ public class DbMailItem {
      * @param ids
      * @param offset offset of the first item to copy in ids
      * @param count number of items to copy
-     * @param unsetDeletedFlag
      * @throws SQLException
      * @throws ServiceException
      */
-    private static void copyToDumpster(DbConnection conn, Mailbox mbox, List<Integer> ids, int offset, int count, boolean unsetDeletedFlag)
+    private static void copyToDumpster(DbConnection conn, Mailbox mbox, List<Integer> ids, int offset, int count)
     throws SQLException, ServiceException {
         String miTableName = getMailItemTableName(mbox, false);
         String dumpsterMiTableName = getMailItemTableName(mbox, true);
@@ -1724,7 +1715,7 @@ public class DbMailItem {
         try {
             miCopyStmt = conn.prepareStatement(command + " INTO " + dumpsterMiTableName +
                     " (" + MAIL_ITEM_DUMPSTER_COPY_DEST_FIELDS + ")" +
-                    " SELECT " + MAIL_ITEM_DUMPSTER_COPY_SRC_FIELDS + (unsetDeletedFlag ? Db.getInstance().bitANDNOT("flags", String.valueOf(Flag.BITMASK_DELETED)) /* negate deleted flag value */ : "flags") + " FROM " + miTableName +
+                    " SELECT " + MAIL_ITEM_DUMPSTER_COPY_SRC_FIELDS + " FROM " + miTableName +
                     " WHERE " + IN_THIS_MAILBOX_AND + miWhere);
             int pos = 1;
             miCopyStmt.setLong(pos++, mbox.getOperationTimestampMillis());

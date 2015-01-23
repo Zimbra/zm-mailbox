@@ -162,11 +162,6 @@ public final class HSQLDB extends Db {
     }
 
     @Override
-    public String bitANDNOT(String expr1, String expr2) {
-        return "BITANDNOT(" + expr1 + ", " + expr2 + ")";
-    }
-
-    @Override
     public void flushToDisk() {
     }
 

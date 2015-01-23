@@ -3091,10 +3091,6 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
     }
 
     void delete(boolean writeTombstones) throws ServiceException {
-        delete(writeTombstones, false);
-    }
-
-    void delete(boolean writeTombstones, boolean unsetDeletedFlag) throws ServiceException {
         if (!isDeletable()) {
             throw MailServiceException.IMMUTABLE_OBJECT(mId);
         }
@@ -3107,15 +3103,10 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
             info.itemIds.remove(getType(), mId);
         }
 
-        delete(mMailbox, info, this, writeTombstones, inDumpster(), unsetDeletedFlag);
+        delete(mMailbox, info, this, writeTombstones, inDumpster());
     }
 
     static void delete(Mailbox mbox, PendingDelete info, MailItem item, boolean writeTombstones, boolean fromDumpster)
-    throws ServiceException {
-        delete(mbox, info, item, writeTombstones, fromDumpster, false);
-    }
-
-    static void delete(Mailbox mbox, PendingDelete info, MailItem item, boolean writeTombstones, boolean fromDumpster, boolean unsetDeletedFlag)
     throws ServiceException {
         // short-circuit now if nothing's actually being deleted
         if (info.itemIds.isEmpty())
@@ -3206,7 +3197,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         }
 
         // actually delete the items from the DB
-        DbMailItem.delete(mbox, item, info, fromDumpster, unsetDeletedFlag);
+        DbMailItem.delete(mbox, item, info, fromDumpster);
 
         // remove the deleted item(s) from the mailbox's cache
         if (item != null) {

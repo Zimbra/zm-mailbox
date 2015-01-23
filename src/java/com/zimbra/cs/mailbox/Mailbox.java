@@ -122,7 +122,6 @@ import com.zimbra.cs.ldap.LdapConstants;
 import com.zimbra.cs.mailbox.CalendarItem.AlarmData;
 import com.zimbra.cs.mailbox.CalendarItem.Callback;
 import com.zimbra.cs.mailbox.CalendarItem.ReplyInfo;
-import com.zimbra.cs.mailbox.Flag.FlagInfo;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata;
 import com.zimbra.cs.mailbox.MailItem.PendingDelete;
 import com.zimbra.cs.mailbox.MailItem.TargetConstraint;
@@ -7037,45 +7036,9 @@ public class Mailbox {
      * @param itemIds item ids
      * @param type item type or {@link MailItem.Type#UNKNOWN}
      * @param tcon target constraint or {@code null}
-     * @param useEmptyForFolders empty folder {@code true} or {@code false}
      */
     private void delete(OperationContext octxt, int[] itemIds, MailItem.Type type, TargetConstraint tcon,
             boolean useEmptyForFolders)
-    throws ServiceException {
-        delete(octxt, itemIds, type, tcon, useEmptyForFolders, false/*unsetDeletedFlag*/);
-    }
-
-    /**
-     * Delete the <tt>MailItem</tt>s with the given ids.  If there is no <tt>MailItem</tt> for a given id, that id is
-     * ignored.  If the id maps to an existing <tt>MailItem</tt> of an incompatible type, however, an error is thrown.
-     *
-     * @param octxt operation context or {@code null}
-     * @param itemIds item ids
-     * @param type item type or {@link MailItem.Type#UNKNOWN}
-     * @param tcon target constraint or {@code null}
-     * @param useEmptyForFolders empty folder {@code true} or {@code false}
-     * @param unsetDeletedFlag unset \Deleted flag on mail item {@code true} or {@code false}
-     */
-    private void delete(OperationContext octxt, int[] itemIds, MailItem.Type type, TargetConstraint tcon,
-            boolean useEmptyForFolders, boolean unsetDeletedFlag)
-    throws ServiceException {
-        delete(octxt, itemIds, type, tcon, useEmptyForFolders, unsetDeletedFlag, null);
-    }
-
-    /**
-     * Delete the <tt>MailItem</tt>s with the given ids.  If there is no <tt>MailItem</tt> for a given id, that id is
-     * ignored.  If the id maps to an existing <tt>MailItem</tt> of an incompatible type, however, an error is thrown.
-     *
-     * @param octxt operation context or {@code null}
-     * @param itemIds item ids
-     * @param type item type or {@link MailItem.Type#UNKNOWN}
-     * @param tcon target constraint or {@code null}
-     * @param useEmptyForFolders empty folder {@code true} or {@code false}
-     * @param unsetDeletedFlag unset \Deleted flag on mail item {@code true} or {@code false}
-     * @param nonExistingItems object of {@link ArrayList} or {@code null} 
-     */
-    private void delete(OperationContext octxt, int[] itemIds, MailItem.Type type, TargetConstraint tcon,
-            boolean useEmptyForFolders, boolean unsetDeletedFlag, List<Integer> nonExistingItems)
     throws ServiceException {
         DeleteItem redoRecorder = new DeleteItem(mId, itemIds, type, tcon);
 
@@ -7093,9 +7056,6 @@ public class Mailbox {
                 try {
                     item = getItemById(id, MailItem.Type.UNKNOWN);
                 } catch (NoSuchItemException nsie) {
-                    if (nonExistingItems != null) {
-                        nonExistingItems.add(id);
-                    }
                     // trying to delete nonexistent things is A-OK!
                     continue;
                 }
@@ -7109,12 +7069,8 @@ public class Mailbox {
                 if (useEmptyForFolders && MailItem.Type.FOLDER.equals(item.getType())) {
                     folderIds.add(id); // removed later to allow batching delete of contents in there own transactions
                 } else {
-                    // check if \Deleted flag is set or not, if set then pass unsetDeletedFlag as true to remove the \Deleted flag before moving item to dumpster
-                    if (item.getUnderlyingData().isSet(FlagInfo.DELETED)) {
-                        unsetDeletedFlag = true;
-                    }
                     // delete the item, but don't write the tombstone until we're finished...
-                    item.delete(false, unsetDeletedFlag);
+                    item.delete(false);
                 }
             }
 
@@ -7145,21 +7101,6 @@ public class Mailbox {
     public void delete(OperationContext octxt, int[] itemIds, MailItem.Type type, TargetConstraint tcon)
     throws ServiceException {
         delete(octxt, itemIds, type, tcon, true /* useEmptyForFolders */);
-    }
-
-    /**
-     * Delete the <tt>MailItem</tt>s with the given ids.  If there is no <tt>MailItem</tt> for a given id, that id is
-     * ignored.  If the id maps to an existing <tt>MailItem</tt> of an incompatible type, however, an error is thrown.
-     *
-     * @param octxt operation context or {@code null}
-     * @param itemIds item ids
-     * @param type item type or {@link MailItem.Type#UNKNOWN}
-     * @param tcon target constraint or {@code null}
-     * @param nonExistingItems object of {@link ArrayList} or {@code null}
-     */
-    public void unsetDeletedFlagAndDelete(OperationContext octxt, int[] itemIds, MailItem.Type type, TargetConstraint tcon, List<Integer> nonExistingItems)
-    throws ServiceException {
-        delete(octxt, itemIds, type, tcon, true /* useEmptyForFolders */, false /* unsetDeletedFlag */, nonExistingItems);
     }
 
     TypedIdList collectPendingTombstones() {

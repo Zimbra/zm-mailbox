@@ -103,11 +103,6 @@ public class MySQL extends Db {
     }
 
     @Override
-    public String bitANDNOT(String expr1, String expr2) {
-        return expr1 + " & ~" + expr2;
-    }
-
-    @Override
     DbPool.PoolConfig getPoolConfig() {
         return new MySQLConfig();
     }
