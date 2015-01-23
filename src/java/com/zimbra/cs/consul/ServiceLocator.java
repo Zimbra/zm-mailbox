@@ -38,7 +38,15 @@ public interface ServiceLocator {
      *
      * @return the Host Name, Host Address, and Service Port of all the instances of a service.
      */
-    public List<Triple<String,String,Integer>> find(String serviceID, boolean healthyOnly) throws IOException, ServiceException;
+    public List<Entry> find(String serviceID, boolean healthyOnly) throws IOException, ServiceException;
+
+    /**
+     * Determines whether a given service instance is healthy.
+     *
+     * @throws IOException when unable to determine a service status due to a middleware I/O failure.
+     * @throws ServiceException NOT_FOUND if the service could not be found or if no health checks have been performed.
+     */
+    public boolean isHealthy(String serviceID, String hostName) throws IOException, ServiceException;
 
     /** Contact the service locator to determine whether it is reachable and responsive */
     public void ping() throws IOException;
@@ -47,5 +55,24 @@ public interface ServiceLocator {
     public void register(CatalogRegistration.Service service) throws IOException, ServiceException;
 
     public void registerSilent(CatalogRegistration.Service service);
+
+
+    public static class Entry extends Triple<String,String,Integer> {
+        public Entry(String hostName, String hostAddress, Integer servicePort) {
+            super(hostName, hostAddress, servicePort);
+        }
+
+        public String getServiceID() {
+            return mFirst;
+        }
+
+        public String getHostName() {
+            return mSecond;
+        }
+
+        public Integer getServicePort() {
+            return mThird;
+        }
+    }
 }
 
