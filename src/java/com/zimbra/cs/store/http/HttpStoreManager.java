@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -38,13 +38,13 @@ import com.zimbra.cs.store.external.ExternalStoreManager;
 
 public abstract class HttpStoreManager extends ExternalStoreManager {
 
-    protected abstract String getPostUrl(Mailbox mbox);
-    protected abstract String getGetUrl(Mailbox mbox, String locator);
-    protected abstract String getDeleteUrl(Mailbox mbox, String locator);
-    protected abstract String getLocator(PostMethod post, String postDigest, long postSize, Mailbox mbox) throws ServiceException, IOException;
+    protected abstract String getPostUrl(Mailbox.MailboxData mboxData);
+    protected abstract String getGetUrl(Mailbox.MailboxData mboxData, String locator);
+    protected abstract String getDeleteUrl(Mailbox.MailboxData mboxData, String locator);
+    protected abstract String getLocator(PostMethod post, String postDigest, long postSize, Mailbox.MailboxData mboxData) throws ServiceException, IOException;
 
     @Override
-    public String writeStreamToStore(InputStream in, long actualSize, Mailbox mbox) throws IOException,
+    public String writeStreamToStore(InputStream in, long actualSize, Mailbox.MailboxData mboxData) throws IOException,
                     ServiceException {
         MessageDigest digest;
         try {
@@ -55,12 +55,12 @@ public abstract class HttpStoreManager extends ExternalStoreManager {
         ByteUtil.PositionInputStream pin = new ByteUtil.PositionInputStream(new DigestInputStream(in, digest));
 
         HttpClient client = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
-        PostMethod post = new PostMethod(getPostUrl(mbox));
+        PostMethod post = new PostMethod(getPostUrl(mboxData));
         try {
             HttpClientUtil.addInputStreamToHttpMethod(post, pin, actualSize, "application/octet-stream");
             int statusCode = HttpClientUtil.executeMethod(client, post);
             if (statusCode == HttpStatus.SC_OK || statusCode == HttpStatus.SC_CREATED || statusCode == HttpStatus.SC_NO_CONTENT) {
-                return getLocator(post, ByteUtil.encodeFSSafeBase64(digest.digest()), pin.getPosition(), mbox);
+                return getLocator(post, ByteUtil.encodeFSSafeBase64(digest.digest()), pin.getPosition(), mboxData);
             } else {
                 throw ServiceException.FAILURE("error POSTing blob: " + post.getStatusText(), null);
             }
@@ -70,10 +70,10 @@ public abstract class HttpStoreManager extends ExternalStoreManager {
     }
 
     @Override
-    public InputStream readStreamFromStore(String locator, Mailbox mbox)
+    public InputStream readStreamFromStore(String locator, Mailbox.MailboxData mboxData)
                     throws IOException {
         HttpClient client = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
-        GetMethod get = new GetMethod(getGetUrl(mbox, locator));
+        GetMethod get = new GetMethod(getGetUrl(mboxData,  locator));
         int statusCode = HttpClientUtil.executeMethod(client, get);
         if (statusCode == HttpStatus.SC_OK) {
             return new UserServlet.HttpInputStream(get);
@@ -84,10 +84,10 @@ public abstract class HttpStoreManager extends ExternalStoreManager {
     }
 
     @Override
-    public boolean deleteFromStore(String locator, Mailbox mbox)
+    public boolean deleteFromStore(String locator, Mailbox.MailboxData mboxData)
                     throws IOException {
         HttpClient client = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
-        DeleteMethod delete = new DeleteMethod(getDeleteUrl(mbox, locator));
+        DeleteMethod delete = new DeleteMethod(getDeleteUrl(mboxData,  locator));
         try {
             int statusCode = HttpClientUtil.executeMethod(client, delete);
             if (statusCode == HttpStatus.SC_OK || statusCode == HttpStatus.SC_NO_CONTENT) {

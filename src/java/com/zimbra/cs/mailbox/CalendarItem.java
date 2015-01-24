@@ -176,6 +176,15 @@ public abstract class CalendarItem extends MailItem {
 
     protected CalendarItem(Mailbox mbox, UnderlyingData data, boolean skipCache) throws ServiceException {
         super(mbox, data, skipCache);
+        init();
+    }
+
+    protected CalendarItem(Account acc, UnderlyingData data, int mailboxId) throws ServiceException {
+        super(acc, data, mailboxId);
+        init();
+    }
+
+    private void init() throws ServiceException {
         if (mData.type != Type.APPOINTMENT.toByte() && mData.type != Type.TASK.toByte()) {
             throw new IllegalArgumentException();
         }
@@ -274,18 +283,30 @@ public abstract class CalendarItem extends MailItem {
 
     @Override
     public List<IndexDocument> generateIndexData() throws TemporaryIndexingException {
-        List<IndexDocument> docs = null;
-        mMailbox.lock.lock();
         try {
-            docs = getIndexDocuments();
-        } finally {
-            mMailbox.lock.release();
-        }
+            List<IndexDocument> docs = null;
+            mMailbox.lock.lock();
+            try {
+                docs = getIndexDocuments(getMailbox().attachmentsIndexingEnabled());
+            } finally {
+                mMailbox.lock.release();
+            }
 
+            return docs;
+        } catch (ServiceException e) {
+            ZimbraLog.index.warn("Unable to generate index data for Calendar Item %d. Item will not be indexed.", getId(), e);
+            return Collections.emptyList();
+        }
+    }
+
+    @Override
+    public List<IndexDocument> generateIndexDataAsync(boolean indexAttachments) throws TemporaryIndexingException {
+        List<IndexDocument> docs = null;
+        docs = getIndexDocuments(indexAttachments);
         return docs;
     }
 
-    protected List<IndexDocument> getIndexDocuments() throws TemporaryIndexingException{
+    protected List<IndexDocument> getIndexDocuments(boolean indexAttachments) throws TemporaryIndexingException{
         List<IndexDocument> toRet = new ArrayList<IndexDocument>();
 
         // Special case to prevent getDefaultInviteOrNull() from logging an error
@@ -405,7 +426,7 @@ public abstract class CalendarItem extends MailItem {
                 docList.add(doc);
             } else {
                 try {
-                    ParsedMessage pm = new ParsedMessage(mm, mMailbox.attachmentsIndexingEnabled());
+                    ParsedMessage pm = new ParsedMessage(mm, indexAttachments);
                     pm.analyzeFully();
 
                     if (pm.hasTemporaryAnalysisFailure())
@@ -418,7 +439,7 @@ public abstract class CalendarItem extends MailItem {
                     }
                 }
             }
-            
+
             for (IndexDocument doc : docList) {
                 // update the doc, overriding many of the fields with data from the appointment
                 doc.addContent(s.toString());
@@ -829,7 +850,7 @@ public abstract class CalendarItem extends MailItem {
         mUid = Invite.fixupIfOutlookUid(meta.get(Metadata.FN_UID, null));
         mInvites = new ArrayList<Invite>();
 
-        ICalTimeZone accountTZ = Util.getAccountTimeZone(getMailbox().getAccount());
+        ICalTimeZone accountTZ = Util.getAccountTimeZone(getAccount());
         if (meta.containsKey(Metadata.FN_TZMAP)) {
             try {
                 Set<String> tzids = new HashSet<String>();
@@ -2488,7 +2509,7 @@ public abstract class CalendarItem extends MailItem {
         try {
             is = pm.getRawInputStream();
             if (is != null) {
-                StagedBlob sblob = sm.stage(is, mMailbox);
+                StagedBlob sblob = sm.stage(is, mMailboxData);
                 return setContent(sblob, pm);
             } else {
                 ZimbraLog.calendar.warn(

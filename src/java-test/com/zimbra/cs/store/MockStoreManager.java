@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -97,37 +97,37 @@ public final class MockStoreManager extends StoreManager {
     }
 
     @Override
-    public StagedBlob stage(InputStream data, long actualSize, Mailbox mbox) throws IOException {
-        return new MockStagedBlob(mbox, ByteStreams.toByteArray(data));
+    public StagedBlob stage(InputStream data, long actualSize, Mailbox.MailboxData mboxData) throws IOException {
+        return new MockStagedBlob(mboxData,  ByteStreams.toByteArray(data));
     }
 
     @Override
-    public StagedBlob stage(Blob blob, Mailbox mbox) {
-        return new MockStagedBlob(mbox, ((MockBlob) blob).content);
+    public StagedBlob stage(Blob blob, Mailbox.MailboxData mboxData) {
+        return new MockStagedBlob(mboxData,  ((MockBlob) blob).content);
     }
 
-    private String blobKey(Mailbox mbox, int itemId, int revision) {
-        return mbox.getId() + "-" + itemId + "-" + revision;
+    private String blobKey(int mailboxId, int itemId, int revision) {
+        return mailboxId + "-" + itemId + "-" + revision;
     }
 
     @Override
-    public MailboxBlob copy(MailboxBlob src, Mailbox destMbox, int destItemId, int destRevision) {
-        MockMailboxBlob blob = new MockMailboxBlob(destMbox, destItemId, destRevision, src.getLocator(), ((MockMailboxBlob) src).content);
-        blobs.put(blobKey(destMbox, destItemId, destRevision), blob);
+    public MailboxBlob copy(MailboxBlob src, Mailbox.MailboxData destMailboxData, int destItemId, int destRevision) {
+        MockMailboxBlob blob = new MockMailboxBlob(destMailboxData, destItemId, destRevision, src.getLocator(), ((MockMailboxBlob) src).content);
+        blobs.put(blobKey(destMailboxData.id, destItemId, destRevision), blob);
         return blob;
     }
 
     @Override
-    public MailboxBlob link(StagedBlob src, Mailbox destMbox, int destItemId, int destRevision) {
-        MockMailboxBlob blob = new MockMailboxBlob(destMbox, destItemId, destRevision, src.getLocator(), ((MockStagedBlob) src).content);
-        blobs.put(blobKey(destMbox, destItemId, destRevision), blob);
+    public MailboxBlob link(StagedBlob src, Mailbox.MailboxData destMailboxData, int destItemId, int destRevision) {
+        MockMailboxBlob blob = new MockMailboxBlob(destMailboxData, destItemId, destRevision, src.getLocator(), ((MockStagedBlob) src).content);
+        blobs.put(blobKey(destMailboxData.id, destItemId, destRevision), blob);
         return blob;
     }
 
     @Override
-    public MailboxBlob renameTo(StagedBlob src, Mailbox destMbox, int destItemId, int destRevision) {
-        MockMailboxBlob blob = new MockMailboxBlob(destMbox, destItemId, destRevision, src.getLocator(), ((MockStagedBlob) src).content);
-        blobs.put(blobKey(destMbox, destItemId, destRevision), blob);
+    public MailboxBlob renameTo(StagedBlob src, Mailbox.MailboxData destMailboxData, int destItemId, int destRevision) {
+        MockMailboxBlob blob = new MockMailboxBlob(destMailboxData, destItemId, destRevision, src.getLocator(), ((MockStagedBlob) src).content);
+        blobs.put(blobKey(destMailboxData.id, destItemId, destRevision), blob);
         return blob;
     }
 
@@ -159,14 +159,14 @@ public final class MockStoreManager extends StoreManager {
 
     @Override
     public boolean delete(MailboxBlob mblob) throws IOException {
-        blobs.remove(blobKey(mblob.getMailbox(), mblob.getItemId(), mblob.getRevision()));
+        blobs.remove(blobKey(mblob.getMailboxId(), mblob.getItemId(), mblob.getRevision()));
         delete(((MockMailboxBlob) mblob).blob);
         return true;
     }
 
     @Override
-    public MailboxBlob getMailboxBlob(Mailbox mbox, int itemId, int revision, String locator) {
-        return blobs.get(blobKey(mbox, itemId, revision));
+    public MailboxBlob getMailboxBlob(Mailbox.MailboxData mboxData, int itemId, int revision, String locator) {
+        return blobs.get(blobKey(mboxData.id, itemId, revision));
     }
 
     @Override
@@ -180,10 +180,10 @@ public final class MockStoreManager extends StoreManager {
     }
 
     @Override
-    public boolean deleteStore(Mailbox mbox, Iterable<MailboxBlob.MailboxBlobInfo> mblobs) throws IOException {
+    public boolean deleteStore(Mailbox.MailboxData mboxData, Iterable<MailboxBlob.MailboxBlobInfo> mblobs) throws IOException {
         assert mblobs != null : "we require a blob iterator for testing purposes";
         for (MailboxBlob.MailboxBlobInfo mbinfo : mblobs) {
-            delete(getMailboxBlob(mbox, mbinfo.itemId, mbinfo.revision, mbinfo.locator));
+            delete(getMailboxBlob(mboxData,  mbinfo.itemId, mbinfo.revision, mbinfo.locator));
         }
         return true;
     }
@@ -245,8 +245,8 @@ public final class MockStoreManager extends StoreManager {
     private static final class MockStagedBlob extends StagedBlob {
         final byte[] content;
 
-        MockStagedBlob(Mailbox mbox, byte[] data) {
-            super(mbox, String.valueOf(data.length), data.length);
+        MockStagedBlob(Mailbox.MailboxData mboxData, byte[] data) {
+            super(mboxData,  String.valueOf(data.length), data.length);
             content = data;
         }
 
@@ -261,8 +261,8 @@ public final class MockStoreManager extends StoreManager {
         final byte[] content;
         MockLocalBlob blob = null;
 
-        MockMailboxBlob(Mailbox mbox, int itemId, int revision, String locator, byte[] data) {
-            super(mbox, itemId, revision, locator);
+        MockMailboxBlob(Mailbox.MailboxData mboxData, int itemId, int revision, String locator, byte[] data) {
+            super(mboxData,  itemId, revision, locator);
             content = data;
         }
 

@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -37,7 +37,7 @@ public abstract class ContentAddressableStoreManager extends ExternalStoreManage
 
     @Override
     public String writeStreamToStore(InputStream in, long actualSize,
-                    Mailbox mbox) throws IOException, ServiceException {
+                    Mailbox.MailboxData mboxData) throws IOException, ServiceException {
         //the override of stage below should never allow this code to be reached
         throw ServiceException.FAILURE("anonymous write is not permitted, something went wrong", null);
     }
@@ -76,21 +76,21 @@ public abstract class ContentAddressableStoreManager extends ExternalStoreManage
      * @throws IOException
      * @throws ServiceException
      */
-    protected abstract void writeStreamToStore(InputStream in, long actualSize, Mailbox mbox, String locator) throws IOException, ServiceException;
+    protected abstract void writeStreamToStore(InputStream in, long actualSize, Mailbox.MailboxData mboxData, String locator) throws IOException, ServiceException;
 
     @Override
-    public StagedBlob stage(Blob blob, Mailbox mbox) throws IOException, ServiceException {
+    public StagedBlob stage(Blob blob, Mailbox.MailboxData mboxData) throws IOException, ServiceException {
         if (supports(StoreFeature.RESUMABLE_UPLOAD) && blob instanceof ExternalUploadedBlob && blob.getRawSize() > 0) {
             ZimbraLog.store.debug("blob already uploaded, just need to commit");
             String locator = ((ExternalResumableUpload) this).finishUpload((ExternalUploadedBlob) blob);
             ZimbraLog.store.debug("staged to locator %s", locator);
             localCache.put(locator, getContent(blob));
-            return new ExternalStagedBlob(mbox, blob.getDigest(), blob.getRawSize(), locator);
+            return new ExternalStagedBlob(mboxData,  blob.getDigest(), blob.getRawSize(), locator);
         } else {
             InputStream is = getContent(blob);
             String locator = getLocator(blob);
             try {
-                StagedBlob staged = stage(is, blob.getRawSize(), mbox, locator);
+                StagedBlob staged = stage(is, blob.getRawSize(), mboxData,  locator);
                 if (staged != null) {
                     ZimbraLog.store.debug("staged to locator %s", staged.getLocator());
                     localCache.put(staged.getLocator(), getContent(blob));
@@ -103,16 +103,16 @@ public abstract class ContentAddressableStoreManager extends ExternalStoreManage
     }
 
     @Override
-    public StagedBlob stage(InputStream in, long actualSize, Mailbox mbox) throws ServiceException, IOException {
+    public StagedBlob stage(InputStream in, long actualSize, Mailbox.MailboxData mboxData) throws ServiceException, IOException {
         Blob blob = storeIncoming(in);
         try {
-            return stage(blob, mbox);
+            return stage(blob, mboxData);
         } finally {
             quietDelete(blob);
         }
     }
 
-    protected StagedBlob stage(InputStream in, long actualSize, Mailbox mbox, String locator) throws ServiceException {
+    protected StagedBlob stage(InputStream in, long actualSize, Mailbox.MailboxData mboxData, String locator) throws ServiceException {
         MessageDigest digest;
         try {
             digest = MessageDigest.getInstance("SHA-256");
@@ -122,8 +122,8 @@ public abstract class ContentAddressableStoreManager extends ExternalStoreManage
         ByteUtil.PositionInputStream pin = new ByteUtil.PositionInputStream(new DigestInputStream(in, digest));
 
         try {
-            writeStreamToStore(pin, actualSize, mbox, locator);
-            return new ExternalStagedBlob(mbox, ByteUtil.encodeFSSafeBase64(digest.digest()), pin.getPosition(), locator);
+            writeStreamToStore(pin, actualSize, mboxData,  locator);
+            return new ExternalStagedBlob(mboxData,  ByteUtil.encodeFSSafeBase64(digest.digest()), pin.getPosition(), locator);
         } catch (IOException e) {
             throw ServiceException.FAILURE("unable to stage blob", e);
         }

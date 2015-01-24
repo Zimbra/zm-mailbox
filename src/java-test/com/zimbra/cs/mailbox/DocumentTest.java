@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -17,13 +17,20 @@
 
 package com.zimbra.cs.mailbox;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -34,8 +41,14 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.Element.XMLElement;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.db.DbMailItem;
+import com.zimbra.cs.db.DbPool;
+import com.zimbra.cs.index.IndexDocument;
+import com.zimbra.cs.index.LuceneFields;
+import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 import com.zimbra.cs.mime.ParsedDocument;
 import com.zimbra.cs.service.mail.ToXML;
 import com.zimbra.cs.service.util.ItemIdFormatter;
@@ -58,12 +71,17 @@ public final class DocumentTest {
         MailboxTestUtil.clearData();
     }
 
+    @After
+    public void tearDown() throws Exception {
+        MailboxTestUtil.clearData();
+    }
+
     @Test
     public void create() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-        Document doc = createDocument(mbox, "filename", "content", false);
-        Assert.assertEquals("filename", doc.getName());
-        Assert.assertEquals("content", doc.getFragment());
+        Document doc = createDocument(mbox, "filename", "content", null, false);
+        assertEquals("filename", doc.getName());
+        assertEquals("content", doc.getFragment());
     }
 
     /**
@@ -73,8 +91,8 @@ public final class DocumentTest {
     public void note() throws Exception {
         // Create document and note.
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-        Document doc = createDocument(mbox, "doc.txt", "This is a document", false);
-        Document note = createDocument(mbox, "note.txt", "This is a note", true);
+        Document doc = createDocument(mbox, "doc.txt", "This is a document", null, false);
+        Document note = createDocument(mbox, "note.txt", "This is a note", null, true);
 
         // Validate flag.
         doc = mbox.getDocumentById(null, doc.getId());
@@ -83,14 +101,14 @@ public final class DocumentTest {
 
         // Search by flag.
         List<Integer> ids = TestUtil.search(mbox, "tag:\\note", MailItem.Type.DOCUMENT);
-        Assert.assertEquals(1, ids.size());
-        Assert.assertEquals(note.getId(), ids.get(0).intValue());
+        assertEquals(1, ids.size());
+        assertEquals(note.getId(), ids.get(0).intValue());
 
         // Make sure that the note flag is serialized to XML.
         Element eDoc = ToXML.encodeDocument(new XMLElement("test"), new ItemIdFormatter(), null, doc);
-        Assert.assertEquals(null, Strings.emptyToNull(eDoc.getAttribute(MailConstants.A_FLAGS, null)));
+        assertEquals(null, Strings.emptyToNull(eDoc.getAttribute(MailConstants.A_FLAGS, null)));
         Element eNote = ToXML.encodeDocument(new XMLElement("test"), new ItemIdFormatter(), null, note);
-        Assert.assertEquals("t", eNote.getAttribute(MailConstants.A_FLAGS));
+        assertEquals("t", eNote.getAttribute(MailConstants.A_FLAGS));
     }
 
     /**
@@ -99,10 +117,10 @@ public final class DocumentTest {
     @Test
     public void docToNote() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-        Document doc = createDocument(mbox, "doc.txt", "This is a document", false);
+        Document doc = createDocument(mbox, "doc.txt", "This is a document", null, false);
         MailboxTestUtil.setFlag(mbox, doc.getId(), Flag.FlagInfo.NOTE);
         doc = mbox.getDocumentById(null, doc.getId());
-        Assert.assertEquals(0, doc.getFlagBitmask());
+        assertEquals(0, doc.getFlagBitmask());
     }
 
     /**
@@ -111,15 +129,15 @@ public final class DocumentTest {
     @Test
     public void noteToDoc() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-        Document doc = createDocument(mbox, "note.txt", "This is a note", true);
+        Document doc = createDocument(mbox, "note.txt", "This is a note", null, true);
         MailboxTestUtil.unsetFlag(mbox, doc.getId(), Flag.FlagInfo.NOTE);
         doc = mbox.getDocumentById(null, doc.getId());
-        Assert.assertEquals(Flag.FlagInfo.NOTE.toBitmask(), doc.getFlagBitmask());
+        assertEquals(Flag.FlagInfo.NOTE.toBitmask(), doc.getFlagBitmask());
     }
 
-    static Document createDocument(Mailbox mbox, String name, String content, boolean isNote) throws Exception {
+    static Document createDocument(Mailbox mbox, String name, String content, String description, boolean isNote) throws Exception {
         InputStream in = new ByteArrayInputStream(content.getBytes());
-        ParsedDocument pd = new ParsedDocument(in, name, "text/plain", System.currentTimeMillis(), null, null);
+        ParsedDocument pd = new ParsedDocument(in, name, "text/plain", System.currentTimeMillis(), null, description);
         int flags = (isNote ? Flag.BITMASK_NOTE : 0);
         return mbox.createDocument(null, Mailbox.ID_FOLDER_BRIEFCASE, pd, MailItem.Type.DOCUMENT, flags);
     }
@@ -133,7 +151,7 @@ public final class DocumentTest {
                 Assert.fail("should not have been allowed to create document: [" + name + "]");
             }
         } catch (ServiceException e) {
-            Assert.assertEquals("unexpected error code", MailServiceException.INVALID_NAME, e.getCode());
+            assertEquals("unexpected error code", MailServiceException.INVALID_NAME, e.getCode());
             if (valid) {
                 Assert.fail("should have been allowed to create document: [" + name + "]");
             }
@@ -181,5 +199,118 @@ public final class DocumentTest {
         checkName(mbox, "sam*wise", true);
         checkName(mbox, "sam|wise", true);
         checkName(mbox, "sam wise", true);
+    }
+
+    @Test
+    public void testConstructFromData() throws Exception {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        Document doc = createDocument(mbox, "doc.txt", "This is a document", "doc description", false);
+
+        UnderlyingData ud = DbMailItem.getById(mbox.getId(), mbox.getSchemaGroupId(), doc.getId(), doc.getType(), doc.inDumpster(), DbPool.getConnection(mbox.getId(), mbox.getSchemaGroupId()));
+        assertNotNull("Underlying data is null", ud);
+        assertEquals("underlying data has wrong type", MailItem.Type.DOCUMENT,MailItem.Type.of(ud.type));
+        assertEquals("underlying data has wrong folder ID", Mailbox.ID_FOLDER_BRIEFCASE,ud.folderId);
+        assertEquals("underlying data has wrong UUID", doc.getUuid(),ud.uuid);
+
+        MailItem testItem = MailItem.constructItem(Provisioning.getInstance().getAccountById(MockProvisioning.DEFAULT_ACCOUNT_ID),ud,mbox.getId());
+        assertNotNull("reconstructed mail item is null", testItem);
+        assertEquals("reconstructed doc has wrong item type", MailItem.Type.DOCUMENT,testItem.getType());
+        assertEquals("reconstructed doc has wrong UUID", doc.getUuid(), testItem.getUuid());
+        assertEquals("reconstructed doc has wrong ID", doc.getId(), testItem.getId());
+        assertEquals("reconstructed doc has wrong folder", doc.getFolderId(), testItem.getFolderId());
+        assertEquals("reonstructed doc has wrong content", Arrays.toString(doc.getContent()),Arrays.toString(testItem.getContent()));
+        List<IndexDocument> docs = testItem.generateIndexDataAsync(false);
+        assertEquals(1, docs.size());
+        IndexDocument indexDoc = docs.get(0);
+        assertNotNull("generated IndexDocument is null", doc);
+        Collection<String> docFields = indexDoc.toDocument().getFieldNames();
+        assertNotNull("generated IndexDocument has NULL fields", docFields);
+        assertFalse("generated IndexDocument has no fields", docFields.isEmpty());
+        String subject = (String) indexDoc.toDocument().getFieldValue(LuceneFields.L_H_SUBJECT);
+        String filename = (String) indexDoc.toDocument().getFieldValue(LuceneFields.L_FILENAME);
+        ArrayList<String> bodyparts = (ArrayList<String>) indexDoc.toDocument().getFieldValue(LuceneFields.L_CONTENT);
+        assertNotNull("document content is null", bodyparts);
+        assertEquals("document should have 2 parts of content", 2, bodyparts.size());
+        assertEquals("doc.txt", subject);
+        assertEquals("doc.txt", filename);
+        assertEquals("This is a document", bodyparts.get(0));
+        assertEquals("This is a document doc description", bodyparts.get(1));
+        assertEquals("index document has wrong l.partname", "top", indexDoc.toDocument().getFieldValue(LuceneFields.L_PARTNAME));
+        assertEquals("index document has wrong content type", "text/plain", indexDoc.toDocument().getFieldValue(LuceneFields.L_MIMETYPE));
+    }
+
+    @Test
+    public void testGenerateIndexData() throws Exception {
+        Account account = Provisioning.getInstance().getAccountById(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        account.setPrefMailDefaultCharset("ISO-2022-JP");
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+
+        Document doc = createDocument(mbox, "doc.txt", "This is a document", "test document", false);
+
+        List<IndexDocument> docs = doc.generateIndexData();
+        assertEquals(1, docs.size());
+        IndexDocument indexDoc = docs.get(0);
+        assertNotNull("generated IndexDocument is null", doc);
+        Collection<String> docFields = indexDoc.toDocument().getFieldNames();
+        assertNotNull("generated IndexDocument has NULL fields", docFields);
+        assertFalse("generated IndexDocument has no fields", docFields.isEmpty());
+        String subject = (String) indexDoc.toDocument().getFieldValue(LuceneFields.L_H_SUBJECT);
+        String filename = (String) indexDoc.toDocument().getFieldValue(LuceneFields.L_FILENAME);
+        ArrayList<String> bodyparts = (ArrayList<String>) indexDoc.toDocument().getFieldValue(LuceneFields.L_CONTENT);
+        assertNotNull("document content is null", bodyparts);
+        assertEquals("document should have 2 parts of content", 2, bodyparts.size());
+        assertEquals("doc.txt", subject);
+        assertEquals("doc.txt", filename);
+        assertEquals("This is a document", bodyparts.get(0));
+        assertEquals("This is a document test document", bodyparts.get(1));
+        assertEquals("index document has wrong l.partname", "top", indexDoc.toDocument().getFieldValue(LuceneFields.L_PARTNAME));
+        assertEquals("index document has wrong content type", "text/plain", indexDoc.toDocument().getFieldValue(LuceneFields.L_MIMETYPE));
+    }
+
+    @Test
+    public void testGenerateIndexDataAsync() throws Exception {
+        Account account = Provisioning.getInstance().getAccountById(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        account.setPrefMailDefaultCharset("ISO-2022-JP");
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+
+        Document doc = createDocument(mbox, "doc.txt", "This is a document", "test document", false);
+
+        List<IndexDocument> docs = doc.generateIndexDataAsync(false);
+        assertEquals(1, docs.size());
+        IndexDocument indexDoc = docs.get(0);
+        assertNotNull("generated IndexDocument is null", doc);
+        Collection<String> docFields = indexDoc.toDocument().getFieldNames();
+        assertNotNull("generated IndexDocument has NULL fields", docFields);
+        assertFalse("generated IndexDocument has no fields", docFields.isEmpty());
+        String subject = (String) indexDoc.toDocument().getFieldValue(LuceneFields.L_H_SUBJECT);
+        String filename = (String) indexDoc.toDocument().getFieldValue(LuceneFields.L_FILENAME);
+        ArrayList<String> bodyparts = (ArrayList<String>) indexDoc.toDocument().getFieldValue(LuceneFields.L_CONTENT);
+        assertNotNull("document content is null", bodyparts);
+        assertEquals("document should have 2 parts of content", 2, bodyparts.size());
+        assertEquals("doc.txt", subject);
+        assertEquals("doc.txt", filename);
+        assertEquals("This is a document", bodyparts.get(0));
+        assertEquals("This is a document test document", bodyparts.get(1));
+        assertEquals("index document has wrong l.partname", "top", indexDoc.toDocument().getFieldValue(LuceneFields.L_PARTNAME));
+        assertEquals("index document has wrong content type", "text/plain", indexDoc.toDocument().getFieldValue(LuceneFields.L_MIMETYPE));
+
+        docs = doc.generateIndexDataAsync(true);
+        assertEquals(1, docs.size());
+        indexDoc = docs.get(0);
+        assertNotNull("generated IndexDocument is null", doc);
+        docFields = indexDoc.toDocument().getFieldNames();
+        assertNotNull("generated IndexDocument has NULL fields", docFields);
+        assertFalse("generated IndexDocument has no fields", docFields.isEmpty());
+        subject = (String) indexDoc.toDocument().getFieldValue(LuceneFields.L_H_SUBJECT);
+        filename = (String) indexDoc.toDocument().getFieldValue(LuceneFields.L_FILENAME);
+        bodyparts = (ArrayList<String>) indexDoc.toDocument().getFieldValue(LuceneFields.L_CONTENT);
+        assertNotNull("document content is null", bodyparts);
+        assertEquals("document should have 2 parts of content", 2, bodyparts.size());
+        assertEquals("doc.txt", subject);
+        assertEquals("doc.txt", filename);
+        assertEquals("This is a document", bodyparts.get(0));
+        assertEquals("This is a document test document", bodyparts.get(1));
+        assertEquals("index document has wrong l.partname", "top", indexDoc.toDocument().getFieldValue(LuceneFields.L_PARTNAME));
+        assertEquals("index document has wrong content type", "text/plain", indexDoc.toDocument().getFieldValue(LuceneFields.L_MIMETYPE));
     }
 }

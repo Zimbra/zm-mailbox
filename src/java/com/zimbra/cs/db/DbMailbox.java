@@ -241,7 +241,7 @@ public final class DbMailbox {
             stmt = null;
 
             if (DebugConfig.disableMailboxGroups) {
-                Db.getInstance().registerDatabaseInterest(conn, getDatabaseName(groupId));
+                Db.getInstance().registerDatabaseInterestInternal(conn, getDatabaseName(groupId));
 
                 if (!DebugConfig.externalMailboxDirectory) {
                     // then create the primary lookup row in ZIMBRA.MAILBOX
@@ -333,7 +333,7 @@ public final class DbMailbox {
 
             // create the new database
             ZimbraLog.mailbox.info("Creating database " + dbname);
-            Db.getInstance().registerDatabaseInterest(conn, dbname);
+            Db.getInstance().registerDatabaseInterestInternal(conn, dbname);
 
             String template = new String(ByteUtil.getContent(file));
             Map<String, String> vars = new HashMap<String, String>();
@@ -394,7 +394,7 @@ public final class DbMailbox {
         if (conn == null) {
             conn = mbox.getOperationConnection();
         } else {
-            Db.registerDatabaseInterest(conn, mbox);
+            Db.registerDatabaseInterest(conn, DbMailbox.getDatabaseName(mbox));
         }
 
         try {
@@ -790,7 +790,7 @@ public final class DbMailbox {
             } else {
                 for (int mailboxId : mailboxIds) {
                     // note that if groups are disabled, mailboxId == groupId
-                    Db.getInstance().registerDatabaseInterest(conn, getDatabaseName(mailboxId));
+                    Db.getInstance().registerDatabaseInterestInternal(conn, getDatabaseName(mailboxId));
 
                     stmt = conn.prepareStatement("SELECT account_id, size_checkpoint FROM " + qualifyZimbraTableName(mailboxId, TABLE_MAILBOX));
                     rs = stmt.executeQuery();
@@ -866,7 +866,7 @@ public final class DbMailbox {
         ResultSet rs = null;
         try {
             if (DebugConfig.disableMailboxGroups) {
-                Db.getInstance().registerDatabaseInterest(conn, getDatabaseName(mailboxId));
+                Db.getInstance().registerDatabaseInterestInternal(conn, getDatabaseName(mailboxId));
             }
 
             // note that if groups are disabled, mailboxId == groupId
@@ -1205,7 +1205,7 @@ public final class DbMailbox {
 
                 int[] mailboxIds = MailboxManager.getInstance().getMailboxIds();
                 for (int mailboxId : mailboxIds) {
-                    Db.getInstance().registerDatabaseInterest(conn, getDatabaseName(mailboxId));
+                    Db.getInstance().registerDatabaseInterestInternal(conn, getDatabaseName(mailboxId));
 
                     stmt = conn.prepareStatement(
                             "SELECT id, id, account_id, index_volume_id, item_id_checkpoint, contact_count, size_checkpoint," +

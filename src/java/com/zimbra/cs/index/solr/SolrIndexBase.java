@@ -63,7 +63,6 @@ import com.zimbra.cs.index.ZimbraScoreDoc;
 import com.zimbra.cs.index.ZimbraTermsFilter;
 import com.zimbra.cs.index.ZimbraTopDocs;
 import com.zimbra.cs.index.solr.SolrUtils.WildcardEscape;
-import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.IndexItemEntry;
@@ -779,8 +778,7 @@ public abstract class SolrIndexBase extends IndexStore {
         }
 
         @Override
-        public void addDocument(Folder folder, MailItem item,
-                List<IndexDocument> docs) throws IOException, ServiceException {
+        public void addDocument(MailItem item, List<IndexDocument> docs) throws IOException, ServiceException {
             if(!indexExists()) {
                 initIndex();
             }

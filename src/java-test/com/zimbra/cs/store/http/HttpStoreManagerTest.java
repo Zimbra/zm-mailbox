@@ -47,22 +47,22 @@ public class HttpStoreManagerTest extends AbstractExternalStoreManagerTest {
 
     public static class MockHttpStoreManager extends HttpStoreManager {
         @Override
-        protected String getGetUrl(Mailbox mbox, String locator) {
+        protected String getGetUrl(Mailbox.MailboxData mboxData, String locator) {
             return MockHttpStore.getUrlPrefix() + locator;
         }
 
         @Override
-        protected String getPostUrl(Mailbox mbox) {
+        protected String getPostUrl(Mailbox.MailboxData mboxData) {
             return MockHttpStore.getUrlPrefix();
         }
 
         @Override
-        protected String getDeleteUrl(Mailbox mbox, String locator) {
+        protected String getDeleteUrl(Mailbox.MailboxData mboxData, String locator) {
             return MockHttpStore.getUrlPrefix() + locator;
         }
 
         @Override
-        protected String getLocator(PostMethod post, String postDigest, long postSize, Mailbox mbox)
+        protected String getLocator(PostMethod post, String postDigest, long postSize, Mailbox.MailboxData mboxData)
         throws ServiceException {
             String locator = post.getResponseHeader("Location").getValue();
             if (locator == null || locator.isEmpty()) {

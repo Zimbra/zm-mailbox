@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -29,6 +29,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ArrayUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbTag;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
@@ -110,9 +111,18 @@ public class Tag extends MailItem {
     Tag(Mailbox mbox, UnderlyingData ud) throws ServiceException {
         this(mbox, ud, false);
     }
-    
+
     Tag(Mailbox mbox, UnderlyingData ud, boolean skipCache) throws ServiceException {
         super(mbox, ud, skipCache);
+        init();
+    }
+
+    Tag(Account acc, UnderlyingData data, int mailboxId) throws ServiceException {
+        super(acc, data, mailboxId);
+        init();
+    }
+
+    private void init() throws ServiceException {
         if (mData.type != Type.TAG.toByte() && mData.type != Type.FLAG.toByte()) {
             throw new IllegalArgumentException();
         }

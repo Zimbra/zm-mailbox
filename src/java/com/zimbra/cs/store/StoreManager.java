@@ -145,10 +145,25 @@ public abstract class StoreManager {
      * @param callback callback, or {@code null}
      * @param mbox the mailbox
      */
-    public abstract StagedBlob stage(InputStream data, long actualSize, Mailbox mbox)
-    throws IOException, ServiceException;
+    public StagedBlob stage(InputStream data, long actualSize, Mailbox mbox)
+    throws IOException, ServiceException {
+        return stage(data, actualSize, mbox.getData());
+    }
 
     /**
+     * Stage an incoming <code>InputStream</code> to an
+     * appropriate place for subsequent storage in a <code>Mailbox</code> via
+     * {@link #link(StagedBlob, Mailbox, int, int)} or {@link #renameTo}.
+     *
+     * @param data the data stream
+     * @param actualSize the content size, or {@code -1} if the content size is not available
+     * @param callback callback, or {@code null}
+     * @param mbox the mailbox
+     */
+    public abstract StagedBlob stage(InputStream data, long actualSize, Mailbox.MailboxData mailboxData)
+    throws IOException, ServiceException;
+
+	/**
      * Stage an incoming <code>InputStream</code> to an
      * appropriate place for subsequent storage in a <code>Mailbox</code> via
      * {@link #link(StagedBlob, Mailbox, int, int)} or {@link #renameTo}.
@@ -159,7 +174,21 @@ public abstract class StoreManager {
      */
     public StagedBlob stage(InputStream data, Mailbox mbox)
     throws IOException, ServiceException {
-        return stage(data, -1, mbox);
+        return stage(data, mbox.getData());
+    }
+
+    /**
+     * Stage an incoming <code>InputStream</code> to an
+     * appropriate place for subsequent storage in a <code>Mailbox</code> via
+     * {@link #link(StagedBlob, Mailbox, int, int)} or {@link #renameTo}.
+     *
+     * @param data the data stream
+     * @param callback callback, or {@code null}
+     * @param mbox the mailbox
+     */
+    public StagedBlob stage(InputStream data, Mailbox.MailboxData mailboxData)
+    throws IOException, ServiceException {
+        return stage(data, -1, mailboxData);
     }
 
     /**
@@ -172,7 +201,21 @@ public abstract class StoreManager {
      * @throws IOException
      * @throws ServiceException
      */
-    public abstract StagedBlob stage(Blob blob, Mailbox mbox) throws IOException, ServiceException;
+    public StagedBlob stage(Blob blob, Mailbox mbox) throws IOException, ServiceException {
+        return stage(blob, mbox.getData());
+    }
+
+    /**
+     * Stage an incoming <code>Blob</code> (see {@link #storeIncoming}) to an
+     * appropriate place for subsequent storage in a <code>Mailbox</code> via
+     * {@link #link(StagedBlob, Mailbox, int, int)} or {@link #renameTo}.
+     * @param blob
+     * @param mbox
+     * @return
+     * @throws IOException
+     * @throws ServiceException
+     */
+    public abstract StagedBlob stage(Blob blob, Mailbox.MailboxData mailboxData) throws IOException, ServiceException;
 
     /**
      * Create a copy in destMbox mailbox with message ID of destMsgId that
@@ -186,10 +229,28 @@ public abstract class StoreManager {
      * @throws IOException
      * @throws ServiceException
      */
-    public abstract MailboxBlob copy(MailboxBlob src, Mailbox destMbox, int destMsgId, int destRevision)
-    throws IOException, ServiceException;
+    public MailboxBlob copy(MailboxBlob src, Mailbox destMbox, int destMsgId, int destRevision)
+    throws IOException, ServiceException {
+        return copy(src, destMbox.getData(), destMsgId, destRevision);
+    }
 
     /**
+     * Create a copy in destMbox mailbox with message ID of destMsgId that
+     * points to srcBlob.
+     * Implementations may choose to use linking where appropriate (i.e. files on same filesystem)
+     * @param src
+     * @param destMbox
+     * @param destMsgId mail_item.id value for message in destMbox
+     * @param destRevision mail_item.mod_content value for message in destMbox
+     * @return MailboxBlob object representing the copied blob
+     * @throws IOException
+     * @throws ServiceException
+     */
+    public abstract MailboxBlob copy(MailboxBlob src, Mailbox.MailboxData destMailboxData, int destMsgId, int destRevision)
+    throws IOException, ServiceException;
+
+
+   /**
      * Create a link in destMbox mailbox with message ID of destMsgId that
      * points to srcBlob.
      * If staging creates permanent blobs, this just needs to return mailbox blob with pointer to location of staged blob
@@ -202,8 +263,42 @@ public abstract class StoreManager {
      * @throws IOException
      * @throws ServiceException
      */
-    public abstract MailboxBlob link(StagedBlob src, Mailbox destMbox, int destMsgId, int destRevision)
+    public MailboxBlob link(StagedBlob src, Mailbox destMbox, int destMsgId, int destRevision)
+    throws IOException, ServiceException {
+        return link(src, destMbox.getData(), destMsgId, destRevision);
+    }
+
+     /**
+     * Create a link in destMbox mailbox with message ID of destMsgId that
+     * points to srcBlob.
+     * If staging creates permanent blobs, this just needs to return mailbox blob with pointer to location of staged blob
+     * If staging is done to temporary area such as our incoming directory this operation finishes it
+     * @param src
+     * @param destMbox
+     * @param destMsgId mail_item.id value for message in destMbox
+     * @param destRevision mail_item.mod_content value for message in destMbox
+     * @return MailboxBlob object representing the linked blob
+     * @throws IOException
+     * @throws ServiceException
+     */
+    public abstract MailboxBlob link(StagedBlob src, Mailbox.MailboxData destMailboxData, int destMsgId, int destRevision)
     throws IOException, ServiceException;
+
+ /**
+     * Rename a blob to a blob in mailbox directory.
+     * This effectively makes the StagedBlob permanent, implementations may not need to do anything if the stage operation creates permanent items
+     * @param src
+     * @param destMbox
+     * @param destMsgId mail_item.id value for message in destMbox
+     * @param destRevision mail_item.mod_content value for message in destMbox
+     * @return MailboxBlob object representing the renamed blob
+     * @throws IOException
+     * @throws ServiceException
+     */
+    public MailboxBlob renameTo(StagedBlob src, Mailbox destMbox, int destMsgId, int destRevision)
+    throws IOException, ServiceException {
+        return renameTo(src, destMbox.getData(), destMsgId, destRevision);
+    }
 
     /**
      * Rename a blob to a blob in mailbox directory.
@@ -216,7 +311,7 @@ public abstract class StoreManager {
      * @throws IOException
      * @throws ServiceException
      */
-    public abstract MailboxBlob renameTo(StagedBlob src, Mailbox destMbox, int destMsgId, int destRevision)
+    public abstract MailboxBlob renameTo(StagedBlob src, Mailbox.MailboxData destMailboxData, int destMsgId, int destRevision)
     throws IOException, ServiceException;
 
     /**
@@ -303,7 +398,7 @@ public abstract class StoreManager {
         }
     }
 
-    /**
+   /**
      * Find the MailboxBlob in mailbox mbox with matching item ID.
      * @param mbox
      * @param itemId mail_item.id value for item
@@ -313,7 +408,22 @@ public abstract class StoreManager {
      *
      * @throws ServiceException
      */
-    public abstract MailboxBlob getMailboxBlob(Mailbox mbox, int itemId, int revision, String locator)
+    public MailboxBlob getMailboxBlob(Mailbox mbox, int itemId, int revision, String locator)
+    throws ServiceException {
+        return getMailboxBlob(mbox.getData(), itemId, revision, locator);
+    }
+
+    /**
+     * Find the MailboxBlob in int mailboxId, String accountId with matching item ID.
+     * @param mbox
+     * @param itemId mail_item.id value for item
+     * @param revision mail_item.mod_content value for item
+     * @return the <code>MailboxBlob</code>, or <code>null</code> if the file
+     * does not exist
+     *
+     * @throws ServiceException
+     */
+    public abstract MailboxBlob getMailboxBlob(Mailbox.MailboxData mailboxData, int itemId, int revision, String locator)
     throws ServiceException;
 
     /**
@@ -325,7 +435,10 @@ public abstract class StoreManager {
      * @throws ServiceException
      */
     public MailboxBlob getMailboxBlob(MailItem item) throws ServiceException {
-        MailboxBlob mblob = getMailboxBlob(item.getMailbox(), item.getId(), item.getSavedSequence(), item.getLocator());
+        Mailbox.MailboxData mailboxData = new Mailbox.MailboxData();
+        mailboxData.id = item.getMailboxId();
+        mailboxData.accountId = item.getAccountId();
+        MailboxBlob mblob = getMailboxBlob(mailboxData, item.getId(), item.getSavedSequence(), item.getLocator());
         if (mblob != null) {
             mblob.setDigest(item.getDigest()).setSize(item.getSize());
         }
@@ -361,7 +474,23 @@ public abstract class StoreManager {
      * @throws IOException
      * @throws ServiceException
      */
-    public abstract boolean deleteStore(Mailbox mbox, Iterable<MailboxBlob.MailboxBlobInfo> blobs)
+    public boolean deleteStore(Mailbox mbox, Iterable<MailboxBlob.MailboxBlobInfo> blobs)
+    throws IOException, ServiceException {
+        return deleteStore(mbox.getData(), blobs);
+    }
+
+    /**
+     * Deletes a user's entire store.  SHOULD BE CALLED CAREFULLY.  No going back.
+     * @param {@link Mailbox.MailboxData} destMailboxData
+     * @param blobs If the store returned {@code true} to {@link #supports(StoreFeature)}
+     *              when passed {@link StoreFeature#BULK_DELETE}, {@code blobs} will be
+     *              {@code null}.  If it returned {@code false}, {@code blobs} will be
+     *              an {@code Iterable} that contains every blob in the {@code Mailbox}.
+     * @return true if store was actually deleted
+     * @throws IOException
+     * @throws ServiceException
+     */
+    public abstract boolean deleteStore(Mailbox.MailboxData destMailboxData, Iterable<MailboxBlob.MailboxBlobInfo> blobs)
     throws IOException, ServiceException;
 
     /**

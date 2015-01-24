@@ -112,7 +112,7 @@ public final class MailboxTest {
         mbox.addMessage(null,
                 new ParsedMessage("From: test4-1@sub4.zimbra.com".getBytes(),
                         false), dopt, null);
-        MailboxTestUtil.forceIndexing(mbox);
+        MailboxTestUtil.index(mbox);
         List<BrowseTerm> terms = mbox.browse(null, Mailbox.BrowseBy.domains,
                 null, 100);
 
@@ -170,7 +170,7 @@ public final class MailboxTest {
         mbox.addMessage(null,
                 new ParsedMessage("From: test4-1@sub4.zimbra.com".getBytes(),
                         false), dopt, null);
-        MailboxTestUtil.forceIndexing(mbox);
+        MailboxTestUtil.index(mbox);
         String defaultLimit = LC.zimbra_terms_cachesize.value();
         LC.zimbra_terms_cachesize.setDefault("5");
         List<BrowseTerm> terms = mbox.browse(null, Mailbox.BrowseBy.domains,
@@ -222,7 +222,7 @@ public final class MailboxTest {
                                         i).getBytes(), false), dopt, null);
             }
         }
-        MailboxTestUtil.forceIndexing(mbox);
+        MailboxTestUtil.index(mbox);
         List<BrowseTerm> terms = mbox.browse(null, Mailbox.BrowseBy.domains,
                 null, 100);
         Assert.assertEquals("Number of expected terms", 100, terms.size());
@@ -663,9 +663,9 @@ public final class MailboxTest {
         mbox.beginTrackingSync();
         int token = mbox.getLastChangeID();
 
-        Document doc1 = DocumentTest.createDocument(mbox, "doc1", "abcdefg",
+        Document doc1 = DocumentTest.createDocument(mbox, "doc1", "abcdefg",null,
                 false);
-        Document doc2 = DocumentTest.createDocument(mbox, "doc2", "tuvwxyz",
+        Document doc2 = DocumentTest.createDocument(mbox, "doc2", "tuvwxyz",null,
                 false);
 
         Set<Integer> ids = Sets.newHashSet(doc1.getId(), doc2.getId());
@@ -717,7 +717,7 @@ public final class MailboxTest {
         Message msg = mbox.addMessage(null,
                 MailboxTestUtil.generateMessage("test subject"),
                 STANDARD_DELIVERY_OPTIONS, null);
-        Document doc3 = DocumentTest.createDocument(mbox, "doc3", "lmnop",
+        Document doc3 = DocumentTest.createDocument(mbox, "doc3", "lmnop",null,
                 false);
         Folder folder = mbox.createFolder(null, "test",
                 new Folder.FolderOptions());

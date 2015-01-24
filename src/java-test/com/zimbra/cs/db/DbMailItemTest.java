@@ -16,6 +16,11 @@
  */
 package com.zimbra.cs.db;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -23,6 +28,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -38,6 +44,8 @@ import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Flag.FlagInfo;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
+import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
@@ -67,8 +75,14 @@ public final class DbMailItemTest {
     }
 
     @After
-    public void tearDown() {
+    public void tearDown() throws Exception {
         conn.closeQuietly();
+    }
+
+    @AfterClass
+    public static void destroy() throws Exception {
+        MailboxTestUtil.clearData();
+        Provisioning.getInstance().deleteAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
     }
 
     @Test
@@ -365,5 +379,71 @@ public final class DbMailItemTest {
         types.add(MailItem.Type.TASK);
         tombstones = DbMailItem.readTombstones(mbox, conn, 0, types);
         Assert.assertEquals(tombstones.size(), 12);
+    }
+
+    @Test
+    public void testGetById() throws Exception {
+        DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item " +
+                "(mailbox_id, id, type, index_id, date, size, flags, tags, mod_metadata, mod_content) " +
+                "VALUES(?, ?, ?, ?, 0, 0, 0, 0, 0, 0)", mbox.getId(), 100, MailItem.Type.MESSAGE.toByte(), 0);
+        UnderlyingData item = DbMailItem.getById(mbox.getId(), mbox.getSchemaGroupId(), 100, MailItem.Type.MESSAGE, false, conn);
+        assertNotNull(item);
+        assertEquals(100,item.id);
+        assertEquals(MailItem.Type.MESSAGE,MailItem.Type.of(item.type));
+        try {
+            item = DbMailItem.getById(mbox.getId(), mbox.getSchemaGroupId(), 101, MailItem.Type.MESSAGE, false, conn);
+            assertTrue("should have thrown an exception", false);
+        } catch (NoSuchItemException ex) {
+            //
+        }
+
+        try {
+            item = DbMailItem.getById(mbox.getId(), mbox.getSchemaGroupId(), 100, MailItem.Type.MESSAGE, false, conn);
+            assertNotNull(item);
+            assertEquals(100,item.id);
+            assertEquals(MailItem.Type.MESSAGE,MailItem.Type.of(item.type));
+        } catch (NoSuchItemException ex) {
+           fail(ex.getMessage());
+        }
+
+        DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item_dumpster " +
+                "(mailbox_id, id, type, index_id, date, size, flags, tags, mod_metadata, mod_content) " +
+                "VALUES(?, ?, ?, ?, 0, 0, 0, 0, 0, 0)", mbox.getId(), 300, MailItem.Type.MESSAGE.toByte(), 0);
+        item = DbMailItem.getById(mbox.getId(), mbox.getSchemaGroupId(), 300, MailItem.Type.MESSAGE, true, conn);
+        assertNotNull(item);
+        assertEquals(300,item.id);
+        assertEquals(MailItem.Type.MESSAGE,MailItem.Type.of(item.type));
+        try {
+            item = DbMailItem.getById(mbox.getId(), mbox.getSchemaGroupId(),300, MailItem.Type.MESSAGE, false, conn);
+            assertTrue("should have thrown an exception", false);
+        } catch (NoSuchItemException ex) {
+            //
+        }
+
+        try {
+            item = DbMailItem.getById(mbox.getId(), mbox.getSchemaGroupId(), 300, MailItem.Type.MESSAGE, true, conn);
+            assertNotNull(item);
+            assertEquals(300,item.id);
+            assertEquals(MailItem.Type.MESSAGE,MailItem.Type.of(item.type));
+        } catch (NoSuchItemException ex) {
+            fail(ex.getMessage());
+        }
+
+        DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item " +
+                "(mailbox_id, id, type, index_id, date, size, flags, tags, mod_metadata, mod_content) " +
+                "VALUES(?, ?, ?, ?, 0, 0, 0, 0, 0, 0)", mbox.getId(), 303, MailItem.Type.MESSAGE.toByte(), 0);
+        conn.commit();
+        DbConnection conn1 = DbPool.getConnection(mbox.getId(), mbox.getSchemaGroupId());
+        try {
+
+            item = DbMailItem.getById(mbox.getId(), mbox.getSchemaGroupId(), 303, MailItem.Type.MESSAGE, false, conn);
+            assertNotNull(item);
+            assertEquals(303,item.id);
+            assertEquals(MailItem.Type.MESSAGE,MailItem.Type.of(item.type));
+        } catch (Exception ex) {
+            fail(ex.getMessage());
+        } finally {
+            DbPool.quietClose(conn1);
+        }
     }
 }

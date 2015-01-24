@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -101,13 +101,17 @@ public class ExternalBlobConsistencyChecker extends BlobConsistencyChecker {
     }
 
     private void checkExternalBlob(Mailbox mbox, boolean checkSize, BlobInfo blobInfo, ExternalStoreManager sm) throws ServiceException {
-        MailboxBlob mblob = sm.getMailboxBlob(mbox, blobInfo.itemId, blobInfo.version, blobInfo.path);
+        checkExternalBlob(mbox.getData(), checkSize, blobInfo, sm);
+    }
+
+    private void checkExternalBlob(Mailbox.MailboxData mboxData, boolean checkSize, BlobInfo blobInfo, ExternalStoreManager sm) throws ServiceException {
+        MailboxBlob mblob = sm.getMailboxBlob(mboxData, blobInfo.itemId, blobInfo.version, blobInfo.path);
         if (mblob == null) {
             results.missingBlobs.put(blobInfo.itemId, blobInfo);
         } else {
             try {
                 unexpectedBlobPaths.remove(mblob.getLocator());
-                Blob blob = sm.getLocalBlob(mbox, mblob.getLocator(), false);
+                Blob blob = sm.getLocalBlob(mboxData, mblob.getLocator(), false);
                 if (blob == null) {
                     results.missingBlobs.put(blobInfo.itemId, blobInfo);
                 } else {

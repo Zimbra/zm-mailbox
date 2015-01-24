@@ -2411,11 +2411,45 @@ public class DbMailItem {
         }
     }
 
+    /**
+     *
+     * @param mbox
+     * @param id
+     * @param type
+     * @param fromDumpster
+     * @return
+     * @throws ServiceException
+     */
     public static UnderlyingData getById(Mailbox mbox, int id, MailItem.Type type, boolean fromDumpster)
     throws ServiceException {
         return getBy(LookupBy.id, mbox, Integer.toString(id), type, fromDumpster);
     }
 
+    /**
+     *
+     * @param mboxId
+     * @param schemaGroupId
+     * @param id
+     * @param type
+     * @param fromDumpster
+     * @param conn DbConnection. Caller is responsible for opening and closing the connection
+     * @return
+     * @throws ServiceException
+     */
+    public static UnderlyingData getById(int mboxId, int schemaGroupId, int id, MailItem.Type type, boolean fromDumpster, DbConnection conn)
+    throws ServiceException {
+        return getBy(LookupBy.id, mboxId, schemaGroupId, Integer.toString(id), type, fromDumpster, conn);
+    }
+
+    /**
+     *
+     * @param mbox
+     * @param uuid
+     * @param type
+     * @param fromDumpster
+     * @return
+     * @throws ServiceException
+     */
     public static UnderlyingData getByUuid(Mailbox mbox, String uuid, MailItem.Type type, boolean fromDumpster)
     throws ServiceException {
         return getBy(LookupBy.uuid, mbox, uuid, type, fromDumpster);
@@ -2425,22 +2459,50 @@ public class DbMailItem {
         id, uuid;
     }
 
+    /**
+     *
+     * @param by
+     * @param mbox
+     * @param key
+     * @param type
+     * @param fromDumpster
+     * @return
+     * @throws ServiceException
+     */
     private static UnderlyingData getBy(LookupBy by, Mailbox mbox, String key, MailItem.Type type, boolean fromDumpster)
+    throws ServiceException {
+        return getBy(by, mbox.getId(),mbox.getSchemaGroupId(),key,type,fromDumpster, mbox.getOperationConnection());
+    }
+
+
+    /**
+     *
+     * @param by
+     * @param mailboxId
+     * @param schemaGroupId
+     * @param key
+     * @param type
+     * @param fromDumpster
+     * @param conn DbConnection. Caller is responsible for opening and closing the connection.
+     * @return
+     * @throws ServiceException
+     */
+    private static UnderlyingData getBy(LookupBy by, int mailboxId, int schemaGroupId, String key, MailItem.Type type, boolean fromDumpster, DbConnection conn)
     throws ServiceException {
         if (Mailbox.isCachedType(type)) {
             throw ServiceException.INVALID_REQUEST("folders and tags must be retrieved from cache", null);
         }
 
-        DbConnection conn = mbox.getOperationConnection();
+        //MailboxManager.getInstance().getMailboxById(mailboxId, skipMailHostCheck)
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
             String keyColumn = LookupBy.uuid.equals(by) ? "uuid" : "id";
             stmt = conn.prepareStatement("SELECT " + DB_FIELDS +
-                        " FROM " + getMailItemTableName(mbox, "mi", fromDumpster) +
+                        " FROM " + getMailItemTableName(schemaGroupId, "mi", fromDumpster) +
                         " WHERE " + IN_THIS_MAILBOX_AND + keyColumn + " = ?");
             int pos = 1;
-            pos = setMailboxId(stmt, mbox, pos);
+            pos = setMailboxId(stmt, mailboxId, pos);
             stmt.setString(pos++, key);
             rs = stmt.executeQuery();
 
@@ -2462,7 +2524,7 @@ public class DbMailItem {
                 }
             }
             if (!fromDumpster && data.type == MailItem.Type.CONVERSATION.toByte()) {
-                completeConversation(mbox, conn, data);
+                completeConversation(mailboxId, schemaGroupId, conn, data);
             }
             return data;
         } catch (SQLException e) {
@@ -2753,7 +2815,16 @@ public class DbMailItem {
         completeConversations(mbox, conn, Collections.singletonList(data));
     }
 
-    private static void completeConversations(Mailbox mbox, DbConnection conn, List<UnderlyingData> convData)
+    public static void completeConversation(int mboxId, int schemaGroupId, DbConnection conn, UnderlyingData data)
+    throws ServiceException {
+        completeConversations(mboxId, schemaGroupId, conn, Collections.singletonList(data));
+    }
+
+    private static void completeConversations(Mailbox mbox, DbConnection conn, List<UnderlyingData> convData) throws ServiceException {
+        completeConversations(mbox.getId(), mbox.getSchemaGroupId(),conn,convData);
+    }
+
+    private static void completeConversations(int mboxId, int schemaGroupId, DbConnection conn, List<UnderlyingData> convData)
     throws ServiceException {
         if (convData == null || convData.isEmpty()) {
             return;
@@ -2773,10 +2844,10 @@ public class DbMailItem {
             try {
                 int count = Math.min(Db.getINClauseBatchSize(), convData.size() - i);
                 stmt = conn.prepareStatement("SELECT parent_id, unread, flags, tag_names" +
-                        " FROM " + getMailItemTableName(mbox) +
+                        " FROM " + DbMailbox.qualifyTableName(schemaGroupId, TABLE_MAIL_ITEM) +
                         " WHERE " + IN_THIS_MAILBOX_AND + DbUtil.whereIn("parent_id", count));
                 int pos = 1;
-                pos = setMailboxId(stmt, mbox, pos);
+                pos = setMailboxId(stmt, mboxId, pos);
                 for (int index = i; index < i + count; index++) {
                     UnderlyingData data = convData.get(index);
                     stmt.setInt(pos++, data.id);
@@ -4732,7 +4803,9 @@ public class DbMailItem {
     public static String getMailItemTableName(Mailbox mbox, String alias, boolean dumpster) {
         return getMailItemTableName(mbox, dumpster) + " AS " + alias;
     }
-
+    public static String getMailItemTableName(int groupId, String alias, boolean dumpster) {
+        return String.format("%s AS %s", DbMailbox.qualifyTableName(groupId, !dumpster ? TABLE_MAIL_ITEM : TABLE_MAIL_ITEM_DUMPSTER), alias);
+    }
     /**
      * Returns the name of the table that stores data on old revisions of {@link MailItem}s.
      * The table name is qualified by the name of the database (e.g. <tt>mailbox1.revision</tt>).

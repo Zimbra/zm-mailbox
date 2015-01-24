@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -30,13 +30,15 @@ import com.zimbra.cs.store.StoreManager;
 public class ExternalBlobInputStream extends BlobInputStream {
 
     protected String locator;
-    protected Mailbox mbox;
+    protected int mailboxId;
+    protected String accountId;
 
     public ExternalBlobInputStream(Blob blob) throws IOException {
         super(blob);
         if (blob instanceof ExternalBlob) {
             locator = ((ExternalBlob) blob).getLocator();
-            mbox = ((ExternalBlob) blob).getMbox();
+            mailboxId = ((ExternalBlob) blob).getMailboxId();
+            accountId = ((ExternalBlob) blob).getAccountId();
         } else {
             Assert.fail("ExternalBlobInputStream constructor Blob instance not ExternalBlob");
         }
@@ -54,19 +56,27 @@ public class ExternalBlobInputStream extends BlobInputStream {
         this.locator = locator;
     }
 
-    public Mailbox getMbox() {
-        return mbox;
+    public int getMailboxId() {
+        return mailboxId;
     }
 
-    public void setMbox(Mailbox mbox) {
-        this.mbox = mbox;
+    public String getAccountId() {
+        return accountId;
+    }
+    public void setMailboxId(int mailboxId) {
+        this.mailboxId = mailboxId;
+    }
+
+    public void setAccountId(String accountId) {
+        this.accountId = accountId;
     }
 
     @Override
     protected void setMailboxLocator(BlobInputStream parent) {
         if (parent instanceof ExternalBlobInputStream) {
             this.locator = ((ExternalBlobInputStream) parent).getLocator();
-            this.mbox = ((ExternalBlobInputStream) parent).getMbox();
+            this.mailboxId = ((ExternalBlobInputStream) parent).getMailboxId();
+            this.accountId = ((ExternalBlobInputStream) parent).getAccountId();
         } else {
             Assert.fail("Parent of ExternalBlobInputStream must always be ExternalBlobInputStream");
         }
@@ -86,7 +96,10 @@ public class ExternalBlobInputStream extends BlobInputStream {
         } else {
             ZimbraLog.store.debug("blob file no longer on disk, fetching from remote store");
             ExternalStoreManager sm = (ExternalStoreManager) StoreManager.getInstance();
-            Blob blob = sm.getLocalBlob(mbox, locator, false);
+            Mailbox.MailboxData mailboxData = new Mailbox.MailboxData();
+            mailboxData.id = getMailboxId();
+            mailboxData.accountId = getAccountId();
+            Blob blob = sm.getLocalBlob(mailboxData, locator, false);
             return blob.getFile();
         }
     }

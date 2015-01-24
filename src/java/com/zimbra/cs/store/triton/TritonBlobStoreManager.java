@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -141,7 +141,7 @@ public class TritonBlobStoreManager extends SisStore implements ExternalResumabl
     }
 
     @Override
-    protected void writeStreamToStore(InputStream in, long actualSize, Mailbox mbox, String locator) throws IOException, ServiceException {
+    protected void writeStreamToStore(InputStream in, long actualSize, Mailbox.MailboxData mboxData, String locator) throws IOException, ServiceException {
         HttpClient client = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
         if (actualSize < 0) {
             throw ServiceException.FAILURE("Must use resumable upload (i.e. StoreManager.newIncomingBlob()) if size is unknown", null);
@@ -170,7 +170,7 @@ public class TritonBlobStoreManager extends SisStore implements ExternalResumabl
     }
 
     @Override
-    public InputStream readStreamFromStore(String locator, Mailbox mbox)
+    public InputStream readStreamFromStore(String locator, Mailbox.MailboxData mboxData)
                     throws IOException {
         HttpClient client = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
         GetMethod get = new GetMethod(blobApiUrl + locator);
@@ -192,7 +192,7 @@ public class TritonBlobStoreManager extends SisStore implements ExternalResumabl
     }
 
     @Override
-    public boolean deleteFromStore(String locator, Mailbox mbox)
+    public boolean deleteFromStore(String locator, Mailbox.MailboxData mboxData)
                     throws IOException {
         HttpClient client = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
         DeleteMethod delete = new DeleteMethod(blobApiUrl + locator);

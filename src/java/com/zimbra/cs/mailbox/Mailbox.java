@@ -856,6 +856,10 @@ public class Mailbox {
         return mData.accountId;
     }
 
+    public MailboxData getData() {
+        return mData;
+    }
+
     /** Returns the {@link Account} object for this mailbox's owner.  At
      *  present, each account can have at most one <tt>Mailbox</tt>.
      *

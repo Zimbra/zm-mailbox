@@ -94,14 +94,14 @@ public abstract class ExternalStoreManager extends StoreManager implements Exter
     };
 
     @Override
-    public MailboxBlob copy(MailboxBlob src, Mailbox destMbox, int destItemId, int destRevision)
+    public MailboxBlob copy(MailboxBlob src, Mailbox.MailboxData destMailboxData, int destItemId, int destRevision)
     throws IOException, ServiceException {
         //default implementation does not handle de-duping
         //stores which de-dupe need to override this method appropriately
         InputStream is = getContent(src);
         try {
-            StagedBlob staged = stage(is, src.getSize(), destMbox);
-            return link(staged, destMbox, destItemId, destRevision);
+            StagedBlob staged = stage(is, src.getSize(), destMailboxData);
+            return link(staged, destMailboxData, destItemId, destRevision);
         } finally {
             ByteUtil.closeStream(is);
         }
@@ -119,7 +119,10 @@ public abstract class ExternalStoreManager extends StoreManager implements Exter
         if (blob == null || blob.isInserted()) {
             return true;
         }
-        return deleteFromStore(blob.getLocator(), blob.getMailbox());
+        Mailbox.MailboxData mailboxData = new Mailbox.MailboxData();
+        mailboxData.id = blob.getMailboxId();
+        mailboxData.accountId = blob.getAccountId();
+        return deleteFromStore(blob.getLocator(), mailboxData);
     }
 
     @Override
@@ -128,17 +131,20 @@ public abstract class ExternalStoreManager extends StoreManager implements Exter
             return true;
         }
         localCache.remove(mblob.getLocator());
-        return deleteFromStore(mblob.getLocator(), mblob.getMailbox());
+        Mailbox.MailboxData mailboxData = new Mailbox.MailboxData();
+        mailboxData.id = mblob.getMailboxId();
+        mailboxData.accountId = mblob.getAccountId();
+        return deleteFromStore(mblob.getLocator(), mailboxData);
     }
 
     @Override
-    public boolean deleteStore(Mailbox mbox, Iterable<MailboxBlob.MailboxBlobInfo> blobs) throws IOException, ServiceException {
+    public boolean deleteStore(Mailbox.MailboxData mailboxData, Iterable<MailboxBlob.MailboxBlobInfo> blobs) throws IOException, ServiceException {
         // the default implementation iterates through the mailbox's blobs and deletes them one by one
         IOException ioException = null;
         int consecutiveIoExceptions = 0;
         for (MailboxBlob.MailboxBlobInfo mbinfo : blobs) {
             try {
-                delete(getMailboxBlob(mbox, mbinfo.itemId, mbinfo.revision, mbinfo.locator));
+                delete(getMailboxBlob(mailboxData, mbinfo.itemId, mbinfo.revision, mbinfo.locator));
                 consecutiveIoExceptions = 0;
             } catch (IOException ioe) {
                 if (ioException == null) {
@@ -146,7 +152,7 @@ public abstract class ExternalStoreManager extends StoreManager implements Exter
                 }
                 consecutiveIoExceptions++;
                 ZimbraLog.store.warn("IOException during deleteStore() for mbox [%d] item [%d] revision [%d] locator [%s]"
-                    , mbox.getId(), mbinfo.itemId, mbinfo.revision, mbinfo.locator, ioe);
+                    , mailboxData.accountId, mbinfo.itemId, mbinfo.revision, mbinfo.locator, ioe);
                 if (consecutiveIoExceptions > Provisioning.getInstance().getLocalServer().getStoreExternalMaxIOExceptionsForDelete()) {
                     ZimbraLog.store.error("too many consecutive IOException during delete store, bailing");
                     break;
@@ -169,7 +175,10 @@ public abstract class ExternalStoreManager extends StoreManager implements Exter
         if (mblob == null) {
             return null;
         }
-        Blob blob = getLocalBlob(mblob.getMailbox(), mblob.getLocator(), true);
+        Mailbox.MailboxData mailboxData = new Mailbox.MailboxData();
+        mailboxData.id = mblob.getMailboxId();
+        mailboxData.accountId = mblob.getAccountId();
+        Blob blob = getLocalBlob(mailboxData, mblob.getLocator(), true);
         return blob.getInputStream();
     }
 
@@ -179,54 +188,60 @@ public abstract class ExternalStoreManager extends StoreManager implements Exter
     }
 
     protected Blob getLocalBlob(Mailbox mbox, String locator, boolean fromCache) throws IOException {
+        return getLocalBlob(mbox.getData(), locator, fromCache);
+    }
+
+    protected Blob getLocalBlob(Mailbox.MailboxData mailboxData, String locator, boolean fromCache) throws IOException {
         FileCache.Item cached = null;
         if (fromCache) {
             cached = localCache.get(locator);
             if (cached != null) {
                 ExternalBlob blob = new ExternalBlob(cached);
                 blob.setLocator(locator);
-                blob.setMbox(mbox);
+                blob.setMailboxId(mailboxData.id);
+                blob.setAccountId(mailboxData.accountId);
                 return blob;
             }
         }
 
-        InputStream is = readStreamFromStore(locator, mbox);
+        InputStream is = readStreamFromStore(locator,mailboxData);
         if (is == null) {
             throw new IOException("Store " + this.getClass().getName() +" returned null for locator " + locator);
         } else {
             cached = localCache.put(locator, is);
             ExternalBlob blob = new ExternalBlob(cached);
             blob.setLocator(locator);
-            blob.setMbox(mbox);
+            blob.setMailboxId(mailboxData.id);
+            blob.setAccountId(mailboxData.accountId);
             return blob;
         }
     }
 
-    protected Blob getLocalBlob(Mailbox mbox, String locator) throws IOException {
-        return getLocalBlob(mbox, locator, true);
+    protected Blob getLocalBlob(Mailbox.MailboxData mailboxData, String locator) throws IOException {
+        return getLocalBlob(mailboxData, locator, true);
     }
 
     @Override
-    public MailboxBlob getMailboxBlob(Mailbox mbox, int itemId, int revision, String locator) throws ServiceException {
-        ExternalMailboxBlob mblob = new ExternalMailboxBlob(mbox, itemId, revision, locator);
+    public MailboxBlob getMailboxBlob(Mailbox.MailboxData mailboxData, int itemId, int revision, String locator) throws ServiceException {
+        ExternalMailboxBlob mblob = new ExternalMailboxBlob(mailboxData, itemId, revision, locator);
         return mblob.validateBlob() ? mblob : null;
     }
 
     @Override
-    public MailboxBlob link(StagedBlob src, Mailbox destMbox, int destMsgId, int destRevision) throws IOException,
+    public MailboxBlob link(StagedBlob src, Mailbox.MailboxData destMailboxData, int destMsgId, int destRevision) throws IOException,
     ServiceException {
         // link is a noop
-        return renameTo(src, destMbox, destMsgId, destRevision);
+        return renameTo(src, destMailboxData, destMsgId, destRevision);
     }
 
     @Override
-    public MailboxBlob renameTo(StagedBlob src, Mailbox destMbox, int destMsgId, int destRevision) throws IOException,
+    public MailboxBlob renameTo(StagedBlob src, Mailbox.MailboxData destMailboxData, int destMsgId, int destRevision) throws IOException,
     ServiceException {
         // rename is a noop
         ExternalStagedBlob staged = (ExternalStagedBlob) src;
         staged.markInserted();
 
-        MailboxBlob mblob = new ExternalMailboxBlob(destMbox, destMsgId, destRevision, staged.getLocator());
+        MailboxBlob mblob = new ExternalMailboxBlob(destMailboxData, destMsgId, destRevision, staged.getLocator());
         return mblob.setSize(staged.getSize()).setDigest(staged.getDigest());
     }
 
@@ -236,7 +251,7 @@ public abstract class ExternalStoreManager extends StoreManager implements Exter
     }
 
     @Override
-    public StagedBlob stage(Blob blob, Mailbox mbox) throws IOException, ServiceException {
+    public StagedBlob stage(Blob blob, Mailbox.MailboxData mailboxData) throws IOException, ServiceException {
         if (supports(StoreFeature.RESUMABLE_UPLOAD) && blob instanceof ExternalUploadedBlob) {
             ZimbraLog.store.debug("blob already uploaded, just need to commit");
             String locator = ((ExternalResumableUpload) this).finishUpload((ExternalUploadedBlob) blob);
@@ -246,11 +261,11 @@ public abstract class ExternalStoreManager extends StoreManager implements Exter
             } else {
                 ZimbraLog.store.warn("blob staging returned null locator");
             }
-            return new ExternalStagedBlob(mbox, blob.getDigest(), blob.getRawSize(), locator);
+            return new ExternalStagedBlob(mailboxData, blob.getDigest(), blob.getRawSize(), locator);
         } else {
             InputStream is = getContent(blob);
             try {
-                StagedBlob staged = stage(is, blob.getRawSize(), mbox);
+                StagedBlob staged = stage(is, blob.getRawSize(), mailboxData);
                 if (staged != null && staged.getLocator() != null) {
                     localCache.put(staged.getLocator(), getContent(blob));
                 }
@@ -262,11 +277,11 @@ public abstract class ExternalStoreManager extends StoreManager implements Exter
     }
 
     @Override
-    public StagedBlob stage(InputStream in, long actualSize, Mailbox mbox) throws ServiceException, IOException {
+    public StagedBlob stage(InputStream in, long actualSize, Mailbox.MailboxData mailboxData) throws ServiceException, IOException {
         if (actualSize < 0) {
             Blob blob = storeIncoming(in);
             try {
-                return stage(blob, mbox);
+                return stage(blob, mailboxData);
             } finally {
                 quietDelete(blob);
             }
@@ -280,13 +295,13 @@ public abstract class ExternalStoreManager extends StoreManager implements Exter
         ByteUtil.PositionInputStream pin = new ByteUtil.PositionInputStream(new DigestInputStream(in, digest));
 
         try {
-            String locator = writeStreamToStore(pin, actualSize, mbox);
+            String locator = writeStreamToStore(pin, actualSize, mailboxData);
             if (locator != null) {
                 ZimbraLog.store.debug("wrote to locator %s",locator);
             } else {
                 ZimbraLog.store.warn("blob staging returned null locator");
             }
-            return new ExternalStagedBlob(mbox, ByteUtil.encodeFSSafeBase64(digest.digest()), pin.getPosition(), locator);
+            return new ExternalStagedBlob(mailboxData, ByteUtil.encodeFSSafeBase64(digest.digest()), pin.getPosition(), locator);
         } catch (IOException e) {
             throw ServiceException.FAILURE("unable to stage blob", e);
         }
@@ -302,13 +317,23 @@ public abstract class ExternalStoreManager extends StoreManager implements Exter
         return builder.init().append(data).finish();
     }
 
-    /**
+/**
      * Get a set of all blobs which exist in the store associated with a mailbox
      * Optional operation used to find orphaned blobs
      * If the blob store does not partition based on mailbox this method should not be overridden
      * @throws IOException
      */
     public List<String> getAllBlobPaths(Mailbox mbox) throws IOException {
+        return getAllBlobPaths(mbox.getId(), mbox.getAccountId());
+    }
+    
+    /**
+     * Get a set of all blobs which exist in the store associated with a mailbox
+     * Optional operation used to find orphaned blobs
+     * If the blob store does not partition based on mailbox this method should not be overridden
+     * @throws IOException
+     */
+    public List<String> getAllBlobPaths(int mailboxId, String accountId) throws IOException {
         return new ArrayList<String>();
     }
 
@@ -326,5 +351,20 @@ public abstract class ExternalStoreManager extends StoreManager implements Exter
     @VisibleForTesting
     public void clearCache() {
         localCache.removeAll();
+    }
+
+    @Override
+    public InputStream readStreamFromStore(String locator, Mailbox mbox) throws IOException {
+        return readStreamFromStore(locator, mbox.getData());
+    }
+
+    @Override
+    public String writeStreamToStore(InputStream in, long actualSize, Mailbox mbox) throws IOException, ServiceException {
+        return writeStreamToStore(in, actualSize, mbox.getData());
+    }
+
+    @Override
+    public boolean deleteFromStore(String locator, Mailbox mbox) throws IOException {
+        return deleteFromStore(locator, mbox.getData());
     }
 }

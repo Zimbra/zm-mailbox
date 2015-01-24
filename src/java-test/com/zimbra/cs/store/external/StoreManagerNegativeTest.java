@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -138,18 +138,18 @@ public class StoreManagerNegativeTest {
         }
 
         @Override
-        public String writeStreamToStore(InputStream in, long actualSize, Mailbox mbox) throws IOException {
-            super.writeStreamToStore(in, actualSize, mbox);
+        public String writeStreamToStore(InputStream in, long actualSize, Mailbox.MailboxData mboxData) throws IOException {
+            super.writeStreamToStore(in, actualSize, mboxData);
             return null;
         }
 
         @Override
-        public InputStream readStreamFromStore(String locator, Mailbox mbox) throws IOException {
+        public InputStream readStreamFromStore(String locator, Mailbox.MailboxData mboxData) throws IOException {
             return null;
         }
 
         @Override
-        public boolean deleteFromStore(String locator, Mailbox mbox) throws IOException {
+        public boolean deleteFromStore(String locator, Mailbox.MailboxData mboxData) throws IOException {
             return false;
         }
 

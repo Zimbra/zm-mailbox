@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -104,25 +104,25 @@ public final class FileBlobStore extends StoreManager {
     }
 
     @Override
-    public VolumeStagedBlob stage(InputStream in, long actualSize, Mailbox mbox)
+    public VolumeStagedBlob stage(InputStream in, long actualSize, Mailbox.MailboxData mboxData)
     throws IOException, ServiceException {
         // mailbox store is on the same volume as incoming directory, so just storeIncoming() and wrap it
         Blob blob = storeIncoming(in);
-        return new VolumeStagedBlob(mbox, (VolumeBlob) blob).markStagedDirectly();
+        return new VolumeStagedBlob(mboxData, (VolumeBlob) blob).markStagedDirectly();
     }
 
     @Override
-    public VolumeStagedBlob stage(Blob blob, Mailbox mbox) throws IOException {
+    public VolumeStagedBlob stage(Blob blob, Mailbox.MailboxData mboxData) throws IOException {
         // mailbox store is on the same volume as incoming directory, so no need to stage the blob
-        return new VolumeStagedBlob(mbox, (VolumeBlob) blob);
+        return new VolumeStagedBlob(mboxData,  (VolumeBlob) blob);
     }
 
     @Override
-    public VolumeMailboxBlob copy(MailboxBlob src, Mailbox destMbox, int destItemId, int destRevision)
+    public VolumeMailboxBlob copy(MailboxBlob src, Mailbox.MailboxData destMboxData, int destItemId, int destRevision)
     throws IOException, ServiceException {
         Volume volume = MANAGER.getCurrentMessageVolume();
         //FileBlobStore optimizes copy by using link where possible
-        return link(src.getLocalBlob(), destMbox, destItemId, destRevision, volume.getId());
+        return link(src.getLocalBlob(), destMboxData, destItemId, destRevision, volume.getId());
     }
 
     /**
@@ -138,13 +138,13 @@ public final class FileBlobStore extends StoreManager {
      * @throws IOException
      * @throws ServiceException
      */
-    public VolumeMailboxBlob copy(Blob src, Mailbox destMbox, int destItemId, int destRevision, short destVolumeId)
+    public VolumeMailboxBlob copy(Blob src, Mailbox.MailboxData destMboxData, int destItemId, int destRevision, short destVolumeId)
     throws IOException, ServiceException {
         Volume volume = MANAGER.getVolume(destVolumeId);
-        return copy(src, destMbox, destItemId, destRevision, volume);
+        return copy(src, destMboxData, destItemId, destRevision, volume);
     }
 
-    private VolumeMailboxBlob copy(Blob src, Mailbox destMbox, int destItemId, int destRevision, Volume destVolume)
+    private VolumeMailboxBlob copy(Blob src, Mailbox.MailboxData destMboxData, int destItemId, int destRevision, Volume destVolume)
     throws IOException, ServiceException {
         File srcFile = src.getFile();
         if (!srcFile.exists()) {
@@ -152,7 +152,7 @@ public final class FileBlobStore extends StoreManager {
         }
 
         String srcPath = src.getPath();
-        File dest = getMailboxBlobFile(destMbox, destItemId, destRevision, destVolume.getId(), false);
+        File dest = getMailboxBlobFile(destMboxData, destItemId, destRevision, destVolume.getId(), false);
         BlobInputStream.getFileDescriptorCache().remove(dest.getPath());  // Prevent stale cache read.
         String destPath = dest.getAbsolutePath();
 
@@ -160,7 +160,7 @@ public final class FileBlobStore extends StoreManager {
             long srcSize = srcFile.length();
             long srcRawSize = src.getRawSize();
             ZimbraLog.store.debug("Copying %s (size=%d, raw size=%d) to %s for mailbox %d, id %d.",
-                srcPath, srcSize, srcRawSize, destPath, destMbox.getId(), destItemId);
+                srcPath, srcSize, srcRawSize, destPath, destMboxData.id, destItemId);
         }
 
         ensureParentDirExists(dest);
@@ -184,25 +184,25 @@ public final class FileBlobStore extends StoreManager {
         }
 
         VolumeBlob newBlob = (VolumeBlob) new VolumeBlob(dest, destVolume.getId()).copyCachedDataFrom(src).setCompressed(destCompressed);
-        return new VolumeMailboxBlob(destMbox, destItemId, destRevision, destVolume.getLocator(), newBlob);
+        return new VolumeMailboxBlob(destMboxData, destItemId, destRevision, destVolume.getLocator(), newBlob);
     }
 
     @Override
-    public VolumeMailboxBlob link(StagedBlob src, Mailbox destMbox, int destItemId, int destRevision)
+    public VolumeMailboxBlob link(StagedBlob src, Mailbox.MailboxData destMboxData, int destItemId, int destRevision)
     throws IOException, ServiceException {
         Volume volume = MANAGER.getCurrentMessageVolume();
         VolumeBlob blob = ((VolumeStagedBlob) src).getLocalBlob();
-        return link(blob, destMbox, destItemId, destRevision, volume.getId());
+        return link(blob, destMboxData, destItemId, destRevision, volume.getId());
     }
 
-    public VolumeMailboxBlob link(Blob src, Mailbox destMbox, int destItemId, int destRevision, short destVolumeId)
+    public VolumeMailboxBlob link(Blob src, Mailbox.MailboxData destMboxData, int destItemId, int destRevision, short destVolumeId)
     throws IOException, ServiceException {
         File srcFile = src.getFile();
         if (!srcFile.exists()) {
             throw new IOException(srcFile.getPath() + " does not exist.");
         }
 
-        File dest = getMailboxBlobFile(destMbox, destItemId, destRevision, destVolumeId, false);
+        File dest = getMailboxBlobFile(destMboxData, destItemId, destRevision, destVolumeId, false);
         String srcPath = src.getPath();
         String destPath = dest.getAbsolutePath();
         BlobInputStream.getFileDescriptorCache().remove(destPath);  // Prevent stale cache read.
@@ -211,7 +211,7 @@ public final class FileBlobStore extends StoreManager {
             long srcSize = srcFile.length();
             long srcRawSize = src.getRawSize();
             ZimbraLog.store.debug("Linking %s (size=%d, raw size=%d) to %s for mailbox %d, id %d.",
-                srcPath, srcSize, srcRawSize, destPath, destMbox.getId(), destItemId);
+                srcPath, srcSize, srcRawSize, destPath, destMboxData.id, destItemId);
         }
 
         ensureParentDirExists(dest);
@@ -255,11 +255,11 @@ public final class FileBlobStore extends StoreManager {
         }
         String destLocator = Short.toString(destVolumeId);
         VolumeBlob vblob = (VolumeBlob) new VolumeBlob(dest, destVolumeId).copyCachedDataFrom(src);
-        return new VolumeMailboxBlob(destMbox, destItemId, destRevision, destLocator, vblob);
+        return new VolumeMailboxBlob(destMboxData, destItemId, destRevision, destLocator, vblob);
     }
 
     @Override
-    public VolumeMailboxBlob renameTo(StagedBlob src, Mailbox destMbox, int destItemId, int destRevision)
+    public VolumeMailboxBlob renameTo(StagedBlob src, Mailbox.MailboxData destMboxData, int destItemId, int destRevision)
     throws IOException, ServiceException {
         Volume volume = MANAGER.getCurrentMessageVolume();
         VolumeBlob blob = ((VolumeStagedBlob) src).getLocalBlob();
@@ -269,7 +269,7 @@ public final class FileBlobStore extends StoreManager {
             throw new IOException(srcFile.getPath() + " does not exist.");
         }
 
-        File destFile = getMailboxBlobFile(destMbox, destItemId, destRevision, volume.getId(), false);
+        File destFile = getMailboxBlobFile(destMboxData, destItemId, destRevision, volume.getId(), false);
         String destPath = destFile.getAbsolutePath();
         BlobInputStream.getFileDescriptorCache().remove(destPath);  // Prevent stale cache read.
         ensureParentDirExists(destFile);
@@ -278,7 +278,7 @@ public final class FileBlobStore extends StoreManager {
             long srcSize = srcFile.length();
             long srcRawSize = blob.getRawSize();
             ZimbraLog.store.debug("Renaming %s (size=%d, raw size=%d) to %s for mailbox %d, id %d.",
-                srcPath, srcSize, srcRawSize, destPath, destMbox.getId(), destItemId);
+                srcPath, srcSize, srcRawSize, destPath, destMboxData.id, destItemId);
         }
 
         short srcVolumeId = blob.getVolumeId();
@@ -301,7 +301,7 @@ public final class FileBlobStore extends StoreManager {
         }
 
         VolumeBlob vblob = (VolumeBlob) new VolumeBlob(destFile, volume.getId()).copyCachedDataFrom(blob);
-        return new VolumeMailboxBlob(destMbox, destItemId, destRevision, volume.getLocator(), vblob);
+        return new VolumeMailboxBlob(destMboxData, destItemId, destRevision, volume.getLocator(), vblob);
     }
 
     @Override
@@ -349,13 +349,13 @@ public final class FileBlobStore extends StoreManager {
     }
 
     @Override
-    public MailboxBlob getMailboxBlob(Mailbox mbox, int itemId, int revision, String locator) throws ServiceException {
+    public MailboxBlob getMailboxBlob(Mailbox.MailboxData mboxData, int itemId, int revision, String locator) throws ServiceException {
         short volumeId = Short.valueOf(locator);
-        File file = getMailboxBlobFile(mbox, itemId, revision, volumeId, true);
+        File file = getMailboxBlobFile(mboxData,  itemId, revision, volumeId, true);
         if (file == null) {
             return null;
         }
-        return new VolumeMailboxBlob(mbox, itemId, revision, locator, new VolumeBlob(file, volumeId));
+        return new VolumeMailboxBlob(mboxData,  itemId, revision, locator, new VolumeBlob(file, volumeId));
     }
 
     @Override
@@ -375,27 +375,31 @@ public final class FileBlobStore extends StoreManager {
     }
 
     @Override
-    public boolean deleteStore(Mailbox mbox, Iterable<MailboxBlob.MailboxBlobInfo> blobs) throws IOException, ServiceException {
+    public boolean deleteStore(Mailbox.MailboxData mboxData, Iterable<MailboxBlob.MailboxBlobInfo> blobs) throws IOException, ServiceException {
         assert blobs == null : "should not be passed a blob list since we support bulk blob delete";
         for (Volume vol : MANAGER.getAllVolumes()) {
-            FileUtil.deleteDir(new File(vol.getMessageRootDir(mbox.getId())));
+            FileUtil.deleteDir(new File(vol.getMessageRootDir(mboxData.id)));
         }
         return true;
     }
 
-    private File getMailboxBlobFile(Mailbox mbox, int itemId, int revision, short volumeId, boolean check)
+    private File getMailboxBlobFile(Mailbox.MailboxData mboxData, int itemId, int revision, short volumeId, boolean check)
     throws ServiceException {
-        File file = new File(getBlobPath(mbox, itemId, revision, volumeId));
+        File file = new File(getBlobPath(mboxData,  itemId, revision, volumeId));
         if (!check || file.exists()) {
             return file;
         }
         // fallback for very very *very* old installs where blob paths were based on item id only
-        file = new File(getBlobPath(mbox, itemId, -1, volumeId));
+        file = new File(getBlobPath(mboxData,  itemId, -1, volumeId));
         return (file.exists() ? file : null);
     }
 
     public static String getBlobPath(Mailbox mbox, int itemId, int revision, short volumeId) throws ServiceException {
         return getBlobPath(mbox.getId(), itemId, revision, volumeId);
+    }
+
+    public static String getBlobPath(Mailbox.MailboxData mboxData, int itemId, int revision, short volumeId) throws ServiceException {
+        return getBlobPath(mboxData.id, itemId, revision, volumeId);
     }
 
     public static String getBlobPath(int mboxId, int itemId, int revision, short volumeId) throws ServiceException {

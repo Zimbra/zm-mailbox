@@ -16,7 +16,12 @@
  */
 package com.zimbra.cs.mailbox;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -26,9 +31,9 @@ import java.util.Map;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimePart;
 
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.google.common.base.Strings;
@@ -45,7 +50,10 @@ import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.db.DbResults;
 import com.zimbra.cs.db.DbUtil;
+import com.zimbra.cs.index.IndexDocument;
+import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.mailbox.Contact.Attachment;
+import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedContact;
 import com.zimbra.cs.service.formatter.VCard;
@@ -58,15 +66,16 @@ import com.zimbra.cs.util.JMSession;
  */
 public final class ContactTest {
 
-    @BeforeClass
-    public static void init() throws Exception {
+    @Before
+    public void setUp() throws Exception {
         MailboxTestUtil.initServer();
+        MailboxTestUtil.clearData();
         Provisioning prov = Provisioning.getInstance();
         prov.createAccount("test@zimbra.com", "secret", new HashMap<String, Object>());
     }
 
-    @Before
-    public void setUp() throws Exception {
+    @After
+    public void tearDown() throws Exception {
         MailboxTestUtil.clearData();
     }
 
@@ -144,7 +153,7 @@ public final class ContactTest {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
         mbox.createContact(null, new ParsedContact(Collections.singletonMap(
                 ContactConstants.A_email, "test1@zimbra.com")), Mailbox.ID_FOLDER_CONTACTS, null);
-        MailboxTestUtil.forceIndexing(mbox);
+        MailboxTestUtil.index(mbox);
         Assert.assertTrue(mbox.index.existsInContacts(ImmutableList.of(
                 new InternetAddress("Test <test1@zimbra.com>"), new InternetAddress("Test <test2@zimbra.com>"))));
         Assert.assertFalse(mbox.index.existsInContacts(ImmutableList.of(
@@ -156,7 +165,7 @@ public final class ContactTest {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
         List<Contact> contacts = mbox.createAutoContact(null, ImmutableList.of(
                 new InternetAddress("Test 1", "TEST1@zimbra.com"), new InternetAddress("Test 2", "TEST2@zimbra.com")));
-        MailboxTestUtil.forceIndexing(mbox);
+        MailboxTestUtil.index(mbox);
         Assert.assertEquals(2, contacts.size());
         Assert.assertEquals("1, Test", contacts.get(0).getFileAsString());
         Assert.assertEquals("TEST1@zimbra.com", contacts.get(0).getFields().get(ContactConstants.A_email));
@@ -272,4 +281,80 @@ public final class ContactTest {
         }
     }
 
+    @Test
+    public void testConstructFromData() throws Exception {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        Contact contact = mbox.createContact(null, new ParsedContact(Collections.singletonMap(
+                ContactConstants.A_email, "test1@zimbra.com")), Mailbox.ID_FOLDER_CONTACTS, null);
+
+        UnderlyingData ud = DbMailItem.getById(mbox.getId(), mbox.getSchemaGroupId(), contact.getId(), contact.getType(), contact.inDumpster(), DbPool.getConnection(mbox.getId(), mbox.getSchemaGroupId()));
+        assertNotNull("Underlying data is null", ud);
+        assertEquals("underlying data has wrong type", MailItem.Type.CONTACT,MailItem.Type.of(ud.type));
+        assertEquals("underlying data has wrong folder ID", Mailbox.ID_FOLDER_CONTACTS,ud.folderId);
+        assertEquals("underlying data has wrong UUID", contact.getUuid(),ud.uuid);
+
+        MailItem testItem = MailItem.constructItem(Provisioning.getInstance().getAccountById(MockProvisioning.DEFAULT_ACCOUNT_ID),ud,mbox.getId());
+        assertNotNull("reconstructed mail item is null", testItem);
+        assertEquals("reconstructed contact has wrong item type", MailItem.Type.CONTACT,testItem.getType());
+        assertEquals("reconstructed contact has wrong UUID", contact.getUuid(), testItem.getUuid());
+        assertEquals("reconstructed contact has wrong ID", contact.getId(), testItem.getId());
+        assertEquals("reconstructed contact has wrong folder", contact.getFolderId(), testItem.getFolderId());
+        assertEquals("reonstructed contact has wrong content", Arrays.toString(contact.getContent()),Arrays.toString(testItem.getContent()));
+
+        List<IndexDocument> docs = testItem.generateIndexDataAsync(false);
+        Assert.assertEquals(1, docs.size());
+        IndexDocument doc = docs.get(0);
+        Collection<String> docFields = doc.toDocument().getFieldNames();
+        assertNotNull("generated IndexDocument has NULL fields", docFields);
+        assertFalse("generated IndexDocument has no fields", docFields.isEmpty());
+        assertEquals("wrong value in l.field",  "email:test1@zimbra.com", doc.toDocument().getFieldValue(LuceneFields.L_FIELD));
+        assertEquals("wrong value in 'to' field","test1@zimbra.com,", doc.toDocument().getFieldValue(LuceneFields.L_H_TO));
+        assertEquals("wrong value in l.partname","CONTACT", doc.toDocument().getFieldValue(LuceneFields.L_PARTNAME));
+    }
+
+    @Test
+    public void testGenerateIndexData() throws Exception {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        Contact contact = mbox.createContact(null, new ParsedContact(Collections.singletonMap(
+                ContactConstants.A_email, "test1@zimbra.com")), Mailbox.ID_FOLDER_CONTACTS, null);
+        List<IndexDocument> docs = contact.generateIndexData();
+        Assert.assertEquals(1, docs.size());
+        IndexDocument doc = docs.get(0);
+        assertNotNull("generated IndexDocument is null", doc);
+        Collection<String> docFields = doc.toDocument().getFieldNames();
+        assertNotNull("generated IndexDocument has NULL fields", docFields);
+        assertFalse("generated IndexDocument has no fields", docFields.isEmpty());
+        assertEquals("wrong value in l.field of generated IndexDocument", "email:test1@zimbra.com", doc.toDocument().getFieldValue(LuceneFields.L_FIELD));
+        assertEquals("wrong value in 'to' field of generated IndexDocument","test1@zimbra.com,", doc.toDocument().getFieldValue(LuceneFields.L_H_TO));
+        assertEquals("wrong value in l.partname of generated IndexDocument","CONTACT", doc.toDocument().getFieldValue(LuceneFields.L_PARTNAME));
+    }
+
+    @Test
+    public void testGenerateIndexDataAsync() throws Exception {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        Contact contact = mbox.createContact(null, new ParsedContact(Collections.singletonMap(
+                ContactConstants.A_email, "test1@zimbra.com")), Mailbox.ID_FOLDER_CONTACTS, null);
+        List<IndexDocument> docs = contact.generateIndexDataAsync(false);
+        Assert.assertEquals(1, docs.size());
+        IndexDocument doc = docs.get(0);
+        assertNotNull("generated IndexDocument is null", doc);
+        Collection<String> docFields = doc.toDocument().getFieldNames();
+        assertNotNull("generated IndexDocument has NULL fields", docFields);
+        assertFalse("generated IndexDocument has no fields", docFields.isEmpty());
+        assertEquals("wrong value in l.field", "email:test1@zimbra.com", doc.toDocument().getFieldValue(LuceneFields.L_FIELD));
+        assertEquals("wrong value in 'to' field","test1@zimbra.com,", doc.toDocument().getFieldValue(LuceneFields.L_H_TO));
+        assertEquals("wrong value in l.partname","CONTACT", doc.toDocument().getFieldValue(LuceneFields.L_PARTNAME));
+
+
+        docs = contact.generateIndexDataAsync(true);
+        Assert.assertEquals(1, docs.size());
+        doc = docs.get(0);
+        assertNotNull("generated IndexDocument is null", doc);
+        docFields = doc.toDocument().getFieldNames();
+        assertNotNull("generated IndexDocument has NULL fields", docFields);
+        assertFalse("generated IndexDocument has no fields", docFields.isEmpty());
+        assertEquals("wrong value in l.field","email:test1@zimbra.com", doc.toDocument().getFieldValue(LuceneFields.L_FIELD));
+        assertEquals("wrong value in 'to' field","test1@zimbra.com,", doc.toDocument().getFieldValue(LuceneFields.L_H_TO));
+        assertEquals("wrong value in l.partname","CONTACT", doc.toDocument().getFieldValue(LuceneFields.L_PARTNAME));
+    }
 }

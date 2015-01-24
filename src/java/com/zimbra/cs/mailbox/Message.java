@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -222,6 +222,15 @@ public class Message extends MailItem {
      */
     Message(Mailbox mbox, UnderlyingData ud, boolean skipCache) throws ServiceException {
         super(mbox, ud, skipCache);
+        init();
+    }
+
+    Message(Account acc, UnderlyingData data, int mailboxId) throws ServiceException {
+        super(acc, data, mailboxId);
+        init();
+    }
+
+    private void init() throws ServiceException {
         if (mData.type != Type.MESSAGE.toByte()  && mData.type != Type.CHAT.toByte()) {
             throw new IllegalArgumentException();
         }
@@ -229,7 +238,6 @@ public class Message extends MailItem {
             mData.parentId = -mId;
         }
     }
-
     /** Returns whether the Message was created as a draft.  Note that this
      *  can only be set when the Message is created; it cannot be altered
      *  thereafter. */
@@ -469,10 +477,14 @@ public class Message extends MailItem {
      * @see TnefConverter
      * @see UUEncodeConverter */
     public MimeMessage getMimeMessage(boolean runConverters) throws ServiceException {
+        return getMimeMessage(runConverters, mMailbox.getAccount());
+    }
+
+    public MimeMessage getMimeMessage(boolean runConverters, Account acc) throws ServiceException {
         MimeMessage mm = MessageCache.getMimeMessage(this, runConverters);
         if (mm instanceof ZMimeMessage && ZMimeMessage.usingZimbraParser()) {
             try {
-                mm = new Mime.FixedMimeMessage(mm, mMailbox.getAccount());
+                mm = new Mime.FixedMimeMessage(mm,  acc);
             } catch (MessagingException e) {
                 ZimbraLog.mailbox.info("could not copy MimeMessage; using original", e);
             }
@@ -1365,6 +1377,9 @@ public class Message extends MailItem {
     }
 
     @Override
+    /**
+     * holds mailbox lock while retrieving message content
+     */
     public List<IndexDocument> generateIndexData() throws TemporaryIndexingException {
         try {
             ParsedMessage pm = null;
@@ -1388,6 +1403,35 @@ public class Message extends MailItem {
             }
 
             // don't hold the lock while extracting text!
+            pm.analyzeFully();
+
+            if (pm.hasTemporaryAnalysisFailure()) {
+                throw new TemporaryIndexingException();
+            }
+            return pm.getLuceneDocuments();
+        } catch (ServiceException e) {
+            ZimbraLog.index.warn("Unable to generate index data for Message %d. Item will not be indexed.", getId(), e);
+            return Collections.emptyList();
+        }
+    }
+
+    @Override
+    /**
+     * Does not hold mailbox lock while retrieving message content
+     */
+    public List<IndexDocument> generateIndexDataAsync(boolean indexAttachments) throws TemporaryIndexingException {
+        try {
+            ParsedMessage pm = null;
+            Account acc = Provisioning.getInstance().getAccountById(this.getAccountId());
+            // force the pm's received-date to be the correct one
+            ParsedMessageOptions opt = new ParsedMessageOptions().setContent(getMimeMessage(false,acc ))
+                .setReceivedDate(getDate())
+                .setAttachmentIndexing(indexAttachments)
+                .setSize(getSize())
+                .setDigest(getDigest());
+
+            pm = new ParsedMessage(opt);
+            pm.setDefaultCharset(acc.getPrefMailDefaultCharset());
             pm.analyzeFully();
 
             if (pm.hasTemporaryAnalysisFailure()) {

@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -19,7 +19,6 @@ package com.zimbra.cs.store.external;
 import java.io.File;
 
 import com.zimbra.common.util.FileCache;
-import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.store.Blob;
 
 /**
@@ -29,7 +28,8 @@ import com.zimbra.cs.store.Blob;
 public class ExternalBlob extends Blob {
 
     protected String locator;
-    protected Mailbox mbox;
+    protected int mailboxId;
+    protected String accountId;
 
     protected ExternalBlob(File file) {
         super(file);
@@ -51,14 +51,21 @@ public class ExternalBlob extends Blob {
         this.locator = locator;
     }
 
-    public Mailbox getMbox() {
-        return mbox;
+    public int getMailboxId() {
+        return mailboxId;
     }
 
-    public void setMbox(Mailbox mbox) {
-        this.mbox = mbox;
+    public void setMailboxId(int mailboxId) {
+        this.mailboxId = mailboxId;
     }
 
+    public String getAccountId() {
+        return accountId;
+    }
+
+    public void setAccountId(String accountId) {
+        this.accountId = accountId;
+    }
     @Override
     public File getFile() {
         return super.getFile();

@@ -52,7 +52,7 @@ public class TestIndexQueueAdapter {
         underlyingData.uuid = account.getUid();
         underlyingData.setBlobDigest("test digest");
         MailItem item = new MockMailItem(mbox,underlyingData);
-        adapter.put(new IndexingQueueItemLocator(mbox.getId(),item.getId(),item.getType()));
+        adapter.put(new IndexingQueueItemLocator(mbox.getId(),mbox.getSchemaGroupId(),item.getId(),item.getType(), account.getId(), false, false));
 
         //verify that message is in the queue
         assertTrue("item queue should not be empty", adapter.hasMoreItems());

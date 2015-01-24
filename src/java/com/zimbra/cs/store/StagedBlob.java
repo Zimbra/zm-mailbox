@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2009, 2010, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -18,6 +18,7 @@ package com.zimbra.cs.store;
 
 import com.zimbra.cs.mailbox.Mailbox;
 
+
 /** This class represents blob data that has been "staged" to a place
  *  appropriate for the <code>Mailbox</code> it is in the process of
  *  being added to.  Data is first added to the local filesystem as a
@@ -26,28 +27,40 @@ import com.zimbra.cs.mailbox.Mailbox;
  *  via {@link StoreManager#stage}, and then placed in the correct
  *  permanent location as a <code>MailboxBlob</code> via either
  *  {@link StoreManager#link} or {@link StoreManager#renameTo}.<p>
- *  
- *  Note that in the default <code>FileBlobStore</code> case, 
+ *
+ *  Note that in the default <code>FileBlobStore</code> case,
  *  {@link StoreManager#stage} is a no-op and a <code>StagedBlob</code>
  *  is effectively just a wrapper around a <code>Blob</code>.  This
  *  is not always the case, however; {@link StoreManager#stage} may
  *  involve making a local copy of the original <code>Blob</code> or
  *  even pushing it out into the cloud. */
 public abstract class StagedBlob {
-    private final Mailbox mMailbox;
+    private final int mailboxId;
+    private final String accountId;
     private final String mDigest;
     private final long mSize;
 
     protected StagedBlob(Mailbox mbox, String digest, long size) {
-        mMailbox = mbox;
+        mailboxId = mbox.getId();
         mDigest = digest;
         mSize = size;
+        accountId = mbox.getAccountId();
     }
 
-    public Mailbox getMailbox() {
-        return mMailbox;
+    protected StagedBlob(Mailbox.MailboxData mailboxData, String digest, long size) {
+        mailboxId = mailboxData.id;
+        mDigest = digest;
+        mSize = size;
+        accountId = mailboxData.accountId;
     }
 
+    public int getMailboxId() {
+        return mailboxId;
+    }
+
+    public String getAccountId() {
+        return accountId;
+    }
     /** Returns the logical size of the blob after it was staged. */
     public long getSize() {
         return mSize;

@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -323,11 +323,17 @@ public class DbPool {
     }
 
     public static DbConnection getConnection(Mailbox mbox) throws ServiceException {
+        return getConnection(mbox == null ? null : mbox.getId(), mbox == null ? null : mbox.getSchemaGroupId());
+    }
+
+    public static DbConnection getConnection(Integer mboxId, Integer schemaGroupId) throws ServiceException {
         if (!isInitialized()) {
             throw ServiceException.FAILURE("Database connection pool not initialized.", null);
         }
-        Integer mboxId = mbox != null ? mbox.getId() : -1; //-1 == zimbra db and/or initialization where mbox isn't known yet
         try {
+            if(mboxId == null) {
+                mboxId = -1; //-1 == zimbra db and/or initialization where mbox isn't known yet
+            }
             Db.getInstance().preOpen(mboxId);
             long start = ZimbraPerf.STOPWATCH_DB_CONN.start();
 
@@ -370,8 +376,10 @@ public class DbPool {
                     sConnectionStackCounter.increment(stackTrace);
                 }
             }
-            if (mbox != null)
-                Db.registerDatabaseInterest(conn, mbox);
+
+            if(schemaGroupId != null) {
+                Db.registerDatabaseInterest(conn, DbMailbox.getDatabaseName(schemaGroupId));
+            }
 
             ZimbraPerf.STOPWATCH_DB_CONN.stop(start);
             return conn;

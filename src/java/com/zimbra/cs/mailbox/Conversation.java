@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -51,11 +51,20 @@ public class Conversation extends MailItem {
 
     Conversation(Mailbox mbox, UnderlyingData data, boolean skipCache) throws ServiceException {
         super(mbox, data, skipCache);
+        init();
+
+    }
+
+    Conversation(Account acc, UnderlyingData data, int mailboxId)  throws ServiceException {
+        super(acc, data, mailboxId);
+        init();
+    }
+
+    private void init() throws ServiceException {
         if (mData.type != Type.CONVERSATION.toByte() && mData.type != Type.VIRTUAL_CONVERSATION.toByte()) {
             throw new IllegalArgumentException();
         }
     }
-
     /**
      * Returns the normalized subject of the conversation.  This is done by taking the {@code Subject:} header of the
      * first message and removing prefixes (e.g. {@code "Re:"}) and suffixes (e.g. {@code "(fwd)"}) and the like.

@@ -807,7 +807,7 @@ public final class MailboxIndex {
         try {
             Indexer indexer = indexStore.openIndexer();
             try {
-                indexer.addDocument(item.getFolder(), item, docs);
+                indexer.addDocument(item, docs);
             } finally {
                 indexer.close();
             }
@@ -817,6 +817,7 @@ public final class MailboxIndex {
             mailbox.lock.release();
         }
     }
+
 
     /**
      * Deletes index documents. The caller doesn't necessarily hold the mailbox lock.

@@ -216,7 +216,7 @@ public final class SQLite extends Db {
                     conn.getConnection().setAutoCommit(true);
                 if (dbname == null)
                     dbname = "zimbra";
-                registerDatabaseInterest(conn, dbname);
+                registerDatabaseInterestInternal(conn, dbname);
                 if (level > 0 && dbname.endsWith("zimbra")) {
                     if (level == 2)
                         (stmt = conn.prepareStatement("VACUUM")).execute();
@@ -246,7 +246,7 @@ public final class SQLite extends Db {
     }
 
     @Override
-    public void registerDatabaseInterest(DbConnection conn, String dbname) throws SQLException, ServiceException {
+    public void registerDatabaseInterestInternal(DbConnection conn, String dbname) throws SQLException, ServiceException {
         LinkedHashMap<String, String> attachedDBs = getAttachedDatabases(conn);
         if (attachedDBs != null && attachedDBs.containsKey(dbname))
             return;
@@ -410,7 +410,7 @@ public final class SQLite extends Db {
             if (!autocommit)
                 conn.getConnection().setAutoCommit(true);
 
-            registerDatabaseInterest(conn, dbname);
+            registerDatabaseInterestInternal(conn, dbname);
             stmt = conn.prepareStatement("SELECT COUNT(*) FROM " +
                 (dbname.equals("zimbra") ? "" : dbname + ".") +
                 "sqlite_master WHERE type='table'");

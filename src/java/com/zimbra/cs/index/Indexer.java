@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -21,8 +21,8 @@ import java.io.IOException;
 import java.util.List;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailItem.TemporaryIndexingException;
 import com.zimbra.cs.mailbox.Mailbox.IndexItemEntry;
 
 /**
@@ -35,16 +35,19 @@ import com.zimbra.cs.mailbox.Mailbox.IndexItemEntry;
 public interface Indexer extends Closeable {
 
     /**
-     * Adds index documents.
-     * @throws ServiceException 
+     * Adds single MailItem to index. A MailItem may contain multiple IndexDocuments.
+     * @param MailItem
+     * @param list of IndexDocument docs
+     * @throws ServiceException
+     * @throws TemporaryIndexingException
      */
-    void addDocument(Folder folder, MailItem item, List<IndexDocument> docs) throws IOException, ServiceException;
+    void addDocument(MailItem item,List<IndexDocument> docs) throws IOException, ServiceException;
 
     /**
      * Deletes index documents.
      *
      * @param ids list of item IDs to delete
-     * @throws ServiceException 
+     * @throws ServiceException
      */
     void deleteDocument(List<Integer> ids) throws IOException, ServiceException;
 
@@ -62,7 +65,11 @@ public interface Indexer extends Closeable {
      */
     int maxDocs();
 
+    /**
+     * Adds multiple MailItems to index. Each MailItem may contain multiple IndexDocuments
+     * @param entries encapsulated in IndexItemEntry class
+     * @throws IOException
+     * @throws ServiceException
+     */
 	void add(List<IndexItemEntry> entries) throws IOException, ServiceException;
-
-	//List<IndexItemEntry> getIndexed();
 }

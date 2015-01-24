@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -26,7 +26,6 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.db.DbPool.DbConnection;
-import com.zimbra.cs.mailbox.Mailbox;
 
 /**
  * @since Apr 10, 2004
@@ -168,16 +167,16 @@ public abstract class Db {
     /** Indicates that the connection will be accessing the given Mailbox's
      *  database in the scope of the current transaction.  Must be called
      *  <em>before</em> any SQL commands are executed in the transaction. */
-    public static void registerDatabaseInterest(DbConnection conn, Mailbox mbox) throws ServiceException {
+    public static void registerDatabaseInterest(DbConnection conn, String dbName) throws ServiceException {
         try {
-            getInstance().registerDatabaseInterest(conn, DbMailbox.getDatabaseName(mbox));
+            getInstance().registerDatabaseInterestInternal(conn, dbName);
         } catch (SQLException e) {
-            throw ServiceException.FAILURE("error registering interest in database " + DbMailbox.getDatabaseName(mbox), e);
+            throw ServiceException.FAILURE("error registering interest in database " +dbName, e);
         }
     }
 
     @SuppressWarnings("unused")
-    void registerDatabaseInterest(DbConnection conn, String dbname) throws SQLException, ServiceException {
+    void registerDatabaseInterestInternal(DbConnection conn, String dbname) throws SQLException, ServiceException {
         // default is to do nothing
     }
 

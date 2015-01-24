@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -16,6 +16,9 @@
  */
 package com.zimbra.cs.mailbox;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -23,6 +26,7 @@ import java.util.UUID;
 
 import junit.framework.Assert;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -36,6 +40,8 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbTag;
+import com.zimbra.cs.index.IndexDocument;
+import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.MailboxTest.MockListener;
 import com.zimbra.cs.mailbox.util.TagUtil;
@@ -58,6 +64,11 @@ public class TagTest {
 
     @Before
     public void setUp() throws Exception {
+        MailboxTestUtil.clearData();
+    }
+
+    @After
+    public void tearDown() throws Exception {
         MailboxTestUtil.clearData();
     }
 
@@ -639,5 +650,26 @@ public class TagTest {
         } catch (ServiceException e) {
             Assert.fail("could not find differently-cased tag");
         }
+    }
+
+
+    @Test
+    public void testConstructFromData() throws Exception {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        Tag tag = mbox.createTag(null, tag1, MailItem.DEFAULT_COLOR);
+
+        UnderlyingData ud = tag.getUnderlyingData();
+        assertNotNull("Underlying data is null", ud);
+        assertEquals("underlying data has wrong type", MailItem.Type.TAG,MailItem.Type.of(ud.type));
+        assertEquals("underlying data has wrong UUID", tag.getUuid(),ud.uuid);
+
+        MailItem testItem = MailItem.constructItem(Provisioning.getInstance().getAccountById(MockProvisioning.DEFAULT_ACCOUNT_ID),ud,mbox.getId());
+        assertNotNull("reconstructed mail item is null", testItem);
+        List<IndexDocument> docs = testItem.generateIndexDataAsync(false);
+        Assert.assertNull(docs);
+        assertEquals("reconstructed tag has wrong item type", MailItem.Type.TAG,testItem.getType());
+        assertEquals("reconstructed tag has wrong UUID", tag.getUuid(), testItem.getUuid());
+        assertEquals("reconstructed tag has wrong ID", tag.getId(), testItem.getId());
+        assertEquals("reconstructed tag has wrong ID", tag.getName(), testItem.getName());
     }
 }

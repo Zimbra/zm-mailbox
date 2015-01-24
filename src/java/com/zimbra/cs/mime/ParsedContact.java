@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -60,7 +60,6 @@ import com.zimbra.cs.mailbox.Contact.Attachment;
 import com.zimbra.cs.mailbox.Contact.DerefGroupMembersOption;
 import com.zimbra.cs.mailbox.ContactGroup;
 import com.zimbra.cs.mailbox.MailServiceException;
-import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.object.ObjectHandlerException;
 import com.zimbra.cs.util.JMSession;
 
@@ -619,9 +618,9 @@ public final class ParsedContact {
     }
 
 
-    public ParsedContact analyze(Mailbox mbox) throws ServiceException {
+    public ParsedContact analyze(Account acc, boolean indexAttachments) throws ServiceException {
         try {
-            analyzeContact(mbox.getAccount(), mbox.attachmentsIndexingEnabled());
+            analyzeContact(acc, indexAttachments);
         } catch (ServiceException e) {
             throw e;
         } catch (Exception e) {
@@ -664,8 +663,8 @@ public final class ParsedContact {
         indexDocs.add(getPrimaryDocument(acct, attachContent.toString()));
     }
 
-    public List<IndexDocument> getLuceneDocuments(Mailbox mbox) throws ServiceException {
-        analyze(mbox);
+    public List<IndexDocument> getLuceneDocuments(Account acc, boolean indexAttachments) throws ServiceException {
+        analyze(acc, indexAttachments);
         return indexDocs;
     }
 
@@ -720,7 +719,7 @@ public final class ParsedContact {
         String emailFields[] = Contact.getEmailFields(acct);
 
         IndexDocument doc = new IndexDocument();
-        
+
         for (Map.Entry<String, String> entry : getFields().entrySet()) {
             String fieldName = entry.getKey();
 

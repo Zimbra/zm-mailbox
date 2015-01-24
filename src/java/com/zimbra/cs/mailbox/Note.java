@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -21,16 +21,17 @@ import java.util.List;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Strings;
-import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.db.DbMailItem;
-import com.zimbra.cs.index.LuceneFields;
-import com.zimbra.cs.index.IndexDocument;
-import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
-import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.common.mailbox.Color;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.db.DbMailItem;
+import com.zimbra.cs.index.IndexDocument;
+import com.zimbra.cs.index.LuceneFields;
+import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
+import com.zimbra.cs.session.PendingModifications.Change;
 
 /**
  * @since Sep 7, 2004
@@ -67,12 +68,21 @@ public class Note extends MailItem {
     private Rectangle mBounds;
 
 
-    public Note(Mailbox mbox, UnderlyingData data) throws ServiceException {
+    Note(Mailbox mbox, UnderlyingData data) throws ServiceException {
         this(mbox, data, false);
     }
-    
-    public Note(Mailbox mbox, UnderlyingData data, boolean skipCache) throws ServiceException {
+
+    Note(Mailbox mbox, UnderlyingData data, boolean skipCache) throws ServiceException {
         super(mbox, data, skipCache);
+        init();
+    }
+
+    Note(Account acc, UnderlyingData data, int mailboxId) throws ServiceException {
+        super(acc, data, mailboxId);
+        init();
+    }
+
+    private void init() throws ServiceException {
         if (mData.type != Type.NOTE.toByte()) {
             throw new IllegalArgumentException();
         }
@@ -182,6 +192,11 @@ public class Note extends MailItem {
         doc.addSubject(toIndex);
         doc.addPartName(LuceneFields.L_PARTNAME_NOTE);
         return Collections.singletonList(doc);
+    }
+
+    @Override
+    public List<IndexDocument> generateIndexDataAsync(boolean indexAttachments) {
+        return generateIndexData();
     }
 
     void setContent(String content) throws ServiceException {

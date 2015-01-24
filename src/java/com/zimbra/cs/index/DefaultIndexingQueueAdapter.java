@@ -47,17 +47,13 @@ public class DefaultIndexingQueueAdapter implements IndexingQueueAdapter {
     }
 
     /**
-     * Return the next element from the queue and remove it from the queue
+     * Return the next element from the queue and remove it from the queue. Blocks until an element is available in the queue.
       * @return {@link com.zimbra.cs.index.IndexingQueueItemLocator}
+      * @throws InterruptedException
      */
     @Override
-    public IndexingQueueItemLocator take() {
-        try {
-            return itemQueue.take();
-        } catch (InterruptedException e) {
-            ZimbraLog.index.error("failed to retrieve next item from indexing queue", e);
-            return null;
-        }
+    public IndexingQueueItemLocator take() throws InterruptedException {
+        return itemQueue.take();
     }
 
     /**

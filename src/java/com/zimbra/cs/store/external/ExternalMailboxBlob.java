@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -30,14 +30,17 @@ import com.zimbra.cs.store.StoreManager;
  */
 public class ExternalMailboxBlob extends MailboxBlob {
 
-    protected ExternalMailboxBlob(Mailbox mbox, int itemId, int revision, String locator) {
-        super(mbox, itemId, revision, locator);
+    protected ExternalMailboxBlob(Mailbox.MailboxData mailboxData, int itemId, int revision, String locator) {
+        super(mailboxData, itemId, revision, locator);
     }
 
     @Override
     public Blob getLocalBlob() throws IOException {
         ExternalStoreManager sm = (ExternalStoreManager) StoreManager.getInstance();
-        Blob blob = sm.getLocalBlob(getMailbox(), getLocator());
+        Mailbox.MailboxData mailboxData = new Mailbox.MailboxData();
+        mailboxData.id = getMailboxId();
+        mailboxData.accountId = getAccountId();
+        Blob blob = sm.getLocalBlob(mailboxData, getLocator());
 
         setSize(blob.getRawSize());
         if (digest != null) {
