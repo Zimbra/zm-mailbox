@@ -125,6 +125,10 @@ public final class FileBlobStore extends StoreManager {
         return link(src.getLocalBlob(), destMboxData, destItemId, destRevision, volume.getId());
     }
 
+    public VolumeMailboxBlob copy(Blob src, Mailbox destMbox, int destItemId, int destRevision, short destVolumeId)
+    throws IOException, ServiceException {
+        return copy(src, destMbox.getData(), destItemId, destRevision, destVolumeId);
+    }
     /**
      * Create a copy of a blob in volume/path specified by dest* parameters.
      * Note this method is not part of the StoreManager interface
@@ -193,6 +197,11 @@ public final class FileBlobStore extends StoreManager {
         Volume volume = MANAGER.getCurrentMessageVolume();
         VolumeBlob blob = ((VolumeStagedBlob) src).getLocalBlob();
         return link(blob, destMboxData, destItemId, destRevision, volume.getId());
+    }
+
+    public VolumeMailboxBlob link(Blob src, Mailbox destMbox, int destItemId, int destRevision, short destVolumeId)
+    throws IOException, ServiceException {
+        return link(src, destMbox.getData(), destItemId, destRevision, destVolumeId);
     }
 
     public VolumeMailboxBlob link(Blob src, Mailbox.MailboxData destMboxData, int destItemId, int destRevision, short destVolumeId)
