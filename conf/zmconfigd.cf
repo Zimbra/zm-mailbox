@@ -367,6 +367,8 @@ SECTION proxy
 	VAR zimbraReverseProxyUpstreamLoginServers
 	VAR zimbraReverseProxyUpstreamEwsServers
 	VAR zimbraReverseProxySSLProtocols
+	VAR zimbraReverseProxySSLSessionTimeout
+    VAR zimbraReverseProxySSLSessionCacheSize
 	VAR zimbraReverseProxyZSSHostname
 	VAR zimbraReverseProxyZmlookupCachingEnabled
 	PROXYGEN
