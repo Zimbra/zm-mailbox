@@ -8368,6 +8368,16 @@ TODO: delete them permanently from here
   <desc>Lmtp Server will reject the client transactions which do not issue LHLO</desc>
 </attr>
 
+<attr id="1679" name="zimbraReverseProxySSLSessionTimeout" type="duration" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="nginxproxy" since="8.7.0">
+  <globalConfigValue>10m</globalConfigValue>
+  <desc>SSL session timeout value for the proxy in minutes</desc>
+</attr>
+
+<attr id="1680" name="zimbraReverseProxySSLSessionCacheSize" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="nginxproxy" since="8.7.0">
+  <globalConfigValue>10m</globalConfigValue>
+  <desc>SSL session cache size in megabytes. Need to have 'm' (for megabytes) suffix at the end</desc>
+</attr>
+
 <attr id="1686" name="zimbraFeatureAdminPreferencesEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="8.7.0">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>Whether email related configuration categories in Preference tab are enabled in the web client even if the zimbraFeatureAdminMailEnabled is set to FALSE (Email tab is disabled), and accessed from the admin console.  If the zimbraFeatureAdminMailEnabled is TRUE, this key is ignored.</desc>

@@ -1491,6 +1491,26 @@ class WebProxyUpstreamEwsTargetVar extends ProxyConfVar {
     }
 }
 
+class WebSSLSessionCacheSizeVar extends ProxyConfVar {
+
+    public WebSSLSessionCacheSizeVar() {
+        super("ssl.session.cachesize", "zimbraReverseProxySSLSessionCacheSize", "10m",
+                ProxyConfValueType.STRING, ProxyConfOverride.SERVER,
+                "SSL session cache size for the proxy");
+    }
+
+    @Override
+    public String format(Object o) {
+        @SuppressWarnings("unchecked")
+        String sslSessionCacheSize = (String)o;
+        StringBuilder sslsessioncache = new StringBuilder();
+        sslsessioncache.append("shared:SSL:");
+        sslsessioncache.append(sslSessionCacheSize);
+
+        return sslsessioncache.toString();
+    }
+}
+
 /**
  *
  * @author zimbra
@@ -2481,6 +2501,8 @@ public class ProxyConfGen
 	    mConfVars.put("web.upstream.login.target", new WebProxyUpstreamLoginTargetVar());
 	    mConfVars.put("web.upstream.ews.target", new WebProxyUpstreamEwsTargetVar());
 	    mConfVars.put("web.zss.upstream.disable", new WebZSSUpstreamEnablerVar());
+	    mConfVars.put("ssl.session.timeout", new ProxyConfVar("ssl.session.timeout", "zimbraReverseProxySSLSessionTimeout", new Long(600000), ProxyConfValueType.TIME, ProxyConfOverride.SERVER, "SSL session timeout value for the proxy in ms"));
+        mConfVars.put("ssl.session.cachesize", new WebSSLSessionCacheSizeVar());
 	    mConfVars.put("web.zss.upstream.hostname", new ProxyConfVar("web.zss.upstream.hostname", "zimbraReverseProxyZSSHostname", "", ProxyConfValueType.STRING, ProxyConfOverride.SERVER, "Hostname of the upstream ZSS server being reverse-proxied"));
 	    mConfVars.put("web.zss.resolver.file", new ProxyConfVar("web.zss.resolver.file", null, mResolverfile, ProxyConfValueType.STRING, ProxyConfOverride.CONFIG, "File containing resolver directive with the nameservers from /etc/resolv.conf"));
     }
