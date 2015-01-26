@@ -12959,6 +12959,27 @@ public class ZAttrProvisioning {
     public static final String A_zimbraReverseProxySSLProtocols = "zimbraReverseProxySSLProtocols";
 
     /**
+     * SSL session cache size in megabytes. Need to have &#039;m&#039; (for
+     * megabytes) suffix at the end
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1680)
+    public static final String A_zimbraReverseProxySSLSessionCacheSize = "zimbraReverseProxySSLSessionCacheSize";
+
+    /**
+     * SSL session timeout value for the proxy in minutes. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1679)
+    public static final String A_zimbraReverseProxySSLSessionTimeout = "zimbraReverseProxySSLSessionTimeout";
+
+    /**
      * If set as TRUE, proxy will use SSL to connect to the upstream mail
      * servers for web and mail proxy. Note admin console proxy always use
      * https no matter how this attr is set.
@@ -13901,7 +13922,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraSSLCertificate = "zimbraSSLCertificate";
 
     /**
-     * excluded cipher suites
+     * exact name or regular expression of cipher suites to exclude
      *
      * @since ZCS 5.0.5
      */
