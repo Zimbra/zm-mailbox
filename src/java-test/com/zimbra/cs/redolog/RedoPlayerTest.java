@@ -82,7 +82,7 @@ public class RedoPlayerTest {
     }
 
     @After
-    public void tearDown() throws ServiceException, IOException {
+    public void tearDown() throws Exception {
         RedoLogProvider provider = RedoLogProvider.getInstance();
         if (provider instanceof MockRedoLogProvider) {
             ((MockRedoLogProvider) provider).forceStop();
@@ -90,6 +90,7 @@ public class RedoPlayerTest {
             provider.shutdown();
         }
         clearRedoLogs();
+        MailboxTestUtil.clearData();
     }
 
 

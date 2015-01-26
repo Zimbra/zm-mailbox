@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -15,6 +15,15 @@
  * ***** END LICENSE BLOCK *****
  */
 package com.zimbra.cs.filter;
+
+import java.util.HashMap;
+import java.util.List;
+
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
 import com.zimbra.common.util.ArrayUtil;
 import com.zimbra.cs.account.Account;
@@ -28,13 +37,6 @@ import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.util.ItemId;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
-
-import java.util.HashMap;
-import java.util.List;
 
 /**
  * Unit test for {@link com.zimbra.cs.filter.jsieve.ImportanceTest}.
@@ -52,6 +54,11 @@ public final class ImportanceTestTest {
 
     @Before
     public void setUp() throws Exception {
+        MailboxTestUtil.clearData();
+    }
+
+    @After
+    public void tearDown() throws Exception {
         MailboxTestUtil.clearData();
     }
 

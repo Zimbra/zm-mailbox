@@ -20,9 +20,9 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.zimbra.common.mailbox.ContactConstants;
@@ -47,15 +47,16 @@ import com.zimbra.cs.service.util.ItemId;
  */
 public final class AddressBookTestTest {
 
-    @BeforeClass
-    public static void init() throws Exception {
+    @Before
+    public void setUp() throws Exception {
         MailboxTestUtil.initServer();
+        MailboxTestUtil.clearData();
         Provisioning prov = Provisioning.getInstance();
         prov.createAccount("test@zimbra.com", "secret", new HashMap<String, Object>());
     }
 
-    @Before
-    public void setUp() throws Exception {
+    @After
+    public void tearDown() throws Exception {
         MailboxTestUtil.clearData();
     }
 
@@ -66,12 +67,12 @@ public final class AddressBookTestTest {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
         mbox.createContact(null, new ParsedContact(Collections.<String, Object>singletonMap(
                 ContactConstants.A_email, "test1@zimbra.com")), Mailbox.ID_FOLDER_CONTACTS, null);
-        MailboxTestUtil.forceIndexing(mbox);
+        MailboxTestUtil.index(mbox);
         account.setMailSieveScript("if addressbook :in \"From\" { tag \"Priority\"; }");
         List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
                 new ParsedMessage("From: test1@zimbra.com".getBytes(), false), 0, account.getName(),
                 new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
-        MailboxTestUtil.forceIndexing(mbox);
+        MailboxTestUtil.index(mbox);
         Assert.assertEquals(1, ids.size());
         Message msg = mbox.getMessageById(null, ids.get(0).getId());
         Assert.assertEquals("Priority", ArrayUtil.getFirstElement(msg.getTags()));

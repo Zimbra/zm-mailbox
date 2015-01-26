@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -28,6 +28,7 @@ import java.util.UUID;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMultipart;
 
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -53,6 +54,8 @@ public class ShareInfoTest {
      */
     @Before
     public void setUp() throws Exception {
+         MailboxTestUtil.clearData();
+
          MailboxTestUtil.initServer();
          Provisioning prov = Provisioning.getInstance();
 
@@ -64,6 +67,11 @@ public class ShareInfoTest {
 
          // this MailboxManager does everything except use SMTP to deliver mail
          MailboxManager.setInstance(new DirectInsertionMailboxManager());
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        MailboxTestUtil.clearData();
     }
 
     @Test

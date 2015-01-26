@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -22,6 +22,7 @@ import java.util.HashMap;
 
 import junit.framework.Assert;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -50,6 +51,11 @@ public class RenameTest {
         InputStream in = new ByteArrayInputStream("This is a document".getBytes());
         ParsedDocument pd = new ParsedDocument(in, "doc.txt", "text/plain", System.currentTimeMillis(), null, null);
         doc = mbox.createDocument(null, folder.getId(), pd, MailItem.Type.DOCUMENT, 0);
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        MailboxTestUtil.clearData();
     }
 
     @Test

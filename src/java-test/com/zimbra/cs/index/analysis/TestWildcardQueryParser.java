@@ -10,14 +10,12 @@ import org.apache.solr.client.solrj.SolrRequest.METHOD;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.embedded.EmbeddedSolrServer;
 import org.apache.solr.client.solrj.request.AbstractUpdateRequest.ACTION;
-import org.apache.solr.client.solrj.request.CoreAdminRequest;
 import org.apache.solr.client.solrj.request.QueryRequest;
 import org.apache.solr.client.solrj.request.UpdateRequest;
-import org.apache.solr.client.solrj.response.CoreAdminResponse;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrInputDocument;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 import com.zimbra.common.service.ServiceException;
@@ -28,15 +26,13 @@ import com.zimbra.cs.mailbox.MailboxTestUtil;
 public class TestWildcardQueryParser {
     private static EmbeddedSolrIndex index;
     private static EmbeddedSolrServer solrServer;
-    private static String coreName = "zimbratest";
     private static String thaiWord1 = "\u0E2D\u0E22\u0E48\u0E32\u0E07\u0E44\u0E23";
     private static String thaiWord2 = "\u0E1A\u0E49\u0E32\u0E07";
 
-    @BeforeClass
-    public static void createCore() throws Exception {
+    @Before
+    public void setUp() throws Exception {
         MailboxTestUtil.initServer();
-        index = (EmbeddedSolrIndex) IndexStore.getFactory().getIndexStore(coreName);
-        index.initIndex();
+        index = (EmbeddedSolrIndex) IndexStore.getFactory().getIndexStore(EmbeddedSolrIndex.TEST_CORE_NAME);
         solrServer = index.getEmbeddedServer();
 
         //we need to add some documents to test wildcard query expansion
@@ -52,21 +48,20 @@ public class TestWildcardQueryParser {
         addDoc("10", "subject","thai text: " + thaiWord1 + thaiWord2); // no whitespace!
     }
 
-    private static void addDoc(String id, String field, String content) throws SolrServerException, IOException, ServiceException {
+    private void addDoc(String id, String field, String content) throws SolrServerException, IOException, ServiceException {
         SolrInputDocument doc = new SolrInputDocument();
         doc.addField(field, content);
         doc.addField("solrId", id);
         UpdateRequest req = new UpdateRequest();
         req.add(doc);
-        req.setParam("collection", coreName);
+        req.setParam("collection", EmbeddedSolrIndex.TEST_CORE_NAME);
         req.setAction(ACTION.COMMIT, false, true, true);
         req.process(solrServer);
     }
 
-    @AfterClass
-    public static void deleteCore() throws Exception {
-        CoreAdminResponse resp = CoreAdminRequest.unloadCore(coreName, true, true, solrServer);
-        index.deleteIndex();
+    @After
+    public void tearDown() throws Exception {
+        MailboxTestUtil.clearData();
     }
 
     private String debugQuery(String fields, String query) throws SolrServerException, ServiceException {

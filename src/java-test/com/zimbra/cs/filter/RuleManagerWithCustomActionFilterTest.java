@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -16,26 +16,33 @@
  */
 package com.zimbra.cs.filter;
 
-import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.MockProvisioning;
-import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.extension.*;
-import org.apache.jsieve.SieveFactory;
-import org.apache.jsieve.commands.AbstractActionCommand;
-import com.zimbra.cs.mailbox.*;
-import com.zimbra.cs.mime.ParsedMessage;
-import com.zimbra.cs.service.util.ItemId;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.AfterClass;
-import org.junit.Test;
-
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.List;
 
-import java.lang.reflect.Method;
-import java.lang.reflect.Field;
+import org.apache.jsieve.SieveFactory;
+import org.apache.jsieve.commands.AbstractActionCommand;
+import org.junit.After;
+import org.junit.AfterClass;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
+
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.MockProvisioning;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.extension.ExtensionTestUtil;
+import com.zimbra.cs.extension.ExtensionUtil;
+import com.zimbra.cs.mailbox.DeliveryContext;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.MailboxTestUtil;
+import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mailbox.OperationContext;
+import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.service.util.ItemId;
 
 /**
  * Unit test for {@link com.zimbra.cs.filter.RuleManager}
@@ -104,6 +111,11 @@ public final class RuleManagerWithCustomActionFilterTest {
 
     @Before
     public void setUp() throws Exception {
+        MailboxTestUtil.clearData();
+    }
+
+    @After
+    public void tearDown() throws Exception {
         MailboxTestUtil.clearData();
     }
 

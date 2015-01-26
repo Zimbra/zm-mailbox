@@ -16,6 +16,7 @@ package com.zimbra.cs.mailbox;
 import java.io.IOException;
 import java.util.HashMap;
 
+import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -52,6 +53,11 @@ public final class RedisMailboxPubSubAdapterTest {
         try {
             flushCacheBetweenTests();
         } catch (Exception e) {}
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        MailboxTestUtil.clearData();
     }
 
     protected boolean isExternalCacheAvailableForTest() throws Exception {

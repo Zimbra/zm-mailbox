@@ -29,6 +29,7 @@ import java.util.UUID;
 import junit.framework.Assert;
 
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -61,7 +62,7 @@ public class DbVolumeBlobsTest {
     private DbConnection conn;
     private StoreManager originalStoreManager;
     private Volume originalVolume;
-
+    private static final String accId = UUID.randomUUID().toString();
     @BeforeClass
     public static void init() throws Exception {
         MailboxTestUtil.initServer();
@@ -70,7 +71,7 @@ public class DbVolumeBlobsTest {
         System.setProperty("zimbra.native.required", "false");
 
         Map<String, Object> attrs = new HashMap<String, Object>();
-        attrs.put(Provisioning.A_zimbraId, UUID.randomUUID().toString());
+        attrs.put(Provisioning.A_zimbraId, accId);
 
         prov.createAccount("test2@zimbra.com", "secret", attrs);
         //need MVCC since the VolumeManager code creates connections internally
@@ -98,6 +99,13 @@ public class DbVolumeBlobsTest {
         }
         StoreManager.getInstance().shutdown();
         StoreManager.setInstance(originalStoreManager);
+    }
+
+    @AfterClass
+    public static void destroy() throws Exception {
+        MailboxTestUtil.clearData();
+        Provisioning.getInstance().deleteAccount(accId);
+        Provisioning.getInstance().deleteAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
     }
 
     private String getPath(BlobReference ref) throws ServiceException {
@@ -152,7 +160,7 @@ public class DbVolumeBlobsTest {
         Message msg1 = mbox.addMessage(null, new ParsedMessage("From: from1@zimbra.com\r\nTo: to1@zimbra.com".getBytes(), false), opt, null);
         long ts2 = System.currentTimeMillis();
         Message msg2 = mbox.addMessage(null, new ParsedMessage("From: from1@zimbra.com\r\nTo: to1@zimbra.com".getBytes(), false), opt, null);
-        MailboxTestUtil.forceIndexing(mbox);
+        MailboxTestUtil.index(mbox);
         long ts3 = System.currentTimeMillis();
         Iterable<MailboxBlobInfo> allBlobs = null;
         Volume vol = VolumeManager.getInstance().getCurrentMessageVolume();

@@ -17,6 +17,7 @@ import java.util.UUID;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMultipart;
 
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -45,7 +46,7 @@ public class ExtShareInfoTest {
     @Before
     public void setUp() throws Exception {
          MailboxTestUtil.initServer();
-
+         MailboxTestUtil.clearData();
          L10nUtil.setMsgClassLoader("conf/msgs");
          Provisioning prov = Provisioning.getInstance();
          Map<String, Object> attrs = Maps.newHashMap();
@@ -59,6 +60,11 @@ public class ExtShareInfoTest {
 
          // this MailboxManager does everything except use SMTP to deliver mail
          MailboxManager.setInstance(new DirectInsertionMailboxManager());
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        MailboxTestUtil.clearData();
     }
 
     @Test

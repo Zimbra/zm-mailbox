@@ -5,6 +5,8 @@ import static org.junit.Assert.assertTrue;
 import java.util.HashMap;
 import java.util.List;
 
+import org.junit.After;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -30,7 +32,6 @@ public class HostTokenTest {
     @BeforeClass
     public static void init() throws Exception {
     	MailboxTestUtil.initServer();
-    	MailboxTestUtil.clearData();
         Provisioning prov = Provisioning.getInstance();
         account = prov.createAccount("hosttest@zimbra.com", "secret", new HashMap<String, Object>());
         mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
@@ -38,6 +39,16 @@ public class HostTokenTest {
         Message msg = TestUtil.addMessage(mbox, pm);
         msgId = msg.getId();
         mbox.index.indexDeferredItems();
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        MailboxTestUtil.clearData();
+    }
+
+    @Before
+    public void setUp() throws Exception {
+        MailboxTestUtil.clearData();
     }
 
     private void runTest(String query, boolean shouldMatch) throws ServiceException {

@@ -2,12 +2,18 @@ package com.zimbra.cs.index.solr;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintStream;
+import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.lucene.document.Document;
+import org.apache.lucene.index.Term;
+import org.apache.lucene.search.Query;
+import org.apache.lucene.search.Sort;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrRequest;
 import org.apache.solr.client.solrj.SolrResponse;
@@ -28,9 +34,16 @@ import org.apache.solr.core.SolrCore;
 import com.google.common.annotations.VisibleForTesting;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.index.IndexDocument;
 import com.zimbra.cs.index.IndexStore;
 import com.zimbra.cs.index.Indexer;
+import com.zimbra.cs.index.ZimbraIndexDocumentID;
+import com.zimbra.cs.index.ZimbraIndexReader;
 import com.zimbra.cs.index.ZimbraIndexSearcher;
+import com.zimbra.cs.index.ZimbraTermsFilter;
+import com.zimbra.cs.index.ZimbraTopDocs;
+import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.Mailbox.IndexItemEntry;
 
 /**
  * Embedded SOLR server used for testing
@@ -41,8 +54,7 @@ public class EmbeddedSolrIndex  extends SolrIndexBase {
     private static EmbeddedSolrServer server = null;
     private CoreContainer coreContainer = null;
     private static final String solrHome = "../ZimbraServer/build/test/solr/";
-    private static ReentrantLock lock = new ReentrantLock(true);
-    private static volatile String lockReason = null;
+    public static String TEST_CORE_NAME = "zsolrtestcore";
 
     private EmbeddedSolrIndex(String accountId) {
         System.setProperty("solr.allow.unsafe.resourceloading", "true");
@@ -55,10 +67,11 @@ public class EmbeddedSolrIndex  extends SolrIndexBase {
         }
         return coreContainer;
     }
+
     @Override
-    public boolean indexExists() {
-            File f = new File(solrHome, accountId);
-            return f.exists();
+    public synchronized boolean indexExists() {
+        File f = new File(solrHome, accountId);
+        return f.exists();
     }
 
     @Override
@@ -68,7 +81,18 @@ public class EmbeddedSolrIndex  extends SolrIndexBase {
             Properties props = new Properties();
             props.put("configSet", "zimbra");
             CoreDescriptor cd = new CoreDescriptor(container, accountId, accountId, props);
-            container.getCoresLocator().create(container, cd);
+            try {
+                container.getCoresLocator().create(container, cd);
+            } catch (SolrException e) {
+                //someone left the folder dirty
+                File f = new File(solrHome, accountId);
+                FileUtils.deleteDirectory(f);
+                try {
+                    container.getCoresLocator().create(container, cd);
+                } catch (SolrException ex) {
+                    throw(ex);
+                }
+            }
             try {
                 SolrCore c = container.create(cd);
                 //container.register(accountId, c, false);
@@ -79,7 +103,7 @@ public class EmbeddedSolrIndex  extends SolrIndexBase {
     }
 
     @Override
-    public Indexer openIndexer() throws IOException, ServiceException {
+    public synchronized Indexer openIndexer() throws IOException, ServiceException {
         if(!indexExists()) {
             initIndex();
         }
@@ -96,25 +120,14 @@ public class EmbeddedSolrIndex  extends SolrIndexBase {
     }
 
     @Override
-    public void evict() {
+    public synchronized void evict() {
         // TODO Auto-generated method stub
 
-    }
-
-    private static void lock(String reason) {
-        lockReason = reason;
-        lock.lock();
-    }
-
-    private static void unlock() {
-        lockReason = null;
-        lock.unlock();
     }
 
     @Override
     public synchronized void deleteIndex() throws IOException, ServiceException {
         if (indexExists()) {
-            lock("deleting index");
             SolrServer solrServer = getSolrServer();
             try {
                 ZimbraLog.index.info(String.format("unloading core %s", accountId));
@@ -127,12 +140,8 @@ public class EmbeddedSolrIndex  extends SolrIndexBase {
                 ZimbraLog.index.warn(String.format("Could not unload solr core %s", accountId), e);
             }
             finally {
-                try {
-                    File f = new File(solrHome, accountId);
-                    FileUtils.deleteDirectory(f);
-                } finally {
-                    unlock();
-                }
+                File f = new File(solrHome, accountId);
+                FileUtils.deleteDirectory(f);
             }
         }
     }
@@ -152,21 +161,16 @@ public class EmbeddedSolrIndex  extends SolrIndexBase {
          * Cleanup any caches etc associated with the IndexStore
          */
         @Override
-        public void destroy() {
-            lock("destroying");
-            try {
-                if (server != null) {
-                    server.shutdown();
-                    try {
-                        FileUtils.deleteDirectory(new File("../ZimbraServer/build/test/solr/solrtestcore/"));
-                    } catch (IOException e) {
-                        // TODO Auto-generated catch block
-                        e.printStackTrace();
-                    }
-                    server = null;
+        public synchronized void destroy() {
+            if (server != null) {
+                server.shutdown();
+                try {
+                    FileUtils.deleteDirectory(new File("../ZimbraServer/build/test/solr/" + TEST_CORE_NAME));
+                } catch (IOException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
                 }
-            } finally {
-                unlock();
+                server = null;
             }
         }
     }
@@ -174,7 +178,7 @@ public class EmbeddedSolrIndex  extends SolrIndexBase {
     private class SolrIndexer extends SolrIndexBase.SolrIndexer {
 
         @Override
-        public void close() throws IOException {
+        public synchronized void close() throws IOException {
         }
 
         @Override
@@ -183,7 +187,7 @@ public class EmbeddedSolrIndex  extends SolrIndexBase {
         }
 
         @Override
-        public int maxDocs() {
+        public synchronized int maxDocs() {
             SolrServer solrServer = null;
             try {
                 solrServer = getSolrServer();
@@ -211,6 +215,40 @@ public class EmbeddedSolrIndex  extends SolrIndexBase {
             }
             return 0;
         }
+
+        @Override
+        public synchronized void add(List<IndexItemEntry> entries) throws IOException,
+                ServiceException {
+            // TODO Auto-generated method stub
+            super.add(entries);
+        }
+
+        @Override
+        public synchronized void addDocument(MailItem item, List<IndexDocument> docs)
+                throws IOException, ServiceException {
+            // TODO Auto-generated method stub
+            super.addDocument(item, docs);
+        }
+
+        @Override
+        protected synchronized void incrementUpdateCounter(SolrServer solrServer)
+                throws ServiceException {
+            // TODO Auto-generated method stub
+            super.incrementUpdateCounter(solrServer);
+        }
+
+        @Override
+        public synchronized  void deleteDocument(List<Integer> ids) throws IOException,
+                ServiceException {
+            // TODO Auto-generated method stub
+            super.deleteDocument(ids);
+        }
+
+        @Override
+        public synchronized void compact() {
+            // TODO Auto-generated method stub
+            super.compact();
+        }
     }
 
     public class SolrIndexSearcher extends SolrIndexBase.SolrIndexSearcher {
@@ -218,10 +256,56 @@ public class EmbeddedSolrIndex  extends SolrIndexBase {
                 com.zimbra.cs.index.solr.SolrIndexBase.SolrIndexReader reader) {
             super(reader);
         }
+
+        @Override
+        public synchronized void close() throws IOException {
+            // TODO Auto-generated method stub
+            super.close();
+        }
+
+        @Override
+        public synchronized Document doc(ZimbraIndexDocumentID docID) throws IOException,
+                ServiceException {
+            // TODO Auto-generated method stub
+            return super.doc(docID);
+        }
+
+        @Override
+        public synchronized int docFreq(Term term) throws IOException, ServiceException {
+            // TODO Auto-generated method stub
+            return super.docFreq(term);
+        }
+
+        @Override
+        public synchronized ZimbraIndexReader getIndexReader() {
+            // TODO Auto-generated method stub
+            return super.getIndexReader();
+        }
+
+        @Override
+        public synchronized ZimbraTopDocs search(Query query, int n) throws IOException,
+                ServiceException {
+            // TODO Auto-generated method stub
+            return super.search(query, n);
+        }
+
+        @Override
+        public synchronized ZimbraTopDocs search(Query query, ZimbraTermsFilter filter, int n)
+                throws IOException, ServiceException {
+            // TODO Auto-generated method stub
+            return super.search(query, filter, n);
+        }
+
+        @Override
+        public synchronized ZimbraTopDocs search(Query query, ZimbraTermsFilter filter,
+                int n, Sort sort) throws IOException, ServiceException {
+            // TODO Auto-generated method stub
+            return super.search(query, filter, n, sort);
+        }
     }
     public class SolrIndexReader extends SolrIndexBase.SolrIndexReader {
         @Override
-        public int numDeletedDocs() {
+        public synchronized int numDeletedDocs() {
             SolrServer solrServer = null;
             try {
                 solrServer = getSolrServer();
@@ -246,11 +330,30 @@ public class EmbeddedSolrIndex  extends SolrIndexBase {
             }
             return 0;
         }
+
+        @Override
+        public synchronized void close() throws IOException {
+            // TODO Auto-generated method stub
+            super.close();
+        }
+
+        @Override
+        public synchronized int numDocs() throws ServiceException {
+            // TODO Auto-generated method stub
+            return super.numDocs();
+        }
+
+        @Override
+        public TermFieldEnumeration getTermsForField(String field,
+                String firstTermValue) throws IOException, ServiceException {
+            // TODO Auto-generated method stub
+            return super.getTermsForField(field, firstTermValue);
+        }
     }
 
 
     @Override
-    public void setupRequest(Object obj, SolrServer solrServer) {
+    public synchronized void setupRequest(Object obj, SolrServer solrServer) {
         if (obj instanceof UpdateRequest) {
             ((UpdateRequest) obj).setParam("collection", accountId);
         } else if (obj instanceof SolrQuery) {
@@ -260,80 +363,117 @@ public class EmbeddedSolrIndex  extends SolrIndexBase {
 
     private static synchronized EmbeddedSolrServer getServerInstance() {
            if (server == null) {
-               lock("starting server");
-               try {
-                   CoreContainer coreContainer = new CoreContainer(solrHome);
-                   coreContainer.load();
-                   server = new EmbeddedSolrServer(coreContainer, "solrtestcore");
-                   /* We have to "root" the EmbeddedSolrServer in a separate core that will be the
-                    * core against which other CoreAdminRequests are run. If it does not exist (which it might),
-                    * we create it
-                    */
-                   if (!coreContainer.isLoaded("solrtestcore")) {
-                       Properties props = new Properties();
-                       props.put("configSet", "zimbra");
-                       CoreDescriptor cd = new CoreDescriptor(coreContainer, "solrtestcore", "solrtestcore", props);
-                       SolrCore c = coreContainer.create(cd);
-                       coreContainer.getCoresLocator().create(coreContainer, cd);
-                      // coreContainer.register("solrtestcore", c, false);
-                    }
-               } finally {
-                   unlock();
-               }
+               CoreContainer coreContainer = new CoreContainer(solrHome);
+               coreContainer.load();
+               server = new EmbeddedSolrServer(coreContainer, TEST_CORE_NAME);
+               /* We have to "root" the EmbeddedSolrServer in a separate core that will be the
+                * core against which other CoreAdminRequests are run. If it does not exist (which it might),
+                * we create it
+                */
+               if (!coreContainer.isLoaded(TEST_CORE_NAME)) {
+                   Properties props = new Properties();
+                   props.put("configSet", "zimbra");
+                   CoreDescriptor cd = new CoreDescriptor(coreContainer, TEST_CORE_NAME, TEST_CORE_NAME, props);
+                   SolrCore c = coreContainer.create(cd);
+                   coreContainer.getCoresLocator().create(coreContainer, cd);
+                }
+
             }
             return server;
     }
 
     @Override
-    public EmbeddedSolrServer getSolrServer() throws ServiceException {
+    public synchronized void warmup() {
+        // TODO Auto-generated method stub
+        super.warmup();
+    }
+
+    @Override
+    public synchronized  boolean isPendingDelete() {
+        // TODO Auto-generated method stub
+        return super.isPendingDelete();
+    }
+
+    @Override
+    public synchronized void setPendingDelete(boolean pendingDelete) {
+        // TODO Auto-generated method stub
+        super.setPendingDelete(pendingDelete);
+    }
+
+    @Override
+    public synchronized void optimize() {
+        // TODO Auto-generated method stub
+        super.optimize();
+    }
+
+    @Override
+    public synchronized boolean verify(PrintStream out) throws IOException {
+        // TODO Auto-generated method stub
+        return super.verify(out);
+    }
+
+    @Override
+    protected synchronized Query optimizeQueryOps(Query query) {
+        // TODO Auto-generated method stub
+        return super.optimizeQueryOps(query);
+    }
+
+    @Override
+    protected synchronized String queryToString(Query query) {
+        // TODO Auto-generated method stub
+        return super.queryToString(query);
+    }
+
+    @Override
+    protected synchronized String TermsToQuery(Collection<Term> terms) {
+        // TODO Auto-generated method stub
+        return super.TermsToQuery(terms);
+    }
+
+    @Override
+    protected synchronized String TermToQuery(Term term) {
+        // TODO Auto-generated method stub
+        return super.TermToQuery(term);
+    }
+
+    @Override
+    public synchronized void waitForIndexCommit(SolrServer solrServer)
+            throws ServiceException {
+        // TODO Auto-generated method stub
+        super.waitForIndexCommit(solrServer);
+    }
+
+    @Override
+    public synchronized long getLatestIndexGeneration(String accountId)
+            throws ServiceException {
+        // TODO Auto-generated method stub
+        return super.getLatestIndexGeneration(accountId);
+    }
+
+    @Override
+    public synchronized List<Map<String, Object>> fetchFileList(long gen, String accountId)
+            throws ServiceException {
+        // TODO Auto-generated method stub
+        return super.fetchFileList(gen, accountId);
+    }
+
+    @Override
+    public synchronized EmbeddedSolrServer getSolrServer() throws ServiceException {
         return getServerInstance();
     }
 
     @VisibleForTesting
-    public EmbeddedSolrServer getEmbeddedServer() throws ServiceException {
+    public synchronized EmbeddedSolrServer getEmbeddedServer() throws ServiceException {
         return getSolrServer();
     }
 
     @Override
-    public void shutdown(SolrServer server) {
+    public synchronized void shutdown(SolrServer server) {
     }
 
     @Override
     protected SolrResponse processRequest(SolrServer server, SolrRequest request) throws SolrServerException, IOException {
-        lock("request");
-        try {
-            return super.processRequest(server, request);
-        } finally {
-            unlock();
-        }
+        return super.processRequest(server, request);
     }
-
-    /*public static class UpdateCounter {
-        private final AtomicInteger num = new AtomicInteger();
-        private static UpdateCounter instance = null;
-
-        private UpdateCounter() {}
-
-        public static UpdateCounter getInstance() {
-            synchronized (UpdateCounter.class) {
-                if (instance == null) {
-                    instance = new UpdateCounter();
-                }
-                return instance;
-            }
-        }
-
-        public void increment() {
-            num.incrementAndGet();
-        }
-
-        public Integer getAndReset() {
-            return num.getAndSet(0);
-        }
-
-        public void reset() {
-           num.set(0);
-        }
-    }*/
 }
 

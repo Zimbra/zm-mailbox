@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2010, 2011, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -23,9 +23,9 @@ import java.util.Map;
 
 import javax.mail.internet.InternetAddress;
 
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableMap;
@@ -44,16 +44,17 @@ import com.zimbra.cs.mime.ParsedContact;
  */
 public final class ContactAutoCompleteTest {
 
-    @BeforeClass
-    public static void init() throws Exception {
+    @Before
+    public void setUp() throws Exception {
+        MailboxTestUtil.clearData();
         MailboxTestUtil.initServer();
         Provisioning prov = Provisioning.getInstance();
         prov.createAccount("test@zimbra.com", "secret", new HashMap<String, Object>());
         Provisioning.setInstance(prov);
     }
 
-    @Before
-    public void setUp() throws Exception {
+    @After
+    public void tearDown() throws Exception {
         MailboxTestUtil.clearData();
     }
 
@@ -174,15 +175,15 @@ public final class ContactAutoCompleteTest {
         comp.addMatchedContacts("first la", attrs, Mailbox.ID_FOLDER_CONTACTS, null, result);
         Assert.assertEquals(1, result.entries.size());
         result.clear();
-        
+
         comp.addMatchedContacts("middle last", attrs, Mailbox.ID_FOLDER_CONTACTS, null, result);
         Assert.assertEquals(1, result.entries.size());
         result.clear();
-        
+
         comp.addMatchedContacts("middle la", attrs, Mailbox.ID_FOLDER_CONTACTS, null, result);
         Assert.assertEquals(1, result.entries.size());
-        result.clear();	
-        
+        result.clear();
+
         comp.addMatchedContacts("ddle last", attrs, Mailbox.ID_FOLDER_CONTACTS, null, result);
         Assert.assertEquals(0, result.entries.size());
         result.clear();

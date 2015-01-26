@@ -19,6 +19,7 @@ package com.zimbra.cs.index;
 import java.util.EnumSet;
 import java.util.HashMap;
 
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -53,6 +54,11 @@ public final class IntersectionQueryOperationTest {
 
     @Before
     public void setUp() throws Exception {
+        MailboxTestUtil.clearData();
+    }
+
+    @After
+    public void tearDown() throws Exception {
         MailboxTestUtil.clearData();
     }
 

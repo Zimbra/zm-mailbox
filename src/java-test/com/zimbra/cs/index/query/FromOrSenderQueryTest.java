@@ -6,6 +6,7 @@ import static org.junit.Assert.assertTrue;
 import java.util.HashMap;
 import java.util.List;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -31,7 +32,6 @@ public class FromOrSenderQueryTest {
     @BeforeClass
     public static void init() throws Exception {
         MailboxTestUtil.initServer();
-        MailboxTestUtil.clearData();
         Provisioning prov = Provisioning.getInstance();
         prov.createAccount("fromorsendertest", "secret", new HashMap<String, Object>());
     }
@@ -48,6 +48,11 @@ public class FromOrSenderQueryTest {
                 + "Subject: fromorsender test").getBytes(), false);
         Message msg = TestUtil.addMessage(mbox, pm);
         msgId = msg.getId();
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        MailboxTestUtil.clearData();
     }
 
     @Test

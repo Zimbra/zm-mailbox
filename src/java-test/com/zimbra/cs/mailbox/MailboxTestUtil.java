@@ -31,6 +31,7 @@ import javax.mail.internet.MimeMultipart;
 import javax.mail.util.ByteArrayDataSource;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.solr.common.SolrException;
 
 import com.google.common.base.Strings;
 import com.zimbra.common.calendar.ZCalendar.ZVCalendar;
@@ -92,6 +93,7 @@ public final class MailboxTestUtil {
 
         // default MIME handlers are now set up in MockProvisioning constructor
         Provisioning.setInstance(new MockProvisioning());
+        Provisioning.getInstance().getLocalServer().setIndexThreads(1);
     }
 
     /**
@@ -131,7 +133,8 @@ public final class MailboxTestUtil {
         IndexStore.setFactory(LC.zimbra_class_index_store_factory.value());
         LC.zimbra_class_store.setDefault(storeManagerClass.getName());
         LC.zimbra_class_soapsessionfactory.setDefault(DefaultSoapSessionFactory.class.getName());
-        setupEmbeddedSolrDirs(false);
+        deleteAllIndexFolders();
+        setupEmbeddedSolrDirs(true);
         Zimbra.startupTest(configClass);
         MailboxManager.setInstance(Zimbra.getAppContext().getBean(MailboxManager.class));
         StoreManager.getInstance().startup();
@@ -145,9 +148,10 @@ public final class MailboxTestUtil {
             } catch (IOException e) {
                 Thread.sleep(1000);
                 try {
+                    FileUtils.cleanDirectory(solrDir);
                     FileUtils.deleteDirectory(solrDir);
                 } catch (IOException e2) {
-                    ZimbraLog.test.warn("cannot delete SOLR directory");
+                    ZimbraLog.test.error("cannot delete SOLR directory " + solrDir.getAbsolutePath());
                 }
             }
         }
@@ -233,7 +237,11 @@ public final class MailboxTestUtil {
     public static void clearData(String zimbraServerDir) throws Exception {
         HSQLDB.clearDatabase(zimbraServerDir);
         MailboxManager.getInstance().clearCache();
-        cleanupAllIndexStores();
+        try {
+            cleanupAllIndexStores();
+        } catch (SolrException ex) {
+            //ignore. We are deleting the folders anyway
+        }
         MailboxIndex.shutdown();
         StoreManager sm = StoreManager.getInstance();
         if (sm instanceof MockStoreManager) {
@@ -242,7 +250,29 @@ public final class MailboxTestUtil {
             MockHttpStore.purge();
         }
         DocumentHandler.resetLocalHost();
-        //EmbeddedSolrIndex.UpdateCounter.getInstance().reset();
+    }
+
+    public static void deleteAllIndexFolders() throws Exception {
+        File[] cores = new File("../ZimbraServer/build/test/solr/").listFiles(new FilenameFilter() {
+
+            @Override
+            public boolean accept(File dir, String name) {
+                return (!name.equals("configsets") &&
+                        !name.equals("custom") &&
+                        !name.equals("solr.xml"));
+            }
+        });
+
+        if(cores != null) {
+            for (File core : cores) {
+                try {
+                    FileUtils.cleanDirectory(core);
+                    FileUtils.deleteDirectory(core);
+                } catch (IOException e2) {
+                    ZimbraLog.test.error("cannot delete SOLR directory " + core.getAbsolutePath());
+                }
+            }
+        }
     }
 
     public static void cleanupAllIndexStores() throws Exception {
@@ -252,31 +282,35 @@ public final class MailboxTestUtil {
             public boolean accept(File dir, String name) {
                 return (!name.equals("configsets") &&
                         !name.equals("custom") &&
-                        !name.equals("solrtestcore") &&
                         !name.equals("solr.xml"));
             }
         });
-        for (int i = 0; i < cores.length; i++) {
-            try {
-                cleanupIndexStore(MailboxManager.getInstance().getMailboxByAccountId(cores[i].getName()));
-            } catch (ServiceException | IOException e) {
+        if(cores != null) {
+            for (int i = 0; i < cores.length; i++) {
                 try {
-                    deleteIndexDir(cores[i].getName()); //delete core folder anyways
-                } catch (IOException cantDelete) {
-                    Thread.sleep(1000); // wait and try again
-                    try {
-                        deleteIndexDir(cores[i].getName());
-                    } catch (IOException cantDelete2) {
-                        //can't delete this folder; just leave it there. It shouldn't cause issues, just clutters up the /test directory
-                    }
+                    cleanupIndexStore(MailboxManager.getInstance().getMailboxByAccountId(cores[i].getName()));
+                } catch (ServiceException | IOException e) {
+                   Thread.sleep(1000);
+                } finally {
+                    deleteIndexDir(cores[i].getName());
                 }
             }
         }
     }
 
-    private static void deleteIndexDir(String dir) throws IOException {
+    private static void deleteIndexDir(String dir) throws IOException, InterruptedException {
         File f = new File("../ZimbraServer/build/test/solr/", dir);
-        FileUtils.deleteDirectory(f);
+        try {
+            FileUtils.deleteDirectory(f);
+        } catch (IOException e) {
+            Thread.sleep(1000);
+            try {
+                FileUtils.cleanDirectory(f);
+                FileUtils.deleteDirectory(f);
+            } catch (IOException e2) {
+                ZimbraLog.test.error("cannot delete SOLR directory " + f.getAbsolutePath());
+            }
+        }
     }
 
     public static void cleanupIndexStore(Mailbox mbox) throws ServiceException, IOException {
@@ -299,6 +333,21 @@ public final class MailboxTestUtil {
 
     public static void index(Mailbox mbox) throws ServiceException {
         mbox.index.indexDeferredItems();
+
+        //wait until all index threads are done
+        int timeWaited = 0;
+        int waitIncrement  = 100;
+        int maxWaitTime = 5000;
+        while (mbox.index.indexTasksRunning() && timeWaited < maxWaitTime) {
+            try {
+                Thread.sleep(waitIncrement);
+                timeWaited += waitIncrement;
+            } catch (InterruptedException e) {
+            }
+        }
+        if (timeWaited >= maxWaitTime) {
+            throw ServiceException.FAILURE(String.format("waiting for mailbox %s to finish indexing took longer than %s ms", mbox.getAccountId(), maxWaitTime), new Throwable());
+        }
     }
 
     public static ParsedMessage generateMessage(String subject) throws Exception {
@@ -370,22 +419,5 @@ public final class MailboxTestUtil {
 
     public static synchronized void forceIndexing(Mailbox mbox) throws Exception {
         index(mbox);
-        /*int timeWaited = 0;
-        int waitIncrement  = 100;
-        int maxWaitTime = 5000;
-        while (mbox.index.indexTasksRunning() && timeWaited < maxWaitTime) {
-            try {
-                Thread.sleep(waitIncrement);
-                timeWaited += waitIncrement;
-            } catch (InterruptedException e) {
-            }
-        }
-        if (timeWaited >= maxWaitTime) {
-            throw ServiceException.FAILURE(String.format("waiting for mailbox %s to finish indexing took longer than %s ms", mbox.getAccountId(), maxWaitTime), new Throwable());
-        }
-        //now wait until the commits have finished on the SOLR end
-        CommitLock lock = ZimbraCommitListener.CommitLock.getInstance();
-        UpdateCounter counter = EmbeddedSolrIndex.UpdateCounter.getInstance();
-        lock.waitUntilCommitFinished(counter.getAndReset());*/
     }
 }

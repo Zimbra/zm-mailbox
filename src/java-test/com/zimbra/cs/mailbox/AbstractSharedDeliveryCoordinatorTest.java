@@ -15,6 +15,7 @@ package com.zimbra.cs.mailbox;
 
 import java.util.HashMap;
 
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Before;
@@ -48,6 +49,11 @@ public abstract class AbstractSharedDeliveryCoordinatorTest {
         try {
             flushCacheBetweenTests();
         } catch (Exception e) {}
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        MailboxTestUtil.clearData();
     }
 
     protected abstract void flushCacheBetweenTests() throws Exception;

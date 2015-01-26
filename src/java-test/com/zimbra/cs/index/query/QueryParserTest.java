@@ -23,7 +23,9 @@ import java.util.List;
 import java.util.TimeZone;
 
 import org.apache.lucene.document.DateTools;
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -50,7 +52,16 @@ public final class QueryParserTest {
         MailboxTestUtil.initServer();
         Provisioning prov = Provisioning.getInstance();
         prov.createAccount("test@zimbra.com", "secret", new HashMap<String, Object>());
+    }
 
+    @After
+    public void tearDown() throws Exception {
+        MailboxTestUtil.clearData();
+    }
+
+    @Before
+    public void setUp() throws Exception {
+        MailboxTestUtil.clearData();
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
         parser = new QueryParser(mbox);
     }

@@ -15,11 +15,11 @@ package com.zimbra.cs.mailbox;
 
 import java.util.HashMap;
 
+import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.BeforeClass;
 
-import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
 
 
@@ -32,12 +32,15 @@ public abstract class AbstractCacheTest {
         prov.createAccount("test@zimbra.com", "secret", new HashMap<String, Object>());
     }
 
+    @After
+    public void tearDown() throws Exception {
+        MailboxTestUtil.clearData();
+    }
+
     @Before
     public void setUp() throws Exception {
         Assume.assumeTrue(isExternalCacheAvailableForTest());
         MailboxTestUtil.clearData();
-        MailboxTestUtil.cleanupIndexStore(
-                MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID));
         try {
             flushCacheBetweenTests();
         } catch (Exception e) {}

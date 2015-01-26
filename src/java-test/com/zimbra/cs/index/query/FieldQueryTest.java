@@ -18,6 +18,7 @@ package com.zimbra.cs.index.query;
 
 import java.util.HashMap;
 
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -47,6 +48,11 @@ public final class FieldQueryTest {
 
     @Before
     public void setUp() throws Exception {
+        MailboxTestUtil.clearData();
+    }
+
+    @After
+    public void tearDown() throws Exception {
         MailboxTestUtil.clearData();
     }
 

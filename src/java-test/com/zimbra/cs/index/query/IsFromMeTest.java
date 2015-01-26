@@ -5,6 +5,7 @@ import static org.junit.Assert.assertTrue;
 import java.util.HashMap;
 import java.util.List;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -31,6 +32,12 @@ public class IsFromMeTest {
         MailboxTestUtil.initServer();
         Provisioning prov = Provisioning.getInstance();
         prov.createAccount("isfrommme@test.com", "secret", new HashMap<String, Object>());
+    }
+
+
+    @After
+    public void tearDown() throws Exception {
+        MailboxTestUtil.clearData();
     }
 
     @Before
