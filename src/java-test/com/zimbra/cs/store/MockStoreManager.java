@@ -53,6 +53,7 @@ public final class MockStoreManager extends StoreManager {
     public void startup() throws IOException {
         purge();
 
+        FileUtil.deleteDir(MockLocalBlob.tmpdir);
         FileUtil.ensureDirExists(MockLocalBlob.tmpdir);
         BlobInputStream.setFileDescriptorCache(new FileDescriptorCache(null));
     }

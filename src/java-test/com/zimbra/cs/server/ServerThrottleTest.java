@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -23,6 +23,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import com.google.common.collect.Sets;
+import com.zimbra.common.util.ZimbraLog;
 
 public class ServerThrottleTest {
 
@@ -66,6 +67,24 @@ public class ServerThrottleTest {
         Assert.assertFalse(throttle.isIpThrottled(ip));
     }
 
+    private void waitForTime(long time) {
+        //thread.sleep is somewhat imprecise and can wakeup too early
+        //we need to make sure we wait the minimum time since we're testing time-based expiration
+        long start = System.currentTimeMillis();
+        try {
+            Thread.sleep(time);
+        } catch (InterruptedException e) {
+        }
+        long end = 0;
+        while ((end = System.currentTimeMillis()) - start < time) {
+            ZimbraLog.test.warn("thread.sleep woke too soon (%d < %d)", end - start, time);
+            try {
+                Thread.sleep(time / 100);
+            } catch (InterruptedException e) {
+            }
+        }
+    }
+
     @Test
     public void throttleIpTime() {
         int numReqs = 1;
@@ -79,11 +98,7 @@ public class ServerThrottleTest {
         Assert.assertFalse(throttle.isIpThrottled(ip + "foo"));
         Assert.assertFalse(throttle.isAccountThrottled(acctId));
 
-        try {
-            Thread.sleep(1001);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        waitForTime(1001);
 
         Assert.assertFalse(throttle.isIpThrottled(ip));
         Assert.assertFalse(throttle.isIpThrottled(ip + "foo"));
@@ -123,11 +138,7 @@ public class ServerThrottleTest {
         Assert.assertFalse(throttle.isAccountThrottled(acctId + "foo"));
         Assert.assertFalse(throttle.isIpThrottled(ip));
 
-        try {
-            Thread.sleep(1001);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        waitForTime(1001);
 
         Assert.assertFalse(throttle.isAccountThrottled(acctId));
         Assert.assertFalse(throttle.isAccountThrottled(acctId + "foo"));
