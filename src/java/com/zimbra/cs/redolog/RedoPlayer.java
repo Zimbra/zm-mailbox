@@ -288,6 +288,7 @@ public class RedoPlayer {
                                     Set<Integer> opMboxIds = new HashSet<Integer>(list);
                                     for (Map.Entry<Integer, Integer> entry : mboxIDsMap.entrySet()) {
                                         if (opMboxIds.contains(entry.getKey())) {
+                                            ZimbraLog.redolog.debug("redo allowed for store incoming - mailboxId match");
                                             allowRedo = true;
                                             // Replace the mailbox ID list in the op.  We're
                                             // replaying it only for the target mailbox ID we're
@@ -304,11 +305,13 @@ public class RedoPlayer {
                                     // the blob since we don't know which mailboxes will
                                     // need it.
                                     allowRedo = true;
+                                    ZimbraLog.redolog.debug("redo allowed for store incoming - ancient redolog version");
                                 }
                             } else if (opMailboxId == RedoableOp.MAILBOX_ID_ALL) {
                                 // This case should be checked after StoreIncomingBlob
                                 // case because StoreIncomingBlob has mailbox ID of
                                 // MAILBOX_ID_ALL.
+                                ZimbraLog.redolog.debug("redo allowed - mailbox ID == ALL");
                                 allowRedo = true;
                             } else {
                                 for (Map.Entry<Integer, Integer> entry : mboxIDsMap.entrySet()) {
@@ -318,6 +321,7 @@ public class RedoPlayer {
                                             prepareOp.setMailboxId(entry.getValue().intValue());
                                         }
                                         allowRedo = true;
+                                        ZimbraLog.redolog.debug("redo allowed - mailbox ID match");
                                         break;
                                     }
                                 }
@@ -328,19 +332,28 @@ public class RedoPlayer {
                                 ZimbraLog.redolog.info("Skipping delete op: " + prepareOp.toString());
                             } else {
                                 try {
-                                    if (ZimbraLog.redolog.isDebugEnabled())
+                                    if (ZimbraLog.redolog.isDebugEnabled()) {
                                         ZimbraLog.redolog.debug("Redoing: " + prepareOp.toString());
+                                    }
                                     prepareOp.setUnloggedReplay(mUnloggedReplay);
                                     playOp(prepareOp);
                                 } catch(Exception e) {
-                                    if (!ignoreReplayErrors())
+                                    if (!ignoreReplayErrors()) {
                                         throw ServiceException.FAILURE("Error executing redoOp", e);
-                                    else
+                                    } else {
                                         ZimbraLog.redolog.warn(
                                                 "Ignoring error during redo log replay: " + e.getMessage(), e);
+                                    }
                                 }
                             }
+                        } else if (ZimbraLog.redolog.isDebugEnabled()) {
+                            ZimbraLog.redolog.debug("redo disallowed - op acceptable but mailboxId does not match");
                         }
+                    } else if (ZimbraLog.redolog.isDebugEnabled()) {
+                        long prepareTimestamp = prepareOp == null ? 0 : prepareOp.getTimestamp();
+                        ZimbraLog.redolog.debug("redo disallowed - op unacceptable. redo committed? [%s] prepareOp not null? [%s] "
+                                + "is commit op? [%s] after start time? [%s] before end time? [%s]", redoCommitted, prepareOp != null, isCommitOp,
+                                (startTime == -1 || prepareTimestamp >= startTime), opTstamp < endTime);
                     }
                 }
             }

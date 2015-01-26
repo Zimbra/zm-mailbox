@@ -214,8 +214,7 @@ public class RedoPlayerTest {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
 
         String folderName = "testfolder";
-        String serverId = "someserverid";
-
+        String serverId = MockRedoableOp.getLocalServerId();
         MockRedoableOp op  = new MockRedoableOp(mbox.getId(), folderName, Mailbox.ID_FOLDER_INBOX, new FolderOptions());
         op.setFolderIdAndUuid(1234, "fakeuuid");
         op.setServerId(serverId);
@@ -227,8 +226,8 @@ public class RedoPlayerTest {
 
         //playback with some other serverids
         HashSet<String> serverIds = new HashSet<String>();
-        serverIds.add("someotherserverid");
-        serverIds.add(MockRedoableOp.getLocalServerId());
+        serverIds.add("someotherserverid1");
+        serverIds.add("someotherserverid2");
         player.scanLog(logFile, true, null, 0, System.currentTimeMillis(), serverIds);
 
         try {
@@ -240,9 +239,7 @@ public class RedoPlayerTest {
 
         serverIds = new HashSet<String>();
         serverIds.add(serverId);
-        //since we're playing back committed and the txn commit is from this server we have to include local server ID
-        //basically deferring the need for more test-related plumbing for now
-        serverIds.add(MockRedoableOp.getLocalServerId());
+        serverIds.add("someotherserverid1");
         ZimbraLog.test.info("playbackCommittedByServer(): starting to playback");
         player.scanLog(logFile, true, null, 0, System.currentTimeMillis(), serverIds);
         ZimbraLog.test.info("playbackCommittedByServer(): finished playback");
@@ -250,6 +247,5 @@ public class RedoPlayerTest {
         Assert.assertNotNull(testFolder);
         Assert.assertEquals(folderName, testFolder.getName());
     }
-
 
 }
