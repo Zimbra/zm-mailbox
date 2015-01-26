@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -35,6 +35,7 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -688,7 +689,7 @@ public class ZoneInfo2iCalendar {
                     if (name.endsWith(".tab") || name.endsWith(".sh") || name.endsWith(".awk") ||  name.endsWith(".pl") ||
                             (name.startsWith(".") || name.endsWith(".swp")) ||  // ignore editor temporary files
                             name.equalsIgnoreCase("CONTRIBUTING") ||
-                            name.equalsIgnoreCase("Makefile") || 
+                            name.equalsIgnoreCase("Makefile") ||
                             name.equalsIgnoreCase("NEWS") ||
                             name.equalsIgnoreCase("README") ||
                             name.equalsIgnoreCase("Theory") ||
@@ -800,21 +801,34 @@ public class ZoneInfo2iCalendar {
 
             Set<Zone> zones = new TreeSet<Zone>(new ZoneComparatorByGmtOffset());
             zones.addAll(parser.getZones());
+            Set<String> zoneIDs = new TreeSet<String>();
+            for (Zone zone : zones) {
+                zoneIDs.add(zone.getName());
+            }
             for (Zone zone : zones) {
                 String tzid = zone.getName();
                 boolean isPrimary = sPrimaryTZIDs.contains(tzid);
                 Integer matchScore = sMatchScores.get(tzid);
                 if (matchScore == null) {
-                    if (isPrimary)
+                    if (isPrimary) {
                         matchScore = Integer.valueOf(TZIDMapper.DEFAULT_MATCH_SCORE_PRIMARY);
-                    else
+                    } else {
                         matchScore = Integer.valueOf(TZIDMapper.DEFAULT_MATCH_SCORE_NON_PRIMARY);
+                    }
                 }
                 Set<String> aliases = zone.getAliases();
+                Iterator<String> aliasesIter = aliases.iterator();
+                while (aliasesIter.hasNext()) {
+                    String curr = aliasesIter.next();
+                    if (zoneIDs.contains(curr)) {
+                        aliasesIter.remove();
+                    }
+                }
                 ZoneLine zline = getZoneLineForYear(zone, params.referenceDate);
-                if (zline != null)
+                if (zline != null) {
                     out.write(toVTimezone(params.referenceDate.get(Calendar.YEAR),
                             zline, params.lastModified, aliases, isPrimary, matchScore));
+                }
             }
 
             StringBuilder footer = new StringBuilder("END:VCALENDAR");
