@@ -56532,7 +56532,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @return zimbraReverseProxySSLSessionCacheSize, or "10m" if unset
      *
-     * @since ZCS 9.0
+     * @since ZCS 8.7.0
      */
     @ZAttr(id=1680)
     public String getReverseProxySSLSessionCacheSize() {
@@ -56545,7 +56545,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param zimbraReverseProxySSLSessionCacheSize new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.0
+     * @since ZCS 8.7.0
      */
     @ZAttr(id=1680)
     public void setReverseProxySSLSessionCacheSize(String zimbraReverseProxySSLSessionCacheSize) throws com.zimbra.common.service.ServiceException {
@@ -56561,7 +56561,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.0
+     * @since ZCS 8.7.0
      */
     @ZAttr(id=1680)
     public Map<String,Object> setReverseProxySSLSessionCacheSize(String zimbraReverseProxySSLSessionCacheSize, Map<String,Object> attrs) {
@@ -56575,7 +56575,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.0
+     * @since ZCS 8.7.0
      */
     @ZAttr(id=1680)
     public void unsetReverseProxySSLSessionCacheSize() throws com.zimbra.common.service.ServiceException {
@@ -56590,7 +56590,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.0
+     * @since ZCS 8.7.0
      */
     @ZAttr(id=1680)
     public Map<String,Object> unsetReverseProxySSLSessionCacheSize(Map<String,Object> attrs) {
@@ -56600,24 +56600,52 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * SSL session timeout value for the proxy in minutes
+     * SSL session timeout value for the proxy in minutes. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * <p>Use getReverseProxySSLSessionTimeoutAsString to access value as a string.
+     *
+     * @see #getReverseProxySSLSessionTimeoutAsString()
+     *
+     * @return zimbraReverseProxySSLSessionTimeout in millseconds, or 600000 (10m)  if unset
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1679)
+    public long getReverseProxySSLSessionTimeout() {
+        return getTimeInterval(Provisioning.A_zimbraReverseProxySSLSessionTimeout, 600000L);
+    }
+
+    /**
+     * SSL session timeout value for the proxy in minutes. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @return zimbraReverseProxySSLSessionTimeout, or "10m" if unset
      *
-     * @since ZCS 9.0
+     * @since ZCS 8.7.0
      */
     @ZAttr(id=1679)
-    public String getReverseProxySSLSessionTimeout() {
+    public String getReverseProxySSLSessionTimeoutAsString() {
         return getAttr(Provisioning.A_zimbraReverseProxySSLSessionTimeout, "10m");
     }
 
     /**
-     * SSL session timeout value for the proxy in minutes
+     * SSL session timeout value for the proxy in minutes. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @param zimbraReverseProxySSLSessionTimeout new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.0
+     * @since ZCS 8.7.0
      */
     @ZAttr(id=1679)
     public void setReverseProxySSLSessionTimeout(String zimbraReverseProxySSLSessionTimeout) throws com.zimbra.common.service.ServiceException {
@@ -56627,13 +56655,17 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * SSL session timeout value for the proxy in minutes
+     * SSL session timeout value for the proxy in minutes. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @param zimbraReverseProxySSLSessionTimeout new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.0
+     * @since ZCS 8.7.0
      */
     @ZAttr(id=1679)
     public Map<String,Object> setReverseProxySSLSessionTimeout(String zimbraReverseProxySSLSessionTimeout, Map<String,Object> attrs) {
@@ -56643,11 +56675,15 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * SSL session timeout value for the proxy in minutes
+     * SSL session timeout value for the proxy in minutes. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.0
+     * @since ZCS 8.7.0
      */
     @ZAttr(id=1679)
     public void unsetReverseProxySSLSessionTimeout() throws com.zimbra.common.service.ServiceException {
@@ -56657,12 +56693,16 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * SSL session timeout value for the proxy in minutes
+     * SSL session timeout value for the proxy in minutes. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.0
+     * @since ZCS 8.7.0
      */
     @ZAttr(id=1679)
     public Map<String,Object> unsetReverseProxySSLSessionTimeout(Map<String,Object> attrs) {
