@@ -17,7 +17,11 @@
 
 package com.zimbra.cs.redolog.op;
 
+import java.io.IOException;
+
 import com.zimbra.cs.mailbox.Folder.FolderOptions;
+import com.zimbra.cs.redolog.RedoLogOutput;
+import com.zimbra.cs.redolog.TransactionId;
 
 /**
  * Mock redo op for testing. Exposes serverId and other internals for testing purposes
@@ -36,5 +40,20 @@ public class MockRedoableOp extends CreateFolder {
 
     public static String getLocalServerId() {
         return RedoableOp.LOCAL_SERVER_ID;
+    }
+
+    @Override
+    public void setTransactionId(TransactionId txnId) {
+        super.setTransactionId(txnId);
+    }
+
+    public void serializeOperation(RedoLogOutput out) throws IOException {
+        super.serializeHeader(out);
+        super.serializeData(out);
+    }
+
+    @Override
+    public void setTimestamp(long currentTimeMillis) {
+        super.setTimestamp(currentTimeMillis);
     }
 }

@@ -31,6 +31,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
 
+import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
@@ -91,6 +92,22 @@ public abstract class AbstractRedoLogManager implements RedoLogManager {
 
     public AbstractRedoLogManager() {
         super();
+        mTxnIdGenerator = new TxnIdGenerator();
+
+        mEnabled = false;
+        mShuttingDown = false;
+        mRecoveryMode = false;
+
+        mRWLock = new ReentrantReadWriteLock();
+        mActiveOps = new LinkedHashMap<TransactionId, RedoableOp>(100);
+        mTxnIdGenerator = new TxnIdGenerator();
+
+        mElapsed = 0;
+        mCounter = 0;
+        mStatGuard = new Object();
+        mElapsed = 0;
+        mCounter = 0;
+
     }
 
     @Override
@@ -467,10 +484,11 @@ public abstract class AbstractRedoLogManager implements RedoLogManager {
                 ZimbraLog.redolog.debug("Redo log rollover started");
 
                 long start = System.currentTimeMillis();
-                // Force the database to persist the committed changes to disk.
-                // This is very important when running mysql with innodb_flush_log_at_trx_commit=0 (or 2).
-                Db.getInstance().flushToDisk();
-
+                if (isDbFlushNeeded()) {
+                    // Force the database to persist the committed changes to disk.
+                    // This is very important when running mysql with innodb_flush_log_at_trx_commit=0 (or 2).
+                    Db.getInstance().flushToDisk();
+                }
                 if (!skipCheckpoint)
                     checkpoint();
                 synchronized (mActiveOps) {
@@ -487,19 +505,12 @@ public abstract class AbstractRedoLogManager implements RedoLogManager {
             writeLock.unlock();
         }
 
-        /* TODO: Finish implementing Rollover as a replicated op.
-         * Checking in this partial code to work on something else.
-        if (rolledOverFile != null) {
-            ZimbraLog.redolog.info("Rollover: " + rolledOverFile.getName());
-            // Log rollover marker to redolog stream.
-            Rollover ro = new Rollover(rolledOverFile);
-            ro.start(System.currentTimeMillis());
-            logOnly(ro, false); // Don't call log() as it may call rollover() in infinite loop.
-            CommitTxn commit = new CommitTxn(ro);
-            logOnly(commit, true);
-        }
-        */
         return;
+    }
+
+    private boolean isDbFlushNeeded() {
+        //TODO: needs further consideration..do we need to flush galera cluster during redolog rollover?
+        return DebugConfig.redologFlushDbOnRollover && Zimbra.isAlwaysOn();
     }
 
     @Override
@@ -561,7 +572,9 @@ public abstract class AbstractRedoLogManager implements RedoLogManager {
 
     protected void signalFatalError(Throwable e) {
         // Die before any further damage is done.
-        Zimbra.halt("Aborting process", e);
+        if (DebugConfig.redologHaltOnFatal) {
+            Zimbra.halt("Aborting process", e);
+        }
     }
 
     /**

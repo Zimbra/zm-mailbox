@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -55,14 +55,18 @@ public class RedoConfig {
 
         mServiceHostname = config.getAttr(Provisioning.A_zimbraServiceHostname);
         mRedoLogEnabled = config.getBooleanAttr(Provisioning.A_zimbraRedoLogEnabled, D_REDOLOG_ENABLED);
-        mRedoLogPath =
-            Config.getPathRelativeToZimbraHome(
+        mRedoLogPath = System.getProperty("zimbra_override_redolog_path");
+        if (mRedoLogPath == null) {
+            mRedoLogPath = Config.getPathRelativeToZimbraHome(
                     config.getAttr(Provisioning.A_zimbraRedoLogLogPath,
                                    D_REDOLOG_PATH)).getAbsolutePath();
-        mRedoLogArchiveDir =
-            Config.getPathRelativeToZimbraHome(
+        }
+        mRedoLogArchiveDir = System.getProperty("zimbra_override_redolog_archivedir");
+        if (mRedoLogArchiveDir == null) {
+            mRedoLogArchiveDir = Config.getPathRelativeToZimbraHome(
                     config.getAttr(Provisioning.A_zimbraRedoLogArchiveDir,
                                    D_REDOLOG_ARCHIVEDIR)).getAbsolutePath();
+        }
         mRedoLogRolloverFileSizeKB =
             config.getLongAttr(Provisioning.A_zimbraRedoLogRolloverFileSizeKB,
                                D_REDOLOG_ROLLOVER_FILESIZE_KB);
@@ -187,11 +191,11 @@ public class RedoConfig {
      * they wait for a dedicated thread to fsync the accumulated changes
      * periodically.  This configuration value controls the interval between
      * the fsyncs.
-     * 
+     *
      * With a longer interval, there will be fewer fsyncs compared to the
      * number of logging calls.  This can improve throughput under heavy
      * load but increases the latency on individual logging calls.
-     * 
+     *
      * @return interval in milliseconds; default is 10ms
      */
     public static synchronized long redoLogFsyncIntervalMS() {
@@ -202,9 +206,9 @@ public class RedoConfig {
     private static final long D_REDOLOG_CRASH_RECOVERY_LOOKBACK_SEC = 10;
     /**
      * This parameter is also related to running mysql with innodb_flush_log_at_trx_commit=0.
-     * When recovering from a crash, mysql may not have the committed changes from roughly the last second. 
+     * When recovering from a crash, mysql may not have the committed changes from roughly the last second.
      * ZCS must re-execute enough past operations to bring mysql into consistent state.
-     * 
+     *
      * This parameter controls how long to look back.  Default is 10 seconds.  Crash recovery normally
      * re-executes only pending changes.  But with this parameter committed changes within the last 10
      * seconds are also re-executed.

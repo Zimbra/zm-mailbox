@@ -247,7 +247,15 @@ public abstract class RedoableOp {
         return mTxnId;
     }
 
-    protected void setTransactionId(TransactionId txnId) {
+    /**
+     * Set the current transaction ID. Only valid to call when transactionId has not been initialized
+     * will throw an IllegalStateException if overwrite is attempted.
+     * @param txnId
+     */
+    public void setTransactionId(TransactionId txnId) {
+        if (mTxnId != null && mTxnId.isInitialized()) {
+            throw new IllegalStateException("transactionId already set, cannot be set again");
+        }
         mTxnId = txnId;
     }
 

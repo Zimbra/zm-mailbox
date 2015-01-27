@@ -19,9 +19,7 @@ package com.zimbra.cs.redolog;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.Set;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock;
 
 import com.zimbra.common.util.FileUtil;
@@ -42,27 +40,17 @@ public class FileRedoLogManager extends AbstractRedoLogManager implements
     File mLogFile; // full path to the "redo.log" file
 
     FileRedoLogManager(File redolog, File archdir, boolean supportsCrashRecovery) {
-        mEnabled = false;
-        mShuttingDown = false;
-        mRecoveryMode = false;
+        super();
         mSupportsCrashRecovery = supportsCrashRecovery;
 
         mLogFile = redolog;
         mArchiveDir = archdir;
-
-        mRWLock = new ReentrantReadWriteLock();
-        mActiveOps = new LinkedHashMap<TransactionId, RedoableOp>(100);
-        mTxnIdGenerator = new TxnIdGenerator();
+        ZimbraLog.redolog.debug("instantating file redolog manager with file %s archive %s", mLogFile, mArchiveDir);
         long minAge = RedoConfig.redoLogRolloverMinFileAge() * 60 * 1000; // milliseconds
         long softMax = RedoConfig.redoLogRolloverFileSizeKB() * 1024; // bytes
         long hardMax = RedoConfig.redoLogRolloverHardMaxFileSizeKB() * 1024; // bytes
         setRolloverLimits(minAge, softMax, hardMax);
         mRolloverMgr = new FileRolloverManager(this, mLogFile);
-        mLogWriter = null;
-
-        mStatGuard = new Object();
-        mElapsed = 0;
-        mCounter = 0;
     }
 
     @Override

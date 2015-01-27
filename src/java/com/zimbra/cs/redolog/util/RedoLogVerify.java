@@ -112,13 +112,14 @@ public class RedoLogVerify {
         return cl;
     }
 
-   static class Params {
+   public static class Params {
         public Set<Integer> mboxIds = new HashSet<Integer>();
         public Set<String> serverIds = new HashSet<String>();
         public boolean quiet = false;
         public boolean hideOffset = false;
         public boolean showBlob = false;
         public boolean help = false;
+        public boolean snippet = false;
     }
 
     private static Params initParams(CommandLine cl) {
@@ -181,7 +182,7 @@ public class RedoLogVerify {
         boolean good = false;
         FileLogReader logReader = new FileLogReader(logfile, false);
         logReader.open();
-        if (!mParams.quiet) {
+        if (!(mParams.quiet || mParams.snippet)) {
             FileHeader header = logReader.getHeader();
             mOut.println("HEADER");
             mOut.println(HEADER_MARKER);
@@ -300,7 +301,9 @@ public class RedoLogVerify {
     }
 
     public boolean verifyFile(File file) {
+        if (!mParams.snippet) {
         mOut.println("VERIFYING: " + file.getAbsolutePath());
+        }
         boolean good = false;
         try {
             good = scanLog(file);
@@ -309,8 +312,9 @@ public class RedoLogVerify {
             mOut.println("Exception while verifying " + file.getAbsolutePath());
             e.printStackTrace(mOut);
         }
-        if (!mParams.quiet)
+        if (!mParams.quiet) {
             mOut.println();
+        }
         return good;
     }
 
@@ -324,8 +328,9 @@ public class RedoLogVerify {
     }
 
     private boolean verifyDirectory(File dir) {
-        if (!mParams.quiet)
+        if (!(mParams.quiet || mParams.snippet)) {
             mOut.println("VERIFYING DIRECTORY: " + dir.getAbsolutePath());
+        }
         File[] all = dir.listFiles();
         if (all == null || all.length == 0)
             return true;
