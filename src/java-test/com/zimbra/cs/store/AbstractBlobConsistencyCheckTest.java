@@ -69,8 +69,7 @@ public abstract class AbstractBlobConsistencyCheckTest {
         originalStoreManager = StoreManager.getInstance();
         StoreManager.setInstance(getStoreManager());
         StoreManager.getInstance().startup();
-        MailboxTestUtil.clearData();
-        deleteAllBlobs();
+        cleanup();
     }
 
 
@@ -202,9 +201,18 @@ public abstract class AbstractBlobConsistencyCheckTest {
 
     @After
     public void tearDown() throws Exception {
-        deleteAllBlobs();
+        cleanup();
         StoreManager.getInstance().shutdown();
         StoreManager.setInstance(originalStoreManager);
+    }
+    
+    private void cleanup () {
+        try {
+            MailboxTestUtil.clearData();
+            deleteAllBlobs();
+        } catch (Exception e) {
+            ZimbraLog.test.error("Exception thrown during cleanup", e);
+        }
     }
 
 }
