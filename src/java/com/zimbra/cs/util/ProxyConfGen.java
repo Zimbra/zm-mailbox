@@ -2500,8 +2500,8 @@ public class ProxyConfGen
 	    mConfVars.put("web.login.upstream.url", new ProxyConfVar("web.login.upstream.url", "zimbraMailURL", "/", ProxyConfValueType.STRING, ProxyConfOverride.SERVER, "Zimbra Login URL"));
 	    mConfVars.put("web.upstream.login.target", new WebProxyUpstreamLoginTargetVar());
 	    mConfVars.put("web.upstream.ews.target", new WebProxyUpstreamEwsTargetVar());
+	    mConfVars.put("ssl.session.timeout", new TimeInSecVarWrapper(new ProxyConfVar("ssl.session.timeout", "zimbraReverseProxySSLSessionTimeout", new Long(600), ProxyConfValueType.TIME, ProxyConfOverride.SERVER, "SSL session timeout value for the proxy in secs")));
 	    mConfVars.put("web.zss.upstream.disable", new WebZSSUpstreamEnablerVar());
-	    mConfVars.put("ssl.session.timeout", new ProxyConfVar("ssl.session.timeout", "zimbraReverseProxySSLSessionTimeout", new Long(600000), ProxyConfValueType.TIME, ProxyConfOverride.SERVER, "SSL session timeout value for the proxy in ms"));
         mConfVars.put("ssl.session.cachesize", new WebSSLSessionCacheSizeVar());
 	    mConfVars.put("web.zss.upstream.hostname", new ProxyConfVar("web.zss.upstream.hostname", "zimbraReverseProxyZSSHostname", "", ProxyConfValueType.STRING, ProxyConfOverride.SERVER, "Hostname of the upstream ZSS server being reverse-proxied"));
 	    mConfVars.put("web.zss.resolver.file", new ProxyConfVar("web.zss.resolver.file", null, mResolverfile, ProxyConfValueType.STRING, ProxyConfOverride.CONFIG, "File containing resolver directive with the nameservers from /etc/resolv.conf"));
