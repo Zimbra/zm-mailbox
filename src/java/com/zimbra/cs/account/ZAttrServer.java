@@ -43056,7 +43056,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * SSL session cache size in megabytes
+     * SSL session cache size in megabytes. Need to have &#039;m&#039; (for
+     * megabytes) suffix at the end
      *
      * @return zimbraReverseProxySSLSessionCacheSize, or "10m" if unset
      *
@@ -43068,7 +43069,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * SSL session cache size in megabytes
+     * SSL session cache size in megabytes. Need to have &#039;m&#039; (for
+     * megabytes) suffix at the end
      *
      * @param zimbraReverseProxySSLSessionCacheSize new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -43083,7 +43085,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * SSL session cache size in megabytes
+     * SSL session cache size in megabytes. Need to have &#039;m&#039; (for
+     * megabytes) suffix at the end
      *
      * @param zimbraReverseProxySSLSessionCacheSize new value
      * @param attrs existing map to populate, or null to create a new map
@@ -43099,7 +43102,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * SSL session cache size in megabytes
+     * SSL session cache size in megabytes. Need to have &#039;m&#039; (for
+     * megabytes) suffix at the end
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -43113,7 +43117,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * SSL session cache size in megabytes
+     * SSL session cache size in megabytes. Need to have &#039;m&#039; (for
+     * megabytes) suffix at the end
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs

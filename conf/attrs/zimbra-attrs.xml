@@ -8459,7 +8459,7 @@ TODO: delete them permanently from here
 
 <attr id="1680" name="zimbraReverseProxySSLSessionCacheSize" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="nginxproxy" since="8.7.0">
   <globalConfigValue>10m</globalConfigValue>
-  <desc>SSL session cache size in megabytes</desc>
+  <desc>SSL session cache size in megabytes. Need to have 'm' (for megabytes) suffix at the end</desc>
 </attr>
 
 <attr id="1681" name="zimbraReverseProxyLimitReqZoneRate" type="integer" min="1" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="nginxproxy" since="9.0">
