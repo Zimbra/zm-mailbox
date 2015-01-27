@@ -30,7 +30,6 @@ public abstract class AbstractFoldersAndTagsCacheTest extends AbstractCacheTest 
 
     @Test
     public void test() throws Exception {
-        Assume.assumeTrue(isExternalCacheAvailableForTest());
         cache = constructCache();
         Assert.assertNotNull(cache);
 

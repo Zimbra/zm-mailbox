@@ -19,10 +19,13 @@ package com.zimbra.cs.mailbox;
 import java.util.HashMap;
 
 import org.junit.BeforeClass;
+import org.springframework.context.annotation.Configuration;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.memcached.ZimbraMemcachedClient;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.memcached.MemcachedOnLocalhostZimbraMemcachedClientConfigurer;
+import com.zimbra.cs.memcached.ZimbraMemcachedClientConfigurer;
 import com.zimbra.cs.store.MockStoreManager;
 import com.zimbra.cs.util.Zimbra;
 
@@ -33,7 +36,7 @@ public final class MemcachedMailItemCacheTest extends AbstractMailItemCacheTest 
 
     @BeforeClass
     public static void init() throws Exception {
-        MailboxTestUtil.initServer(MockStoreManager.class, "", MemcachedOnLocalhostZimbraConfig.class);
+        MailboxTestUtil.initServer(MockStoreManager.class, "", LocalConfig.class);
         Provisioning prov = Provisioning.getInstance();
         prov.createAccount("test@zimbra.com", "secret", new HashMap<String, Object>());
     }
@@ -54,5 +57,18 @@ public final class MemcachedMailItemCacheTest extends AbstractMailItemCacheTest 
     @Override
     protected void flushCacheBetweenTests() throws Exception {
         Zimbra.getAppContext().getBean(ZimbraMemcachedClient.class).flush();
+    }
+
+
+    /**
+     * Use local (in-mem) adapters for everything possible (LocalCachingZimbraConfig), to allow
+     * this test to have dedicated use of memcached.
+     **/
+    @Configuration
+    static class LocalConfig extends LocalCachingZimbraConfig {
+        @Override
+        public ZimbraMemcachedClientConfigurer memcachedClientConfigurerBean() throws Exception {
+            return new MemcachedOnLocalhostZimbraMemcachedClientConfigurer();
+        }
     }
 }

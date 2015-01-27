@@ -13,13 +13,10 @@
  */
 package com.zimbra.cs.mailbox;
 
-import net.spy.memcached.HashAlgorithm;
-
 import org.springframework.context.annotation.Configuration;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Server;
+import com.zimbra.cs.memcached.MemcachedOnLocalhostZimbraMemcachedClientConfigurer;
 import com.zimbra.cs.memcached.ZimbraMemcachedClientConfigurer;
 import com.zimbra.cs.util.ZimbraConfig;
 
@@ -36,17 +33,6 @@ public class MemcachedOnLocalhostZimbraConfig extends ZimbraConfig {
 
     @Override
     public ZimbraMemcachedClientConfigurer memcachedClientConfigurerBean() throws Exception {
-        return new ZimbraMemcachedClientConfigurer() {
-            @Override
-            public void reconfigure() throws ServiceException {
-                Server server = Provisioning.getInstance().getLocalServer();
-                String[] serverList = {"localhost"};
-                boolean useBinaryProtocol = server.getBooleanAttr(Provisioning.A_zimbraMemcachedClientBinaryProtocolEnabled, false);
-                String hashAlgorithm = server.getAttr(Provisioning.A_zimbraMemcachedClientHashAlgorithm, HashAlgorithm.KETAMA_HASH.toString());
-                int expirySeconds = 10;
-                long timeoutMillis = 100;
-                client.connect(serverList, useBinaryProtocol, hashAlgorithm, expirySeconds, timeoutMillis);
-            }
-        };
+        return new MemcachedOnLocalhostZimbraMemcachedClientConfigurer();
     }
 }
