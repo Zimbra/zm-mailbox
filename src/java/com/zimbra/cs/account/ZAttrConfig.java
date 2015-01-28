@@ -13146,6 +13146,78 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * Enable contact ranking table
+     *
+     * @return zimbraContactRankingEnabled, or true if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1816)
+    public boolean isContactRankingEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraContactRankingEnabled, true);
+    }
+
+    /**
+     * Enable contact ranking table
+     *
+     * @param zimbraContactRankingEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1816)
+    public void setContactRankingEnabled(boolean zimbraContactRankingEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraContactRankingEnabled, zimbraContactRankingEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Enable contact ranking table
+     *
+     * @param zimbraContactRankingEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1816)
+    public Map<String,Object> setContactRankingEnabled(boolean zimbraContactRankingEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraContactRankingEnabled, zimbraContactRankingEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Enable contact ranking table
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1816)
+    public void unsetContactRankingEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraContactRankingEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Enable contact ranking table
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1816)
+    public Map<String,Object> unsetContactRankingEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraContactRankingEnabled, "");
+        return attrs;
+    }
+
+    /**
      * Deprecated since: 6.0.6. Deprecated per bug 40081. Orig desc: How
      * often do we refresh contact ranking table from address book and GAL to
      * get friendly name for the email address. Use 0 to disable the
@@ -13266,6 +13338,196 @@ public abstract class ZAttrConfig extends Entry {
     public Map<String,Object> unsetContactRankingTableRefreshInterval(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraContactRankingTableRefreshInterval, "");
+        return attrs;
+    }
+
+    /**
+     * Flag to enable contact ranking table
+     *
+     * @return zimbraConversationIgnoreMaillistPrefix, or true if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1792)
+    public boolean isConversationIgnoreMaillistPrefix() {
+        return getBooleanAttr(Provisioning.A_zimbraConversationIgnoreMaillistPrefix, true);
+    }
+
+    /**
+     * Flag to enable contact ranking table
+     *
+     * @param zimbraConversationIgnoreMaillistPrefix new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1792)
+    public void setConversationIgnoreMaillistPrefix(boolean zimbraConversationIgnoreMaillistPrefix) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraConversationIgnoreMaillistPrefix, zimbraConversationIgnoreMaillistPrefix ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Flag to enable contact ranking table
+     *
+     * @param zimbraConversationIgnoreMaillistPrefix new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1792)
+    public Map<String,Object> setConversationIgnoreMaillistPrefix(boolean zimbraConversationIgnoreMaillistPrefix, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraConversationIgnoreMaillistPrefix, zimbraConversationIgnoreMaillistPrefix ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Flag to enable contact ranking table
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1792)
+    public void unsetConversationIgnoreMaillistPrefix() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraConversationIgnoreMaillistPrefix, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Flag to enable contact ranking table
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1792)
+    public Map<String,Object> unsetConversationIgnoreMaillistPrefix(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraConversationIgnoreMaillistPrefix, "");
+        return attrs;
+    }
+
+    /**
+     * Conversation max age in millis. Deletes rows from open_conversation
+     * whose items are older than the given no of days. Default is 31 days..
+     * Must be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * <p>Use getConversationMaxAgeAsString to access value as a string.
+     *
+     * @see #getConversationMaxAgeAsString()
+     *
+     * @return zimbraConversationMaxAge in millseconds, or 2678400000 (2678400000ms)  if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1793)
+    public long getConversationMaxAge() {
+        return getTimeInterval(Provisioning.A_zimbraConversationMaxAge, 2678400000L);
+    }
+
+    /**
+     * Conversation max age in millis. Deletes rows from open_conversation
+     * whose items are older than the given no of days. Default is 31 days..
+     * Must be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @return zimbraConversationMaxAge, or "2678400000ms" if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1793)
+    public String getConversationMaxAgeAsString() {
+        return getAttr(Provisioning.A_zimbraConversationMaxAge, "2678400000ms");
+    }
+
+    /**
+     * Conversation max age in millis. Deletes rows from open_conversation
+     * whose items are older than the given no of days. Default is 31 days..
+     * Must be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @param zimbraConversationMaxAge new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1793)
+    public void setConversationMaxAge(String zimbraConversationMaxAge) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraConversationMaxAge, zimbraConversationMaxAge);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Conversation max age in millis. Deletes rows from open_conversation
+     * whose items are older than the given no of days. Default is 31 days..
+     * Must be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @param zimbraConversationMaxAge new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1793)
+    public Map<String,Object> setConversationMaxAge(String zimbraConversationMaxAge, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraConversationMaxAge, zimbraConversationMaxAge);
+        return attrs;
+    }
+
+    /**
+     * Conversation max age in millis. Deletes rows from open_conversation
+     * whose items are older than the given no of days. Default is 31 days..
+     * Must be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1793)
+    public void unsetConversationMaxAge() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraConversationMaxAge, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Conversation max age in millis. Deletes rows from open_conversation
+     * whose items are older than the given no of days. Default is 31 days..
+     * Must be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1793)
+    public Map<String,Object> unsetConversationMaxAge(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraConversationMaxAge, "");
         return attrs;
     }
 
@@ -17678,6 +17940,83 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * Flag for not populating envelope sender when message is redirected by
+     * mail filters. See bug 56566
+     *
+     * @return zimbraFilterNullEnvelopeSenderForDSNRedirect, or true if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1796)
+    public boolean isFilterNullEnvelopeSenderForDSNRedirect() {
+        return getBooleanAttr(Provisioning.A_zimbraFilterNullEnvelopeSenderForDSNRedirect, true);
+    }
+
+    /**
+     * Flag for not populating envelope sender when message is redirected by
+     * mail filters. See bug 56566
+     *
+     * @param zimbraFilterNullEnvelopeSenderForDSNRedirect new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1796)
+    public void setFilterNullEnvelopeSenderForDSNRedirect(boolean zimbraFilterNullEnvelopeSenderForDSNRedirect) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFilterNullEnvelopeSenderForDSNRedirect, zimbraFilterNullEnvelopeSenderForDSNRedirect ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Flag for not populating envelope sender when message is redirected by
+     * mail filters. See bug 56566
+     *
+     * @param zimbraFilterNullEnvelopeSenderForDSNRedirect new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1796)
+    public Map<String,Object> setFilterNullEnvelopeSenderForDSNRedirect(boolean zimbraFilterNullEnvelopeSenderForDSNRedirect, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFilterNullEnvelopeSenderForDSNRedirect, zimbraFilterNullEnvelopeSenderForDSNRedirect ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Flag for not populating envelope sender when message is redirected by
+     * mail filters. See bug 56566
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1796)
+    public void unsetFilterNullEnvelopeSenderForDSNRedirect() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFilterNullEnvelopeSenderForDSNRedirect, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Flag for not populating envelope sender when message is redirected by
+     * mail filters. See bug 56566
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1796)
+    public Map<String,Object> unsetFilterNullEnvelopeSenderForDSNRedirect(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFilterNullEnvelopeSenderForDSNRedirect, "");
+        return attrs;
+    }
+
+    /**
      * Whether to force clear zimbra auth cookies when SOAP session ends
      * (i.e. force logout on browser tab close)
      *
@@ -17751,6 +18090,88 @@ public abstract class ZAttrConfig extends Entry {
     public Map<String,Object> unsetForceClearCookies(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraForceClearCookies, "");
+        return attrs;
+    }
+
+    /**
+     * Flag to disable the listing of interval when you have no data about
+     * account&#039;s free busy interval. One example is user doesn&#039;t
+     * have the acl to fetch free busy intervals of this account
+     *
+     * @return zimbraFreeBusyDisableNoDataStatus, or false if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1797)
+    public boolean isFreeBusyDisableNoDataStatus() {
+        return getBooleanAttr(Provisioning.A_zimbraFreeBusyDisableNoDataStatus, false);
+    }
+
+    /**
+     * Flag to disable the listing of interval when you have no data about
+     * account&#039;s free busy interval. One example is user doesn&#039;t
+     * have the acl to fetch free busy intervals of this account
+     *
+     * @param zimbraFreeBusyDisableNoDataStatus new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1797)
+    public void setFreeBusyDisableNoDataStatus(boolean zimbraFreeBusyDisableNoDataStatus) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFreeBusyDisableNoDataStatus, zimbraFreeBusyDisableNoDataStatus ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Flag to disable the listing of interval when you have no data about
+     * account&#039;s free busy interval. One example is user doesn&#039;t
+     * have the acl to fetch free busy intervals of this account
+     *
+     * @param zimbraFreeBusyDisableNoDataStatus new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1797)
+    public Map<String,Object> setFreeBusyDisableNoDataStatus(boolean zimbraFreeBusyDisableNoDataStatus, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFreeBusyDisableNoDataStatus, zimbraFreeBusyDisableNoDataStatus ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Flag to disable the listing of interval when you have no data about
+     * account&#039;s free busy interval. One example is user doesn&#039;t
+     * have the acl to fetch free busy intervals of this account
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1797)
+    public void unsetFreeBusyDisableNoDataStatus() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFreeBusyDisableNoDataStatus, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Flag to disable the listing of interval when you have no data about
+     * account&#039;s free busy interval. One example is user doesn&#039;t
+     * have the acl to fetch free busy intervals of this account
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1797)
+    public Map<String,Object> unsetFreeBusyDisableNoDataStatus(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFreeBusyDisableNoDataStatus, "");
         return attrs;
     }
 
@@ -23975,6 +24396,78 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * Maximum image size in bytes to resize
+     *
+     * @return zimbraImapNioEnabled, or true if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1802)
+    public boolean isImapNioEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraImapNioEnabled, true);
+    }
+
+    /**
+     * Maximum image size in bytes to resize
+     *
+     * @param zimbraImapNioEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1802)
+    public void setImapNioEnabled(boolean zimbraImapNioEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraImapNioEnabled, zimbraImapNioEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum image size in bytes to resize
+     *
+     * @param zimbraImapNioEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1802)
+    public Map<String,Object> setImapNioEnabled(boolean zimbraImapNioEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraImapNioEnabled, zimbraImapNioEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Maximum image size in bytes to resize
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1802)
+    public void unsetImapNioEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraImapNioEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum image size in bytes to resize
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1802)
+    public Map<String,Object> unsetImapNioEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraImapNioEnabled, "");
+        return attrs;
+    }
+
+    /**
      * number of handler threads
      *
      * @return zimbraImapNumThreads, or 200 if unset
@@ -25680,6 +26173,727 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * Disable perf counters for lucene indexer
+     *
+     * @return zimbraIndexDisablePerfCounters, or false if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1791)
+    public boolean isIndexDisablePerfCounters() {
+        return getBooleanAttr(Provisioning.A_zimbraIndexDisablePerfCounters, false);
+    }
+
+    /**
+     * Disable perf counters for lucene indexer
+     *
+     * @param zimbraIndexDisablePerfCounters new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1791)
+    public void setIndexDisablePerfCounters(boolean zimbraIndexDisablePerfCounters) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIndexDisablePerfCounters, zimbraIndexDisablePerfCounters ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Disable perf counters for lucene indexer
+     *
+     * @param zimbraIndexDisablePerfCounters new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1791)
+    public Map<String,Object> setIndexDisablePerfCounters(boolean zimbraIndexDisablePerfCounters, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIndexDisablePerfCounters, zimbraIndexDisablePerfCounters ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Disable perf counters for lucene indexer
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1791)
+    public void unsetIndexDisablePerfCounters() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIndexDisablePerfCounters, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Disable perf counters for lucene indexer
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1791)
+    public Map<String,Object> unsetIndexDisablePerfCounters(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIndexDisablePerfCounters, "");
+        return attrs;
+    }
+
+    /**
+     * Lucene index io implementation
+     *
+     * <p>Valid values: [mmap, nio, simple]
+     *
+     * @return zimbraIndexLuceneIoImpl, or ZAttrProvisioning.IndexLuceneIoImpl.nio if unset and/or has invalid value
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1811)
+    public ZAttrProvisioning.IndexLuceneIoImpl getIndexLuceneIoImpl() {
+        try { String v = getAttr(Provisioning.A_zimbraIndexLuceneIoImpl); return v == null ? ZAttrProvisioning.IndexLuceneIoImpl.nio : ZAttrProvisioning.IndexLuceneIoImpl.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.IndexLuceneIoImpl.nio; }
+    }
+
+    /**
+     * Lucene index io implementation
+     *
+     * <p>Valid values: [mmap, nio, simple]
+     *
+     * @return zimbraIndexLuceneIoImpl, or "nio" if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1811)
+    public String getIndexLuceneIoImplAsString() {
+        return getAttr(Provisioning.A_zimbraIndexLuceneIoImpl, "nio");
+    }
+
+    /**
+     * Lucene index io implementation
+     *
+     * <p>Valid values: [mmap, nio, simple]
+     *
+     * @param zimbraIndexLuceneIoImpl new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1811)
+    public void setIndexLuceneIoImpl(ZAttrProvisioning.IndexLuceneIoImpl zimbraIndexLuceneIoImpl) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIndexLuceneIoImpl, zimbraIndexLuceneIoImpl.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Lucene index io implementation
+     *
+     * <p>Valid values: [mmap, nio, simple]
+     *
+     * @param zimbraIndexLuceneIoImpl new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1811)
+    public Map<String,Object> setIndexLuceneIoImpl(ZAttrProvisioning.IndexLuceneIoImpl zimbraIndexLuceneIoImpl, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIndexLuceneIoImpl, zimbraIndexLuceneIoImpl.toString());
+        return attrs;
+    }
+
+    /**
+     * Lucene index io implementation
+     *
+     * <p>Valid values: [mmap, nio, simple]
+     *
+     * @param zimbraIndexLuceneIoImpl new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1811)
+    public void setIndexLuceneIoImplAsString(String zimbraIndexLuceneIoImpl) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIndexLuceneIoImpl, zimbraIndexLuceneIoImpl);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Lucene index io implementation
+     *
+     * <p>Valid values: [mmap, nio, simple]
+     *
+     * @param zimbraIndexLuceneIoImpl new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1811)
+    public Map<String,Object> setIndexLuceneIoImplAsString(String zimbraIndexLuceneIoImpl, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIndexLuceneIoImpl, zimbraIndexLuceneIoImpl);
+        return attrs;
+    }
+
+    /**
+     * Lucene index io implementation
+     *
+     * <p>Valid values: [mmap, nio, simple]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1811)
+    public void unsetIndexLuceneIoImpl() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIndexLuceneIoImpl, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Lucene index io implementation
+     *
+     * <p>Valid values: [mmap, nio, simple]
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1811)
+    public Map<String,Object> unsetIndexLuceneIoImpl(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIndexLuceneIoImpl, "");
+        return attrs;
+    }
+
+    /**
+     * Determines how often segment indices are merged by addDocument
+     * function. With smaller values, less RAM is used while indexing, and
+     * searches are faster, but indexing speed is slower. With larger values,
+     * more RAM is used during indexing, and while searches is slower,
+     * indexing is faster. Thus larger values greater than 10 are best for
+     * batch index creation, and smaller values less than 10 for indices that
+     * are interactively maintained
+     *
+     * @return zimbraIndexLuceneMergeFactor, or 10 if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1812)
+    public int getIndexLuceneMergeFactor() {
+        return getIntAttr(Provisioning.A_zimbraIndexLuceneMergeFactor, 10);
+    }
+
+    /**
+     * Determines how often segment indices are merged by addDocument
+     * function. With smaller values, less RAM is used while indexing, and
+     * searches are faster, but indexing speed is slower. With larger values,
+     * more RAM is used during indexing, and while searches is slower,
+     * indexing is faster. Thus larger values greater than 10 are best for
+     * batch index creation, and smaller values less than 10 for indices that
+     * are interactively maintained
+     *
+     * @param zimbraIndexLuceneMergeFactor new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1812)
+    public void setIndexLuceneMergeFactor(int zimbraIndexLuceneMergeFactor) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIndexLuceneMergeFactor, Integer.toString(zimbraIndexLuceneMergeFactor));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Determines how often segment indices are merged by addDocument
+     * function. With smaller values, less RAM is used while indexing, and
+     * searches are faster, but indexing speed is slower. With larger values,
+     * more RAM is used during indexing, and while searches is slower,
+     * indexing is faster. Thus larger values greater than 10 are best for
+     * batch index creation, and smaller values less than 10 for indices that
+     * are interactively maintained
+     *
+     * @param zimbraIndexLuceneMergeFactor new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1812)
+    public Map<String,Object> setIndexLuceneMergeFactor(int zimbraIndexLuceneMergeFactor, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIndexLuceneMergeFactor, Integer.toString(zimbraIndexLuceneMergeFactor));
+        return attrs;
+    }
+
+    /**
+     * Determines how often segment indices are merged by addDocument
+     * function. With smaller values, less RAM is used while indexing, and
+     * searches are faster, but indexing speed is slower. With larger values,
+     * more RAM is used during indexing, and while searches is slower,
+     * indexing is faster. Thus larger values greater than 10 are best for
+     * batch index creation, and smaller values less than 10 for indices that
+     * are interactively maintained
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1812)
+    public void unsetIndexLuceneMergeFactor() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIndexLuceneMergeFactor, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Determines how often segment indices are merged by addDocument
+     * function. With smaller values, less RAM is used while indexing, and
+     * searches are faster, but indexing speed is slower. With larger values,
+     * more RAM is used during indexing, and while searches is slower,
+     * indexing is faster. Thus larger values greater than 10 are best for
+     * batch index creation, and smaller values less than 10 for indices that
+     * are interactively maintained
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1812)
+    public Map<String,Object> unsetIndexLuceneMergeFactor(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIndexLuceneMergeFactor, "");
+        return attrs;
+    }
+
+    /**
+     * Flag to commit the index manually or not
+     *
+     * @return zimbraIndexManualCommit, or true if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1813)
+    public boolean isIndexManualCommit() {
+        return getBooleanAttr(Provisioning.A_zimbraIndexManualCommit, true);
+    }
+
+    /**
+     * Flag to commit the index manually or not
+     *
+     * @param zimbraIndexManualCommit new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1813)
+    public void setIndexManualCommit(boolean zimbraIndexManualCommit) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIndexManualCommit, zimbraIndexManualCommit ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Flag to commit the index manually or not
+     *
+     * @param zimbraIndexManualCommit new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1813)
+    public Map<String,Object> setIndexManualCommit(boolean zimbraIndexManualCommit, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIndexManualCommit, zimbraIndexManualCommit ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Flag to commit the index manually or not
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1813)
+    public void unsetIndexManualCommit() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIndexManualCommit, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Flag to commit the index manually or not
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1813)
+    public Map<String,Object> unsetIndexManualCommit(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIndexManualCommit, "");
+        return attrs;
+    }
+
+    /**
+     * When batching index operations into a Mailbox transaction, the maximum
+     * aggregate size of items that we will allow in a single transaction.
+     *
+     * @return zimbraIndexMaxTransactionBytes, or 5000000 if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1814)
+    public int getIndexMaxTransactionBytes() {
+        return getIntAttr(Provisioning.A_zimbraIndexMaxTransactionBytes, 5000000);
+    }
+
+    /**
+     * When batching index operations into a Mailbox transaction, the maximum
+     * aggregate size of items that we will allow in a single transaction.
+     *
+     * @param zimbraIndexMaxTransactionBytes new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1814)
+    public void setIndexMaxTransactionBytes(int zimbraIndexMaxTransactionBytes) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIndexMaxTransactionBytes, Integer.toString(zimbraIndexMaxTransactionBytes));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * When batching index operations into a Mailbox transaction, the maximum
+     * aggregate size of items that we will allow in a single transaction.
+     *
+     * @param zimbraIndexMaxTransactionBytes new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1814)
+    public Map<String,Object> setIndexMaxTransactionBytes(int zimbraIndexMaxTransactionBytes, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIndexMaxTransactionBytes, Integer.toString(zimbraIndexMaxTransactionBytes));
+        return attrs;
+    }
+
+    /**
+     * When batching index operations into a Mailbox transaction, the maximum
+     * aggregate size of items that we will allow in a single transaction.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1814)
+    public void unsetIndexMaxTransactionBytes() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIndexMaxTransactionBytes, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * When batching index operations into a Mailbox transaction, the maximum
+     * aggregate size of items that we will allow in a single transaction.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1814)
+    public Map<String,Object> unsetIndexMaxTransactionBytes(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIndexMaxTransactionBytes, "");
+        return attrs;
+    }
+
+    /**
+     * When batching index operations, the maximum number of mail items we
+     * allow in a single transaction.
+     *
+     * @return zimbraIndexMaxTransactionItems, or 100 if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1815)
+    public int getIndexMaxTransactionItems() {
+        return getIntAttr(Provisioning.A_zimbraIndexMaxTransactionItems, 100);
+    }
+
+    /**
+     * When batching index operations, the maximum number of mail items we
+     * allow in a single transaction.
+     *
+     * @param zimbraIndexMaxTransactionItems new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1815)
+    public void setIndexMaxTransactionItems(int zimbraIndexMaxTransactionItems) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIndexMaxTransactionItems, Integer.toString(zimbraIndexMaxTransactionItems));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * When batching index operations, the maximum number of mail items we
+     * allow in a single transaction.
+     *
+     * @param zimbraIndexMaxTransactionItems new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1815)
+    public Map<String,Object> setIndexMaxTransactionItems(int zimbraIndexMaxTransactionItems, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIndexMaxTransactionItems, Integer.toString(zimbraIndexMaxTransactionItems));
+        return attrs;
+    }
+
+    /**
+     * When batching index operations, the maximum number of mail items we
+     * allow in a single transaction.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1815)
+    public void unsetIndexMaxTransactionItems() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIndexMaxTransactionItems, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * When batching index operations, the maximum number of mail items we
+     * allow in a single transaction.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1815)
+    public Map<String,Object> unsetIndexMaxTransactionItems(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIndexMaxTransactionItems, "");
+        return attrs;
+    }
+
+    /**
+     * Maximum number of IndexReaders in the search index cache
+     *
+     * @return zimbraIndexReaderCacheSize, or 20 if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1790)
+    public int getIndexReaderCacheSize() {
+        return getIntAttr(Provisioning.A_zimbraIndexReaderCacheSize, 20);
+    }
+
+    /**
+     * Maximum number of IndexReaders in the search index cache
+     *
+     * @param zimbraIndexReaderCacheSize new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1790)
+    public void setIndexReaderCacheSize(int zimbraIndexReaderCacheSize) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIndexReaderCacheSize, Integer.toString(zimbraIndexReaderCacheSize));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of IndexReaders in the search index cache
+     *
+     * @param zimbraIndexReaderCacheSize new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1790)
+    public Map<String,Object> setIndexReaderCacheSize(int zimbraIndexReaderCacheSize, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIndexReaderCacheSize, Integer.toString(zimbraIndexReaderCacheSize));
+        return attrs;
+    }
+
+    /**
+     * Maximum number of IndexReaders in the search index cache
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1790)
+    public void unsetIndexReaderCacheSize() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIndexReaderCacheSize, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of IndexReaders in the search index cache
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1790)
+    public Map<String,Object> unsetIndexReaderCacheSize(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIndexReaderCacheSize, "");
+        return attrs;
+    }
+
+    /**
+     * TTL in seconds for index reader cache. If idle for longer than this
+     * value (seconds) then remove the IndexReader from the cache.. Must be
+     * in valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * <p>Use getIndexReaderCacheTtlAsString to access value as a string.
+     *
+     * @see #getIndexReaderCacheTtlAsString()
+     *
+     * @return zimbraIndexReaderCacheTtl in millseconds, or 300000 (300s)  if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1817)
+    public long getIndexReaderCacheTtl() {
+        return getTimeInterval(Provisioning.A_zimbraIndexReaderCacheTtl, 300000L);
+    }
+
+    /**
+     * TTL in seconds for index reader cache. If idle for longer than this
+     * value (seconds) then remove the IndexReader from the cache.. Must be
+     * in valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @return zimbraIndexReaderCacheTtl, or "300s" if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1817)
+    public String getIndexReaderCacheTtlAsString() {
+        return getAttr(Provisioning.A_zimbraIndexReaderCacheTtl, "300s");
+    }
+
+    /**
+     * TTL in seconds for index reader cache. If idle for longer than this
+     * value (seconds) then remove the IndexReader from the cache.. Must be
+     * in valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @param zimbraIndexReaderCacheTtl new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1817)
+    public void setIndexReaderCacheTtl(String zimbraIndexReaderCacheTtl) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIndexReaderCacheTtl, zimbraIndexReaderCacheTtl);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * TTL in seconds for index reader cache. If idle for longer than this
+     * value (seconds) then remove the IndexReader from the cache.. Must be
+     * in valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @param zimbraIndexReaderCacheTtl new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1817)
+    public Map<String,Object> setIndexReaderCacheTtl(String zimbraIndexReaderCacheTtl, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIndexReaderCacheTtl, zimbraIndexReaderCacheTtl);
+        return attrs;
+    }
+
+    /**
+     * TTL in seconds for index reader cache. If idle for longer than this
+     * value (seconds) then remove the IndexReader from the cache.. Must be
+     * in valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1817)
+    public void unsetIndexReaderCacheTtl() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIndexReaderCacheTtl, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * TTL in seconds for index reader cache. If idle for longer than this
+     * value (seconds) then remove the IndexReader from the cache.. Must be
+     * in valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1817)
+    public Map<String,Object> unsetIndexReaderCacheTtl(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIndexReaderCacheTtl, "");
+        return attrs;
+    }
+
+    /**
      * No of threads used by lucene indexer
      *
      * @return zimbraIndexThreads, or 10 if unset
@@ -26445,6 +27659,150 @@ public abstract class ZAttrConfig extends Entry {
     public Map<String,Object> unsetItemActionBatchSize(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraItemActionBatchSize, "");
+        return attrs;
+    }
+
+    /**
+     * Enabled Kerberos debugging
+     *
+     * @return zimbraKerberosDebugEnabled, or false if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1798)
+    public boolean isKerberosDebugEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraKerberosDebugEnabled, false);
+    }
+
+    /**
+     * Enabled Kerberos debugging
+     *
+     * @param zimbraKerberosDebugEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1798)
+    public void setKerberosDebugEnabled(boolean zimbraKerberosDebugEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraKerberosDebugEnabled, zimbraKerberosDebugEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Enabled Kerberos debugging
+     *
+     * @param zimbraKerberosDebugEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1798)
+    public Map<String,Object> setKerberosDebugEnabled(boolean zimbraKerberosDebugEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraKerberosDebugEnabled, zimbraKerberosDebugEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Enabled Kerberos debugging
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1798)
+    public void unsetKerberosDebugEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraKerberosDebugEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Enabled Kerberos debugging
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1798)
+    public Map<String,Object> unsetKerberosDebugEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraKerberosDebugEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * Flag to get Kerobos Service Principal from Interface Address
+     *
+     * @return zimbraKerobosServicePrincipalFromInterfaceAddress, or false if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1799)
+    public boolean isKerobosServicePrincipalFromInterfaceAddress() {
+        return getBooleanAttr(Provisioning.A_zimbraKerobosServicePrincipalFromInterfaceAddress, false);
+    }
+
+    /**
+     * Flag to get Kerobos Service Principal from Interface Address
+     *
+     * @param zimbraKerobosServicePrincipalFromInterfaceAddress new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1799)
+    public void setKerobosServicePrincipalFromInterfaceAddress(boolean zimbraKerobosServicePrincipalFromInterfaceAddress) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraKerobosServicePrincipalFromInterfaceAddress, zimbraKerobosServicePrincipalFromInterfaceAddress ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Flag to get Kerobos Service Principal from Interface Address
+     *
+     * @param zimbraKerobosServicePrincipalFromInterfaceAddress new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1799)
+    public Map<String,Object> setKerobosServicePrincipalFromInterfaceAddress(boolean zimbraKerobosServicePrincipalFromInterfaceAddress, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraKerobosServicePrincipalFromInterfaceAddress, zimbraKerobosServicePrincipalFromInterfaceAddress ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Flag to get Kerobos Service Principal from Interface Address
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1799)
+    public void unsetKerobosServicePrincipalFromInterfaceAddress() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraKerobosServicePrincipalFromInterfaceAddress, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Flag to get Kerobos Service Principal from Interface Address
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1799)
+    public Map<String,Object> unsetKerobosServicePrincipalFromInterfaceAddress(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraKerobosServicePrincipalFromInterfaceAddress, "");
         return attrs;
     }
 
@@ -27353,6 +28711,78 @@ public abstract class ZAttrConfig extends Entry {
     public Map<String,Object> unsetLmtpShutdownGraceSeconds(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraLmtpShutdownGraceSeconds, "");
+        return attrs;
+    }
+
+    /**
+     * Lmtp ip throttle. Maximum lmtp requests per second per account.
+     *
+     * @return zimbraLmtpThrottleIpLimit, or 0 if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1800)
+    public int getLmtpThrottleIpLimit() {
+        return getIntAttr(Provisioning.A_zimbraLmtpThrottleIpLimit, 0);
+    }
+
+    /**
+     * Lmtp ip throttle. Maximum lmtp requests per second per account.
+     *
+     * @param zimbraLmtpThrottleIpLimit new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1800)
+    public void setLmtpThrottleIpLimit(int zimbraLmtpThrottleIpLimit) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLmtpThrottleIpLimit, Integer.toString(zimbraLmtpThrottleIpLimit));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Lmtp ip throttle. Maximum lmtp requests per second per account.
+     *
+     * @param zimbraLmtpThrottleIpLimit new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1800)
+    public Map<String,Object> setLmtpThrottleIpLimit(int zimbraLmtpThrottleIpLimit, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLmtpThrottleIpLimit, Integer.toString(zimbraLmtpThrottleIpLimit));
+        return attrs;
+    }
+
+    /**
+     * Lmtp ip throttle. Maximum lmtp requests per second per account.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1800)
+    public void unsetLmtpThrottleIpLimit() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLmtpThrottleIpLimit, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Lmtp ip throttle. Maximum lmtp requests per second per account.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1800)
+    public Map<String,Object> unsetLmtpThrottleIpLimit(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLmtpThrottleIpLimit, "");
         return attrs;
     }
 
@@ -28994,6 +30424,78 @@ public abstract class ZAttrConfig extends Entry {
     public Map<String,Object> unsetMailMode(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailMode, "");
+        return attrs;
+    }
+
+    /**
+     * Flag to enable notes
+     *
+     * @return zimbraMailNotesEnabled, or false if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1804)
+    public boolean isMailNotesEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraMailNotesEnabled, false);
+    }
+
+    /**
+     * Flag to enable notes
+     *
+     * @param zimbraMailNotesEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1804)
+    public void setMailNotesEnabled(boolean zimbraMailNotesEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailNotesEnabled, zimbraMailNotesEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Flag to enable notes
+     *
+     * @param zimbraMailNotesEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1804)
+    public Map<String,Object> setMailNotesEnabled(boolean zimbraMailNotesEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailNotesEnabled, zimbraMailNotesEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Flag to enable notes
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1804)
+    public void unsetMailNotesEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailNotesEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Flag to enable notes
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1804)
+    public Map<String,Object> unsetMailNotesEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailNotesEnabled, "");
         return attrs;
     }
 
@@ -31483,6 +32985,118 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * Sleep time in milliseconds to give other threads a chance to use the
+     * mailbox between deletion batches.. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * <p>Use getMailboxDeleteFolderThreadSleepAsString to access value as a string.
+     *
+     * @see #getMailboxDeleteFolderThreadSleepAsString()
+     *
+     * @return zimbraMailboxDeleteFolderThreadSleep in millseconds, or 1 (1ms)  if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1795)
+    public long getMailboxDeleteFolderThreadSleep() {
+        return getTimeInterval(Provisioning.A_zimbraMailboxDeleteFolderThreadSleep, 1L);
+    }
+
+    /**
+     * Sleep time in milliseconds to give other threads a chance to use the
+     * mailbox between deletion batches.. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @return zimbraMailboxDeleteFolderThreadSleep, or "1ms" if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1795)
+    public String getMailboxDeleteFolderThreadSleepAsString() {
+        return getAttr(Provisioning.A_zimbraMailboxDeleteFolderThreadSleep, "1ms");
+    }
+
+    /**
+     * Sleep time in milliseconds to give other threads a chance to use the
+     * mailbox between deletion batches.. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @param zimbraMailboxDeleteFolderThreadSleep new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1795)
+    public void setMailboxDeleteFolderThreadSleep(String zimbraMailboxDeleteFolderThreadSleep) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxDeleteFolderThreadSleep, zimbraMailboxDeleteFolderThreadSleep);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Sleep time in milliseconds to give other threads a chance to use the
+     * mailbox between deletion batches.. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @param zimbraMailboxDeleteFolderThreadSleep new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1795)
+    public Map<String,Object> setMailboxDeleteFolderThreadSleep(String zimbraMailboxDeleteFolderThreadSleep, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxDeleteFolderThreadSleep, zimbraMailboxDeleteFolderThreadSleep);
+        return attrs;
+    }
+
+    /**
+     * Sleep time in milliseconds to give other threads a chance to use the
+     * mailbox between deletion batches.. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1795)
+    public void unsetMailboxDeleteFolderThreadSleep() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxDeleteFolderThreadSleep, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Sleep time in milliseconds to give other threads a chance to use the
+     * mailbox between deletion batches.. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1795)
+    public Map<String,Object> unsetMailboxDeleteFolderThreadSleep(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxDeleteFolderThreadSleep, "");
+        return attrs;
+    }
+
+    /**
      * Maximum allowed waiting threads on a mailbox lock
      *
      * @return zimbraMailboxLockMaxWaitingThreads, or 15 if unset
@@ -33917,6 +35531,78 @@ public abstract class ZAttrConfig extends Entry {
     public Map<String,Object> unsetMimeExcludeEmptyContent(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMimeExcludeEmptyContent, "");
+        return attrs;
+    }
+
+    /**
+     * Maximum image size in bytes to resize
+     *
+     * @return zimbraMimeMaxImageSizeToResize, or 10485760 if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1801)
+    public int getMimeMaxImageSizeToResize() {
+        return getIntAttr(Provisioning.A_zimbraMimeMaxImageSizeToResize, 10485760);
+    }
+
+    /**
+     * Maximum image size in bytes to resize
+     *
+     * @param zimbraMimeMaxImageSizeToResize new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1801)
+    public void setMimeMaxImageSizeToResize(int zimbraMimeMaxImageSizeToResize) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMimeMaxImageSizeToResize, Integer.toString(zimbraMimeMaxImageSizeToResize));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum image size in bytes to resize
+     *
+     * @param zimbraMimeMaxImageSizeToResize new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1801)
+    public Map<String,Object> setMimeMaxImageSizeToResize(int zimbraMimeMaxImageSizeToResize, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMimeMaxImageSizeToResize, Integer.toString(zimbraMimeMaxImageSizeToResize));
+        return attrs;
+    }
+
+    /**
+     * Maximum image size in bytes to resize
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1801)
+    public void unsetMimeMaxImageSizeToResize() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMimeMaxImageSizeToResize, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum image size in bytes to resize
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1801)
+    public Map<String,Object> unsetMimeMaxImageSizeToResize(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMimeMaxImageSizeToResize, "");
         return attrs;
     }
 
@@ -45602,6 +47288,78 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * Flag to enable streaming of jdbc results.
+     *
+     * @return zimbraMysqlJdbcResultStreamingEnabled, or true if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1789)
+    public boolean isMysqlJdbcResultStreamingEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraMysqlJdbcResultStreamingEnabled, true);
+    }
+
+    /**
+     * Flag to enable streaming of jdbc results.
+     *
+     * @param zimbraMysqlJdbcResultStreamingEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1789)
+    public void setMysqlJdbcResultStreamingEnabled(boolean zimbraMysqlJdbcResultStreamingEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMysqlJdbcResultStreamingEnabled, zimbraMysqlJdbcResultStreamingEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Flag to enable streaming of jdbc results.
+     *
+     * @param zimbraMysqlJdbcResultStreamingEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1789)
+    public Map<String,Object> setMysqlJdbcResultStreamingEnabled(boolean zimbraMysqlJdbcResultStreamingEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMysqlJdbcResultStreamingEnabled, zimbraMysqlJdbcResultStreamingEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Flag to enable streaming of jdbc results.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1789)
+    public void unsetMysqlJdbcResultStreamingEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMysqlJdbcResultStreamingEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Flag to enable streaming of jdbc results.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1789)
+    public Map<String,Object> unsetMysqlJdbcResultStreamingEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMysqlJdbcResultStreamingEnabled, "");
+        return attrs;
+    }
+
+    /**
      * A signed activation key that authorizes this installation.
      *
      * @return zimbraNetworkActivation, or null if unset
@@ -45722,6 +47480,78 @@ public abstract class ZAttrConfig extends Entry {
     public Map<String,Object> unsetNetworkLicense(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraNetworkLicense, "");
+        return attrs;
+    }
+
+    /**
+     * Nio maximum write queue size in bytes
+     *
+     * @return zimbraNioMaxWriteQueueSize, or 10000 if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1803)
+    public int getNioMaxWriteQueueSize() {
+        return getIntAttr(Provisioning.A_zimbraNioMaxWriteQueueSize, 10000);
+    }
+
+    /**
+     * Nio maximum write queue size in bytes
+     *
+     * @param zimbraNioMaxWriteQueueSize new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1803)
+    public void setNioMaxWriteQueueSize(int zimbraNioMaxWriteQueueSize) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraNioMaxWriteQueueSize, Integer.toString(zimbraNioMaxWriteQueueSize));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Nio maximum write queue size in bytes
+     *
+     * @param zimbraNioMaxWriteQueueSize new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1803)
+    public Map<String,Object> setNioMaxWriteQueueSize(int zimbraNioMaxWriteQueueSize, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraNioMaxWriteQueueSize, Integer.toString(zimbraNioMaxWriteQueueSize));
+        return attrs;
+    }
+
+    /**
+     * Nio maximum write queue size in bytes
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1803)
+    public void unsetNioMaxWriteQueueSize() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraNioMaxWriteQueueSize, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Nio maximum write queue size in bytes
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1803)
+    public Map<String,Object> unsetNioMaxWriteQueueSize(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraNioMaxWriteQueueSize, "");
         return attrs;
     }
 
@@ -47491,6 +49321,256 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * Maximum no of consecutive errors for retry
+     *
+     * @return zimbraPop3MaxConsecutiveError, or 5 if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1805)
+    public int getPop3MaxConsecutiveError() {
+        return getIntAttr(Provisioning.A_zimbraPop3MaxConsecutiveError, 5);
+    }
+
+    /**
+     * Maximum no of consecutive errors for retry
+     *
+     * @param zimbraPop3MaxConsecutiveError new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1805)
+    public void setPop3MaxConsecutiveError(int zimbraPop3MaxConsecutiveError) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPop3MaxConsecutiveError, Integer.toString(zimbraPop3MaxConsecutiveError));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum no of consecutive errors for retry
+     *
+     * @param zimbraPop3MaxConsecutiveError new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1805)
+    public Map<String,Object> setPop3MaxConsecutiveError(int zimbraPop3MaxConsecutiveError, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPop3MaxConsecutiveError, Integer.toString(zimbraPop3MaxConsecutiveError));
+        return attrs;
+    }
+
+    /**
+     * Maximum no of consecutive errors for retry
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1805)
+    public void unsetPop3MaxConsecutiveError() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPop3MaxConsecutiveError, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum no of consecutive errors for retry
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1805)
+    public Map<String,Object> unsetPop3MaxConsecutiveError(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPop3MaxConsecutiveError, "");
+        return attrs;
+    }
+
+    /**
+     * Maximum idle time in seconds. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * <p>Use getPop3MaxIdleTimeAsString to access value as a string.
+     *
+     * @see #getPop3MaxIdleTimeAsString()
+     *
+     * @return zimbraPop3MaxIdleTime in millseconds, or 60000 (60s)  if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1806)
+    public long getPop3MaxIdleTime() {
+        return getTimeInterval(Provisioning.A_zimbraPop3MaxIdleTime, 60000L);
+    }
+
+    /**
+     * Maximum idle time in seconds. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @return zimbraPop3MaxIdleTime, or "60s" if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1806)
+    public String getPop3MaxIdleTimeAsString() {
+        return getAttr(Provisioning.A_zimbraPop3MaxIdleTime, "60s");
+    }
+
+    /**
+     * Maximum idle time in seconds. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @param zimbraPop3MaxIdleTime new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1806)
+    public void setPop3MaxIdleTime(String zimbraPop3MaxIdleTime) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPop3MaxIdleTime, zimbraPop3MaxIdleTime);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum idle time in seconds. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @param zimbraPop3MaxIdleTime new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1806)
+    public Map<String,Object> setPop3MaxIdleTime(String zimbraPop3MaxIdleTime, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPop3MaxIdleTime, zimbraPop3MaxIdleTime);
+        return attrs;
+    }
+
+    /**
+     * Maximum idle time in seconds. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1806)
+    public void unsetPop3MaxIdleTime() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPop3MaxIdleTime, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum idle time in seconds. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1806)
+    public Map<String,Object> unsetPop3MaxIdleTime(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPop3MaxIdleTime, "");
+        return attrs;
+    }
+
+    /**
+     * Flag to enable pop3 nio
+     *
+     * @return zimbraPop3NioEnabled, or true if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1794)
+    public boolean isPop3NioEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraPop3NioEnabled, true);
+    }
+
+    /**
+     * Flag to enable pop3 nio
+     *
+     * @param zimbraPop3NioEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1794)
+    public void setPop3NioEnabled(boolean zimbraPop3NioEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPop3NioEnabled, zimbraPop3NioEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Flag to enable pop3 nio
+     *
+     * @param zimbraPop3NioEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1794)
+    public Map<String,Object> setPop3NioEnabled(boolean zimbraPop3NioEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPop3NioEnabled, zimbraPop3NioEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Flag to enable pop3 nio
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1794)
+    public void unsetPop3NioEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPop3NioEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Flag to enable pop3 nio
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1794)
+    public Map<String,Object> unsetPop3NioEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPop3NioEnabled, "");
+        return attrs;
+    }
+
+    /**
      * number of handler threads
      *
      * @return zimbraPop3NumThreads, or 100 if unset
@@ -48202,6 +50282,261 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * Pop3 maximum keep alive time in seconds. Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
+     *
+     * <p>Use getPop3ThreadKeepAliveTimeAsString to access value as a string.
+     *
+     * @see #getPop3ThreadKeepAliveTimeAsString()
+     *
+     * @return zimbraPop3ThreadKeepAliveTime in millseconds, or 60000 (60s)  if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1808)
+    public long getPop3ThreadKeepAliveTime() {
+        return getTimeInterval(Provisioning.A_zimbraPop3ThreadKeepAliveTime, 60000L);
+    }
+
+    /**
+     * Pop3 maximum keep alive time in seconds. Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
+     *
+     * @return zimbraPop3ThreadKeepAliveTime, or "60s" if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1808)
+    public String getPop3ThreadKeepAliveTimeAsString() {
+        return getAttr(Provisioning.A_zimbraPop3ThreadKeepAliveTime, "60s");
+    }
+
+    /**
+     * Pop3 maximum keep alive time in seconds. Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
+     *
+     * @param zimbraPop3ThreadKeepAliveTime new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1808)
+    public void setPop3ThreadKeepAliveTime(String zimbraPop3ThreadKeepAliveTime) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPop3ThreadKeepAliveTime, zimbraPop3ThreadKeepAliveTime);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Pop3 maximum keep alive time in seconds. Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
+     *
+     * @param zimbraPop3ThreadKeepAliveTime new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1808)
+    public Map<String,Object> setPop3ThreadKeepAliveTime(String zimbraPop3ThreadKeepAliveTime, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPop3ThreadKeepAliveTime, zimbraPop3ThreadKeepAliveTime);
+        return attrs;
+    }
+
+    /**
+     * Pop3 maximum keep alive time in seconds. Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1808)
+    public void unsetPop3ThreadKeepAliveTime() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPop3ThreadKeepAliveTime, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Pop3 maximum keep alive time in seconds. Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1808)
+    public Map<String,Object> unsetPop3ThreadKeepAliveTime(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPop3ThreadKeepAliveTime, "");
+        return attrs;
+    }
+
+    /**
+     * pop3 throttle account. Maximum allowed requests per second per account
+     * .
+     *
+     * @return zimbraPop3ThrottleAcctLimit, or 5000 if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1810)
+    public int getPop3ThrottleAcctLimit() {
+        return getIntAttr(Provisioning.A_zimbraPop3ThrottleAcctLimit, 5000);
+    }
+
+    /**
+     * pop3 throttle account. Maximum allowed requests per second per account
+     * .
+     *
+     * @param zimbraPop3ThrottleAcctLimit new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1810)
+    public void setPop3ThrottleAcctLimit(int zimbraPop3ThrottleAcctLimit) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPop3ThrottleAcctLimit, Integer.toString(zimbraPop3ThrottleAcctLimit));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * pop3 throttle account. Maximum allowed requests per second per account
+     * .
+     *
+     * @param zimbraPop3ThrottleAcctLimit new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1810)
+    public Map<String,Object> setPop3ThrottleAcctLimit(int zimbraPop3ThrottleAcctLimit, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPop3ThrottleAcctLimit, Integer.toString(zimbraPop3ThrottleAcctLimit));
+        return attrs;
+    }
+
+    /**
+     * pop3 throttle account. Maximum allowed requests per second per account
+     * .
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1810)
+    public void unsetPop3ThrottleAcctLimit() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPop3ThrottleAcctLimit, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * pop3 throttle account. Maximum allowed requests per second per account
+     * .
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1810)
+    public Map<String,Object> unsetPop3ThrottleAcctLimit(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPop3ThrottleAcctLimit, "");
+        return attrs;
+    }
+
+    /**
+     * pop3 ip throttle. Maximum allowed requests per second per ip .
+     *
+     * @return zimbraPop3ThrottleIpLimit, or 5000 if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1809)
+    public int getPop3ThrottleIpLimit() {
+        return getIntAttr(Provisioning.A_zimbraPop3ThrottleIpLimit, 5000);
+    }
+
+    /**
+     * pop3 ip throttle. Maximum allowed requests per second per ip .
+     *
+     * @param zimbraPop3ThrottleIpLimit new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1809)
+    public void setPop3ThrottleIpLimit(int zimbraPop3ThrottleIpLimit) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPop3ThrottleIpLimit, Integer.toString(zimbraPop3ThrottleIpLimit));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * pop3 ip throttle. Maximum allowed requests per second per ip .
+     *
+     * @param zimbraPop3ThrottleIpLimit new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1809)
+    public Map<String,Object> setPop3ThrottleIpLimit(int zimbraPop3ThrottleIpLimit, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPop3ThrottleIpLimit, Integer.toString(zimbraPop3ThrottleIpLimit));
+        return attrs;
+    }
+
+    /**
+     * pop3 ip throttle. Maximum allowed requests per second per ip .
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1809)
+    public void unsetPop3ThrottleIpLimit() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPop3ThrottleIpLimit, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * pop3 ip throttle. Maximum allowed requests per second per ip .
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1809)
+    public Map<String,Object> unsetPop3ThrottleIpLimit(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPop3ThrottleIpLimit, "");
+        return attrs;
+    }
+
+    /**
      * Pop3 timeout in seconds
      *
      * @return zimbraPop3Timeout, or 60 if unset
@@ -48270,6 +50605,112 @@ public abstract class ZAttrConfig extends Entry {
     public Map<String,Object> unsetPop3Timeout(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPop3Timeout, "");
+        return attrs;
+    }
+
+    /**
+     * Pop3 write timeout in seconds. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * <p>Use getPop3WriteTimeoutAsString to access value as a string.
+     *
+     * @see #getPop3WriteTimeoutAsString()
+     *
+     * @return zimbraPop3WriteTimeout in millseconds, or 10000 (10s)  if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1807)
+    public long getPop3WriteTimeout() {
+        return getTimeInterval(Provisioning.A_zimbraPop3WriteTimeout, 10000L);
+    }
+
+    /**
+     * Pop3 write timeout in seconds. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @return zimbraPop3WriteTimeout, or "10s" if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1807)
+    public String getPop3WriteTimeoutAsString() {
+        return getAttr(Provisioning.A_zimbraPop3WriteTimeout, "10s");
+    }
+
+    /**
+     * Pop3 write timeout in seconds. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @param zimbraPop3WriteTimeout new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1807)
+    public void setPop3WriteTimeout(String zimbraPop3WriteTimeout) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPop3WriteTimeout, zimbraPop3WriteTimeout);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Pop3 write timeout in seconds. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @param zimbraPop3WriteTimeout new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1807)
+    public Map<String,Object> setPop3WriteTimeout(String zimbraPop3WriteTimeout, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPop3WriteTimeout, zimbraPop3WriteTimeout);
+        return attrs;
+    }
+
+    /**
+     * Pop3 write timeout in seconds. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1807)
+    public void unsetPop3WriteTimeout() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPop3WriteTimeout, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Pop3 write timeout in seconds. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1807)
+    public Map<String,Object> unsetPop3WriteTimeout(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPop3WriteTimeout, "");
         return attrs;
     }
 
