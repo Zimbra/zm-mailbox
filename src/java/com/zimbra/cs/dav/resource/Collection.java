@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -32,6 +32,8 @@ import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.DavProtocol;
 import com.zimbra.cs.dav.property.Acl;
+import com.zimbra.cs.dav.property.CalDavProperty;
+import com.zimbra.cs.dav.service.DavServlet;
 import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
@@ -49,7 +51,6 @@ import com.zimbra.cs.service.FileUploadServlet;
 public class Collection extends MailItemResource {
 
     protected MailItem.Type view;
-    protected MailItem.Type type;
     protected int mMailboxId;
 
     public Collection(DavContext ctxt, Folder f) throws DavException, ServiceException {
@@ -63,6 +64,9 @@ public class Collection extends MailItemResource {
         this.type = f.getType();
         addProperties(Acl.getAclProperties(this, f));
         mMailboxId = f.getMailboxId();
+        if (this.isCalendarHomeSet()) {
+            addProperty(CalDavProperty.getSupportedCalendarComponentSets());
+        }
     }
 
     public Collection(String name, String acct) throws DavException {
@@ -226,5 +230,9 @@ public class Collection extends MailItemResource {
 
     protected boolean isRootCollection() {
         return (mId == Mailbox.ID_FOLDER_USER_ROOT);
+    }
+
+    protected boolean isCalendarHomeSet() {
+        return isRootCollection();
     }
 }

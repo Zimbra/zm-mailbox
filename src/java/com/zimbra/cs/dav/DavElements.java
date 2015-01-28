@@ -215,6 +215,7 @@ public class DavElements {
     public static final String P_SUPPORTED_ADDRESS_DATA = "supported-address-data";
     public static final String P_SUPPORTED_CALENDAR_COMPONENT = "supported-calendar-component";
     public static final String P_SUPPORTED_CALENDAR_COMPONENT_SET = "supported-calendar-component-set";
+    public static final String P_SUPPORTED_CALENDAR_COMPONENT_SETS = "supported-calendar-component-sets";
     public static final String P_SUPPORTED_CALENDAR_DATA = "supported-calendar-data";
     public static final String P_SUPPORTED_COLLATION = "supported-collation";
     public static final String P_SUPPORTED_COLLATION_SET = "supported-collation-set";
@@ -390,6 +391,7 @@ public class DavElements {
     public static final QName E_STATUS = QName.get(P_STATUS, WEBDAV_NS);
     public static final QName E_SUPPORTED_CALENDAR_COMPONENT = QName.get(P_SUPPORTED_CALENDAR_COMPONENT, CALDAV_NS);
     public static final QName E_SUPPORTED_CALENDAR_COMPONENT_SET = QName.get(P_SUPPORTED_CALENDAR_COMPONENT_SET, CALDAV_NS);
+    public static final QName E_SUPPORTED_CALENDAR_COMPONENT_SETS = QName.get(P_SUPPORTED_CALENDAR_COMPONENT_SETS, CALDAV_NS);
     public static final QName E_SUPPORTED_CALENDAR_DATA = QName.get(P_SUPPORTED_CALENDAR_DATA, CALDAV_NS);
     public static final QName E_SUPPORTED_COLLATION = QName.get(P_SUPPORTED_COLLATION, CALDAV_NS);
     public static final QName E_SUPPORTED_COLLATION_SET = QName.get(P_SUPPORTED_COLLATION_SET, CALDAV_NS);

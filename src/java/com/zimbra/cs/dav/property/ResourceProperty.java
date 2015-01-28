@@ -110,6 +110,25 @@ public class ResourceProperty {
         return elem;
     }
 
+    public Element toElement(boolean nameOnly) {
+        Element elem = org.dom4j.DocumentHelper.createElement(mName);
+        if (nameOnly) {
+            return elem;
+        }
+
+        if (mValue != null) {
+            if (mLocale != null) {
+                elem.addAttribute(DavElements.E_LANG, mLocale.toString());
+            }
+            elem.setText(mValue);
+        } else {
+            for (Element child : mChildren) {
+                elem.add(child.createCopy());
+            }
+        }
+        return elem;
+    }
+
     /* Sets the Locale for the text part. */
     public void setMessageLocale(Locale locale) {
         mLocale = locale;
