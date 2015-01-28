@@ -45,7 +45,8 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.calendar.Util;
 
 /**
- * CALDAV:supported-calendar-component-set - draft-dusseault-caldav section 5.2.3
+ * CALDAV:supported-calendar-component-set  - http://tools.ietf.org/html/rfc4791#section-5.2.3
+ * CALDAV:supported-calendar-component-sets - http://tools.ietf.org/html/draft-daboo-caldav-extensions-01#section-4
  * CALDAV:supported-calendar-data - draft-dusseault-caldav section 5.2.4
  * CALDAV:supported-collation-set - draft-dusseault-caldav section 7.5.1
  * CALDAV:calendar-data - draft-dusseault-caldav section 9.6
@@ -58,6 +59,10 @@ public class CalDavProperty extends ResourceProperty {
 
     public static ResourceProperty getSupportedCalendarComponentSet(MailItem.Type view) {
         return new SupportedCalendarComponentSet(view);
+    }
+
+    public static ResourceProperty getSupportedCalendarComponentSets() {
+        return new SupportedCalendarComponentSets();
     }
 
     public static ResourceProperty getSupportedCalendarData() {
@@ -144,6 +149,9 @@ public class CalDavProperty extends ResourceProperty {
      */
     private static class SupportedCalendarComponentSet extends CalDavProperty {
         public SupportedCalendarComponentSet(MailItem.Type view) {
+            this(view, true);
+        }
+        public SupportedCalendarComponentSet(MailItem.Type view, boolean includeFreeBusy) {
             super(DavElements.E_SUPPORTED_CALENDAR_COMPONENT_SET);
             super.setAllowSetOnCreate(true);
             ArrayList<CalComponent> comps = new ArrayList<CalComponent>();
@@ -158,13 +166,45 @@ public class CalDavProperty extends ResourceProperty {
             }
             // Apple Mac OSX Mavericks Calendar's GetInfo for a calendar doesn't offer a checkbox for
             // "Events affect availability" unless VFREEBUSY is present in this list.
-            comps.add(CalComponent.VFREEBUSY);
+            if (includeFreeBusy) {
+                comps.add(CalComponent.VFREEBUSY);
+            }
 
             for (CalComponent comp : comps) {
                 Element e = org.dom4j.DocumentHelper.createElement(DavElements.E_COMP);
                 e.addAttribute(DavElements.P_NAME, comp.name());
                 mChildren.add(e);
             }
+        }
+    }
+
+    /**
+     * From : http://tools.ietf.org/html/draft-daboo-caldav-extensions-01#section-4.1
+     * Purpose:  Enumerates the sets of component restrictions the server is willing to allow the client to specify
+     * in MKCALENDAR or extended MKCOL requests.
+     * Description:  If servers apply restrictions on the allowed calendar component sets used when creating a
+     * calendar, then those servers SHOULD advertise this property on each calendar home collection within which the
+     * restrictions apply.  In the absence of this property, clients cannot assume anything about whether the
+     * server will enforce a set of restrictions or not - in that case clients need to handle the server rejecting
+     * certain combinations of restricted component sets.  If this property is present, but contains no child XML
+     * elements, then clients can assume that the server imposes no restrictions on the combinations of component
+     * types it is willing to accept.  If present, each CALDAV:supported-calendar-component-set element represents a
+     * valid restriction the client can use in an MKCALENDAR or extended MKCOL request when creating a calendar.
+     *
+     * <C:supported-calendar-component-sets xmlns:C="urn:ietf:params:xml:ns:caldav">
+     * <C:supported-calendar-component-set>
+     *   <C:comp name="VEVENT" />
+     * </C:supported-calendar-component-set>
+     * <C:supported-calendar-component-set>
+     *   <C:comp name="VTODO" />
+     * </C:supported-calendar-component-set>
+     * </C:supported-calendar-component-sets>
+     */
+    private static class SupportedCalendarComponentSets extends CalDavProperty {
+        public SupportedCalendarComponentSets() {
+            super(DavElements.E_SUPPORTED_CALENDAR_COMPONENT_SETS);
+            mChildren.add(new SupportedCalendarComponentSet(MailItem.Type.APPOINTMENT, false).toElement(false));
+            mChildren.add(new SupportedCalendarComponentSet(MailItem.Type.TASK, false).toElement(false));
         }
     }
 
