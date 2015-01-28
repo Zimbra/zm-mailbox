@@ -77,8 +77,8 @@ public class TestRedoLog {
     public void testTestRestoreMessageToNewAccount()
     throws Exception {
         // Add message to source account.
-        long startTime = System.currentTimeMillis();
         Mailbox sourceMbox = TestUtil.getMailbox(USER_NAME);
+        long startTime = System.currentTimeMillis();
         Message sourceMsg = TestUtil.addMessage(sourceMbox, NAME_PREFIX + " testRestoreMessageToNewAccount");
         String sourceContent = new String(sourceMsg.getContent());
         assertTrue(sourceContent.length() != 0);
