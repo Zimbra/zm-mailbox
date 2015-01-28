@@ -609,11 +609,11 @@ public abstract class SolrIndexBase extends IndexStore {
                 SolrDocumentList solrDocList = resp.getResults();
                 return (int)solrDocList.getNumFound();
             } catch (SolrServerException e) {
-                ZimbraLog.index.error("Cought SolrServerException retrieving number of documents in mailbox %s", accountId,e);
+                ZimbraLog.index.error("Caught SolrServerException retrieving number of documents in mailbox %s", accountId,e);
             } catch (RemoteSolrException e) {
-                ZimbraLog.index.error("Cought SolrServerException retrieving number of documents in mailbox %s", accountId,e);
+                ZimbraLog.index.error("Caught SolrServerException retrieving number of documents in mailbox %s", accountId,e);
             } catch (IOException e) {
-                ZimbraLog.index.error("Cought SolrServerException retrieving number of documents in mailbox %s", accountId,e);
+                ZimbraLog.index.error("Caught SolrServerException retrieving number of documents in mailbox %s", accountId,e);
             } finally {
                 shutdown(solrServer);
             }

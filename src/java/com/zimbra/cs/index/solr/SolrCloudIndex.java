@@ -263,11 +263,11 @@ public class SolrCloudIndex extends SolrIndexBase {
                     }
                 }
             } catch (IOException e) {
-                ZimbraLog.index.error("Cought IOException retrieving maxDocs for mailbox %s", accountId,e );
+                ZimbraLog.index.error("Caught IOException retrieving maxDocs for mailbox %s", accountId,e );
             } catch (SolrServerException e) {
-                ZimbraLog.index.error("Cought SolrServerException retrieving maxDocs for mailbox %s", accountId,e);
+                ZimbraLog.index.error("Caught SolrServerException retrieving maxDocs for mailbox %s", accountId,e);
             } catch (RemoteSolrException e) {
-                ZimbraLog.index.error("Cought RemoteSolrException retrieving maxDocs for mailbox %s", accountId,e);
+                ZimbraLog.index.error("Caught RemoteSolrException retrieving maxDocs for mailbox %s", accountId,e);
             }
             return 0;
         }
@@ -288,11 +288,11 @@ public class SolrCloudIndex extends SolrIndexBase {
                     }
                 }
             } catch (IOException e) {
-                ZimbraLog.index.error("Cought IOException retrieving number of deleted documents in mailbox %s", accountId,e);
+                ZimbraLog.index.error("Caught IOException retrieving number of deleted documents in mailbox %s", accountId,e);
             } catch (SolrServerException e) {
-                ZimbraLog.index.error("Cought SolrServerException retrieving number of deleted documents in mailbox %s", accountId,e);
+                ZimbraLog.index.error("Caught SolrServerException retrieving number of deleted documents in mailbox %s", accountId,e);
             } catch (RemoteSolrException e) {
-                ZimbraLog.index.error("Cought SolrServerException retrieving number of deleted documents in mailbox %s", accountId,e);
+                ZimbraLog.index.error("Caught SolrServerException retrieving number of deleted documents in mailbox %s", accountId,e);
             }
             return 0;
         }
