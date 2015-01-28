@@ -1656,6 +1656,7 @@
             zimbraMailSSLClientCertMode WantClientAuth \
             zimbraImapCleartextLoginEnabled TRUE \
             zimbraPop3CleartextLoginEnabled TRUE \
+            zimbraRedisUrl redis://localhost:6379 \
         	zimbraSoapExposeVersion TRUE
             ModifyServer ${zimbra.server.hostname} \
             +zimbraServiceInstalled ldap \

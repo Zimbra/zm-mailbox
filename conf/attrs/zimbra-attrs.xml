@@ -8994,4 +8994,9 @@ TODO: delete them permanently from here
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>Show Chats folder even if zimbraFeatureIMEnabled is false</desc>
 </attr>
+
+<attr id="1788" name="zimbraRedisUrl" type="string" cardinality="multi" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
+  <desc>Redis url </desc>
+</attr>
+
 </attrs>

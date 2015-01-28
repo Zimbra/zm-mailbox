@@ -115,7 +115,7 @@ public class ZimbraConfig {
     }
 
     public boolean isRedisAvailable() throws ServiceException {
-        return false; // TODO redisUri() != null;
+        return redisUri() != null;
     }
 
     @Bean(name="jedisPool")
@@ -188,8 +188,9 @@ public class ZimbraConfig {
     }
 
     public URI redisUri() throws ServiceException {
+        String[] uris = Provisioning.getInstance().getLocalServer().getRedisUrl();
         try {
-            return new URI("redis://localhost:6379"); // TODO
+            return (uris.length == 0 ? null : new URI(uris[0]));
         } catch (URISyntaxException e) {
             throw ServiceException.PARSE_ERROR("Invalid Redis URI", e);
         }
