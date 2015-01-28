@@ -82,6 +82,7 @@ import com.zimbra.cs.service.mail.UploadScanner;
 import com.zimbra.cs.servlet.ETagHeaderFilter;
 import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.StoreManager;
+import com.zimbra.cs.util.ProvisioningUtil;
 
 public final class NativeFormatter extends Formatter {
 
@@ -241,7 +242,7 @@ public final class NativeFormatter extends Formatter {
                     // If this is an image that exceeds the max size, resize it.  Don't resize
                     // gigantic images because ImageIO reads image content into memory.
                     if ((context.hasMaxWidth() || context.hasMaxHeight()) &&
-                        (Mime.getSize(mp) < LC.max_image_size_to_resize.intValue())) {
+                        (Mime.getSize(mp) < ProvisioningUtil.getServerAttribute(Provisioning.A_zimbraMimeMaxImageSizeToResize, 10485760))) {
                         try {
                             data =
                                 getResizedImageData(mp, context.getMaxWidth(),
@@ -295,10 +296,10 @@ public final class NativeFormatter extends Formatter {
         InputStream in = null;
 
         if (maxWidth == null)
-            maxWidth = LC.max_image_size_to_resize.intValue();
+            maxWidth = ProvisioningUtil.getServerAttribute(Provisioning.A_zimbraMimeMaxImageSizeToResize, 10485760);
 
         if (maxHeight == null)
-            maxHeight = LC.max_image_size_to_resize.intValue();
+            maxHeight = ProvisioningUtil.getServerAttribute(Provisioning.A_zimbraMimeMaxImageSizeToResize, 10485760);
 
         try {
             // Get ImageReader for stream content.

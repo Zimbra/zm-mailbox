@@ -22,6 +22,7 @@ import java.io.StringWriter;
 import java.text.ParseException;
 import java.util.*;
 
+import com.zimbra.common.account.ZAttrProvisioning;
 import com.zimbra.common.calendar.ICalTimeZone;
 import com.zimbra.common.calendar.ParsedDateTime;
 import com.zimbra.common.calendar.TimeZoneMap;
@@ -37,6 +38,7 @@ import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.Period;
 import com.zimbra.cs.mailbox.calendar.ZOrganizer;
+import com.zimbra.cs.util.ProvisioningUtil;
 
 /**
  * @author tim
@@ -60,7 +62,7 @@ public class FreeBusy implements Iterable<FreeBusy.Interval> {
 	// unknown (no data) from start to end
     public static FreeBusy nodataFreeBusy(String name, long start, long end) {
         IntervalList il = new IntervalList(start, end);
-        if (!LC.freebusy_disable_nodata_status.booleanValue())
+        if (!ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraFreeBusyDisableNoDataStatus , false))
             il.addInterval(new Interval(start, end, IcalXmlStrMap.FBTYPE_NODATA));
         return new FreeBusy(name, il, start, end);
     }

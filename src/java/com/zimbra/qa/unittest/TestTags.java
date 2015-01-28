@@ -36,6 +36,7 @@ import com.zimbra.common.util.Log.Level;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Conversation;
@@ -48,6 +49,7 @@ import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.stats.ZimbraPerf;
+import com.zimbra.cs.util.ProvisioningUtil;
 
 /**
  * @author bburtin
@@ -78,9 +80,8 @@ public class TestTags {
     public void setUp() throws Exception {
         // Clean up, in case the last test didn't exit cleanly
         cleanUp();
-
-        originalLCSetting = LC.zimbra_index_manual_commit.booleanValue();
-        LC.zimbra_index_manual_commit.setDefault(true);
+        originalLCSetting = ProvisioningUtil.getServerAttribute(Provisioning.A_zimbraIndexManualCommit, true);
+        Provisioning.getInstance().getLocalServer().setIndexManualCommit(true);
 
         ZimbraLog.test.debug("TestTags.setUp()");
 
@@ -393,9 +394,8 @@ public class TestTags {
     @After
     public void tearDown() throws Exception {
         ZimbraLog.test.debug("TestTags.tearDown()");
-
         cleanUp();
-        LC.zimbra_index_manual_commit.setDefault(originalLCSetting);
+        Provisioning.getInstance().getLocalServer().setIndexManualCommit(originalLCSetting);
     }
 
     private void cleanUp() throws Exception {

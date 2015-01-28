@@ -47,6 +47,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbPop3Message;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.util.ProvisioningUtil;
 import com.zimbra.soap.admin.type.DataSourceType;
 
 public class TestPop3Import extends TestCase {
@@ -63,8 +64,8 @@ public class TestPop3Import extends TestCase {
     public void setUp() throws Exception {
         mIsServerSideTest = false;
         cleanUp();
-        originalLCSetting = LC.zimbra_index_manual_commit.booleanValue();
-        LC.zimbra_index_manual_commit.setDefault(true);
+        originalLCSetting = ProvisioningUtil.getServerAttribute(Provisioning.A_zimbraIndexManualCommit, true);
+        Provisioning.getInstance().getLocalServer().setIndexManualCommit(true);
         createDataSource();
         mOriginalRules = TestUtil.getZMailbox(USER_NAME).getIncomingFilterRules();
     }
@@ -172,7 +173,7 @@ public class TestPop3Import extends TestCase {
     public void tearDown() throws Exception {
         cleanUp();
         TestUtil.getZMailbox(USER_NAME).saveIncomingFilterRules(mOriginalRules);
-        LC.zimbra_index_manual_commit.setDefault(originalLCSetting);
+        Provisioning.getInstance().getLocalServer().setIndexManualCommit(originalLCSetting);
     }
 
     private void createDataSource() throws Exception {

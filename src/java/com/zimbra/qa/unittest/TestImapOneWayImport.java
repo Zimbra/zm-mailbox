@@ -34,6 +34,7 @@ import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.util.ProvisioningUtil;
 import com.zimbra.soap.type.DataSource.ConnectionType;
 
 public class TestImapOneWayImport extends TestCase {
@@ -75,8 +76,8 @@ public class TestImapOneWayImport extends TestCase {
         Provisioning.getInstance().getLocalServer().setImapEnableStartTls(false);
 
         //turn on synchronous indexing
-        originalLCSetting = LC.zimbra_index_manual_commit.booleanValue();
-        LC.zimbra_index_manual_commit.setDefault(true);
+        originalLCSetting = ProvisioningUtil.getServerAttribute(Provisioning.A_zimbraIndexManualCommit, true);
+        Provisioning.getInstance().getLocalServer().setIndexManualCommit(true);
 
         // Get mailbox references
         if (!TestUtil.accountExists(LOCAL_USER_NAME)) {
@@ -352,7 +353,7 @@ public class TestImapOneWayImport extends TestCase {
             cleanUp();
 
             //reset config settings to pre-test values
-            LC.zimbra_index_manual_commit.setDefault(originalLCSetting);
+            Provisioning.getInstance().getLocalServer().setIndexManualCommit(originalLCSetting);
             Provisioning.getInstance().getLocalServer().setImapEnableStartTls(mOriginalEnableStarttls);
             TestUtil.setServerAttr(Provisioning.A_zimbraImapCleartextLoginEnabled, mOriginalCleartextValue);
         }

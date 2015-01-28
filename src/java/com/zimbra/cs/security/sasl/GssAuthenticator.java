@@ -21,7 +21,9 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.security.kerberos.Krb5Keytab;
+import com.zimbra.cs.util.ProvisioningUtil;
 import com.zimbra.common.account.Key;
+import com.zimbra.common.account.ZAttrProvisioning;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -36,6 +38,7 @@ import javax.security.auth.Subject;
 import javax.security.auth.callback.CallbackHandler;
 import javax.security.auth.callback.Callback;
 import javax.security.auth.callback.UnsupportedCallbackException;
+
 import java.util.Map;
 import java.util.HashMap;
 import java.util.List;
@@ -61,7 +64,7 @@ public class GssAuthenticator extends Authenticator {
     public static final String KRB5_DEBUG_ENABLED_PROP = "ZimbraKrb5DebugEnabled";
 
     private static final boolean DEBUG =
-        LC.krb5_debug_enabled.booleanValue() || Boolean.getBoolean(KRB5_DEBUG_ENABLED_PROP);
+        ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraKerberosDebugEnabled, false) || Boolean.getBoolean(KRB5_DEBUG_ENABLED_PROP);
 
     public static final String MECHANISM = "GSSAPI";
 
@@ -111,7 +114,7 @@ public class GssAuthenticator extends Authenticator {
         debug("keytab file = %s", keytab.getFile());
 
         final String host;
-        if (LC.krb5_service_principal_from_interface_address.booleanValue()) {
+        if (ProvisioningUtil.getServerAttribute(Provisioning.A_zimbraKerobosServicePrincipalFromInterfaceAddress, false)) {
             String localSocketHostname = localAddress.getCanonicalHostName().toLowerCase();
             if (localSocketHostname.length() == 0 || Character.isDigit(localSocketHostname.charAt(0)))
                 localSocketHostname = LC.zimbra_server_hostname.value();

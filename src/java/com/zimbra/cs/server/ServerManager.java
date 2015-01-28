@@ -37,6 +37,7 @@ import com.zimbra.cs.pop3.NioPop3Server;
 import com.zimbra.cs.pop3.Pop3Config;
 import com.zimbra.cs.pop3.Pop3Server;
 import com.zimbra.cs.pop3.TcpPop3Server;
+import com.zimbra.cs.util.ProvisioningUtil;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.util.ZimbraApplication;
 
@@ -109,7 +110,7 @@ public final class ServerManager {
 
     private Pop3Server startPop3Server(boolean ssl) throws ServiceException {
         Pop3Config config = new Pop3Config(ssl);
-        Pop3Server server = NIO_ENABLED || LC.nio_pop3_enabled.booleanValue() ?
+        Pop3Server server = NIO_ENABLED || ProvisioningUtil.getServerAttribute(Provisioning.A_zimbraPop3NioEnabled, true)?
             new NioPop3Server(config) : new TcpPop3Server(config);
         server.start();
         return server;
@@ -117,9 +118,9 @@ public final class ServerManager {
 
     private ImapServer startImapServer(boolean ssl) throws ServiceException {
         ImapConfig config = new ImapConfig(ssl);
-        ImapServer server = NIO_ENABLED || LC.nio_imap_enabled.booleanValue() ?
+        ImapServer server = NIO_ENABLED || isEnabled(Provisioning.A_zimbraImapNioEnabled) ?
             new NioImapServer(config) : new TcpImapServer(config);
-        server.start();
+        server.start();	
         return server;
     }
 

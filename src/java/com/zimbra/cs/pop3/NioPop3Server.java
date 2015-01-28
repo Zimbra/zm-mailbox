@@ -31,6 +31,8 @@ import com.google.common.collect.ImmutableMap;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.stats.RealtimeStatsCallback;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.server.NioConnection;
 import com.zimbra.cs.server.NioHandler;
 import com.zimbra.cs.server.NioServer;
@@ -44,7 +46,8 @@ public final class NioPop3Server extends NioServer implements Pop3Server, Realti
         super(config);
         registerMBean(getName());
         ZimbraPerf.addStatsCallback(this);
-        ServerThrottle.configureThrottle(config.getProtocol(), LC.pop3_throttle_ip_limit.intValue(), LC.pop3_throttle_acct_limit.intValue(), getThrottleSafeHosts(), getThrottleWhitelist());
+        Server localServer = Provisioning.getInstance().getLocalServer();
+        ServerThrottle.configureThrottle(config.getProtocol(), localServer.getPop3ThrottleIpLimit(), localServer.getPop3ThrottleAcctLimit(), getThrottleSafeHosts(), getThrottleWhitelist());
     }
 
     @Override

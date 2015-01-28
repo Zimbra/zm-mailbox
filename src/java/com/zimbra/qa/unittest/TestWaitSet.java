@@ -28,12 +28,14 @@ import com.zimbra.client.ZFolder;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.Pair;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.service.mail.WaitSetRequest;
 import com.zimbra.cs.service.mail.WaitSetRequest.TypeEnum;
 import com.zimbra.cs.session.IWaitSet;
 import com.zimbra.cs.session.WaitSetAccount;
 import com.zimbra.cs.session.WaitSetError;
 import com.zimbra.cs.session.WaitSetMgr;
+import com.zimbra.cs.util.ProvisioningUtil;
 
 /**
  *
@@ -51,8 +53,8 @@ public class TestWaitSet  {
     @Before
     public void setUp() throws Exception {
         cleanUp();
-        originalLCSetting = LC.zimbra_index_manual_commit.booleanValue();
-        LC.zimbra_index_manual_commit.setDefault(true);
+    	originalLCSetting = ProvisioningUtil.getServerAttribute(Provisioning.A_zimbraIndexManualCommit, true);
+        Provisioning.getInstance().getLocalServer().setIndexManualCommit(true);
         TestUtil.createAccount(USER_1_NAME);
         TestUtil.createAccount(USER_2_NAME);
     }
@@ -229,6 +231,6 @@ public class TestWaitSet  {
     @After
     public void tearDown() throws Exception {
         cleanUp();
-        LC.zimbra_index_manual_commit.setDefault(originalLCSetting);
+        Provisioning.getInstance().getLocalServer().setIndexManualCommit(originalLCSetting);
     }
 }

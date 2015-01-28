@@ -86,6 +86,7 @@ import com.zimbra.cs.filter.SoapToSieve;
 import com.zimbra.cs.ldap.LdapConstants;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.calendar.Util;
+import com.zimbra.cs.util.ProvisioningUtil;
 
 public final class TestFilter extends TestCase {
 
@@ -114,8 +115,8 @@ public final class TestFilter extends TestCase {
     @Override
     public void setUp() throws Exception {
         cleanUp();
-        originalLCSetting = LC.zimbra_index_manual_commit.booleanValue();
-        LC.zimbra_index_manual_commit.setDefault(true);
+        originalLCSetting = ProvisioningUtil.getServerAttribute(Provisioning.A_zimbraIndexManualCommit, true);
+        Provisioning.getInstance().getLocalServer().setIndexManualCommit(true);
         mMbox = TestUtil.getZMailbox(USER_NAME);
         mTag1 = mMbox.createTag(TAG1_NAME, null);
         mTag2 = mMbox.createTag(TAG2_NAME, null);
@@ -1538,7 +1539,7 @@ public final class TestFilter extends TestCase {
         TestUtil.setServerAttr(Provisioning.A_zimbraSmtpPort, mOriginalSmtpPort);
         TestUtil.setServerAttr(Provisioning.A_zimbraMailRedirectSetEnvelopeSender, mOriginalSetEnvelopeSender);
         cleanUp();
-        LC.zimbra_index_manual_commit.setDefault(originalLCSetting);
+        Provisioning.getInstance().getLocalServer().setIndexManualCommit(originalLCSetting);
     }
 
     private void cleanUp()

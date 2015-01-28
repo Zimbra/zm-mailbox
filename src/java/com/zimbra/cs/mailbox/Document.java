@@ -183,10 +183,7 @@ public class Document extends MailItem {
 
         contentType = pd.getContentType();
         creator = pd.getCreator();
-
-        if(!LC.documents_disable_instant_parsing.booleanValue())
-            fragment = pd.getFragment();
-
+        fragment = pd.getFragment();
         mData.date = pd.getCreatedDate();
         mData.name = pd.getFilename();
         mData.setSubject(pd.getFilename());
@@ -206,12 +203,6 @@ public class Document extends MailItem {
 
     protected static UnderlyingData prepareCreate(MailItem.Type type, int id, String uuid, Folder folder, String name,
             String mimeType, ParsedDocument pd, Metadata meta, CustomMetadata custom, int flags) throws ServiceException {
-
-        return prepareCreate(type, id, uuid, folder, name, mimeType, pd, meta, custom, flags, LC.documents_disable_instant_parsing.booleanValue());
-    }
-
-    protected static UnderlyingData prepareCreate(MailItem.Type type, int id, String uuid, Folder folder, String name,
-            String mimeType, ParsedDocument pd, Metadata meta, CustomMetadata custom, int flags, boolean skipParsing) throws ServiceException {
         if (folder == null || !folder.canContain(Type.DOCUMENT)) {
             throw MailServiceException.CANNOT_CONTAIN();
         }
@@ -239,7 +230,7 @@ public class Document extends MailItem {
         data.setSubject(name);
         data.setBlobDigest(pd.getDigest());
         data.metadata = encodeMetadata(meta, DEFAULT_COLOR_RGB, 1, 1, extended, mimeType, pd.getCreator(),
-                skipParsing ? null : pd.getFragment(), null, 0, pd.getDescription(), pd.isDescriptionEnabled(), null).toString();
+                pd.getFragment(), null, 0, pd.getDescription(), pd.isDescriptionEnabled(), null).toString();
         data.setFlags(flags);
        return data;
     }

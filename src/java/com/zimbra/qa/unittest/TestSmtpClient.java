@@ -33,6 +33,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailclient.smtp.SmtpConfig;
 import com.zimbra.cs.mailclient.smtp.SmtpConnection;
 import com.zimbra.cs.util.JMSession;
+import com.zimbra.cs.util.ProvisioningUtil;
 
 public class TestSmtpClient extends TestCase {
 
@@ -51,8 +52,8 @@ public class TestSmtpClient extends TestCase {
     @Override
     public void setUp() throws Exception {
         cleanUp();
-        originalLCSetting = LC.zimbra_index_manual_commit.booleanValue();
-        LC.zimbra_index_manual_commit.setDefault(true);
+        originalLCSetting = ProvisioningUtil.getServerAttribute(Provisioning.A_zimbraIndexManualCommit, true);
+        Provisioning.getInstance().getLocalServer().setIndexManualCommit(true);
     }
 
     public void testSimple() throws Exception {
@@ -148,7 +149,7 @@ public class TestSmtpClient extends TestCase {
     @Override
     public void tearDown() throws Exception {
         cleanUp();
-        LC.zimbra_index_manual_commit.setDefault(originalLCSetting);
+        Provisioning.getInstance().getLocalServer().setIndexManualCommit(originalLCSetting);
     }
 
     public void cleanUp() throws Exception {

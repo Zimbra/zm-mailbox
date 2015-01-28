@@ -104,7 +104,7 @@ public final class EhcacheManager {
         conf.setDiskPersistent(true);
         conf.setMaxBytesLocalHeap( ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraActiveSyncSyncStateItemCacheHeapSize, "10M") );
         conf.setMaxElementsOnDisk(0); //infinite
-        conf.setTimeToLiveSeconds(ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraActiveSyncMetadataCacheExpiration, 3600*1000L)/1000);
+        conf.setTimeToLiveSeconds(ProvisioningUtil.getTimeIntervalServerAttribute(ZAttrProvisioning.A_zimbraActiveSyncMetadataCacheExpiration, 3600*1000L)/1000);
         return conf;
     }
 

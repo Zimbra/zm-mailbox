@@ -22,16 +22,18 @@ import java.util.Map;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.stats.RealtimeStatsCallback;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.server.ProtocolHandler;
 import com.zimbra.cs.server.ServerThrottle;
 import com.zimbra.cs.server.TcpServer;
 import com.zimbra.cs.stats.ZimbraPerf;
+import com.zimbra.cs.util.ProvisioningUtil;
 
 public final class TcpLmtpServer extends TcpServer implements LmtpServer, RealtimeStatsCallback {
     public TcpLmtpServer(LmtpConfig config) throws ServiceException {
         super(config);
         ZimbraPerf.addStatsCallback(this);
-        ServerThrottle.configureThrottle(config.getProtocol(), LC.lmtp_throttle_ip_limit.intValue(), 0, getThrottleSafeHosts(), getThrottleWhitelist());
+        ServerThrottle.configureThrottle(config.getProtocol(), Provisioning.getInstance().getLocalServer().getLmtpThrottleIpLimit(), 0, getThrottleSafeHosts(), getThrottleWhitelist());
     }
 
     @Override

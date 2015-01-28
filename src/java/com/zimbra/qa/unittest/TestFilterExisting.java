@@ -56,6 +56,7 @@ import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.filter.RuleManager;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.util.ProvisioningUtil;
 
 public class TestFilterExisting  {
 
@@ -83,8 +84,8 @@ public class TestFilterExisting  {
     @Before
     public void setUp() throws Exception {
         cleanUp();
-        originalLCSetting = LC.zimbra_index_manual_commit.booleanValue();
-        LC.zimbra_index_manual_commit.setDefault(true);
+        originalLCSetting = ProvisioningUtil.getServerAttribute(Provisioning.A_zimbraIndexManualCommit, true);
+        Provisioning.getInstance().getLocalServer().setIndexManualCommit(true);
         TestUtil.createAccount(USER_NAME);
         saveNewRules();
 
@@ -558,7 +559,7 @@ public class TestFilterExisting  {
     @After
     public void tearDown() throws Exception {
         cleanUp();
-        LC.zimbra_index_manual_commit.setDefault(originalLCSetting);
+        Provisioning.getInstance().getLocalServer().setIndexManualCommit(originalLCSetting);
     }
 
     private void cleanUp() throws Exception {

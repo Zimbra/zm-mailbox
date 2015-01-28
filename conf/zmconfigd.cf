@@ -269,7 +269,7 @@ SECTION mailbox
 	VAR zimbraImapSSLBindAddress
 	VAR zimbraImapSSLBindPort
 	VAR zimbraHttpNumThreads
-	VAR nio_imap_enabled
+	VAR zimbraImapNioEnabled
 	VAR zimbraSSLExcludeCipherSuites
 	VAR zimbraSSLExcludeCipherSuitesXML
 	VAR zimbraMailBindAddress

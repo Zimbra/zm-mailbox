@@ -28,6 +28,7 @@ import org.junit.Test;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbResults;
 import com.zimbra.cs.db.DbUtil;
@@ -41,6 +42,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.Tag;
+import com.zimbra.cs.util.ProvisioningUtil;
 
 /**
  * @author bburtin
@@ -90,9 +92,8 @@ public class TestUnread  {
     @Before
     public void setUp() throws Exception {
         cleanUp();
-
-        originalLCSetting = LC.zimbra_index_manual_commit.booleanValue();
-        LC.zimbra_index_manual_commit.setDefault(true);
+        originalLCSetting = ProvisioningUtil.getServerAttribute(Provisioning.A_zimbraIndexManualCommit, true);
+        Provisioning.getInstance().getLocalServer().setIndexManualCommit(true);
         TestUtil.createAccount(USER_NAME);
 
         mMbox = TestUtil.getMailbox(USER_NAME);
@@ -528,7 +529,7 @@ public class TestUnread  {
     @After
     public void tearDown() throws Exception {
         cleanUp();
-        LC.zimbra_index_manual_commit.setDefault(originalLCSetting);
+        Provisioning.getInstance().getLocalServer().setIndexManualCommit(originalLCSetting);
     }
 
     private void cleanUp()

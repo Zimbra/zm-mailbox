@@ -27,6 +27,7 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.util.ProvisioningUtil;
 import com.zimbra.soap.admin.type.CacheEntryType;
 
 
@@ -39,8 +40,8 @@ public class TestIndex extends TestCase {
     @Override
 	public void setUp()
     throws Exception {
-        originalLCSetting = LC.zimbra_index_manual_commit.booleanValue();
-        LC.zimbra_index_manual_commit.setDefault(true);
+    	originalLCSetting = ProvisioningUtil.getServerAttribute(Provisioning.A_zimbraIndexManualCommit, true);
+        Provisioning.getInstance().getLocalServer().setIndexManualCommit(true);
         mOriginalTextLimit = Integer.parseInt(TestUtil.getServerAttr(Provisioning.A_zimbraAttachmentsIndexedTextLimit));
         cleanUp();
     }
@@ -172,7 +173,7 @@ public class TestIndex extends TestCase {
         setTextLimit(mOriginalTextLimit);
         Provisioning.getInstance().getConfig().addDefaultAnalyzerStopWords("a");
         cleanUp();
-        LC.zimbra_index_manual_commit.setDefault(originalLCSetting);
+        Provisioning.getInstance().getLocalServer().setIndexManualCommit(originalLCSetting);
     }
 
     private void cleanUp()

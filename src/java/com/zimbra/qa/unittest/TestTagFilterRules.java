@@ -32,6 +32,8 @@ import com.zimbra.client.ZMailbox;
 import com.zimbra.client.ZMessage;
 import com.zimbra.client.ZTag;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.util.ProvisioningUtil;
 
 public class TestTagFilterRules
 extends TestCase
@@ -52,8 +54,8 @@ extends TestCase
     public void setUp()
     throws Exception {
         cleanUp();
-        originalLCSetting = LC.zimbra_index_manual_commit.booleanValue();
-        LC.zimbra_index_manual_commit.setDefault(true);
+        originalLCSetting = ProvisioningUtil.getServerAttribute(Provisioning.A_zimbraIndexManualCommit, true);
+        Provisioning.getInstance().getLocalServer().setIndexManualCommit(true);
         mMbox = TestUtil.getZMailbox(USER_NAME);
         mTag = mMbox.createTag(TAG_NAME, ZTag.Color.purple);
         mTag2 = mMbox.createTag(TAG2_NAME, ZTag.Color.green);
@@ -122,7 +124,7 @@ extends TestCase
     throws Exception {
         mMbox.saveIncomingFilterRules(mOriginalRules);
         cleanUp();
-        LC.zimbra_index_manual_commit.setDefault(originalLCSetting);
+        Provisioning.getInstance().getLocalServer().setIndexManualCommit(originalLCSetting);
     }
 
     public void cleanUp()

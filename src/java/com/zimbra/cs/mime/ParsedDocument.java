@@ -79,8 +79,7 @@ public final class ParsedDocument {
         this.creator = creator;
         this.description = description;
         this.descEnabled = descEnabled;
-        if (LC.documents_disable_instant_parsing.booleanValue() == false)
-            performExtraction();
+        performExtraction();
     }
 
     /**

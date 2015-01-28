@@ -137,7 +137,6 @@ public class FormatterFactory {
         addFormatter(new TgzFormatter());
         addFormatter(new ZipFormatter());
         addFormatter(new ContactFolderFormatter());
-        addFormatter(new OctopusPatchFormatter());
     }
 
     /**

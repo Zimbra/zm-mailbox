@@ -50,6 +50,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
+import com.zimbra.common.account.ZAttrProvisioning;
 import com.zimbra.common.calendar.ZCalendar.ICalTok;
 import com.zimbra.common.calendar.ZCalendar.ZCalendarBuilder;
 import com.zimbra.common.calendar.ZCalendar.ZVCalendar;
@@ -83,6 +84,7 @@ import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.BlobInputStream;
 import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.util.JMSession;
+import com.zimbra.cs.util.ProvisioningUtil;
 
 /**
  * Instantiates a JavaMail {@link MimeMessage} from a <tt>byte[]</tt> or
@@ -1282,7 +1284,7 @@ public final class ParsedMessage {
             }
 
             // trim mailing list prefixes (e.g. "[rev-dandom]")
-            if (LC.conversation_ignore_maillist_prefix.booleanValue()) {
+            if (ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraConversationIgnoreMaillistPrefix, true)) {
                 int bclose;
                 if (braced && (bclose = subject.indexOf(']')) > 0 && subject.lastIndexOf('[', bclose) == 0) {
                     String remainder = subject.substring(bclose + 1).trim();

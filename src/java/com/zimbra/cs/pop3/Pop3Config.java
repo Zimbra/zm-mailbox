@@ -17,7 +17,20 @@
 
 package com.zimbra.cs.pop3;
 
-import static com.zimbra.cs.account.Provisioning.*;
+import static com.zimbra.common.account.ZAttrProvisioning.A_zimbraPop3AdvertisedName;
+import static com.zimbra.common.account.ZAttrProvisioning.A_zimbraPop3BindAddress;
+import static com.zimbra.common.account.ZAttrProvisioning.A_zimbraPop3BindPort;
+import static com.zimbra.common.account.ZAttrProvisioning.A_zimbraPop3CleartextLoginEnabled;
+import static com.zimbra.common.account.ZAttrProvisioning.A_zimbraPop3ExposeVersionOnBanner;
+import static com.zimbra.common.account.ZAttrProvisioning.A_zimbraPop3MaxConnections;
+import static com.zimbra.common.account.ZAttrProvisioning.A_zimbraPop3MaxIdleTime;
+import static com.zimbra.common.account.ZAttrProvisioning.A_zimbraPop3NumThreads;
+import static com.zimbra.common.account.ZAttrProvisioning.A_zimbraPop3SSLBindAddress;
+import static com.zimbra.common.account.ZAttrProvisioning.A_zimbraPop3SSLBindPort;
+import static com.zimbra.common.account.ZAttrProvisioning.A_zimbraPop3SaslGssapiEnabled;
+import static com.zimbra.common.account.ZAttrProvisioning.A_zimbraPop3ShutdownGraceSeconds;
+import static com.zimbra.common.account.ZAttrProvisioning.A_zimbraPop3ThreadKeepAliveTime;
+import static com.zimbra.common.account.ZAttrProvisioning.A_zimbraPop3WriteTimeout;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.Log;
@@ -25,6 +38,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.server.ServerConfig;
 import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.util.Config;
+import com.zimbra.cs.util.ProvisioningUtil;
 
 public class Pop3Config extends ServerConfig {
     private static final String PROTOCOL = "POP3";
@@ -64,7 +78,7 @@ public class Pop3Config extends ServerConfig {
 
     @Override
     public int getMaxIdleTime() {
-        return LC.pop3_max_idle_time.intValue();
+    	return (int) (ProvisioningUtil.getTimeIntervalServerAttribute(A_zimbraPop3MaxIdleTime, 60000L)/1000);
     }
 
     @Override
@@ -74,9 +88,9 @@ public class Pop3Config extends ServerConfig {
 
     @Override
     public int getThreadKeepAliveTime() {
-        return LC.pop3_thread_keep_alive_time.intValue();
+    	return (int) (ProvisioningUtil.getTimeIntervalServerAttribute(A_zimbraPop3ThreadKeepAliveTime, 60000L)/1000);
     }
-
+    
     @Override
     public int getMaxConnections() {
         return getIntAttr(A_zimbraPop3MaxConnections, super.getMaxConnections());
@@ -84,7 +98,7 @@ public class Pop3Config extends ServerConfig {
 
     @Override
     public int getWriteTimeout() {
-        return LC.pop3_write_timeout.intValue();
+        return (int) (ProvisioningUtil.getTimeIntervalServerAttribute(A_zimbraPop3WriteTimeout, 10000L)/1000);
     }
 
     @Override
@@ -109,4 +123,5 @@ public class Pop3Config extends ServerConfig {
     protected String getUrlScheme() {
         return isSslEnabled() ? "pops" : "pop";
     }
+    
 }

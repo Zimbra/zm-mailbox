@@ -32,9 +32,12 @@ import org.apache.lucene.store.NIOFSDirectory;
 import org.apache.lucene.store.SimpleFSDirectory;
 import org.apache.lucene.store.SingleInstanceLockFactory;
 
+import com.zimbra.common.account.ZAttrProvisioning;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.stats.ZimbraPerf;
+import com.zimbra.cs.util.ProvisioningUtil;
 
 /**
  * Lucene {@link FSDirectory} wrapper to count I/O bytes.
@@ -83,7 +86,7 @@ public final class LuceneDirectory extends Directory {
      * @param path directory path
      */
     public static LuceneDirectory open(File path) throws IOException {
-        String impl = LC.zimbra_index_lucene_io_impl.value();
+    	String impl  = ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraIndexLuceneIoImpl, "nio");
         FSDirectory dir;
         if ("nio".equals(impl)) {
             dir = new NIOFSDirectory(path, new SingleInstanceLockFactory());
@@ -177,7 +180,7 @@ public final class LuceneDirectory extends Directory {
     private static final class LuceneIndexInput extends IndexInput {
 
 		private final IndexInput input;
-        private boolean disableCounters = LC.zimbra_index_disable_perf_counters.booleanValue();
+        private boolean disableCounters = ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraIndexDisablePerfCounters, false);
 
         LuceneIndexInput(IndexInput in) {
         	super("");
@@ -243,7 +246,7 @@ public final class LuceneDirectory extends Directory {
 
     private static final class LuceneIndexOutput extends IndexOutput {
         private final IndexOutput output;
-        private boolean disableCounters = LC.zimbra_index_disable_perf_counters.booleanValue();
+        private boolean disableCounters = ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraIndexDisablePerfCounters, false);
 
         LuceneIndexOutput(IndexOutput out) {
             output = out;

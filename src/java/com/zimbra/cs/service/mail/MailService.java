@@ -18,8 +18,10 @@ package com.zimbra.cs.service.mail;
 
 import com.zimbra.soap.DocumentDispatcher;
 import com.zimbra.soap.DocumentService;
+import com.zimbra.common.account.ZAttrProvisioning;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.cs.util.ProvisioningUtil;
 
 /**
  * @zm-service-description The Mail Service includes commands for managing mail and calendar information.
@@ -99,7 +101,7 @@ public final class MailService implements DocumentService {
         dispatcher.registerHandler(MailConstants.IMPORT_CONTACTS_REQUEST, new ImportContacts());
 
         // notes
-        if (LC.notes_enabled.booleanValue()) {
+        if (ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraMailNotesEnabled, false)) {
             dispatcher.registerHandler(MailConstants.GET_NOTE_REQUEST, new GetNote());
             dispatcher.registerHandler(MailConstants.CREATE_NOTE_REQUEST, new CreateNote());
             dispatcher.registerHandler(MailConstants.NOTE_ACTION_REQUEST, new NoteAction());

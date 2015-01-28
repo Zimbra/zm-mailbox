@@ -47,6 +47,7 @@ import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.util.ProvisioningUtil;
 
 public class TestDocument {
 
@@ -59,8 +60,8 @@ public class TestDocument {
     public void setUp()
     throws Exception {
         cleanUp();
-        originalLCSetting = LC.zimbra_index_manual_commit.booleanValue();
-        LC.zimbra_index_manual_commit.setDefault(true);
+        originalLCSetting = ProvisioningUtil.getServerAttribute(Provisioning.A_zimbraIndexManualCommit, true);
+        Provisioning.getInstance().getLocalServer().setIndexManualCommit(true);
         TestUtil.createAccount(USER_NAME);
         TestUtil.createAccount(USER2_NAME);
     }
@@ -244,7 +245,7 @@ public class TestDocument {
     public void tearDown()
     throws Exception {
         cleanUp();
-        LC.zimbra_index_manual_commit.setDefault(originalLCSetting);
+        Provisioning.getInstance().getLocalServer().setIndexManualCommit(originalLCSetting);
     }
 
     private void cleanUp()

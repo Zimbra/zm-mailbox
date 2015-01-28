@@ -117,10 +117,6 @@ public final class TestDocumentServer extends TestCase {
      */
 
     public void testCompressedVolume() throws Exception {
-        // Perform this test only if instant parsing is enabled.
-        // Normally the instant parsing is enabled for ZCS and disabled for Octopus.
-        if (LC.documents_disable_instant_parsing.booleanValue() == true)
-            return;
         VolumeManager mgr = VolumeManager.getInstance();
         Volume current = mgr.getCurrentMessageVolume();
         mgr.update(Volume.builder(current).setCompressBlobs(true).setCompressionThreshold(1).build());

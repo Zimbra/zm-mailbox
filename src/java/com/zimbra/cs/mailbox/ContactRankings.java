@@ -18,9 +18,9 @@ package com.zimbra.cs.mailbox;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.HashMap;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
@@ -28,12 +28,13 @@ import javax.mail.Address;
 import javax.mail.internet.InternetAddress;
 
 import com.zimbra.common.account.Key;
-import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.account.ZAttrProvisioning;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.ContactAutoComplete.ContactEntry;
+import com.zimbra.cs.util.ProvisioningUtil;
 
 public class ContactRankings {
     private static final String CONFIG_KEY_CONTACT_RANKINGS = "CONTACT_RANKINGS";
@@ -50,12 +51,12 @@ public class ContactRankings {
         mEntryMap = new TreeMap<String,TreeSet<ContactEntry>>();
         mEntries = new HashMap<String,ContactEntry>();
         mTableSize = Provisioning.getInstance().get(Key.AccountBy.id, mAccountId).getIntAttr(Provisioning.A_zimbraContactRankingTableSize, 40);
-        if (!LC.contact_ranking_enabled.booleanValue())
+        if (!ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraContactRankingEnabled , true))
             return;
         readFromDatabase();
     }
     public static void reset(String accountId) throws ServiceException {
-        if (!LC.contact_ranking_enabled.booleanValue())
+        if (!ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraContactRankingEnabled , true))
             return;
         ContactRankings rankings = new ContactRankings(accountId);
         rankings.mEntryMap.clear();
@@ -63,7 +64,7 @@ public class ContactRankings {
         rankings.writeToDatabase();
     }
     public static void remove(String accountId, String email) throws ServiceException {
-        if (!LC.contact_ranking_enabled.booleanValue())
+        if (!ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraContactRankingEnabled , true))
             return;
         ContactRankings rankings = new ContactRankings(accountId);
         ContactEntry entry = rankings.mEntries.get(email.toLowerCase());
@@ -73,7 +74,7 @@ public class ContactRankings {
     }
 
     public static void increment(String accountId, Collection<? extends Address> addrs) throws ServiceException {
-        if (!LC.contact_ranking_enabled.booleanValue())
+        if (!ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraContactRankingEnabled , true))
             return;
         ContactRankings rankings = new ContactRankings(accountId);
         for (Address addr : addrs)

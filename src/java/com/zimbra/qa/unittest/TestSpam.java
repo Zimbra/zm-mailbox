@@ -41,7 +41,6 @@ import com.zimbra.client.ZFilterRules;
 import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.client.ZMessage;
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.zmime.ZMimeMessage;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Config;
@@ -50,6 +49,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.util.SpamHandler;
 import com.zimbra.cs.util.JMSession;
+import com.zimbra.cs.util.ProvisioningUtil;
 
 public class TestSpam extends TestCase {
 
@@ -67,8 +67,8 @@ public class TestSpam extends TestCase {
     @Override
     public void setUp() throws Exception {
         cleanUp();
-        originalLCSetting = LC.zimbra_index_manual_commit.booleanValue();
-        LC.zimbra_index_manual_commit.setDefault(true);
+        originalLCSetting = ProvisioningUtil.getServerAttribute(Provisioning.A_zimbraIndexManualCommit, true);
+        Provisioning.getInstance().getLocalServer().setIndexManualCommit(true);
         Config config = Provisioning.getInstance().getConfig();
         mOriginalSpamHeaderValue = config.getSpamHeaderValue();
         mOriginalSpamAccount = config.getSpamIsSpamAccount();
@@ -209,7 +209,7 @@ public class TestSpam extends TestCase {
         account.setMailSieveScript(mOriginalSieveScript);
 
         cleanUp();
-        LC.zimbra_index_manual_commit.setDefault(originalLCSetting);
+        Provisioning.getInstance().getLocalServer().setIndexManualCommit(originalLCSetting);
     }
 
     private void cleanUp()

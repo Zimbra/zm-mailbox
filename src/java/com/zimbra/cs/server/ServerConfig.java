@@ -30,6 +30,7 @@ import com.zimbra.common.util.Log;
 import com.zimbra.common.util.NetConfigException;
 import com.zimbra.common.util.NetUtil;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.util.ProvisioningUtil;
 
 public abstract class ServerConfig {
     private String protocol;
@@ -42,8 +43,7 @@ public abstract class ServerConfig {
     private static final int DEFAULT_WRITE_CHUNK_SIZE = 8192;
     private static final int DEFAULT_WRITE_TIMEOUT = 10;
     private static final int DEFAULT_THREAD_KEEP_ALIVE_TIME = 60 * 2;
-    private static final int DEFAULT_MAX_WRITE_QUEUE_SIZE = LC.nio_max_write_queue_size.intValue();
-
+    private static final int DEFAULT_MAX_WRITE_QUEUE_SIZE =  ProvisioningUtil.getServerAttribute(Provisioning.A_zimbraNioMaxWriteQueueSize, 10000);
     public ServerConfig(String protocol, boolean ssl) {
         this.protocol = protocol;
         this.ssl = ssl;
@@ -205,6 +205,15 @@ public abstract class ServerConfig {
     protected int getIntAttr(String key, int defaultValue) {
         try {
             return getLocalServer().getIntAttr(key, defaultValue);
+        } catch (ServiceException e) {
+            getLog().warn("Unable to get server attribute: " + key, e);
+            return defaultValue;
+        }
+    }
+    
+    protected long getLongAttr(String key, long defaultValue) {
+        try {
+            return getLocalServer().getLongAttr(key, defaultValue);
         } catch (ServiceException e) {
             getLog().warn("Unable to get server attribute: " + key, e);
             return defaultValue;

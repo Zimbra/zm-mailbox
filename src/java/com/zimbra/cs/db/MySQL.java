@@ -33,10 +33,13 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 
 import com.google.common.base.Joiner;
+import com.zimbra.common.account.ZAttrProvisioning;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbPool.DbConnection;
+import com.zimbra.cs.util.ProvisioningUtil;
 
 public class MySQL extends Db {
 
@@ -134,7 +137,7 @@ public class MySQL extends Db {
     @Override
     public void enableStreaming(Statement stmt)
     throws SQLException {
-        if (LC.jdbc_results_streaming_enabled.booleanValue()) {
+        if (ProvisioningUtil.getServerAttribute(Provisioning.A_zimbraMysqlJdbcResultStreamingEnabled, true)){
             stmt.setFetchSize(Integer.MIN_VALUE);
         }
     }

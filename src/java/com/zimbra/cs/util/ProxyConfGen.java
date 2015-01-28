@@ -549,8 +549,8 @@ class ImapGreetingVar extends ProxyConfVar {
 class SaslHostFromIPVar extends ProxyConfVar {
 
     public SaslHostFromIPVar() {
-        super("mail.sasl_host_from_ip", "krb5_service_principal_from_interface_address",
-                false, ProxyConfValueType.BOOLEAN, ProxyConfOverride.LOCALCONFIG,
+        super("mail.sasl_host_from_ip", "zimbraKerobosServicePrincipalFromInterfaceAddress",
+                false, ProxyConfValueType.BOOLEAN, ProxyConfOverride.SERVER,
                 "Whether to use incoming interface IP address to determine service " +
                 "principal name (if true, IP address is reverse mapped to DNS name, " +
                 "else host name of proxy is used)");
@@ -558,12 +558,7 @@ class SaslHostFromIPVar extends ProxyConfVar {
 
     @Override
     public void update() {
-        if (LC.krb5_service_principal_from_interface_address.booleanValue()) {
-            mValue = true;
-        }
-        else {
-            mValue = false;
-        }
+    	mValue = serverSource.getBooleanAttr("zimbraKerobosServicePrincipalFromInterfaceAddress",false);
     }
 }
 
@@ -1955,6 +1950,7 @@ class WebZSSUpstreamEnablerVar extends WebEnablerVar {
     }
 }
 
+
 public class ProxyConfGen
 {
     private static final int DEFAULT_SERVERS_NAME_HASH_MAX_SIZE = 512;
@@ -2571,8 +2567,8 @@ public class ProxyConfGen
         mConfVars.put("memcache.reconnect", new ProxyConfVar("memcache.reconnect", "zimbraReverseProxyCacheReconnectInterval", new Long(60000), ProxyConfValueType.TIME, ProxyConfOverride.CONFIG, "Time (ms) after which NGINX will attempt to re-establish a broken connection to a memcache server"));
         mConfVars.put("memcache.ttl", new ProxyConfVar("memcache.ttl", "zimbraReverseProxyCacheEntryTTL", new Long(3600000), ProxyConfValueType.TIME, ProxyConfOverride.CONFIG, "Time interval (ms) for which cached entries remain in memcache"));
         mConfVars.put("mail.ctimeout", new ProxyConfVar("mail.ctimeout", "zimbraReverseProxyConnectTimeout", new Long(120000), ProxyConfValueType.TIME, ProxyConfOverride.SERVER, "Time interval (ms) after which a POP/IMAP proxy connection to a remote host will give up"));
-        mConfVars.put("mail.pop3.timeout", new ProxyConfVar("mail.pop3.timeout", "pop3_max_idle_time", 60, ProxyConfValueType.INTEGER, ProxyConfOverride.LOCALCONFIG, "pop3 network timeout before authentication"));
-        mConfVars.put("mail.pop3.proxytimeout", new ProxyConfVar("mail.pop3.proxytimeout", "pop3_max_idle_time", 60, ProxyConfValueType.INTEGER, ProxyConfOverride.LOCALCONFIG, "pop3 network timeout after authentication"));
+        mConfVars.put("mail.pop3.timeout", new ProxyConfVar("mail.pop3.timeout", "zimbraPop3MaxIdleTime", new Long(60000), ProxyConfValueType.TIME, ProxyConfOverride.SERVER, "pop3 network timeout before authentication"));
+        mConfVars.put("mail.pop3.proxytimeout", new ProxyConfVar("mail.pop3.proxytimeout", "zimbraPop3MaxIdleTime", new Long(60000), ProxyConfValueType.TIME, ProxyConfOverride.SERVER, "pop3 network timeout after authentication"));
         mConfVars.put("mail.imap.timeout", new ProxyConfVar("mail.imap.timeout", "zimbraImapMaxIdleTime", 60, ProxyConfValueType.INTEGER, ProxyConfOverride.SERVER, "imap network timeout before authentication"));
         mConfVars.put("mail.imap.proxytimeout", new TimeoutVar("mail.imap.proxytimeout", "zimbraImapAuthenticatedMaxIdleTime", 1800, ProxyConfOverride.SERVER, 300, "imap network timeout after authentication"));
         mConfVars.put("mail.passerrors", new ProxyConfVar("mail.passerrors", "zimbraReverseProxyPassErrors", true, ProxyConfValueType.BOOLEAN, ProxyConfOverride.SERVER, "Indicates whether mail proxy will pass any protocol specific errors from the upstream server back to the downstream client"));

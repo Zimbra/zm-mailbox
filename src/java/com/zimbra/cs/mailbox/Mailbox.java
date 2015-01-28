@@ -8156,7 +8156,7 @@ public class Mailbox {
                     if (firstTime) {
                         firstTime = false;
                     } else {
-                        long sleepMillis = LC.empty_folder_batch_sleep_ms.longValue();
+                        long sleepMillis = ProvisioningUtil.getTimeIntervalServerAttribute(ZAttrProvisioning.A_zimbraMailboxDeleteFolderThreadSleep, 1L);
                         try {
                             ZimbraLog.mailbox.debug("emptyLargeFolder() sleeping for %dms", sleepMillis);
                             Thread.sleep(sleepMillis);
@@ -8510,8 +8510,8 @@ public class Mailbox {
             }
 
             if (Threader.isHashPurgeAllowed(acct)) {
-                long convTimeoutSecs = LC.conversation_max_age_ms.longValue();
-                DbMailItem.closeOldConversations(this, getOperationTimestampMillis() - convTimeoutSecs);
+                long convTimeoutMillis = ProvisioningUtil.getTimeIntervalServerAttribute(ZAttrProvisioning.A_zimbraConversationMaxAge, 2678400000L);
+                DbMailItem.closeOldConversations(this, getOperationTimestampMillis() - convTimeoutMillis);
             }
 
             if (isTrackingSync()) {

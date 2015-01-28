@@ -81,7 +81,6 @@ import com.zimbra.cs.service.formatter.Formatter;
 import com.zimbra.cs.service.formatter.FormatterFactory;
 import com.zimbra.cs.service.formatter.FormatterFactory.FormatType;
 import com.zimbra.cs.service.formatter.IfbFormatter;
-import com.zimbra.cs.service.formatter.OctopusPatchFormatter;
 import com.zimbra.cs.service.formatter.TarFormatter;
 import com.zimbra.cs.service.formatter.ZipFormatter;
 import com.zimbra.cs.service.util.ItemId;
@@ -208,7 +207,6 @@ public class UserServlet extends ZimbraServlet {
     /**
      * Used by {@link OctopusPatchFormatter}
      */
-    public static final String QP_MANIFEST = "manifest"; // selects whether server returns patch manifest or not
 
     public static final String QP_DUMPSTER = "dumpster"; // whether search in dumpster
 

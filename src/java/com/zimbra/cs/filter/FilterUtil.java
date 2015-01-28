@@ -38,6 +38,7 @@ import com.google.common.collect.Sets;
 import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.ZAttrProvisioning;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.mime.shim.JavaMailInternetAddress;
@@ -71,6 +72,7 @@ import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.JMSession;
+import com.zimbra.cs.util.ProvisioningUtil;
 
 public final class FilterUtil {
 
@@ -281,7 +283,7 @@ public final class FilterUtil {
 
         try {
             if (Provisioning.getInstance().getLocalServer().isMailRedirectSetEnvelopeSender()) {
-                if (isDeliveryStatusNotification(msg) && LC.filter_null_env_sender_for_dsn_redirect.booleanValue()) {
+                if (isDeliveryStatusNotification(msg) && ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraFilterNullEnvelopeSenderForDSNRedirect, true)) {
                     sender.setEnvelopeFrom("<>");
                     sender.setDsnNotifyOptions(MailSender.DsnNotifyOption.NEVER);
                 } else {

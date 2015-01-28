@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import com.zimbra.common.account.ZAttrProvisioning;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -41,6 +42,7 @@ import com.zimbra.cs.mailbox.calendar.cache.CalSummaryCache.CalendarDataResult;
 import com.zimbra.cs.mailbox.calendar.cache.CalendarItemData;
 import com.zimbra.cs.mailbox.calendar.cache.FullInstanceData;
 import com.zimbra.cs.mailbox.calendar.cache.InstanceData;
+import com.zimbra.cs.util.ProvisioningUtil;
 
 public class LocalFreeBusyProvider {
 
@@ -140,7 +142,7 @@ public class LocalFreeBusyProvider {
                 }
             }
         }
-        if (!accountAceAllowed && numAllowedFolders == 0 && !LC.freebusy_disable_nodata_status.booleanValue()) {
+        if (!accountAceAllowed && numAllowedFolders == 0 && !ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraFreeBusyDisableNoDataStatus , false)) {
             Interval nodata = new Interval(start, end, IcalXmlStrMap.FBTYPE_NODATA);
             intervals.addInterval(nodata);
         }

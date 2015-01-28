@@ -100,6 +100,7 @@ import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavProtocol;
 import com.zimbra.cs.dav.resource.UrlNamespace;
 import com.zimbra.cs.dav.service.DavServlet;
+import com.zimbra.cs.util.ProvisioningUtil;
 
 public class TestCalDav  {
 
@@ -1271,8 +1272,8 @@ public class TestCalDav  {
 
     @Before
     public void setUp() throws Exception {
-        originalLCSetting = LC.zimbra_index_manual_commit.booleanValue();
-        LC.zimbra_index_manual_commit.setDefault(true);
+    	originalLCSetting = ProvisioningUtil.getServerAttribute(Provisioning.A_zimbraIndexManualCommit, true);
+    	Provisioning.getInstance().getLocalServer().setIndexManualCommit(true);
         if (!TestUtil.fromRunUnitTests) {
             TestUtil.cliSetup();
             String tzFilePath = LC.timezone_file.value();
@@ -1284,7 +1285,7 @@ public class TestCalDav  {
 
     @After
     public void tearDown() throws Exception {
-        LC.zimbra_index_manual_commit.setDefault(originalLCSetting);
+    	Provisioning.getInstance().getLocalServer().setIndexManualCommit(originalLCSetting);
         cleanUp();
     }
 

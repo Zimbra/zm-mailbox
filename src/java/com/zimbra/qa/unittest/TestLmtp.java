@@ -45,6 +45,7 @@ import com.zimbra.cs.lmtpserver.LmtpMessageInputStream;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mime.handler.MessageRFC822Handler;
+import com.zimbra.cs.util.ProvisioningUtil;
 
 public class TestLmtp
 extends TestCase {
@@ -94,8 +95,8 @@ extends TestCase {
     @Override
     public void setUp()
     throws Exception {
-        originalLCSetting = LC.zimbra_index_manual_commit.booleanValue();
-        LC.zimbra_index_manual_commit.setDefault(true);
+    	originalLCSetting = ProvisioningUtil.getServerAttribute(Provisioning.A_zimbraIndexManualCommit, true);
+    	Provisioning.getInstance().getLocalServer().setIndexManualCommit(true);
         mbox = TestUtil.getZMailbox("user1");
         account = TestUtil.getAccount("user1");
         originalWarnInterval = account.getAttr(Provisioning.A_zimbraQuotaWarnInterval);
@@ -816,7 +817,7 @@ extends TestCase {
         TestUtil.setConfigAttr(Provisioning.A_zimbraMessageIdDedupeCacheTimeout, originalDedupeCacheTimeout);
         TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraPrefMessageIdDedupingEnabled, originalDedupingEnabled);
         cleanUp();
-        LC.zimbra_index_manual_commit.setDefault(originalLCSetting);
+        Provisioning.getInstance().getLocalServer().setIndexManualCommit(originalLCSetting);
     }
 
     private void cleanUp()

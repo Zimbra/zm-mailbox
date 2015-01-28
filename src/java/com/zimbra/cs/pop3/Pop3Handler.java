@@ -44,6 +44,7 @@ import com.zimbra.cs.security.sasl.AuthenticatorUser;
 import com.zimbra.cs.security.sasl.PlainAuthenticator;
 import com.zimbra.cs.server.ServerThrottle;
 import com.zimbra.cs.stats.ZimbraPerf;
+import com.zimbra.cs.util.ProvisioningUtil;
 
 /**
  * @since Nov 25, 2004
@@ -157,7 +158,7 @@ abstract class Pop3Handler {
         } catch (Pop3CmdException e) {
             ZimbraLog.pop.debug(e.getMessage(), e);
             errorCount++;
-            int errorLimit = LC.pop3_max_consecutive_error.intValue();
+            int errorLimit = ProvisioningUtil.getServerAttribute(Provisioning.A_zimbraPop3MaxConsecutiveError, 5);
             if (errorLimit > 0 && errorCount >= errorLimit) {
                 ZimbraLog.pop.warn("dropping connection due to too many errors");
                 sendERR(e.getResponse() +" : Dropping connection due to too many bad commands");

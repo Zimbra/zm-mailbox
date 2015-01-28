@@ -70,8 +70,8 @@ public final class TestImapImport extends TestCase {
         cleanUp();
 
         //turn on synchronous indexing
-        originalLCSetting = LC.zimbra_index_manual_commit.booleanValue();
-        LC.zimbra_index_manual_commit.setDefault(true);
+        originalLCSetting = ProvisioningUtil.getServerAttribute(Provisioning.A_zimbraIndexManualCommit, true);
+        Provisioning.getInstance().getLocalServer().setIndexManualCommit(true);
 
         // Turn on cleartext login
         mOriginalCleartextValue = TestUtil.getServerAttr(Provisioning.A_zimbraImapCleartextLoginEnabled);
@@ -359,7 +359,7 @@ public final class TestImapImport extends TestCase {
         cleanUp();
 
         //reset configs to pre-test values
-        LC.zimbra_index_manual_commit.setDefault(originalLCSetting);
+        Provisioning.getInstance().getLocalServer().setIndexManualCommit(originalLCSetting);
         TestUtil.setServerAttr(Provisioning.A_zimbraImapCleartextLoginEnabled, mOriginalCleartextValue);
         Provisioning.getInstance().getLocalServer().setImapEnableStartTls(mOriginalEnableStarttls);
     }

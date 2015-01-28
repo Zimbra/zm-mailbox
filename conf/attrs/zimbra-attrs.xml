@@ -8999,4 +8999,150 @@ TODO: delete them permanently from here
   <desc>Redis url </desc>
 </attr>
 
+<attr id="1789" name="zimbraMysqlJdbcResultStreamingEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
+  <globalConfigValue>TRUE</globalConfigValue>
+  <desc>Flag to enable streaming of jdbc results.</desc>
+</attr>
+
+<attr id="1790" name="zimbraIndexReaderCacheSize" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="solr"  since="9.0">
+  <globalConfigValue>20</globalConfigValue>
+  <desc>Maximum number of IndexReaders in the search index cache</desc>
+</attr>
+
+<attr id="1791" name="zimbraIndexDisablePerfCounters" type="boolean" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="solr"  since="9.0">
+  <globalConfigValue>FALSE</globalConfigValue>
+  <desc>Disable perf counters for lucene indexer</desc>
+</attr>
+
+<attr id="1792" name="zimbraConversationIgnoreMaillistPrefix" type="boolean" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
+  <globalConfigValue>TRUE</globalConfigValue>
+  <desc>Flag to enable contact ranking table</desc>
+</attr>
+
+<attr id="1793" name="zimbraConversationMaxAge" type="duration" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
+  <globalConfigValue>2678400000ms</globalConfigValue>
+  <desc>Conversation max age in millis. Deletes rows from open_conversation whose items are older than the given no of days. Default is 31 days.</desc>
+</attr>
+
+<attr id="1794" name="zimbraPop3NioEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
+  <globalConfigValue>TRUE</globalConfigValue>
+  <desc>Flag to enable pop3 nio</desc>
+</attr>
+
+<attr id="1795" name="zimbraMailboxDeleteFolderThreadSleep" type="duration" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
+  <globalConfigValue>1ms</globalConfigValue>
+  <desc>Sleep time in milliseconds to give other threads a chance to use the mailbox between deletion batches.</desc>
+</attr>
+
+<attr id="1796" name="zimbraFilterNullEnvelopeSenderForDSNRedirect" type="boolean" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
+  <globalConfigValue>TRUE</globalConfigValue>
+  <desc>Flag for not populating envelope sender when message is redirected by mail filters. See bug 56566</desc>
+</attr>
+
+<attr id="1797" name="zimbraFreeBusyDisableNoDataStatus" type="boolean" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
+  <globalConfigValue>FALSE</globalConfigValue>
+  <desc>Flag to disable the listing of interval when you have no data about account's free busy interval. One example is user doesn't have the acl to fetch free busy intervals of this account</desc>
+</attr>
+
+<attr id="1798" name="zimbraKerberosDebugEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
+  <globalConfigValue>FALSE</globalConfigValue>
+  <desc>Enabled Kerberos debugging</desc>
+</attr>
+
+<attr id="1799" name="zimbraKerobosServicePrincipalFromInterfaceAddress" type="boolean" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
+  <globalConfigValue>FALSE</globalConfigValue>
+  <desc>Flag to get Kerobos Service Principal from Interface Address</desc>
+</attr>
+
+<attr id="1800" name="zimbraLmtpThrottleIpLimit" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
+  <globalConfigValue>0</globalConfigValue>
+  <desc>Lmtp ip throttle. Maximum lmtp requests per second per account.</desc>
+</attr>
+
+<attr id="1801" name="zimbraMimeMaxImageSizeToResize" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
+  <globalConfigValue>10485760</globalConfigValue>
+  <desc>Maximum image size in bytes to resize</desc>
+</attr>
+
+<attr id="1802" name="zimbraImapNioEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
+  <globalConfigValue>TRUE</globalConfigValue>
+  <desc>Maximum image size in bytes to resize</desc>
+</attr>
+
+<attr id="1803" name="zimbraNioMaxWriteQueueSize" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
+  <globalConfigValue>10000</globalConfigValue>
+  <desc>Nio maximum write queue size in bytes</desc>
+</attr>
+
+<attr id="1804" name="zimbraMailNotesEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
+  <globalConfigValue>FALSE</globalConfigValue>
+  <desc>Flag to enable notes</desc>
+</attr>
+
+<attr id="1805" name="zimbraPop3MaxConsecutiveError" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
+  <globalConfigValue>5</globalConfigValue>
+  <desc>Maximum no of consecutive errors for retry</desc>
+</attr>
+
+<attr id="1806" name="zimbraPop3MaxIdleTime" type="duration" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
+  <globalConfigValue>60s</globalConfigValue>
+  <desc>Maximum idle time in seconds</desc>
+</attr>
+
+<attr id="1807" name="zimbraPop3WriteTimeout" type="duration" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
+  <globalConfigValue>10s</globalConfigValue>
+  <desc>Pop3 write timeout in seconds</desc>
+</attr>
+
+<attr id="1808" name="zimbraPop3ThreadKeepAliveTime" type="duration" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
+  <globalConfigValue>60s</globalConfigValue>
+  <desc>Pop3 maximum keep alive time in seconds</desc>
+</attr>
+
+<attr id="1809" name="zimbraPop3ThrottleIpLimit" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
+  <globalConfigValue>5000</globalConfigValue>
+  <desc>pop3 ip throttle.  Maximum allowed requests per second per ip .</desc>
+</attr>
+
+<attr id="1810" name="zimbraPop3ThrottleAcctLimit" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
+  <globalConfigValue>5000</globalConfigValue>
+  <desc>pop3 throttle account. Maximum  allowed requests per second per account .</desc>
+</attr>
+
+<attr id="1811" name="zimbraIndexLuceneIoImpl" type="enum" value= "nio,mmap,simple" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="solr"  since="9.0">
+  <globalConfigValue>nio</globalConfigValue>
+  <desc>Lucene index io implementation</desc>
+</attr>
+
+<attr id="1812" name="zimbraIndexLuceneMergeFactor" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="solr"  since="9.0">
+  <globalConfigValue>10</globalConfigValue>
+  <desc> Determines how often segment indices are merged by addDocument function. With smaller values, less RAM is used while indexing, and searches are faster, but indexing speed is slower.  With larger values, more RAM is used during indexing, and while searches is slower, indexing is faster.  Thus larger values greater than 10 are best for batch index creation, and smaller values less than 10 for indices that are interactively maintained </desc>
+</attr>
+
+<attr id="1813" name="zimbraIndexManualCommit" type="boolean" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="solr"  since="9.0">
+  <globalConfigValue>TRUE</globalConfigValue>
+  <desc>Flag to commit the index manually or not</desc>
+</attr>
+
+<attr id="1814" name="zimbraIndexMaxTransactionBytes" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="solr"  since="9.0">
+  <globalConfigValue>5000000</globalConfigValue>
+  <desc>When batching index operations into a Mailbox transaction, the maximum aggregate size of items that we will allow in a single transaction.</desc>
+</attr>
+
+<attr id="1815" name="zimbraIndexMaxTransactionItems" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="solr"  since="9.0">
+  <globalConfigValue>100</globalConfigValue>
+  <desc> When batching index operations, the maximum number of mail items we allow in a single transaction.</desc>
+</attr>
+
+<attr id="1816" name="zimbraContactRankingEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="solr"  since="9.0">
+  <globalConfigValue>TRUE</globalConfigValue>
+  <desc>Enable contact ranking table</desc>
+</attr>
+
+<attr id="1817" name="zimbraIndexReaderCacheTtl" type="duration" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="solr"  since="9.0">
+  <globalConfigValue>300s</globalConfigValue>
+  <desc> TTL in seconds for index reader cache. If idle for longer than this value (seconds) then remove the IndexReader from the cache.</desc>
+</attr>
+
+
 </attrs>

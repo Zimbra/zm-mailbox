@@ -26,6 +26,8 @@ import com.zimbra.client.ZMessage;
 import com.zimbra.client.ZMessage.ZMimePart;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.ByteUtil;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.util.ProvisioningUtil;
 
 public class TestConversion extends TestCase {
 
@@ -35,8 +37,8 @@ public class TestConversion extends TestCase {
     @Override
     public void setUp()
     throws Exception {
-        originalLCSetting = LC.zimbra_index_manual_commit.booleanValue();
-        LC.zimbra_index_manual_commit.setDefault(true);
+        originalLCSetting = ProvisioningUtil.getServerAttribute(Provisioning.A_zimbraIndexManualCommit, true);
+        Provisioning.getInstance().getLocalServer().setIndexManualCommit(true);
         cleanUp();
     }
 
@@ -76,7 +78,7 @@ public class TestConversion extends TestCase {
     public void tearDown()
     throws Exception {
         cleanUp();
-        LC.zimbra_index_manual_commit.setDefault(originalLCSetting);
+        Provisioning.getInstance().getLocalServer().setIndexManualCommit(originalLCSetting);
     }
 
     private void cleanUp()

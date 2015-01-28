@@ -128,7 +128,7 @@ public final class MailboxTestUtil {
         LC.zimbra_class_database.setDefault(HSQLDB.class.getName());
         DbPool.startup();
         HSQLDB.createDatabase(zimbraServerDir, false);
-        LC.zimbra_index_manual_commit.setDefault(true);
+        Provisioning.getInstance().getLocalServer().setIndexManualCommit(true);
         LC.zimbra_class_index_store_factory.setDefault(EmbeddedSolrIndex.Factory.class.getName());
         IndexStore.setFactory(LC.zimbra_class_index_store_factory.value());
         LC.zimbra_class_store.setDefault(storeManagerClass.getName());

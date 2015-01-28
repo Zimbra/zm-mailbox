@@ -83,8 +83,8 @@ import com.zimbra.cs.util.Zimbra;
  * @author ysasaki
  */
 public final class MailboxIndex {
-    private static final long MAX_TX_BYTES = LC.zimbra_index_max_transaction_bytes.longValue();
-    private static final int MAX_TX_ITEMS = LC.zimbra_index_max_transaction_items.intValue();
+    private static final long MAX_TX_BYTES =  ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraIndexMaxTransactionBytes, 5000000);
+    private static final int MAX_TX_ITEMS =  ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraIndexMaxTransactionItems, 100);
     private static final long FAILURE_DELAY = ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraIndexDeferredItemsFailureDelay, 300*1000L);
 
     private static final ThreadPoolExecutor INDEX_EXECUTOR = new ThreadPoolExecutor(

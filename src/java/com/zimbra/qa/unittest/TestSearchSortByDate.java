@@ -38,9 +38,11 @@ import com.zimbra.client.ZSearchParams;
 import com.zimbra.client.ZSearchParams.Cursor;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.util.ProvisioningUtil;
 import com.zimbra.soap.type.SearchSortBy;
 /**
  * @author Greg Solovyev
@@ -60,8 +62,8 @@ public class TestSearchSortByDate {
     @Before
     public void setUp() throws Exception {
         cleanUp();
-        originalLCSetting = LC.zimbra_index_manual_commit.booleanValue();
-        LC.zimbra_index_manual_commit.setDefault(true);
+        originalLCSetting = ProvisioningUtil.getServerAttribute(Provisioning.A_zimbraIndexManualCommit, true);
+        Provisioning.getInstance().getLocalServer().setIndexManualCommit(true);
         TestUtil.createAccount(ADDRESS1);
         TestUtil.createAccount(ADDRESS2);    }
 
@@ -441,7 +443,7 @@ public class TestSearchSortByDate {
     public void tearDown()
     throws Exception {
         cleanUp();
-        LC.zimbra_index_manual_commit.setDefault(originalLCSetting);
+        Provisioning.getInstance().getLocalServer().setIndexManualCommit(originalLCSetting);
     }
 
     private void cleanUp()

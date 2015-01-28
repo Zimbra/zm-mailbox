@@ -48,6 +48,7 @@ import com.google.common.collect.Lists;
 import com.google.common.io.Closeables;
 import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
 import com.googlecode.concurrentlinkedhashmap.EvictionListener;
+import com.zimbra.common.account.ZAttrProvisioning;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -63,9 +64,11 @@ import com.zimbra.cs.index.ZimbraScoreDoc;
 import com.zimbra.cs.index.ZimbraTermsFilter;
 import com.zimbra.cs.index.ZimbraTopDocs;
 import com.zimbra.cs.index.solr.SolrUtils.WildcardEscape;
+import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.IndexItemEntry;
+import com.zimbra.cs.util.ProvisioningUtil;
 
 /**
  * Base class for standalone solr and solrcloud IndexStores
@@ -93,8 +96,8 @@ public abstract class SolrIndexBase extends IndexStore {
 
     protected static final Cache<Integer, SolrIndexSearcher> SEARCHER_CACHE =
             CacheBuilder.newBuilder()
-            .maximumSize(LC.zimbra_index_reader_cache_size.intValue())
-            .expireAfterAccess(LC.zimbra_index_reader_cache_ttl.intValue(), TimeUnit.SECONDS)
+            .maximumSize(ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraIndexReaderCacheSize, 20))
+            .expireAfterAccess(ProvisioningUtil.getTimeIntervalServerAttribute(ZAttrProvisioning.A_zimbraIndexReaderCacheTtl, 300000L), TimeUnit.MILLISECONDS)
             .removalListener(new RemovalListener<Integer, SolrIndexSearcher>() {
                 @Override
                 public void onRemoval(RemovalNotification<Integer, SolrIndexSearcher> notification) {
@@ -419,7 +422,7 @@ public abstract class SolrIndexBase extends IndexStore {
             }
             SolrServer solrServer = getSolrServer();
             try {
-                if(LC.zimbra_index_manual_commit.booleanValue()) {
+                if(ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraIndexManualCommit, true)) {
                     waitForIndexCommit(solrServer);
                 }
                 if (docID instanceof ZimbraSolrDocumentID) {
@@ -458,7 +461,7 @@ public abstract class SolrIndexBase extends IndexStore {
             }
             SolrServer solrServer = getSolrServer();
             try {
-                if(LC.zimbra_index_manual_commit.booleanValue()) {
+                if(ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraIndexManualCommit, true)) {
                     waitForIndexCommit(solrServer);
                 }
                 SolrQuery q = new SolrQuery().setQuery(TermToQuery(term)).setRows(0);
@@ -507,7 +510,7 @@ public abstract class SolrIndexBase extends IndexStore {
             }
 
             SolrServer solrServer = getSolrServer();
-            if(LC.zimbra_index_manual_commit.booleanValue()) {
+            if(ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraIndexManualCommit, true)) {
                 waitForIndexCommit(solrServer);
             }
 
@@ -640,7 +643,7 @@ public abstract class SolrIndexBase extends IndexStore {
                     return;
                 }
                 SolrServer solrServer = getSolrServer();
-                if(LC.zimbra_index_manual_commit.booleanValue()) {
+                if(ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraIndexManualCommit, true)) {
                     waitForIndexCommit(solrServer);
                 }
                 SolrQuery q = new SolrQuery().setRequestHandler("/terms");
@@ -741,7 +744,7 @@ public abstract class SolrIndexBase extends IndexStore {
             SolrServer solrServer = getSolrServer();
             UpdateRequest req = new UpdateRequest();
             setupRequest(req, solrServer);
-            if(LC.zimbra_index_manual_commit.booleanValue()) {
+            if(ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraIndexManualCommit, true)) {
                 setAction(req);
             }
             for (IndexItemEntry entry : entries) {
@@ -766,7 +769,7 @@ public abstract class SolrIndexBase extends IndexStore {
                 }
             }
             try {
-                if(LC.zimbra_index_manual_commit.booleanValue()) {
+                if(ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraIndexManualCommit, true)) {
                     incrementUpdateCounter(solrServer);
                 }
                 processRequest(solrServer, req);
@@ -803,11 +806,11 @@ public abstract class SolrIndexBase extends IndexStore {
                 UpdateRequest req = new UpdateRequest();
                 setupRequest(req, solrServer);
                 req.add(solrDoc);
-                if(LC.zimbra_index_manual_commit.booleanValue()) {
+                if(ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraIndexManualCommit, true)) {
                     setAction(req);
                 }
                 try {
-                    if(LC.zimbra_index_manual_commit.booleanValue()) {
+                    if(ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraIndexManualCommit, true)) {
                         incrementUpdateCounter(solrServer);
                     }
                     processRequest(solrServer, req);
@@ -845,11 +848,11 @@ public abstract class SolrIndexBase extends IndexStore {
                 for (Integer id : ids) {
                     UpdateRequest req = new UpdateRequest().deleteByQuery(String.format("%s:%d",LuceneFields.L_MAILBOX_BLOB_ID,id));
                     setupRequest(req, solrServer);
-                    if(LC.zimbra_index_manual_commit.booleanValue()) {
+                    if(ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraIndexManualCommit, true)) {
                         setAction(req);
                     }
                     try {
-                        if(LC.zimbra_index_manual_commit.booleanValue()) {
+                        if(ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraIndexManualCommit, true)) {
                             incrementUpdateCounter(solrServer);
                         }
                         processRequest(solrServer, req);

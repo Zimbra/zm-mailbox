@@ -32,9 +32,11 @@ import com.zimbra.common.calendar.WellKnownTimeZones;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.Constants;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.util.ProvisioningUtil;
 import com.zimbra.soap.account.message.ModifyPrefsRequest;
 import com.zimbra.soap.account.message.ModifyPrefsResponse;
 import com.zimbra.soap.account.type.Pref;
@@ -122,8 +124,8 @@ public class TestInvite  {
 
     @Before
     public void setUp() throws Exception {
-        originalLCSetting = LC.zimbra_index_manual_commit.booleanValue();
-        LC.zimbra_index_manual_commit.setDefault(true);
+    	originalLCSetting = ProvisioningUtil.getServerAttribute(Provisioning.A_zimbraIndexManualCommit, true);
+    	Provisioning.getInstance().getLocalServer().setIndexManualCommit(true);
         if (!TestUtil.fromRunUnitTests) {
             TestUtil.cliSetup();
             String tzFilePath = LC.timezone_file.value();
@@ -148,7 +150,7 @@ public class TestInvite  {
     @After
     public void tearDown() throws Exception {
         cleanup();
-        LC.zimbra_index_manual_commit.setDefault(originalLCSetting);
+        Provisioning.getInstance().getLocalServer().setIndexManualCommit(originalLCSetting);
     }
 
     /**

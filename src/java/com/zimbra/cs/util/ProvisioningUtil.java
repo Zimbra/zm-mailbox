@@ -62,4 +62,14 @@ public class ProvisioningUtil {
             return defaultValue;
         }
     }
+    
+    
+    public static long getTimeIntervalServerAttribute(String name, Long defaultValueInMillis) {
+        try {
+            return Provisioning.getInstance().getLocalServer().getTimeInterval(name, defaultValueInMillis);
+        } catch (ServiceException e) {
+            ZimbraLog.misc.error(e);
+            return defaultValueInMillis;
+        }
+    }
 }

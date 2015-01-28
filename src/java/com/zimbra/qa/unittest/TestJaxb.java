@@ -52,6 +52,8 @@ import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.soap.W3cDomUtil;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.util.ProvisioningUtil;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.mail.message.BrowseRequest;
 import com.zimbra.soap.mail.message.BrowseResponse;
@@ -104,15 +106,15 @@ public class TestJaxb  {
         TestUtil.createAccount(ATTENDEE1);
         TestUtil.createAccount(ATTENDEE2);
         TestUtil.createAccount(ORGANIZER);
-        originalLCSetting = LC.zimbra_index_manual_commit.booleanValue();
-        LC.zimbra_index_manual_commit.setDefault(true);
+        originalLCSetting = ProvisioningUtil.getServerAttribute(Provisioning.A_zimbraIndexManualCommit, true);
+        Provisioning.getInstance().getLocalServer().setIndexManualCommit(true);
         marshaller = JaxbUtil.createMarshaller();
     }
 
     @After
     public void tearDown() throws Exception {
         cleanUp();
-        LC.zimbra_index_manual_commit.setDefault(originalLCSetting);
+        Provisioning.getInstance().getLocalServer().setIndexManualCommit(originalLCSetting);
     }
 
     private void cleanUp() throws Exception {

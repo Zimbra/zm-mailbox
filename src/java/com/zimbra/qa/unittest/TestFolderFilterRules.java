@@ -29,6 +29,7 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.util.ProvisioningUtil;
 
 
 public class TestFolderFilterRules
@@ -67,8 +68,8 @@ extends TestCase {
     throws Exception {
         super.setUp();
         cleanUp();
-        originalLCSetting = LC.zimbra_index_manual_commit.booleanValue();
-        LC.zimbra_index_manual_commit.setDefault(true);
+        originalLCSetting = ProvisioningUtil.getServerAttribute(Provisioning.A_zimbraIndexManualCommit, true);
+        Provisioning.getInstance().getLocalServer().setIndexManualCommit(true);
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         mFolder1 = TestUtil.createFolder(mbox, FOLDER1_NAME);
         mFolder2 = TestUtil.createFolder(mbox, mFolder1.getId(), FOLDER2_NAME);
@@ -326,7 +327,7 @@ extends TestCase {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         mbox.saveIncomingFilterRules(mOriginalRules);
         cleanUp();
-        LC.zimbra_index_manual_commit.setDefault(originalLCSetting);
+        Provisioning.getInstance().getLocalServer().setIndexManualCommit(originalLCSetting);
     }
 
     private static final String FILTER_RULES = StringUtil.join("\n", new String[] {

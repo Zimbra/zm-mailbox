@@ -51,6 +51,7 @@ import com.zimbra.cs.ldap.LdapConstants;
 import com.zimbra.cs.ldap.LdapUtil;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.util.JMSession;
+import com.zimbra.cs.util.ProvisioningUtil;
 
 
 public class TestNotification
@@ -81,8 +82,8 @@ extends TestCase {
     {
         super.setUp();
         cleanUp();
-        originalLCSetting = LC.zimbra_index_manual_commit.booleanValue();
-        LC.zimbra_index_manual_commit.setDefault(true);
+        originalLCSetting = ProvisioningUtil.getServerAttribute(Provisioning.A_zimbraIndexManualCommit, true);
+        Provisioning.getInstance().getLocalServer().setIndexManualCommit(true);
         Account account = TestUtil.getAccount(RECIPIENT_NAME);
         mOriginalReplyEnabled = account.getBooleanAttr(Provisioning.A_zimbraPrefOutOfOfficeReplyEnabled, false);
         mOriginalReply = account.getAttr(Provisioning.A_zimbraPrefOutOfOfficeReply, "");
@@ -274,7 +275,7 @@ extends TestCase {
     public void tearDown()
     throws Exception {
         cleanUp();
-        LC.zimbra_index_manual_commit.setDefault(originalLCSetting);
+        Provisioning.getInstance().getLocalServer().setIndexManualCommit(originalLCSetting);
         // Revert to original values for out-of-office and notification
         Account account = TestUtil.getAccount(RECIPIENT_NAME);
 

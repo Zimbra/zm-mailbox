@@ -33,6 +33,7 @@ import com.zimbra.cs.db.DbOutOfOffice;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.util.ProvisioningUtil;
 
 /**
  * Tests out-of-office notification.  All tests must be run inside the server, because
@@ -62,8 +63,8 @@ extends TestCase {
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        originalLCSetting = LC.zimbra_index_manual_commit.booleanValue();
-        LC.zimbra_index_manual_commit.setDefault(true);
+        originalLCSetting = ProvisioningUtil.getServerAttribute(Provisioning.A_zimbraIndexManualCommit, true);
+        Provisioning.getInstance().getLocalServer().setIndexManualCommit(true);
         mMbox = TestUtil.getMailbox(RECIPIENT_NAME);
         mConn = DbPool.getConnection();
 
@@ -206,7 +207,7 @@ extends TestCase {
     public void tearDown()
     throws Exception {
         cleanUp();
-        LC.zimbra_index_manual_commit.setDefault(originalLCSetting);
+        Provisioning.getInstance().getLocalServer().setIndexManualCommit(originalLCSetting);
         DbPool.quietClose(mConn);
 
         Account recipient = TestUtil.getAccount(RECIPIENT_NAME);
