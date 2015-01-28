@@ -15,12 +15,6 @@
  * ***** END LICENSE BLOCK *****
  */
 
-/*
- * Created on 2005. 6. 28.
- *
- * TODO To change the template for this generated file go to
- * Window - Preferences - Java - Code Style - Code Templates
- */
 package com.zimbra.cs.redolog;
 
 import com.zimbra.common.service.ServiceException;
@@ -29,12 +23,6 @@ import com.zimbra.cs.account.Server;
 import com.zimbra.cs.util.Config;
 import com.zimbra.cs.util.Zimbra;
 
-/**
- * @author jhahm
- *
- * TODO To change the template for this generated type comment go to
- * Window - Preferences - Java - Code Style - Code Templates
- */
 public class RedoConfig {
 
     private static RedoConfig theInstance;
@@ -55,18 +43,14 @@ public class RedoConfig {
 
         mServiceHostname = config.getAttr(Provisioning.A_zimbraServiceHostname);
         mRedoLogEnabled = config.getBooleanAttr(Provisioning.A_zimbraRedoLogEnabled, D_REDOLOG_ENABLED);
-        mRedoLogPath = System.getProperty("zimbra_override_redolog_path");
-        if (mRedoLogPath == null) {
-            mRedoLogPath = Config.getPathRelativeToZimbraHome(
+        mRedoLogPath =
+            Config.getPathRelativeToZimbraHome(
                     config.getAttr(Provisioning.A_zimbraRedoLogLogPath,
                                    D_REDOLOG_PATH)).getAbsolutePath();
-        }
-        mRedoLogArchiveDir = System.getProperty("zimbra_override_redolog_archivedir");
-        if (mRedoLogArchiveDir == null) {
-            mRedoLogArchiveDir = Config.getPathRelativeToZimbraHome(
+        mRedoLogArchiveDir =
+            Config.getPathRelativeToZimbraHome(
                     config.getAttr(Provisioning.A_zimbraRedoLogArchiveDir,
                                    D_REDOLOG_ARCHIVEDIR)).getAbsolutePath();
-        }
         mRedoLogRolloverFileSizeKB =
             config.getLongAttr(Provisioning.A_zimbraRedoLogRolloverFileSizeKB,
                                D_REDOLOG_ROLLOVER_FILESIZE_KB);
