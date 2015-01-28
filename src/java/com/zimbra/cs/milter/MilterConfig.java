@@ -61,12 +61,12 @@ public class MilterConfig extends ServerConfig {
 
     @Override
     public int getMaxIdleTime() {
-        return (int) (ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraMilterMaxIdleTime, 3630*1000L)/1000);
+        return (int) (ProvisioningUtil.getTimeIntervalServerAttribute(ZAttrProvisioning.A_zimbraMilterMaxIdleTime, 3630*1000L)/1000);
     }
 
     @Override
     public int getWriteTimeout() {
-        return (int)  (ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraMilterWriteTimeout, 10*1000L)/1000);
+        return (int)  (ProvisioningUtil.getTimeIntervalServerAttribute(ZAttrProvisioning.A_zimbraMilterWriteTimeout, 10*1000L)/1000);
     }
 
     @Override
@@ -76,7 +76,7 @@ public class MilterConfig extends ServerConfig {
 
     @Override
     public int getThreadKeepAliveTime() {
-        return (int) ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraMilterThreadKeepAliveTime, 60*1000L)/1000;
+        return (int) ProvisioningUtil.getTimeIntervalServerAttribute(ZAttrProvisioning.A_zimbraMilterThreadKeepAliveTime, 60*1000L)/1000;
     }
 
     @Override
