@@ -864,8 +864,8 @@
           <Item><New class="java.lang.Boolean"><Arg><Property name="nio_imap_enabled" default="true"/></Arg></New></Item>
         </Entry>
         <Entry>
-          <Item>nio_pop3_enabled</Item>
-          <Item><New class="java.lang.Boolean"><Arg><Property name="nio_pop3_enabled" default="true"/></Arg></New></Item>
+          <Item>zimbraPop3NioEnabled</Item>
+          <Item><New class="java.lang.Boolean"><Arg><Property name="zimbraPop3NioEnabled" default="true"/></Arg></New></Item>
         </Entry>
         <Entry>
           <Item>zimbra_ssl_enabled</Item>
