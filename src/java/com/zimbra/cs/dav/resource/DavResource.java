@@ -146,6 +146,10 @@ public abstract class DavResource {
         getProperty(DavElements.E_HREF).setStringValue(HttpUtil.urlEscape(href));
     }
 
+    public String getHref() {
+        return getProperty(DavElements.E_HREF).getStringValue();
+    }
+
     public boolean isValid() {
         return true;
     }
@@ -321,6 +325,7 @@ public abstract class DavResource {
     public String toString() {
         return mUri;
     }
+
     public DavResource copy(DavContext ctxt, DavResource dest) throws DavException {
         throw new DavException("not supported", HttpServletResponse.SC_NOT_ACCEPTABLE);
     }

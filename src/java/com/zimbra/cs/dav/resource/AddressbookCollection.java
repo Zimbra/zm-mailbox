@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2009, 2010, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -16,15 +16,20 @@
  */
 package com.zimbra.cs.dav.resource;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Locale;
+
+import javax.servlet.http.HttpServletResponse;
 
 import org.dom4j.Element;
 import org.dom4j.QName;
 
+import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.L10nUtil;
 import com.zimbra.common.util.L10nUtil.MsgKey;
+import com.zimbra.common.util.UUIDUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
@@ -36,6 +41,8 @@ import com.zimbra.cs.dav.property.ResourceProperty;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.calendar.cache.CtagInfo;
+import com.zimbra.cs.service.formatter.VCard;
+import com.zimbra.cs.servlet.ETagHeaderFilter;
 
 public class AddressbookCollection extends Collection {
 
@@ -49,6 +56,7 @@ public class AddressbookCollection extends Collection {
         rp.setStringValue(description);
         rp.setProtected(false);
         addProperty(rp);
+        addProperty(ResourceProperty.AddMember.create(UrlNamespace.getFolderUrl(ctxt.getUser(), f.getName())));
         rp = new ResourceProperty(DavElements.CardDav.E_SUPPORTED_ADDRESS_DATA);
         Element vcard = rp.addChild(DavElements.CardDav.E_ADDRESS_DATA);
         vcard.addAttribute(DavElements.P_CONTENT_TYPE, DavProtocol.VCARD_CONTENT_TYPE);
@@ -85,6 +93,52 @@ public class AddressbookCollection extends Collection {
     protected QName[] getSupportedReports() {
         return SUPPORTED_REPORTS;
     }
+
+    @Override
+    public DavResource createItem(DavContext ctxt, String name) throws DavException, IOException {
+        return createVCard(ctxt, name);
+    }
+
+    @Override
+    public void handlePost(DavContext ctxt) throws DavException, IOException, ServiceException {
+        Provisioning prov = Provisioning.getInstance();
+        DavResource rs = null;
+        try {
+            String user = ctxt.getUser();
+            Account account = prov.get(AccountBy.name, user);
+            if (account == null) {
+                // Anti-account name harvesting.
+                ZimbraLog.dav.info("Failing POST to Addressbook - no such account '%s'", user);
+                throw new DavException("Request denied", HttpServletResponse.SC_NOT_FOUND, null);
+            }
+
+            VCard vcard = AddressObject.uploadToVCard(ctxt);
+            String baseName = new StringBuilder(vcard.uid).append(AddressObject.VCARD_EXTENSION).toString();
+            rs = UrlNamespace.getResourceAt(ctxt, ctxt.getUser(), relativeUrlForChild(ctxt.getUser(), baseName));
+            if (rs != null) {
+                // name based on uid already taken - choose another.
+                baseName = new StringBuilder(UUIDUtil.generateUUID()).append(AddressObject.VCARD_EXTENSION).toString();
+            }
+            rs = AddressObject.create(ctxt, baseName, this, vcard, false);
+            if (rs.isNewlyCreated()) {
+                ctxt.getResponse().setHeader("Location", rs.getHref());
+                ctxt.setStatus(HttpServletResponse.SC_CREATED);
+            } else {
+                ctxt.setStatus(HttpServletResponse.SC_NO_CONTENT);
+            }
+            if (rs.hasEtag()) {
+                ctxt.getResponse().setHeader(DavProtocol.HEADER_ETAG, rs.getEtag());
+                ctxt.getResponse().setHeader(ETagHeaderFilter.ZIMBRA_ETAG_HEADER, rs.getEtag());
+            }
+        } catch (ServiceException e) {
+            if (e.getCode().equals(ServiceException.FORBIDDEN)) {
+                throw new DavException(e.getMessage(), HttpServletResponse.SC_FORBIDDEN, e);
+            } else {
+                throw new DavException("cannot create vcard item", HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e);
+            }
+        }
+    }
+
 
     /**
      * Filter out non-contact related children.  Apple Mac OS X Mavericks Contacts doesn't cope well with them.

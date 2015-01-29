@@ -570,7 +570,7 @@ public class TestCalDav  {
                     String hrefText = respEntry.getText();
                     // assertTrue(hrefText + " should end with /Inbox/", hrefText.endsWith("/Inbox/"));
                     // assertTrue(hrefText + " should start with /dav/", hrefText.startsWith("/dav/"));
-                    assertEquals("HREF", shorturl, hrefText);
+                    assertEquals("HREF", shorturl.replaceAll("@", "%40"), hrefText);
                 } else if (DavElements.P_PROPSTAT.equals(respEntry.getName())) {
                     for (Element psEntry : respEntry.listElements()) {
                         if (DavElements.P_STATUS.equals(psEntry.getName())) {
@@ -635,7 +635,7 @@ public class TestCalDav  {
         xPathExpr = xpath.compile("/D:multistatus/D:response/D:href/text()");
         result = (NodeList) xPathExpr.evaluate(doc, XPathConstants.NODESET);
         text = (String) xPathExpr.evaluate(doc, XPathConstants.STRING);
-        assertEquals(String.format("href '%s' should be same as '%s'", text, shorturl), shorturl, text);
+        assertEquals("HREF", shorturl.replaceAll("@", "%40"), text);
         xPathExpr = xpath.compile("/D:multistatus/D:response/D:propstat/D:status/text()");
         text = (String) xPathExpr.evaluate(doc, XPathConstants.STRING);
         assertEquals("status", "HTTP/1.1 200 OK", text);
@@ -801,7 +801,8 @@ public class TestCalDav  {
     public void testAndroidMeetingSeries() throws Exception {
         Account dav1 = TestUtil.createAccount(DAV1);
         Account dav2 = TestUtil.createAccount(DAV2);
-        String calFolderUrl = getFolderUrl(dav1, "Calendar");
+        ZMailbox dav2MB = TestUtil.getZMailbox(DAV2); // Force creation of mailbox - shouldn't be needed
+        String calFolderUrl = getFolderUrl(dav1, "Calendar").replaceAll("@", "%40");
         String url = String.format("%s%s.ics", calFolderUrl, androidSeriesMeetingUid);
         HttpClient client = new HttpClient();
         PutMethod putMethod = new PutMethod(url);
@@ -1190,6 +1191,7 @@ public class TestCalDav  {
         addBasicAuthHeaderForUser(method, dav1);
 
         ZMailbox organizer = TestUtil.getZMailbox(DAV2);
+        ZMailbox dav1MB = TestUtil.getZMailbox(DAV1); // Force creation of mailbox - shouldn't be needed
         String subject = String.format("%s %s", NAME_PREFIX,
                 suppressReply ? "testInvite which shouldNOT be replied to" : "testInvite to be auto-declined");
         Date startDate = new Date(System.currentTimeMillis() + Constants.MILLIS_PER_DAY);

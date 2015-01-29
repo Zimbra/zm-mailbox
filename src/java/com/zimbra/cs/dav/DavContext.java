@@ -298,6 +298,12 @@ public class DavContext {
         return mResp;
     }
 
+    public String getFullUrlBeforePath() {
+        return new StringBuilder(mReq.getScheme()).append("://")
+                .append(mReq.getServerName()).append(':')
+                .append(mReq.getServerPort()).toString();
+    }
+
     /* Returns OperationContext used to access Mailbox. */
     public OperationContext getOperationContext() {
         return mOpCtxt;
