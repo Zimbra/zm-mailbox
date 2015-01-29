@@ -20,14 +20,8 @@
 
     <!-- Targets -->
     <target name="compile-dependencies">
-        <ant dir="${common.dir}" target="jar" inheritAll="false">
-            <property name="skip.maven" value="${skip.maven}"/>
-        </ant>
-
-        <ant dir="${soap.dir}" target="jar" inheritAll="false">
-            <property name="skip.maven" value="${skip.maven}"/>
-        </ant>
-
+        <ant dir="${common.dir}" target="jar" inheritAll="false"/>
+        <ant dir="${soap.dir}" target="jar" inheritAll="false"/>
     </target>
 
     <target name="jar" depends="compile-dependencies,compile" description="Creates the jar file">

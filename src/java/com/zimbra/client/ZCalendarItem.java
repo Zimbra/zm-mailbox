@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -22,15 +22,11 @@ import java.util.List;
 
 import org.json.JSONException;
 
-import com.zimbra.client.ZInvite.ZComponent;
 import com.zimbra.client.event.ZModifyEvent;
 import com.zimbra.client.event.ZModifyMessageEvent;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.common.util.Pair;
-import com.zimbra.common.util.StringUtil;
-import com.zimbra.common.util.ZimbraLog;
 
 public class ZCalendarItem implements ZItem, ToZJSONObject {
 
@@ -43,9 +39,7 @@ public class ZCalendarItem implements ZItem, ToZJSONObject {
         public char getFlagChar() { return mFlagChar; }
 
         public static String toNameList(String flags) {
-            if (flags == null || flags.length() == 0) {
-                return "";
-            }
+            if (flags == null || flags.length() == 0) return "";
             StringBuilder sb = new StringBuilder();
             for (int i=0; i < flags.length(); i++) {
                 String v = null;
@@ -55,9 +49,7 @@ public class ZCalendarItem implements ZItem, ToZJSONObject {
                         break;
                     }
                 }
-                if (sb.length() > 0) {
-                    sb.append(", ");
-                }
+                if (sb.length() > 0) sb.append(", ");
                 sb.append(v == null ? flags.substring(i, i+1) : v);
             }
             return sb.toString();
@@ -94,8 +86,8 @@ public class ZCalendarItem implements ZItem, ToZJSONObject {
 
     @Override
     public void modifyNotification(ZModifyEvent event) throws ServiceException {
-        if (event instanceof ZModifyMessageEvent) {
-            ZModifyMessageEvent mevent = (ZModifyMessageEvent) event;
+    	if (event instanceof ZModifyMessageEvent) {
+    		ZModifyMessageEvent mevent = (ZModifyMessageEvent) event;
             if (mevent.getId().equals(mId)) {
                 mFlags = mevent.getFlags(mFlags);
                 mTags = mevent.getTagIds(mTags);
@@ -120,28 +112,6 @@ public class ZCalendarItem implements ZItem, ToZJSONObject {
         return mInvites;
     }
 
-    public Pair<ZInvite, ZComponent> getDefaultInvite() {
-        ZComponent first = null;
-        ZInvite mainInvite = null;
-        for (ZInvite invite : mInvites) {
-            List<ZComponent> comps = invite.getComponents();
-            for (ZComponent comp : comps) {
-                String recurId = comp.getRecurrenceIdZ(); //main invite doesn't have recurId
-                if (StringUtil.isNullOrEmpty(recurId)) {
-                    return new Pair<>(invite, comp);
-                }
-                if (first == null) {
-                    mainInvite = invite;
-                    first = comp;
-                }
-            }
-        }
-        if (first == null) {
-            ZimbraLog.calendar.error("Invalid state: appointment/task %s has no default invite; ", getId());
-        }
-        return new Pair<>(mainInvite, first);
-    }
-
     @Override
     public String getId() {
         return mId;
@@ -160,8 +130,8 @@ public class ZCalendarItem implements ZItem, ToZJSONObject {
         return mTags != null && mTags.length() > 0;
     }
 
-    @Override
-    public ZJSONObject toZJSONObject() throws JSONException {
+   @Override
+public ZJSONObject toZJSONObject() throws JSONException {
         ZJSONObject zjo = new ZJSONObject();
         zjo.put("id", mId);
         zjo.put("flags", mFlags);
