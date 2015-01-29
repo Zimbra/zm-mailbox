@@ -17,6 +17,8 @@
 
 package com.zimbra.cs.mailbox;
 
+import org.springframework.beans.BeansException;
+
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.acl.EffectiveACLCache;
 import com.zimbra.cs.mailbox.acl.EffectiveACLCacheMailboxListener;
@@ -33,7 +35,7 @@ public class CacheManager extends MailboxListener {
     }
 
     @Override
-    public void notify(ChangeNotification notification) {
+    public void notify(ChangeNotification notification) throws BeansException, ServiceException {
         PendingModifications mods = notification.mods;
         int changeId = notification.lastChangeId;
 

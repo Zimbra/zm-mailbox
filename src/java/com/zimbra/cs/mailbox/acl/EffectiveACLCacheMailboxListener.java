@@ -52,7 +52,7 @@ public class EffectiveACLCacheMailboxListener {
                 if (whatChanged instanceof Folder && (change.why & (Change.ACL | Change.FOLDER)) != 0) {
                     Folder folder = (Folder) whatChanged;
                     // Invalidate all child folders because their inherited ACL will need to be recomputed.
-                    String acctId = folder.getMailbox().getAccountId();
+                    String acctId = folder.getAccountId();
                     List<Folder> subfolders = folder.getSubfolderHierarchy();  // includes "folder" folder
                     for (Folder subf : subfolders) {
                         keysToInvalidate.add(new Key(acctId, subf.getId()));

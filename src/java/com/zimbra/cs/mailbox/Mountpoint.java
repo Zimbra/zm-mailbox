@@ -90,7 +90,7 @@ public class Mountpoint extends Folder {
 
     /** @return TRUE if this mountpoint points to its owner's mailbox */
     public boolean isLocal() {
-        return (getOwnerId().equals(getMailbox().getAccountId()));
+        return (getOwnerId().equals(getAccountId()));
     }
 
     /** Grants the specified set of rights to the target and persists them

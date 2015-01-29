@@ -150,7 +150,7 @@ public class SoapSession extends Session {
          */
         protected boolean skipChangeSerialization(Mailbox mbox, MailItem item) throws ServiceException {
             // don't serialize out changes on too-large delegated conversation
-            return (mbox != item.getMailbox() && item instanceof Conversation && ((Conversation) item).getMessageCount() > DELEGATED_CONVERSATION_SIZE_LIMIT && !mParentHasFullAccess);
+            return (mbox.getId() != item.getMailboxId() && item instanceof Conversation && ((Conversation) item).getMessageCount() > DELEGATED_CONVERSATION_SIZE_LIMIT && !mParentHasFullAccess);
         }
 
         /**
@@ -290,7 +290,7 @@ public class SoapSession extends Session {
         }
 
         private void forceConversationModification(
-                Message msg, Change chg, PendingModifications pms, PendingModifications filtered, int changeMask) {
+                Message msg, Change chg, PendingModifications pms, PendingModifications filtered, int changeMask) throws ServiceException {
             int convId = msg.getConversationId();
             Mailbox mbox = msg.getMailbox();
             ModificationKey mkey = new ModificationKey(mbox.getAccountId(), convId);
@@ -1350,8 +1350,9 @@ public class SoapSession extends Session {
      * @param zsc    The SOAP request context from the client's request
      * @param lastSequence  The highest notification-sequence-number that the client has
      *         received (0 means none)
-     * @return The passed-in <tt>&lt;context></tt> element */
-    public Element putNotifications(Element ctxt, ZimbraSoapContext zsc, int lastSequence) {
+     * @return The passed-in <tt>&lt;context></tt> element 
+     * @throws ServiceException */
+    public Element putNotifications(Element ctxt, ZimbraSoapContext zsc, int lastSequence) throws ServiceException {
         Mailbox mbox = mailbox;
         if (ctxt == null || mbox == null) {
             return null;
@@ -1418,8 +1419,9 @@ public class SoapSession extends Session {
     }
 
     /** Write a single instance of the PendingModifications structure into the
-     *  passed-in <ctxt> block. */
-    protected void putQueuedNotifications(Mailbox mbox, QueuedNotifications ntfn, Element parent, ZimbraSoapContext zsc) {
+     *  passed-in <ctxt> block. 
+     * @throws ServiceException */
+    protected void putQueuedNotifications(Mailbox mbox, QueuedNotifications ntfn, Element parent, ZimbraSoapContext zsc) throws ServiceException {
         // create the base "notify" block:  <notify seq="6"/>
         Element eNotify = parent.addElement(ZimbraNamespace.E_NOTIFY);
         if (ntfn.getSequence() > 0) {

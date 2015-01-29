@@ -495,10 +495,6 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
             this(mbox, include, null);
         }
 
-        public TargetConstraint(Mailbox mbox, String includeQuery) {
-            this(mbox, INCLUDE_QUERY, includeQuery);
-        }
-
         public TargetConstraint(Mailbox mbox, short include, String includeQuery) {
             mailbox = mbox;
             if (includeQuery == null || includeQuery.trim().length() == 0) {
@@ -725,8 +721,8 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
 
     protected int            mId;
     protected UnderlyingData mData;
-    protected Mailbox        mMailbox;
-    protected Mailbox.MailboxData   mMailboxData;
+    private Mailbox        mMailbox;
+    protected Mailbox.MailboxData  mMailboxData;
     protected Account        mAccount;
     protected MailboxBlob    mBlob;
     protected int            mMetaVersion = 1;
@@ -748,11 +744,11 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         }
         mId      = data.id;
         mData    = data;
-        mMailbox = mbox;
         if(mbox != null) {
             mMailboxData = mbox.getData();
             mAccount = mbox.getAccount();
-        }
+            mMailbox = mbox;
+        } 
         decodeMetadata(mData.metadata);
         checkItemCreationAllowed(); // this check may rely on decoded metadata
         mData.metadata = null;
@@ -777,6 +773,13 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         mData.metadata = null;
     }
 
+    public Mailbox getMailbox() throws ServiceException {
+        if(mMailbox == null && mMailboxData != null) {
+            mMailbox = MailboxManager.getInstance().getMailboxById(mMailboxData.id);
+        }
+        return mMailbox;
+    }
+    
     protected void checkItemCreationAllowed() throws ServiceException {
         // not allowed in external account mailbox
         if (getAccount().isIsExternalVirtualAccount()) {
@@ -803,11 +806,6 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
     /** Returns the numeric ID of the {@link Mailbox} this item belongs to. */
     public int getMailboxId() {
         return mMailboxData.id;
-    }
-
-    /** Returns the {@link Mailbox} this item belongs to.*/
-    public Mailbox getMailbox() {
-        return mMailbox;
     }
 
     /** Returns the numeric ID of the {@link Mailbox} this item belongs to. */
@@ -998,8 +996,9 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
     }
 
     /** Returns the item's underlying storage data so that it may be persisted
-     *  somewhere besides the database - usually in encoded form. */
-    public UnderlyingData getUnderlyingData() {
+     *  somewhere besides the database - usually in encoded form. 
+     * @throws ServiceException */
+    public UnderlyingData getUnderlyingData() throws ServiceException {
         mData.metadata = encodeMetadata().toString();
         return mData;
     }
@@ -1614,8 +1613,9 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
      *
      * @return a list of IndexDocument to be added to the index for this item
      * @throws TemporaryIndexingException recoverable index error
+     * @throws ServiceException 
      */
-    public List<IndexDocument> generateIndexData() throws TemporaryIndexingException {
+    public List<IndexDocument> generateIndexData() throws TemporaryIndexingException, ServiceException {
         return null;
     }
     /** Returns the item's parent.  Returns <tt>null</tt> if the item
@@ -2238,8 +2238,9 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
             }
         }
         DbMailItem.purgeRevisions(this, version, includeOlderRevisions);
-        getMailbox().markOtherItemDirty(info);
-        getMailbox().updateSize(-info.size);
+        Mailbox mbox = getMailbox();
+        mbox.markOtherItemDirty(info);
+        mbox.updateSize(-info.size);
         mRevisions = null;
     }
 
@@ -3035,7 +3036,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         if (!canParent(child)) {
             throw MailServiceException.CANNOT_PARENT();
         }
-        if (mMailbox != child.getMailbox()) {
+        if (getMailboxId() != child.getMailboxId()) {
             throw MailServiceException.WRONG_MAILBOX();
         }
     }
@@ -3374,8 +3375,9 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         //   1) deleting a regular item and dumpster is not in use, OR
         //   2) permantently deleting an item from dumpster
         // In other words, skip the blob/index deletes when soft-deleting item to dumpster.
-        if (!getMailbox().dumpsterEnabled() || inDumpster() ||
-            mData.folderId == Mailbox.ID_FOLDER_DRAFTS || (inSpam() && !getMailbox().useDumpsterForSpam())) {
+        Mailbox mbox = getMailbox();
+        if (!mbox.dumpsterEnabled() || inDumpster() ||
+            mData.folderId == Mailbox.ID_FOLDER_DRAFTS || (inSpam() && !mbox.useDumpsterForSpam())) {
             if (getIndexStatus() != IndexStatus.NO) {
                 int indexId = getIndexStatus() == IndexStatus.DONE ? mData.indexId : mData.id;
                 if (isTagged(Flag.FlagInfo.COPIED)) {
@@ -3444,7 +3446,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         return false;
     }
 
-    Metadata encodeMetadata() {
+    Metadata encodeMetadata() throws ServiceException {
         Metadata meta = encodeMetadata(new Metadata());
         if (trackUserAgentInMetadata()) {
             OperationContext octxt = getMailbox().getOperationContext();
@@ -3777,7 +3779,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         if (!canAccess(ACL.RIGHT_ADMIN)) {
             throw ServiceException.PERM_DENIED("you do not have admin rights to item " + getPath());
         }
-        if (type == ACL.GRANTEE_USER && zimbraId.equalsIgnoreCase(getMailbox().getAccountId())) {
+        if (type == ACL.GRANTEE_USER && zimbraId.equalsIgnoreCase(getAccountId())) {
             throw ServiceException.PERM_DENIED("cannot grant access to the owner of the item");
         }
         // if there's an ACL on the item, the item does not inherit from its parent
@@ -3826,7 +3828,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         if (!canAccess(ACL.RIGHT_ADMIN)) {
             throw ServiceException.PERM_DENIED("you do not have admin rights to item " + getPath());
         }
-        if (zimbraId.equalsIgnoreCase(getMailbox().getAccountId())) {
+        if (zimbraId.equalsIgnoreCase(getAccountId())) {
             throw ServiceException.PERM_DENIED("cannot revoke access from the owner of the item");
         }
         ACL acl = getEffectiveACL();

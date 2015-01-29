@@ -94,7 +94,7 @@ public class SendDeliveryReport extends MailDocumentHandler {
     public static void sendReport(Account authAccount, Message msg, boolean automatic, String requestHost, String userAgent)
     throws ServiceException {
         MimeMessage mm = msg.getMimeMessage();
-        Account owner = msg.getMailbox().getAccount();
+        Account owner = msg.getAccount();
 
         String charset = authAccount.getPrefMailDefaultCharset();
         if (charset == null) {

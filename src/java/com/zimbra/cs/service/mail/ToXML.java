@@ -123,6 +123,7 @@ import com.zimbra.cs.mailbox.MailItem.CustomMetadata;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.Note;
@@ -726,7 +727,7 @@ public final class ToXML {
         el.addAttribute(MailConstants.A_ID, ifmt.formatItemId(contact));
         if (needToOutput(fields, Change.FOLDER)) {
             el.addAttribute(MailConstants.A_FOLDER,
-                ifmt.formatItemId(new ItemId(contact.getMailbox().getAccountId(), contact.getFolderId())));
+                ifmt.formatItemId(new ItemId(contact.getAccountId(), contact.getFolderId())));
         }
         recordItemTags(el, contact, octxt, fields);
         if (needToOutput(fields, Change.CONFLICT)) {
@@ -914,7 +915,7 @@ public final class ToXML {
         }
         if (needToOutput(fields, Change.FOLDER)) {
             el.addAttribute(MailConstants.A_FOLDER,
-                    ifmt.formatItemId(new ItemId(note.getMailbox().getAccountId(), note.getFolderId())));
+                    ifmt.formatItemId(new ItemId(note.getAccountId(), note.getFolderId())));
         }
         if (needToOutput(fields, Change.DATE)) {
             el.addAttribute(MailConstants.A_DATE, note.getDate());
@@ -1035,7 +1036,7 @@ public final class ToXML {
                 m.addAttribute(MailConstants.A_DATE, msg.getDate());
                 m.addAttribute(MailConstants.A_SIZE, msg.getSize());
                 m.addAttribute(MailConstants.A_FOLDER,
-                    ifmt.formatItemId(new ItemId(msg.getMailbox().getAccountId(), msg.getFolderId())));
+                    ifmt.formatItemId(new ItemId(msg.getAccountId(), msg.getFolderId())));
                 recordItemTags(m, msg, octxt, fields);
                 m.addAttribute(MailConstants.E_FRAG, msg.getFragment(), Element.Disposition.CONTENT);
                 encodeEmail(m, msg.getSender(), EmailType.FROM);
@@ -1446,7 +1447,7 @@ public final class ToXML {
 
             if (wholeMessage && msg.isDraft()) {
                 if (!msg.getDraftOrigId().isEmpty()) {
-                    ItemId origId = new ItemId(msg.getDraftOrigId(), msg.getMailbox().getAccountId());
+                    ItemId origId = new ItemId(msg.getDraftOrigId(), msg.getAccountId());
                     m.addAttribute(MailConstants.A_ORIG_ID, ifmt.formatItemId(origId));
                 }
                 if (!msg.getDraftReplyType().isEmpty()) {
@@ -1506,7 +1507,7 @@ public final class ToXML {
             if (wantExpandGroupInfo) {
                 ZimbraLog.gal.trace("want expand group info");
                 Account authedAcct = octxt.getAuthenticatedUser();
-                Account requestedAcct = msg.getMailbox().getAccount();
+                Account requestedAcct = msg.getAccount();
                 encodeAddrsWithGroupInfo(m, requestedAcct, authedAcct);
             } else {
                 ZimbraLog.gal.trace("do not want expand group info");
@@ -1537,7 +1538,7 @@ public final class ToXML {
         calItemElem.addAttribute(MailConstants.A_UID, calItem.getUid());
         calItemElem.addAttribute(MailConstants.A_ID, ifmt.formatItemId(calItem));
         calItemElem.addAttribute(MailConstants.A_FOLDER,
-            ifmt.formatItemId(new ItemId(calItem.getMailbox().getAccountId(), calItem.getFolderId())));
+            ifmt.formatItemId(new ItemId(calItem.getAccountId(), calItem.getFolderId())));
 
         if (needToOutput(fields, Change.CONTENT) && calItem.getSavedSequence() != 0) {
             calItemElem.addAttribute(MailConstants.A_REVISION, calItem.getSavedSequence());
@@ -1848,7 +1849,7 @@ public final class ToXML {
 
             if (wantExpandGroupInfo) {
                 Account authedAcct = octxt.getAuthenticatedUser();
-                Account requestedAcct = calItem.getMailbox().getAccount();
+                Account requestedAcct = calItem.getAccount();
                 encodeAddrsWithGroupInfo(m, requestedAcct, authedAcct);
             }
         } catch (IOException ex) {
@@ -1964,7 +1965,7 @@ public final class ToXML {
         }
         if (needToOutput(fields, Change.FOLDER)) {
             elem.addAttribute(MailConstants.A_FOLDER,
-                    ifmt.formatItemId(new ItemId(item.getMailbox().getAccountId(), item.getFolderId())));
+                    ifmt.formatItemId(new ItemId(item.getAccountId(), item.getFolderId())));
         }
         if (item instanceof Message) {
             Message msg = (Message) item;
@@ -2846,7 +2847,7 @@ public final class ToXML {
         }
         if (needToOutput(fields, Change.FOLDER)) {
             m.addAttribute(MailConstants.A_FOLDER,
-                    ifmt.formatItemId(new ItemId(doc.getMailbox().getAccountId(), doc.getFolderId())));
+                    ifmt.formatItemId(new ItemId(doc.getAccountId(), doc.getFolderId())));
             m.addAttribute(MailConstants.A_FOLDER_UUID, doc.getFolderUuid());
         }
         if (needToOutput(fields, Change.CONFLICT)) {

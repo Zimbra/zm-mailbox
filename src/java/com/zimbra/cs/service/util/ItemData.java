@@ -24,6 +24,7 @@ import org.json.JSONObject;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Metadata;
@@ -219,7 +220,7 @@ public class ItemData {
         }
     }
 
-    public boolean tagsEqual(MailItem mi) {
+    public boolean tagsEqual(MailItem mi) throws ServiceException {
         // FIXME: may not work with misordered tags
         return isOldTags() ? tags.equals(TagUtil.getTagIdString(mi)) : tags.equals(getTagString(mi.getTags()));
     }

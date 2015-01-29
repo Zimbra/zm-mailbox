@@ -285,11 +285,11 @@ public abstract class CalendarItem extends MailItem {
     public List<IndexDocument> generateIndexData() throws TemporaryIndexingException {
         try {
             List<IndexDocument> docs = null;
-            mMailbox.lock.lock();
+            getMailbox().lock.lock();
             try {
                 docs = getIndexDocuments(getMailbox().attachmentsIndexingEnabled());
             } finally {
-                mMailbox.lock.release();
+                getMailbox().lock.release();
             }
 
             return docs;
@@ -1441,7 +1441,7 @@ public abstract class CalendarItem extends MailItem {
         }
         if (first == null)
             ZimbraLog.calendar.error(
-                    "Invalid state: appointment/task " + getId() + " in mailbox " + getMailbox().getId() + " has no default invite; " +
+                    "Invalid state: appointment/task " + getId() + " in mailbox " + getMailboxId() + " has no default invite; " +
                     (mInvites != null ? ("invite count = " + mInvites.size()) : "null invite list"));
         return first;
     }
@@ -1626,7 +1626,7 @@ public abstract class CalendarItem extends MailItem {
 
         // Don't allow moving a private appointment on behalf of another user,
         // unless that other user is a calendar resource.
-        boolean isCalendarResource = getMailbox().getAccount() instanceof CalendarResource;
+        boolean isCalendarResource = getAccount() instanceof CalendarResource;
         boolean denyPrivateAccess = requirePrivateCheck ? !allowPrivateAccess(authAccount, asAdmin) : false;
         if (!newInvite.isPublic() || !isPublic()) {
             if (folderId != getFolderId()) {
@@ -1683,7 +1683,7 @@ public abstract class CalendarItem extends MailItem {
                 return false;
             }
             if (cancelAll) {
-                Folder trash = mMailbox.getFolderById(Mailbox.ID_FOLDER_TRASH);
+                Folder trash = getMailbox().getFolderById(Mailbox.ID_FOLDER_TRASH);
                 move(trash);
                 // If we have revisions enabled we need to force metadata write to db because version field changed.
                 if (getMaxRevisions() != 1)
@@ -2503,7 +2503,7 @@ public abstract class CalendarItem extends MailItem {
     }
 
     private MailboxBlob storeUpdatedBlob(MimeMessage mm) throws ServiceException, IOException {
-        ParsedMessage pm = new ParsedMessage(mm, mMailbox.attachmentsIndexingEnabled());
+        ParsedMessage pm = new ParsedMessage(mm, getMailbox().attachmentsIndexingEnabled());
         StoreManager sm = StoreManager.getInstance();
         InputStream is = null;
         try {
@@ -2530,7 +2530,7 @@ public abstract class CalendarItem extends MailItem {
             subject = firstInvite.getName();
         }
         mData.setSubject(Strings.nullToEmpty(subject));
-        saveData(new DbMailItem(mMailbox));
+        saveData(new DbMailItem(getMailbox()));
     }
 
     /**
@@ -3256,7 +3256,7 @@ public abstract class CalendarItem extends MailItem {
      */
     public String getEffectivePartStat(Invite inv, Instance inst) throws ServiceException {
         if (!inv.isOrganizer()) {
-            ZAttendee at = mReplyList.getEffectiveAttendee(getMailbox().getAccount(), inv, inst);
+            ZAttendee at = mReplyList.getEffectiveAttendee(getAccount(), inv, inst);
             if (at != null) {
                 if (at.hasPartStat())
                     return at.getPartStat();

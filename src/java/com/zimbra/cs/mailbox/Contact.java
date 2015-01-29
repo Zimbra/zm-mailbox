@@ -733,20 +733,20 @@ public class Contact extends MailItem {
     }
 
     @Override
-    public List<IndexDocument> generateIndexData() throws TemporaryIndexingException {
-        mMailbox.lock.lock();
+    public List<IndexDocument> generateIndexData() throws TemporaryIndexingException, ServiceException {
+        getMailbox().lock.lock();
         try {
             ParsedContact pc = new ParsedContact(this);
-            pc.analyze(mMailbox.getAccount(),mMailbox.attachmentsIndexingEnabled());
+            pc.analyze(getAccount(),getMailbox().attachmentsIndexingEnabled());
             if (pc.hasTemporaryAnalysisFailure()) {
                 throw new TemporaryIndexingException();
             }
-            return pc.getLuceneDocuments(mMailbox.getAccount(),mMailbox.attachmentsIndexingEnabled());
+            return pc.getLuceneDocuments(getAccount(),getMailbox().attachmentsIndexingEnabled());
         } catch (ServiceException e) {
             ZimbraLog.index.error("Failed to index contact id=%d", getId());
             return Collections.emptyList();
         } finally {
-            mMailbox.lock.release();
+            getMailbox().lock.release();
         }
     }
 
@@ -789,14 +789,14 @@ public class Contact extends MailItem {
         if (pc.hasAttachment()) {
             mData.setFlag(Flag.FlagInfo.ATTACHED);
         }
-        saveData(new DbMailItem(mMailbox).setSender(getFileAsString(fields)));
+        saveData(new DbMailItem(getMailbox()).setSender(getFileAsString(fields)));
     }
 
     /** @perms {@link ACL#RIGHT_INSERT} on the target folder,
      *         {@link ACL#RIGHT_READ} on the original item */
     @Override
     MailItem copy(Folder folder, int id, String uuid, MailItem parent) throws IOException, ServiceException {
-        mMailbox.updateContactCount(1);
+        getMailbox().updateContactCount(1);
         return super.copy(folder, id, uuid, parent);
     }
 
@@ -804,7 +804,7 @@ public class Contact extends MailItem {
      *         {@link ACL#RIGHT_READ} on the original item */
     @Override
     MailItem icopy(Folder folder, int copyId, String copyUuid) throws IOException, ServiceException {
-        mMailbox.updateContactCount(1);
+        getMailbox().updateContactCount(1);
         return super.icopy(folder, copyId, copyUuid);
     }
 

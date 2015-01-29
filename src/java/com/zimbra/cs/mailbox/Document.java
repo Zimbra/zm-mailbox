@@ -193,12 +193,12 @@ public class Document extends MailItem {
 
         if (mData.size != pd.getSize()) {
             markItemModified(Change.SIZE);
-            mMailbox.updateSize(pd.getSize() - mData.size, false);
+            getMailbox().updateSize(pd.getSize() - mData.size, false);
             getFolder().updateSize(0, 0, pd.getSize() - mData.size);
             mData.size = pd.getSize();
         }
 
-        saveData(new DbMailItem(mMailbox));
+        saveData(new DbMailItem(getMailbox()));
     }
 
     protected static UnderlyingData prepareCreate(MailItem.Type type, int id, String uuid, Folder folder, String name,
@@ -355,7 +355,7 @@ public class Document extends MailItem {
         String oldName = getName();
         super.rename(name, target);
         if (!oldName.equalsIgnoreCase(name))
-            mMailbox.index.add(this);
+            getMailbox().index.add(this);
     }
 
     @Override
@@ -384,7 +384,7 @@ public class Document extends MailItem {
     }
 
     protected void checkLock() throws ServiceException {
-        if (lockOwner != null && !mMailbox.getLockAccount().getId().equalsIgnoreCase(lockOwner)) {
+        if (lockOwner != null && !getMailbox().getLockAccount().getId().equalsIgnoreCase(lockOwner)) {
             throw MailServiceException.LOCKED(mId, lockOwner);
         }
     }
@@ -392,7 +392,7 @@ public class Document extends MailItem {
     @Override
     PendingDelete getDeletionInfo() throws ServiceException {
         PendingDelete info = super.getDeletionInfo();
-        for (Comment comment : mMailbox.getComments(null, mId, 0, -1, inDumpster())) {
+        for (Comment comment : getMailbox().getComments(null, mId, 0, -1, inDumpster())) {
             info.add(comment.getDeletionInfo());
         }
         return info;

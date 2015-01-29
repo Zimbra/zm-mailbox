@@ -103,7 +103,7 @@ public class Appointment extends CalendarItem {
      */
     public String getEffectiveFreeBusyActual(Invite inv, Instance inst) throws ServiceException {
         if (!inv.isOrganizer()) {
-            ZAttendee at = getReplyList().getEffectiveAttendee(getMailbox().getAccount(), inv, inst);
+            ZAttendee at = getReplyList().getEffectiveAttendee(getAccount(), inv, inst);
             if (at != null) {
                 if (at.hasPartStat())
                     return inv.partStatToFreeBusyActual(at.getPartStat());
@@ -328,7 +328,7 @@ public class Appointment extends CalendarItem {
             octxt != null ? (CreateCalendarItemPlayer) octxt.getPlayer() : null;
         long opTime = octxt != null ? octxt.getTimestamp() : System.currentTimeMillis();
 
-        Account account = getMailbox().getAccount();
+        Account account = getAccount();
         boolean onBehalfOf = false;
         Account authAcct = account;
         if (octxt != null) {
@@ -551,7 +551,7 @@ public class Appointment extends CalendarItem {
     // conflicting meetings.  Do our best to use a timezone familiar to the
     // organizer.
     private ICalTimeZone chooseReplyTZ(Invite invite) throws ServiceException {
-        Account account = getMailbox().getAccount();
+        Account account = getAccount();
         Account organizer = invite.getOrganizerAccount();
         ICalTimeZone tz = invite.getStartTime().getTimeZone();
         if (tz == null && invite.isAllDayEvent()) {

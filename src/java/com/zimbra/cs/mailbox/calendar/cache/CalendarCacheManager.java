@@ -95,7 +95,7 @@ public class CalendarCacheManager {
         Zimbra.getAppContext().getAutowireCapableBeanFactory().initializeBean(mSummaryCache, "calSummaryCache");
     }
 
-    public void notifyCommittedChanges(PendingModifications mods, int changeId) {
+    public void notifyCommittedChanges(PendingModifications mods, int changeId) throws ServiceException {
         if (mSummaryCacheEnabled) {
             mSummaryCache.notifyCommittedChanges(mods, changeId);
         }

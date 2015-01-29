@@ -608,7 +608,7 @@ public class Mailbox {
                 MailItem.UnderlyingData data = folder.getUnderlyingData().clone();
                 data.setFlag(Flag.FlagInfo.UNCACHED);
                 data.metadata = folder.encodeMetadata().toString();
-                copy.put((Folder) MailItem.constructItem(folder.getMailbox(), data));
+                copy.put((Folder) MailItem.constructItem(folder.getAccount(), data, folder.getMailboxId()));
             }
             for (Folder folder : copy.values()) {
                 Folder parent = copy.get(folder.getFolderId());
@@ -9291,7 +9291,11 @@ public class Mailbox {
                     conn.closeQuietly();
                 }
             }
-            MailboxListener.notifyListeners(notification);
+            try {
+                MailboxListener.notifyListeners(notification);
+            } catch (ServiceException e) {
+                ZimbraLog.session.warn("Caught an exception trying to notify Mailbox listeners", e);
+            }
         }
     }
 

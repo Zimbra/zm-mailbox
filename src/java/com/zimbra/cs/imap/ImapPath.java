@@ -19,6 +19,11 @@ package com.zimbra.cs.imap;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 
+import com.zimbra.client.ZFolder;
+import com.zimbra.client.ZMailbox;
+import com.zimbra.client.ZMountpoint;
+import com.zimbra.client.ZSearchFolder;
+import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
@@ -26,7 +31,6 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
@@ -41,10 +45,6 @@ import com.zimbra.cs.mailbox.SearchFolder;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.util.AccountUtil;
-import com.zimbra.client.ZFolder;
-import com.zimbra.client.ZMailbox;
-import com.zimbra.client.ZMountpoint;
-import com.zimbra.client.ZSearchFolder;
 
 public class ImapPath implements Comparable<ImapPath> {
     enum Scope { UNPARSED, NAME, CONTENT, REFERENCE };
@@ -127,7 +127,7 @@ public class ImapPath implements Comparable<ImapPath> {
         mItemId = other.mItemId;
     }
 
-    ImapPath(String owner, Folder folder, ImapCredentials creds) {
+    ImapPath(String owner, Folder folder, ImapCredentials creds) throws ServiceException {
         this(owner, folder.getPath(), creds);
         mMailbox = folder.getMailbox();
         mFolder = folder;

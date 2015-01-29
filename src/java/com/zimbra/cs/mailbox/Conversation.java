@@ -192,7 +192,7 @@ public class Conversation extends MailItem {
 
         // need to rewrite the overview metadata
         ZimbraLog.mailbox.debug("resetting metadata: cid=%d,size was=%d is=%d", mId, mData.size, mSenderList.size());
-        saveData(new DbMailItem(mMailbox));
+        saveData(new DbMailItem(getMailbox()));
         return mSenderList;
     }
 
@@ -215,7 +215,7 @@ public class Conversation extends MailItem {
         List<Message> msgs = new ArrayList<Message>(getMessageCount());
         List<UnderlyingData> listData = DbMailItem.getByParent(this, sort, limit, false);
         for (UnderlyingData data : listData) {
-            msgs.add(mMailbox.getMessage(data));
+            msgs.add(getMailbox().getMessage(data));
         }
         return msgs;
     }
@@ -356,7 +356,7 @@ public class Conversation extends MailItem {
         // Decrement the in-memory unread count of each message.  Each message will
         // then implicitly decrement the unread count for its conversation, folder
         // and tags.
-        TargetConstraint tcon = mMailbox.getOperationTargetConstraint();
+        TargetConstraint tcon = getMailbox().getOperationTargetConstraint();
         List<Integer> targets = new ArrayList<Integer>();
         for (Message msg : getMessages()) {
             // skip messages that don't need to be changed, or that the client can't modify, doesn't know about, or has explicitly excluded
@@ -380,7 +380,7 @@ public class Conversation extends MailItem {
                 throw ServiceException.PERM_DENIED("you do not have sufficient permissions");
             }
         } else {
-            DbMailItem.alterUnread(mMailbox, targets, unread);
+            DbMailItem.alterUnread(getMailbox(), targets, unread);
         }
     }
 
@@ -419,7 +419,7 @@ public class Conversation extends MailItem {
         }
         markItemModified(tag instanceof Flag ? Change.FLAGS : Change.TAGS);
 
-        TargetConstraint tcon = mMailbox.getOperationTargetConstraint();
+        TargetConstraint tcon = getMailbox().getOperationTargetConstraint();
         boolean excludeAccess = false;
 
         List<Message> msgs = getMessages();
@@ -479,7 +479,7 @@ public class Conversation extends MailItem {
         if (add) {
             tagChanged(tag, add);
         } else {
-            DbMailItem.completeConversation(mMailbox, mMailbox.getOperationConnection(), mData);
+            DbMailItem.completeConversation(getMailbox(), getMailbox().getOperationConnection(), mData);
         }
     }
 
@@ -526,7 +526,7 @@ public class Conversation extends MailItem {
         markItemModified(Change.NONE);
 
         List<Message> msgs = getMessages();
-        TargetConstraint tcon = mMailbox.getOperationTargetConstraint();
+        TargetConstraint tcon = getMailbox().getOperationTargetConstraint();
         boolean toTrash = target.inTrash();
         int oldUnread = 0;
         for (Message msg : msgs) {
@@ -616,7 +616,7 @@ public class Conversation extends MailItem {
 
             if (!indexUpdated.isEmpty()) {
                 for (MailItem msg : indexUpdated) {
-                    mMailbox.index.add(msg);
+                    getMailbox().index.add(msg);
                 }
             }
         }
@@ -667,10 +667,10 @@ public class Conversation extends MailItem {
 
         // FIXME: this ordering is to work around the fact that when getSenderList has to
         //   recalc the metadata, it uses the already-updated DB message state to do it...
-        mData.date = mMailbox.getOperationTimestampMillis();
+        mData.date = getMailbox().getOperationTimestampMillis();
         contentChanged();
 
-        if (!mMailbox.hasListeners(Session.Type.SOAP)) {
+        if (!getMailbox().hasListeners(Session.Type.SOAP)) {
             instantiateSenderList();
             mData.size++;
             try {
@@ -707,7 +707,7 @@ public class Conversation extends MailItem {
 
         markItemModified(Change.SIZE | Change.SENDERS);
 
-        if (!mMailbox.hasListeners(Session.Type.SOAP)) {
+        if (!getMailbox().hasListeners(Session.Type.SOAP)) {
             // update unread counts
             if (child.isUnread()) {
                 markItemModified(Change.UNREAD);
@@ -719,7 +719,7 @@ public class Conversation extends MailItem {
                 int oldFlags = mData.getFlags();
                 int oldTagCount = mData.getTags().length;
 
-                DbMailItem.completeConversation(mMailbox, mMailbox.getOperationConnection(), mData);
+                DbMailItem.completeConversation(getMailbox(), getMailbox().getOperationConnection(), mData);
 
                 if (mData.getFlags() != oldFlags) {
                     markItemModified(Change.FLAGS);
@@ -797,7 +797,7 @@ public class Conversation extends MailItem {
         }
 
         List<Message> msgs = getMessages();
-        TargetConstraint tcon = mMailbox.getOperationTargetConstraint();
+        TargetConstraint tcon = getMailbox().getOperationTargetConstraint();
 
         boolean excludeModify = false, excludeAccess = false;
         for (Message child : msgs) {
@@ -886,7 +886,7 @@ public class Conversation extends MailItem {
      */
     @Override
     protected boolean isQuotaCheckRequired() throws ServiceException {
-        Account account = getMailbox().getAccount();
+        Account account = getAccount();
         return !account.isMailAllowReceiveButNotSendWhenOverQuota();
     }
 

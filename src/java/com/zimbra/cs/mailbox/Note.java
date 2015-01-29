@@ -163,7 +163,7 @@ public class Note extends MailItem {
         if (location == null) {
             location = new Rectangle();
         }
-        Mailbox mbox = folder.getMailbox();
+        Mailbox mbox =  folder.getMailbox();
         UnderlyingData data = new UnderlyingData();
         data.id = id;
         data.type = Type.NOTE.toByte();
@@ -217,8 +217,8 @@ public class Note extends MailItem {
         markItemModified(Change.CONTENT | Change.DATE);
         // XXX: should probably update both mData.size and the Mailbox's size
         mData.setSubject(content);
-        mData.date = mMailbox.getOperationTimestampMillis();
-        saveData(new DbMailItem(mMailbox));
+        mData.date = getMailbox().getOperationTimestampMillis();
+        saveData(new DbMailItem(getMailbox()));
     }
 
     protected void saveSubject() throws ServiceException {

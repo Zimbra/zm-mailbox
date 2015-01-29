@@ -71,7 +71,7 @@ public class RemoteSoapSession extends SoapSession {
     }
 
     @Override
-    public Element putNotifications(Element ctxt, ZimbraSoapContext zsc, int lastSequence) {
+    public Element putNotifications(Element ctxt, ZimbraSoapContext zsc, int lastSequence) throws ServiceException {
         if (ctxt == null) {
             return null;
         }
@@ -124,7 +124,7 @@ public class RemoteSoapSession extends SoapSession {
         }
 
         @Override
-        public void notificationsReady() {
+        public void notificationsReady() throws ServiceException {
             CrossServerNotification ntfn;
             try {
                 ntfn = CrossServerNotification.create(RemoteSoapSession.this, authUserCtxt);

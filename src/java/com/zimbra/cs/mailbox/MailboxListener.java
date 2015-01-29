@@ -21,6 +21,8 @@ import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.springframework.beans.BeansException;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.service.ServiceException;
@@ -66,8 +68,10 @@ public abstract class MailboxListener {
      * or other long latency operation within notify method.
      *
      * @param notification
+     * @throws ServiceException 
+     * @throws BeansException 
      */
-    public abstract void notify(ChangeNotification notification);
+    public abstract void notify(ChangeNotification notification) throws BeansException, ServiceException;
 
     protected static final Set<Type> ALL_ITEM_TYPES = EnumSet.allOf(Type.class);
 
@@ -134,7 +138,7 @@ public abstract class MailboxListener {
         }
     }
 
-    public static void notifyListeners(ChangeNotification notification) {
+    public static void notifyListeners(ChangeNotification notification) throws BeansException, ServiceException {
         for (MailboxListener l : sListeners) {
             if (!Collections.disjoint(notification.mods.changedTypes, l.registerForItemTypes())) {
                 l.notify(notification);

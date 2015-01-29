@@ -289,7 +289,7 @@ public class Tag extends MailItem {
         List<Integer> targets = new ArrayList<Integer>();
         int delta = unread ? 1 : -1;
         for (UnderlyingData data : DbTag.getUnreadMessages(this)) {
-            Message msg = mMailbox.getMessage(data);
+            Message msg = getMailbox().getMessage(data);
             if (msg.checkChangeID() || !msg.canAccess(ACL.RIGHT_WRITE)) {
                 msg.updateUnread(delta, msg.isTagged(Flag.FlagInfo.DELETED) ? delta : 0);
                 msg.metadataChanged();
@@ -298,7 +298,7 @@ public class Tag extends MailItem {
         }
 
         // Mark all messages with this tag as read in the database
-        DbMailItem.alterUnread(mMailbox, targets, unread);
+        DbMailItem.alterUnread(getMailbox(), targets, unread);
     }
 
     static final String FLAG_NAME_PREFIX = "\\";
@@ -342,7 +342,7 @@ public class Tag extends MailItem {
         contentChanged();
         DbTag.renameTag(this);
         // dump entire item cache because tag names on cached items are now stale
-        mMailbox.purge(Type.MESSAGE);
+        getMailbox().purge(Type.MESSAGE);
         // any folder that contains items might have seen some of its contents change
         touchAllFolders();
     }
@@ -355,7 +355,7 @@ public class Tag extends MailItem {
         // any folder that contains items might have seen some of its contents change
         touchAllFolders();
         // dump entire item cache because tag names on cached items are now stale
-        mMailbox.purge(Type.MESSAGE);
+        getMailbox().purge(Type.MESSAGE);
         // remove tag from tag cache
         super.purgeCache(info, purgeItem);
     }
@@ -365,7 +365,7 @@ public class Tag extends MailItem {
      *  Since we can't easily tell which folders would be affected, we just
      *  update the highwater mark for *all* folders. */
     void touchAllFolders() throws ServiceException {
-        for (Folder folder : mMailbox.listAllFolders()) {
+        for (Folder folder : getMailbox().listAllFolders()) {
             if (folder.getItemCount() > 0) {
                 folder.updateHighestMODSEQ();
             }

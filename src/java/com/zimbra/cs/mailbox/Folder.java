@@ -301,12 +301,13 @@ public class Folder extends MailItem {
      *  time the folder was accessed via a read/write IMAP session.  If there
      *  is such a session already active, returns the last item ID in the
      *  Mailbox.  This value is used to calculate the \Recent flag when it
-     *  has not already been cached. */
-    public int getImapRECENTCutoff() {
-        for (Session s : mMailbox.getListeners(Session.Type.IMAP)) {
+     *  has not already been cached. 
+     * @throws ServiceException */
+    public int getImapRECENTCutoff() throws ServiceException {
+        for (Session s : getMailbox().getListeners(Session.Type.IMAP)) {
             ImapSession i4session = (ImapSession) s;
             if (i4session.getFolderId() == mId && i4session.isWritable())
-                return mMailbox.getLastItemId();
+                return getMailbox().getLastItemId();
         }
         return imapRECENTCutoff;
     }
@@ -325,7 +326,7 @@ public class Folder extends MailItem {
             return 0;
         }
         // if there's a READ-WRITE IMAP session active on the folder, by definition there are no \Recent messages
-        for (Session s : mMailbox.getListeners(Session.Type.IMAP)) {
+        for (Session s : getMailbox().getListeners(Session.Type.IMAP)) {
             ImapSession i4session = (ImapSession) s;
             if (i4session.getFolderId() == mId && i4session.isWritable()) {
                 return 0;
@@ -408,7 +409,7 @@ public class Folder extends MailItem {
                 return true;
             if (parentId == Mailbox.ID_FOLDER_ROOT)
                 return false;
-            folder = folder.getMailbox().getFolderById(null, parentId);
+            folder = getMailbox().getFolderById(null, parentId);
         }
     }
 
@@ -450,7 +451,7 @@ public class Folder extends MailItem {
             return rightsNeeded;
         // XXX: in Mailbox, authuser is set to null if authuser == owner.
         // the mailbox owner can do anything they want
-        if (authuser == null || authuser.getId().equals(mMailbox.getAccountId()))
+        if (authuser == null || authuser.getId().equals(getAccountId()))
             return rightsNeeded;
         // check admin access
         if (AccessManager.getInstance().canAccessAccount(authuser, getAccount(), asAdmin))
@@ -641,7 +642,7 @@ public class Folder extends MailItem {
     /** Sets the folder's UIDNEXT item ID highwater mark to one more than
      *  the Mailbox's last assigned item ID. */
     void updateUIDNEXT() throws ServiceException {
-        int uidnext = mMailbox.getLastItemId() + 1;
+        int uidnext = getMailbox().getLastItemId() + 1;
         if (trackImapStats() && imapUIDNEXT < uidnext) {
             markItemModified(Change.SIZE);
             imapUIDNEXT = uidnext;
@@ -651,7 +652,7 @@ public class Folder extends MailItem {
     /** Sets the folder's MODSEQ change ID highwater mark to the Mailbox's
      *  current change ID. */
     void updateHighestMODSEQ() throws ServiceException {
-        int modseq = mMailbox.getOperationChangeID();
+        int modseq = getMailbox().getOperationChangeID();
         if (trackImapStats() && imapMODSEQ < modseq) {
             markItemModified(Change.SIZE);
             imapMODSEQ = modseq;
@@ -661,12 +662,12 @@ public class Folder extends MailItem {
     /** Sets the folder's RECENT item ID highwater mark to the Mailbox's
      *  last assigned item ID. */
     void checkpointRECENT() throws ServiceException {
-        if (imapRECENTCutoff == mMailbox.getLastItemId())
+        if (imapRECENTCutoff == getMailbox().getLastItemId())
             return;
 
         markItemModified(Change.INTERNAL_ONLY);
         imapRECENT = 0;
-        imapRECENTCutoff = mMailbox.getLastItemId();
+        imapRECENTCutoff = getMailbox().getLastItemId();
         saveFolderCounts(false);
     }
 
@@ -677,8 +678,8 @@ public class Folder extends MailItem {
      *                 UIDNEXT and HIGHESTMODSEQ values. */
     protected void saveFolderCounts(boolean initial) throws ServiceException {
         if (initial) {
-            imapUIDNEXT = mMailbox.getLastItemId() + 1;
-            imapMODSEQ  = mMailbox.getLastChangeID();
+            imapUIDNEXT = getMailbox().getLastItemId() + 1;
+            imapMODSEQ  = getMailbox().getLastChangeID();
         }
         DbMailItem.persistCounts(this, encodeMetadata());
         ZimbraLog.mailbox.debug("\"%s\": updating folder counts (c%d/d%d/u%d/du%d/s%d)", getName(),
@@ -742,8 +743,9 @@ public class Folder extends MailItem {
      * and we also make sure to avoid any cycles of folders.
      *
      * @param child the {@link MailItem} object to check
+     * @throws ServiceException 
      */
-    boolean canContain(MailItem child) {
+    boolean canContain(MailItem child) throws ServiceException {
         if (!canContain(child.getType())) {
             return false;
         } else if (child instanceof Folder) {
@@ -765,13 +767,14 @@ public class Folder extends MailItem {
      * <ul>
      *
      * @param type the type of object, e.g. {@link MailItem#TYPE_TAG}
+     * @throws ServiceException 
      */
-    boolean canContain(Type type) {
+    boolean canContain(Type type) throws ServiceException {
         if ((type == Type.TAG) != (mId == Mailbox.ID_FOLDER_TAGS)) {
             return false;
         } else if ((type == Type.CONVERSATION) != (mId == Mailbox.ID_FOLDER_CONVERSATIONS)) {
             return false;
-        } else if (type == Type.FOLDER && !mMailbox.isChildFolderPermitted(mId)) {
+        } else if (type == Type.FOLDER && !getMailbox().isChildFolderPermitted(mId)) {
             return false;
         }
         return true;
@@ -1034,14 +1037,14 @@ public class Folder extends MailItem {
                     conversations.add(data.parentId);
                 }
             }
-            mMailbox.getItemById(conversations, Type.CONVERSATION);
+            getMailbox().getItemById(conversations, Type.CONVERSATION);
         }
 
         // mark all messages in this folder as read in memory; this implicitly
         //   decrements the unread count for its conversation, folder and tags
         List<Integer> targets = new ArrayList<Integer>();
         for (UnderlyingData data : unreaddata) {
-            Message msg = mMailbox.getMessage(data);
+            Message msg = getMailbox().getMessage(data);
             if (msg.checkChangeID() || !msg.canAccess(ACL.RIGHT_WRITE)) {
                 msg.updateUnread(-1, msg.isTagged(Flag.FlagInfo.DELETED) ? -1 : 0);
                 msg.metadataChanged();
@@ -1057,7 +1060,7 @@ public class Folder extends MailItem {
                 ZimbraLog.mailop.debug("marking messages in %s as %s.  ids: %s", context, state, StringUtil.join(",", ids));
             }
         }
-        DbMailItem.alterUnread(mMailbox, targets, unread);
+        DbMailItem.alterUnread(getMailbox(), targets, unread);
     }
 
     /** Tags or untags a folder.  Persists the change to the database and
@@ -1318,7 +1321,7 @@ public class Folder extends MailItem {
     @Override
     void propagateDeletion(PendingDelete info) throws ServiceException {
         if (info.incomplete) {
-            info.cascadeIds = DbMailItem.markDeletionTargets(mMailbox,
+            info.cascadeIds = DbMailItem.markDeletionTargets(getMailbox(),
                     info.itemIds.getIds(EnumSet.of(Type.MESSAGE, Type.CHAT)), info.modifiedIds);
         } else {
             info.cascadeIds = DbMailItem.markDeletionTargets(this, info.modifiedIds);
@@ -1332,9 +1335,9 @@ public class Folder extends MailItem {
     @Override
     void purgeCache(PendingDelete info, boolean purgeItem) throws ServiceException {
         // when deleting a folder, need to purge conv cache!
-        mMailbox.purge(Type.CONVERSATION);
+        getMailbox().purge(Type.CONVERSATION);
         // fault modified conversations back in, thereby marking them dirty
-        mMailbox.getItemById(ArrayUtil.toIntArray(info.modifiedIds), Type.CONVERSATION);
+        getMailbox().getItemById(ArrayUtil.toIntArray(info.modifiedIds), Type.CONVERSATION);
         // remove this folder from the cache if needed
         super.purgeCache(info, purgeItem);
     }

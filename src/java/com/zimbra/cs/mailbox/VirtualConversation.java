@@ -74,7 +74,7 @@ public class VirtualConversation extends Conversation {
 
 
     Message getMessage() throws ServiceException {
-        return mMailbox.getMessageById(getMessageId());
+        return getMailbox().getMessageById(getMessageId());
     }
 
     @Override
@@ -148,13 +148,13 @@ public class VirtualConversation extends Conversation {
             throw MailServiceException.IS_NOT_CHILD();
         }
         markItemDeleted();
-        mMailbox.uncache(this);
+        getMailbox().uncache(this);
     }
 
     @Override
     public MailItem snapshotItem() throws ServiceException {
         UnderlyingData data = getUnderlyingData().clone();
         data.setFlag(Flag.FlagInfo.UNCACHED);
-        return new VirtualConversation(mMailbox, data);
+        return new VirtualConversation(getMailbox(), data);
     }
 }

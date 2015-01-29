@@ -667,7 +667,7 @@ public class CalSummaryCache {
         }
     }
 
-    void notifyCommittedChanges(PendingModifications mods, int changeId) {
+    void notifyCommittedChanges(PendingModifications mods, int changeId) throws ServiceException {
         if (mods.created != null) {
             for (Map.Entry<ModificationKey, MailItem> entry : mods.created.entrySet()) {
                 MailItem item = entry.getValue();

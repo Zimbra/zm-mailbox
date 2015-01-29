@@ -50,7 +50,7 @@ public class CtagInfoCacheMailboxListener {
                 if (item instanceof Message) {
                     Message msg = (Message) item;
                     if (msg.hasCalendarItemInfos() && msg.getFolderId() == inboxFolder) {
-                        keysToInvalidate.add(new Pair<>(msg.getMailbox().getAccountId(), inboxFolder));
+                        keysToInvalidate.add(new Pair<>(msg.getAccountId(), inboxFolder));
                     }
                 }
             }
@@ -63,7 +63,7 @@ public class CtagInfoCacheMailboxListener {
                     Folder folder = (Folder) whatChanged;
                     MailItem.Type viewType = folder.getDefaultView();
                     if (viewType == MailItem.Type.APPOINTMENT || viewType == MailItem.Type.TASK) {
-                        keysToInvalidate.add(new Pair<>(folder.getMailbox().getAccountId(), folder.getId()));
+                        keysToInvalidate.add(new Pair<>(folder.getAccountId(), folder.getId()));
                     }
                 } else if (whatChanged instanceof Message) {
                     Message msg = (Message) whatChanged;
@@ -72,7 +72,7 @@ public class CtagInfoCacheMailboxListener {
                             // If message was moved, we don't know which folder it was moved from.
                             // Just invalidate the Inbox because that's the only message folder we care
                             // about in calendaring.
-                            keysToInvalidate.add(new Pair<>(msg.getMailbox().getAccountId(), inboxFolder));
+                            keysToInvalidate.add(new Pair<>(msg.getAccountId(), inboxFolder));
                         }
                     }
                 }

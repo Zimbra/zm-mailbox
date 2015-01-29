@@ -88,7 +88,7 @@ public class ShareStartStopListener extends MailboxListener {
 
     // Add the share locator entry for this folder.
     private void startShare(Folder folder) {
-        final String me = folder.getMailbox().getAccountId();
+        final String me = folder.getAccountId();
         final String uuid = folder.getUuid();
         TimerTask t = new TimerTask() {
             @Override
@@ -119,7 +119,7 @@ public class ShareStartStopListener extends MailboxListener {
 
     // Remove the share locator entry for this folder.
     private void stopShare(Folder folder) {
-        final String me = folder.getMailbox().getAccountId();
+        final String me = folder.getAccountId();
         final String uuid = folder.getUuid();
         TimerTask t = new TimerTask() {
             @Override

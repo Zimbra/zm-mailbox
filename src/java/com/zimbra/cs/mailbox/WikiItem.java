@@ -47,7 +47,7 @@ public final class WikiItem extends Document {
         Metadata meta = new Metadata();
         UnderlyingData data = prepareCreate(Type.WIKI, id, uuid, folder, wikiword, WIKI_CONTENT_TYPE, pd, meta, custom, 0);
 
-        Mailbox mbox = folder.getMailbox();
+        Mailbox mbox =  folder.getMailbox();
         data.contentChanged(mbox);
         ZimbraLog.mailop.info("Adding WikiItem %s: id=%d, folderId=%d, folderName=%s.",
             wikiword, data.id, folder.getId(), folder.getName());

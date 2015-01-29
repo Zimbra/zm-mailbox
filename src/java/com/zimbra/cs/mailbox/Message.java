@@ -477,7 +477,7 @@ public class Message extends MailItem {
      * @see TnefConverter
      * @see UUEncodeConverter */
     public MimeMessage getMimeMessage(boolean runConverters) throws ServiceException {
-        return getMimeMessage(runConverters, mMailbox.getAccount());
+        return getMimeMessage(runConverters, getAccount());
     }
 
     public MimeMessage getMimeMessage(boolean runConverters, Account acc) throws ServiceException {
@@ -645,7 +645,8 @@ public class Message extends MailItem {
             return false;
         }
         AccountAddressMatcher acctMatcher = new AccountAddressMatcher(ownerAcct);
-        for (Mountpoint sharedCal : getMailbox().getCalendarMountpoints(getMailbox().getOperationContext(), SortBy.NONE)) {
+        Mailbox mbox = getMailbox();;
+        for (Mountpoint sharedCal : mbox.getCalendarMountpoints(mbox.getOperationContext(), SortBy.NONE)) {
             if (sharedCal.canAccess(ACL.RIGHT_ACTION)) {
                 String calOwner = Provisioning.getInstance().get(AccountBy.id, sharedCal.getOwnerId()).getName();
                 if (acctMatcher.matches(calOwner)) {
@@ -684,11 +685,11 @@ public class Message extends MailItem {
         try {
             headerVal = getCalendarIntendedFor(getMimeMessage());
             if (headerVal != null && headerVal.length() > 0) {
-                AccountAddressMatcher acctMatcher = new AccountAddressMatcher(mMailbox.getAccount());
+                AccountAddressMatcher acctMatcher = new AccountAddressMatcher(getAccount());
                 if (!acctMatcher.matches(headerVal) && manageCalendar(headerVal)) {
                     Provisioning prov = Provisioning.getInstance();
                     Account ownerAcct = prov.get(AccountBy.name, headerVal);
-                    remoteCalendarItem = mMailbox.getRemoteCalItemByUID(ownerAcct, invite.getUid(), true, false);
+                    remoteCalendarItem = getMailbox().getRemoteCalItemByUID(ownerAcct, invite.getUid(), true, false);
                 }
             }
         } catch (ServiceException e) {
@@ -770,9 +771,10 @@ public class Message extends MailItem {
             throw ServiceException.INVALID_REQUEST("null ParsedMessage while processing invite in message " + mId, null);
         }
 
+        Mailbox mbox = getMailbox();;
         Account acct = getAccount();
         AccountAddressMatcher acctMatcher = new AccountAddressMatcher(acct);
-        OperationContext octxt = getMailbox().getOperationContext();
+        OperationContext octxt = mbox.getOperationContext();
 
         ProcessInvitesStatus status = new ProcessInvitesStatus(acct, pm);
         status.initAutoAddNew(octxt);
@@ -788,7 +790,7 @@ public class Message extends MailItem {
             boolean canInvite;
             AccessManager accessMgr = AccessManager.getInstance();
             if (octxt != null && octxt.getAuthenticatedUser() != null) {
-                onBehalfOf = octxt.isDelegatedRequest(getMailbox());
+                onBehalfOf = octxt.isDelegatedRequest(mbox);
                 senderAcct = octxt.getAuthenticatedUser();
                 senderEmail = senderAcct.getName();
                 canInvite = accessMgr.canDo(senderAcct, acct, User.R_invite, octxt.isUsingAdminPrivileges());
@@ -801,7 +803,7 @@ public class Message extends MailItem {
             }
             if (!canInvite) {
                 Invite invite = invites.get(0);
-                CalendarMailSender.handleInviteAutoDeclinedNotification(octxt, getMailbox(), acct,
+                CalendarMailSender.handleInviteAutoDeclinedNotification(octxt, mbox, acct,
                         senderEmail, senderAcct, onBehalfOf, applyToCalendar, getId(), invite);
                 String inviteSender = senderEmail != null ? senderEmail : "unknown sender";
                 ZimbraLog.calendar.info("Calendar invite from %s to %s is not allowed", inviteSender, acct.getName());
@@ -929,7 +931,7 @@ public class Message extends MailItem {
                             // For attendee-originated methods, look up organizer from appointment on calendar.
                             // If appointment is not found, fall back to the intended-for address, then finally to self.
                             ZOrganizer org = null;
-                            CalendarItem ci = mMailbox.getCalendarItemByUid(octxt, cur.getUid());
+                            CalendarItem ci = getMailbox().getCalendarItemByUid(octxt, cur.getUid());
                             if (ci != null) {
                                 Invite inv = ci.getInvite(cur.getRecurId());
                                 if (inv == null) {
@@ -1036,7 +1038,7 @@ public class Message extends MailItem {
                     List<String> rcptsFiltered = new ArrayList<String>();    // recipients to receive message filtered to remove private data
                     Folder calFolder = null;
                     try {
-                        calFolder = getMailbox().getFolderById(status.calItemFolderId);
+                        calFolder = mbox.getFolderById(status.calItemFolderId);
                     } catch (NoSuchItemException e) {
                         ZimbraLog.mailbox.warn("No such calendar folder (" + status.calItemFolderId + ") during invite auto-forwarding");
                     }
@@ -1096,16 +1098,16 @@ public class Message extends MailItem {
                                 MimeMessage mm = CalendarMailSender.createForwardedInviteMessage(
                                         mmOrig, origSender, forwarder, rcptsUnfiltered.toArray(new String[0]));
                                 if (mm != null) {
-                                    ItemId origMsgId = new ItemId(getMailbox(), getId());
-                                    CalendarMailSender.sendInviteAutoForwardMessage(octxt, getMailbox(), origMsgId, mm);
+                                    ItemId origMsgId = new ItemId(mbox, getId());
+                                    CalendarMailSender.sendInviteAutoForwardMessage(octxt, mbox, origMsgId, mm);
                                 }
                             }
                             if (!rcptsFiltered.isEmpty()) {
                                 MimeMessage mm = CalendarMailSender.createForwardedPrivateInviteMessage(
                                         acct, acct.getLocale(), method, invites, origSender, forwarder, rcptsFiltered.toArray(new String[0]));
                                 if (mm != null) {
-                                    ItemId origMsgId = new ItemId(getMailbox(), getId());
-                                    CalendarMailSender.sendInviteAutoForwardMessage(octxt, getMailbox(), origMsgId, mm);
+                                    ItemId origMsgId = new ItemId(mbox, getId());
+                                    CalendarMailSender.sendInviteAutoForwardMessage(octxt, mbox, origMsgId, mm);
                                 }
                             }
                         }
@@ -1123,6 +1125,7 @@ public class Message extends MailItem {
         boolean calItemIsNew = false;
         boolean modifiedCalItem = false;
         boolean success = false;
+        Mailbox mbox = getMailbox();
         try {
             InviteChanges invChanges = null;
             // Look for organizer-provided change list.
@@ -1143,7 +1146,7 @@ public class Message extends MailItem {
                 return;
             }
 
-            OperationContext octxt = getMailbox().getOperationContext();
+            OperationContext octxt = mbox.getOperationContext();
             ICalTok methodTok = Invite.lookupMethod(method);
             AccountAddressMatcher acctMatcher = status.getAcctMatcher();
             cur.sanitize(true);
@@ -1151,7 +1154,7 @@ public class Message extends MailItem {
                 Provisioning prov = Provisioning.getInstance();
                 Account ownerAcct = prov.get(AccountBy.name, calendarIntendedFor);
                 com.zimbra.soap.mail.type.CalendarItemInfo cii =
-                        getMailbox().getRemoteCalItemByUID(ownerAcct, cur.getUid(), false, false);
+                        mbox.getRemoteCalItemByUID(ownerAcct, cur.getUid(), false, false);
                 CalendarItemInfo info;
                 if (cii == null) {
                     info = new CalendarItemInfo(CalendarItemInfo.CALITEM_ID_NONE, cur.getComponentNum(), cur, invChanges);
@@ -1174,7 +1177,7 @@ public class Message extends MailItem {
                 success = true;
                 return;
             }
-            status.calItem = mMailbox.getCalendarItemByUid(octxt, cur.getUid());
+            status.calItem = getMailbox().getCalendarItemByUid(octxt, cur.getUid());
             if (applyToCalendar &&
                 !ICalTok.REPLY.equals(methodTok) && // replies are handled elsewhere (in Mailbox.addMessage())
                 !ICalTok.COUNTER.equals(methodTok) && !ICalTok.DECLINECOUNTER.equals(methodTok)) {
@@ -1187,9 +1190,9 @@ public class Message extends MailItem {
                         if (status.autoAddNew) {
                             int flags = 0;
                             // int flags = Flag.BITMASK_INDEXING_DEFERRED;
-                            // mMailbox.incrementIndexDeferredCount(1);
+                            // getMailbox().incrementIndexDeferredCount(1);
                             int defaultFolder = cur.isTodo() ? Mailbox.ID_FOLDER_TASKS : Mailbox.ID_FOLDER_CALENDAR;
-                            status.calItem = mMailbox.createCalendarItem(defaultFolder, flags, null, cur.getUid(), pm,
+                            status.calItem = getMailbox().createCalendarItem(defaultFolder, flags, null, cur.getUid(), pm,
                                     cur, null);
                             calItemIsNew = true;
                             status.calItemFolderId = status.calItem.getFolderId();
@@ -1267,14 +1270,14 @@ public class Message extends MailItem {
             calendarItemInfos.add(info);
             status.updatedMetadata = true;
             if (status.calItem != null && (calItemIsNew || modifiedCalItem)) {
-                mMailbox.index.add(status.calItem);
+                getMailbox().index.add(status.calItem);
             }
             success = true;
         } finally {
             if (!success && status.calItem != null) {
                 // Error occurred and the calItem in memory may be out of sync with the database.
                 // Uncache it here, because the error will be ignored by this method's caller.
-                getMailbox().uncache(status.calItem);
+                mbox.uncache(status.calItem);
             }
         }
     }
@@ -1284,7 +1287,7 @@ public class Message extends MailItem {
         if (getSize() == size && StringUtil.equal(getDigest(), mblob.getDigest()) && StringUtil.equal(getLocator(), mblob.getLocator()))
             return;
 
-        mMailbox.updateSize(size - mData.size, true);
+        getMailbox().updateSize(size - mData.size, true);
         getFolder().updateSize(0, 0, size - mData.size);
 
         mData.size    = size;
@@ -1347,7 +1350,7 @@ public class Message extends MailItem {
         if (parent instanceof VirtualConversation &&
                 parent.getId() == (newParent == null ? -1 : newParent.mId) &&
                 !isDraft() && inSpam() == folder.inSpam()) {
-            Conversation conv = mMailbox.createConversation(Mailbox.ID_AUTO_INCREMENT, this, copy);
+            Conversation conv = getMailbox().createConversation(Mailbox.ID_AUTO_INCREMENT, this, copy);
             DbMailItem.changeOpenTargets(this, conv.getId());
             parent.removeChild(this);
         }
@@ -1383,23 +1386,24 @@ public class Message extends MailItem {
     public List<IndexDocument> generateIndexData() throws TemporaryIndexingException {
         try {
             ParsedMessage pm = null;
-            mMailbox.lock.lock();
+            Mailbox mbox = getMailbox();
+            mbox.lock.lock();
             try {
                 // force the pm's received-date to be the correct one
                 ParsedMessageOptions opt = new ParsedMessageOptions().setContent(getMimeMessage(false))
                     .setReceivedDate(getDate())
-                    .setAttachmentIndexing(getMailbox().attachmentsIndexingEnabled())
+                    .setAttachmentIndexing(mbox.attachmentsIndexingEnabled())
                     .setSize(getSize())
                     .setDigest(getDigest());
                 pm = new ParsedMessage(opt);
             } finally {
-                mMailbox.lock.release();
+                mbox.lock.release();
             }
 
             pm.setDefaultCharset(getAccount().getPrefMailDefaultCharset());
 
-            if (mMailbox.index.isReIndexInProgress()) {
-                getMailbox().reanalyze(getId(), getType(), pm, getSize());
+            if (mbox.index.isReIndexInProgress()) {
+                mbox.reanalyze(getId(), getType(), pm, getSize());
             }
 
             // don't hold the lock while extracting text!
@@ -1478,7 +1482,7 @@ public class Message extends MailItem {
         }
         if (hadAttachment != pm.hasAttachments()) {
             markItemModified(Change.FLAGS);
-            parent.tagChanged(mMailbox.getFlagById(Flag.ID_ATTACHED), pm.hasAttachments());
+            parent.tagChanged(getMailbox().getFlagById(Flag.ID_ATTACHED), pm.hasAttachments());
         }
 
         // make sure the "urgency" FLAGs are correct
@@ -1490,23 +1494,23 @@ public class Message extends MailItem {
         if (oldUrgency != urgency) {
             markItemModified(Change.FLAGS);
             if (urgency == Flag.BITMASK_HIGH_PRIORITY || oldUrgency == Flag.BITMASK_HIGH_PRIORITY) {
-                parent.tagChanged(mMailbox.getFlagById(Flag.ID_HIGH_PRIORITY), urgency == Flag.BITMASK_HIGH_PRIORITY);
+                parent.tagChanged(getMailbox().getFlagById(Flag.ID_HIGH_PRIORITY), urgency == Flag.BITMASK_HIGH_PRIORITY);
             }
             if (urgency == Flag.BITMASK_LOW_PRIORITY || oldUrgency == Flag.BITMASK_LOW_PRIORITY) {
-                parent.tagChanged(mMailbox.getFlagById(Flag.ID_LOW_PRIORITY), urgency == Flag.BITMASK_LOW_PRIORITY);
+                parent.tagChanged(getMailbox().getFlagById(Flag.ID_LOW_PRIORITY), urgency == Flag.BITMASK_LOW_PRIORITY);
             }
         }
 
         // update the SIZE and METADATA
         if (mData.size != newSize) {
             markItemModified(Change.SIZE);
-            mMailbox.updateSize(newSize - mData.size, false);
+            getMailbox().updateSize(newSize - mData.size, false);
             getFolder().updateSize(0, 0, newSize - mData.size);
             mData.size = newSize;
         }
 
         // rewrite the DB row to reflect our new view
-        saveData(new DbMailItem(mMailbox), encodeMetadata(mRGBColor, mMetaVersion, mVersion, mExtendedData, pm, fragment,
+        saveData(new DbMailItem(getMailbox()), encodeMetadata(mRGBColor, mMetaVersion, mVersion, mExtendedData, pm, fragment,
                 draftInfo, calendarItemInfos, calendarIntendedFor));
 
         if (parent instanceof VirtualConversation) {
@@ -1522,13 +1526,13 @@ public class Message extends MailItem {
         }
 
         if (parent.getSize() <= 1) {
-            mMailbox.closeConversation((Conversation) parent, null);
+            getMailbox().closeConversation((Conversation) parent, null);
         } else {
             // remove this message from its (real) conversation
             markItemModified(Change.PARENT);
             parent.removeChild(this);
             // and place it in a new, non-"opened", virtual conversation
-            VirtualConversation vconv = new VirtualConversation(mMailbox, this);
+            VirtualConversation vconv = new VirtualConversation(getMailbox(), this);
             mData.parentId = vconv.getId();
             DbMailItem.setParent(this, vconv);
         }
@@ -1639,7 +1643,7 @@ public class Message extends MailItem {
      */
     @Override
     protected boolean isQuotaCheckRequired() throws ServiceException {
-        Account account = getMailbox().getAccount();
+        Account account = getAccount();
         return !account.isMailAllowReceiveButNotSendWhenOverQuota();
     }
 

@@ -81,7 +81,7 @@ public final class SearchFolder extends Folder {
      *  attribute <code>zimbraPrefImapSearchFoldersEnabled</code>. */
     public boolean isImapVisible() {
         try {
-            return mMailbox.getAccount().getBooleanAttr(Provisioning.A_zimbraPrefImapSearchFoldersEnabled, true);
+            return getAccount().getBooleanAttr(Provisioning.A_zimbraPrefImapSearchFoldersEnabled, true);
         } catch (ServiceException e) {
             return true;
         }
@@ -142,7 +142,7 @@ public final class SearchFolder extends Folder {
         if (sort != null && sort.trim().equals("")) {
             sort = null;
         }
-        Mailbox mbox = parent.getMailbox();
+        Mailbox mbox =  parent.getMailbox();
         UnderlyingData data = new UnderlyingData();
         data.uuid = uuid;
         data.id = id;

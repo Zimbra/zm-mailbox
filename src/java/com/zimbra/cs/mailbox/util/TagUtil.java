@@ -34,6 +34,7 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.ArrayUtil;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.OperationContext;
 
 public class TagUtil {
@@ -57,7 +58,7 @@ public class TagUtil {
     }
 
     @Deprecated
-    public static String getTagIdString(MailItem item) {
+    public static String getTagIdString(MailItem item) throws ServiceException {
         return getTagIdString(item.getMailbox(), item.getTags());
     }
 
@@ -67,7 +68,7 @@ public class TagUtil {
     }
 
     @Deprecated
-    public static List<Integer> getTagIds(MailItem item) {
+    public static List<Integer> getTagIds(MailItem item) throws ServiceException {
         return getTagIds(item.getMailbox(), item.getTags());
     }
 

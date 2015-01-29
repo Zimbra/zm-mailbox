@@ -138,7 +138,7 @@ public final class PendingModifications {
         }
 
         public ModificationKey(MailItem item) {
-            super(item.getMailbox().getAccountId(), item.getId());
+            super(item.getAccountId(), item.getId());
         }
 
         public ModificationKey(ModificationKey mkey) {

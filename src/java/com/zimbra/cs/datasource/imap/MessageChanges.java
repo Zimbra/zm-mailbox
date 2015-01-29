@@ -27,6 +27,7 @@ import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
 
 class MessageChanges {
@@ -41,7 +42,7 @@ class MessageChanges {
         return new MessageChanges(ds, folder).findChanges(changeId);
     }
 
-    private MessageChanges(DataSource ds, Folder folder) {
+    private MessageChanges(DataSource ds, Folder folder) throws ServiceException {
         this.ds = ds;
         this.folder = folder;
         mbox = folder.getMailbox();

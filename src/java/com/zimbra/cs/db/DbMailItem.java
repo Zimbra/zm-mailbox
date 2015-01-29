@@ -2281,7 +2281,7 @@ public class DbMailItem {
         List<UnderlyingData> result = new ArrayList<UnderlyingData>();
 
         StringBuilder sql = new StringBuilder("SELECT ").append(DB_FIELDS).append(" FROM ")
-                .append(getMailItemTableName(parent.getMailbox(), " mi", fromDumpster))
+                .append(getMailItemTableName(mbox, " mi", fromDumpster))
                 .append(" WHERE ").append(IN_THIS_MAILBOX_AND).append("parent_id = ? ")
                 .append(DbSearch.orderBy(sort, false));
         if (limit > 0) {
@@ -2344,7 +2344,7 @@ public class DbMailItem {
             }
 
             stmt = conn.prepareStatement("SELECT " + DB_FIELDS +
-                    " FROM " + getMailItemTableName(relativeTo.getMailbox(), " mi") +
+                    " FROM " + getMailItemTableName(mbox, " mi") +
                     " WHERE " + IN_THIS_MAILBOX_AND + "unread > 0 AND " + relation + " AND type NOT IN " + NON_SEARCHABLE_TYPES);
             if (relativeTo.getUnreadCount() > RESULTS_STREAMING_MIN_ROWS) {
                 Db.getInstance().enableStreaming(stmt);
@@ -4785,10 +4785,10 @@ public class DbMailItem {
     public static String getMailItemTableName(int groupId, boolean dumpster) {
         return DbMailbox.qualifyTableName(groupId, !dumpster ? TABLE_MAIL_ITEM : TABLE_MAIL_ITEM_DUMPSTER);
     }
-    public static String getMailItemTableName(MailItem item) {
+    public static String getMailItemTableName(MailItem item) throws ServiceException {
         return getMailItemTableName(item, false);
     }
-    public static String getMailItemTableName(MailItem item, boolean dumpster) {
+    public static String getMailItemTableName(MailItem item, boolean dumpster) throws ServiceException {
         return DbMailbox.qualifyTableName(item.getMailbox(), !dumpster ? TABLE_MAIL_ITEM : TABLE_MAIL_ITEM_DUMPSTER);
     }
     public static String getMailItemTableName(Mailbox mbox) {
@@ -4813,10 +4813,10 @@ public class DbMailItem {
     public static String getRevisionTableName(int groupId, boolean dumpster) {
         return DbMailbox.qualifyTableName(groupId, !dumpster ? TABLE_REVISION : TABLE_REVISION_DUMPSTER);
     }
-    public static String getRevisionTableName(MailItem item) {
+    public static String getRevisionTableName(MailItem item) throws ServiceException {
         return getRevisionTableName(item, false);
     }
-    public static String getRevisionTableName(MailItem item, boolean dumpster) {
+    public static String getRevisionTableName(MailItem item, boolean dumpster) throws ServiceException {
         return DbMailbox.qualifyTableName(item.getMailbox(), !dumpster ? TABLE_REVISION : TABLE_REVISION_DUMPSTER);
     }
     public static String getRevisionTableName(Mailbox mbox) {
@@ -4859,7 +4859,7 @@ public class DbMailItem {
     public static String getConversationTableName(int mailboxId, int groupId) {
         return DbMailbox.qualifyTableName(groupId, TABLE_OPEN_CONVERSATION);
     }
-    public static String getConversationTableName(MailItem item) {
+    public static String getConversationTableName(MailItem item) throws ServiceException {
         return DbMailbox.qualifyTableName(item.getMailbox(), TABLE_OPEN_CONVERSATION);
     }
     public static String getConversationTableName(Mailbox mbox) {

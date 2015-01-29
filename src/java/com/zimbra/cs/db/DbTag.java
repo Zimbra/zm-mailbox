@@ -48,6 +48,7 @@ import com.zimbra.cs.mailbox.MailItem.PendingDelete;
 import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.RetentionPolicyManager;
 import com.zimbra.cs.mailbox.Tag;
@@ -795,7 +796,7 @@ public final class DbTag {
         return DbMailbox.qualifyTableName(groupId, TABLE_TAG);
     }
 
-    public static String getTagTableName(MailItem item) {
+    public static String getTagTableName(MailItem item) throws ServiceException {
         return DbMailbox.qualifyTableName(item.getMailbox(), TABLE_TAG);
     }
 

@@ -48,7 +48,7 @@ public class Task extends CalendarItem {
     @Override
     protected String processPartStat(Invite invite, MimeMessage mmInv, boolean forCreate, String defaultPartStat)
             throws ServiceException {
-        Mailbox mbox = getMailbox();
+        Mailbox mbox =  getMailbox();
         OperationContext octxt = mbox.getOperationContext();
         CreateCalendarItemPlayer player =
             octxt != null ? (CreateCalendarItemPlayer) octxt.getPlayer() : null;
@@ -63,7 +63,7 @@ public class Task extends CalendarItem {
             (CreateCalendarItemRecorder) mbox.getRedoRecorder();
         recorder.setCalendarItemPartStat(partStat);
 
-        Account account = getMailbox().getAccount();
+        Account account = getAccount();
         invite.updateMyPartStat(account, partStat);
         if (forCreate) {
             Invite defaultInvite = getDefaultInviteOrNull();

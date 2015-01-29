@@ -429,7 +429,7 @@ final class ImapSessionManager {
         return null;
     }
 
-    private List<ImapMessage> duplicateSerializedFolder(Folder folder) {
+    private List<ImapMessage> duplicateSerializedFolder(Folder folder) throws ServiceException {
         ImapFolder i4folder = getCache(folder);
         if (i4folder == null) { // cache miss
             return null;
@@ -488,7 +488,11 @@ final class ImapSessionManager {
             return i4list;
         } catch (ServiceException e) {
             ZimbraLog.imap.info("  ** error caught during IMAP session cache consistency check; falling back to reload", e);
-            clearCache(folder);
+            try {
+                clearCache(folder);
+            } catch (ServiceException e1) {
+                ZimbraLog.imap.info("  ** error caught during IMAP session cache consistency check while trying to clear cache", e);
+            }
             return null;
         }
     }
@@ -583,8 +587,9 @@ final class ImapSessionManager {
 
     /**
      * Try to retrieve from inactive session cache, then fall back to active session cache.
+     * @throws ServiceException 
      */
-    private ImapFolder getCache(Folder folder) {
+    private ImapFolder getCache(Folder folder) throws ServiceException {
         ImapFolder i4folder = inactiveSessionCache.get(cacheKey(folder, false));
         if (i4folder != null) {
             return i4folder;
@@ -594,8 +599,9 @@ final class ImapSessionManager {
 
     /**
      * Remove cached values from both active session cache and inactive session cache.
+     * @throws ServiceException 
      */
-    private void clearCache(Folder folder) {
+    private void clearCache(Folder folder) throws ServiceException {
         activeSessionCache.remove(cacheKey(folder, true));
         inactiveSessionCache.remove(cacheKey(folder, false));
     }
@@ -619,7 +625,7 @@ final class ImapSessionManager {
         return session.hasExpunges() ? cachekey + "+" + session.getQualifiedSessionId() : cachekey;
     }
 
-    private String cacheKey(Folder folder, boolean active) {
+    private String cacheKey(Folder folder, boolean active) throws ServiceException {
         Mailbox mbox = folder.getMailbox();
         int modseq = folder instanceof SearchFolder ? mbox.getLastChangeID() : folder.getImapMODSEQ();
         long uvv = folder instanceof SearchFolder ? mbox.getLastChangeID() : ImapFolder.getUIDValidity(folder);

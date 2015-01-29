@@ -46,7 +46,7 @@ public class CalendarDataCacheMailboxListener {
                     Folder folder = (Folder) whatChanged;
                     MailItem.Type viewType = folder.getDefaultView();
                     if (viewType == MailItem.Type.APPOINTMENT || viewType == MailItem.Type.TASK) {
-                        keysToInvalidate.add(new CalendarDataCache.Key(folder.getMailbox().getAccountId(), folder.getId()));
+                        keysToInvalidate.add(new CalendarDataCache.Key(folder.getAccountId(), folder.getId()));
                     }
                 }
             }

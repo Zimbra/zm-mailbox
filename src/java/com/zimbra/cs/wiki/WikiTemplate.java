@@ -19,31 +19,31 @@ package com.zimbra.cs.wiki;
 import java.io.IOException;
 import java.text.DateFormat;
 import java.util.ArrayList;
-import java.util.Locale;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.StringTokenizer;
 
+import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.L10nUtil;
+import com.zimbra.common.util.L10nUtil.MsgKey;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Folder;
-import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.WikiItem;
 import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.doc.DocServiceException;
 import com.zimbra.cs.wiki.WikiPage.WikiContext;
-import com.zimbra.common.util.L10nUtil;
-import com.zimbra.common.util.L10nUtil.MsgKey;
 
 /**
  * Wikis are now obsolete but this class has been retained to aid migrating legacy data.
@@ -791,7 +791,7 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
         @Override public String apply(Context ctxt) throws ServiceException {
            if (ctxt.item instanceof Folder) {
                //notebook folder
-               return ctxt.item.getMailbox().getAccount().getName();
+               return ctxt.item.getAccount().getName();
            } else if (ctxt.item instanceof Document) {
                Document doc = (Document) ctxt.item.getMailbox().getItemRevision(ctxt.wctxt.octxt, ctxt.item.getId(), ctxt.item.getType(), 1);
                if (doc != null)
@@ -1128,7 +1128,7 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
                 String url = null;
                 if(type != null && type.equals(sVERSIONURL) && ctxt.latestVersionItem !=null) {
                     wurl = new WikiUrl(ctxt.latestVersionItem);
-                    url = wurl.getFullUrl(ctxt.wctxt, ctxt.latestVersionItem.getMailbox().getAccountId())+"?ver="+ctxt.item.getVersion();
+                    url = wurl.getFullUrl(ctxt.wctxt, ctxt.latestVersionItem.getAccountId())+"?ver="+ctxt.item.getVersion();
                 } else if (type != null && type.equals(sHISTORYURL)) {
                     if (ctxt.item instanceof Folder){
                         url = null;
@@ -1143,10 +1143,10 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
                         if (title == null){
                             title = sHISTORYURL;
                         }
-                        url = wurl.getFullUrl(ctxt.wctxt, ctxt.item.getMailbox().getAccountId())+"?view="+sHISTORYURL;
+                        url = wurl.getFullUrl(ctxt.wctxt, ctxt.item.getAccountId())+"?view="+sHISTORYURL;
                     }
                 } else {
-                    url = wurl.getFullUrl(ctxt.wctxt, ctxt.item.getMailbox().getAccountId());
+                    url = wurl.getFullUrl(ctxt.wctxt, ctxt.item.getAccountId());
 
                     if(ctxt.item.getType() == MailItem.Type.DOCUMENT) {
                         String contentType = ((Document)ctxt.item).getContentType();
@@ -1190,7 +1190,7 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
         public String getMessage (String key,  Context ctxt) {
             String mText = "";
             try {
-                Locale lc= ctxt.item.getMailbox().getAccount().getLocale();
+                Locale lc= ctxt.item.getAccount().getLocale();
                 MsgKey msgKey = MsgKey.valueOf(key);
                 if(msgKey != null) {
                     String msgText = L10nUtil.getMessage(msgKey, lc);
