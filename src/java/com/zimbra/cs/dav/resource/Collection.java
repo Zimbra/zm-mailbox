@@ -210,8 +210,19 @@ public class Collection extends MailItemResource {
         }
     }
 
+    protected String relativeUrlForChild(String user, String baseName)
+    throws DavException, ServiceException {
+        return new StringBuilder(getHref()).append('/').append(baseName).toString();
+    }
+
+    protected String fullUrlForChild(String user, String basename) throws DavException, ServiceException {
+        StringBuilder url = new StringBuilder();
+        url.append(DavServlet.getDavUrl(user)).append(mPath).append("/").append(basename);
+        return url.toString();
+    }
+
     protected DavResource createVCard(DavContext ctxt, String name) throws DavException, IOException {
-        return AddressObject.create(ctxt, name, this);
+        return AddressObject.create(ctxt, name, this, true);
     }
 
     @Override

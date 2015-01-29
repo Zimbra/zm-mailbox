@@ -191,8 +191,11 @@ public abstract class MailItemResource extends DavResource {
     protected Mailbox getMailbox(DavContext ctxt) throws ServiceException, DavException {
         Provisioning prov = Provisioning.getInstance();
         Account account = prov.get(AccountBy.id, mOwnerId);
-        if (account == null)
-            throw new DavException("no such account "+mOwnerId, HttpServletResponse.SC_NOT_FOUND, null);
+        if (account == null) {
+            // Anti-account name harvesting.
+            ZimbraLog.dav.info("Failing GET of mailbox for item resource - no such account '%s'", mOwnerId);
+            throw new DavException("Request denied", HttpServletResponse.SC_NOT_FOUND, null);
+        }
         return MailboxManager.getInstance().getMailboxByAccount(account);
     }
 

@@ -58,7 +58,6 @@ import com.zimbra.cs.dav.caldav.CalDavUtils;
 import com.zimbra.cs.dav.caldav.Range.TimeRange;
 import com.zimbra.cs.dav.property.CalDavProperty;
 import com.zimbra.cs.dav.property.ResourceProperty;
-import com.zimbra.cs.dav.service.DavServlet;
 import com.zimbra.cs.dav.service.method.Delete;
 import com.zimbra.cs.dav.service.method.Get;
 import com.zimbra.cs.fb.FreeBusy;
@@ -383,14 +382,16 @@ public class CalendarCollection extends Collection {
             String user = ctxt.getUser();
             Account account = prov.get(AccountBy.name, user);
             if (account == null) {
-                throw new DavException("no such account "+user, HttpServletResponse.SC_NOT_FOUND, null);
+                // Anti-account name harvesting.
+                ZimbraLog.dav.info("Failing POST to Calendar - no such account '%s'", user);
+                throw new DavException("Request denied", HttpServletResponse.SC_NOT_FOUND, null);
             }
 
             List<Invite> invites = uploadToInvites(ctxt, account);
             String uid = findEventUid(invites);
             rs =  createItemFromInvites(ctxt, account, uid + ".ics", invites, false);
             if (rs.isNewlyCreated()) {
-                ctxt.getResponse().setHeader("Location", rs.getUri());
+                ctxt.getResponse().setHeader("Location", rs.getHref());
                 ctxt.setStatus(HttpServletResponse.SC_CREATED);
             } else {
                 ctxt.setStatus(HttpServletResponse.SC_NO_CONTENT);
@@ -419,7 +420,9 @@ public class CalendarCollection extends Collection {
             String user = ctxt.getUser();
             Account account = prov.get(AccountBy.name, user);
             if (account == null) {
-                throw new DavException("no such account "+user, HttpServletResponse.SC_NOT_FOUND, null);
+                // Anti-account name harvesting.
+                ZimbraLog.dav.info("Failing POST to Calendar - no such account '%s'", user);
+                throw new DavException("Request denied", HttpServletResponse.SC_NOT_FOUND, null);
             }
 
             List<Invite> invites = uploadToInvites(ctxt, account);
@@ -497,13 +500,14 @@ public class CalendarCollection extends Collection {
                             // In another folder, ignore
                             origCalItem = null;
                         } else {
-                            // The item exists, but doesn't have this name.
-                            // issue a redirect to the URI we want it to be at.
+                            // The item exists, but doesn't have this name - UID conflict.
                             if (acceptableClientChosenBasename) {
                                 redirectUrl = hrefForCalendarItem(origCalItem, user, uid);
                             } else {
                                 redirectUrl = defaultUrlForCalendarItem(user, uid);
                             }
+                            throw new DavException.UidConflict(
+                                    "An item with the same UID already exists in the calendar", redirectUrl);
                         }
                     }
                     if ((origCalItem == null) && (!DebugConfig.enableDAVclientCanChooseResourceBaseName)) {
@@ -664,7 +668,7 @@ public class CalendarCollection extends Collection {
             davName = DavNames.get(this.mMailboxId, calItem.getId());
         }
         if (davName != null) {
-            preexistingHref = urlForCalendarItem(user, davName.davBaseName);
+            preexistingHref = fullUrlForChild(user, davName.davBaseName);
         } else {
             preexistingHref = defaultUrlForCalendarItem(user, uid);
         }
@@ -698,16 +702,9 @@ public class CalendarCollection extends Collection {
         return invites;
     }
 
-
-    private String urlForCalendarItem(String user, String basename) throws DavException, ServiceException {
-        StringBuilder url = new StringBuilder();
-        url.append(DavServlet.getDavUrl(user)).append(mPath).append("/").append(basename);
-        return url.toString();
-    }
-
     private String defaultUrlForCalendarItem(String user, String uid) throws DavException, ServiceException {
         StringBuilder basename = new StringBuilder(uid).append(CalendarObject.CAL_EXTENSION);
-        return urlForCalendarItem(user, basename.toString());
+        return fullUrlForChild(user, basename.toString());
     }
 
     /* Returns iCalalendar (RFC 2445) representation of freebusy report for specified time range. */

@@ -77,6 +77,12 @@ public class DavException extends Exception {
     }
 
     protected static class DavExceptionWithErrorMessage extends DavException {
+        protected DavExceptionWithErrorMessage(String msg, int status, Throwable cause) {
+            super(msg, status, cause);
+            mErrMsg = org.dom4j.DocumentHelper.createDocument();
+            mErrMsg.addElement(DavElements.E_ERROR);
+        }
+
         protected DavExceptionWithErrorMessage(String msg, int status) {
             super(msg, status);
             mErrMsg = org.dom4j.DocumentHelper.createDocument();
@@ -112,6 +118,10 @@ public class DavException extends Exception {
     }
 
     public static class InvalidData extends DavExceptionWithErrorMessage {
+        public InvalidData(QName prop, String msg, Throwable cause) {
+            super(msg, HttpServletResponse.SC_FORBIDDEN, cause);
+            setError(prop);
+        }
         public InvalidData(QName prop, String msg) {
             super(msg, HttpServletResponse.SC_FORBIDDEN);
             setError(prop);
@@ -122,6 +132,16 @@ public class DavException extends Exception {
         public UidConflict(String msg, String href) {
             super(msg, HttpServletResponse.SC_PRECONDITION_FAILED);
             Element errElem = org.dom4j.DocumentHelper.createElement(DavElements.E_NO_UID_CONFLICT);
+            Element hrefE= errElem.addElement(DavElements.E_HREF);
+            hrefE.setText(href);
+            setError(errElem);
+        }
+    }
+
+    public static class CardDavUidConflict extends DavExceptionWithErrorMessage {
+        public CardDavUidConflict(String msg, String href) {
+            super(msg, HttpServletResponse.SC_PRECONDITION_FAILED);
+            Element errElem = org.dom4j.DocumentHelper.createElement(DavElements.CardDav.E_NO_UID_CONFLICT);
             Element hrefE= errElem.addElement(DavElements.E_HREF);
             hrefE.setText(href);
             setError(errElem);

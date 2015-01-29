@@ -444,5 +444,6 @@ public class DavElements {
         public static final QName E_SUPPORTED_ADDRESS_DATA = QName.get(P_SUPPORTED_ADDRESS_DATA, CARDDAV_NS);
         public static final QName E_VALID_ADDRESS_DATA = QName.get(P_VALID_ADDRESS_DATA, CARDDAV_NS);
         public static final QName E_TEXT_MATCH = QName.get(P_TEXT_MATCH, CARDDAV_NS);
+        public static final QName E_NO_UID_CONFLICT = QName.get(P_NO_UID_CONFLICT, CARDDAV_NS);
     }
 }

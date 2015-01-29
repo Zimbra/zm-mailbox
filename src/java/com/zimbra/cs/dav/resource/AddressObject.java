@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletResponse;
@@ -34,6 +35,7 @@ import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.HttpUtil;
+import com.zimbra.common.util.UUIDUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
@@ -204,73 +206,187 @@ public class AddressObject extends MailItemResource {
         return VCard.formatContact(contact, attrs, true).getFormatted();
     }
 
-    public static DavResource create(DavContext ctxt, String name, Collection where) throws DavException, IOException {
+    public static boolean acceptableVCardContentType(String contentType, boolean nullIsOk) {
+        if (contentType == null) {
+            return nullIsOk;
+        }
+        return (contentType.startsWith(DavProtocol.VCARD_CONTENT_TYPE) ||
+                 contentType.startsWith(MimeConstants.CT_TEXT_VCARD_LEGACY) ||
+                 contentType.startsWith(MimeConstants.CT_TEXT_VCARD_LEGACY2));
+    }
+
+    public static VCard uploadToVCard(DavContext ctxt)
+    throws DavException, IOException {
         FileUploadServlet.Upload upload = ctxt.getUpload();
-        String buf = new String(ByteUtil.getContent(upload.getInputStream(), (int)upload.getSize()), MimeConstants.P_CHARSET_UTF8);
-        Mailbox mbox = null;
+        String contentType = upload.getContentType();
+        if (!acceptableVCardContentType(contentType, true)) {
+            throw new DavException.InvalidData(DavElements.CardDav.E_SUPPORTED_ADDRESS_DATA,
+                    String.format("Incorrect Content-Type '%s', expected '%s'",
+                            contentType, DavProtocol.VCARD_CONTENT_TYPE));
+        }
+        long uploadSize = upload.getSize();
+        if (uploadSize <= 0) {
+            throw new DavException.InvalidData(DavElements.CardDav.E_VALID_ADDRESS_DATA,"empty request");
+        }
+        List<VCard> vcards = null;
+        try (InputStream is = ctxt.getUpload().getInputStream()) {
+            String buf = new String(ByteUtil.getContent(is, (int)uploadSize), MimeConstants.P_CHARSET_UTF8);
+            vcards = VCard.parseVCard(buf);
+        } catch (ServiceException se) {
+            throw new DavException.InvalidData(DavElements.CardDav.E_VALID_ADDRESS_DATA,
+                    String.format("Problem parsing %s data - %s", DavProtocol.VCARD_CONTENT_TYPE, se.getMessage()));
+        }
+        if (vcards == null) {
+            throw new DavException.InvalidData(DavElements.CardDav.E_VALID_ADDRESS_DATA,
+                    String.format("Problem parsing %s data - no cards produced.", DavProtocol.VCARD_CONTENT_TYPE));
+        }
+        if (vcards.size() != 1) {
+            throw new DavException.InvalidData(DavElements.CardDav.E_VALID_ADDRESS_DATA,
+                    String.format("Problem parsing %s data - %d cards produced, only 1 allowed.",
+                            DavProtocol.VCARD_CONTENT_TYPE, vcards.size()));
+        }
+        VCard vcard = vcards.get(0);
+        if (vcard.uid == null) {
+            vcard.uid = UUIDUtil.generateUUID();
+        }
+        return vcard;
+    }
+
+    /**
+     * @param name Preferred DAV basename for the new item - including ".vcf".
+     * @param allowUpdate - PUTs are allowed to update a pre-existing item.  POSTs to the containing collection are not.
+     */
+    public static DavResource create(DavContext ctxt, String name, Collection where, boolean allowUpdate)
+    throws DavException, IOException {
+        VCard vcard = uploadToVCard(ctxt);
+        return create(ctxt, name, where, vcard, allowUpdate);
+    }
+
+    /**
+     * @param name Preferred DAV basename for the new item - including ".vcf".
+     * @param allowUpdate - PUTs are allowed to update a pre-existing item.  POSTs to the containing collection are not.
+     */
+    public static DavResource create(DavContext ctxt, String name, Collection where, VCard vcard, boolean allowUpdate)
+    throws DavException, IOException {
+        if (vcard.fields.isEmpty()) {
+            throw new DavException.InvalidData(DavElements.CardDav.E_VALID_ADDRESS_DATA,
+                    String.format("Problem parsing %s data - no fields found.", DavProtocol.VCARD_CONTENT_TYPE));
+        }
+        String baseName = HttpUtil.urlUnescape(name);
         DavResource res = null;
+        boolean useEtag = allowUpdate;
+        StringBuilder pathSB = new StringBuilder(where.getUri());
+        if (pathSB.charAt(pathSB.length() -1) != '/') {
+            pathSB.append('/');
+        }
+        pathSB.append(baseName);
+        String path = pathSB.toString();
         try {
-            String url = ctxt.getItem();
-            if (url.endsWith(AddressObject.VCARD_EXTENSION)) {
-                url = url.substring(0, url.length()-4);
-                url = HttpUtil.urlUnescape(url);
+            if (name.endsWith(AddressObject.VCARD_EXTENSION)) {
+                name = name.substring(0, name.length()-4);
+                name = HttpUtil.urlUnescape(name);
             }
-            mbox = where.getMailbox(ctxt);
-            for (VCard vcard : VCard.parseVCard(buf)) {
-                if (vcard.fields.isEmpty())
-                    continue;
-                vcard.fields.put(ContactConstants.A_vCardURL, url);
-                String uid = vcard.uid;
-                Account ownerAccount = Provisioning.getInstance().getAccountById(where.mOwnerId);
-                Contact c = null;
-                // check for existing contact
-                if (uid != null) {
-                    vcard.fields.put(ContactConstants.A_vCardUID, uid);
-                    res = UrlNamespace.getResourceAt(ctxt, ctxt.getUser(), ctxt.getPath());
-                }
-                if (res == null) {
-                    // Convert Apple contact group to Zimbra contact group.
-                    constructContactGroupFromAppleXProps(ctxt, ownerAccount, vcard, null, where.getId());
-                    c = mbox.createContact(ctxt.getOperationContext(), vcard.asParsedContact(), where.mId, null);
-                    res = new AddressObject(ctxt, c);
-                    res.mNewlyCreated = true;
+            Mailbox mbox = where.getMailbox(ctxt);
+            vcard.fields.put(ContactConstants.A_vCardURL, name);
+            String uid = vcard.uid;
+            Account ownerAccount = Provisioning.getInstance().getAccountById(where.mOwnerId);
+            Contact c = null;
+            // check for existing contact
+            if (uid != null) {
+                vcard.fields.put(ContactConstants.A_vCardUID, uid);
+                AddressObject ao = getAddressObjectByUID(ctxt, uid, ctxt.getTargetMailbox().getAccount(),
+                            ctxt.getTargetMailbox().getFolderById(ctxt.getOperationContext(), where.mId), baseName);
+                if (ao != null) {
+                    if (!allowUpdate) {
+                        throw new DavException.CardDavUidConflict(
+                                // "An item with the same UID already exists in the address book", ao.getUri());
+                                "An item with the same UID already exists in the address book",
+                                ao.getHref());
+                    }
+                    if (path.equals(ao.getUri())) {
+                        res = ao;
+                    } else {
+                        throw new DavException.CardDavUidConflict(
+                                // "An item with the same UID already exists in the address book", ao.getUri());
+                                "An item with the same UID already exists in the address book",
+                                ao.getHref());
+                    }
                 } else {
-                    String etag = ctxt.getRequest().getHeader(DavProtocol.HEADER_IF_MATCH);
-                    String itemEtag = res.getEtag();
-                    if (etag != null && !etag.equals(itemEtag)) {
-                        throw new DavException("item etag does not match", HttpServletResponse.SC_PRECONDITION_FAILED);
-                    }
-                    String ifnonematch = ctxt.getRequest().getHeader(DavProtocol.HEADER_IF_NONE_MATCH);
-                    if ((ifnonematch != null) && ifnonematch.equals("*")) {
-                        throw new DavException("item already exists", HttpServletResponse.SC_PRECONDITION_FAILED);
-                    }
-                    MailItemResource mir = (MailItemResource) res;
-                    constructContactGroupFromAppleXProps(ctxt, ownerAccount, vcard, (Contact) mir.getMailItem(ctxt), where.getId());
-                    vcard.merge((Contact) mir.getMailItem(ctxt));
-                    mbox.modifyContact(ctxt.getOperationContext(), mir.getId(), vcard.asParsedContact());
-                    res = UrlNamespace.getResourceAt(ctxt, ctxt.getUser(), ctxt.getPath());
+                    res = UrlNamespace.getResourceAt(ctxt, ctxt.getUser(), path);
                 }
+            }
+            if (res == null) {
+                // Convert Apple contact group to Zimbra contact group.
+                constructContactGroupFromAppleXProps(ctxt, ownerAccount, vcard, null, where.getId());
+                c = mbox.createContact(ctxt.getOperationContext(), vcard.asParsedContact(), where.mId, null);
+                res = new AddressObject(ctxt, c);
+                res.mNewlyCreated = true;
+            } else {
+                String etag = null;
+                if (useEtag) {
+                    etag = ctxt.getRequest().getHeader(DavProtocol.HEADER_IF_MATCH);
+                    useEtag = (etag != null);
+                }
+
+                String itemEtag = res.getEtag();
+                if (useEtag && (etag != null) && !etag.equals(itemEtag)) {
+                    throw new DavException("item etag does not match", HttpServletResponse.SC_PRECONDITION_FAILED);
+                }
+                String ifnonematch = ctxt.getRequest().getHeader(DavProtocol.HEADER_IF_NONE_MATCH);
+                if ((ifnonematch != null) && ifnonematch.equals("*")) {
+                    throw new DavException("item already exists", HttpServletResponse.SC_PRECONDITION_FAILED);
+                }
+                MailItemResource mir = (MailItemResource) res;
+                constructContactGroupFromAppleXProps(
+                        ctxt, ownerAccount, vcard, (Contact) mir.getMailItem(ctxt), where.getId());
+                vcard.merge((Contact) mir.getMailItem(ctxt));
+                mbox.modifyContact(ctxt.getOperationContext(), mir.getId(), vcard.asParsedContact());
+                res = UrlNamespace.getResourceAt(ctxt, ctxt.getUser(), path);
             }
         } catch (ServiceException e) {
+            ZimbraLog.dav.info("Problem parsing VCARD", e);
+            throw new DavException.InvalidData(DavElements.CardDav.E_VALID_ADDRESS_DATA,
+                    String.format("cannot parse vcard - %s", e.getMessage()), e);
+        }
+        if (res == null) {
             throw new DavException.InvalidData(DavElements.CardDav.E_VALID_ADDRESS_DATA, "cannot parse vcard");
         }
-        if (res == null)
-            throw new DavException.InvalidData(DavElements.CardDav.E_VALID_ADDRESS_DATA, "cannot parse vcard");
         return res;
     }
 
-    public static AddressObject getAddressObjectByUID(DavContext ctxt, String uid, Account account, Folder f) throws ServiceException {
-        Contact c = getContactByUID(ctxt, uid, account, (f != null) ? f.getId() : -1);
+    public static AddressObject getAddressObjectByUID(DavContext ctxt, String uid, Account account, Folder f)
+    throws ServiceException {
+        return getAddressObjectByUID(ctxt, uid, account, f, null /* preferredBaseName */);
+    }
+
+    /**
+     * @param preferredBaseName If more than one item matches the UID, prefer one matching this name - can be null
+     */
+    public static AddressObject getAddressObjectByUID(DavContext ctxt, String uid, Account account, Folder f,
+            String preferredBaseName)
+    throws ServiceException {
+        Contact c = getContactByUID(ctxt, uid, account, (f != null) ? f.getId() : -1, preferredBaseName);
         if (c == null)
             return null;
         return new AddressObject(ctxt, c);
     }
 
-    public static AddressObject getAddressObjectByUID(DavContext ctxt, String uid, Account account) throws ServiceException {
+    public static AddressObject getAddressObjectByUID(DavContext ctxt, String uid, Account account)
+    throws ServiceException {
         return getAddressObjectByUID(ctxt, uid, account, null);
     }
 
-    private static Contact getContactByUID(DavContext ctxt, String uid, Account account, int folderId) throws ServiceException {
+    private static Contact getContactByUID(DavContext ctxt, String uid, Account account, int folderId)
+    throws ServiceException {
+        return getContactByUID(ctxt, uid, account, folderId, null /* preferredBaseName */);
+    }
+
+    /**
+     * @param preferredBaseName If more than one item matches the UID, prefer one matching this name - can be null
+     */
+    private static Contact getContactByUID(DavContext ctxt, String uid, Account account, int folderId,
+            String preferredBaseName)
+    throws ServiceException {
         Contact item = null;
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
         if (uid.endsWith(AddressObject.VCARD_EXTENSION)) {
@@ -278,6 +394,7 @@ public class AddressObject extends MailItemResource {
             // Unescape the name (It was encoded in DavContext intentionally)
             uid = HttpUtil.urlUnescape(uid);
         }
+        // first check whether the UID is an encoding of the Contact ID
         int id = 0;
         int index = uid.indexOf(':');
         if (index > 0) {
@@ -303,17 +420,7 @@ public class AddressObject extends MailItemResource {
                 zqr = mbox.index.search(ctxt.getOperationContext(), query.toString(),
                         EnumSet.of(MailItem.Type.CONTACT), SortBy.NAME_ASC, 10);
                 // There could be multiple contacts with the same UID from different collections.
-                while (zqr.hasNext()) {
-                    ZimbraHit hit = zqr.getNext();
-                    if (hit instanceof ContactHit) {
-                        item = ((ContactHit)hit).getContact();
-                        if (folderId < 0)
-                            break;
-                        if (item.getFolderId() == folderId)
-                            break;
-                        item = null;
-                    }
-                }
+                item = getMatchingHit(zqr, folderId, preferredBaseName);
             } catch (Exception e) {
                 ZimbraLog.dav.error("can't search for: uid=%s", uid, e);
             } finally {
@@ -326,4 +433,48 @@ public class AddressObject extends MailItemResource {
 
         return item;
     }
+
+    /**
+     * There could be multiple contacts with the same UID from different collections.
+     * Due to an old CardDAV bug, it is also possible there may be more than one contact with the same UID in
+     * the same collection.  Using "preferredBaseName" ensures that CardDAV clients can still do an
+     * update in that case.
+     *
+     * @param zqr
+     * @param folderId
+     * @param preferredBaseName If more than one item matches, prefer one matching this name - can be null
+     *        Ignored if folderId < 0
+     * @return
+     * @throws ServiceException
+     */
+    private static Contact getMatchingHit(ZimbraQueryResults zqr, int folderId, String preferredBaseName)
+    throws ServiceException {
+        Contact item = null;
+        Contact firstMatchingItem = null;
+        while (zqr.hasNext()) {
+            ZimbraHit hit = zqr.getNext();
+            if (hit instanceof ContactHit) {
+                item = ((ContactHit)hit).getContact();
+                if (folderId < 0) {
+                    break;
+                }
+                if (item.getFolderId() == folderId) {
+                    if (firstMatchingItem == null) {
+                        firstMatchingItem = item;
+                    }
+                    if (preferredBaseName != null) {
+                        String contactBaseName = VCard.getUrl(item) + AddressObject.VCARD_EXTENSION;
+                        if (!preferredBaseName.equals(contactBaseName)) {
+                            item = null;
+                            continue;
+                        }
+                    }
+                    break;
+                }
+                item = null;
+            }
+        }
+        return item != null ? item : firstMatchingItem;
+    }
+
 }

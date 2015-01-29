@@ -266,9 +266,11 @@ public class UrlNamespace {
 
     /* Returns URL to the resource. */
     public static String getResourceUrl(DavResource rs) {
-        //return urlEscape(DavServlet.getDavUrl(user) + resourcePath);
         String str = HttpUtil.urlEscape(getRawResourceUrl(rs));
-        return str.replaceAll("//", "%2F");
+        // A lot of clients don't like naked "@" signs
+        // e.g. Mac Contacts created 2 contacts every time a new contact is created via rfc5995 POST
+        // if the response Location: header contained "@"
+        return str.replaceAll("//", "%2F").replaceAll("@", "%40");
     }
 
     public static String getPrincipalUrl(Account account) {
@@ -388,8 +390,11 @@ public class UrlNamespace {
     throws ServiceException, DavException {
         Provisioning prov = Provisioning.getInstance();
         Account account = prov.get(AccountBy.name, user);
-        if (account == null)
-            throw new DavException("no such account "+user, HttpServletResponse.SC_NOT_FOUND, null);
+        if (account == null) {
+            // Anti-account name harvesting.
+            ZimbraLog.dav.info("Failing GET of mail item resource - no such account '%s' path '%s'", user, path);
+            throw new DavException("Request denied", HttpServletResponse.SC_NOT_FOUND, null);
+        }
 
         if (ctxt.getUser().compareTo(user) != 0 || !Provisioning.onLocalServer(account)) {
             try {
@@ -504,8 +509,11 @@ public class UrlNamespace {
     private static java.util.Collection<DavResource> getFolders(DavContext ctxt, String user) throws ServiceException, DavException {
         Provisioning prov = Provisioning.getInstance();
         Account account = prov.get(AccountBy.name, user);
-        if (account == null)
-            throw new DavException("no such account "+user, HttpServletResponse.SC_NOT_FOUND, null);
+        if (account == null) {
+            // Anti-account name harvesting.
+            ZimbraLog.dav.info("Failing GET of folders - no such account '%s'", user);
+            throw new DavException("Request denied", HttpServletResponse.SC_NOT_FOUND, null);
+        }
 
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
         OperationContext octxt = ctxt.getOperationContext();
@@ -680,8 +688,11 @@ public class UrlNamespace {
     private static MailItem getMailItemById(DavContext ctxt, String user, int id) throws DavException, ServiceException {
         Provisioning prov = Provisioning.getInstance();
         Account account = prov.get(AccountBy.name, user);
-        if (account == null)
-            throw new DavException("no such account "+user, HttpServletResponse.SC_NOT_FOUND, null);
+        if (account == null) {
+            // Anti-account name harvesting.
+            ZimbraLog.dav.info("Failing GET of mail item - no such account '%s' id=%d", user, id);
+            throw new DavException("Request denied", HttpServletResponse.SC_NOT_FOUND, null);
+        }
 
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
         return mbox.getItemById(ctxt.getOperationContext(), id, MailItem.Type.UNKNOWN);
