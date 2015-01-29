@@ -46,16 +46,20 @@ public final class ContactAutoCompleteTest {
 
     @Before
     public void setUp() throws Exception {
-        MailboxTestUtil.clearData();
         MailboxTestUtil.initServer();
+        cleanup();
         Provisioning prov = Provisioning.getInstance();
         prov.createAccount("test@zimbra.com", "secret", new HashMap<String, Object>());
         Provisioning.setInstance(prov);
     }
 
+    private void cleanup () throws Exception {
+        MailboxTestUtil.clearData();
+    }
+    
     @After
     public void tearDown() throws Exception {
-        MailboxTestUtil.clearData();
+        cleanup();
     }
 
     @Test

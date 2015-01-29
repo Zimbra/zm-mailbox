@@ -50,16 +50,20 @@ public final class AddressBookTestTest {
     @Before
     public void setUp() throws Exception {
         MailboxTestUtil.initServer();
-        MailboxTestUtil.clearData();
+        cleanup();
         Provisioning prov = Provisioning.getInstance();
         prov.createAccount("test@zimbra.com", "secret", new HashMap<String, Object>());
     }
 
     @After
     public void tearDown() throws Exception {
-        MailboxTestUtil.clearData();
+        cleanup();
     }
 
+    private void cleanup () throws Exception {
+        MailboxTestUtil.clearData();
+    }
+    
     @Test
     public void filter() throws Exception {
         Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);

@@ -68,13 +68,18 @@ public final class DocumentTest {
 
     @Before
     public void setUp() throws Exception {
-        MailboxTestUtil.clearData();
+        cleanup();
     }
 
     @After
     public void tearDown() throws Exception {
+        cleanup();
+    }
+    
+    private void cleanup () throws Exception {
         MailboxTestUtil.clearData();
     }
+
 
     @Test
     public void create() throws Exception {

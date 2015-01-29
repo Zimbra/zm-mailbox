@@ -120,6 +120,7 @@ public final class MailboxIndex {
     }
 
     public static void shutdown() {
+        INDEX_EXECUTOR.shutdownNow();
         IndexStore.getFactory().destroy();
     }
 

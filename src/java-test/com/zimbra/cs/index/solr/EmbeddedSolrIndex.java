@@ -163,12 +163,16 @@ public class EmbeddedSolrIndex  extends SolrIndexBase {
         @Override
         public synchronized void destroy() {
             if (server != null) {
-                server.shutdown();
+                try {
+                    server.shutdown();
+                } catch (Exception e) {
+                    //can be ignored, since the test server may have not been properly initialized
+                    ZimbraLog.test.warn("Caught an exception trying to shutdown EmbeddedSolrServer instance", e);
+                }
                 try {
                     FileUtils.deleteDirectory(new File("../ZimbraServer/build/test/solr/" + TEST_CORE_NAME));
-                } catch (IOException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
+                } catch (Exception e) {
+                    ZimbraLog.test.warn("Caught an exception trying to delete solr data folders", e);
                 }
                 server = null;
             }
