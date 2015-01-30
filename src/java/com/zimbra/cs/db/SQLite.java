@@ -124,6 +124,11 @@ public final class SQLite extends Db {
     }
 
     @Override
+    public String bitANDNOT(String expr1, String expr2) {
+        return expr1 + " & ~" + expr2;
+    }
+
+    @Override
     PoolConfig getPoolConfig() {
         return new SQLiteConfig();
     }
