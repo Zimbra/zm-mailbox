@@ -38,7 +38,6 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ExceptionToString;
 import com.zimbra.common.util.L10nUtil;
-import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.accesscontrol.Right;
@@ -259,7 +258,6 @@ public abstract class Provisioning extends ZAttrProvisioning {
         if (singleton == null) {
             synchronized (Provisioning.class) {
                 if (singleton == null) {
-                    LogFactory.init();
                     if (cacheMode == null) {
                         cacheMode = CacheMode.DEFAULT;
                     }
