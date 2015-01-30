@@ -7093,9 +7093,11 @@ public class Mailbox {
      * @param itemIds item ids
      * @param type item type or {@link MailItem.Type#UNKNOWN}
      * @param tcon target constraint or {@code null}
+     * @param useEmptyForFolders empty folder {@code true} or {@code false}
+     * @param nonExistingItems object of {@link ArrayList} or {@code null}
      */
     private void delete(OperationContext octxt, int[] itemIds, MailItem.Type type, TargetConstraint tcon,
-            boolean useEmptyForFolders)
+            boolean useEmptyForFolders, List<Integer> nonExistingItems)
     throws ServiceException {
         DeleteItem redoRecorder = new DeleteItem(mId, itemIds, type, tcon);
 
@@ -7113,6 +7115,9 @@ public class Mailbox {
                 try {
                     item = getItemById(id, MailItem.Type.UNKNOWN);
                 } catch (NoSuchItemException nsie) {
+                    if (nonExistingItems != null) {
+                        nonExistingItems.add(id);
+                    }
                     // trying to delete nonexistent things is A-OK!
                     continue;
                 }
@@ -7157,7 +7162,22 @@ public class Mailbox {
      */
     public void delete(OperationContext octxt, int[] itemIds, MailItem.Type type, TargetConstraint tcon)
     throws ServiceException {
-        delete(octxt, itemIds, type, tcon, true /* useEmptyForFolders */);
+        delete(octxt, itemIds, type, tcon, true /* useEmptyForFolders */, null);
+    }
+
+    /**
+     * Delete the <tt>MailItem</tt>s with the given ids.  If there is no <tt>MailItem</tt> for a given id, that id is
+     * ignored.  If the id maps to an existing <tt>MailItem</tt> of an incompatible type, however, an error is thrown.
+     *
+     * @param octxt operation context or {@code null}
+     * @param itemIds item ids
+     * @param type item type or {@link MailItem.Type#UNKNOWN}
+     * @param tcon target constraint or {@code null}
+     * @param nonExistingItems object of {@link ArrayList} or {@code null}
+     */
+    public void delete(OperationContext octxt, int[] itemIds, MailItem.Type type, TargetConstraint tcon, List<Integer> nonExistingItems)
+    throws ServiceException {
+        delete(octxt, itemIds, type, tcon, true /* useEmptyForFolders */, nonExistingItems);
     }
 
     TypedIdList collectPendingTombstones() {
@@ -8230,7 +8250,7 @@ public class Mailbox {
                     if (!folderIds.isEmpty()) {
                         lock.lock();
                         try {
-                            delete(octxt, ArrayUtil.toIntArray(folderIds), MailItem.Type.FOLDER, tcon, false /* don't useEmptyForFolders */);
+                            delete(octxt, ArrayUtil.toIntArray(folderIds), MailItem.Type.FOLDER, tcon, false /* don't useEmptyForFolders */, null);
                         } finally {
                             lock.release();
                         }

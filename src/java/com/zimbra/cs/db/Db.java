@@ -277,6 +277,11 @@ public abstract class Db {
      */
     public abstract String bitAND(String expr1, String expr2);
 
+    /**
+     * Generates a bitwise first value AND NOT second values.
+     */
+    public abstract String bitANDNOT(String expr1, String expr2);
+
     @SuppressWarnings("unused")
     public void enableStreaming(Statement stmt) throws SQLException {}
 
