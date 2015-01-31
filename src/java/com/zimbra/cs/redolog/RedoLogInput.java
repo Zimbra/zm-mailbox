@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2006, 2007, 2009, 2010, 2011, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -18,11 +18,13 @@ package com.zimbra.cs.redolog;
 
 import java.io.DataInput;
 import java.io.DataInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
 
 import com.zimbra.common.util.ByteUtil;
+import com.zimbra.cs.redolog.op.RedoableOpData;
 
 /**
  * This class is equivalent to java.io.DataInputStream except that readUTF()
@@ -30,8 +32,7 @@ import com.zimbra.common.util.ByteUtil;
  * format. (thus incompatible with DataInputStream)  This class is not derived
  * from DataInputStream and does not implement DataInput interface, to prevent
  * using either of those in redo log operation classes.
- * 
- * @author jhahm
+ *
  */
 public class RedoLogInput {
     private DataInput mIN;
@@ -48,7 +49,7 @@ public class RedoLogInput {
 
     /**
      * Returns the path to the redo log file, or <tt>null</tt> if this object
-     * reads from an <tt>InputStream</tt>. 
+     * reads from an <tt>InputStream</tt>.
      */
     public String getPath() {
         return mPath;
@@ -94,6 +95,27 @@ public class RedoLogInput {
             v[i] = readUTF();
         }
         return v;
+    }
+
+    public RedoableOpData readOpData(int length) throws IOException {
+        RedoableOpData opData = null;
+        if (getPath() != null) {
+            opData = new RedoableOpData(new File(getPath()), getFilePointer(), length);
+            // Now that we have a stream to the data, skip to the next op.
+            long pos = getFilePointer();
+            int numSkipped = skipBytes(length);
+            if (numSkipped != length) {
+                String msg = String.format("Attempted to skip %d bytes at position %d in %s, but actually skipped %d.",
+                        length, pos, getPath(), numSkipped);
+                throw new IOException(msg);
+            }
+        } else {
+            //TODO: optimize this; buffering isn't ideal
+            byte[] content = new byte[length];
+            readFully(content);
+            opData = new RedoableOpData(content);
+        }
+        return opData;
     }
 
     // methods of DataInput that shouldn't be used in redo logging

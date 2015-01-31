@@ -26,49 +26,80 @@ import org.apache.commons.httpclient.methods.InputStreamRequestEntity;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.http.HttpStatus;
 
+import com.zimbra.common.util.ZimbraHttpConnectionManager;
+import com.zimbra.cs.redolog.RedoLogInput;
+import com.zimbra.cs.redolog.RedoLogManager;
+import com.zimbra.cs.redolog.TransactionId;
 import com.zimbra.cs.redolog.op.RedoableOp;
 
-public class HttpLogWriter implements LogWriter {
+public class HttpLogWriter extends AbstractLogWriter implements LogWriter {
+
+    public HttpLogWriter(RedoLogManager redoLogMgr) {
+        super(redoLogMgr, new CommitNotifyQueue(100));
+    }
+
+    //TODO: config
+    private String URL = "http://localhost:8080/redolog";
 
     @Override
     public void open() throws IOException {
-        //create db connection and populate initial vars
     }
 
     @Override
     public void close() throws IOException {
-        //close db connection
+    }
+
+    private TransactionId deserializeTxnId(PostMethod post) throws IOException {
+        RedoLogInput in = new RedoLogInput(post.getResponseBodyAsStream());
+        TransactionId txnId = new TransactionId();
+        txnId.deserialize(in);
+        return txnId;
     }
 
     @Override
-    public void log(RedoableOp op, InputStream data, boolean synchronous)
-            throws IOException {
-        //TODO: if synchronous...
-
-        HttpClient client = new HttpClient();
-        //TODO: dynamic host/port...
-        PostMethod post = new PostMethod("http://localhost:8080/redolog");
-        post.setRequestEntity(new InputStreamRequestEntity(data));
-        int code = client.executeMethod(post);
-        if (code != HttpStatus.SC_OK) {
-            throw new IOException("non-OK response from redolog servlet [" + code + "] message:[" + post.getResponseBodyAsString() + "]");
+    public void log(final RedoableOp op, final InputStream data, boolean synchronous) throws IOException {
+        HttpClient client = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
+        PostMethod post = new PostMethod(URL);
+        try {
+            post.setRequestEntity(new InputStreamRequestEntity(data));
+            int code = client.executeMethod(post);
+            if (code != HttpStatus.SC_OK) {
+                throw new IOException("unexpected response from redolog servlet [" + code + "] message:[" + post.getResponseBodyAsString() + "]");
+            }
+            if (!op.getTransactionId().isInitialized()) {
+                op.setTransactionId(deserializeTxnId(post));
+            } else {
+                assert(op.getTransactionId().equals(deserializeTxnId(post)));
+            }
+        } finally {
+            post.releaseConnection();
         }
+        notifyCallback(op);
+    }
+
+    @Override
+    protected void notifyCallback(RedoableOp op) throws IOException {
+        super.notifyCallback(op);
+        getCommitNotifyQueue().flush(); //immediate flush since we're not waiting for filesystem sync on this end
     }
 
     @Override
     public void flush() throws IOException {
         //maybe do nothing; maybe add buffering...
+        //relevant?
     }
 
     @Override
     public long getSize() {
         //size since rollover
+        //relevant?
         return 0;
     }
 
     @Override
     public long getCreateTime() {
         //timestamp of start or last rollover (first op?)
+        //relevant
         return 0;
     }
 
@@ -98,7 +129,7 @@ public class HttpLogWriter implements LogWriter {
 
     @Override
     public void rollover(LinkedHashMap activeOps) throws IOException {
-        //add a rollover mark, reset counters, perhaps increment sequence (or does that happen externally)
+        //could fire a rollover; but does it make sense?...let redo server handle it
     }
 
     @Override

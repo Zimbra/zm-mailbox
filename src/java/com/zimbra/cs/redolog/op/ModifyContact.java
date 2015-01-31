@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2009, 2010, 2011, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -20,7 +20,6 @@
  */
 package com.zimbra.cs.redolog.op;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
@@ -39,7 +38,7 @@ public class ModifyContact extends RedoableOp {
 
     private int mId;
     private Map<String, String> mFields;
-    
+
     /** Used when this op is created from a <tt>ParsedContact</tt>. */
     private ParsedContact mParsedContact;
 
@@ -90,7 +89,9 @@ public class ModifyContact extends RedoableOp {
         }
         if (getVersion().atLeast(1, 14)) {
             out.writeShort((short) -1);
-            out.writeInt((int) mParsedContact.getSize());
+            int size = mParsedContact != null ? (int) mParsedContact.getSize() :
+                mRedoLogContent != null ? mRedoLogContent.getLength() : 0;
+            out.writeInt(size);
         }
     }
 
@@ -105,7 +106,7 @@ public class ModifyContact extends RedoableOp {
         }
         return null;
     }
-    
+
     @Override
     protected void deserializeData(RedoLogInput in) throws IOException {
         mId = in.readInt();
@@ -124,16 +125,7 @@ public class ModifyContact extends RedoableOp {
             in.readShort();
             int length = in.readInt();
             if (length > 0) {
-                mRedoLogContent = new RedoableOpData(new File(in.getPath()), in.getFilePointer(), length);
-
-                // Now that we have a stream to the data, skip to the next op.
-                long pos = in.getFilePointer();
-                int numSkipped = in.skipBytes(length);
-                if (numSkipped != length) {
-                    String msg = String.format("Attempted to skip %d bytes at position %d in %s, but actually skipped %d.",
-                            length, pos, in.getPath(), numSkipped);
-                    throw new IOException(msg);
-                }
+                mRedoLogContent = in.readOpData(length);
             }
         }
     }
@@ -141,7 +133,7 @@ public class ModifyContact extends RedoableOp {
     @Override
     public void redo() throws ServiceException {
         Mailbox mailbox = MailboxManager.getInstance().getMailboxById(getMailboxId());
-        
+
         InputStream in = null;
         try {
             in = getAdditionalDataStream();

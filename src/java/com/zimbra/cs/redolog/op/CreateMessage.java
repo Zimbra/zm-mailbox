@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -135,7 +135,8 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
         }
     }
 
-    @Override public synchronized void commit() {
+    @Override
+    public synchronized void commit() throws ServiceException {
         // Override commit() and abort().  Null out mData (reference to message
         // body byte array) after calling superclass' commit/abort.
         // Indexer keeps many IndexItem redo objects in memory because of batch
@@ -156,7 +157,8 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
         }
     }
 
-    @Override public synchronized void abort() {
+    @Override
+    public synchronized void abort() throws ServiceException {
         // see comments in commit()
         try {
             super.abort();
@@ -448,16 +450,7 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
                 in.readFully(data, 0, dataLength);
                 mData = new RedoableOpData(data);
             } else {
-                long pos = in.getFilePointer();
-                mData = new RedoableOpData(new File(in.getPath()), pos, dataLength);
-
-                // Now that we have a stream to the data, skip to the next op.
-                int numSkipped = in.skipBytes(dataLength);
-                if (numSkipped != dataLength) {
-                    String msg = String.format("Attempted to skip %d bytes at position %d in %s, but actually skipped %d.",
-                            dataLength, pos, in.getPath(), numSkipped);
-                    throw new IOException(msg);
-                }
+                mData = in.readOpData(dataLength);
             }
 
             // Blob data must be the last thing deserialized.  See comments in

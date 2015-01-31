@@ -32,6 +32,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
 
 import com.zimbra.common.localconfig.DebugConfig;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
@@ -131,13 +132,13 @@ public abstract class AbstractRedoLogManager implements RedoLogManager {
     protected abstract void initRedoLog() throws IOException;
 
     @Override
-    public synchronized void start() {
+    public synchronized void start() throws ServiceException {
         mEnabled = true;
 
         try {
             initRedoLog();
         } catch (IOException e) {
-            signalFatalError(e);
+            signalLogError(e);
         }
 
         setInCrashRecovery(true);
@@ -148,7 +149,7 @@ public abstract class AbstractRedoLogManager implements RedoLogManager {
             mRolloverMgr.crashRecovery();
         } catch (IOException e) {
             ZimbraLog.redolog.fatal("Exception during crash recovery");
-            signalFatalError(e);
+            signalLogError(e);
         }
 
         long fsyncInterval = RedoConfig.redoLogFsyncIntervalMS();
@@ -176,7 +177,7 @@ public abstract class AbstractRedoLogManager implements RedoLogManager {
                 mLogWriter.close();
             } catch (Exception e) {
                 ZimbraLog.redolog.fatal("Exception during crash recovery");
-                signalFatalError(e);
+                signalLogError(e);
             }
             ZimbraLog.redolog.info("Finished pre-startup crash recovery");
             mRecoveryMode = false;
@@ -191,7 +192,7 @@ public abstract class AbstractRedoLogManager implements RedoLogManager {
             mInitialLogSize = mLogWriter.getSize();
         } catch (IOException e) {
             ZimbraLog.redolog.fatal("Unable to open redo log");
-            signalFatalError(e);
+            signalLogError(e);
         }
 
         if (numRecoveredOps > 0) {
@@ -263,7 +264,7 @@ public abstract class AbstractRedoLogManager implements RedoLogManager {
     }
 
     @Override
-    public void log(RedoableOp op, boolean synchronous) {
+    public void log(RedoableOp op, boolean synchronous) throws ServiceException {
         if (!mEnabled || mRecoveryMode)
             return;
 
@@ -274,7 +275,7 @@ public abstract class AbstractRedoLogManager implements RedoLogManager {
     }
 
     @Override
-    public void commit(RedoableOp op) {
+    public void commit(RedoableOp op) throws ServiceException {
         if (mEnabled) {
             long redoSeq = mRolloverMgr.getCurrentSequence();
             CommitTxn commit = new CommitTxn(op);
@@ -287,7 +288,7 @@ public abstract class AbstractRedoLogManager implements RedoLogManager {
     }
 
     @Override
-    public void abort(RedoableOp op) {
+    public void abort(RedoableOp op) throws ServiceException {
         if (mEnabled) {
             AbortTxn abort = new AbortTxn(op);
             // Abort records are written with fsync, to prevent triggering
@@ -308,9 +309,10 @@ public abstract class AbstractRedoLogManager implements RedoLogManager {
      * bother with checkpoint, rollover, etc.
      * @param op
      * @param synchronous
+     * @throws ServiceException
      */
     @Override
-    public void logOnly(RedoableOp op, boolean synchronous) {
+    public void logOnly(RedoableOp op, boolean synchronous) throws ServiceException {
         try {
             // Do the logging while holding a read lock on the RW lock.
             // This prevents checkpoint or rollover from starting when
@@ -369,12 +371,12 @@ public abstract class AbstractRedoLogManager implements RedoLogManager {
                     // you're hitting the second bug.
                     //
 
-                    signalFatalError(e);
+                    signalLogError(e);
                 } catch (OutOfMemoryError e) {
                     Zimbra.halt("out of memory", e);
                 } catch (Throwable e) {
                     ZimbraLog.redolog.error("Redo logging to logger " + mLogWriter.getClass().getName() + " failed", e);
-                    signalFatalError(e);
+                    signalLogError(e);
                 }
 
                 if (ZimbraLog.redolog.isDebugEnabled())
@@ -394,8 +396,9 @@ public abstract class AbstractRedoLogManager implements RedoLogManager {
 
     /**
      * Should be called with write lock on mRWLock held.
+     * @throws ServiceException
      */
-    private void checkpoint() {
+    private void checkpoint() throws ServiceException {
         LinkedHashSet<TransactionId> txns = null;
         synchronized (mActiveOps) {
             if (mActiveOps.size() == 0)
@@ -421,7 +424,7 @@ public abstract class AbstractRedoLogManager implements RedoLogManager {
      * @param immediate
      * @return
      */
-    protected boolean isRolloverNeeded(boolean immediate) {
+    protected boolean isRolloverNeeded(boolean immediate) throws ServiceException {
         boolean result = false;
         try {
             if (immediate) {
@@ -441,7 +444,7 @@ public abstract class AbstractRedoLogManager implements RedoLogManager {
             }
         } catch (IOException e) {
             ZimbraLog.redolog.fatal("Unable to get redo log size");
-            signalFatalError(e);
+            signalLogError(e);
         }
         return result;
     }
@@ -459,8 +462,9 @@ public abstract class AbstractRedoLogManager implements RedoLogManager {
      * @param force
      * @param skipCheckpoint if true, skips writing Checkpoint entry at end of file
      * @return java.io.File object for rolled over file; null if no rollover occurred
+     * @throws ServiceException
      */
-    protected void rollover(boolean force, boolean skipCheckpoint) {
+    protected void rollover(boolean force, boolean skipCheckpoint) throws ServiceException {
         if (!mEnabled)
             return;
 
@@ -500,7 +504,7 @@ public abstract class AbstractRedoLogManager implements RedoLogManager {
             }
         } catch (IOException e) {
             ZimbraLog.redolog.error("IOException during redo log rollover");
-            signalFatalError(e);
+            signalLogError(e);
         } finally {
             writeLock.unlock();
         }
@@ -514,12 +518,12 @@ public abstract class AbstractRedoLogManager implements RedoLogManager {
     }
 
     @Override
-    public void forceRollover() {
+    public void forceRollover() throws ServiceException {
         forceRollover(false);
     }
 
     @Override
-    public void forceRollover(boolean skipCheckpoint) {
+    public void forceRollover(boolean skipCheckpoint) throws ServiceException {
         rollover(true, skipCheckpoint);
     }
 
@@ -570,7 +574,7 @@ public abstract class AbstractRedoLogManager implements RedoLogManager {
         exclusiveLock.unlock();
     }
 
-    protected void signalFatalError(Throwable e) {
+    protected void signalLogError(Throwable e) throws ServiceException {
         // Die before any further damage is done.
         if (DebugConfig.redologHaltOnFatal) {
             Zimbra.halt("Aborting process", e);
@@ -636,7 +640,13 @@ public abstract class AbstractRedoLogManager implements RedoLogManager {
                     // txn ID.  We must therefore tell the redolog the currnt
                     // op is canceled, to avoid redoing it during next startup.
                     AbortTxn abort = new AbortTxn(op);
-                    logOnly(abort, true);
+                    try {
+                        logOnly(abort, true);
+                    } catch (ServiceException e) {
+                        ZimbraLog.redolog.error("Abort failed for [" + op + "]." +
+                                "  Backend state of affected item is indeterminate." +
+                                "  moving on.", e);
+                    }
                 }
             }
 

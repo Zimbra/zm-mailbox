@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Set;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Pair;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.redolog.logger.LogWriter;
@@ -15,8 +16,9 @@ public interface RedoLogManager {
 
     /**
      * Start the log manager
+     * @throws ServiceException
      */
-    public abstract void start();
+    public abstract void start() throws ServiceException;
 
     /**
      * Stop the log manager
@@ -32,20 +34,23 @@ public interface RedoLogManager {
      * Log an operation
      * @param op
      * @param synchronous
+     * @throws ServiceException
      */
-    public abstract void log(RedoableOp op, boolean synchronous);
+    public abstract void log(RedoableOp op, boolean synchronous) throws ServiceException;
 
     /**
      * Logs the COMMIT record for an operation.
      * @param op
+     * @throws ServiceException
      */
-    public abstract void commit(RedoableOp op);
+    public abstract void commit(RedoableOp op) throws ServiceException;
 
     /**
      * Logs the ABORT record for an operation
      * @param op
+     * @throws ServiceException
      */
-    public abstract void abort(RedoableOp op);
+    public abstract void abort(RedoableOp op) throws ServiceException;
 
     /**
      * Flush the log buffer (if applicable)
@@ -55,22 +60,25 @@ public interface RedoLogManager {
 
     /**
      * Rollover the log immediately
+     * @throws ServiceException
      */
-    public abstract void forceRollover();
+    public abstract void forceRollover() throws ServiceException;
 
     /**
      * Rollover the log immediately
      * @param skipCheckpoint
+     * @throws ServiceException
      */
-    public abstract void forceRollover(boolean skipCheckpoint);
+    public abstract void forceRollover(boolean skipCheckpoint) throws ServiceException;
 
     /**
      * Log an operation to the logger.  Only does logging; doesn't
      * bother with checkpoint, rollover, etc.
      * @param op
      * @param synchronous
+     * @throws ServiceException
      */
-    public abstract void logOnly(RedoableOp op, boolean synchronous);
+    public abstract void logOnly(RedoableOp op, boolean synchronous) throws ServiceException;
 
     /**
      * Get the current RolloverManager

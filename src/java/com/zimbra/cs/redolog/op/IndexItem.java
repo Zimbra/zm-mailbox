@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -19,6 +19,7 @@ package com.zimbra.cs.redolog.op;
 import java.io.IOException;
 import java.util.List;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.index.IndexDocument;
 import com.zimbra.cs.mailbox.MailItem;
@@ -145,7 +146,7 @@ public class IndexItem extends RedoableOp {
         return mCommitAllowed;
     }
 
-    public synchronized void allowCommit() {
+    public synchronized void allowCommit() throws ServiceException {
         mCommitAllowed = true;
         if (mAttachedToParent) {
             commit();
@@ -158,7 +159,8 @@ public class IndexItem extends RedoableOp {
      * commit/abort has been called already and ignore the subsequent
      * calls.
      */
-    @Override public synchronized void commit() {
+    @Override
+    public synchronized void commit() throws ServiceException {
         if (ZimbraLog.index.isDebugEnabled())
             ZimbraLog.index.debug(this.toString()+" committed");
 
@@ -173,7 +175,8 @@ public class IndexItem extends RedoableOp {
         }
     }
 
-    @Override public synchronized void abort() {
+    @Override
+    public synchronized void abort() throws ServiceException {
         if (!mCommitAbortDone) {
             super.abort();
             mCommitAbortDone = true;
@@ -190,7 +193,7 @@ public class IndexItem extends RedoableOp {
         mParentOp = op;
     }
 
-    public synchronized void attachToParent() {
+    public synchronized void attachToParent() throws ServiceException {
         if (!mCommitAllowed && !mAttachedToParent) {
             mAttachedToParent = true;
             if (mParentOp != null)

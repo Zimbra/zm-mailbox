@@ -14,13 +14,6 @@
  * If not, see <http://www.gnu.org/licenses/>.
  * ***** END LICENSE BLOCK *****
  */
-
-/*
- * Created on 2004. 11. 12.
- *
- * TODO To change the template for this generated file go to
- * Window - Preferences - Java - Code Generation - Code and Comments
- */
 package com.zimbra.cs.redolog.logger;
 
 import java.io.File;
@@ -37,86 +30,73 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.redolog.CommitId;
 import com.zimbra.cs.redolog.FileRedoLogManager;
 import com.zimbra.cs.redolog.FileRolloverManager;
-import com.zimbra.cs.redolog.RedoCommitCallback;
 import com.zimbra.cs.redolog.RedoConfig;
-import com.zimbra.cs.redolog.op.CommitTxn;
 import com.zimbra.cs.redolog.op.RedoableOp;
 import com.zimbra.cs.util.Zimbra;
 
-/**
- * @author jhahm
- *
- * TODO To change the template for this generated type comment go to
- * Window - Preferences - Java - Code Generation - Code and Comments
- */
-public class FileLogWriter implements LogWriter {
+public class FileLogWriter extends AbstractLogWriter implements LogWriter {
 
-    private static String sServerId;
+    private static String SERVER_ID;
     static {
         try {
-            sServerId = Provisioning.getInstance().getLocalServer().getId();
+            SERVER_ID = Provisioning.getInstance().getLocalServer().getId();
         } catch (ServiceException e) {
             ZimbraLog.redolog.error("Unable to get local server ID", e);
-            sServerId = "unknown";
+            SERVER_ID = "unknown";
         }
     }
 
-    protected FileRedoLogManager mRedoLogMgr;
-
     // Synchronizes access to mRAF, mFileSize, mLogSeq, mFsyncSeq, mLogCount, and mFsyncCount.
-    private final Object mLock = new Object();
+    private final Object lock = new Object();
 
     // wait/notify between logger threads and fsync thread
-    private final Object mFsyncCond = new Object();
+    private final Object fsyncCond = new Object();
 
-    private FileHeader mHeader;
-    private long mFirstOpTstamp;
-    private long mLastOpTstamp;
-    private long mCreateTime;
+    private FileHeader header;
+    private long firstOpTstamp;
+    private long lastOpTstamp;
+    private long createTime;
 
-    private File mFile;
-    private RandomAccessFile mRAF;
-    private long mFileSize;
-    private long mLastLogTime;
+    private File file;
+    private RandomAccessFile raf;
+    private long fileSize;
+    private long lastLogTime;
 
-    private long mFsyncIntervalMS;          // how many milliseconds fsync thread sleeps after each fync
-    private boolean mFsyncDisabled;
+    private long fsyncIntervalMS;          // how many milliseconds fsync thread sleeps after each fync
+    private boolean fsyncDisabled;
 
-    private FsyncThread mFsyncer;   // fsync thread
+    private FsyncThread fsyncer;   // fsync thread
 
-    private int mLogSeq;            // last item logged
-    private int mFsyncSeq;          // last item fsynced
+    private int logSeq;            // last item logged
+    private int fsyncSeq;          // last item fsynced
 
     // for gathering some stats; nonessential for functionality
-    private int mLogCount;          // how many times log was called
-    private int mFsyncCount;        // how many times fsync was called
-
-    private CommitNotifyQueue mCommitNotifyQueue;
+    private int logCount;          // how many times log was called
+    private int fsyncCount;        // how many times fsync was called
 
     public FileLogWriter(FileRedoLogManager redoLogMgr,
                          File logfile,
                          long fsyncIntervalMS) {
-        mRedoLogMgr = redoLogMgr;
+        super(redoLogMgr);
+        this.redoLogMgr = redoLogMgr;
 
-        mHeader = new FileHeader(sServerId);
-        mFile = logfile;
-        mFileSize = mFile.length();
-        mLastLogTime = mFile.lastModified();
+        this.header = new FileHeader(SERVER_ID);
+        this.file = logfile;
+        this.fileSize = file.length();
+        this.lastLogTime = file.lastModified();
 
-        mFsyncIntervalMS = fsyncIntervalMS;
-        mFsyncDisabled = DebugConfig.disableRedoLogFsync;
+        this.fsyncIntervalMS = fsyncIntervalMS;
+        this.fsyncDisabled = DebugConfig.disableRedoLogFsync;
 
-        mFsyncCount = mLogCount = 0;
-
-        mCommitNotifyQueue = new CommitNotifyQueue(100);
+        this.fsyncCount = logCount = 0;
+        setCommitNotifyQueue(new FileCommitNotifyQueue(100));
     }
 
     @Override public long getSequence() {
-        synchronized (mLock) {
-            return mHeader.getSequence();
+        synchronized (lock) {
+            return header.getSequence();
         }
     }
 
@@ -124,8 +104,8 @@ public class FileLogWriter implements LogWriter {
      * @see com.zimbra.cs.redolog.LogWriter#getSize()
      */
     @Override public long getSize() {
-        synchronized (mLock) {
-            return mFileSize;
+        synchronized (lock) {
+            return fileSize;
         }
     }
 
@@ -133,8 +113,8 @@ public class FileLogWriter implements LogWriter {
      * @see com.zimbra.cs.redolog.logger.LogWriter#getCreateTime()
      */
     @Override public long getCreateTime() {
-        synchronized (mLock) {
-            return mCreateTime;
+        synchronized (lock) {
+            return createTime;
         }
     }
 
@@ -142,8 +122,8 @@ public class FileLogWriter implements LogWriter {
      * @see com.zimbra.cs.redolog.logger.LogWriter#getLastLogTime()
      */
     @Override public long getLastLogTime() {
-        synchronized (mLock) {
-        	return mLastLogTime;
+        synchronized (lock) {
+        	return lastLogTime;
         }
     }
 
@@ -158,51 +138,51 @@ public class FileLogWriter implements LogWriter {
      * @see com.zimbra.cs.redolog.logger.LogWriter#exists()
      */
     @Override public boolean exists() {
-        return mFile.exists();
+        return file.exists();
     }
 
     /* (non-Javadoc)
      * @see com.zimbra.cs.redolog.logger.LogWriter#delete()
      */
     @Override public boolean delete() {
-        return mFile.delete();
+        return file.delete();
     }
 
     /* (non-Javadoc)
      * @see com.zimbra.cs.redolog.LogWriter#open()
      */
     @Override public synchronized void open() throws IOException {
-        synchronized (mLock) {
-            if (mRAF != null) return;  // already open
+        synchronized (lock) {
+            if (raf != null) return;  // already open
 
-            mRAF = new RandomAccessFile(mFile, "rw");
+            raf = new RandomAccessFile(file, "rw");
 
-            if (mRAF.length() >= FileHeader.HEADER_LEN) {
-                mHeader.read(mRAF);
-                mCreateTime = mHeader.getCreateTime();
-                if (mCreateTime == 0) {
-                    mCreateTime = System.currentTimeMillis();
-                    mHeader.setCreateTime(mCreateTime);
+            if (raf.length() >= FileHeader.HEADER_LEN) {
+                header.read(raf);
+                createTime = header.getCreateTime();
+                if (createTime == 0) {
+                    createTime = System.currentTimeMillis();
+                    header.setCreateTime(createTime);
                 }
-                mFirstOpTstamp = mHeader.getFirstOpTstamp();
-                mLastOpTstamp = mHeader.getLastOpTstamp();
+                firstOpTstamp = header.getFirstOpTstamp();
+                lastOpTstamp = header.getLastOpTstamp();
             } else {
-                mCreateTime = System.currentTimeMillis();
-                mHeader.setCreateTime(mCreateTime);
-                mHeader.setSequence(mRedoLogMgr.getCurrentLogSequence());
+                createTime = System.currentTimeMillis();
+                header.setCreateTime(createTime);
+                header.setSequence(redoLogMgr.getCurrentLogSequence());
             }
-            mHeader.setOpen(true);
-            mHeader.write(mRAF);
+            header.setOpen(true);
+            header.write(raf);
 
             // go to the end of file, so we can append
-            long len = mRAF.length();
-            mRAF.seek(len);
-            mFileSize = len;
+            long len = raf.length();
+            raf.seek(len);
+            fileSize = len;
 
-            mLogSeq = mFsyncSeq = 0;
+            logSeq = fsyncSeq = 0;
         }
 
-        if (mFsyncIntervalMS > 0)
+        if (fsyncIntervalMS > 0)
             startFsyncThread();
     }
 
@@ -212,24 +192,24 @@ public class FileLogWriter implements LogWriter {
     @Override public synchronized void close() throws IOException {
         stopFsyncThread();
 
-        synchronized (mLock) {
-            if (mRAF != null) {
-                if (mLastOpTstamp != 0)
-                	mHeader.setLastOpTstamp(mLastOpTstamp);
-                mHeader.setOpen(false);
-                mHeader.setFileSize(mRAF.length());
-                mHeader.write(mRAF);
+        synchronized (lock) {
+            if (raf != null) {
+                if (lastOpTstamp != 0)
+                	header.setLastOpTstamp(lastOpTstamp);
+                header.setOpen(false);
+                header.setFileSize(raf.length());
+                header.write(raf);
 
-                mRAF.getChannel().force(true);
-                mRAF.close();
-                mRAF = null;
+                raf.getChannel().force(true);
+                raf.close();
+                raf = null;
             } else
                 return;
         }
 
         // Write some stats, so we can see how many times we were able to avoid calling fsync.
-        if (!mNoStat && mLogCount > 0 && ZimbraLog.redolog.isDebugEnabled())
-            ZimbraLog.redolog.debug("Logged: " + mLogCount + " items, " + mFsyncCount + " fsyncs");
+        if (!mNoStat && logCount > 0 && ZimbraLog.redolog.isDebugEnabled())
+            ZimbraLog.redolog.debug("Logged: " + logCount + " items, " + fsyncCount + " fsyncs");
     }
 
     /**
@@ -259,73 +239,65 @@ public class FileLogWriter implements LogWriter {
         int seq;
         boolean sameMboxAsLastOp = false;
 
-        synchronized (mLock) {
-            if (mRAF == null)
+        synchronized (lock) {
+            if (raf == null) {
                 throw new IOException("Redolog file closed");
+            }
 
             // Record first transaction in header.
             long tstamp = op.getTimestamp();
-            mLastOpTstamp = Math.max(tstamp, mLastOpTstamp);
-            if (mFirstOpTstamp == 0) {
-            	mFirstOpTstamp = tstamp;
-                mHeader.setFirstOpTstamp(mFirstOpTstamp);
-                mHeader.setLastOpTstamp(mLastOpTstamp);
-                long pos = mRAF.getFilePointer();
-                mHeader.write(mRAF);
-                mRAF.seek(pos);
+            lastOpTstamp = Math.max(tstamp, lastOpTstamp);
+            if (firstOpTstamp == 0) {
+            	firstOpTstamp = tstamp;
+                header.setFirstOpTstamp(firstOpTstamp);
+                header.setLastOpTstamp(lastOpTstamp);
+                long pos = raf.getFilePointer();
+                header.write(raf);
+                raf.seek(pos);
             }
 
-            mLogSeq++;
-            mLogCount++;
-            seq = mLogSeq;
+            logSeq++;
+            logCount++;
+            seq = logSeq;
             int numRead;
             byte[] buf = new byte[1024];
             while ((numRead = data.read(buf)) >= 0) {
-                mRAF.write(buf, 0, numRead);
-                mFileSize += numRead;
+                raf.write(buf, 0, numRead);
+                fileSize += numRead;
             }
             data.close();
 
             // We do this with log writer lock held, so the commits and any
             // callbacks made on their behalf are truly in the correct order.
-            if (op instanceof CommitTxn) {
-                CommitTxn cmt = (CommitTxn) op;
-                RedoCommitCallback cb = cmt.getCallback();
-                if (cb != null) {
-                    long redoSeq = mRedoLogMgr.getRolloverManager().getCurrentSequence();
-                    CommitId cid = new CommitId(redoSeq, (CommitTxn) op);
-                    Notif notif = new Notif(cb, cid);
-                    // We queue it instead making the callback right away.
-                    // Call it only after the commit record has been fsynced.
-                    mCommitNotifyQueue.push(notif);
-                }
-            }
+            notifyCallback(op);
 
-            mLastLogTime = System.currentTimeMillis();
+            lastLogTime = System.currentTimeMillis();
 
             sameMboxAsLastOp = mLastOpMboxId == op.getMailboxId();
             mLastOpMboxId = op.getMailboxId();
         }
 
         // cases 1 above
-        if (!synchronous)
+        if (!synchronous) {
             return;
+        }
 
-        if (mFsyncIntervalMS > 0) {
+        if (fsyncIntervalMS > 0) {
             if (!sameMboxAsLastOp) {
                 // case 2
                 try {
                     // wait for fsync thread to write this entry to disk
-                    synchronized (mFsyncCond) {
-                        mFsyncCond.wait(10000);
+                    synchronized (fsyncCond) {
+                        fsyncCond.wait(10000);
                     }
                 } catch (InterruptedException e) {
                     ZimbraLog.redolog.info("Thread interrupted during fsync");
                 }
-                synchronized (mLock) {
+                synchronized (lock) {
                     // timed out, so fsync in this thread
-                    if (seq > mFsyncSeq)
+                    if (seq > fsyncSeq) {
                         fsync();
+                    }
                 }
             } else {
                 // If this op is on same mailbox as last op, let's assume there's a thread issuing
@@ -342,7 +314,8 @@ public class FileLogWriter implements LogWriter {
 
     private int mLastOpMboxId;
 
-    @Override public void flush() throws IOException {
+    @Override
+    public void flush() throws IOException {
         fsync();
     }
 
@@ -355,7 +328,7 @@ public class FileLogWriter implements LogWriter {
     @Override
     public synchronized void rollover(LinkedHashMap /*<TxnId, RedoableOp>*/ activeOps)
     throws IOException {
-        FileRolloverManager romgr = (FileRolloverManager) mRedoLogMgr.getRolloverManager();
+        FileRolloverManager romgr = (FileRolloverManager) redoLogMgr.getRolloverManager();
         //cast OK since file writer depends on file rollover...but could be cleaner code
         long lastSeq = getSequence();
 
@@ -365,12 +338,12 @@ public class FileLogWriter implements LogWriter {
 
         romgr.incrementSequence();
 
-        String currentPath = mFile.getAbsolutePath();
+        String currentPath = file.getAbsolutePath();
 
         // Open a temporary logger.
-        File tempLogfile = new File(mFile.getParentFile(), romgr.getTempFilename(lastSeq + 1));
+        File tempLogfile = new File(file.getParentFile(), romgr.getTempFilename(lastSeq + 1));
         FileLogWriter tempLogger =
-            new FileLogWriter(mRedoLogMgr, tempLogfile, 0);
+            new FileLogWriter((FileRedoLogManager) redoLogMgr, tempLogfile, 0);
         tempLogger.open();
         tempLogger.noStat(true);
 
@@ -389,20 +362,20 @@ public class FileLogWriter implements LogWriter {
         if (RedoConfig.redoLogDeleteOnRollover()) {
             // Delete the current log.  We don't need to hold on to the
             // indexing-only log files after rollover.
-            if (!mFile.delete())
-                throw new IOException("Unable to delete current redo log " + mFile.getAbsolutePath());
+            if (!file.delete())
+                throw new IOException("Unable to delete current redo log " + file.getAbsolutePath());
         } else {
             File destDir = rolloverFile.getParentFile();
             if (destDir != null && !destDir.exists())
                 destDir.mkdirs();
-            if (!mFile.renameTo(rolloverFile))
+            if (!file.renameTo(rolloverFile))
                 throw new IOException("Unable to rename current redo log to " + rolloverFile.getAbsolutePath());
         }
 
         // Rename the temporary logger to current logfile name.
         String tempPath = tempLogfile.getAbsolutePath();
-        mFile = new File(currentPath);
-        if (!tempLogfile.renameTo(mFile))
+        file = new File(currentPath);
+        if (!tempLogfile.renameTo(file))
             throw new IOException("Unable to rename " + tempPath + " to " + currentPath);
 
         // Reopen current log.
@@ -423,49 +396,51 @@ public class FileLogWriter implements LogWriter {
     }
 
     private synchronized void startFsyncThread() {
-        if (mFsyncer == null && mFsyncIntervalMS > 0) {
-            mFsyncer = new FsyncThread(mFsyncIntervalMS);
-            mFsyncer.start();
+        if (fsyncer == null && fsyncIntervalMS > 0) {
+            fsyncer = new FsyncThread(fsyncIntervalMS);
+            fsyncer.start();
         }
     }
 
     private synchronized void stopFsyncThread() {
-        if (mFsyncer != null) {
-            mFsyncer.stopThread();
-            mFsyncer = null;
+        if (fsyncer != null) {
+            fsyncer.stopThread();
+            fsyncer = null;
         }
     }
 
     // do fsync if there are items logged since last fsync
-    private void fsync() throws IOException {
+    void fsync() throws IOException {
         boolean fsyncNeeded = false;
         int seq = 0;
-        synchronized (mLock) {
-            if (mFsyncSeq < mLogSeq) {
-                if (mRAF == null)
+        synchronized (lock) {
+            if (fsyncSeq < logSeq) {
+                if (raf == null)
                     throw new IOException("Redolog file closed");
                 fsyncNeeded = true;
-                seq = mLogSeq;
-                if (!mFsyncDisabled)
-                    mFsyncCount++;
+                seq = logSeq;
+                if (!fsyncDisabled)
+                    fsyncCount++;
             }
         }
         if (fsyncNeeded) {
-            if (!mFsyncDisabled) {
-                synchronized (mLock) {
-                    if (mRAF != null)
-                        mRAF.getChannel().force(false);
-                    else
+            if (!fsyncDisabled) {
+                synchronized (lock) {
+                    if (raf != null) {
+                        raf.getChannel().force(false);
+                    } else {
                         throw new IOException("Redolog file closed");
-                    mCommitNotifyQueue.flush(false);
+                    }
+                    //TODO: move to abstract?
+                    getCommitNotifyQueue().flushInternal(false);
                 }
             }
-            synchronized (mLock) {
-                mFsyncSeq = seq;
+            synchronized (lock) {
+                fsyncSeq = seq;
             }
-            if (mFsyncIntervalMS > 0) {
-                synchronized (mFsyncCond) {
-                    mFsyncCond.notifyAll();
+            if (fsyncIntervalMS > 0) {
+                synchronized (fsyncCond) {
+                    fsyncCond.notifyAll();
                 }
             }
         }
@@ -518,7 +493,7 @@ public class FileLogWriter implements LogWriter {
                 try {
                     fsync();    // do the sync
                 } catch (IOException e) {
-                    String message = "Error while fsyncing " + mFile.getAbsolutePath() + "; Aborting.";
+                    String message = "Error while fsyncing " + file.getAbsolutePath() + "; Aborting.";
                     Zimbra.halt(message, e);
                 }
 
@@ -550,69 +525,26 @@ public class FileLogWriter implements LogWriter {
         }
     }
 
-
-    // Commit callback handling
-
-    private static class Notif {
-        private RedoCommitCallback mCallback;
-        private CommitId mCommitId;
-
-        public Notif(RedoCommitCallback callback, CommitId cid) {
-            mCallback = callback;
-            mCommitId = cid;
-        }
-        public RedoCommitCallback getCallback() { return mCallback; }
-        public CommitId getCommitId() { return mCommitId; }
+    @Override
+    protected FileCommitNotifyQueue getCommitNotifyQueue() {
+        return (FileCommitNotifyQueue) super.getCommitNotifyQueue();
     }
 
-    private class CommitNotifyQueue {
-        private Notif[] mQueue = new Notif[100];
-        private int mHead;  // points to first entry
-        private int mTail;  // points to just after last entry (first empty slot)
-        private boolean mFull;
-
-        public CommitNotifyQueue(int size) {
-            mQueue = new Notif[size];
-            mHead = mTail = 0;
-            mFull = false;
+    private class FileCommitNotifyQueue extends CommitNotifyQueue {
+        public FileCommitNotifyQueue(int size) {
+            super(size);
         }
 
-        public synchronized void push(Notif notif) throws IOException {
-            if (notif != null) {
-                if (mFull) flush(true);  // queue is full
-                assert(!mFull);
-                mQueue[mTail] = notif;
-                mTail++;
-                mTail %= mQueue.length;
-                mFull = mTail == mHead;
-            }
+        @Override
+        public synchronized void flush() throws IOException {
+            flushInternal(true);
         }
 
-        private synchronized Notif pop() {
-            if (mHead == mTail && !mFull) return null;  // queue is empty
-            Notif n = mQueue[mHead];
-            mQueue[mHead] = null;  // help with GC
-            mHead++;
-            mHead %= mQueue.length;
-            mFull = false;
-            return n;
-        }
-
-        public synchronized void flush(boolean fsync) throws IOException {
-            if (fsync)
+        private synchronized void flushInternal(boolean fsync) throws IOException {
+            if (fsync) {
                 fsync();
-            Notif notif;
-            while ((notif = pop()) != null) {
-                RedoCommitCallback cb = notif.getCallback();
-                assert(cb != null);
-                try {
-                    cb.callback(notif.getCommitId());
-                } catch (OutOfMemoryError e) {
-                    Zimbra.halt("out of memory", e);
-                } catch (Throwable t) {
-                    ZimbraLog.misc.error("Error while making commit callback", t);
-                }
             }
+            super.flush();
         }
     }
 }

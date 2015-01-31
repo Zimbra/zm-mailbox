@@ -132,11 +132,11 @@ public abstract class RedoableOp {
             setTransactionId(mRedoLogMgr.getNewTxnId());
     }
 
-    public void log() {
+    public void log() throws ServiceException {
         log(true);
     }
 
-    public void log(boolean synchronous) {
+    public void log(boolean synchronous) throws ServiceException {
         mRedoLogMgr.log(this, synchronous);
         if (isStartMarker())
             mActive = true;
@@ -157,7 +157,7 @@ public abstract class RedoableOp {
         return octxt;
     }
 
-    public synchronized void commit() {
+    public synchronized void commit() throws ServiceException {
         if (mActive) {
             mActive = false;
             mRedoLogMgr.commit(this);
@@ -173,7 +173,7 @@ public abstract class RedoableOp {
         }
     }
 
-    public synchronized void abort() {
+    public synchronized void abort() throws ServiceException {
         if (mActive) {
             mActive = false;
             mRedoLogMgr.abort(this);
@@ -257,6 +257,9 @@ public abstract class RedoableOp {
             throw new IllegalStateException("transactionId already set, cannot be set again");
         }
         mTxnId = txnId;
+        if (isSerializedByteArrayInitialized()) {
+            setSerializedByteArray(null);
+        }
     }
 
     public int getMailboxId() {
@@ -439,6 +442,12 @@ public abstract class RedoableOp {
                 // clear current vector
                 mSerializedByteArrayVector = null;
             }
+        }
+    }
+
+    public boolean isSerializedByteArrayInitialized() {
+        synchronized (mSBAVGuard) {
+            return mSerializedByteArrayVector != null;
         }
     }
 
