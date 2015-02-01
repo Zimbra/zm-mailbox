@@ -605,8 +605,6 @@ public final class LC {
             " -Dsun.net.inetaddr.ttl=${networkaddress_cache_ttl}" +
             " -Dorg.apache.jasper.compiler.disablejsr199=true" +
             " -XX:+UseConcMarkSweepGC" +
-            " -XX:PermSize=128m" +
-            " -XX:MaxPermSize=350m" +
             " -XX:SoftRefLRUPolicyMSPerMB=1" +
             " -verbose:gc" +
             " -XX:+PrintGCDetails" +

@@ -215,8 +215,6 @@ public abstract class LocalConfigUpgrade {
 	    mjo = appendOptionIfNotPresent(mjo, "-XX:+PrintGCTimeStamps");
 	    mjo = appendOptionIfNotPresent(mjo, "-XX:+PrintGCApplicationStoppedTime");
 	    
-	    mjo = appendOptionIfNoOptionBeginsWith(mjo, "-XX:PermSize=", "-XX:PermSize=128m");
-	    mjo = appendOptionIfNoOptionBeginsWith(mjo, "-XX:MaxPermSize=", "-XX:MaxPermSize=128m");
 	    mjo = appendOptionIfNoOptionBeginsWith(mjo, "-XX:SoftRefLRUPolicyMSPerMB=", "-XX:SoftRefLRUPolicyMSPerMB=1"); 
 	    return mjo;
 	}
