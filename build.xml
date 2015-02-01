@@ -1999,7 +1999,7 @@
 
     <target name="start-jetty-java">
         <java dir="${jetty.home.dir}" jar="${jetty.home.dir}/start.jar" fork="true" spawn="true">
-            <arg line="-ea -Dfile.encoding=UTF-8 -server -Djava.awt.headless=true -Dsun.net.inetaddr.ttl=60 -Dorg.apache.jasper.compiler.disablejsr199=true -XX:+UseConcMarkSweepGC -XX:PermSize=128m -XX:MaxPermSize=350m -XX:SoftRefLRUPolicyMSPerMB=1 -verbose:gc -XX:+PrintGCDetails -XX:+PrintGCDateStamps -XX:+PrintGCApplicationStoppedTime -XX:-OmitStackTraceInFastThrow -DSTART=c:/opt/zimbra/jetty/etc/start.config -DSTOP.PORT=7867 -DSTOP.KEY=stop -Dzimbra.config=c:/opt/zimbra/conf/localconfig.xml -Djava.library.path=c:\opt\zimbra\lib -Djava.endorsed.dirs=c:\opt\zimbra\jetty\common\endorsed -Djetty.home=c:/opt/zimbra/jetty --module=zimbra,server,servlet,servlets,jsp,jmx,resources,websocket,ext,plus,rewrite,monitor,continuation,webapp etc/jetty.xml"/>
+            <arg line="-ea -Dfile.encoding=UTF-8 -server -Djava.awt.headless=true -Dsun.net.inetaddr.ttl=60 -Dorg.apache.jasper.compiler.disablejsr199=true -XX:+UseConcMarkSweepGC -XX:SoftRefLRUPolicyMSPerMB=1 -verbose:gc -XX:+PrintGCDetails -XX:+PrintGCDateStamps -XX:+PrintGCApplicationStoppedTime -XX:-OmitStackTraceInFastThrow -DSTART=c:/opt/zimbra/jetty/etc/start.config -DSTOP.PORT=7867 -DSTOP.KEY=stop -Dzimbra.config=c:/opt/zimbra/conf/localconfig.xml -Djava.library.path=c:\opt\zimbra\lib -Djava.endorsed.dirs=c:\opt\zimbra\jetty\common\endorsed -Djetty.home=c:/opt/zimbra/jetty --module=zimbra,server,servlet,servlets,jsp,jmx,resources,websocket,ext,plus,rewrite,monitor,continuation,webapp etc/jetty.xml"/>
         </java>
     </target>
 
