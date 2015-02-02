@@ -94,7 +94,7 @@ public class ConsulServiceLocator implements ServiceLocator {
             ServiceHealthResponse.Check lastCheck = health.checks.get(health.checks.size() - 1);
             return "passing".equals(lastCheck.status);
         }
-        throw ServiceException.NOT_FOUND("No such service in node health response");
+        return false;
     }
 
     /** Contact the service locator to determine whether it is reachable and responsive. */
