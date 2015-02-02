@@ -234,6 +234,17 @@ public class ProxyPurgeUtil
                 routes.add("alias:user=" + uid + ";ip=" + domain);
 
                 Domain d = prov.get(Key.DomainBy.name, domain);
+                String[] vips = d.getVirtualIPAddress();
+                for (String vip : vips) {
+                    // for each virtual ip add the routes to the list.
+                    routes.add("route:proto=http;user=" + uid + "@" + vip);
+                    routes.add("route:proto=imap;user=" + uid + "@" + vip);
+                    routes.add("route:proto=pop3;user=" + uid + "@" + vip);
+                    routes.add("route:proto=httpssl;user=" + uid + "@" + vip);
+                    routes.add("route:proto=imapssl;user=" + uid + "@" + vip);
+                    routes.add("route:proto=pop3ssl;user=" + uid + "@" + vip);
+                    routes.add("alias:user=" + uid + ";ip=" + vip);
+                }
                 String[] vhostnames = d.getVirtualHostname();
                 for (String vhost : vhostnames) {
                     // for each virtual host name add the alias to the list
@@ -273,7 +284,7 @@ public class ProxyPurgeUtil
                     }
                 }
 
-                // for each alias add routes for it's domain
+                // for each alias add routes for it's domain and all virtual IPs for that domain
                 // I haven't found any alias in the http/httpssl routes. Hence skipping it.
                 // bug:79940 says Active Sync routes are stored as http/https - alias@domain.com
                 for (String alias : aliases) {
@@ -290,6 +301,16 @@ public class ProxyPurgeUtil
                     for (String vhost : vhostnames) {
                         // for each virtual host name add the alias to the alias user
                         routes.add("alias:user=" + alias + ";vhost=" + vhost);
+                    }
+                    for (String vip : vips) {
+                        // for each virtual ip add the routes to the list.
+                        routes.add("route:proto=http;user=" + alias + "@" + vip);
+                        routes.add("route:proto=imap;user=" + alias + "@" + vip);
+                        routes.add("route:proto=pop3;user=" + alias + "@" + vip);
+                        routes.add("route:proto=httpssl;user=" + alias + "@" + vip);
+                        routes.add("route:proto=imapssl;user=" + alias + "@" + vip);
+                        routes.add("route:proto=pop3ssl;user=" + alias + "@" + vip);
+                        routes.add("alias:user=" + alias + ";ip=" + vip);
                     }
                 }
             }

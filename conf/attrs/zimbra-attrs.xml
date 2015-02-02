@@ -2962,9 +2962,8 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>time to wait before auto saving a draft</desc>
 </attr>
 
-<attr id="562" name="zimbraVirtualIPAddress" type="string" max="256" cardinality="multi" optionalIn="domain" since="5.0.0" deprecatedSince="9.0">
-  <desc>An virtual IP address for this domain, used to determine domain based on an IP address</desc>
-  <deprecateDesc>No longer needed with SNI support in proxy (bug 56178)</deprecateDesc>
+<attr id="562" name="zimbraVirtualIPAddress" type="string" max="256" cardinality="multi" optionalIn="domain" since="5.0.0">
+  <desc>Virtual IP address for this domain, used to determine domain based on an IP address and have IP-based virtual hosts for the proxy. Consider using zimbraReverseProxySNIEnabled instead when using SNI capable clients</desc>
 </attr>
 
 <attr id="563" name="zimbraSSLCertificate" type="astring" cardinality="single" optionalIn="globalConfig,server,domain" flags="serverInherited" since="5.0.0">
@@ -9144,5 +9143,8 @@ TODO: delete them permanently from here
   <desc> TTL in seconds for index reader cache. If idle for longer than this value (seconds) then remove the IndexReader from the cache.</desc>
 </attr>
 
-
+<attr id="1818" name="zimbraReverseProxySNIEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" affectsServices="nginxproxy" since="9.0">
+  <globalConfigValue>FALSE</globalConfigValue>
+  <desc>Enable the use of Server Name Indication (SNI) TLS extension in the proxy. When set to TRUE, and using SNI capable clients, there is no need for a separate IP address per domain (zimbraVirtualIPAddress)</desc>
+</attr>
 </attrs>

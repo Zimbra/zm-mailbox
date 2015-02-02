@@ -1673,13 +1673,14 @@ class SSLStaplingEnablerVar extends ProxyConfVar {
 }
 
 /**
- * A simple class of Triple<VirtualHostName, DomainName>. Uses
+ * A simple class of Triple<VirtualHostName, VirtualIPAddress, DomainName>. Uses
  * this only for convenient and HashMap can't guarantee order
  * @author jiankuan
  */
 class DomainAttrItem {
     public String domainName;
     public String virtualHostname;
+    public String virtualIPAddress;
     public String sslCertificate;
     public String sslPrivateKey;
     public Boolean useDomainServerCert;
@@ -1687,10 +1688,11 @@ class DomainAttrItem {
     public String clientCertMode;
     public String clientCertCa;
 
-    public DomainAttrItem(String dn, String vhn, String scrt, String spk,
+    public DomainAttrItem(String dn, String vhn, String vip, String scrt, String spk,
             String ccm, String cca) {
         this.domainName = dn;
         this.virtualHostname = vhn;
+        this.virtualIPAddress = vip;
         this.sslCertificate = scrt;
         this.sslPrivateKey = spk;
         this.clientCertMode = ccm;
@@ -1705,7 +1707,7 @@ class DomainAttrItem {
  */
 class DomainAttrExceptionItem extends DomainAttrItem {
     public DomainAttrExceptionItem(ProxyConfException e) {
-        super(null, null, null, null, null, null);
+        super(null, null, null, null, null, null, null);
         this.exception = e;
     }
 
@@ -2069,6 +2071,7 @@ public class ProxyConfGen
 
         final Set<String> attrsNeeded = new HashSet<String>();
         attrsNeeded.add(Provisioning.A_zimbraVirtualHostname);
+        attrsNeeded.add(Provisioning.A_zimbraVirtualIPAddress);
         attrsNeeded.add(Provisioning.A_zimbraSSLCertificate);
         attrsNeeded.add(Provisioning.A_zimbraSSLPrivateKey);
         attrsNeeded.add(Provisioning.A_zimbraReverseProxyClientCertMode);
@@ -2085,6 +2088,8 @@ public class ProxyConfGen
                     .getAttr(Provisioning.A_zimbraDomainName);
                 String[] virtualHostnames = entry
                     .getMultiAttr(Provisioning.A_zimbraVirtualHostname);
+                String[] virtualIPAddresses = entry
+                    .getMultiAttr(Provisioning.A_zimbraVirtualIPAddress);
                 String certificate = entry
                     .getAttr(Provisioning.A_zimbraSSLCertificate);
                 String privateKey = entry
@@ -2104,13 +2109,34 @@ public class ProxyConfGen
                             // config
                 }
 
+                boolean lookupVIP = true; // lookup virutal IP from DNS or /etc/hosts
+                if (virtualIPAddresses.length > 0) {
+                    if (virtualIPAddresses.length != virtualHostnames.length) {
+                        result.add(new DomainAttrExceptionItem(
+                                new ProxyConfException("The configurations of zimbraVirtualHostname and " +
+                                                       "zimbraVirtualIPAddress are mismatched", null)));
+                                return;
+                    }
+                    lookupVIP = false;
+                }
+
+                //Here assume virtualHostnames, virtualIPAddresses & DomainAllowedIPs are
+                //same in number
                 int i = 0;
                 for( ; i < virtualHostnames.length; i++) {
+                    //bug 66892, only lookup IP when zimbraVirtualIPAddress is unset
+                    String vip = null;
+                    if (lookupVIP) {
+                        vip = null;
+                    } else {
+                        vip = virtualIPAddresses[i];
+                    }
+
                     if (!ProxyConfUtil.isEmptyString(clientCertCA)){
                         createDomainSSLDirIfNotExists();
                     }
                     result.add(new DomainAttrItem(domainName,
-                            virtualHostnames[i], certificate, privateKey,
+                            virtualHostnames[i], vip, certificate, privateKey,
                             clientCertMode, clientCertCA));
                 }
             }
@@ -2420,9 +2446,47 @@ public class ProxyConfGen
         //resolve the virtual host name
         InetAddress vip = null;
         try {
-            vip = InetAddress.getByName(item.virtualHostname);
+            if (item.virtualIPAddress == null) {
+                vip = InetAddress.getByName(item.virtualHostname);
+            } else {
+                vip = InetAddress.getByName(item.virtualIPAddress);
+            }
         } catch (UnknownHostException e) {
             throw new ProxyConfException("virtual host name \"" + item.virtualHostname + "\" is not resolvable", e);
+        }
+
+        if (IPModeEnablerVar.getZimbraIPMode() != IPModeEnablerVar.IPMode.BOTH) {
+            if (IPModeEnablerVar.getZimbraIPMode() == IPModeEnablerVar.IPMode.IPV4_ONLY &&
+                    vip instanceof Inet6Address) {
+                String msg = vip.getHostAddress() +
+                        " is an IPv6 address but zimbraIPMode is 'ipv4'";
+                mLog.error(msg);
+                throw new ProxyConfException(msg);
+            }
+
+            if (IPModeEnablerVar.getZimbraIPMode() == IPModeEnablerVar.IPMode.IPV6_ONLY &&
+                    vip instanceof Inet4Address) {
+                String msg = vip.getHostAddress() +
+                        " is an IPv4 address but zimbraIPMode is 'ipv6'";
+                mLog.error(msg);
+                throw new ProxyConfException(msg);
+            }
+        }
+
+        boolean sni = ProxyConfVar.serverSource.getBooleanAttr("zimbraReverseProxySNIEnabled", false);
+        if (vip instanceof Inet6Address) {
+            //ipv6 address has to be enclosed with [ ]
+            if (sni) {
+                mVars.put("vip", "[::]:");
+            } else {
+                mVars.put("vip", "[" + vip.getHostAddress() + "]:");
+            }
+        } else {
+            if (sni) {
+                mVars.put("vip", "");
+            } else {
+                mVars.put("vip", vip.getHostAddress() + ":");
+            }
         }
 
         if ( item.sslCertificate != null ){
