@@ -620,6 +620,9 @@ public class DefangFilter extends DefaultFilter {
         int index = attributes.getIndex(attrName);
         if (index != -1) {
             String value = attributes.getValue(index);
+            if (!value.startsWith("/")) {
+                value = "/" + value;
+            }
             if (mBaseHref != null && value != null && value.indexOf(":") == -1) {
                 if (mBaseHrefURI != null) {
                     try {
