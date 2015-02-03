@@ -450,7 +450,7 @@ public final class SoapToSieve {
                 throw ServiceException.INVALID_REQUEST("subject conflict", null);
             }
             return new StringBuilder("notify ").
-                    append(StringUtil.enclose(emailAddr, '"')).append(' ').
+                    append(StringUtil.enclose(FilterUtil.escape(emailAddr), '"')).append(' ').
                     append(StringUtil.enclose(subjectTemplate, '"')).append(' ').
                     append("text:\r\n").append(getDotStuffed(bodyTemplate)).append("\r\n.\r\n").
                     append(maxBodyBytes < 0 ? "" : " " + maxBodyBytes).
