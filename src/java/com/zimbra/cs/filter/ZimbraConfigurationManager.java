@@ -17,6 +17,7 @@
 package com.zimbra.cs.filter;
 
 import org.apache.jsieve.CommandManager;
+import org.apache.jsieve.ComparatorManager;
 import org.apache.jsieve.ConfigurationManager;
 import org.apache.jsieve.SieveConfigurationException;
 
@@ -47,4 +48,11 @@ public class ZimbraConfigurationManager extends ConfigurationManager {
         return new ZimbraCommandManagerImpl(getCommandMap());
     }
 
+    /**
+     * Return an instance of Zimbra specific ComparatorManager.
+     */
+    @Override
+    public ComparatorManager getComparatorManager() {
+        return new ZimbraComparatorManagerImpl(getComparatorMap());
+    }
 }
