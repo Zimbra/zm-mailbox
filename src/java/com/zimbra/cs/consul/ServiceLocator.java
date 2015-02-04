@@ -43,8 +43,8 @@ public interface ServiceLocator {
     /**
      * Determines whether a given service instance is healthy.
      *
-     * @throws IOException when unable to determine a service health due to an I/O failure.
-     * @throws ServiceException when unable to determine service health.
+     * @throws IOException when unable to determine a service status due to a middleware I/O failure.
+     * @throws ServiceException NOT_FOUND if the service could not be found or if no health checks have been performed.
      */
     public boolean isHealthy(String serviceID, String hostName) throws IOException, ServiceException;
 
