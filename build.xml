@@ -108,7 +108,7 @@
     <condition property="db-mysql">
       <not><isset property="db-sqlite"/></not>
     </condition>
-    <condition property="db.driver.jar" value="mysql-connector-java-*.jar">
+    <condition property="db.driver.jar" value="mariadb-java-client-*.jar">
         <isset property="db-mysql"/>
     </condition>
     <condition property="db.driver.jar" value="sqlitejdbc*.jar">
@@ -503,7 +503,7 @@
           <include name="${ziputil.jar}"/>
           <include name="${memcached.jar}"/>
           <include name="${db.driver.jar}"/>
-          <include name="mysql-connector-java-*.jar"/>
+          <include name="mariadb-java-client-*.jar"/>
           <include name="javamail-1.4.5.jar"/>
           <include name="zimbra-native.jar"/>
           <include name="bcprov-jdk15-146.jar"/>
@@ -1398,11 +1398,11 @@
     <target name="db-init" depends="choose-db-schema,mysql-init,sqlite-init"/>
 
     <target name="mysql-init" if="db-mysql">
-        <sql driver="com.mysql.jdbc.Driver" url="jdbc:mysql://127.0.0.1:7306/" userid="root" password="zimbra"
+        <sql driver="org.mariadb.jdbc.Driver" url="jdbc:mysql://127.0.0.1:7306/" userid="root" password="zimbra"
              classpathref="class.path" onerror="continue" src="${db.schema.dir}/dropdb.sql" print="false"/>
-        <sql driver="com.mysql.jdbc.Driver" url="jdbc:mysql://127.0.0.1:7306/" userid="root" password="zimbra"
+        <sql driver="org.mariadb.jdbc.Driver" url="jdbc:mysql://127.0.0.1:7306/" userid="root" password="zimbra"
              classpathref="class.path" onerror="abort" src="${db.schema.dir}/db.sql"/>
-        <sql driver="com.mysql.jdbc.Driver" url="jdbc:mysql://127.0.0.1:7306/" userid="root" password="zimbra"
+        <sql driver="org.mariadb.jdbc.Driver" url="jdbc:mysql://127.0.0.1:7306/" userid="root" password="zimbra"
              classpathref="class.path" onerror="abort" src="${build.dir}/versions-init.sql"/>
     </target>
 
