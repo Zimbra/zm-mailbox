@@ -112,7 +112,7 @@
     <condition property="db-mysql">
       <not><isset property="db-sqlite"/></not>
     </condition>
-    <condition property="db.driver.jar" value="mysql-connector-java-*.jar">
+    <condition property="db.driver.jar" value="mariadb-java-client-*.jar">
         <isset property="db-mysql"/>
     </condition>
     <condition property="db.driver.jar" value="sqlitejdbc*.jar">
@@ -509,8 +509,8 @@
           <include name="${db.driver.jar}"/>
           <include name="apache-log4j-extras-*.jar"/>
           <include name="aopalliance-*.jar"/>
-	      <include name="aspectjweaver-*.jar"/>
-          <include name="mysql-connector-java-*.jar"/>
+	  <include name="aspectjweaver-*.jar"/>
+          <include name="mariadb-java-client-*.jar"/>
           <include name="mail-*.jar"/>
           <include name="zimbranative*.jar"/>
           <include name="bcprov-jdk15-146.jar"/>
@@ -545,7 +545,6 @@
           <include name="junixsocket*.jar"/>  
           <include name="jython*.jar"/>
           <include name="log4j-*.jar"/>
-          <include name="mysql-connector-java-*.jar"/>
           <include name="qless-*.jar"/>
           <include name="testng*.jar"/>
           <include name="tnef*.jar"/>
@@ -1435,11 +1434,11 @@
     <target name="db-init" depends="choose-db-schema,mysql-init,sqlite-init"/>
 
     <target name="mysql-init" if="db-mysql">
-        <sql driver="com.mysql.jdbc.Driver" url="jdbc:mysql://127.0.0.1:7306/" userid="root" password="zimbra"
+        <sql driver="org.mariadb.jdbc.Driver" url="jdbc:mysql://127.0.0.1:7306/" userid="root" password="zimbra"
              classpathref="class.path" onerror="continue" src="${db.schema.dir}/dropdb.sql" print="false"/>
-        <sql driver="com.mysql.jdbc.Driver" url="jdbc:mysql://127.0.0.1:7306/" userid="root" password="zimbra"
+        <sql driver="org.mariadb.jdbc.Driver" url="jdbc:mysql://127.0.0.1:7306/" userid="root" password="zimbra"
              classpathref="class.path" onerror="abort" src="${db.schema.dir}/db.sql"/>
-        <sql driver="com.mysql.jdbc.Driver" url="jdbc:mysql://127.0.0.1:7306/" userid="root" password="zimbra"
+        <sql driver="org.mariadb.jdbc.Driver" url="jdbc:mysql://127.0.0.1:7306/" userid="root" password="zimbra"
              classpathref="class.path" onerror="abort" src="${build.dir}/versions-init.sql"/>
     </target>
 
