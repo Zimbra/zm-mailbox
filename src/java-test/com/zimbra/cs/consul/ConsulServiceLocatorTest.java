@@ -59,7 +59,12 @@ public final class ConsulServiceLocatorTest {
         serviceLocator.register(service);
 
         // Verify expected health check result when no health check has ever run
-        Assert.assertEquals(false, serviceLocator.isHealthy(service.id, InetAddress.getLocalHost().getHostName()));
+        try {
+            serviceLocator.isHealthy(service.id, InetAddress.getLocalHost().getHostName());
+            Assert.fail("Expected a ServiceException with code=NOT_FOUND");
+        } catch (ServiceException e) {
+            Assert.assertEquals(ServiceException.NOT_FOUND, e.getCode());
+        }
 
         // Deregister
         serviceLocator.deregister(service.id);
