@@ -41094,7 +41094,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * number of scratch codes to generate for 2-factor auth
+     * number of scratch codes to generate for two-factor auth
      *
      * @return zimbraTwoFactorAuthNumScratchCodes, or 3 if unset
      *
@@ -41106,7 +41106,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * number of scratch codes to generate for 2-factor auth
+     * number of scratch codes to generate for two-factor auth
      *
      * @param zimbraTwoFactorAuthNumScratchCodes new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -41121,7 +41121,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * number of scratch codes to generate for 2-factor auth
+     * number of scratch codes to generate for two-factor auth
      *
      * @param zimbraTwoFactorAuthNumScratchCodes new value
      * @param attrs existing map to populate, or null to create a new map
@@ -41137,7 +41137,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * number of scratch codes to generate for 2-factor auth
+     * number of scratch codes to generate for two-factor auth
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -41151,7 +41151,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * number of scratch codes to generate for 2-factor auth
+     * number of scratch codes to generate for two-factor auth
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -41166,7 +41166,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * whether 2-factor authentication is required
+     * whether two-factor authentication is required
      *
      * @return zimbraTwoFactorAuthRequired, or false if unset
      *
@@ -41178,7 +41178,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * whether 2-factor authentication is required
+     * whether two-factor authentication is required
      *
      * @param zimbraTwoFactorAuthRequired new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -41193,7 +41193,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * whether 2-factor authentication is required
+     * whether two-factor authentication is required
      *
      * @param zimbraTwoFactorAuthRequired new value
      * @param attrs existing map to populate, or null to create a new map
@@ -41209,7 +41209,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * whether 2-factor authentication is required
+     * whether two-factor authentication is required
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -41223,7 +41223,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * whether 2-factor authentication is required
+     * whether two-factor authentication is required
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -41572,7 +41572,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * whether 2-factor authentication is enabled by the user
+     * whether two-factor authentication is enabled by the user
      *
      * @return zimbraTwoFactorAuthUserEnabled, or false if unset
      *
@@ -41584,7 +41584,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * whether 2-factor authentication is enabled by the user
+     * whether two-factor authentication is enabled by the user
      *
      * @param zimbraTwoFactorAuthUserEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -41599,7 +41599,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * whether 2-factor authentication is enabled by the user
+     * whether two-factor authentication is enabled by the user
      *
      * @param zimbraTwoFactorAuthUserEnabled new value
      * @param attrs existing map to populate, or null to create a new map
@@ -41615,7 +41615,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * whether 2-factor authentication is enabled by the user
+     * whether two-factor authentication is enabled by the user
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -41629,7 +41629,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * whether 2-factor authentication is enabled by the user
+     * whether two-factor authentication is enabled by the user
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -41900,9 +41900,10 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Codes corresponding to the current time window +/- this offset will be
-     * accepted. A value of at least 1 is necessary to account for network
-     * latency and clock drift
+     * Determines the number of windows to check when trying to validate a TOTP code (NOW-n through NOW+n). 
+     * This number should typically be small, but a minimum value of 1 is usually necessary to account 
+     * for network latency and clock drift.  See also: zimbraTwoFactorTimeWindowLength
+     * and https://tools.ietf.org/html/rfc6238#section-5.2
      *
      * @return zimbraTwoFactorTimeWindowOffset, or 1 if unset
      *
@@ -41914,9 +41915,10 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Codes corresponding to the current time window +/- this offset will be
-     * accepted. A value of at least 1 is necessary to account for network
-     * latency and clock drift
+     * Determines the number of windows to check when trying to validate a TOTP code (NOW-n through NOW+n). 
+     * This number should typically be small, but a minimum value of 1 is usually necessary to account 
+     * for network latency and clock drift.  See also: zimbraTwoFactorTimeWindowLength
+     * and https://tools.ietf.org/html/rfc6238#section-5.2
      *
      * @param zimbraTwoFactorTimeWindowOffset new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -41931,9 +41933,10 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Codes corresponding to the current time window +/- this offset will be
-     * accepted. A value of at least 1 is necessary to account for network
-     * latency and clock drift
+     * Determines the number of windows to check when trying to validate a TOTP code (NOW-n through NOW+n). 
+     * This number should typically be small, but a minimum value of 1 is usually necessary to account 
+     * for network latency and clock drift.  See also: zimbraTwoFactorTimeWindowLength
+     * and https://tools.ietf.org/html/rfc6238#section-5.2
      *
      * @param zimbraTwoFactorTimeWindowOffset new value
      * @param attrs existing map to populate, or null to create a new map
@@ -41949,9 +41952,10 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Codes corresponding to the current time window +/- this offset will be
-     * accepted. A value of at least 1 is necessary to account for network
-     * latency and clock drift
+     * Determines the number of windows to check when trying to validate a TOTP code (NOW-n through NOW+n). 
+     * This number should typically be small, but a minimum value of 1 is usually necessary to account 
+     * for network latency and clock drift.  See also: zimbraTwoFactorTimeWindowLength
+     * and https://tools.ietf.org/html/rfc6238#section-5.2
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -41965,9 +41969,10 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Codes corresponding to the current time window +/- this offset will be
-     * accepted. A value of at least 1 is necessary to account for network
-     * latency and clock drift
+     * Determines the number of windows to check when trying to validate a TOTP code (NOW-n through NOW+n). 
+     * This number should typically be small, but a minimum value of 1 is usually necessary to account 
+     * for network latency and clock drift.  See also: zimbraTwoFactorTimeWindowLength
+     * and https://tools.ietf.org/html/rfc6238#section-5.2
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs

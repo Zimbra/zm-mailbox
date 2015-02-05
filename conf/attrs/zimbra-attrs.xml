@@ -9148,12 +9148,12 @@ TODO: delete them permanently from here
   <desc>Enable the use of Server Name Indication (SNI) TLS extension in the proxy. When set to TRUE, and using SNI capable clients, there is no need for a separate IP address per domain (zimbraVirtualIPAddress)</desc>
 </attr>
 <attr id="1819" name="zimbraTwoFactorAuthUserEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="domainAdminModifiable" since="8.7.0">
-  <desc>whether 2-factor authentication is enabled by the user</desc>
+  <desc>whether two-factor authentication is enabled by the user</desc>
   <defaultCOSValue>FALSE</defaultCOSValue>
 </attr>
 
 <attr id="1820" name="zimbraTwoFactorAuthRequired" type="boolean" cardinality="single" optionalIn="account,cos" flags="domainAdminModifiable" since="8.7.0">
-  <desc>whether 2-factor authentication is required</desc>
+  <desc>whether two-factor authentication is required</desc>
   <defaultCOSValue>FALSE</defaultCOSValue>
 </attr>
 
@@ -9167,7 +9167,7 @@ TODO: delete them permanently from here
 
 <attr id="1823" name="zimbraTwoFactorAuthNumScratchCodes" type="integer" min="1" cardinality="single" optionalIn="account,cos" since="8.7.0">
   <defaultCOSValue>3</defaultCOSValue>
-  <desc>number of scratch codes to generate for 2-factor auth</desc>
+  <desc>number of scratch codes to generate for two-factor auth</desc>
 </attr>
 
 <attr id="1824" name="zimbraTwoFactorAuthSecretLength" type="integer" min="8" cardinality="single" optionalIn="account,cos" since="8.7.0">
@@ -9202,7 +9202,7 @@ TODO: delete them permanently from here
 
 <attr id="1830" name="zimbraTwoFactorTimeWindowOffset" type="integer" min="1" cardinality="single" optionalIn="account,cos" since="8.7.0">
   <defaultCOSValue>1</defaultCOSValue>
-  <desc>Codes corresponding to the current time window +/- this offset will be accepted. A value of at least 1 is necessary to account for network latency and clock drift</desc>
+  <desc>Determines the number of windows to check when trying to validate a TOTP code (NOW-n through NOW+n). This number should typically be small, but a minimum value of 1 is usually necessary to account for network latency and clock drift.  See also: zimbraTwoFactorTimeWindowLength and https://tools.ietf.org/html/rfc6238#section-5.2</desc>
 </attr>
 <attr id="1831" name="zimbraTwoFactorAuthScratchCodeEncoding" type="enum" value="BASE32,BASE64" cardinality="single" optionalIn="account,cos" since="8.7.0">
   <defaultCOSValue>BASE32</defaultCOSValue>
