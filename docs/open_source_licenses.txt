@@ -245,7 +245,6 @@ SECTION 8: GNU General Public License, V2.0
    >>> libtool-2.2.6b
    >>> libwww-perl-6.05
    >>> mariadb-10.0.15
-   >>> mysql-connector-java-5.1.29
    >>> perl-archive-tar-1.96
    >>> perl-archive-zip-1.37
    >>> perl-array-compare-2.02
@@ -384,6 +383,7 @@ SECTION 10: GNU Lesser General Public License, V2.1
    >>> jcommon-1.0.20
    >>> jfreechart-1.0.16
    >>> jna-3.4.0
+   >>> mariadb-java-client-1.1.8
    >>> perl-mozilla-ca-20130114
    >>> perl-test-nowarnings-1.04
    >>> syslog4j-0.9.46
@@ -394,7 +394,7 @@ SECTION 10: GNU Lesser General Public License, V2.1
 
 SECTION 11: GNU Lesser General Public License, V3.0
 
-   >>> zeromq-3.2.3
+   >>> zeromq-4.0.5
 
 
 
@@ -32872,153 +32872,6 @@ POSSIBILITY OF SUCH DAMAGE.
 
 ***************************************************************************
 
->>> mysql-connector-java-5.1.29
-
-LICENSE
-
-MySQL Connector/J is licensed under the GPL or a commercial license
-from MySQL AB. 
-
-If you have licensed this product under the GPL, please see the COPYING
-file for more information. 
-
-There are special exceptions to the terms and conditions of the GPL 
-as it is applied to this software. View the full text of the 
-exception in file EXCEPTIONS-CONNECTOR-J in the directory of this 
-software distribution.
-
-If you have licensed this product under a commercial license from
-MySQL AB, please see the file "MySQLEULA.txt" that comes with this 
-distribution for the terms of the license.
-
-If you need non-GPL licenses for commercial distribution please contact 
-me <mark@mysql.com> or <sales@mysql.com>.
-
-
-ADDITIONAL LICENSE INFORMATION:
-
-> EXCEPTIONS-CONNECTOR-J:
-
-MySQL FLOSS License Exception
-
-The MySQL AB Exception for Free/Libre and Open Source
-Software-only Applications Using MySQL Client Libraries (the
-"FLOSS Exception").
-
-Version 0.6, 7 March 2007
-
-Exception Intent
-
-We want specified Free/Libre and Open Source Software (``FLOSS'')
-applications to be able to use specified GPL-licensed MySQL client
-libraries (the ``Program'') despite the fact that not all FLOSS
-licenses are compatible with version 2 of the GNU General Public
-License (the ``GPL'').
-
-Legal Terms and Conditions
-
-As a special exception to the terms and conditions of version 2.0
-of the GPL:
-
- 1. You are free to distribute a Derivative Work that is formed
-    entirely from the Program and one or more works (each, a
-    "FLOSS Work") licensed under one or more of the licenses
-    listed below in section 1, as long as:
-      a. You obey the GPL in all respects for the Program and the
-         Derivative Work, except for identifiable sections of the
-         Derivative Work which are not derived from the Program,
-         and which can reasonably be considered independent and
-         separate works in themselves,
-      b. all identifiable sections of the Derivative Work which
-         are not derived from the Program, and which can
-         reasonably be considered independent and separate works
-         in themselves,
-           i. are distributed subject to one of the FLOSS licenses
-              listed below, and
-          ii. the object code or executable form of those sections
-              are accompanied by the complete corresponding
-              machine-readable source code for those sections on
-              the same medium and under the same FLOSS license as
-              the corresponding object code or executable forms of
-              those sections, and
-      c. any works which are aggregated with the Program or with a
-         Derivative Work on a volume of a storage or distribution
-         medium in accordance with the GPL, can reasonably be
-         considered independent and separate works in themselves
-         which are not derivatives of either the Program, a
-         Derivative Work or a FLOSS Work.
-    If the above conditions are not met, then the Program may only
-    be copied, modified, distributed or used under the terms and
-    conditions of the GPL or another valid licensing option from
-    MySQL AB.
-
- 2. FLOSS License List
-
-License name Version(s)/Copyright Date
-Academic Free License 2.0
-Apache Software License 1.0/1.1/2.0
-Apple Public Source License 2.0
-Artistic license From Perl 5.8.0
-BSD license "July 22 1999"
-Common Development and Distribution License (CDDL) 1.0
-Common Public License 1.0
-Eclipse Public License 1.0
-GNU Library or "Lesser" General Public License (LGPL) 2.0/2.1
-Jabber Open Source License 1.0
-MIT license (As listed in file MIT-License.txt) ---
-Mozilla Public License (MPL) 1.0/1.1
-Open Software License 2.0
-OpenSSL license (with original SSLeay license) "2003" ("1998")
-PHP License 3.0
-Python license (CNRI Python License) ---
-Python Software Foundation License 2.1.1
-Sleepycat License "1999"
-University of Illinois/NCSA Open Source License ---
-W3C License "2001"
-X11 License "2001"
-Zlib/libpng License ---
-Zope Public License 2.0
-
-    Due to the many variants of some of the above licenses, we
-    require that any version follow the 2003 version of the Free
-    Software Foundation's Free Software Definition
-    (http://www.gnu.org/philosophy/free-sw.html) or version 1.9 of
-    the Open Source Definition by the Open Source Initiative
-    (http://www.opensource.org/docs/definition.php).
-
- 3. Definitions
-
-      a. Terms used, but not defined, herein shall have the
-         meaning provided in the GPL.
-      b. Derivative Work means a derivative work under copyright
-         law.
-
- 4. Applicability: This FLOSS Exception applies to all Programs
-    that contain a notice placed by MySQL AB saying that the
-    Program may be distributed under the terms of this FLOSS
-    Exception. If you create or distribute a work which is a
-    Derivative Work of both the Program and any other work
-    licensed under the GPL, then this FLOSS Exception is not
-    available for that work; thus, you must remove the FLOSS
-    Exception notice from that work and comply with the GPL in all
-    respects, including by retaining all GPL notices. You may
-    choose to redistribute a copy of the Program exclusively under
-    the terms of the GPL by removing the FLOSS Exception notice
-    from that copy of the Program, provided that the copy has
-    never been modified by you or any third party.
-
-Appendix A. Qualified Libraries and Packages
-
-The following is a non-exhaustive list of libraries and packages
-which are covered by the FLOSS License Exception. Please note that
-this appendix is provided merely as an additional service to
-specific FLOSS projects wishing to simplify licensing information
-for their users. Compliance with one of the licenses noted under
-the "FLOSS license list" section remains a prerequisite.
-
-Package Name                  Qualifying License and Version
-Apache Portable Runtime (APR) Apache Software License 2.0
-
 
 >>> perl-archive-tar-1.96
 
@@ -35037,6 +34890,56 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 Lesser General Public License for more details.
 
 
+>>> mariadb-java-client-1.1.8
+
+MariaDB Client for Java
+
+Copyright (c) 2012 Monty Program Ab.
+
+This library is free software; you can redistribute it and/or modify it under
+the terms of the GNU Lesser General Public License as published by the Free
+Software Foundation; either version 2.1 of the License, or (at your option)
+any later version.
+
+This library is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+for more details.
+
+You should have received a copy of the GNU Lesser General Public License along
+with this library; if not, write to Monty Program Ab info@montyprogram.com.
+
+This particular MariaDB Client for Java file is work
+derived from a Drizzle-JDBC. Drizzle-JDBC file which is covered by subject to
+the following copyright and notice provisions:
+
+Copyright (c) 2009-2011, Marcus Eriksson
+
+Redistribution and use in source and binary forms, with or without modification,
+are permitted provided that the following conditions are met:
+Redistributions of source code must retain the above copyright notice, this list
+of conditions and the following disclaimer.
+
+Redistributions in binary form must reproduce the above copyright notice, this
+list of conditions and the following disclaimer in the documentation and/or
+other materials provided with the distribution.
+
+Neither the name of the driver nor the names of its contributors may not be
+used to endorse or promote products derived from this software without specific
+prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS  AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY
+OF SUCH DAMAGE.
+
+
 >>> perl-mozilla-ca-20130114
 
 [PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE LGPL 2.1.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE LGPL 2.1.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
@@ -35129,7 +35032,7 @@ License.
 GNU Lesser General Public License, V3.0 is applicable to the following component(s).
 
 
->>> zeromq-3.2.3
+>>> zeromq-4.0.5
 
 Copyright (c) 2010-2011 250bpm s.r.o.
     Copyright (c) 2010-2011 Other contributors as noted in the AUTHORS file
@@ -35152,7 +35055,7 @@ ADDITIONAL LICENSE INFORMATION:
 
 > GPL 3.0
 
-C:\Documents and Settings\karabi.d\My Documents\Downloads\zeromq-3.2.3.tar.gz\zeromq-3.2.3.tar\zeromq-3.2.3\COPYING
+C:\Documents and Settings\karabi.d\My Documents\Downloads\zeromq-4.0.5.tar.gz\zeromq-4.0.5.tar\zeromq-4.0.5\COPYING
 
 License: GPL 3.0
 
@@ -35160,7 +35063,7 @@ License: GPL 3.0
 
 > MIT
 
-\zeromq-3.2.3.tar.gz\zeromq-3.2.3.tar\zeromq-3.2.3\config\ltsugar.m4
+\zeromq-4.0.5.tar.gz\zeromq-4.0.5.tar\zeromq-4.0.5\config\ltsugar.m4
 
 Copyright (C) 2004, 2005, 2007, 2008 Free Software Foundation, Inc.
 Written by Gary V. Vaughan, 2004
