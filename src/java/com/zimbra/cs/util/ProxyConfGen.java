@@ -82,6 +82,13 @@ enum ProxyConfValueType {
     CUSTOM;
 };
 
+enum IPMode {
+    UNKNOWN,
+    BOTH,
+    IPV4_ONLY,
+    IPV6_ONLY;
+};
+
 @SuppressWarnings("serial")
 class ProxyConfException extends Exception {
     public ProxyConfException (String msg) {
@@ -349,6 +356,32 @@ class ProxyConfVar
                     timeout);
         }
     }
+
+    String generateListenDirective(String key, String vip, int serverPort, IPMode ipmode, boolean sni) {
+        boolean spdy = serverSource.getBooleanAttr(Provisioning.A_zimbraReverseProxySPDYEnabled, true);
+        String spdystring = "";
+        String default_string = "";
+
+        if(spdy && (serverPort == 443 || serverPort == 3443 || serverPort == 9071)) {
+            spdystring = " ssl spdy";     // spdy only for https, sso & admin proxy ports
+        }
+        if (key.contains("default")) {
+            default_string = " default";
+        }
+        if (ipmode == IPMode.IPV4_ONLY || ipmode == IPMode.BOTH) {
+            if (sni || vip.isEmpty()) {
+                return String.format("%d%s%s", serverPort, default_string, spdystring);
+            } else {
+                return String.format("%s:%d%s", vip, serverPort, spdystring);
+            }
+        } else {
+            if (sni || vip.isEmpty()) {
+                return String.format("[::]:%d%s ipv6only=on%s", serverPort, default_string, spdystring);
+            } else {
+                return String.format("[%s]:%d ipv6only=on%s", vip, serverPort, spdystring);
+            }
+        }
+    }
 }
 
 abstract class WebEnablerVar extends ProxyConfVar {
@@ -409,13 +442,6 @@ abstract class IPModeEnablerVar extends ProxyConfVar {
     }
     private static IPMode currentIPMode = IPMode.UNKNOWN;
 
-    static enum IPMode {
-        UNKNOWN,
-        BOTH,
-        IPV4_ONLY,
-        IPV6_ONLY
-    }
-
     static IPMode getZimbraIPMode()
     {
         if (currentIPMode == IPMode.UNKNOWN) {
@@ -430,45 +456,6 @@ abstract class IPModeEnablerVar extends ProxyConfVar {
         }
 
         return currentIPMode;
-    }
-}
-
-class IPBothEnablerVar extends IPModeEnablerVar {
-
-    public IPBothEnablerVar() {
-        super("core.ipboth.enabled", true, "Both IPv4 and IPv6");
-    }
-
-    @Override
-    public void update() {
-        IPMode ipmode = getZimbraIPMode();
-        mValue=(ipmode == IPMode.BOTH)?true:false;
-    }
-}
-
-class IPv4OnlyEnablerVar extends IPModeEnablerVar {
-
-    public IPv4OnlyEnablerVar() {
-        super("core.ipv4only.enabled", false, "IPv4 Only");
-    }
-
-    @Override
-    public void update() {
-        IPMode ipmode = getZimbraIPMode();
-        mValue=(ipmode == IPMode.IPV4_ONLY)?true:false;
-    }
-}
-
-class IPv6OnlyEnablerVar extends IPModeEnablerVar {
-
-    public IPv6OnlyEnablerVar() {
-        super("core.ipv6only.enabled", false, "IPv6 Only");
-    }
-
-    @Override
-    public void update() {
-        IPMode ipmode = getZimbraIPMode();
-        mValue=(ipmode == IPMode.IPV6_ONLY)?true:false;
     }
 }
 
@@ -1079,6 +1066,56 @@ class WebLoginSSLUpstreamServersVar extends ServersVar {
     }
 }
 
+class ListenVipsVar extends ProxyConfVar {
+    private final String[] mvips;
+    private final String portAttrName;
+    private final IPMode ipmode;
+    private final String key;
+
+    public ListenVipsVar(String key, String[] vips, String portAttrName, IPMode ipmode, String description) {
+        super(key, null, null, ProxyConfValueType.CUSTOM, ProxyConfOverride.CUSTOM, description);
+        this.mvips = vips;
+        this.portAttrName = portAttrName;
+        this.ipmode = ipmode;
+        this.key = key;
+    }
+
+    @Override
+    public void update() throws ServiceException {
+        ArrayList<String> directives = new ArrayList<String>();
+        int serverPort = serverSource.getIntAttr(portAttrName, 0);
+        boolean sni = serverSource.getBooleanAttr("zimbraReverseProxySNIEnabled", false);
+
+        if (mvips.length > 0) {
+            for (String vip: mvips) {
+                mLog.debug("Adding listen directive for virtual ip " + vip);
+                directives.add(generateListenDirective(key, vip, serverPort, ipmode, sni));
+            }
+        } else {   // mvips.length = 0, zimbraVirtualIPAddress for the domain empty or its for the default server
+            mLog.debug("Adding listen directive for default server (i.e localhost)");
+            directives.add(generateListenDirective(key, "", serverPort, ipmode, sni));
+        }
+        mValue = directives;
+    }
+
+    @Override
+    public String format(Object o) {
+        @SuppressWarnings("unchecked")
+        ArrayList<String> listen = (ArrayList<String>) o;
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < listen.size(); i++) {
+            String s = listen.get(i);
+            mLog.debug("listen directive = " + s);
+            if (i == 0) {
+                sb.append(String.format("listen                  %s;", s));
+            } else {
+                sb.append(String.format("\n    listen                  %s;", s));
+            }
+        }
+        return sb.toString();
+    }
+}
+
 class ImapCapaVar extends ProxyConfVar {
 
     public ImapCapaVar() {
@@ -1522,23 +1559,6 @@ class WebProxyUpstreamEwsTargetVar extends ProxyConfVar {
     }
 }
 
-class SpdyConfVar extends ProxyConfVar {
-    public SpdyConfVar() {
-        super("core.spdy", "zimbraReverseProxySPDYEnabled", true, ProxyConfValueType.BOOLEAN,
-                ProxyConfOverride.SERVER, "String options required in listen directive for SPDY");
-    }
-
-    @Override
-    public String format(Object o) throws ProxyConfException {
-        Boolean value = (Boolean)o;
-        if(value == false) {
-            return "";
-        } else {
-            return " ssl spdy";
-        }
-    }
-}
-
 class WebSSLSessionCacheSizeVar extends ProxyConfVar {
 
     public WebSSLSessionCacheSizeVar() {
@@ -1680,7 +1700,7 @@ class SSLStaplingEnablerVar extends ProxyConfVar {
 class DomainAttrItem {
     public String domainName;
     public String virtualHostname;
-    public String virtualIPAddress;
+    public String[] virtualIPAddress;
     public String sslCertificate;
     public String sslPrivateKey;
     public Boolean useDomainServerCert;
@@ -1688,7 +1708,7 @@ class DomainAttrItem {
     public String clientCertMode;
     public String clientCertCa;
 
-    public DomainAttrItem(String dn, String vhn, String vip, String scrt, String spk,
+    public DomainAttrItem(String dn, String vhn, String[] vip, String scrt, String spk,
             String ccm, String cca) {
         this.domainName = dn;
         this.virtualHostname = vhn;
@@ -1987,6 +2007,7 @@ public class ProxyConfGen
     private static Server mServer = null;
     private static boolean mGenConfPerVhn = false;
     private static Map<String, ProxyConfVar> mConfVars = new HashMap<String, ProxyConfVar>();
+    private static Map<String, ProxyConfVar> mDomainConfVars = new HashMap<String, ProxyConfVar>();
     private static Map<String, String> mVars = new HashMap<String, String>();
     static List<DomainAttrItem> mDomainReverseProxyAttrs;
 
@@ -2109,34 +2130,13 @@ public class ProxyConfGen
                             // config
                 }
 
-                boolean lookupVIP = true; // lookup virutal IP from DNS or /etc/hosts
-                if (virtualIPAddresses.length > 0) {
-                    if (virtualIPAddresses.length != virtualHostnames.length) {
-                        result.add(new DomainAttrExceptionItem(
-                                new ProxyConfException("The configurations of zimbraVirtualHostname and " +
-                                                       "zimbraVirtualIPAddress are mismatched", null)));
-                                return;
-                    }
-                    lookupVIP = false;
-                }
-
-                //Here assume virtualHostnames, virtualIPAddresses & DomainAllowedIPs are
-                //same in number
                 int i = 0;
                 for( ; i < virtualHostnames.length; i++) {
-                    //bug 66892, only lookup IP when zimbraVirtualIPAddress is unset
-                    String vip = null;
-                    if (lookupVIP) {
-                        vip = null;
-                    } else {
-                        vip = virtualIPAddresses[i];
-                    }
-
                     if (!ProxyConfUtil.isEmptyString(clientCertCA)){
                         createDomainSSLDirIfNotExists();
                     }
                     result.add(new DomainAttrItem(domainName,
-                            virtualHostnames[i], vip, certificate, privateKey,
+                            virtualHostnames[i], virtualIPAddresses, certificate, privateKey,
                             clientCertMode, clientCertCA));
                 }
             }
@@ -2444,90 +2444,102 @@ public class ProxyConfGen
         mVars.put("vhn", item.virtualHostname);
 
         //resolve the virtual host name
-        InetAddress vip = null;
+        ArrayList<InetAddress> vip = new ArrayList<InetAddress>();
+        int i = 0;
         try {
-            if (item.virtualIPAddress == null) {
-                vip = InetAddress.getByName(item.virtualHostname);
+            if (item.virtualIPAddress.length == 0) {
+                vip.add(InetAddress.getByName(item.virtualHostname));
             } else {
-                vip = InetAddress.getByName(item.virtualIPAddress);
+                for( ; i < item.virtualIPAddress.length; i++) {
+                    vip.add(InetAddress.getByName(item.virtualIPAddress[i]));
+                }
             }
         } catch (UnknownHostException e) {
             throw new ProxyConfException("virtual host name \"" + item.virtualHostname + "\" is not resolvable", e);
         }
 
-        if (IPModeEnablerVar.getZimbraIPMode() != IPModeEnablerVar.IPMode.BOTH) {
-            if (IPModeEnablerVar.getZimbraIPMode() == IPModeEnablerVar.IPMode.IPV4_ONLY &&
-                    vip instanceof Inet6Address) {
-                String msg = vip.getHostAddress() +
-                        " is an IPv6 address but zimbraIPMode is 'ipv4'";
-                mLog.error(msg);
-                throw new ProxyConfException(msg);
-            }
+        IPMode ipmode = IPModeEnablerVar.getZimbraIPMode();
+        for(i = 0; i < vip.size(); i++) {
+            if (ipmode != IPMode.BOTH) {
+                if (ipmode == IPMode.IPV4_ONLY &&
+                        vip.get(i) instanceof Inet6Address) {
+                    String msg = vip.get(i).getHostAddress() +
+                            " is an IPv6 address but zimbraIPMode is 'ipv4'";
+                    mLog.error(msg);
+                    throw new ProxyConfException(msg);
+                }
 
-            if (IPModeEnablerVar.getZimbraIPMode() == IPModeEnablerVar.IPMode.IPV6_ONLY &&
-                    vip instanceof Inet4Address) {
-                String msg = vip.getHostAddress() +
-                        " is an IPv4 address but zimbraIPMode is 'ipv6'";
-                mLog.error(msg);
-                throw new ProxyConfException(msg);
+                if (ipmode == IPMode.IPV6_ONLY &&
+                        vip.get(i) instanceof Inet4Address) {
+                    String msg = vip.get(i).getHostAddress() +
+                            " is an IPv4 address but zimbraIPMode is 'ipv6'";
+                    mLog.error(msg);
+                    throw new ProxyConfException(msg);
+                }
             }
         }
 
-        boolean sni = ProxyConfVar.serverSource.getBooleanAttr("zimbraReverseProxySNIEnabled", false);
-        if (vip instanceof Inet6Address) {
-            //ipv6 address has to be enclosed with [ ]
-            if (sni) {
-                mVars.put("vip", "[::]:");
-            } else {
-                mVars.put("vip", "[" + vip.getHostAddress() + "]:");
-            }
-        } else {
-            if (sni) {
-                mVars.put("vip", "");
-            } else {
-                mVars.put("vip", vip.getHostAddress() + ":");
-            }
+        mDomainConfVars.put("mail.listen.imap.vhost", new ListenVipsVar("mail.listen.imap.vhost", item.virtualIPAddress,
+                "zimbraImapProxyBindPort", ipmode, "Listen directive for vhost mail imap proxy"));
+        mDomainConfVars.put("mail.listen.imaps.vhost", new ListenVipsVar("mail.listen.imaps.vhost", item.virtualIPAddress,
+                "zimbraImapSSLProxyBindPort", ipmode, "Listen directive for vhost mail imaps proxy"));
+        mDomainConfVars.put("mail.listen.pop3.vhost", new ListenVipsVar("mail.listen.pop3.vhost", item.virtualIPAddress,
+                "zimbraPop3ProxyBindPort", ipmode, "Listen directive for vhost mail pop3 proxy"));
+        mDomainConfVars.put("mail.listen.pop3s.vhost", new ListenVipsVar("mail.listen.pop3s.vhost", item.virtualIPAddress,
+                "zimbraPop3SSLProxyBindPort", ipmode, "Listen directive for vhost mail pop3s proxy"));
+        mDomainConfVars.put("web.listen.admin.vhost", new ListenVipsVar("web.listen.admin.vhost", item.virtualIPAddress,
+                "zimbraAdminProxyPort", ipmode, "Listen directive for vhost web admin proxy"));
+        mDomainConfVars.put("web.listen.http.vhost", new ListenVipsVar("web.listen.http.vhost", item.virtualIPAddress,
+                "zimbraMailProxyPort", ipmode, "Listen directive for vhost web http proxy"));
+        mDomainConfVars.put("web.listen.https.vhost", new ListenVipsVar("web.listen.https.vhost", item.virtualIPAddress,
+                "zimbraMailSSLProxyPort", ipmode, "Listen directive for vhost web https proxy"));
+        mDomainConfVars.put("web.listen.sso.vhost", new ListenVipsVar("web.listen.sso.vhost", item.virtualIPAddress,
+                "zimbraMailSSLProxyClientCertPort", ipmode, "Listen directive for vhost web sso proxy"));
+
+        mLog.info("Updating Default Domain Variable Map");
+        try {
+            updateDefaultDomainVars();
+        } catch (ProxyConfException pe) {
+            handleException(pe);
+        } catch (ServiceException se) {
+            handleException(se);
         }
 
-        if ( item.sslCertificate != null ){
+        if (item.sslCertificate != null) {
             mVars.put("ssl.crt", mDomainSSLDir + File.separator +
             item.domainName + mSSLCrtExt);
-        }
-        else{
+        } else {
             defaultVal = mVars.get("ssl.crt.default");
             mVars.put("ssl.crt", defaultVal);
         }
 
-        if ( item.sslPrivateKey != null ){
+        if (item.sslPrivateKey != null) {
             mVars.put("ssl.key", mDomainSSLDir + File.separator +
                     item.domainName + mSSLKeyExt);
-        }
-        else{
+        } else {
             defaultVal = mVars.get("ssl.key.default");
             mVars.put("ssl.key", defaultVal);
         }
 
-        if ( item.clientCertMode != null ){
+        if (item.clientCertMode != null) {
             mVars.put("ssl.clientcertmode", item.clientCertMode );
-            if ( item.clientCertMode.equals("on") || item.clientCertMode.equals("optional")) {
+            if (item.clientCertMode.equals("on") || item.clientCertMode.equals("optional")) {
                 mVars.put("web.sso.certauth.enabled", "");
             } else {
                 mVars.put("web.sso.certauth.enabled", "#");
             }
-        }
-        else {
+        } else {
             defaultVal = mVars.get("ssl.clientcertmode.default");
             mVars.put("ssl.clientcertmode", defaultVal );
         }
 
-        if ( item.clientCertCa != null ){
+        if (item.clientCertCa != null) {
             String clientCertCaPath = getClientCertCaPathByDomain(item.domainName);
             mVars.put("ssl.clientcertca", clientCertCaPath);
             //DnVhnVIPItem.clientCertCa stores the CA cert's content, other than path
             //if it is not null or "", loadReverseProxyVhnAndVIP() will save its content .
             //into clientCertCaPath before coming here
-        }
-        else{
+        } else {
             defaultVal = mVars.get("ssl.clientcertca.default");
             mVars.put("ssl.clientcertca", defaultVal);
         }
@@ -2610,9 +2622,6 @@ public class ProxyConfGen
         mConfVars.put("core.includes.webmode", new ProxyConfVar("core.includes.webmode", null, mWebModeConfIncludesDir, ProxyConfValueType.STRING, ProxyConfOverride.NONE, "Include directory for all the web mode conf files (relative to ${core.workdir}/conf)"));
         mConfVars.put("core.cprefix", new ProxyConfVar("core.cprefix", null, mConfPrefix, ProxyConfValueType.STRING, ProxyConfOverride.NONE, "Common config file prefix"));
         mConfVars.put("core.tprefix", new ProxyConfVar("core.tprefix", null, mTemplatePrefix, ProxyConfValueType.STRING, ProxyConfOverride.NONE, "Common template file prefix"));
-        mConfVars.put("core.ipv4only.enabled", new IPv4OnlyEnablerVar());
-        mConfVars.put("core.ipv6only.enabled", new IPv6OnlyEnablerVar());
-        mConfVars.put("core.ipboth.enabled", new IPBothEnablerVar());
         mConfVars.put("ssl.crt.default", new ProxyConfVar("ssl.crt.default", null, mDefaultSSLCrt, ProxyConfValueType.STRING, ProxyConfOverride.NONE, "default nginx certificate file path"));
         mConfVars.put("ssl.key.default", new ProxyConfVar("ssl.key.default", null, mDefaultSSLKey, ProxyConfValueType.STRING, ProxyConfOverride.NONE, "default nginx private key file path"));
         mConfVars.put("ssl.clientcertmode.default", new ProxyConfVar("ssl.clientcertmode.default", "zimbraReverseProxyClientCertMode", "off", ProxyConfValueType.STRING, ProxyConfOverride.SERVER,"enable authentication via X.509 Client Certificate in nginx proxy (https only)"));
@@ -2746,7 +2755,6 @@ public class ProxyConfGen
 	    mConfVars.put("web.login.upstream.url", new ProxyConfVar("web.login.upstream.url", "zimbraMailURL", "/", ProxyConfValueType.STRING, ProxyConfOverride.SERVER, "Zimbra Login URL"));
 	    mConfVars.put("web.upstream.login.target", new WebProxyUpstreamLoginTargetVar());
 	    mConfVars.put("web.upstream.ews.target", new WebProxyUpstreamEwsTargetVar());
-	    mConfVars.put("web.ssl.spdy", new SpdyConfVar());
 	    mConfVars.put("web.ssl.stapling", new ProxyConfVar("web.ssl.stapling", "zimbraReverseProxySSLStapling", "off", ProxyConfValueType.STRING, ProxyConfOverride.SERVER, "SSL Stapling flag for NGINX - can be on|off - on Enables stapling of OCSP responses by the server, off disables it"));
 	    mConfVars.put("ssl.stapling.responder.enabled", new SSLStaplingEnablerVar());
 	    mConfVars.put("ssl.stapling.responder.url", new ProxyConfVar("ssl.stapling.responder.url", "zimbraReverseProxySSLStaplingResponderURL", "", ProxyConfValueType.STRING, ProxyConfOverride.SERVER, "SSL Stapling responder URL"));
@@ -2761,6 +2769,23 @@ public class ProxyConfGen
 	    mConfVars.put("web.zss.upstream.disable", new WebZSSUpstreamEnablerVar());
 	    mConfVars.put("web.zss.upstream.hostname", new ProxyConfVar("web.zss.upstream.hostname", "zimbraReverseProxyZSSHostname", "", ProxyConfValueType.STRING, ProxyConfOverride.SERVER, "Hostname of the upstream ZSS server being reverse-proxied"));
 	    mConfVars.put("web.zss.resolver.file", new ProxyConfVar("web.zss.resolver.file", null, mResolverfile, ProxyConfValueType.STRING, ProxyConfOverride.CONFIG, "File containing resolver directive with the nameservers from /etc/resolv.conf"));
+	    IPMode ipmode = IPModeEnablerVar.getZimbraIPMode();
+	    mConfVars.put("mail.listen.imap.default", new ListenVipsVar("mail.listen.imap.default", new String[0],
+                "zimbraImapProxyBindPort", ipmode, "Listen directive for default mail imap proxy"));
+	    mConfVars.put("mail.listen.imaps.default", new ListenVipsVar("mail.listen.imaps.default", new String[0],
+                "zimbraImapSSLProxyBindPort", ipmode, "Listen directive for default mail imaps proxy"));
+	    mConfVars.put("mail.listen.pop3.default", new ListenVipsVar("mail.listen.pop3.default", new String[0],
+                "zimbraPop3ProxyBindPort", ipmode, "Listen directive for default mail pop3 proxy"));
+	    mConfVars.put("mail.listen.pop3s.default", new ListenVipsVar("mail.listen.pop3s.default", new String[0],
+                "zimbraPop3SSLProxyBindPort", ipmode, "Listen directive for default mail pop3s proxy"));
+	    mConfVars.put("web.listen.admin.default", new ListenVipsVar("web.listen.admin.default", new String[0],
+                "zimbraAdminProxyPort", ipmode, "Listen directive for default web admin proxy"));
+	    mConfVars.put("web.listen.http.default", new ListenVipsVar("web.listen.http.default", new String[0],
+                "zimbraMailProxyPort", ipmode, "Listen directive for default web http proxy"));
+	    mConfVars.put("web.listen.https.default", new ListenVipsVar("web.listen.https.default", new String[0],
+                "zimbraMailSSLProxyPort", ipmode, "Listen directive for default web https proxy"));
+	    mConfVars.put("web.listen.sso.default", new ListenVipsVar("web.listen.sso.default", new String[0],
+                "zimbraMailSSLProxyClientCertPort", ipmode, "Listen directive for default web sso proxy"));
     }
 
     /* update the default variable map from the active configuration */
@@ -2771,6 +2796,17 @@ public class ProxyConfGen
         for (String key: keys) {
             mConfVars.get(key).update();
             mVars.put(key,mConfVars.get(key).confValue());
+        }
+    }
+
+    /* update the default domain variable map from the active configuration */
+    public static void updateDefaultDomainVars ()
+        throws ServiceException, ProxyConfException
+    {
+        Set<String> keys = mDomainConfVars.keySet();
+        for (String key: keys) {
+            mDomainConfVars.get(key).update();
+            mVars.put(key,mDomainConfVars.get(key).confValue());
         }
     }
 
@@ -3169,9 +3205,9 @@ class ProxyConfUtil{
             throw new ProxyConfException("the lookup target " + hostname
                     + " can't be resolved");
         }
-        IPModeEnablerVar.IPMode mode = IPModeEnablerVar.getZimbraIPMode();
+        IPMode mode = IPModeEnablerVar.getZimbraIPMode();
 
-        if (mode == IPModeEnablerVar.IPMode.IPV4_ONLY) {
+        if (mode == IPMode.IPV4_ONLY) {
             for (InetAddress ip : ips) {
                 if (ip instanceof Inet4Address) {
                     return ip;
@@ -3179,7 +3215,7 @@ class ProxyConfUtil{
             }
             throw new ProxyConfException(
                     "Can't find valid lookup target IPv4 address when zimbra IP mode is IPv4 only");
-        } else if (mode == IPModeEnablerVar.IPMode.IPV6_ONLY) {
+        } else if (mode == IPMode.IPV6_ONLY) {
             for (InetAddress ip : ips) {
                 if (ip instanceof Inet6Address) {
                     return ip;
