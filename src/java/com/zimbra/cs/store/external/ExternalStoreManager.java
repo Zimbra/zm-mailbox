@@ -152,7 +152,7 @@ public abstract class ExternalStoreManager extends StoreManager implements Exter
                 }
                 consecutiveIoExceptions++;
                 ZimbraLog.store.warn("IOException during deleteStore() for mbox [%d] item [%d] revision [%d] locator [%s]"
-                    , mailboxData.accountId, mbinfo.itemId, mbinfo.revision, mbinfo.locator, ioe);
+                    , mailboxData.id, mbinfo.itemId, mbinfo.revision, mbinfo.locator, ioe);
                 if (consecutiveIoExceptions > Provisioning.getInstance().getLocalServer().getStoreExternalMaxIOExceptionsForDelete()) {
                     ZimbraLog.store.error("too many consecutive IOException during delete store, bailing");
                     break;
@@ -326,7 +326,7 @@ public abstract class ExternalStoreManager extends StoreManager implements Exter
     public List<String> getAllBlobPaths(Mailbox mbox) throws IOException {
         return getAllBlobPaths(mbox.getId(), mbox.getAccountId());
     }
-    
+
     /**
      * Get a set of all blobs which exist in the store associated with a mailbox
      * Optional operation used to find orphaned blobs
