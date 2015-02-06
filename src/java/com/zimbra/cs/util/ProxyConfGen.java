@@ -363,10 +363,10 @@ class ProxyConfVar
         String default_string = "";
 
         if(spdy && (serverPort == 443 || serverPort == 3443 || serverPort == 9071)) {
-            spdystring = " ssl spdy";     // spdy only for https, sso & admin proxy ports
+            spdystring = " ssl spdy";     // spdy only for https, sso & admin web proxy ports
         }
-        if (key.contains("default")) {
-            default_string = " default";
+        if (key.contains("default") && (serverPort == 443 || serverPort == 3443 || serverPort == 9071 || serverPort == 80)) {
+            default_string = " default";    // default server option only for the web proxy & not mail proxy
         }
         if (ipmode == IPMode.IPV4_ONLY || ipmode == IPMode.BOTH) {
             if (sni || vip.isEmpty()) {
