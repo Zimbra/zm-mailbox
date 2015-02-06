@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2009, 2010, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -18,8 +18,11 @@ package com.zimbra.cs.dav.resource;
 
 import javax.servlet.http.HttpServletResponse;
 
+import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
@@ -56,9 +59,25 @@ public class Principal extends DavResource {
         return false;
     }
 
-    public Account getAccount() {
-    	return mAccount;
+    protected Account setAccount(Account acct) {
+        mAccount = acct;
+        return mAccount;
     }
 
-    protected Account mAccount;
+    public Account getAccount() {
+        if (mAccount != null) {
+            return mAccount;
+        } else {
+            try {
+                mAccount = Provisioning.getInstance().get(AccountBy.name, mOwner);
+            } catch (ServiceException e) {
+                ZimbraLog.dav.info("No account associated with Principal owner='%s' href='%s'", mOwner, this.getHref());
+                mAccount = null;
+            }
+            return mAccount;
+        }
+    }
+
+    /** deliberately private.  Use getAccount() to make sure is initialized if wasn't provided in constructor */
+    private Account mAccount;
 }

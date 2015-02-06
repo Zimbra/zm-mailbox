@@ -670,7 +670,7 @@ public class DavContext {
     }
 
 
-    private ZMailbox getZMailbox(Account acct) throws ServiceException {
+    public ZMailbox getZMailbox(Account acct) throws ServiceException {
         AuthToken authToken = AuthProvider.getAuthToken(getAuthAccount());
         ZMailbox.Options zoptions = new ZMailbox.Options(authToken.toZAuthToken(), AccountUtil.getSoapUri(acct));
         zoptions.setNoSession(true);

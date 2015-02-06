@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2009, 2010, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -16,11 +16,11 @@
  */
 package com.zimbra.cs.dav.service.method;
 
-import javax.servlet.http.HttpServletResponse;
-
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.Iterator;
+
+import javax.servlet.http.HttpServletResponse;
 
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
@@ -110,23 +110,27 @@ public class ExpandProperty extends Report {
                             continue;
                         @SuppressWarnings("rawtypes")
                         Iterator hrefs = prop.elementIterator(DavElements.E_HREF);
-                        while (hrefs.hasNext()) {
-                            Element href = (Element)hrefs.next();
-                            String url = href.getText();
-                            if (url == null)
-                                continue;
-                            try {
-                                url = URLDecoder.decode(url, "UTF-8");
-                            } catch (UnsupportedEncodingException e) {
-                                ZimbraLog.dav.warn("can't decode url %s", url, e);
-                            }
-                            try {
-                                DavResource target = UrlNamespace.getResourceAtUrl(ctxt, url);
-                                Element targetElem = DocumentHelper.createElement(DavElements.E_RESPONSE);
-                                expandProperties(ctxt, target, property, targetElem);
-                                propstat.add(rp.getName(), targetElem);
-                            } catch (DavException e) {
-                                ZimbraLog.dav.warn("can't find resource for "+url, e);
+                        if (!hrefs.hasNext()) {
+                            propstat.add(rp); // need to say which property, even if the list is empty
+                        } else {
+                            while (hrefs.hasNext()) {
+                                Element href = (Element)hrefs.next();
+                                String url = href.getText();
+                                if (url == null)
+                                    continue;
+                                try {
+                                    url = URLDecoder.decode(url, "UTF-8");
+                                } catch (UnsupportedEncodingException e) {
+                                    ZimbraLog.dav.warn("can't decode url %s", url, e);
+                                }
+                                try {
+                                    DavResource target = UrlNamespace.getResourceAtUrl(ctxt, url);
+                                    Element targetElem = DocumentHelper.createElement(DavElements.E_RESPONSE);
+                                    expandProperties(ctxt, target, property, targetElem);
+                                    propstat.add(rp.getName(), targetElem);
+                                } catch (DavException e) {
+                                    ZimbraLog.dav.warn("can't find resource for "+url, e);
+                                }
                             }
                         }
                     }
@@ -139,9 +143,9 @@ public class ExpandProperty extends Report {
     }
 
     private static class Prop {
-        private String mName;
-        private String mNamespace;
-        private QName mQName;
+        private final String mName;
+        private final String mNamespace;
+        private final QName mQName;
 
         public Prop(Element propElement) {
             mName = propElement.attributeValue(DavElements.P_NAME);

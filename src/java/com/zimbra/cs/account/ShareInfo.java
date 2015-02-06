@@ -553,19 +553,6 @@ public class ShareInfo {
      */
     public static class NotificationSender {
 
-        private static final short ROLE_VIEW  = ACL.RIGHT_READ;
-        private static final short ROLE_ADMIN = ACL.RIGHT_READ |
-                                                ACL.RIGHT_WRITE |
-                                                ACL.RIGHT_INSERT |
-                                                ACL.RIGHT_DELETE |
-                                                ACL.RIGHT_ACTION |
-                                                ACL.RIGHT_ADMIN;
-        private static final short ROLE_MANAGER = ACL.RIGHT_READ |
-                                                  ACL.RIGHT_WRITE |
-                                                  ACL.RIGHT_INSERT |
-                                                  ACL.RIGHT_DELETE |
-                                                  ACL.RIGHT_ACTION;
-
         private static final String HTML_LINE_BREAK = "<br>";
         private static final String NEWLINE = "\n";
 
@@ -734,15 +721,15 @@ public class ShareInfo {
                     share.addAttribute(ShareConstants.A_EXPIRE, true);
                 }
             }
-            share.addElement(ShareConstants.E_GRANTEE).
+            share.addNonUniqueElement(ShareConstants.E_GRANTEE).
                     addAttribute(ShareConstants.A_ID, sid.getGranteeId()).
                     addAttribute(ShareConstants.A_EMAIL, sid.getGranteeName()).
                     addAttribute(ShareConstants.A_NAME, sid.getGranteeNotifName());
-            share.addElement(ShareConstants.E_GRANTOR).
+            share.addNonUniqueElement(ShareConstants.E_GRANTOR).
                     addAttribute(ShareConstants.A_ID, sid.getOwnerAcctId()).
                     addAttribute(ShareConstants.A_EMAIL, sid.getOwnerAcctEmail()).
                     addAttribute(ShareConstants.A_NAME, sid.getOwnerNotifName());
-            Element link = share.addElement(ShareConstants.E_LINK);
+            Element link = share.addNonUniqueElement(ShareConstants.E_LINK);
             link.addAttribute(ShareConstants.A_ID, sid.getItemId()).
                     addAttribute(ShareConstants.A_NAME, sid.getName()).
                     addAttribute(ShareConstants.A_VIEW, sid.getFolderDefaultView());
@@ -762,11 +749,11 @@ public class ShareInfo {
         private static String getRoleFromRights(ShareInfoData sid, Locale locale) {
             String rights = sid.getRights();
             rights = rights.replace(ACL.rightsToString(ACL.RIGHT_PRIVATE), "");
-            if (rights.equals(ACL.rightsToString(ROLE_ADMIN))) {
+            if (rights.equals(ACL.rightsToString(ACL.ROLE_ADMIN))) {
                 return L10nUtil.getMessage(MsgKey.shareNotifBodyGranteeRoleAdmin, locale);
-            }  else if (rights.equals(ACL.rightsToString(ROLE_MANAGER))) {
+            }  else if (rights.equals(ACL.rightsToString(ACL.ROLE_MANAGER))) {
                  return L10nUtil.getMessage(MsgKey.shareNotifBodyGranteeRoleManager, locale);
-            }  else if (rights.equals(ACL.rightsToString(ROLE_VIEW))) {
+            }  else if (rights.equals(ACL.rightsToString(ACL.ROLE_VIEW))) {
                 return L10nUtil.getMessage(MsgKey.shareNotifBodyGranteeRoleViewer, locale);
             } else if (StringUtil.isNullOrEmpty(sid.getRights())){
                 return L10nUtil.getMessage(MsgKey.shareNotifBodyGranteeRoleNone, locale);

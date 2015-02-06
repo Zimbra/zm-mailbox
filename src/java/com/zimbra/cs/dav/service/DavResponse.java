@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -106,7 +106,7 @@ public class DavResponse {
         sStatusTextMap.put(DavProtocol.STATUS_INSUFFICIENT_STORAGE, "HTTP/1.1 507 Insufficient Storage");
     }
 
-    private Document mResponse;
+    private final Document mResponse;
 
     public DavResponse() {
         mResponse = org.dom4j.DocumentHelper.createDocument();
@@ -201,8 +201,8 @@ public class DavResponse {
     }
 
     public static class PropStat {
-        private HashMap<Integer,Element> mMap;
-        private ArrayList<ResourceProperty> mProps;
+        private final HashMap<Integer,Element> mMap;
+        private final ArrayList<ResourceProperty> mProps;
         public PropStat() {
             mProps = new ArrayList<ResourceProperty>();
             mMap = new HashMap<Integer,Element>();
@@ -210,12 +210,15 @@ public class DavResponse {
         public void toResponse(DavContext ctxt, Element response, boolean nameOnly) {
             if (!mProps.isEmpty()) {
                 Element propElem = findProp(HttpServletResponse.SC_OK);
-                for (ResourceProperty prop : mProps)
+                for (ResourceProperty prop : mProps) {
                     prop.toElement(ctxt, propElem, nameOnly);
+                }
             }
-            for (Integer code : mMap.keySet())
+            for (Integer code : mMap.keySet()) {
                 response.add(mMap.get(code));
+            }
         }
+
         public void add(ResourceProperty prop) {
             mProps.add(prop);
         }
