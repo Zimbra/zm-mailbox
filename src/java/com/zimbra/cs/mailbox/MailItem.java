@@ -748,7 +748,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
             mMailboxData = mbox.getData();
             mAccount = mbox.getAccount();
             mMailbox = mbox;
-        } 
+        }
         decodeMetadata(mData.metadata);
         checkItemCreationAllowed(); // this check may rely on decoded metadata
         mData.metadata = null;
@@ -779,7 +779,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         }
         return mMailbox;
     }
-    
+
     protected void checkItemCreationAllowed() throws ServiceException {
         // not allowed in external account mailbox
         if (getAccount().isIsExternalVirtualAccount()) {
@@ -900,10 +900,11 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         return path + (path.endsWith("/") ? "" : "/") + name;
     }
 
-    /** Returns the ID the item is referenced by in the index.  Returns -1
-     *  for non-indexed items.  For indexed items, the "index ID" will be the
-     *  same as the item ID unless the item is a copy of another item; in that
-     *  case, the "index ID" is the same as the original item's "index ID". */
+    /** Returns the ID the item is referenced by in the index.  Returns -1 (IndexStatus.NO.id()) for non-indexed items.
+     *  For indexed items, the "index ID" will be the same as the item ID unless the item is a copy of another item;
+     *  in that case, the "index ID" is the same as the original item's "index ID".
+     *  Value can also be 0 (IndexStatus.DEFERRED.id()) and 1 (MailItem.IndexStatus.STALE.id())
+     */
     public int getIndexId() {
         return mData.indexId;
     }
@@ -996,7 +997,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
     }
 
     /** Returns the item's underlying storage data so that it may be persisted
-     *  somewhere besides the database - usually in encoded form. 
+     *  somewhere besides the database - usually in encoded form.
      * @throws ServiceException */
     public UnderlyingData getUnderlyingData() throws ServiceException {
         mData.metadata = encodeMetadata().toString();
@@ -1613,7 +1614,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
      *
      * @return a list of IndexDocument to be added to the index for this item
      * @throws TemporaryIndexingException recoverable index error
-     * @throws ServiceException 
+     * @throws ServiceException
      */
     public List<IndexDocument> generateIndexData() throws TemporaryIndexingException, ServiceException {
         return null;

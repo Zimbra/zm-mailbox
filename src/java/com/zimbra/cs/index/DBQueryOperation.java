@@ -558,7 +558,6 @@ public class DBQueryOperation extends QueryOperation {
                             executeMode = QueryExecuteMode.LUCENE_FIRST;
                         }
                     }
-
                     getNextChunk();
                 }
 
@@ -569,7 +568,18 @@ public class DBQueryOperation extends QueryOperation {
                     // message with separately-indexed MIME parts. Each of these parts will turn into a separate
                     // ZimbraHit at this point, although they might be combined together at a higher level (via a
                     // HitGrouper).
-                    Collection<SolrDocument> docs = luceneChunk != null ? luceneChunk.getHit(sr.getIndexId()) : null;
+                    Collection<SolrDocument> docs;
+                    if (luceneChunk == null) {
+                        docs = null;
+                    } else {
+                        // Bug 97612: Value sometimes 0 (i.e. DEFERRED) even though found the item from the
+                        // index.  May be related to indexing having been skipped due to another thread draining the
+                        // deferred indexing queue.
+                        // The idiom for testing greater than STALE is used elsewhere, so assumed valid.
+                        int hitId =
+                                (sr.getIndexId() > MailItem.IndexStatus.STALE.id()) ? sr.getIndexId() : sr.getId();
+                        docs = luceneChunk.getHit(hitId);
+                    }
 
                     if (docs == null || !ZimbraQueryResultsImpl.shouldAddDuplicateHits(sr.getType())) {
                         ZimbraHit toAdd = context.getResults().getZimbraHit(context.getMailbox(), sr, null, fetch);
@@ -703,7 +713,8 @@ public class DBQueryOperation extends QueryOperation {
         long start = System.currentTimeMillis();
         results.addAll(context.getMailbox().index.search(constraints, fetch, sort, offset, size,
                 context.getParams().inDumpster()));
-        ZimbraLog.search.debug("DBSearch elapsed=%d", System.currentTimeMillis() - start);
+        ZimbraLog.search.debug("DBSearch elapsed=%d total results size=%d",
+                System.currentTimeMillis() - start, results.size());
     }
 
     private boolean shouldExecuteDbFirst() throws ServiceException {

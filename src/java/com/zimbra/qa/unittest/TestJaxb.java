@@ -44,7 +44,6 @@ import com.zimbra.client.ZMailbox;
 import com.zimbra.client.ZMessage;
 import com.zimbra.client.ZSearchParams;
 import com.zimbra.common.httpclient.HttpClientUtil;
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
@@ -648,12 +647,16 @@ public class TestJaxb  {
     @Test
     public void testBrowseRequestAttachments() throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
-        TestUtil.addMessage(mbox, NAME_PREFIX);
+        MessageBuilder mb = new MessageBuilder();
+        String raw = mb.withSubject(NAME_PREFIX).withBody(bodyWithObject)
+                .withContentType(MimeConstants.CT_APPLICATION_PDF).create();
+        TestUtil.addRawMessage(mbox, raw);
         BrowseRequest browseRequest = new BrowseRequest("attachments" /* browseBy */, "" /* regex */, 10);
         BrowseResponse browseResponse = doBrowseRequest(browseRequest);
         Assert.assertNotNull("JAXB BrowseResponse object", browseResponse);
         List<BrowseData> datas = browseResponse.getBrowseDatas();
         Assert.assertNotNull("JAXB BrowseResponse datas", datas);
+        Assert.assertTrue("JAXB BrowseResponse datas", datas.size() >=1);
     }
 
     static String bodyWithObject = "contains http://www.example.com/fun so treat as containing com_zimbra_url object";
@@ -717,7 +720,10 @@ public class TestJaxb  {
     @Test
     public void testBrowseRequestAttachmentsBadRegex() throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
-        TestUtil.addMessage(mbox, NAME_PREFIX);
+        MessageBuilder mb = new MessageBuilder();
+        String raw = mb.withSubject(NAME_PREFIX).withBody(bodyWithObject)
+                .withContentType(MimeConstants.CT_APPLICATION_PDF).create();
+        TestUtil.addRawMessage(mbox, raw);
         BrowseRequest browseRequest = new BrowseRequest("attachments" /* browseBy */, BAD_REGEX /* regex */, 10);
         Element envelope = doBadBrowseRequest(browseRequest);
         Assert.assertNotNull("Envelope", envelope);
