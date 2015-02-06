@@ -484,9 +484,9 @@ public class AttributeManager {
             }
 
             if (deprecatedSinceVer != null && deprecateDesc == null)
-                error(name, file, "missing attr " + A_DEPRECATED_SINCE);
+                error(name, file, "missing attr " + E_DEPRECATE_DESC);
             else if (deprecatedSinceVer == null && deprecateDesc != null)
-                error(name, file, "missing element " + E_DEPRECATE_DESC);
+                error(name, file, "missing element " + A_DEPRECATED_SINCE);
 
             if (deprecatedSinceVer != null) {
                 String deprecateInfo = "Deprecated since: " + deprecatedSinceVer.toString() + ".  " + deprecateDesc;
