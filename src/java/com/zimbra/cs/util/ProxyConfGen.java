@@ -1067,14 +1067,14 @@ class WebLoginSSLUpstreamServersVar extends ServersVar {
 }
 
 class ListenVipsVar extends ProxyConfVar {
-    private final String[] mvips;
+    private final ArrayList<InetAddress> vips;
     private final String portAttrName;
     private final IPMode ipmode;
     private final String key;
 
-    public ListenVipsVar(String key, String[] vips, String portAttrName, IPMode ipmode, String description) {
+    public ListenVipsVar(String key, ArrayList<InetAddress> vips, String portAttrName, IPMode ipmode, String description) {
         super(key, null, null, ProxyConfValueType.CUSTOM, ProxyConfOverride.CUSTOM, description);
-        this.mvips = vips;
+        this.vips = vips;
         this.portAttrName = portAttrName;
         this.ipmode = ipmode;
         this.key = key;
@@ -1086,12 +1086,12 @@ class ListenVipsVar extends ProxyConfVar {
         int serverPort = serverSource.getIntAttr(portAttrName, 0);
         boolean sni = serverSource.getBooleanAttr("zimbraReverseProxySNIEnabled", false);
 
-        if (mvips.length > 0) {
-            for (String vip: mvips) {
-                mLog.debug("Adding listen directive for virtual ip " + vip);
-                directives.add(generateListenDirective(key, vip, serverPort, ipmode, sni));
+        if (vips.size() > 0) {
+            for (InetAddress vip: vips) {
+                mLog.debug("Adding listen directive for virtual ip " + vip.getHostAddress());
+                directives.add(generateListenDirective(key, vip.getHostAddress(), serverPort, ipmode, sni));
             }
-        } else {   // mvips.length = 0, zimbraVirtualIPAddress for the domain empty or its for the default server
+        } else {   // vips.size() = 0, its for the default server
             mLog.debug("Adding listen directive for default server (i.e localhost)");
             directives.add(generateListenDirective(key, "", serverPort, ipmode, sni));
         }
@@ -2479,24 +2479,24 @@ public class ProxyConfGen
             }
         }
 
-        mDomainConfVars.put("mail.listen.imap.vhost", new ListenVipsVar("mail.listen.imap.vhost", item.virtualIPAddress,
+        mDomainConfVars.put("mail.listen.imap.vhost", new ListenVipsVar("mail.listen.imap.vhost", vip,
                 "zimbraImapProxyBindPort", ipmode, "Listen directive for vhost mail imap proxy"));
-        mDomainConfVars.put("mail.listen.imaps.vhost", new ListenVipsVar("mail.listen.imaps.vhost", item.virtualIPAddress,
+        mDomainConfVars.put("mail.listen.imaps.vhost", new ListenVipsVar("mail.listen.imaps.vhost", vip,
                 "zimbraImapSSLProxyBindPort", ipmode, "Listen directive for vhost mail imaps proxy"));
-        mDomainConfVars.put("mail.listen.pop3.vhost", new ListenVipsVar("mail.listen.pop3.vhost", item.virtualIPAddress,
+        mDomainConfVars.put("mail.listen.pop3.vhost", new ListenVipsVar("mail.listen.pop3.vhost", vip,
                 "zimbraPop3ProxyBindPort", ipmode, "Listen directive for vhost mail pop3 proxy"));
-        mDomainConfVars.put("mail.listen.pop3s.vhost", new ListenVipsVar("mail.listen.pop3s.vhost", item.virtualIPAddress,
+        mDomainConfVars.put("mail.listen.pop3s.vhost", new ListenVipsVar("mail.listen.pop3s.vhost", vip,
                 "zimbraPop3SSLProxyBindPort", ipmode, "Listen directive for vhost mail pop3s proxy"));
-        mDomainConfVars.put("web.listen.admin.vhost", new ListenVipsVar("web.listen.admin.vhost", item.virtualIPAddress,
+        mDomainConfVars.put("web.listen.admin.vhost", new ListenVipsVar("web.listen.admin.vhost", vip,
                 "zimbraAdminProxyPort", ipmode, "Listen directive for vhost web admin proxy"));
-        mDomainConfVars.put("web.listen.http.vhost", new ListenVipsVar("web.listen.http.vhost", item.virtualIPAddress,
+        mDomainConfVars.put("web.listen.http.vhost", new ListenVipsVar("web.listen.http.vhost", vip,
                 "zimbraMailProxyPort", ipmode, "Listen directive for vhost web http proxy"));
-        mDomainConfVars.put("web.listen.https.vhost", new ListenVipsVar("web.listen.https.vhost", item.virtualIPAddress,
+        mDomainConfVars.put("web.listen.https.vhost", new ListenVipsVar("web.listen.https.vhost", vip,
                 "zimbraMailSSLProxyPort", ipmode, "Listen directive for vhost web https proxy"));
-        mDomainConfVars.put("web.listen.sso.vhost", new ListenVipsVar("web.listen.sso.vhost", item.virtualIPAddress,
+        mDomainConfVars.put("web.listen.sso.vhost", new ListenVipsVar("web.listen.sso.vhost", vip,
                 "zimbraMailSSLProxyClientCertPort", ipmode, "Listen directive for vhost web sso proxy"));
 
-        mLog.info("Updating Default Domain Variable Map");
+        mLog.debug("Updating Default Domain Variable Map");
         try {
             updateDefaultDomainVars();
         } catch (ProxyConfException pe) {
@@ -2770,21 +2770,22 @@ public class ProxyConfGen
 	    mConfVars.put("web.zss.upstream.hostname", new ProxyConfVar("web.zss.upstream.hostname", "zimbraReverseProxyZSSHostname", "", ProxyConfValueType.STRING, ProxyConfOverride.SERVER, "Hostname of the upstream ZSS server being reverse-proxied"));
 	    mConfVars.put("web.zss.resolver.file", new ProxyConfVar("web.zss.resolver.file", null, mResolverfile, ProxyConfValueType.STRING, ProxyConfOverride.CONFIG, "File containing resolver directive with the nameservers from /etc/resolv.conf"));
 	    IPMode ipmode = IPModeEnablerVar.getZimbraIPMode();
-	    mConfVars.put("mail.listen.imap.default", new ListenVipsVar("mail.listen.imap.default", new String[0],
+	    ArrayList<InetAddress> ips = new ArrayList<InetAddress>();
+	    mConfVars.put("mail.listen.imap.default", new ListenVipsVar("mail.listen.imap.default", ips,
                 "zimbraImapProxyBindPort", ipmode, "Listen directive for default mail imap proxy"));
-	    mConfVars.put("mail.listen.imaps.default", new ListenVipsVar("mail.listen.imaps.default", new String[0],
+	    mConfVars.put("mail.listen.imaps.default", new ListenVipsVar("mail.listen.imaps.default", ips,
                 "zimbraImapSSLProxyBindPort", ipmode, "Listen directive for default mail imaps proxy"));
-	    mConfVars.put("mail.listen.pop3.default", new ListenVipsVar("mail.listen.pop3.default", new String[0],
+	    mConfVars.put("mail.listen.pop3.default", new ListenVipsVar("mail.listen.pop3.default", ips,
                 "zimbraPop3ProxyBindPort", ipmode, "Listen directive for default mail pop3 proxy"));
-	    mConfVars.put("mail.listen.pop3s.default", new ListenVipsVar("mail.listen.pop3s.default", new String[0],
+	    mConfVars.put("mail.listen.pop3s.default", new ListenVipsVar("mail.listen.pop3s.default", ips,
                 "zimbraPop3SSLProxyBindPort", ipmode, "Listen directive for default mail pop3s proxy"));
-	    mConfVars.put("web.listen.admin.default", new ListenVipsVar("web.listen.admin.default", new String[0],
+	    mConfVars.put("web.listen.admin.default", new ListenVipsVar("web.listen.admin.default", ips,
                 "zimbraAdminProxyPort", ipmode, "Listen directive for default web admin proxy"));
-	    mConfVars.put("web.listen.http.default", new ListenVipsVar("web.listen.http.default", new String[0],
+	    mConfVars.put("web.listen.http.default", new ListenVipsVar("web.listen.http.default", ips,
                 "zimbraMailProxyPort", ipmode, "Listen directive for default web http proxy"));
-	    mConfVars.put("web.listen.https.default", new ListenVipsVar("web.listen.https.default", new String[0],
+	    mConfVars.put("web.listen.https.default", new ListenVipsVar("web.listen.https.default", ips,
                 "zimbraMailSSLProxyPort", ipmode, "Listen directive for default web https proxy"));
-	    mConfVars.put("web.listen.sso.default", new ListenVipsVar("web.listen.sso.default", new String[0],
+	    mConfVars.put("web.listen.sso.default", new ListenVipsVar("web.listen.sso.default", ips,
                 "zimbraMailSSLProxyClientCertPort", ipmode, "Listen directive for default web sso proxy"));
     }
 
