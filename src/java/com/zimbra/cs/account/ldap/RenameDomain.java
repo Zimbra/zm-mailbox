@@ -187,7 +187,7 @@ public class RenameDomain {
         debug("Deleting old domain %s(%s)", mOldDomainName, mOldDomainId);
         // save zimbraDefaultDomainName because deleteDomain will erase it if it is the old domain
         String curDefaultDomain = mProv.getConfig().getAttr(Provisioning.A_zimbraDefaultDomainName);
-        mProv.deleteDomain(mOldDomainId);
+        mProv.deleteDomainAfterRename(mOldDomainId);
 
         /*
          * 4. Modify system accounts that had been renamed

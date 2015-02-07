@@ -3255,8 +3255,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         return createAccount(dummyEmailAddr, null, attrs);
     }
 
-    @Override
-    public void deleteDomain(String zimbraId) throws ServiceException {
+    private void deleteDomain(String zimbraId, boolean deleteDomainAliases) throws ServiceException {
         ZLdapContext zlc = null;
         try {
             zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.DELETE_DOMAIN);
@@ -3266,27 +3265,37 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
                 throw AccountServiceException.NO_SUCH_DOMAIN(zimbraId);
             }
 
-            List<String> aliasDomainIds = null;
-            if (domain.isLocal()) {
-                aliasDomainIds = getEmptyAliasDomainIds(zlc, domain, true);
-            }
+            if (deleteDomainAliases) {
+                List<String> aliasDomainIds = null;
+                if (domain.isLocal()) {
+                    aliasDomainIds = getEmptyAliasDomainIds(zlc, domain, true);
+                }
 
-            // delete the domain;
-            deleteDomainInternal(zlc, zimbraId);
-
-            // delete all alias domains if any
-            if (aliasDomainIds != null) {
-                for (String aliasDomainId : aliasDomainIds) {
-                    deleteDomainInternal(zlc, aliasDomainId);
+               // delete all alias domains if any
+                if (aliasDomainIds != null) {
+                    for (String aliasDomainId : aliasDomainIds) {
+                        deleteDomainInternal(zlc, aliasDomainId);
+                    }
                 }
             }
+            // delete the domain;
+            deleteDomainInternal(zlc, zimbraId);
 
         } catch (ServiceException e) {
             throw e;
         } finally {
             LdapClient.closeContext(zlc);
         }
+    }
 
+    @Override
+    public void deleteDomain(String zimbraId) throws ServiceException {
+        deleteDomain(zimbraId, true);
+    }
+
+	@Override
+    public void deleteDomainAfterRename(String zimbraId) throws ServiceException {
+        deleteDomain(zimbraId, false);
     }
 
     public List<String> getEmptyAliasDomainIds(ZLdapContext zlc, Domain targetDomain, boolean suboridinateCheck)

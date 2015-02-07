@@ -444,6 +444,11 @@ public final class MockProvisioning extends Provisioning {
     }
 
     @Override
+    public void deleteDomainAfterRename(String zimbraId) {
+        id2domain.remove(zimbraId);
+    }
+
+    @Override
     public Cos createCos(String name, Map<String, Object> attrs) throws ServiceException {
         name = name.trim().toLowerCase();
         if (get(Key.CosBy.name, name) != null) {
