@@ -748,6 +748,11 @@ public class SoapProvisioning extends Provisioning {
     }
 
     @Override
+    public void deleteDomainAfterRename(String zimbraId) throws ServiceException {
+        invokeJaxb( new DeleteDomainRequest(zimbraId));
+    }
+
+    @Override
     public void deleteServer(String zimbraId) throws ServiceException {
         invokeJaxb( new DeleteServerRequest(zimbraId));
     }
