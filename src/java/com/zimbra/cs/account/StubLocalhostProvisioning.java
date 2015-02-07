@@ -296,6 +296,11 @@ public class StubLocalhostProvisioning extends Provisioning {
     }
 
     @Override
+    public void deleteDomainAfterRename(String zimbraId) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public Cos createCos(String name, Map<String, Object> attrs) throws ServiceException {
         throw new UnsupportedOperationException();
     }
