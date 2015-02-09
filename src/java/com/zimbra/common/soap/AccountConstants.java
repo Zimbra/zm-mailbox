@@ -34,6 +34,8 @@ public class AccountConstants {
     public static final String E_CHANGE_PASSWORD_RESPONSE = "ChangePasswordResponse";
     public static final String E_END_SESSION_REQUEST = "EndSessionRequest";
     public static final String E_END_SESSION_RESPONSE = "EndSessionResponse";
+    public static final String E_TWO_FACTOR_AUTH_REQUEST = "TwoFactorAuthRequest";
+    public static final String E_TWO_FACTOR_AUTH_RESPONSE = "TwoFactorAuthResponse";
 
     public static final String E_GET_PREFS_REQUEST = "GetPrefsRequest";
     public static final String E_GET_PREFS_RESPONSE = "GetPrefsResponse";
@@ -61,7 +63,7 @@ public class AccountConstants {
     public static final String E_MODIFY_WHITE_BLACK_LIST_RESPONSE = "ModifyWhiteBlackListResponse";
     public static final String E_MODIFY_ZIMLET_PREFS_REQUEST = "ModifyZimletPrefsRequest";
     public static final String E_MODIFY_ZIMLET_PREFS_RESPONSE = "ModifyZimletPrefsResponse";
-
+    
     // GAL
     public static final String E_AUTO_COMPLETE_GAL_REQUEST = "AutoCompleteGalRequest";
     public static final String E_AUTO_COMPLETE_GAL_RESPONSE = "AutoCompleteGalResponse";
@@ -143,6 +145,8 @@ public class AccountConstants {
     public static final QName CHANGE_PASSWORD_RESPONSE = QName.get(E_CHANGE_PASSWORD_RESPONSE, NAMESPACE);
     public static final QName END_SESSION_REQUEST = QName.get(E_END_SESSION_REQUEST, NAMESPACE);
     public static final QName END_SESSION_RESPONSE = QName.get(E_END_SESSION_RESPONSE, NAMESPACE);
+    public static final QName TWO_FACTOR_REQUEST = QName.get(E_TWO_FACTOR_AUTH_REQUEST, NAMESPACE);
+    public static final QName TWO_FACTOR_RESPONSE = QName.get(E_TWO_FACTOR_AUTH_RESPONSE, NAMESPACE);
 
     // prefs
     public static final QName GET_PREFS_REQUEST = QName.get(E_GET_PREFS_REQUEST, NAMESPACE);
@@ -452,4 +456,12 @@ public class AccountConstants {
     // Zimbra Mobile Gateway
     public static final String E_APP_ID = "appId";
     public static final String E_APP_KEY = "appKey";
+    
+    //two-factor auth attributes
+    public static final String E_TWO_FACTOR_CODE = "twoFactorCode";
+    public static final String E_TWO_FACTOR_SCRATCH_CODE = "scratchCode";
+    public static final String E_TWO_FACTOR_SCRATCH_CODES = "scratchCodes";
+    public static final String E_TWO_FACTOR_CREDENTIALS = "credentials";
+    public static final String A_TWO_FACTOR_AUTH_SUPPORTED = "twoFactorAuthSupported";
+    public static final String E_TWO_FACTOR_SECRET = "secret";
 }
