@@ -99,6 +99,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.Element.Disposition;
 import com.zimbra.common.soap.Element.JSONElement;
 import com.zimbra.common.soap.Element.XMLElement;
 import com.zimbra.common.soap.HeaderConstants;
@@ -129,6 +130,8 @@ import com.zimbra.soap.account.message.GetInfoRequest;
 import com.zimbra.soap.account.message.GetInfoResponse;
 import com.zimbra.soap.account.message.GetSignaturesRequest;
 import com.zimbra.soap.account.message.GetSignaturesResponse;
+import com.zimbra.soap.account.message.TwoFactorAuthRequest;
+import com.zimbra.soap.account.message.TwoFactorAuthResponse;
 import com.zimbra.soap.account.type.AuthToken;
 import com.zimbra.soap.account.type.InfoSection;
 import com.zimbra.soap.mail.message.CheckSpellingRequest;
@@ -269,6 +272,9 @@ public class ZMailbox implements ToZJSONObject {
         private String mRequestedSkin;
         private boolean mCsrfSupported; // Used by AuthRequest
         private Map<String, String> mCustomHeaders;
+        private String mTwoFactorCode;
+        private String mTwoFactorScratchCode;
+        private boolean mTwoFactorSupported;
 
         public Options() {
         }
@@ -384,6 +390,15 @@ public class ZMailbox implements ToZJSONObject {
 
         public boolean getCsrfSupported() { return mCsrfSupported; }
         public Options setCsrfSupported(boolean csrfSupported) { mCsrfSupported = csrfSupported;  return this; }
+
+        public String getTwoFactorCode() { return mTwoFactorCode; }
+        public Options setTwoFactorCode(String code) { mTwoFactorCode = code; return this; }
+
+        public String getTwoFactorScratchCode() { return mTwoFactorScratchCode; }
+        public Options setTwoFactorScratchCode(String code) { mTwoFactorScratchCode = code; return this; }
+
+        public boolean getTwoFactorSupported() { return mTwoFactorSupported; }
+        public Options setTwoFactorSupported(boolean bool) { mTwoFactorSupported = bool; return this; }
 
         public Map<String, String> getCustomHeaders() {
             if (mCustomHeaders == null) {
@@ -614,7 +629,8 @@ public class ZMailbox implements ToZJSONObject {
         }
     }
 
-    private ZAuthResult authByPassword(Options options, String password) throws ServiceException {
+
+    public ZAuthResult authByPassword(Options options, String password) throws ServiceException {
         if (mTransport == null) {
             throw ZClientException.CLIENT_ERROR("must call setURI before calling authenticate", null);
         }
@@ -622,9 +638,12 @@ public class ZMailbox implements ToZJSONObject {
         AccountSelector account = new AccountSelector(com.zimbra.soap.type.AccountBy.name, options.getAccount());
         AuthRequest auth = new AuthRequest(account, password);
         auth.setPassword(password);
+        auth.setTwoFactorCode(options.getTwoFactorCode());
+        auth.setTwoFactorScratchCode(options.getTwoFactorScratchCode());
         auth.setVirtualHost(options.getVirtualHost());
         auth.setRequestedSkin(options.getRequestedSkin());
         auth.setCsrfSupported(options.getCsrfSupported());
+        auth.setTwoFactorAuthSupported(true);
         addAttrsAndPrefs(auth, options);
 
         AuthResponse authRes = invokeJaxb(auth);
@@ -5519,6 +5538,25 @@ public class ZMailbox implements ToZJSONObject {
             folder = subfolder;
         }
         return new Pair<ZFolder, String>(folder, unmatched);
+    }
+
+    public ZTwoFactorAuthResponse enableTwoFactorAuth(String password) throws ServiceException {
+        return twoFactorAuthRequest(password, TwoFactorAuthAction.enable);
+    }
+
+    public ZTwoFactorAuthResponse disableTwoFactorAuth(String password) throws ServiceException {
+        return twoFactorAuthRequest(password, TwoFactorAuthAction.disable);
+    }
+
+    private ZTwoFactorAuthResponse twoFactorAuthRequest(String password, TwoFactorAuthAction action) throws ServiceException {
+        TwoFactorAuthRequest req = new TwoFactorAuthRequest();
+        req.setAction(action.toString());
+        TwoFactorAuthResponse resp = invokeJaxb(req);
+        return new ZTwoFactorAuthResponse(resp);
+    }
+
+    private enum TwoFactorAuthAction {
+        enable, disable;
     }
 }
 
