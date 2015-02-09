@@ -77,7 +77,7 @@ SECTION 1: BSD-STYLE, MIT-STYLE, OR SIMILAR STYLE LICENSES
    >>> nist-sip-1.2
    >>> nviennot-nginx-tcp-keepalive-4d7186d
    >>> opendkim-2.9.3
-   >>> openldap-2.4.40
+   >>> openldap-2.4.41
    >>> openssl-1.0.1l
    >>> perl-data-uuid-1.219
    >>> perl-geography-countries-2009041301
@@ -87,7 +87,7 @@ SECTION 1: BSD-STYLE, MIT-STYLE, OR SIMILAR STYLE LICENSES
    >>> perl-socket6-0.25
    >>> perl-termreadkey-2.32
    >>> perl-try-tiny-0.19
-   >>> php-5.6.4
+   >>> php-5.6.5
    >>> postfix-logwatch-1.40.01
    >>> sendmail-8.14.8
    >>> slf4j-1.6.4
@@ -232,13 +232,13 @@ SECTION 6: GNU General Public License, V1.0
 SECTION 8: GNU General Public License, V2.0
 
    >>> amavisd-2.9.0
-   >>> clamav-0.98.5
+   >>> clamav-0.98.6
    >>> cluebringer-2.1.0-beta
    >>> innotop-1.9.1
    >>> javax.ws.rs-api-2.0-m10
    >>> libtool-2.2.6b
    >>> libwww-perl-6.05
-   >>> mariadb-10.0.15
+   >>> mariadb-10.0.16
    >>> perl-archive-tar-1.96
    >>> perl-archive-zip-1.37
    >>> perl-array-compare-2.02
@@ -19761,7 +19761,7 @@ Portions Copyright (c) 2010-2012, The Trusted Domain Project.
 All rights reserved.
 
 
->>> openldap-2.4.40
+>>> openldap-2.4.41
 
 The OpenLDAP Public License
 Version 2.8, 17 August 2003
@@ -20140,7 +20140,7 @@ This program is free software; you can redistribute
 it and/or modify it under the terms of the MIT license.
 
 
->>> php-5.6.4
+>>> php-5.6.5
 
 The PHP License, version 3.01
 
@@ -20169,7 +20169,7 @@ ADDITIONAL LICENSE INFORMATION:
 
 > BSD style
 
-php-5.4.30.tar.bz2\php-5.4.30.tar\php-5.4.30\Zend\LICENSE
+php-5.6.5.tar.bz2\php-5.6.5.tar\php-5.6.5\Zend\LICENSE
 
 The Zend Engine License, Version 2.00
 Copyright (c) 1999-2006 Zend Technologies Ltd. All rights reserved.
@@ -20193,7 +20193,7 @@ THIS SOFTWARE IS PROVIDED BY ZEND TECHNOLOGIES LTD. ``AS IS'' AND  ANY EXPRESSED
 
 > GPL 2.0
 
-php-5.4.30.tar.bz2\php-5.4.30.tar\php-5.4.30\build\shtool
+php-5.6.5.tar.bz2\php-5.6.5.tar\php-5.6.5\build\shtool
 
 GNU shtool -- The GNU Portable Shell Tool
 Copyright (c) 1994-2008 Ralf S. Engelschall <rse@engelschall.com>
@@ -20214,14 +20214,14 @@ NOTICE: Given that you include this file verbatim into your own source tree, you
 
 > LGPL 2.1
 
-php-5.4.30.tar.bz2\php-5.4.30.tar\php-5.4.30\ext\bcmath\libbcmath\COPYING.LIB
+php-5.6.5.tar.bz2\php-5.6.5.tar\php-5.6.5\ext\bcmath\libbcmath\COPYING.LIB
 
 License: LGPL 2.1
 
 
 > LGPL 2.0
 
-php-5.4.30.tar.bz2\php-5.4.30.tar\php-5.4.30\ext\bcmath\libbcmath\src\add.c
+php-5.6.5.tar.bz2\php-5.6.5.tar\php-5.6.5\ext\bcmath\libbcmath\src\add.c
 
 Copyright (C) 1991, 1992, 1993, 1994, 1997 Free Software Foundation, Inc.
 Copyright (C) 2000 Philip A. Nelson
@@ -20242,7 +20242,7 @@ Bellingham, WA 98226-9062
 
 > MIT
 
-php-5.4.30.tar.bz2\php-5.4.30.tar\php-5.4.30\ext\gd\libgd\ COPYING
+php-5.6.5.tar.bz2\php-5.6.5.tar\php-5.6.5\ext\gd\libgd\ COPYING
 
 Portions copyright 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002 by Cold Spring Harbor Laboratory. Funded under Grant P41-RR02188 by the National Institutes of Health.
  
@@ -20268,7 +20268,7 @@ Although their code does not appear in gd, the authors wish to thank David Kobla
 
 > Public Domain
 
-php-5.4.30.tar.bz2\php-5.4.30.tar\php-5.4.30\ext\sqlite3\libsqlite\sqlite3.h
+php-5.6.5.tar.bz2\php-5.6.5.tar\php-5.6.5\ext\sqlite3\libsqlite\sqlite3.h
 
 2001 September 15
 
@@ -30551,7 +30551,7 @@ A copy of the license is included in the section entitled "GNU
 Free Documentation License".
 
 
->>> clamav-0.98.5
+>>> clamav-0.98.6
 
 Copyright (C)2008 Sourcefire, Inc.
 
@@ -30575,7 +30575,7 @@ ADDITIONAL LICENSE INFORMATION :
 
 > BSD
 
-clamav-0.98.5.tar.gz\clamav-0.98.5.tar\clamav-0.98.5\COPYING.bzip2
+clamav-0.98.6.tar.gz\clamav-0.98.6.tar\clamav-0.98.6\COPYING.bzip2
 
 This program, "bzip2", the associated library "libbzip2", and all
 documentation, are copyright (C) 1996-2006 Julian R Seward.  All
@@ -30618,7 +30618,7 @@ bzip2/libbzip2 version 1.0.4 of 20 December 2006
 
 > MIT
 
-clamav-0.98.5.tar.gz\clamav-0.98.5.tar\clamav-0.98.5\COPYING.getopt
+clamav-0.98.6.tar.gz\clamav-0.98.6.tar\clamav-0.98.6\COPYING.getopt
 
 getopt.c - my re-implementation of getopt.
 Copyright 1997, 2000, 2001, 2002, 2006, Benjamin Sittler
@@ -30645,7 +30645,7 @@ DEALINGS IN THE SOFTWARE.
 
 > LLVM License
 
-clamav-0.98.5.tar.gz\clamav-0.98.5.tar\clamav-0.98.5\COPYING.llvm
+clamav-0.98.6.tar.gz\clamav-0.98.6.tar\clamav-0.98.6\COPYING.llvm
 
 LLVM Release License
 ==============================================================================
@@ -30692,7 +30692,7 @@ SOFTWARE.
 
 > Public Domain
 
-clamav-0.98.5.tar.gz\clamav-0.98.5.tar\clamav-0.98.5\COPYING.lzma
+clamav-0.98.6.tar.gz\clamav-0.98.6.tar\clamav-0.98.6\COPYING.lzma
 
 The original lzma.txt license file, a small portion of which is reproduced below,
 is available under libclamav/7z/lzma.txt.
@@ -30704,7 +30704,7 @@ LZMA SDK is written and placed in the public domain by Igor Pavlov
 
 > Unrar License
 
-C:\Documents and Settings\jasdeep.singh\My Documents\Downloads\clamav-0.98.5.tar.gz\clamav-0.98.5.tar\clamav-0.98.5\COPYING.unrar
+C:\Documents and Settings\jasdeep.singh\My Documents\Downloads\clamav-0.98.6.tar.gz\clamav-0.98.6.tar\clamav-0.98.6\COPYING.unrar
 
 The libclamunrar code is based on the work of Alexander L. Roshal (C)
 
@@ -30758,7 +30758,7 @@ Thank you for your interest in RAR and UnRAR.
 
 > LGPL 2.1
 
-clamav-0.98.5.tar.gz\clamav-0.98.5.tar\clamav-0.98.5\libclamunrar_iface\unrar_iface.h
+clamav-0.98.6.tar.gz\clamav-0.98.6.tar\clamav-0.98.6\libclamunrar_iface\unrar_iface.h
 
 Interface to libclamunrar
 Copyright (C) 2007 Sourcefire, Inc.
@@ -30775,7 +30775,7 @@ Lesser General Public License for more details.
 
 > LGPL 2.0
 
-clamav-0.98.5.tar.gz\clamav-0.98.5.tar\clamav-0.98.5\libltdl\argz.c
+clamav-0.98.6.tar.gz\clamav-0.98.6.tar\clamav-0.98.6\libltdl\argz.c
 
 Copyright (C) 2004, 2006, 2007, 2008 Free Software Foundation, Inc.
 Written by Gary V. Vaughan, 2004
@@ -30964,7 +30964,7 @@ COPYRIGHT
 This library is free software; you can redistribute it and/or modify it under the same terms as Perl itself.
 
 
->>> mariadb-10.0.15
+>>> mariadb-10.0.16
 
 
 This is a release of MariaDB.
