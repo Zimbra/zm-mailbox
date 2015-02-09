@@ -69,6 +69,7 @@ public final class MockProvisioning extends Provisioning {
     private final Map<String, ShareLocator> shareLocators = Maps.newHashMap();
 
     private final Server localhost;
+    private final List<AlwaysOnCluster> aocList = new ArrayList<AlwaysOnCluster>();
 
     public MockProvisioning() {
         Map<String, Object> attrs = new HashMap<String, Object>();
@@ -779,7 +780,7 @@ public final class MockProvisioning extends Provisioning {
 
     @Override
     public void flushCache(CacheEntryType type, CacheEntry[] entries) {
-        throw new UnsupportedOperationException();
+
     }
 
     @Override
@@ -828,7 +829,10 @@ public final class MockProvisioning extends Provisioning {
     @Override
     public AlwaysOnCluster createAlwaysOnCluster(String name,
             Map<String, Object> attrs) throws ServiceException {
-        throw new UnsupportedOperationException();
+        Map<String, Object> attrsDefault = new HashMap<String, Object>();
+        AlwaysOnCluster aoc = new  AlwaysOnCluster(name , UUID.randomUUID().toString(), attrs, attrsDefault, Provisioning.getInstance());
+        aocList.add(aoc);
+        return aoc;
     }
 
     @Override
@@ -839,13 +843,14 @@ public final class MockProvisioning extends Provisioning {
 
     @Override
     public void deleteAlwaysOnCluster(String zimbraId) throws ServiceException {
-        throw new UnsupportedOperationException();
+        this.aocList.clear();
     }
 
     @Override
     public List<AlwaysOnCluster> getAllAlwaysOnClusters()
             throws ServiceException {
-        throw new UnsupportedOperationException();
+
+        return aocList;
     }
 
     @Override
