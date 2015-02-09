@@ -33467,7 +33467,7 @@ public abstract class ZAttrConfig extends Entry {
      */
     @ZAttr(id=1657)
     public String[] getMailboxdSSLProtocols() {
-        String[] value = getMultiAttr(Provisioning.A_zimbraMailboxdSSLProtocols); return value.length > 0 ? value : new String[] {"TLSv1","TLSv1.1","TLSv1.2"};
+        String[] value = getMultiAttr(Provisioning.A_zimbraMailboxdSSLProtocols); return value.length > 0 ? value : new String[] {"TLSv1","TLSv1.1","TLSv1.2","SSLv2Hello"};
     }
 
     /**
