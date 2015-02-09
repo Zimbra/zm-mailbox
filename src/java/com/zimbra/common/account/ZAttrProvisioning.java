@@ -1958,6 +1958,56 @@ public class ZAttrProvisioning {
         public boolean isOPTIMIZE() { return this == OPTIMIZE;}
     }
 
+    public static enum TwoFactorAuthHashAlgorithm {
+        SHA512("SHA512"),
+        SHA256("SHA256"),
+        SHA1("SHA1");
+        private String mValue;
+        private TwoFactorAuthHashAlgorithm(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static TwoFactorAuthHashAlgorithm fromString(String s) throws ServiceException {
+            for (TwoFactorAuthHashAlgorithm value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isSHA512() { return this == SHA512;}
+        public boolean isSHA256() { return this == SHA256;}
+        public boolean isSHA1() { return this == SHA1;}
+    }
+
+    public static enum TwoFactorAuthScratchCodeEncoding {
+        BASE32("BASE32"),
+        BASE64("BASE64");
+        private String mValue;
+        private TwoFactorAuthScratchCodeEncoding(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static TwoFactorAuthScratchCodeEncoding fromString(String s) throws ServiceException {
+            for (TwoFactorAuthScratchCodeEncoding value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isBASE32() { return this == BASE32;}
+        public boolean isBASE64() { return this == BASE64;}
+    }
+
+    public static enum TwoFactorAuthSecretEncoding {
+        BASE32("BASE32"),
+        BASE64("BASE64");
+        private String mValue;
+        private TwoFactorAuthSecretEncoding(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static TwoFactorAuthSecretEncoding fromString(String s) throws ServiceException {
+            for (TwoFactorAuthSecretEncoding value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isBASE32() { return this == BASE32;}
+        public boolean isBASE64() { return this == BASE64;}
+    }
+
     /**
      */
     @ZAttr(id=-1)
@@ -14113,6 +14163,119 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1434)
     public static final String A_zimbraTouchJSErrorTrackingKey = "zimbraTouchJSErrorTrackingKey";
+
+    /**
+     * hash algorithm used in TOTP generation
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1825)
+    public static final String A_zimbraTwoFactorAuthHashAlgorithm = "zimbraTwoFactorAuthHashAlgorithm";
+
+    /**
+     * number of scratch codes to generate for two-factor auth
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1823)
+    public static final String A_zimbraTwoFactorAuthNumScratchCodes = "zimbraTwoFactorAuthNumScratchCodes";
+
+    /**
+     * whether two-factor authentication is required
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1820)
+    public static final String A_zimbraTwoFactorAuthRequired = "zimbraTwoFactorAuthRequired";
+
+    /**
+     * scratch code encoding
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1831)
+    public static final String A_zimbraTwoFactorAuthScratchCodeEncoding = "zimbraTwoFactorAuthScratchCodeEncoding";
+
+    /**
+     * encrypted comma-separated list of valid scratch codes
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1822)
+    public static final String A_zimbraTwoFactorAuthScratchCodes = "zimbraTwoFactorAuthScratchCodes";
+
+    /**
+     * encrypted shared secret
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1821)
+    public static final String A_zimbraTwoFactorAuthSecret = "zimbraTwoFactorAuthSecret";
+
+    /**
+     * shared secret encoding
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1826)
+    public static final String A_zimbraTwoFactorAuthSecretEncoding = "zimbraTwoFactorAuthSecretEncoding";
+
+    /**
+     * length of shared secret
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1824)
+    public static final String A_zimbraTwoFactorAuthSecretLength = "zimbraTwoFactorAuthSecretLength";
+
+    /**
+     * whether two-factor authentication is enabled by the user
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1819)
+    public static final String A_zimbraTwoFactorAuthUserEnabled = "zimbraTwoFactorAuthUserEnabled";
+
+    /**
+     * length of TOTP code required for two-factor authentication
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1828)
+    public static final String A_zimbraTwoFactorCodeLength = "zimbraTwoFactorCodeLength";
+
+    /**
+     * length of scratch codes
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1827)
+    public static final String A_zimbraTwoFactorScratchCodeLength = "zimbraTwoFactorScratchCodeLength";
+
+    /**
+     * length of time that a TOTP code is valid for. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1829)
+    public static final String A_zimbraTwoFactorTimeWindowLength = "zimbraTwoFactorTimeWindowLength";
+
+    /**
+     * Determines the number of windows to check when trying to validate a
+     * TOTP code (NOW-n through NOW+n). This number should typically be
+     * small, but a minimum value of 1 is usually necessary to account for
+     * network latency and clock drift. See also:
+     * zimbraTwoFactorTimeWindowLength and
+     * https://tools.ietf.org/html/rfc6238#section-5.2
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1830)
+    public static final String A_zimbraTwoFactorTimeWindowOffset = "zimbraTwoFactorTimeWindowOffset";
 
     /**
      * call control service URL for the UC service
