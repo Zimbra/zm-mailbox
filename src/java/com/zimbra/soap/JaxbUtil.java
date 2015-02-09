@@ -152,6 +152,8 @@ public final class JaxbUtil {
             com.zimbra.soap.account.message.SubscribeDistributionListResponse.class,
             com.zimbra.soap.account.message.SyncGalRequest.class,
             com.zimbra.soap.account.message.SyncGalResponse.class,
+            com.zimbra.soap.account.message.TwoFactorAuthRequest.class,
+            com.zimbra.soap.account.message.TwoFactorAuthResponse.class,
 
             // zimbraMail
             com.zimbra.soap.mail.message.AddAppointmentInviteRequest.class,

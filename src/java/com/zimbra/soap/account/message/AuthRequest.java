@@ -145,6 +145,26 @@ public class AuthRequest {
     @XmlElement(name=AccountConstants.E_REQUESTED_SKIN /* requestedSkin */, required=false)
     private String requestedSkin;
 
+    /**
+     *@zm-api-field-description the TOTP code used for two-factor authentication
+     *
+     */
+    @XmlElement(name=AccountConstants.E_TWO_FACTOR_CODE /* twoFactorCode */, required=false)
+    private String twoFactorCode;
+
+    /**
+     *@zm-api-field-description a single-use scratch code for two-factor authentication
+     *
+     */
+    @XmlElement(name=AccountConstants.E_TWO_FACTOR_SCRATCH_CODE /* twoFactorScratchCode */, required=false)
+    private String twoFactorScratchCode;
+
+    /**
+     * @zm-api-field-description Flag signifying that the requesting client supports the two-factor authentication user flow.
+     */
+    @XmlAttribute(name=AccountConstants.A_TWO_FACTOR_AUTH_SUPPORTED, required=false)
+    private ZmBoolean twoFactorAuthSupported;
+
     public AuthRequest() {
     }
 
@@ -236,5 +256,29 @@ public class AuthRequest {
         this.csrfSupported = ZmBoolean.fromBool(csrfSupported);
     }
 
+    public AuthRequest setTwoFactorCode(String totp) {
+        this.twoFactorCode = totp;
+        return this;
+    }
 
+    public String getTwoFactorCode() {
+        return twoFactorCode;
+    }
+
+    public AuthRequest setTwoFactorScratchCode(String code) {
+        this.twoFactorScratchCode = code;
+        return this;
+    }
+
+    public String getTwoFactorScratchCode() {
+        return twoFactorScratchCode;
+    }
+
+    public ZmBoolean getTwoFactorAuthSupported() {
+        return twoFactorAuthSupported;
+    }
+
+    public void setTwoFactorAuthSupported(Boolean supported) {
+        this.twoFactorAuthSupported = ZmBoolean.fromBool(supported);
+    }
 }
