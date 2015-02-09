@@ -86,6 +86,7 @@ public class AccountServiceException extends ServiceException {
     public static final String TOO_MANY_ACCOUNTS = "account.TOO_MANY_ACCOUNTS";
     public static final String TOO_MANY_SEARCH_RESULTS = "account.TOO_MANY_SEARCH_RESULTS";
     public static final String TOO_MANY_TRUSTED_SENDERS = "account.TOO_MANY_TRUSTED_SENDERS";
+    public static final String TWO_FACTOR_SETUP_REQUIRED = "account.TWO_FACTOR_SETUP_REQUIRED";
 
     private AccountServiceException(String message, String code, boolean isReceiversFault) {
         super(message, code, isReceiversFault);
@@ -384,4 +385,7 @@ public class AccountServiceException extends ServiceException {
         return new AccountServiceException(message, TOO_MANY_TRUSTED_SENDERS, SENDERS_FAULT, null);
     }
 
+    public static AccountServiceException TWO_FACTOR_SETUP_REQUIRED() {
+        return new AccountServiceException("two-factor authentication setup required", TWO_FACTOR_SETUP_REQUIRED, SENDERS_FAULT, null);
+    }
 }

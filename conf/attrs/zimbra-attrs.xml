@@ -8434,4 +8434,65 @@ TODO: delete them permanently from here
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>Show Chats folder even if zimbraFeatureIMEnabled is false</desc>
 </attr>
+<attr id="1819" name="zimbraTwoFactorAuthUserEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="domainAdminModifiable" since="8.7.0">
+  <desc>whether two-factor authentication is enabled by the user</desc>
+  <defaultCOSValue>FALSE</defaultCOSValue>
+</attr>
+
+<attr id="1820" name="zimbraTwoFactorAuthRequired" type="boolean" cardinality="single" optionalIn="account,cos" flags="domainAdminModifiable" since="8.7.0">
+  <desc>whether two-factor authentication is required</desc>
+  <defaultCOSValue>FALSE</defaultCOSValue>
+</attr>
+
+<attr id="1821" name="zimbraTwoFactorAuthSecret" type="string" cardinality="single" optionalIn="account" since="8.7.0">
+  <desc>encrypted shared secret</desc>
+</attr>
+
+<attr id="1822" name="zimbraTwoFactorAuthScratchCodes" type="string" cardinality="single" optionalIn="account" since="8.7.0">
+  <desc>encrypted comma-separated list of valid scratch codes</desc>
+</attr>
+
+<attr id="1823" name="zimbraTwoFactorAuthNumScratchCodes" type="integer" min="1" cardinality="single" optionalIn="account,cos" since="8.7.0">
+  <defaultCOSValue>3</defaultCOSValue>
+  <desc>number of scratch codes to generate for two-factor auth</desc>
+</attr>
+
+<attr id="1824" name="zimbraTwoFactorAuthSecretLength" type="integer" min="8" cardinality="single" optionalIn="account,cos" since="8.7.0">
+  <defaultCOSValue>16</defaultCOSValue>
+  <desc>length of shared secret</desc>
+</attr>
+
+<attr id="1825" name="zimbraTwoFactorAuthHashAlgorithm" type="enum" value="SHA1,SHA256,SHA512" cardinality="single" optionalIn="account,cos" since="8.7.0">
+  <defaultCOSValue>SHA256</defaultCOSValue>
+  <desc>hash algorithm used in TOTP generation</desc>
+</attr>
+
+<attr id="1826" name="zimbraTwoFactorAuthSecretEncoding" type="enum" value="BASE32,BASE64" cardinality="single" optionalIn="account,cos" since="8.7.0">
+  <defaultCOSValue>BASE32</defaultCOSValue>
+  <desc>shared secret encoding</desc>
+</attr>
+
+<attr id="1827" name="zimbraTwoFactorScratchCodeLength" type="integer" cardinality="single" optionalIn="account,cos" since="8.7.0">
+  <defaultCOSValue>8</defaultCOSValue>
+  <desc>length of scratch codes</desc>
+</attr>
+
+<attr id="1828" name="zimbraTwoFactorCodeLength" type="integer" cardinality="single" optionalIn="account,cos" since="8.7.0">
+  <defaultCOSValue>6</defaultCOSValue>
+  <desc>length of TOTP code required for two-factor authentication</desc>
+</attr>
+
+<attr id="1829" name="zimbraTwoFactorTimeWindowLength" type="duration" cardinality="single" optionalIn="account,cos" since="8.7.0">
+  <defaultCOSValue>30s</defaultCOSValue>
+  <desc>length of time that a TOTP code is valid for</desc>
+</attr>
+
+<attr id="1830" name="zimbraTwoFactorTimeWindowOffset" type="integer" min="1" cardinality="single" optionalIn="account,cos" since="8.7.0">
+  <defaultCOSValue>1</defaultCOSValue>
+  <desc>Determines the number of windows to check when trying to validate a TOTP code (NOW-n through NOW+n). This number should typically be small, but a minimum value of 1 is usually necessary to account for network latency and clock drift.  See also: zimbraTwoFactorTimeWindowLength and https://tools.ietf.org/html/rfc6238#section-5.2</desc>
+</attr>
+<attr id="1831" name="zimbraTwoFactorAuthScratchCodeEncoding" type="enum" value="BASE32,BASE64" cardinality="single" optionalIn="account,cos" since="8.7.0">
+  <defaultCOSValue>BASE32</defaultCOSValue>
+  <desc>scratch code encoding</desc>
+</attr>
 </attrs>

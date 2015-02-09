@@ -39,6 +39,7 @@ import com.zimbra.common.soap.HeaderConstants;
 import com.zimbra.common.util.ZimbraCookie;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 import com.zimbra.cs.account.AttributeFlag;
 import com.zimbra.cs.account.AttributeManager;
@@ -48,6 +49,8 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.auth.AuthContext;
+import com.zimbra.cs.account.auth.AuthMechanism;
+import com.zimbra.cs.account.auth.twofactor.TwoFactorManager;
 import com.zimbra.cs.account.krb5.Krb5Principal;
 import com.zimbra.cs.account.names.NameUtil.EmailAddress;
 import com.zimbra.cs.service.AuthProvider;
@@ -65,8 +68,8 @@ import com.zimbra.soap.ZimbraSoapContext;
  */
 public class Auth extends AccountDocumentHandler {
 
-	@Override
-	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
+    @Override
+    public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
 
@@ -76,7 +79,7 @@ public class Auth extends AccountDocumentHandler {
         Account acct = null;
         Element acctEl = request.getOptionalElement(AccountConstants.E_ACCOUNT);
         boolean csrfSupport = request.getAttributeBool(AccountConstants.A_CSRF_SUPPORT, false);
-
+        boolean supportsTwoFactorAuth = request.getAttributeBool(AccountConstants.A_TWO_FACTOR_AUTH_SUPPORTED, false);
         if (acctEl != null) {
             acctValuePassedIn = acctEl.getText();
             acctValue = acctValuePassedIn;
@@ -140,7 +143,8 @@ public class Auth extends AccountDocumentHandler {
 
             Element preAuthEl = request.getOptionalElement(AccountConstants.E_PREAUTH);
             String password = request.getAttribute(AccountConstants.E_PASSWORD, null);
-
+            String totp = request.getAttribute(AccountConstants.E_TWO_FACTOR_CODE, null);
+            String scratchCode = request.getAttribute(AccountConstants.E_TWO_FACTOR_SCRATCH_CODE, null);
             long expires = 0;
 
             Map<String, Object> authCtxt = new HashMap<String, Object>();
@@ -150,6 +154,8 @@ public class Auth extends AccountDocumentHandler {
             authCtxt.put(AuthContext.AC_USER_AGENT, zsc.getUserAgent());
 
             boolean acctAutoProvisioned = false;
+            boolean usingTwoFactorAuth = acct != null? supportsTwoFactorAuth && TwoFactorManager.twoFactorAuthRequired(acct): false;
+
             if (acct == null) {
                 //
                 // try auto provision the account
@@ -199,7 +205,20 @@ public class Auth extends AccountDocumentHandler {
             // if account was auto provisioned, we had already authenticated the principal
             if (!acctAutoProvisioned) {
                 if (password != null) {
-                    prov.authAccount(acct, password, AuthContext.Protocol.soap, authCtxt);
+                    //if two-factor auth enabled but credentials not specified, throw error
+                    if (usingTwoFactorAuth && totp == null && scratchCode == null) {
+                        needTwoFactorAuth(acct);
+                    } else {
+                        prov.authAccount(acct, password, AuthContext.Protocol.soap, authCtxt);
+                        if (usingTwoFactorAuth) {
+                            TwoFactorManager manager = new TwoFactorManager(acct);
+                            if (totp != null) {
+                                manager.authenticate(password, totp);
+                            } else if (scratchCode != null) {
+                                manager.authenticateScratchCode(password, scratchCode);
+                            }
+                        }
+                    }
                 } else if (preAuthEl != null) {
                     long timestamp = preAuthEl.getAttributeLong(AccountConstants.A_TIMESTAMP);
                     expires = preAuthEl.getAttributeLong(AccountConstants.A_EXPIRES, 0);
@@ -222,6 +241,18 @@ public class Auth extends AccountDocumentHandler {
             httpReq.setAttribute(CsrfFilter.AUTH_TOKEN, at);
             return doResponse(request, at, zsc, context, acct, csrfSupport);
         }
+    }
+
+    private void needTwoFactorAuth(Account account) throws ServiceException {
+        /* two cases here:
+         * 1) the user needs to provide a two-factor token
+         * 2) the user needs to set up two-factor auth.
+         *    this can happen if it's required at the COS level but the user hasn't received a secret yet.
+         */
+        if (TwoFactorManager.twoFactorAuthEnabled(account)) {
+            throw AccountServiceException.TWO_FACTOR_SETUP_REQUIRED();
+        }
+        throw ServiceException.TWO_FACTOR_AUTH_REQUIRED();
     }
 
     private Element doResponse(Element request, AuthToken at, ZimbraSoapContext zsc,
@@ -255,11 +286,11 @@ public class Auth extends AccountDocumentHandler {
             response.addAttribute(AccountConstants.E_REFERRAL, acct.getAttr(Provisioning.A_zimbraMailHost), Element.Disposition.CONTENT);
         }
 
-		Element prefsRequest = request.getOptionalElement(AccountConstants.E_PREFS);
-		if (prefsRequest != null) {
-			Element prefsResponse = response.addUniqueElement(AccountConstants.E_PREFS);
-			GetPrefs.handle(prefsRequest, prefsResponse, acct);
-		}
+        Element prefsRequest = request.getOptionalElement(AccountConstants.E_PREFS);
+        if (prefsRequest != null) {
+            Element prefsResponse = response.addUniqueElement(AccountConstants.E_PREFS);
+            GetPrefs.handle(prefsRequest, prefsResponse, acct);
+        }
 
         Element attrsRequest = request.getOptionalElement(AccountConstants.E_ATTRS);
         if (attrsRequest != null) {
@@ -277,21 +308,21 @@ public class Auth extends AccountDocumentHandler {
             }
         }
 
-		Element requestedSkinEl = request.getOptionalElement(AccountConstants.E_REQUESTED_SKIN);
-		String requestedSkin = requestedSkinEl != null ? requestedSkinEl.getText() : null;
-		String skin = SkinUtil.chooseSkin(acct, requestedSkin);
-		ZimbraLog.webclient.debug("chooseSkin() returned "+skin );
-		if (skin != null) {
-			response.addElement(AccountConstants.E_SKIN).setText(skin);
-		}
+        Element requestedSkinEl = request.getOptionalElement(AccountConstants.E_REQUESTED_SKIN);
+        String requestedSkin = requestedSkinEl != null ? requestedSkinEl.getText() : null;
+        String skin = SkinUtil.chooseSkin(acct, requestedSkin);
+        ZimbraLog.webclient.debug("chooseSkin() returned "+skin );
+        if (skin != null) {
+            response.addElement(AccountConstants.E_SKIN).setText(skin);
+        }
 
-		boolean csrfCheckEnabled = false;
-		if ( httpReq.getAttribute(Provisioning.A_zimbraCsrfTokenCheckEnabled) != null) {
-		    csrfCheckEnabled = (Boolean) httpReq.getAttribute(Provisioning.A_zimbraCsrfTokenCheckEnabled);
-		}
+        boolean csrfCheckEnabled = false;
+        if ( httpReq.getAttribute(Provisioning.A_zimbraCsrfTokenCheckEnabled) != null) {
+            csrfCheckEnabled = (Boolean) httpReq.getAttribute(Provisioning.A_zimbraCsrfTokenCheckEnabled);
+        }
 
-		if (csrfSupport && csrfCheckEnabled) {
-		    String accountId = at.getAccountId();
+        if (csrfSupport && csrfCheckEnabled) {
+            String accountId = at.getAccountId();
             long authTokenExpiration = at.getExpires();
             int tokenSalt = (Integer)httpReq.getAttribute(CsrfFilter.CSRF_SALT);
             String token = CsrfUtil.generateCsrfToken(accountId,
@@ -299,15 +330,15 @@ public class Auth extends AccountDocumentHandler {
             Element csrfResponse = response.addUniqueElement(HeaderConstants.E_CSRFTOKEN);
             csrfResponse.addText(token);
             httpResp.setHeader(CsrfFilter.CSRF_TOKEN, token);
-		}
+        }
 
-		return response;
+        return response;
     }
 
     @Override
-	public boolean needsAuth(Map<String, Object> context) {
-		return false;
-	}
+    public boolean needsAuth(Map<String, Object> context) {
+        return false;
+    }
 
     // for auth by auth token
     public static void addAccountToLogContextByAuthToken(Provisioning prov, AuthToken at) {

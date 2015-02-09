@@ -40891,6 +40891,1040 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
+     * hash algorithm used in TOTP generation
+     *
+     * <p>Valid values: [SHA256, SHA1, SHA512]
+     *
+     * @return zimbraTwoFactorAuthHashAlgorithm, or ZAttrProvisioning.TwoFactorAuthHashAlgorithm.SHA256 if unset and/or has invalid value
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1825)
+    public ZAttrProvisioning.TwoFactorAuthHashAlgorithm getTwoFactorAuthHashAlgorithm() {
+        try { String v = getAttr(Provisioning.A_zimbraTwoFactorAuthHashAlgorithm); return v == null ? ZAttrProvisioning.TwoFactorAuthHashAlgorithm.SHA256 : ZAttrProvisioning.TwoFactorAuthHashAlgorithm.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.TwoFactorAuthHashAlgorithm.SHA256; }
+    }
+
+    /**
+     * hash algorithm used in TOTP generation
+     *
+     * <p>Valid values: [SHA256, SHA1, SHA512]
+     *
+     * @return zimbraTwoFactorAuthHashAlgorithm, or "SHA256" if unset
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1825)
+    public String getTwoFactorAuthHashAlgorithmAsString() {
+        return getAttr(Provisioning.A_zimbraTwoFactorAuthHashAlgorithm, "SHA256");
+    }
+
+    /**
+     * hash algorithm used in TOTP generation
+     *
+     * <p>Valid values: [SHA256, SHA1, SHA512]
+     *
+     * @param zimbraTwoFactorAuthHashAlgorithm new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1825)
+    public void setTwoFactorAuthHashAlgorithm(ZAttrProvisioning.TwoFactorAuthHashAlgorithm zimbraTwoFactorAuthHashAlgorithm) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorAuthHashAlgorithm, zimbraTwoFactorAuthHashAlgorithm.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * hash algorithm used in TOTP generation
+     *
+     * <p>Valid values: [SHA256, SHA1, SHA512]
+     *
+     * @param zimbraTwoFactorAuthHashAlgorithm new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1825)
+    public Map<String,Object> setTwoFactorAuthHashAlgorithm(ZAttrProvisioning.TwoFactorAuthHashAlgorithm zimbraTwoFactorAuthHashAlgorithm, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorAuthHashAlgorithm, zimbraTwoFactorAuthHashAlgorithm.toString());
+        return attrs;
+    }
+
+    /**
+     * hash algorithm used in TOTP generation
+     *
+     * <p>Valid values: [SHA256, SHA1, SHA512]
+     *
+     * @param zimbraTwoFactorAuthHashAlgorithm new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1825)
+    public void setTwoFactorAuthHashAlgorithmAsString(String zimbraTwoFactorAuthHashAlgorithm) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorAuthHashAlgorithm, zimbraTwoFactorAuthHashAlgorithm);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * hash algorithm used in TOTP generation
+     *
+     * <p>Valid values: [SHA256, SHA1, SHA512]
+     *
+     * @param zimbraTwoFactorAuthHashAlgorithm new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1825)
+    public Map<String,Object> setTwoFactorAuthHashAlgorithmAsString(String zimbraTwoFactorAuthHashAlgorithm, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorAuthHashAlgorithm, zimbraTwoFactorAuthHashAlgorithm);
+        return attrs;
+    }
+
+    /**
+     * hash algorithm used in TOTP generation
+     *
+     * <p>Valid values: [SHA256, SHA1, SHA512]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1825)
+    public void unsetTwoFactorAuthHashAlgorithm() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorAuthHashAlgorithm, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * hash algorithm used in TOTP generation
+     *
+     * <p>Valid values: [SHA256, SHA1, SHA512]
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1825)
+    public Map<String,Object> unsetTwoFactorAuthHashAlgorithm(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorAuthHashAlgorithm, "");
+        return attrs;
+    }
+
+    /**
+     * number of scratch codes to generate for two-factor auth
+     *
+     * @return zimbraTwoFactorAuthNumScratchCodes, or 3 if unset
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1823)
+    public int getTwoFactorAuthNumScratchCodes() {
+        return getIntAttr(Provisioning.A_zimbraTwoFactorAuthNumScratchCodes, 3);
+    }
+
+    /**
+     * number of scratch codes to generate for two-factor auth
+     *
+     * @param zimbraTwoFactorAuthNumScratchCodes new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1823)
+    public void setTwoFactorAuthNumScratchCodes(int zimbraTwoFactorAuthNumScratchCodes) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorAuthNumScratchCodes, Integer.toString(zimbraTwoFactorAuthNumScratchCodes));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * number of scratch codes to generate for two-factor auth
+     *
+     * @param zimbraTwoFactorAuthNumScratchCodes new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1823)
+    public Map<String,Object> setTwoFactorAuthNumScratchCodes(int zimbraTwoFactorAuthNumScratchCodes, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorAuthNumScratchCodes, Integer.toString(zimbraTwoFactorAuthNumScratchCodes));
+        return attrs;
+    }
+
+    /**
+     * number of scratch codes to generate for two-factor auth
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1823)
+    public void unsetTwoFactorAuthNumScratchCodes() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorAuthNumScratchCodes, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * number of scratch codes to generate for two-factor auth
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1823)
+    public Map<String,Object> unsetTwoFactorAuthNumScratchCodes(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorAuthNumScratchCodes, "");
+        return attrs;
+    }
+
+    /**
+     * whether two-factor authentication is required
+     *
+     * @return zimbraTwoFactorAuthRequired, or false if unset
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1820)
+    public boolean isTwoFactorAuthRequired() {
+        return getBooleanAttr(Provisioning.A_zimbraTwoFactorAuthRequired, false);
+    }
+
+    /**
+     * whether two-factor authentication is required
+     *
+     * @param zimbraTwoFactorAuthRequired new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1820)
+    public void setTwoFactorAuthRequired(boolean zimbraTwoFactorAuthRequired) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorAuthRequired, zimbraTwoFactorAuthRequired ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether two-factor authentication is required
+     *
+     * @param zimbraTwoFactorAuthRequired new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1820)
+    public Map<String,Object> setTwoFactorAuthRequired(boolean zimbraTwoFactorAuthRequired, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorAuthRequired, zimbraTwoFactorAuthRequired ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * whether two-factor authentication is required
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1820)
+    public void unsetTwoFactorAuthRequired() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorAuthRequired, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether two-factor authentication is required
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1820)
+    public Map<String,Object> unsetTwoFactorAuthRequired(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorAuthRequired, "");
+        return attrs;
+    }
+
+    /**
+     * scratch code encoding
+     *
+     * <p>Valid values: [BASE64, BASE32]
+     *
+     * @return zimbraTwoFactorAuthScratchCodeEncoding, or ZAttrProvisioning.TwoFactorAuthScratchCodeEncoding.BASE32 if unset and/or has invalid value
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1831)
+    public ZAttrProvisioning.TwoFactorAuthScratchCodeEncoding getTwoFactorAuthScratchCodeEncoding() {
+        try { String v = getAttr(Provisioning.A_zimbraTwoFactorAuthScratchCodeEncoding); return v == null ? ZAttrProvisioning.TwoFactorAuthScratchCodeEncoding.BASE32 : ZAttrProvisioning.TwoFactorAuthScratchCodeEncoding.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.TwoFactorAuthScratchCodeEncoding.BASE32; }
+    }
+
+    /**
+     * scratch code encoding
+     *
+     * <p>Valid values: [BASE64, BASE32]
+     *
+     * @return zimbraTwoFactorAuthScratchCodeEncoding, or "BASE32" if unset
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1831)
+    public String getTwoFactorAuthScratchCodeEncodingAsString() {
+        return getAttr(Provisioning.A_zimbraTwoFactorAuthScratchCodeEncoding, "BASE32");
+    }
+
+    /**
+     * scratch code encoding
+     *
+     * <p>Valid values: [BASE64, BASE32]
+     *
+     * @param zimbraTwoFactorAuthScratchCodeEncoding new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1831)
+    public void setTwoFactorAuthScratchCodeEncoding(ZAttrProvisioning.TwoFactorAuthScratchCodeEncoding zimbraTwoFactorAuthScratchCodeEncoding) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorAuthScratchCodeEncoding, zimbraTwoFactorAuthScratchCodeEncoding.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * scratch code encoding
+     *
+     * <p>Valid values: [BASE64, BASE32]
+     *
+     * @param zimbraTwoFactorAuthScratchCodeEncoding new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1831)
+    public Map<String,Object> setTwoFactorAuthScratchCodeEncoding(ZAttrProvisioning.TwoFactorAuthScratchCodeEncoding zimbraTwoFactorAuthScratchCodeEncoding, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorAuthScratchCodeEncoding, zimbraTwoFactorAuthScratchCodeEncoding.toString());
+        return attrs;
+    }
+
+    /**
+     * scratch code encoding
+     *
+     * <p>Valid values: [BASE64, BASE32]
+     *
+     * @param zimbraTwoFactorAuthScratchCodeEncoding new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1831)
+    public void setTwoFactorAuthScratchCodeEncodingAsString(String zimbraTwoFactorAuthScratchCodeEncoding) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorAuthScratchCodeEncoding, zimbraTwoFactorAuthScratchCodeEncoding);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * scratch code encoding
+     *
+     * <p>Valid values: [BASE64, BASE32]
+     *
+     * @param zimbraTwoFactorAuthScratchCodeEncoding new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1831)
+    public Map<String,Object> setTwoFactorAuthScratchCodeEncodingAsString(String zimbraTwoFactorAuthScratchCodeEncoding, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorAuthScratchCodeEncoding, zimbraTwoFactorAuthScratchCodeEncoding);
+        return attrs;
+    }
+
+    /**
+     * scratch code encoding
+     *
+     * <p>Valid values: [BASE64, BASE32]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1831)
+    public void unsetTwoFactorAuthScratchCodeEncoding() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorAuthScratchCodeEncoding, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * scratch code encoding
+     *
+     * <p>Valid values: [BASE64, BASE32]
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1831)
+    public Map<String,Object> unsetTwoFactorAuthScratchCodeEncoding(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorAuthScratchCodeEncoding, "");
+        return attrs;
+    }
+
+    /**
+     * shared secret encoding
+     *
+     * <p>Valid values: [BASE64, BASE32]
+     *
+     * @return zimbraTwoFactorAuthSecretEncoding, or ZAttrProvisioning.TwoFactorAuthSecretEncoding.BASE32 if unset and/or has invalid value
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1826)
+    public ZAttrProvisioning.TwoFactorAuthSecretEncoding getTwoFactorAuthSecretEncoding() {
+        try { String v = getAttr(Provisioning.A_zimbraTwoFactorAuthSecretEncoding); return v == null ? ZAttrProvisioning.TwoFactorAuthSecretEncoding.BASE32 : ZAttrProvisioning.TwoFactorAuthSecretEncoding.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.TwoFactorAuthSecretEncoding.BASE32; }
+    }
+
+    /**
+     * shared secret encoding
+     *
+     * <p>Valid values: [BASE64, BASE32]
+     *
+     * @return zimbraTwoFactorAuthSecretEncoding, or "BASE32" if unset
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1826)
+    public String getTwoFactorAuthSecretEncodingAsString() {
+        return getAttr(Provisioning.A_zimbraTwoFactorAuthSecretEncoding, "BASE32");
+    }
+
+    /**
+     * shared secret encoding
+     *
+     * <p>Valid values: [BASE64, BASE32]
+     *
+     * @param zimbraTwoFactorAuthSecretEncoding new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1826)
+    public void setTwoFactorAuthSecretEncoding(ZAttrProvisioning.TwoFactorAuthSecretEncoding zimbraTwoFactorAuthSecretEncoding) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorAuthSecretEncoding, zimbraTwoFactorAuthSecretEncoding.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * shared secret encoding
+     *
+     * <p>Valid values: [BASE64, BASE32]
+     *
+     * @param zimbraTwoFactorAuthSecretEncoding new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1826)
+    public Map<String,Object> setTwoFactorAuthSecretEncoding(ZAttrProvisioning.TwoFactorAuthSecretEncoding zimbraTwoFactorAuthSecretEncoding, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorAuthSecretEncoding, zimbraTwoFactorAuthSecretEncoding.toString());
+        return attrs;
+    }
+
+    /**
+     * shared secret encoding
+     *
+     * <p>Valid values: [BASE64, BASE32]
+     *
+     * @param zimbraTwoFactorAuthSecretEncoding new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1826)
+    public void setTwoFactorAuthSecretEncodingAsString(String zimbraTwoFactorAuthSecretEncoding) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorAuthSecretEncoding, zimbraTwoFactorAuthSecretEncoding);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * shared secret encoding
+     *
+     * <p>Valid values: [BASE64, BASE32]
+     *
+     * @param zimbraTwoFactorAuthSecretEncoding new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1826)
+    public Map<String,Object> setTwoFactorAuthSecretEncodingAsString(String zimbraTwoFactorAuthSecretEncoding, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorAuthSecretEncoding, zimbraTwoFactorAuthSecretEncoding);
+        return attrs;
+    }
+
+    /**
+     * shared secret encoding
+     *
+     * <p>Valid values: [BASE64, BASE32]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1826)
+    public void unsetTwoFactorAuthSecretEncoding() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorAuthSecretEncoding, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * shared secret encoding
+     *
+     * <p>Valid values: [BASE64, BASE32]
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1826)
+    public Map<String,Object> unsetTwoFactorAuthSecretEncoding(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorAuthSecretEncoding, "");
+        return attrs;
+    }
+
+    /**
+     * length of shared secret
+     *
+     * @return zimbraTwoFactorAuthSecretLength, or 16 if unset
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1824)
+    public int getTwoFactorAuthSecretLength() {
+        return getIntAttr(Provisioning.A_zimbraTwoFactorAuthSecretLength, 16);
+    }
+
+    /**
+     * length of shared secret
+     *
+     * @param zimbraTwoFactorAuthSecretLength new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1824)
+    public void setTwoFactorAuthSecretLength(int zimbraTwoFactorAuthSecretLength) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorAuthSecretLength, Integer.toString(zimbraTwoFactorAuthSecretLength));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * length of shared secret
+     *
+     * @param zimbraTwoFactorAuthSecretLength new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1824)
+    public Map<String,Object> setTwoFactorAuthSecretLength(int zimbraTwoFactorAuthSecretLength, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorAuthSecretLength, Integer.toString(zimbraTwoFactorAuthSecretLength));
+        return attrs;
+    }
+
+    /**
+     * length of shared secret
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1824)
+    public void unsetTwoFactorAuthSecretLength() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorAuthSecretLength, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * length of shared secret
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1824)
+    public Map<String,Object> unsetTwoFactorAuthSecretLength(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorAuthSecretLength, "");
+        return attrs;
+    }
+
+    /**
+     * whether two-factor authentication is enabled by the user
+     *
+     * @return zimbraTwoFactorAuthUserEnabled, or false if unset
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1819)
+    public boolean isTwoFactorAuthUserEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraTwoFactorAuthUserEnabled, false);
+    }
+
+    /**
+     * whether two-factor authentication is enabled by the user
+     *
+     * @param zimbraTwoFactorAuthUserEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1819)
+    public void setTwoFactorAuthUserEnabled(boolean zimbraTwoFactorAuthUserEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorAuthUserEnabled, zimbraTwoFactorAuthUserEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether two-factor authentication is enabled by the user
+     *
+     * @param zimbraTwoFactorAuthUserEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1819)
+    public Map<String,Object> setTwoFactorAuthUserEnabled(boolean zimbraTwoFactorAuthUserEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorAuthUserEnabled, zimbraTwoFactorAuthUserEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * whether two-factor authentication is enabled by the user
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1819)
+    public void unsetTwoFactorAuthUserEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorAuthUserEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether two-factor authentication is enabled by the user
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1819)
+    public Map<String,Object> unsetTwoFactorAuthUserEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorAuthUserEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * length of TOTP code required for two-factor authentication
+     *
+     * @return zimbraTwoFactorCodeLength, or 6 if unset
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1828)
+    public int getTwoFactorCodeLength() {
+        return getIntAttr(Provisioning.A_zimbraTwoFactorCodeLength, 6);
+    }
+
+    /**
+     * length of TOTP code required for two-factor authentication
+     *
+     * @param zimbraTwoFactorCodeLength new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1828)
+    public void setTwoFactorCodeLength(int zimbraTwoFactorCodeLength) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorCodeLength, Integer.toString(zimbraTwoFactorCodeLength));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * length of TOTP code required for two-factor authentication
+     *
+     * @param zimbraTwoFactorCodeLength new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1828)
+    public Map<String,Object> setTwoFactorCodeLength(int zimbraTwoFactorCodeLength, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorCodeLength, Integer.toString(zimbraTwoFactorCodeLength));
+        return attrs;
+    }
+
+    /**
+     * length of TOTP code required for two-factor authentication
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1828)
+    public void unsetTwoFactorCodeLength() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorCodeLength, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * length of TOTP code required for two-factor authentication
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1828)
+    public Map<String,Object> unsetTwoFactorCodeLength(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorCodeLength, "");
+        return attrs;
+    }
+
+    /**
+     * length of scratch codes
+     *
+     * @return zimbraTwoFactorScratchCodeLength, or 8 if unset
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1827)
+    public int getTwoFactorScratchCodeLength() {
+        return getIntAttr(Provisioning.A_zimbraTwoFactorScratchCodeLength, 8);
+    }
+
+    /**
+     * length of scratch codes
+     *
+     * @param zimbraTwoFactorScratchCodeLength new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1827)
+    public void setTwoFactorScratchCodeLength(int zimbraTwoFactorScratchCodeLength) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorScratchCodeLength, Integer.toString(zimbraTwoFactorScratchCodeLength));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * length of scratch codes
+     *
+     * @param zimbraTwoFactorScratchCodeLength new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1827)
+    public Map<String,Object> setTwoFactorScratchCodeLength(int zimbraTwoFactorScratchCodeLength, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorScratchCodeLength, Integer.toString(zimbraTwoFactorScratchCodeLength));
+        return attrs;
+    }
+
+    /**
+     * length of scratch codes
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1827)
+    public void unsetTwoFactorScratchCodeLength() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorScratchCodeLength, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * length of scratch codes
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1827)
+    public Map<String,Object> unsetTwoFactorScratchCodeLength(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorScratchCodeLength, "");
+        return attrs;
+    }
+
+    /**
+     * length of time that a TOTP code is valid for. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * <p>Use getTwoFactorTimeWindowLengthAsString to access value as a string.
+     *
+     * @see #getTwoFactorTimeWindowLengthAsString()
+     *
+     * @return zimbraTwoFactorTimeWindowLength in millseconds, or 30000 (30s)  if unset
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1829)
+    public long getTwoFactorTimeWindowLength() {
+        return getTimeInterval(Provisioning.A_zimbraTwoFactorTimeWindowLength, 30000L);
+    }
+
+    /**
+     * length of time that a TOTP code is valid for. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @return zimbraTwoFactorTimeWindowLength, or "30s" if unset
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1829)
+    public String getTwoFactorTimeWindowLengthAsString() {
+        return getAttr(Provisioning.A_zimbraTwoFactorTimeWindowLength, "30s");
+    }
+
+    /**
+     * length of time that a TOTP code is valid for. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @param zimbraTwoFactorTimeWindowLength new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1829)
+    public void setTwoFactorTimeWindowLength(String zimbraTwoFactorTimeWindowLength) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorTimeWindowLength, zimbraTwoFactorTimeWindowLength);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * length of time that a TOTP code is valid for. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @param zimbraTwoFactorTimeWindowLength new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1829)
+    public Map<String,Object> setTwoFactorTimeWindowLength(String zimbraTwoFactorTimeWindowLength, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorTimeWindowLength, zimbraTwoFactorTimeWindowLength);
+        return attrs;
+    }
+
+    /**
+     * length of time that a TOTP code is valid for. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1829)
+    public void unsetTwoFactorTimeWindowLength() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorTimeWindowLength, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * length of time that a TOTP code is valid for. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1829)
+    public Map<String,Object> unsetTwoFactorTimeWindowLength(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorTimeWindowLength, "");
+        return attrs;
+    }
+
+    /**
+     * Determines the number of windows to check when trying to validate a
+     * TOTP code (NOW-n through NOW+n). This number should typically be
+     * small, but a minimum value of 1 is usually necessary to account for
+     * network latency and clock drift. See also:
+     * zimbraTwoFactorTimeWindowLength and
+     * https://tools.ietf.org/html/rfc6238#section-5.2
+     *
+     * @return zimbraTwoFactorTimeWindowOffset, or 1 if unset
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1830)
+    public int getTwoFactorTimeWindowOffset() {
+        return getIntAttr(Provisioning.A_zimbraTwoFactorTimeWindowOffset, 1);
+    }
+
+    /**
+     * Determines the number of windows to check when trying to validate a
+     * TOTP code (NOW-n through NOW+n). This number should typically be
+     * small, but a minimum value of 1 is usually necessary to account for
+     * network latency and clock drift. See also:
+     * zimbraTwoFactorTimeWindowLength and
+     * https://tools.ietf.org/html/rfc6238#section-5.2
+     *
+     * @param zimbraTwoFactorTimeWindowOffset new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1830)
+    public void setTwoFactorTimeWindowOffset(int zimbraTwoFactorTimeWindowOffset) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorTimeWindowOffset, Integer.toString(zimbraTwoFactorTimeWindowOffset));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Determines the number of windows to check when trying to validate a
+     * TOTP code (NOW-n through NOW+n). This number should typically be
+     * small, but a minimum value of 1 is usually necessary to account for
+     * network latency and clock drift. See also:
+     * zimbraTwoFactorTimeWindowLength and
+     * https://tools.ietf.org/html/rfc6238#section-5.2
+     *
+     * @param zimbraTwoFactorTimeWindowOffset new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1830)
+    public Map<String,Object> setTwoFactorTimeWindowOffset(int zimbraTwoFactorTimeWindowOffset, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorTimeWindowOffset, Integer.toString(zimbraTwoFactorTimeWindowOffset));
+        return attrs;
+    }
+
+    /**
+     * Determines the number of windows to check when trying to validate a
+     * TOTP code (NOW-n through NOW+n). This number should typically be
+     * small, but a minimum value of 1 is usually necessary to account for
+     * network latency and clock drift. See also:
+     * zimbraTwoFactorTimeWindowLength and
+     * https://tools.ietf.org/html/rfc6238#section-5.2
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1830)
+    public void unsetTwoFactorTimeWindowOffset() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorTimeWindowOffset, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Determines the number of windows to check when trying to validate a
+     * TOTP code (NOW-n through NOW+n). This number should typically be
+     * small, but a minimum value of 1 is usually necessary to account for
+     * network latency and clock drift. See also:
+     * zimbraTwoFactorTimeWindowLength and
+     * https://tools.ietf.org/html/rfc6238#section-5.2
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1830)
+    public Map<String,Object> unsetTwoFactorTimeWindowOffset(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorTimeWindowOffset, "");
+        return attrs;
+    }
+
+    /**
      * UC service zimbraId
      *
      * @return zimbraUCServiceId, or null if unset
