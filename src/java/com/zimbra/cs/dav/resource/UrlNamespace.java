@@ -123,30 +123,46 @@ public class UrlNamespace {
     }
 
     public static DavResource getPrincipalAtUrl(DavContext ctxt, String url) throws DavException {
-        ZimbraLog.dav.debug("getPrincipalAtUrl");
         String name = ctxt.getAuthAccount().getName();
+        String proxyPrincipal = "";
         if (url != null) {
             int index = url.indexOf(PRINCIPALS_PATH);
-            if (index == -1 || url.endsWith(PRINCIPALS_PATH))
+            if (index == -1 || url.endsWith(PRINCIPALS_PATH)) {
                 try {
                     return new Principal(ctxt.getAuthAccount(), url);
                 } catch (ServiceException se) {
                     throw new DavException("invalid uri", HttpServletResponse.SC_NOT_FOUND, se);
                 }
+            }
             index += PRINCIPALS_PATH.length();
             name = url.substring(index);
-            if (name.indexOf('/') > 0)
+            if (name.indexOf('/') > 0) {
+                proxyPrincipal = name.substring(name.indexOf('/') + 1);
+                if (proxyPrincipal.endsWith("/")) {
+                    proxyPrincipal = proxyPrincipal.substring(0, proxyPrincipal.indexOf('/'));
+                }
                 name = name.substring(0, name.indexOf('/'));
-            ZimbraLog.dav.debug("name: "+name);
+            }
+            name = name.replaceAll("%40", "@");
         } else {
             url = "/";
         }
+        ZimbraLog.dav.debug("getPrincipalAtUrl name='%s' url='%s' proxyPrincipal='%s'", name, url, proxyPrincipal);
 
         try {
-            Account a = Provisioning.getInstance().get(Key.AccountBy.name, name);
-            if (a == null)
+            Account acct = Provisioning.getInstance().get(Key.AccountBy.name, name);
+            if (acct == null) {
                 throw new DavException("user not found", HttpServletResponse.SC_NOT_FOUND, null);
-            return new User(ctxt, a, url);
+            }
+            if (ctxt.useIcalDelegation()) {
+                if (CalendarProxyRead.CALENDAR_PROXY_READ.equals(proxyPrincipal)) {
+                    return new CalendarProxyRead(acct, url);
+                }
+                if (CalendarProxyWrite.CALENDAR_PROXY_WRITE.equals(proxyPrincipal)) {
+                    return new CalendarProxyWrite(acct, url);
+                }
+            }
+            return new User(ctxt, acct, url);
         } catch (ServiceException se) {
             throw new DavException("user not found", HttpServletResponse.SC_NOT_FOUND, null);
         }
@@ -291,6 +307,7 @@ public class UrlNamespace {
         }
         return true;
     }
+
     public static String getPrincipalUrl(Account authAccount, Account targetAccount) {
         String url = getPrincipalUrl(targetAccount.getName());
         if (!onSameServer(authAccount, targetAccount)) {
@@ -302,6 +319,17 @@ public class UrlNamespace {
         }
         return url;
     }
+
+    public static String getCalendarProxyReadUrl(Account authAccount, Account targetAccount) {
+        return UrlNamespace.getPrincipalUrl(authAccount, targetAccount)
+                 + CalendarProxyRead.CALENDAR_PROXY_READ;
+    }
+
+    public static String getCalendarProxyWriteUrl(Account authAccount, Account targetAccount) {
+        return UrlNamespace.getPrincipalUrl(authAccount, targetAccount)
+                 + CalendarProxyWrite.CALENDAR_PROXY_WRITE;
+    }
+
     public static String getPrincipalUrl(String user) {
         return HttpUtil.urlEscape(PRINCIPALS_PATH + user + "/");
     }
@@ -703,6 +731,7 @@ public class UrlNamespace {
         if (index == -1)
             return null;
         String acct = principalUrl.substring(index + PRINCIPALS_PATH.length());
+        acct = acct.replaceAll("%40", "@");
         Provisioning prov = Provisioning.getInstance();
         return prov.get(AccountBy.name, acct);
     }

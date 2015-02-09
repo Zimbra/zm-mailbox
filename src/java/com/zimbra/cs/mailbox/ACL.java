@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -64,6 +64,11 @@ public final class ACL {
     private static final short GRANTABLE_RIGHTS = RIGHT_READ    | RIGHT_WRITE    | RIGHT_INSERT |
                                                   RIGHT_DELETE  | RIGHT_ACTION   | RIGHT_ADMIN  |
                                                   RIGHT_PRIVATE | RIGHT_FREEBUSY ;
+
+    public static final short ROLE_VIEW         = ACL.RIGHT_READ;
+    public static final short ROLE_MANAGER      = ACL.RIGHT_READ | ACL.RIGHT_WRITE | ACL.RIGHT_INSERT |
+                                                  ACL.RIGHT_DELETE | ACL.RIGHT_ACTION;
+    public static final short ROLE_ADMIN        = ACL.ROLE_MANAGER | ACL.RIGHT_ADMIN;
 
     /** The grantee of these rights is the zimbraId for a user. */
     public static final byte GRANTEE_USER     = 1;
