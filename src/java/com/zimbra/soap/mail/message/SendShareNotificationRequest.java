@@ -77,6 +77,26 @@ public class SendShareNotificationRequest {
     public SendShareNotificationRequest() {
     }
 
+    public static SendShareNotificationRequest create(Id id, ShareNotifAction action, String notes,
+            List<EmailAddrInfo> emailAddresses) {
+        SendShareNotificationRequest req = new SendShareNotificationRequest();
+        req.setItem(id);
+        req.setAction(action);
+        req.setNotes(notes);
+        req.setEmailAddresses(emailAddresses);
+        return req;
+    }
+
+    public static SendShareNotificationRequest create(Integer id, ShareNotifAction action, String notes,
+            List<EmailAddrInfo> emailAddresses) {
+        SendShareNotificationRequest req = new SendShareNotificationRequest();
+        req.setItem(new Id(id));
+        req.setAction(action);
+        req.setNotes(notes);
+        req.setEmailAddresses(emailAddresses);
+        return req;
+    }
+
     public void setItem(Id item) { this.item = item; }
     public void setEmailAddresses(Iterable <EmailAddrInfo> emailAddresses) {
         this.emailAddresses.clear();
