@@ -75,8 +75,7 @@ public abstract class AbstractCalendarProxy extends Principal {
     @Override
     public void patchProperties(DavContext ctxt, Collection<Element> set, Collection<QName> remove)
     throws DavException, IOException {
-        String path = ctxt.getPath();
-        boolean readOnlyProxy = path.endsWith(CalendarProxyRead.CALENDAR_PROXY_READ + "/");
+        boolean readOnlyProxy = !(this instanceof CalendarProxyWrite);
         // Zimbra supports more fine grained permissions than this.  ROLE_VIEW is a good match but
         // which role is appropriate for read-write proxy is probably either ROLE_MANAGER or ROLE_ADMIN
         // Flipped the coin and chosen ROLE_ADMIN here.

@@ -154,13 +154,19 @@ public class UrlNamespace {
             if (acct == null) {
                 throw new DavException("user not found", HttpServletResponse.SC_NOT_FOUND, null);
             }
-            if (ctxt.useIcalDelegation()) {
-                if (CalendarProxyRead.CALENDAR_PROXY_READ.equals(proxyPrincipal)) {
-                    return new CalendarProxyRead(acct, url);
+            if (CalendarProxyRead.CALENDAR_PROXY_READ.equals(proxyPrincipal)) {
+                if (!ctxt.useIcalDelegation()) {
+                    throw new DavException("Not available because zimbraPrefAppleIcalDelegationEnabled=FALSE",
+                            HttpServletResponse.SC_NOT_FOUND, null);
                 }
-                if (CalendarProxyWrite.CALENDAR_PROXY_WRITE.equals(proxyPrincipal)) {
-                    return new CalendarProxyWrite(acct, url);
+                return new CalendarProxyRead(acct, url);
+            }
+            if (CalendarProxyWrite.CALENDAR_PROXY_WRITE.equals(proxyPrincipal)) {
+                if (!ctxt.useIcalDelegation()) {
+                    throw new DavException("Not available because zimbraPrefAppleIcalDelegationEnabled=FALSE",
+                            HttpServletResponse.SC_NOT_FOUND, null);
                 }
+                return new CalendarProxyWrite(acct, url);
             }
             return new User(ctxt, acct, url);
         } catch (ServiceException se) {
@@ -322,12 +328,12 @@ public class UrlNamespace {
 
     public static String getCalendarProxyReadUrl(Account authAccount, Account targetAccount) {
         return UrlNamespace.getPrincipalUrl(authAccount, targetAccount)
-                 + CalendarProxyRead.CALENDAR_PROXY_READ;
+                 + CalendarProxyRead.CALENDAR_PROXY_READ + "/";
     }
 
     public static String getCalendarProxyWriteUrl(Account authAccount, Account targetAccount) {
         return UrlNamespace.getPrincipalUrl(authAccount, targetAccount)
-                 + CalendarProxyWrite.CALENDAR_PROXY_WRITE;
+                 + CalendarProxyWrite.CALENDAR_PROXY_WRITE+ "/";
     }
 
     public static String getPrincipalUrl(String user) {
