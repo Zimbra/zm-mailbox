@@ -8318,6 +8318,7 @@ TODO: delete them permanently from here
   <globalConfigValue>TLSv1</globalConfigValue>
   <globalConfigValue>TLSv1.1</globalConfigValue>
   <globalConfigValue>TLSv1.2</globalConfigValue>
+  <globalConfigValue>SSLv2Hello</globalConfigValue>
   <desc>List of SSL/TLS protocols (as documented by SunJSSE Provider Protocols and used in setEnabledProtocols) to be enabled in Jetty for HTTPS, IMAPS, POP3S, and STARTTLS (including LMTP)</desc>
 </attr>
 
