@@ -368,17 +368,24 @@ class ProxyConfVar
         if (key.contains("default") && (serverPort == 443 || serverPort == 3443 || serverPort == 9071 || serverPort == 80)) {
             default_string = " default";    // default server option only for the web proxy & not mail proxy
         }
-        if (ipmode == IPMode.IPV4_ONLY || ipmode == IPMode.BOTH) {
+
+        if (ipmode == IPMode.BOTH) {
+            if (sni || vip.isEmpty()) {
+                return String.format("[::]:%d%s ipv6only=off%s", serverPort, default_string, spdystring);
+            } else {
+                return String.format("[%s]:%d ipv6only=off%s", vip, serverPort, spdystring);
+            }
+        } else if (ipmode == IPMode.IPV4_ONLY) {
             if (sni || vip.isEmpty()) {
                 return String.format("%d%s%s", serverPort, default_string, spdystring);
             } else {
                 return String.format("%s:%d%s", vip, serverPort, spdystring);
             }
-        } else {
+        }  else {   // ipmode is IPv6_ONLY
             if (sni || vip.isEmpty()) {
-                return String.format("[::]:%d%s ipv6only=on%s", serverPort, default_string, spdystring);
+                return String.format("[::]:%d%s%s", serverPort, default_string, spdystring);
             } else {
-                return String.format("[%s]:%d ipv6only=on%s", vip, serverPort, spdystring);
+                return String.format("[%s]:%d%s", vip, serverPort, spdystring);
             }
         }
     }
@@ -445,7 +452,7 @@ abstract class IPModeEnablerVar extends ProxyConfVar {
     static IPMode getZimbraIPMode()
     {
         if (currentIPMode == IPMode.UNKNOWN) {
-            String res = ProxyConfVar.serverSource.getAttr(Provisioning.A_zimbraIPMode, "both");
+            String res = ProxyConfVar.serverSource.getAttr(Provisioning.A_zimbraIPMode, "ipv4");
             if (res.equalsIgnoreCase("both")) {
                 currentIPMode = IPMode.BOTH;
             } else if (res.equalsIgnoreCase("ipv4")) {
