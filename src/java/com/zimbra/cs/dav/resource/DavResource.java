@@ -254,6 +254,13 @@ public abstract class DavResource {
     }
 
     protected void setProperty(QName key, String val) {
+        if (DavElements.E_HREF.equals(key)) {
+            if (val != null && (val.startsWith("/") || (val.startsWith("http:")) || (val.startsWith("http:")))) {
+                // For web URLs (i.e. not mailto) for consistency, always encode @ as %40
+                // A lot of clients don't like naked "@" signs
+                val = val.replaceAll("@", "%40");
+            }
+        }
         setProperty(key, val, false);
     }
 

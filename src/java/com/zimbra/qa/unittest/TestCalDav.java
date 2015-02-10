@@ -73,6 +73,7 @@ import com.zimbra.client.ZFolder.View;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.client.ZMessage;
 import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.ZAttrProvisioning;
 import com.zimbra.common.calendar.ICalTimeZone;
 import com.zimbra.common.calendar.ParsedDateTime;
 import com.zimbra.common.calendar.WellKnownTimeZones;
@@ -100,7 +101,16 @@ import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavProtocol;
 import com.zimbra.cs.dav.resource.UrlNamespace;
 import com.zimbra.cs.dav.service.DavServlet;
+import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.util.ProvisioningUtil;
+import com.zimbra.soap.account.message.ModifyPrefsRequest;
+import com.zimbra.soap.account.message.ModifyPrefsResponse;
+import com.zimbra.soap.account.type.Pref;
+import com.zimbra.soap.mail.message.CreateMountpointRequest;
+import com.zimbra.soap.mail.message.CreateMountpointResponse;
+import com.zimbra.soap.mail.type.NewMountpointSpec;
+
 
 public class TestCalDav  {
 
@@ -156,6 +166,7 @@ public class TestCalDav  {
         Map<String, String> aMap = Maps.newHashMapWithExpectedSize(2);
         aMap.put("D", DavElements.WEBDAV_NS_STRING);
         aMap.put("C", DavElements.CALDAV_NS_STRING);
+        aMap.put("CS", DavElements.CS_NS_STRING);
         caldavNSMap = Collections.unmodifiableMap(aMap);
     }
 
@@ -377,6 +388,24 @@ public class TestCalDav  {
     public static String getFolderUrl(Account auth, String folderName) throws ServiceException {
         StringBuilder sb = getLocalServerRoot();
         sb.append(UrlNamespace.getFolderUrl(auth.getName(), folderName));
+        return sb.toString();
+    }
+
+    public static String getPrincipalUrl(Account auth) throws ServiceException {
+        StringBuilder sb = getLocalServerRoot();
+        sb.append(UrlNamespace.getPrincipalUrl(auth));
+        return sb.toString();
+    }
+
+    public static String getCalendarProxyReadUrl(Account target) throws ServiceException {
+        StringBuilder sb = getLocalServerRoot();
+        sb.append(UrlNamespace.getCalendarProxyReadUrl(target, target));
+        return sb.toString();
+    }
+
+    public static String getCalendarProxyWriteUrl(Account target) throws ServiceException {
+        StringBuilder sb = getLocalServerRoot();
+        sb.append(UrlNamespace.getCalendarProxyWriteUrl(target, target));
         return sb.toString();
     }
 
@@ -1268,9 +1297,208 @@ public class TestCalDav  {
         putMethod.addRequestHeader(DavProtocol.HEADER_IF_NONE_MATCH, "*");
         putMethod.setRequestEntity(new ByteArrayRequestEntity(simpleVcard.getBytes(), MimeConstants.CT_TEXT_VCARD));
         HttpMethodExecutor.execute(client, putMethod, HttpStatus.SC_PRECONDITION_FAILED);
-
     }
 
+    public static final String expandPropertyGroupMemberSet =
+    "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" +
+    "<A:expand-property xmlns:A=\"DAV:\">" +
+    "  <A:property name=\"group-member-set\" namespace=\"DAV:\">" +
+    "    <A:property name=\"email-address-set\" namespace=\"http://calendarserver.org/ns/\"/>" +
+    "    <A:property name=\"calendar-user-address-set\" namespace=\"urn:ietf:params:xml:ns:caldav\"/>" +
+    "    <A:property name=\"displayname\" namespace=\"DAV:\"/>" +
+    "  </A:property>" +
+    "</A:expand-property>";
+
+    public static final String expandPropertyDelegateFor =
+    "<A:expand-property xmlns:A=\"DAV:\">" +
+    "  <A:property name=\"calendar-proxy-write-for\" namespace=\"http://calendarserver.org/ns/\">" +
+    "    <A:property name=\"displayname\" namespace=\"DAV:\"/>" +
+    "    <A:property name=\"calendar-user-address-set\" namespace=\"urn:ietf:params:xml:ns:caldav\"/>" +
+    "    <A:property name=\"email-address-set\" namespace=\"http://calendarserver.org/ns/\"/>" +
+    "  </A:property>" +
+    "  <A:property name=\"calendar-proxy-read-for\" namespace=\"http://calendarserver.org/ns/\">" +
+    "    <A:property name=\"displayname\" namespace=\"DAV:\"/>" +
+    "    <A:property name=\"calendar-user-address-set\" namespace=\"urn:ietf:params:xml:ns:caldav\"/>" +
+    "    <A:property name=\"email-address-set\" namespace=\"http://calendarserver.org/ns/\"/>" +
+    "  </A:property>" +
+    "</A:expand-property>";
+
+    public static String propPatchGroupMemberSetTemplate =
+    "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" +
+    "<A:propertyupdate xmlns:A=\"DAV:\">" +
+    "    <A:set>" +
+    "        <A:prop>" +
+    "            <A:group-member-set>" +
+    "                <A:href>%%MEMBER%%</A:href>" +
+    "            </A:group-member-set>" +
+    "        </A:prop>" +
+    "    </A:set>" +
+    "</A:propertyupdate>";
+
+    private void setZimbraPrefAppleIcalDelegationEnabled(ZMailbox mbox, Boolean val)
+    throws ServiceException {
+        ModifyPrefsRequest modPrefsReq = new ModifyPrefsRequest();
+        Pref pref = Pref.createPrefWithNameAndValue(
+                ZAttrProvisioning.A_zimbraPrefAppleIcalDelegationEnabled,
+                val.toString().toUpperCase());
+        modPrefsReq.addPref(pref);
+        ModifyPrefsResponse modPrefsResp = mbox.invokeJaxb(modPrefsReq);
+        assertNotNull("null ModifyPrefs Response for forwarding calendar invites/no auto-add", modPrefsResp);
+    }
+
+    /**
+     * http://svn.calendarserver.org/repository/calendarserver/CalendarServer/trunk/doc/Extensions/caldav-proxy.txt
+     * This is an Apple standard implemented by Apple Mac OSX at least up to Yosemite and offers a fairly simple
+     * sharing model for calendars.  The model is simpler than Zimbra's native model and there are mismatches,
+     * for instance Zimbra requires the proposed delegate to accept shares.
+     */
+    @Test
+    public void testAppleCaldavProxyFunctions() throws ServiceException, IOException {
+        Account sharer = TestUtil.createAccount(DAV3);
+        Account sharee1 = TestUtil.createAccount(DAV1);
+        Account sharee2 = TestUtil.createAccount(DAV2);
+        ZMailbox mboxSharer = TestUtil.getZMailbox(sharer.getName());
+        ZMailbox mboxSharee1 = TestUtil.getZMailbox(sharee1.getName());
+        ZMailbox mboxSharee2 = TestUtil.getZMailbox(sharee2.getName());
+        setZimbraPrefAppleIcalDelegationEnabled(mboxSharer, true);
+        setZimbraPrefAppleIcalDelegationEnabled(mboxSharee1, true);
+        setZimbraPrefAppleIcalDelegationEnabled(mboxSharee2, true);
+        // Test PROPPATCH to "calendar-proxy-read" URL
+        setGroupMemberSet(TestCalDav.getCalendarProxyReadUrl(sharer), sharer, sharee2);
+        // Test PROPPATCH to "calendar-proxy-write" URL
+        setGroupMemberSet(TestCalDav.getCalendarProxyWriteUrl(sharer), sharer, sharee1);
+
+        // verify that adding new members to groups triggered notification messages
+        List<ZMessage> msgs = TestUtil.waitForMessages(mboxSharee1,
+                "in:inbox subject:\"Share Created: Calendar shared by \"", 1, 10000);
+        assertNotNull(String.format("Notification msgs for %s",sharee1.getName()), msgs);
+        assertEquals(String.format("num msgs for %s",sharee1.getName()), 1, msgs.size());
+
+        msgs = TestUtil.waitForMessages(mboxSharee2,
+                "in:inbox subject:\"Share Created: Calendar shared by \"", 1, 10000);
+        assertNotNull(String.format("Notification msgs for %s",sharee2.getName()), msgs);
+        assertEquals(String.format("num msgs for %s",sharee2.getName()), 1, msgs.size());
+        // Simulate acceptance of the shares (would normally need to be done in ZWC
+        createCalendarMountPoint(mboxSharee1, sharer);
+        createCalendarMountPoint(mboxSharee2, sharer);
+        Document doc = delegateForExpandProperty(sharee1);
+        XPath xpath = XPathFactory.newInstance().newXPath();
+        xpath.setNamespaceContext(TestCalDav.NamespaceContextForXPath.forCalDAV());
+        XPathExpression xPathExpr;
+        try {
+            String xpathS = "/D:multistatus/D:response/D:href/text()";
+            xPathExpr = xpath.compile(xpathS);
+            NodeList result = (NodeList) xPathExpr.evaluate(doc, XPathConstants.NODESET);
+            assertEquals(String.format("num XPath nodes for %s for %s", xpathS,
+                    sharee1.getName()), 1, result.getLength());
+            String text = (String) xPathExpr.evaluate(doc, XPathConstants.STRING);
+            assertEquals("HREF for account owner", UrlNamespace.getPrincipalUrl(sharee1).replaceAll("@", "%40"), text);
+
+            xpathS = "/D:multistatus/D:response/D:propstat/D:prop/CS:calendar-proxy-write-for/D:response/D:href/text()";
+            xPathExpr = xpath.compile(xpathS);
+            result = (NodeList) xPathExpr.evaluate(doc, XPathConstants.NODESET);
+            assertEquals(String.format("num XPath nodes for %s for %s", xpathS,
+                    sharee1.getName()), 1, result.getLength());
+            text = (String) xPathExpr.evaluate(doc, XPathConstants.STRING);
+            assertEquals("HREF for sharer", UrlNamespace.getPrincipalUrl(sharer).replaceAll("@", "%40"), text);
+        } catch (XPathExpressionException e1) {
+            ZimbraLog.test.debug("xpath problem", e1);
+        }
+        // Check that proxy write has sharee1 in it
+        doc = groupMemberSetExpandProperty(sharer, sharee1, true);
+        // Check that proxy read has sharee2 in it
+        doc = groupMemberSetExpandProperty(sharer, sharee2, false);
+    }
+
+    public static Document groupMemberSetExpandProperty(Account acct, Account member, boolean proxyWrite)
+    throws IOException, ServiceException {
+        String url = proxyWrite ? TestCalDav.getCalendarProxyWriteUrl(acct) : TestCalDav.getCalendarProxyReadUrl(acct);
+        url = url.replaceAll("@", "%40");
+        String href = proxyWrite ? UrlNamespace.getCalendarProxyWriteUrl(acct, acct) : UrlNamespace.getCalendarProxyReadUrl(acct, acct);
+        href = href.replaceAll("@", "%40");
+        ReportMethod method = new ReportMethod(url);
+        addBasicAuthHeaderForUser(method, acct);
+        HttpClient client = new HttpClient();
+        TestCalDav.HttpMethodExecutor executor;
+        method.addRequestHeader("Content-Type", MimeConstants.CT_TEXT_XML);
+        method.setRequestEntity( new ByteArrayRequestEntity(TestCalDav.expandPropertyGroupMemberSet.getBytes(),
+                MimeConstants.CT_TEXT_XML));
+        executor = new TestCalDav.HttpMethodExecutor(client, method, HttpStatus.SC_MULTI_STATUS);
+        String respBody = new String(executor.responseBodyBytes, MimeConstants.P_CHARSET_UTF8);
+        Document doc = W3cDomUtil.parseXMLToDoc(respBody);
+        org.w3c.dom.Element docElement = doc.getDocumentElement();
+        assertEquals("Report node name", DavElements.P_MULTISTATUS, docElement.getLocalName());
+        XPath xpath = XPathFactory.newInstance().newXPath();
+        xpath.setNamespaceContext(TestCalDav.NamespaceContextForXPath.forCalDAV());
+        XPathExpression xPathExpr;
+        try {
+            String xpathS = "/D:multistatus/D:response/D:href/text()";
+            xPathExpr = xpath.compile(xpathS);
+            String text = (String) xPathExpr.evaluate(doc, XPathConstants.STRING);
+            assertEquals("HREF for response", href, text);
+
+            xpathS = "/D:multistatus/D:response/D:propstat/D:prop/D:group-member-set/D:response/D:href/text()";
+            xPathExpr = xpath.compile(xpathS);
+            text = (String) xPathExpr.evaluate(doc, XPathConstants.STRING);
+            assertEquals("HREF for sharee", UrlNamespace.getPrincipalUrl(member).replaceAll("@", "%40"), text);
+        } catch (XPathExpressionException e1) {
+            ZimbraLog.test.debug("xpath problem", e1);
+        }
+        return doc;
+    }
+
+    public static Document delegateForExpandProperty(Account acct)
+    throws IOException, ServiceException {
+        ReportMethod method = new ReportMethod(getPrincipalUrl(acct));
+        addBasicAuthHeaderForUser(method, acct);
+        HttpClient client = new HttpClient();
+        TestCalDav.HttpMethodExecutor executor;
+        method.addRequestHeader("Content-Type", MimeConstants.CT_TEXT_XML);
+        method.setRequestEntity(
+                new ByteArrayRequestEntity(expandPropertyDelegateFor.getBytes(), MimeConstants.CT_TEXT_XML));
+        executor = new TestCalDav.HttpMethodExecutor(client, method, HttpStatus.SC_MULTI_STATUS);
+        String respBody = new String(executor.responseBodyBytes, MimeConstants.P_CHARSET_UTF8);
+        Document doc = W3cDomUtil.parseXMLToDoc(respBody);
+        org.w3c.dom.Element docElement = doc.getDocumentElement();
+        assertEquals("Report node name", DavElements.P_MULTISTATUS, docElement.getLocalName());
+        return doc;
+    }
+
+    public static CreateMountpointResponse createCalendarMountPoint(ZMailbox mboxSharee, Account sharer)
+    throws ServiceException {
+        NewMountpointSpec  mpSpec = new NewMountpointSpec("Shared Calendar");
+        mpSpec.setFlags("#");
+        mpSpec.setRemoteId(Mailbox.ID_FOLDER_CALENDAR);
+        mpSpec.setColor((byte) 4);
+        mpSpec.setOwnerId(sharer.getId());
+        mpSpec.setFolderId(Integer.valueOf(Mailbox.ID_FOLDER_USER_ROOT).toString());
+        mpSpec.setDefaultView(MailItem.Type.APPOINTMENT.toString());
+        CreateMountpointRequest createMpReq = new CreateMountpointRequest(mpSpec);
+        CreateMountpointResponse createMpResp = mboxSharee.invokeJaxb(createMpReq);
+        assertNotNull(String.format(
+                "CreateMountPointResponse for %s's Calendar on mbox %s",sharer.getName(), mboxSharee.getName()),
+                createMpResp);
+        return createMpResp;
+    }
+
+    public static Document setGroupMemberSet(String url, Account acct, Account memberAcct)
+    throws IOException, XmlParseException {
+        PropPatchMethod method = new PropPatchMethod(url);
+        addBasicAuthHeaderForUser(method, acct);
+        HttpClient client = new HttpClient();
+        TestCalDav.HttpMethodExecutor executor;
+        method.addRequestHeader("Content-Type", MimeConstants.CT_TEXT_XML);
+        String body = TestCalDav.propPatchGroupMemberSetTemplate.replace("%%MEMBER%%",
+                UrlNamespace.getPrincipalUrl(memberAcct, memberAcct));
+        method.setRequestEntity(
+                new ByteArrayRequestEntity(body.getBytes(), MimeConstants.CT_TEXT_XML));
+        executor = new TestCalDav.HttpMethodExecutor(client, method, HttpStatus.SC_MULTI_STATUS);
+        String respBody = new String(executor.responseBodyBytes, MimeConstants.P_CHARSET_UTF8);
+        Document doc = W3cDomUtil.parseXMLToDoc(respBody);
+        org.w3c.dom.Element docElement = doc.getDocumentElement();
+        assertEquals("Report node name", DavElements.P_MULTISTATUS, docElement.getLocalName());
+        return doc;
+    }
 
     @Before
     public void setUp() throws Exception {
