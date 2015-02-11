@@ -160,4 +160,13 @@ public class TestDataSource extends MailDocumentHandler {
         }
         return error;
     }
+    
+    public static void testDataSourceConnection(Provisioning prov, Element eDataSource, DataSourceType type,
+        Account account) throws ServiceException {
+        String error = testDataSource(prov, account, eDataSource, type);
+        if (error != null) {
+            throw ServiceException.INVALID_REQUEST("DataSource test failed with error: " + error,
+                null);
+        }
+    }
 }

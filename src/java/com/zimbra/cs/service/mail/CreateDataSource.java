@@ -51,10 +51,13 @@ public class CreateDataSource extends MailDocumentHandler {
         Element eDataSource = getDataSourceElement(request);
         DataSourceType type = DataSourceType.fromString(eDataSource.getName());
 
-        doZMGAppProvisioningIfReq(zsc, prov, eDataSource, type);
+        boolean isAppProvisioned = doZMGAppProvisioningIfReq(zsc, prov, eDataSource, type);
 
         Account account = getRequestedAccount(zsc);
-
+        
+        if (eDataSource.getAttributeBool(MailConstants.A_DS_TEST, false) && !isAppProvisioned) {
+            TestDataSource.testDataSourceConnection(prov, eDataSource, type, account);
+        }
         if (!canModifyOptions(zsc, account))
             throw ServiceException.PERM_DENIED("can not modify options");
         
@@ -140,19 +143,21 @@ public class CreateDataSource extends MailDocumentHandler {
         return response;
     }
 
-    private static synchronized void doZMGAppProvisioningIfReq(ZimbraSoapContext zsc, Provisioning prov,
+    private static synchronized boolean doZMGAppProvisioningIfReq(ZimbraSoapContext zsc, Provisioning prov,
             Element eDataSource, DataSourceType type)
             throws ServiceException {
         String acctId = zsc.getAuthtokenAccountId();
+        boolean isAppProvisioned = false;
         AuthToken authToken = zsc.getAuthToken();
         if (authToken.isZMGAppBootstrap() && prov.getAccountById(acctId) == null) {
             Account acct = prov.createZMGAppAccount(acctId, authToken.getDigest());
 
             // test the data source to make sure it is a valid one
-            String error = TestDataSource.testDataSource(prov, acct, eDataSource, type);
-            if (error != null) {
+            try {
+                TestDataSource.testDataSourceConnection(prov, eDataSource, type, acct);
+            } catch (Exception e) {
                 prov.deleteAccount(acctId);
-                throw ServiceException.INVALID_REQUEST("DataSource test failed with error: " + error, null);
+                throw e;
             }
 
             MailboxManager mailboxManager = MailboxManager.getInstance();
@@ -165,7 +170,9 @@ public class CreateDataSource extends MailDocumentHandler {
                     throw e;
                 }
             }
+            isAppProvisioned = true;
         }
+        return isAppProvisioned;
     }
 
     /**
