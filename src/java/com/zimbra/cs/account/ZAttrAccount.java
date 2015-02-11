@@ -54429,10 +54429,12 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Determines the number of windows to check when trying to validate a TOTP code (NOW-n through NOW+n). 
-     * This number should typically be small, but a minimum value of 1 is usually necessary to account 
-     * for network latency and clock drift.  See also: zimbraTwoFactorTimeWindowLength
-     * and https://tools.ietf.org/html/rfc6238#section-5.2
+     * Determines the number of windows to check when trying to validate a
+     * TOTP code (NOW-n through NOW+n). This number should typically be
+     * small, but a minimum value of 1 is usually necessary to account for
+     * network latency and clock drift. See also:
+     * zimbraTwoFactorTimeWindowLength and
+     * https://tools.ietf.org/html/rfc6238#section-5.2
      *
      * @return zimbraTwoFactorTimeWindowOffset, or 1 if unset
      *
@@ -54444,10 +54446,12 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Determines the number of windows to check when trying to validate a TOTP code (NOW-n through NOW+n). 
-     * This number should typically be small, but a minimum value of 1 is usually necessary to account 
-     * for network latency and clock drift.  See also: zimbraTwoFactorTimeWindowLength
-     * and https://tools.ietf.org/html/rfc6238#section-5.2
+     * Determines the number of windows to check when trying to validate a
+     * TOTP code (NOW-n through NOW+n). This number should typically be
+     * small, but a minimum value of 1 is usually necessary to account for
+     * network latency and clock drift. See also:
+     * zimbraTwoFactorTimeWindowLength and
+     * https://tools.ietf.org/html/rfc6238#section-5.2
      *
      * @param zimbraTwoFactorTimeWindowOffset new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -54462,10 +54466,12 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Determines the number of windows to check when trying to validate a TOTP code (NOW-n through NOW+n). 
-     * This number should typically be small, but a minimum value of 1 is usually necessary to account 
-     * for network latency and clock drift.  See also: zimbraTwoFactorTimeWindowLength
-     * and https://tools.ietf.org/html/rfc6238#section-5.2
+     * Determines the number of windows to check when trying to validate a
+     * TOTP code (NOW-n through NOW+n). This number should typically be
+     * small, but a minimum value of 1 is usually necessary to account for
+     * network latency and clock drift. See also:
+     * zimbraTwoFactorTimeWindowLength and
+     * https://tools.ietf.org/html/rfc6238#section-5.2
      *
      * @param zimbraTwoFactorTimeWindowOffset new value
      * @param attrs existing map to populate, or null to create a new map
@@ -54481,10 +54487,12 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Determines the number of windows to check when trying to validate a TOTP code (NOW-n through NOW+n). 
-     * This number should typically be small, but a minimum value of 1 is usually necessary to account 
-     * for network latency and clock drift.  See also: zimbraTwoFactorTimeWindowLength
-     * and https://tools.ietf.org/html/rfc6238#section-5.2
+     * Determines the number of windows to check when trying to validate a
+     * TOTP code (NOW-n through NOW+n). This number should typically be
+     * small, but a minimum value of 1 is usually necessary to account for
+     * network latency and clock drift. See also:
+     * zimbraTwoFactorTimeWindowLength and
+     * https://tools.ietf.org/html/rfc6238#section-5.2
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -54498,10 +54506,12 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Determines the number of windows to check when trying to validate a TOTP code (NOW-n through NOW+n). 
-     * This number should typically be small, but a minimum value of 1 is usually necessary to account 
-     * for network latency and clock drift.  See also: zimbraTwoFactorTimeWindowLength
-     * and https://tools.ietf.org/html/rfc6238#section-5.2
+     * Determines the number of windows to check when trying to validate a
+     * TOTP code (NOW-n through NOW+n). This number should typically be
+     * small, but a minimum value of 1 is usually necessary to account for
+     * network latency and clock drift. See also:
+     * zimbraTwoFactorTimeWindowLength and
+     * https://tools.ietf.org/html/rfc6238#section-5.2
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
