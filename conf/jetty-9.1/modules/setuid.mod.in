@@ -35,9 +35,7 @@ zimbraImapSSLBindPort=%%zimbraImapSSLBindPort%%
 zimbraSSLExcludeCipherSuites=%%zimbraSSLExcludeCipherSuites%%
 zimbraSSLIncludeCipherSuites=%%zimbraSSLIncludeCipherSuites%%
 
-zimbraImapNioEnabled=%%truefalse VAR:zimbraImapNioEnabled%%
-zimbraPop3NioEnabled=%%truefalse VAR:zimbraPop3NioEnabled%%
-zimbra_ssl_enabled=%%truefalse LOCAL:zimbra_ssl_enabled%%
+nio_imap_enabled=%%truefalse LOCAL:nio_imap_enabled%%
 
 mailboxd_keystore=@@mailboxd_keystore@@
 mailboxd_keystore_password=@@mailboxd_keystore_password@@
