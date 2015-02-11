@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -152,8 +152,6 @@ public final class JaxbUtil {
             com.zimbra.soap.account.message.SubscribeDistributionListResponse.class,
             com.zimbra.soap.account.message.SyncGalRequest.class,
             com.zimbra.soap.account.message.SyncGalResponse.class,
-            com.zimbra.soap.account.message.TwoFactorAuthRequest.class,
-            com.zimbra.soap.account.message.TwoFactorAuthResponse.class,
 
             // zimbraMail
             com.zimbra.soap.mail.message.AddAppointmentInviteRequest.class,
@@ -610,8 +608,6 @@ public final class JaxbUtil {
             com.zimbra.soap.admin.message.GetAllAccountLoggersResponse.class,
             com.zimbra.soap.admin.message.GetAllAccountsRequest.class,
             com.zimbra.soap.admin.message.GetAllAccountsResponse.class,
-            com.zimbra.soap.admin.message.GetAllActiveServersRequest.class,
-            com.zimbra.soap.admin.message.GetAllActiveServersResponse.class,
             com.zimbra.soap.admin.message.GetAllAdminAccountsRequest.class,
             com.zimbra.soap.admin.message.GetAllAdminAccountsResponse.class,
             com.zimbra.soap.admin.message.GetAllAlwaysOnClustersRequest.class,
@@ -898,12 +894,8 @@ public final class JaxbUtil {
             com.zimbra.soap.admin.message.SearchMultiMailboxResponse.class,
             com.zimbra.soap.admin.message.SetCurrentVolumeRequest.class,
             com.zimbra.soap.admin.message.SetCurrentVolumeResponse.class,
-            com.zimbra.soap.admin.message.SetLocalServerOnlineRequest.class,
-            com.zimbra.soap.admin.message.SetLocalServerOnlineResponse.class,
             com.zimbra.soap.admin.message.SetPasswordRequest.class,
             com.zimbra.soap.admin.message.SetPasswordResponse.class,
-            com.zimbra.soap.admin.message.SetServerOfflineRequest.class,
-            com.zimbra.soap.admin.message.SetServerOfflineResponse.class,
             com.zimbra.soap.admin.message.SuspendDeviceRequest.class,
             com.zimbra.soap.admin.message.SuspendDeviceResponse.class,
             com.zimbra.soap.admin.message.SyncGalAccountRequest.class,
