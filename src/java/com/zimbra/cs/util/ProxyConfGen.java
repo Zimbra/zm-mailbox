@@ -2596,7 +2596,7 @@ public class ProxyConfGen
 
         mProv = Provisioning.getInstance();
         ProxyConfVar.configSource = mProv.getConfig();
-        ProxyConfVar.serverSource = ProxyConfVar.configSource;
+        ProxyConfVar.serverSource = mProv.getLocalServer();
 
         if (cl.hasOption('h')) {
             usage(null);
