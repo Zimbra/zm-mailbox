@@ -17,11 +17,9 @@
 package com.zimbra.cs.redolog.op;
 
 import java.io.IOException;
-import java.util.List;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.index.IndexDocument;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -109,8 +107,7 @@ public class IndexItem extends RedoableOp {
         }
 
         try {
-            List<IndexDocument> docList = item.generateIndexData();
-            mbox.index.redoIndexItem(item, mId, docList);
+            mbox.index.redoIndexItem(item);
         } catch (Exception e) {
             // TODO - update the item and set the item's "unindexed" flag
             ZimbraLog.index.info("Caught exception attempting to replay IndexItem for ID "+mId+" item will not be indexed", e);

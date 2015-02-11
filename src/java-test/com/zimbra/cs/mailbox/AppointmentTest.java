@@ -13,6 +13,7 @@ import java.util.UUID;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.zimbra.common.calendar.ZCalendar.ZComponent;
@@ -30,13 +31,16 @@ import com.zimbra.cs.mailbox.calendar.Invite;
 
 public class AppointmentTest {
 
+    @BeforeClass
+    public static void init() throws Exception {
+        MailboxTestUtil.initServer();
+        Provisioning prov = Provisioning.getInstance();
+        prov.createAccount("test@zimbra.com", "secret", new HashMap<String, Object>());        
+    }
+    
     @Before
     public void setUp() throws Exception {
         MailboxTestUtil.clearData();
-
-        MailboxTestUtil.initServer();
-        Provisioning prov = Provisioning.getInstance();
-        prov.createAccount("test@zimbra.com", "secret", new HashMap<String, Object>());
     }
 
     @After

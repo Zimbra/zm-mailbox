@@ -11,9 +11,7 @@ import org.apache.solr.client.solrj.SolrRequest;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.CloudSolrServer;
 import org.apache.solr.client.solrj.impl.HttpSolrServer.RemoteSolrException;
-import org.apache.solr.client.solrj.request.CoreAdminRequest;
 import org.apache.solr.client.solrj.request.QueryRequest;
-import org.apache.solr.client.solrj.response.CoreAdminResponse;
 import org.apache.solr.common.params.CollectionParams.CollectionAction;
 import org.apache.solr.common.params.ModifiableSolrParams;
 import org.junit.Assert;
@@ -55,7 +53,7 @@ public class SolrSearchIndexTest extends AbstractIndexStoreTest {
         originalIndexStoreFactory = IndexStore.getFactory().getClass().getName();
     }
 
-    @Override
+    /* @Override
     protected boolean indexStoreAvailable() {
 
         try {
@@ -66,7 +64,7 @@ public class SolrSearchIndexTest extends AbstractIndexStoreTest {
         } catch (IOException e) {
             return false;
         }
-    }
+    }*/
 
     @Override
     protected void cleanupForIndexStore() {
@@ -97,7 +95,6 @@ public class SolrSearchIndexTest extends AbstractIndexStoreTest {
         createContact(mbox, "a", "bc", "abc@zimbra.com");
         createContact(mbox, "j", "k", "j.k@zimbra.com");
         createContact(mbox, "Matilda", "Higgs-Bozon", "matilda.higgs.bozon@zimbra.com");
-        mbox.index.indexDeferredItems();
 
         // Stick with just one IndexStore - the one cached in Mailbox:
         //    IndexStore index = IndexStore.getFactory().getIndexStore(mbox);
@@ -131,7 +128,6 @@ public class SolrSearchIndexTest extends AbstractIndexStoreTest {
         Contact contact1 = createContact(mbox, "James", "Peters", "test1@zimbra.com");
         createContact(mbox, "Emma", "Peters", "test2@zimbra.com");
 
-        mbox.index.indexDeferredItems(); // Make sure all indexing has been done
         ZimbraIndexSearcher searcher = index.openSearcher();
         Assert.assertEquals("numDocs after 2 adds", 2, searcher.getIndexReader().numDocs());
         ZimbraTopDocs result = searcher.search(
@@ -167,7 +163,6 @@ public class SolrSearchIndexTest extends AbstractIndexStoreTest {
         createContact(mbox, "Emma", "Peters", "test2@zimbra.com");
         createContact(mbox, "Fiona", "Peters", "test3@zimbra.com");
         createContact(mbox, "Edward", "Peters", "test4@zimbra.com");
-        mbox.index.indexDeferredItems(); // Make sure all indexing has been done
         Assert.assertEquals("maxDocs after adding 4 contacts", 4, indexer.maxDocs());
         indexer.close();
 

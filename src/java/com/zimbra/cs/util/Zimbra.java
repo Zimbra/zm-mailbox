@@ -52,8 +52,8 @@ import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.db.DbSession;
 import com.zimbra.cs.db.Versions;
 import com.zimbra.cs.extension.ExtensionUtil;
+import com.zimbra.cs.index.IndexingService;
 import com.zimbra.cs.iochannel.MessageChannel;
-import com.zimbra.cs.mailbox.MailboxIndex;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.PurgeThread;
 import com.zimbra.cs.mailbox.ScheduledTaskManager;
@@ -302,7 +302,8 @@ public final class Zimbra {
 
         // ZimletUtil.loadZimlets();
 
-        MailboxIndex.startup();
+        //start indexing service before server manager
+       appContext.getBean(IndexingService.class).startUp();
 
         RedoLogProvider redoLog = RedoLogProvider.getInstance();
         if (sIsMailboxd) {
@@ -435,8 +436,6 @@ public final class Zimbra {
 
             SessionCache.shutdown();
         }
-
-        MailboxIndex.shutdown();
 
         if (sIsMailboxd) {
             redoLog.shutdown();

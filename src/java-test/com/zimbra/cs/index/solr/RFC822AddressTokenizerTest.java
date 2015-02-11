@@ -7,13 +7,11 @@ import java.util.List;
 
 import org.apache.solr.common.SolrDocument;
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.base.Strings;
 import com.zimbra.cs.index.IndexDocument;
 import com.zimbra.cs.mime.ParsedMessage;
-
 public class RFC822AddressTokenizerTest extends SolrPluginTestBase {
 
     @Test

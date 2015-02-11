@@ -212,9 +212,7 @@ public class MailboxManager {
         mailboxIds.clear();
     }
 
-    public void startup() {
-        MailboxIndex.startup();
-    }
+    public void startup() {}
 
     @PreDestroy
     public void shutdown() {}

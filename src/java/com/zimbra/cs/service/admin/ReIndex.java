@@ -37,8 +37,8 @@ import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.MailboxIndex;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.ReIndexStatus;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
@@ -142,21 +142,10 @@ public final class ReIndex extends AdminDocumentHandler {
                 response.addAttribute(AdminConstants.A_STATUS, STATUS_STARTED);
             }
         } else if (ACTION_STATUS.equalsIgnoreCase(action)) {
-            MailboxIndex.ReIndexStatus status = mbox.index.getReIndexStatus();
-            if (status != null) {
-                addProgressInfo(response, status);
-                response.addAttribute(AdminConstants.A_STATUS, STATUS_RUNNING);
-            } else {
-                response.addAttribute(AdminConstants.A_STATUS, STATUS_IDLE);
-            }
+            addProgressInfo(response, mbox.index.getReIndexStatus());
         } else if (ACTION_CANCEL.equalsIgnoreCase(action)) {
-            MailboxIndex.ReIndexStatus status = mbox.index.cancelReIndex();
-            if (status != null) {
-                response.addAttribute(AdminConstants.A_STATUS, STATUS_CANCELLED);
-                addProgressInfo(response, status);
-            } else {
-                response.addAttribute(AdminConstants.A_STATUS, STATUS_IDLE);
-            }
+            ReIndexStatus status = mbox.index.cancelReIndex();
+            addProgressInfo(response, status);
         } else {
             throw ServiceException.INVALID_REQUEST("Unknown action: " + action, null);
         }
@@ -164,11 +153,13 @@ public final class ReIndex extends AdminDocumentHandler {
         return response;
     }
 
-    private void addProgressInfo(Element response, MailboxIndex.ReIndexStatus status) {
-        Element prog = response.addElement(AdminConstants.E_PROGRESS);
-        prog.addAttribute(AdminConstants.A_NUM_SUCCEEDED, status.getProcessed() - status.getFailed());
+    private void addProgressInfo(Element response, ReIndexStatus status) {
+        Element prog = response.addUniqueElement(AdminConstants.E_PROGRESS);
+        prog.addAttribute(AdminConstants.A_NUM_SUCCEEDED, status.getSucceeded());
         prog.addAttribute(AdminConstants.A_NUM_FAILED, status.getFailed());
-        prog.addAttribute(AdminConstants.A_NUM_REMAINING, status.getTotal() - status.getProcessed());
+        prog.addAttribute(AdminConstants.A_NUM_REMAINING, status.getTotal() > 0 ? (status.getTotal() - status.getSucceeded() - status.getFailed()) : 0);
+        response.addAttribute(AdminConstants.A_STATUS, status.isCancelled() ? STATUS_CANCELLED : 
+            (status.isRunning() ? STATUS_RUNNING : STATUS_IDLE));
     }
 
     @Override

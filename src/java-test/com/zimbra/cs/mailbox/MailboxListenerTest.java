@@ -43,11 +43,15 @@ public final class MailboxListenerTest {
     }
 
     @Before
-    public void setup() throws Exception {
-        MailboxTestUtil.clearData();
-        listenerWasCalled = false;
+    public void setUp() throws Exception {
+        cleanup();
     }
 
+    @After
+    public void tearDown() throws Exception {
+        cleanup();
+    }
+    
     @Test
     public void listenerTest() throws Exception {
         Account acct = Provisioning.getInstance().getAccountById(MockProvisioning.DEFAULT_ACCOUNT_ID);
@@ -56,13 +60,13 @@ public final class MailboxListenerTest {
         MailboxListener.register(new TestListener());
         mbox.createDocument(octxt, Mailbox.ID_FOLDER_BRIEFCASE, "test", "text/plain", "test@zimbra.com",
                 "hello", new ByteArrayInputStream("hello world".getBytes("UTF-8")));
+        Assert.assertTrue(listenerWasCalled);
     }
 
-    @After
-    public void cleanup() throws Exception {
-        MailboxTestUtil.clearData();
-        Assert.assertTrue(listenerWasCalled);
+    private void cleanup() throws Exception {
         MailboxListener.reset();
+        MailboxTestUtil.clearData();
+        listenerWasCalled = false;
     }
 
     public static class TestListener extends MailboxListener {

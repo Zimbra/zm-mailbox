@@ -3,6 +3,7 @@
  */
 package com.zimbra.cs.index;
 
+import java.util.HashMap;
 import java.util.concurrent.ArrayBlockingQueue;
 
 import com.zimbra.common.account.ZAttrProvisioning;
@@ -16,6 +17,9 @@ import com.zimbra.cs.util.Zimbra;
  */
 public class DefaultIndexingQueueAdapter implements IndexingQueueAdapter {
     private final ArrayBlockingQueue<IndexingQueueItemLocator> itemQueue;
+    private final HashMap<String, Integer> totalCounters;
+    private final HashMap<String, Integer> succeededCounters;
+    private final HashMap<String, Integer> failedCounters;
     private static IndexingQueueAdapter instance = null;
 
     public static synchronized IndexingQueueAdapter getInstance() {
@@ -29,6 +33,9 @@ public class DefaultIndexingQueueAdapter implements IndexingQueueAdapter {
      */
     public DefaultIndexingQueueAdapter() {
         itemQueue = new ArrayBlockingQueue<IndexingQueueItemLocator>(ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraIndexingQueueMaxSize, 10000));
+        totalCounters = new HashMap<String, Integer>();
+        succeededCounters = new HashMap<String, Integer>();
+        failedCounters = new HashMap<String, Integer>();
     }
 
     /**
@@ -40,7 +47,7 @@ public class DefaultIndexingQueueAdapter implements IndexingQueueAdapter {
         try {
             itemQueue.put(item);
         } catch (InterruptedException e) {
-            ZimbraLog.index.error("failed to queue item %d for indexing to mailbox %d", item.getMailItemID(), item.getMailboxID(), e);
+            ZimbraLog.index.error("failed to queue items for indexing to mailbox %d", item.getMailboxID(), e);
             return false;
         }
         return true;
@@ -68,5 +75,72 @@ public class DefaultIndexingQueueAdapter implements IndexingQueueAdapter {
     @Override
     public boolean hasMoreItems() {
         return !itemQueue.isEmpty();
+    }
+    
+    @Override
+    public void drain() {
+        itemQueue.clear();
+        totalCounters.clear();   
+        succeededCounters.clear();
+        failedCounters.clear();
+    }
+    
+    @Override
+    public synchronized void incrementSucceededMailboxTaskCount(String accountId, int val) {
+        Integer currentCount = succeededCounters.get(accountId);
+        if(currentCount == null) {
+            currentCount = 0;
+        }
+        succeededCounters.put(accountId,currentCount + val);
+    }
+    
+    @Override
+    public synchronized int getSucceededMailboxTaskCount(String accountId) {
+        Integer currentCount = succeededCounters.get(accountId);
+        return currentCount == null ? 0 : currentCount;
+    }
+    
+    @Override
+    public synchronized void deleteMailboxTaskCounts(String accountId) {
+        totalCounters.remove(accountId);
+        succeededCounters.remove(accountId);
+    }
+    
+    @Override
+    public synchronized void clearAllTaskCounts() {
+        totalCounters.clear();   
+        succeededCounters.clear();
+        failedCounters.clear();
+    }
+    
+    @Override
+    public void setTotalMailboxTaskCount(String accountId, int val) {
+        totalCounters.put(accountId, val);
+    }
+    
+    @Override
+    public void setSucceededMailboxTaskCount(String accountId, int val) {
+        succeededCounters.put(accountId, val);
+        
+    }
+    
+    @Override
+    public int getTotalMailboxTaskCount(String accountId) {
+        Integer val = totalCounters.get(accountId);
+        return val == null ? 0 : val;
+    }
+    @Override
+    public void incrementFailedMailboxTaskCount(String accountId, int numItems) {
+        Integer currentCount = failedCounters.get(accountId);
+        if(currentCount == null) {
+            currentCount = 0;
+        }
+        failedCounters.put(accountId,currentCount + numItems);
+        
+    }
+    @Override
+    public int getFailedMailboxTaskCount(String accountId) {
+        Integer currentCount = failedCounters.get(accountId);
+        return currentCount == null ? 0 : currentCount;
     }
 }

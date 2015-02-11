@@ -6233,7 +6233,10 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
     }
 
     /**
-     * Flag to commit the index manually or not
+     * When set to TRUE, server will commit changes to Solr after every
+     * update request. When set to FALSE, Solr commits will be performed
+     * according to Solr configuration. Set to TRUE for automated testing.
+     * Recommended production setting is FALSE.
      *
      * @return zimbraIndexManualCommit, or false if unset
      *
@@ -6245,7 +6248,10 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
     }
 
     /**
-     * Flag to commit the index manually or not
+     * When set to TRUE, server will commit changes to Solr after every
+     * update request. When set to FALSE, Solr commits will be performed
+     * according to Solr configuration. Set to TRUE for automated testing.
+     * Recommended production setting is FALSE.
      *
      * @param zimbraIndexManualCommit new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -6260,7 +6266,10 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
     }
 
     /**
-     * Flag to commit the index manually or not
+     * When set to TRUE, server will commit changes to Solr after every
+     * update request. When set to FALSE, Solr commits will be performed
+     * according to Solr configuration. Set to TRUE for automated testing.
+     * Recommended production setting is FALSE.
      *
      * @param zimbraIndexManualCommit new value
      * @param attrs existing map to populate, or null to create a new map
@@ -6276,7 +6285,10 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
     }
 
     /**
-     * Flag to commit the index manually or not
+     * When set to TRUE, server will commit changes to Solr after every
+     * update request. When set to FALSE, Solr commits will be performed
+     * according to Solr configuration. Set to TRUE for automated testing.
+     * Recommended production setting is FALSE.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -6290,7 +6302,10 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
     }
 
     /**
-     * Flag to commit the index manually or not
+     * When set to TRUE, server will commit changes to Solr after every
+     * update request. When set to FALSE, Solr commits will be performed
+     * according to Solr configuration. Set to TRUE for automated testing.
+     * Recommended production setting is FALSE.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -6794,6 +6809,88 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
     public Map<String,Object> unsetIndexingQueueMaxSize(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraIndexingQueueMaxSize, "");
+        return attrs;
+    }
+
+    /**
+     * Class that implements access to shared indexing queue. When this
+     * attribute is empty, servers will send documents to Solr for indexing
+     * as soon as documents arrive.
+     *
+     * @return zimbraIndexingQueueProvider, or null if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1833)
+    public String getIndexingQueueProvider() {
+        return getAttr(Provisioning.A_zimbraIndexingQueueProvider, null);
+    }
+
+    /**
+     * Class that implements access to shared indexing queue. When this
+     * attribute is empty, servers will send documents to Solr for indexing
+     * as soon as documents arrive.
+     *
+     * @param zimbraIndexingQueueProvider new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1833)
+    public void setIndexingQueueProvider(String zimbraIndexingQueueProvider) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIndexingQueueProvider, zimbraIndexingQueueProvider);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Class that implements access to shared indexing queue. When this
+     * attribute is empty, servers will send documents to Solr for indexing
+     * as soon as documents arrive.
+     *
+     * @param zimbraIndexingQueueProvider new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1833)
+    public Map<String,Object> setIndexingQueueProvider(String zimbraIndexingQueueProvider, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIndexingQueueProvider, zimbraIndexingQueueProvider);
+        return attrs;
+    }
+
+    /**
+     * Class that implements access to shared indexing queue. When this
+     * attribute is empty, servers will send documents to Solr for indexing
+     * as soon as documents arrive.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1833)
+    public void unsetIndexingQueueProvider() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIndexingQueueProvider, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Class that implements access to shared indexing queue. When this
+     * attribute is empty, servers will send documents to Solr for indexing
+     * as soon as documents arrive.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1833)
+    public Map<String,Object> unsetIndexingQueueProvider(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIndexingQueueProvider, "");
         return attrs;
     }
 
@@ -9360,6 +9457,78 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
     public Map<String,Object> unsetRedisUrl(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraRedisUrl, "");
+        return attrs;
+    }
+
+    /**
+     * Maximum number of items to put into a single reindexing task.
+     *
+     * @return zimbraReindexBatchSize, or -1 if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1834)
+    public int getReindexBatchSize() {
+        return getIntAttr(Provisioning.A_zimbraReindexBatchSize, -1);
+    }
+
+    /**
+     * Maximum number of items to put into a single reindexing task.
+     *
+     * @param zimbraReindexBatchSize new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1834)
+    public void setReindexBatchSize(int zimbraReindexBatchSize) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReindexBatchSize, Integer.toString(zimbraReindexBatchSize));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of items to put into a single reindexing task.
+     *
+     * @param zimbraReindexBatchSize new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1834)
+    public Map<String,Object> setReindexBatchSize(int zimbraReindexBatchSize, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReindexBatchSize, Integer.toString(zimbraReindexBatchSize));
+        return attrs;
+    }
+
+    /**
+     * Maximum number of items to put into a single reindexing task.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1834)
+    public void unsetReindexBatchSize() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReindexBatchSize, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of items to put into a single reindexing task.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1834)
+    public Map<String,Object> unsetReindexBatchSize(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReindexBatchSize, "");
         return attrs;
     }
 

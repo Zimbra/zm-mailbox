@@ -37,6 +37,7 @@ import javax.mail.Session;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -72,8 +73,6 @@ public class SendMsgTest {
 
     @BeforeClass
     public static void init() throws Exception {
-        int i = DebugConfig.getNumMailboxGroups();
-
         MailboxTestUtil.initServer();
 
         int after = DebugConfig.getNumMailboxGroups();
@@ -173,6 +172,11 @@ public class SendMsgTest {
         MailboxTestUtil.clearData();
     }
 
+    @After
+    public void tearDown() throws Exception {
+        MailboxTestUtil.clearData();
+    }
+    
     @Test
     public void deleteDraft() throws Exception {
         Account acct = Provisioning.getInstance().getAccountByName("test@zimbra.com");

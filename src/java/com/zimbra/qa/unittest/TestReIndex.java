@@ -17,7 +17,9 @@
 
 package com.zimbra.qa.unittest;
 
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -48,6 +50,20 @@ public class TestReIndex {
         SoapProvisioning prov = TestProvisioningUtil.getSoapProvisioning();
         ReIndexInfo info = prov.reIndex(account, "status", null, null);
         Assert.assertEquals("idle", info.getStatus());
+    }
+    
+    @Before
+    public void setUp() {
+        cleanup();
+    }
+    
+    @After
+    public void tearDown() {
+        cleanup();
+    }
+    
+    private void cleanup() {
+        
     }
 
 }

@@ -13,15 +13,17 @@ import org.apache.solr.client.solrj.response.AnalysisResponseBase.AnalysisPhase;
 import org.apache.solr.client.solrj.response.AnalysisResponseBase.TokenInfo;
 import org.apache.solr.client.solrj.response.FieldAnalysisResponse;
 import org.apache.solr.client.solrj.response.FieldAnalysisResponse.Analysis;
-import org.junit.AfterClass;
+import org.apache.solr.common.SolrException;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.BeforeClass;
 
 import com.zimbra.common.service.ServiceException;
-
+import com.zimbra.cs.index.IndexStore;
+import com.zimbra.cs.mailbox.MailboxTestUtil;
 public abstract class SolrPluginTestBase {
     protected static SolrServer solrServer;
     protected static EmbeddedSolrIndex index;
-    private static String coreName = "zimbratestcore";
 
     private List<TokenInfo> doAnalysisRequest(String fieldType, String value, boolean ignoreLastPhase) throws SolrServerException, IOException, ServiceException {
         FieldAnalysisRequest req = new FieldAnalysisRequest("/analysis/field");
@@ -83,17 +85,30 @@ public abstract class SolrPluginTestBase {
     }
 
     @BeforeClass
-    public static void createCore() throws SolrServerException, IOException, ServiceException {
-        index = (EmbeddedSolrIndex) new EmbeddedSolrIndex.Factory().getIndexStore(coreName);
+    public static void init() throws Exception {
+        MailboxTestUtil.initServer();
+    }
+    
+    @Before
+    public void setUp() throws Exception {
+        cleanup();
+        index = (EmbeddedSolrIndex) new EmbeddedSolrIndex.Factory().getIndexStore(EmbeddedSolrIndex.TEST_CORE_NAME);
         solrServer = index.getEmbeddedServer();
-        index.initIndex();
     }
 
-    @AfterClass
-    public static void deleteCore() throws SolrServerException, IOException, ServiceException {
-        index.deleteIndex();
+    @After
+    public void tearDown() throws Exception {
+        cleanup();
     }
 
+    private void cleanup() throws Exception {
+        IndexStore.getFactory().destroy();
+        try {
+            MailboxTestUtil.cleanupAllIndexStores();
+        } catch (SolrException ex) {
+            //ignore. We are deleting the folders anyway
+        }
+    }
     public static List<String> toTokens(TokenStream stream) throws IOException {
         List<String> result = new ArrayList<String>();
         CharTermAttribute termAttr = stream.addAttribute(CharTermAttribute.class);

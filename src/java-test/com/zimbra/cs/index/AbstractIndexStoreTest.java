@@ -103,8 +103,8 @@ public abstract class AbstractIndexStoreTest {
 
     @After
     public void teardown() throws Exception {
-        IndexStore.getFactory().destroy();
-        cleanupForIndexStore();
+        //IndexStore.getFactory().destroy();
+        //cleanupForIndexStore();
         MailboxTestUtil.clearData();
     }
 
@@ -124,7 +124,6 @@ public abstract class AbstractIndexStoreTest {
         createContact(mbox, "a", "bc", "abc@zimbra.com");
         createContact(mbox, "j", "k", "j.k@zimbra.com");
         createContact(mbox, "Matilda", "Higgs-Bozon", "matilda.higgs.bozon@zimbra.com");
-        mbox.index.indexDeferredItems();
 
         // Stick with just one IndexStore - the one cached in Mailbox:
         //    IndexStore index = IndexStore.getFactory().getIndexStore(mbox);
@@ -155,7 +154,6 @@ public abstract class AbstractIndexStoreTest {
         Contact contact3 = createContact(mbox, "x", "y", "xy@zimbra.com");
         Contact contact4 = createContact(mbox, "x", "yz", "xyz@zimbra.com");
         Contact contact5 = createContact(mbox, "x", "yz", "xyz@zimbra.com");
-        mbox.index.indexDeferredItems(); // Make sure we don't index items after the deleteIndex() below
 
         IndexStore index = mbox.index.getIndexStore();
         index.deleteIndex();
@@ -202,7 +200,6 @@ public abstract class AbstractIndexStoreTest {
         Thread.sleep(1001);  // To ensure different sort date
         Contact con4 = createContact(mbox, "xyz@zimbra.com");
         Contact con5 = createContact(mbox, "xyz@zimbra.com");
-        mbox.index.indexDeferredItems(); // Make sure we don't index items after the deleteIndex() below
 
         IndexStore index = mbox.index.getIndexStore();
         index.deleteIndex();
@@ -245,7 +242,7 @@ public abstract class AbstractIndexStoreTest {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
         Contact contact = createContact(mbox, "First", "Last", "f.last@zimbra.com", "Leading Wildcard");
         createContact(mbox, "Grand", "Piano", "grand@vmware.com");
-        mbox.index.indexDeferredItems(); // Make sure all indexing has been done
+        
 
         IndexStore index = mbox.index.getIndexStore();
         ZimbraIndexSearcher searcher = index.openSearcher();
@@ -265,7 +262,6 @@ public abstract class AbstractIndexStoreTest {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
         Contact contact = createContact(mbox, "First", "Last", "f.last@zimbra.com", "Software Development Engineer");
         createContact(mbox, "Given", "Surname", "GiV.SurN@zimbra.com");
-        mbox.index.indexDeferredItems(); // Make sure all indexing has been done
 
         IndexStore index = mbox.index.getIndexStore();
         ZimbraIndexSearcher searcher = index.openSearcher();
@@ -292,7 +288,6 @@ public abstract class AbstractIndexStoreTest {
         createContact(mbox, "Non", "Match", "nOn.MaTchiNg@zimbra.com");
         Contact contact2 = createContact(mbox, "First", "Last", "f.last@zimbra.com", "Software Development Engineer");
         createContact(mbox, "Given", "Surname", "GiV.SurN@zimbra.com");
-        mbox.index.indexDeferredItems(); // Make sure all indexing has been done
 
         IndexStore index = mbox.index.getIndexStore();
         ZimbraIndexSearcher searcher = index.openSearcher();
@@ -327,7 +322,7 @@ public abstract class AbstractIndexStoreTest {
         Contact contact2 = createContact(mbox, "First", "Last", "f.last@zimbra.com",
                 "1066 and all that with William the conqueror and others");
         createContact(mbox, "Given", "Surname", "GiV.SurN@zimbra.com");
-        mbox.index.indexDeferredItems(); // Make sure all indexing has been done
+        
 
         IndexStore index = mbox.index.getIndexStore();
         ZimbraIndexSearcher searcher = index.openSearcher();
@@ -357,7 +352,7 @@ public abstract class AbstractIndexStoreTest {
         Contact contact3 = createContact(mbox, "Leo", "EE",   "ee@example.net", "Software Developer Engineer");
         Contact contact4 = createContact(mbox, "Wow", "DD", "dd@example.net", "Softly Development Engineer");
         createContact(mbox, "Given", "Surname", "GiV.SurN@zimbra.com");
-        mbox.index.indexDeferredItems(); // Make sure all indexing has been done
+        
 
         IndexStore index = mbox.index.getIndexStore();
         ZimbraIndexSearcher searcher = index.openSearcher();
@@ -402,7 +397,7 @@ public abstract class AbstractIndexStoreTest {
         Contact contact2 = createContact(mbox, "a", "bcd", "abcd@zimbra.com");
         createContact(mbox, "x", "Y", "xy@zimbra.com");
         createContact(mbox, "x", "Yz", "x.Yz@zimbra.com");
-        mbox.index.indexDeferredItems(); // Make sure all indexing has been done
+        
         IndexStore index = mbox.index.getIndexStore();
         ZimbraIndexSearcher searcher = index.openSearcher();
         ZimbraTopDocs result = searcher.search(new PrefixQuery(new Term(LuceneFields.L_CONTACT_DATA, "ab")), 100);
@@ -434,7 +429,7 @@ public abstract class AbstractIndexStoreTest {
         createContact(mbox, "aa", "bcd", "aaaa@zimbra.com");
         createContact(mbox, "aa", "bcd", "zzz@zimbra.com");
 
-        mbox.index.indexDeferredItems(); // Make sure all indexing has been done
+        
         IndexStore index = mbox.index.getIndexStore();
         ZimbraIndexSearcher searcher = index.openSearcher();
         TermRangeQuery query = new TermRangeQuery(LuceneFields.L_FIELD,
@@ -468,7 +463,7 @@ public abstract class AbstractIndexStoreTest {
         Contact contact1 = createContact(mbox, "James", "Peters", "test1@zimbra.com");
         createContact(mbox, "Emma", "Peters", "test2@zimbra.com");
 
-        mbox.index.indexDeferredItems(); // Make sure all indexing has been done
+        
         ZimbraIndexSearcher searcher = index.openSearcher();
         Assert.assertEquals("numDocs after 2 adds", 2, searcher.getIndexReader().numDocs());
         ZimbraTopDocs result = searcher.search(
@@ -503,7 +498,7 @@ public abstract class AbstractIndexStoreTest {
         createContact(mbox, "Emma", "Peters", "test2@zimbra.com");
         createContact(mbox, "Fiona", "Peters", "test3@zimbra.com");
         createContact(mbox, "Edward", "Peters", "test4@zimbra.com");
-        mbox.index.indexDeferredItems(); // Make sure all indexing has been done
+        
 
         Assert.assertEquals("maxDocs after adding 4 contacts", 4, indexer.maxDocs());
         indexer.close();
@@ -554,7 +549,7 @@ public abstract class AbstractIndexStoreTest {
         createContact(mbox, "teSt1@ziMBRA.com");
         createContact(mbox, "test2@zimbra.com");
 
-        mbox.index.indexDeferredItems(); // Make sure all indexing has been done
+        
         IndexStore index = mbox.index.getIndexStore();
         ZimbraIndexSearcher searcher = index.openSearcher();
         // Note that TermFieldEnumeration order is defined to be sorted

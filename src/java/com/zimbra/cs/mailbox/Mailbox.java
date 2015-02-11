@@ -371,7 +371,7 @@ public class Mailbox {
         public final List<IndexDocument> documents;
         public final MailItem item;
 
-        IndexItemEntry(MailItem item, List<IndexDocument> docs) {
+        public IndexItemEntry(MailItem item, List<IndexDocument> docs) {
             this.item = item;
             this.documents = docs;
         }
@@ -390,7 +390,7 @@ public class Mailbox {
         boolean active;
         DbConnection conn = null;
         RedoableOp recorder = null;
-        List<IndexItemEntry> indexItems = new ArrayList<IndexItemEntry>();
+        List<MailItem> indexItems = new ArrayList<MailItem>();
         LocalItemCache itemCache = null;
         OperationContext octxt = null;
         TargetConstraint tcon = null;
@@ -476,9 +476,9 @@ public class Mailbox {
         /**
          * Add an item to the list of things to be indexed at the end of the current transaction
          */
-        void addIndexItem(IndexItemEntry item) {
+       /* void addIndexItem(MailItem item) {
             indexItems.add(item);
-        }
+        }*/
 
         void addPendingDelete(PendingDelete info) {
             if (deletes == null) {
@@ -585,7 +585,11 @@ public class Mailbox {
         }
 
         public void remove(Folder folder) {
-            Folder removed = mapById.remove(folder.getId());
+            remove(folder.getId());
+        }
+        
+        public void remove(int id) {
+            Folder removed = mapById.remove(id);
             if (removed != null) {
                 String uuid = removed.getUuid();
                 if (uuid != null) {
@@ -1848,7 +1852,22 @@ public class Mailbox {
         ZimbraLog.cache.debug("cached %s %d in mailbox %d", item.getType(), item.getId(), getId());
     }
 
-    protected void uncache(MailItem item) throws ServiceException {
+    public void batchUncache(List<MailItem> items) throws ServiceException {
+        beginTransaction("UncacheItemList", null);
+        boolean success = false;
+        try {
+            for(MailItem item : items) {
+                uncache(item);
+            }
+            success = true;
+        } catch (ServiceException e) {
+            ZimbraLog.cache.error("Failed to remove a batch of items from cache", e);
+        } finally {
+            endTransaction(success);
+        }
+    }
+    
+    public void uncache(MailItem item) throws ServiceException {
         if (item == null) {
             return;
         }
@@ -8883,11 +8902,11 @@ public class Mailbox {
         }
     }
 
-    void addIndexItemToCurrentChange(IndexItemEntry item) {
+    /*void addIndexItemToCurrentChange(MailItem item) {
         assert (lock.isWriteLockedByCurrentThread());
         assert (currentChange().isActive());
         currentChange().addIndexItem(item);
-    }
+    }*/
 
     /**
      * for folder view migration.
@@ -8941,15 +8960,6 @@ public class Mailbox {
             ServiceException exception = null;
 
             if (success) {
-                List<IndexItemEntry> indexItems = currentChange().indexItems;
-                if (!indexItems.isEmpty()) {
-                    assert (currentChange().writeChange);
-                    //TODO: See bug 15072 - we need to clear mCurrentChange.indexItems (it is stored in a temporary) here,
-                    // just in case item.reindex() recurses into a new transaction...
-                    currentChange().indexItems = new ArrayList<IndexItemEntry>();
-                    index.add(indexItems);
-                }
-
                 // update mailbox size, folder unread/message counts
                 try {
                     snapshotCounts();
@@ -9035,19 +9045,11 @@ public class Mailbox {
                 }
             }
 
-            boolean changeMade = currentChange().changeId != MailboxChange.NO_CHANGE;
             deletes = currentChange().deletes; // keep a reference for cleanup
                                                // deletes outside the lock
             // We are finally done with database and redo commits. Cache update
             // comes last.
             commitCache(currentChange());
-
-            // Do deferred index check after commitCache to avoid nested db connection acquisitions.  commitCache()
-            // will release the transaction's db connection before index.maybeIndexDeferredItems() acquires a new one
-            // down in its call stack.
-            if (changeMade) {
-                index.maybeIndexDeferredItems();
-            }
         } finally {
             lock.release();
 

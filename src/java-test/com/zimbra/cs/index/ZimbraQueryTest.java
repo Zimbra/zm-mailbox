@@ -138,7 +138,6 @@ public final class ZimbraQueryTest {
         Map<String, Object> fields = new HashMap<String, Object>();
         fields.put(ContactConstants.A_email, "test1@zimbra.com");
         Contact contact = mbox.createContact(null, new ParsedContact(fields), Mailbox.ID_FOLDER_CONTACTS, null);
-        MailboxTestUtil.index(mbox);
 
         SearchParams params = new SearchParams();
         params.setQueryString("contact:test");
@@ -222,7 +221,6 @@ public final class ZimbraQueryTest {
 
         Contact contact = mbox.createContact(null, new ParsedContact(Collections.singletonMap(
                 ContactConstants.A_email, "test1@zimbra.com")), Mailbox.ID_FOLDER_CONTACTS, null);
-        MailboxTestUtil.index(mbox);
 
         SearchParams params = new SearchParams();
         params.setQueryString("test");
@@ -244,7 +242,6 @@ public final class ZimbraQueryTest {
         DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX);
         Message msg = mbox.addMessage(null, new ParsedMessage("Subject: all hands meeting".getBytes(), false),
                 dopt, null);
-        MailboxTestUtil.index(mbox);
 
         SearchParams params = new SearchParams();
         params.setQueryString("all hands me");

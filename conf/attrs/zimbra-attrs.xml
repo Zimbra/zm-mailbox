@@ -3246,10 +3246,11 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Template used to construct the body of a legal intercept message.</desc>
 </attr>
 
-<attr id="619" name="zimbraBatchedIndexingSize" type="integer" min="0" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.3">
+<attr id="619" name="zimbraBatchedIndexingSize" type="integer" min="0" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.3" deprecatedSince="9.0">
   <defaultCOSValue>20</defaultCOSValue>
   <defaultCOSValueUpgrade>20</defaultCOSValueUpgrade>
   <desc>Batch size to use when indexing data</desc>
+  <deprecateDesc>index batch size is controlled on server level using zimbraReindexBatchSize</deprecateDesc>
 </attr>
 
 <attr id="620" name="zimbraFreebusyExchangeCachedIntervalStart" type="duration" cardinality="single" optionalIn="globalConfig,domain,cos,account" flags="domainInherited,accountCosDomainInherited" since="5.0.3">
@@ -9120,8 +9121,8 @@ TODO: delete them permanently from here
 </attr>
 
 <attr id="1813" name="zimbraIndexManualCommit" type="boolean" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="solr"  since="9.0">
-  <globalConfigValue>TRUE</globalConfigValue>
-  <desc>Flag to commit the index manually or not</desc>
+  <globalConfigValue>FALSE</globalConfigValue>
+  <desc>When set to TRUE, server will commit changes to Solr after every update request. When set to FALSE, Solr commits will be performed according to Solr configuration. Set to TRUE for automated testing. Recommended production setting is FALSE.</desc>
 </attr>
 
 <attr id="1814" name="zimbraIndexMaxTransactionBytes" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="solr"  since="9.0">
@@ -9209,8 +9210,19 @@ TODO: delete them permanently from here
   <defaultCOSValue>BASE32</defaultCOSValue>
   <desc>scratch code encoding</desc>
 </attr>
+
 <attr id="1832" name="zimbraMailboxdSSLRenegotiationAllowed" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="8.7.0">
   <globalConfigValue>TRUE</globalConfigValue>
   <desc>Whether TLS renegotiation is allowed. See also RFC 5746 and CVE-2011-1473 for concerns about possible SSL renegotiation DoS</desc>
 </attr>
+
+<attr id="1833" name="zimbraIndexingQueueProvider" type="string" max="256" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited" requiresRestart="mailbox" since="9.0">
+  <globalConfigValue>com.zimbra.cs.index.DefaultIndexingQueueAdapter</globalConfigValue>
+  <desc>Class that implements access to shared indexing queue. When this attribute is empty, servers will send documents to Solr for indexing as soon as documents arrive.</desc>
+</attr>
+
+<attr id="1834" name="zimbraReindexBatchSize" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited" since="9.0">
+  <globalConfigValue>20</globalConfigValue>
+  <desc>Maximum number of items to put into a single reindexing task.</desc>
+ </attr>
 </attrs>

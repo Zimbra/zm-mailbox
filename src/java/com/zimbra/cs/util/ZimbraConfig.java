@@ -39,6 +39,7 @@ import com.zimbra.cs.consul.ServiceLocator;
 import com.zimbra.cs.extension.ExtensionUtil;
 import com.zimbra.cs.index.DefaultIndexingQueueAdapter;
 import com.zimbra.cs.index.IndexingQueueAdapter;
+import com.zimbra.cs.index.IndexingService;
 import com.zimbra.cs.mailbox.FoldersAndTagsCache;
 import com.zimbra.cs.mailbox.LocalSharedDeliveryCoordinator;
 import com.zimbra.cs.mailbox.MailboxLockFactory;
@@ -91,6 +92,11 @@ public class ZimbraConfig {
         Server server = Provisioning.getInstance().getLocalServer();
         String url = server.getConsulURL();
         return new ConsulClient(url);
+    }
+
+    @Bean
+    public IndexingService indexingService()  {
+        return new IndexingService();
     }
 
     @Bean(name="effectiveACLCache")
@@ -303,8 +309,9 @@ public class ZimbraConfig {
 	@Bean(name="indexingQueueAdapter")
 	public IndexingQueueAdapter indexingQueueAdapterBean() throws Exception {
 	    IndexingQueueAdapter instance = null;
-        String className = LC.zimbra_class_indexing_queue_adapter.value();
-        if (className != null && !className.equals("")) {
+	    Server localServer = Provisioning.getInstance().getLocalServer();
+	    String className = localServer.getIndexingQueueProvider();
+        if (className != null && !className.isEmpty()) {
             try {
                 instance = (IndexingQueueAdapter) Class.forName(className).newInstance();
             } catch (ClassNotFoundException e) {
@@ -312,7 +319,7 @@ public class ZimbraConfig {
             }
         }
         if (instance == null) {
-            //TODO: instantiate Redis adapter if Redis is available
+            //fall back to default (local) queue implementation
             instance = new DefaultIndexingQueueAdapter();
         }
         return instance;

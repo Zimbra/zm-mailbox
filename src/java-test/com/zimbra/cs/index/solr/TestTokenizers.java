@@ -11,13 +11,13 @@ import org.junit.Test;
  * @author iraykin
  */
 
-@Ignore ("This test case is ignored until bug described in https://issues.apache.org/jira/browse/SOLR-2834 is fixed in solrj. The bug is causing the SolrPluginTestBase.doAnalysisRequest method to fail.") 
 public class TestTokenizers extends SolrPluginTestBase {
 
     @Test
+    @Ignore ("This test case is ignored until bug described in https://issues.apache.org/jira/browse/SOLR-2834 is fixed in solrj.")
     public void testNumber() throws Exception {
         String src = "123 456 1,000,000";
-        assertEquals(Arrays.asList("123", "456", "1000000"), getTokens("zmnumber", src));
+        assertEquals(Arrays.asList(123, 456, 1000000), getTokens("zmnumber", src));
     }
 
     @Test
@@ -27,6 +27,7 @@ public class TestTokenizers extends SolrPluginTestBase {
     }
 
     @Test
+    @Ignore ("This test case is ignored until bug described in https://issues.apache.org/jira/browse/SOLR-2834 is fixed in solrj.")
     public void testPhraseQuery() throws Exception {
         String src = "ONE two^three.";
         assertEquals(Arrays.asList("one", "two", "^", "three"), getTokensWithoutReversals("zmtext", src));

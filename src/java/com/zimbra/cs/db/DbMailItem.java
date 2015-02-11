@@ -805,8 +805,18 @@ public class DbMailItem {
         }
         return ids;
     }
+    
+    public static void setIndexId(DbConnection conn, Mailbox mbox, int id) throws ServiceException {
+        List<Integer> ids = new ArrayList<Integer>();
+        ids.add(id);
+        setIndexIds(conn, mbox.getSchemaGroupId(), mbox.getId(), ids, mbox.dumpsterEnabled());
+    }
 
     public static void setIndexIds(DbConnection conn, Mailbox mbox, List<Integer> ids) throws ServiceException {
+        setIndexIds(conn, mbox.getSchemaGroupId(), mbox.getId(), ids, mbox.dumpsterEnabled());
+    }
+
+    public static void setIndexIds(DbConnection conn, int schemaGroupId, int mboxId, List<Integer> ids, boolean dumpsterEnabled) throws ServiceException {
         if (ids.isEmpty()) {
             return;
         }
@@ -815,9 +825,9 @@ public class DbMailItem {
             int updated;
             PreparedStatement stmt = null;
             try { // update MAIL_ITEM table
-                stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(mbox, false) +
+                stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(schemaGroupId, false) +
                         " SET index_id = id WHERE " + IN_THIS_MAILBOX_AND + DbUtil.whereIn("id", count));
-                int pos = setMailboxId(stmt, mbox, 1);
+                int pos = setMailboxId(stmt, mboxId, 1);
                 for (int j = i; j < i + count; j++) {
                     stmt.setInt(pos++, ids.get(j));
                 }
@@ -830,11 +840,11 @@ public class DbMailItem {
             if (updated == count) { // all updates were in MAIL_ITEM table, no need to update MAIL_ITEM_DUMPSTER table
                 continue;
             }
-            if (mbox.dumpsterEnabled()) {
+            if (dumpsterEnabled) {
                 try { // also update MAIL_ITEM_DUMPSTER table
-                    stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(mbox, true) +
+                    stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(schemaGroupId, true) +
                             " SET index_id = id WHERE " + IN_THIS_MAILBOX_AND + DbUtil.whereIn("id", count));
-                    int pos = setMailboxId(stmt, mbox, 1);
+                    int pos = setMailboxId(stmt, mboxId, 1);
                     for (int j = i; j < i + count; j++) {
                         stmt.setInt(pos++, ids.get(j));
                     }
@@ -847,7 +857,7 @@ public class DbMailItem {
             }
         }
     }
-
+    
     public static void resetIndexId(DbConnection conn, Mailbox mbox) throws ServiceException {
         PreparedStatement stmt = null;
         try { // update MAIL_ITEM table

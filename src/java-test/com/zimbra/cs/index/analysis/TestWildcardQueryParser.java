@@ -15,7 +15,9 @@ import org.apache.solr.client.solrj.request.UpdateRequest;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrInputDocument;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.zimbra.common.service.ServiceException;
@@ -29,9 +31,21 @@ public class TestWildcardQueryParser {
     private static String thaiWord1 = "\u0E2D\u0E22\u0E48\u0E32\u0E07\u0E44\u0E23";
     private static String thaiWord2 = "\u0E1A\u0E49\u0E32\u0E07";
 
+    @BeforeClass
+    public static void init() throws Exception {
+        MailboxTestUtil.initServer();
+    }
+    
+    @AfterClass
+    public static void destroy() throws Exception {
+        index.deleteIndex();
+        solrServer = null;
+    }
+    
     @Before
     public void setUp() throws Exception {
-        MailboxTestUtil.initServer();
+        cleanup();
+        
         index = (EmbeddedSolrIndex) IndexStore.getFactory().getIndexStore(EmbeddedSolrIndex.TEST_CORE_NAME);
         solrServer = index.getEmbeddedServer();
 
@@ -59,9 +73,12 @@ public class TestWildcardQueryParser {
         req.process(solrServer);
     }
 
+    private void cleanup() throws Exception {
+        MailboxTestUtil.clearData();
+    }
     @After
     public void tearDown() throws Exception {
-        MailboxTestUtil.clearData();
+        cleanup();
     }
 
     private String debugQuery(String fields, String query) throws SolrServerException, ServiceException {

@@ -153,7 +153,6 @@ public final class ContactTest {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
         mbox.createContact(null, new ParsedContact(Collections.singletonMap(
                 ContactConstants.A_email, "test1@zimbra.com")), Mailbox.ID_FOLDER_CONTACTS, null);
-        MailboxTestUtil.index(mbox);
         Assert.assertTrue(mbox.index.existsInContacts(ImmutableList.of(
                 new InternetAddress("Test <test1@zimbra.com>"), new InternetAddress("Test <test2@zimbra.com>"))));
         Assert.assertFalse(mbox.index.existsInContacts(ImmutableList.of(
@@ -165,7 +164,6 @@ public final class ContactTest {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
         List<Contact> contacts = mbox.createAutoContact(null, ImmutableList.of(
                 new InternetAddress("Test 1", "TEST1@zimbra.com"), new InternetAddress("Test 2", "TEST2@zimbra.com")));
-        MailboxTestUtil.index(mbox);
         Assert.assertEquals(2, contacts.size());
         Assert.assertEquals("1, Test", contacts.get(0).getFileAsString());
         Assert.assertEquals("TEST1@zimbra.com", contacts.get(0).getFields().get(ContactConstants.A_email));

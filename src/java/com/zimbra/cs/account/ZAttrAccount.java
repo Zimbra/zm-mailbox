@@ -4619,7 +4619,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Batch size to use when indexing data
+     * Deprecated since: 9.0. index batch size is controlled on server level
+     * using zimbraReindexBatchSize. Orig desc: Batch size to use when
+     * indexing data
      *
      * @return zimbraBatchedIndexingSize, or 20 if unset
      *
@@ -4631,7 +4633,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Batch size to use when indexing data
+     * Deprecated since: 9.0. index batch size is controlled on server level
+     * using zimbraReindexBatchSize. Orig desc: Batch size to use when
+     * indexing data
      *
      * @param zimbraBatchedIndexingSize new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -4646,7 +4650,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Batch size to use when indexing data
+     * Deprecated since: 9.0. index batch size is controlled on server level
+     * using zimbraReindexBatchSize. Orig desc: Batch size to use when
+     * indexing data
      *
      * @param zimbraBatchedIndexingSize new value
      * @param attrs existing map to populate, or null to create a new map
@@ -4662,7 +4668,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Batch size to use when indexing data
+     * Deprecated since: 9.0. index batch size is controlled on server level
+     * using zimbraReindexBatchSize. Orig desc: Batch size to use when
+     * indexing data
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -4676,7 +4684,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Batch size to use when indexing data
+     * Deprecated since: 9.0. index batch size is controlled on server level
+     * using zimbraReindexBatchSize. Orig desc: Batch size to use when
+     * indexing data
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs

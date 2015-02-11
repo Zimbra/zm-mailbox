@@ -160,7 +160,6 @@ public class DbVolumeBlobsTest {
         Message msg1 = mbox.addMessage(null, new ParsedMessage("From: from1@zimbra.com\r\nTo: to1@zimbra.com".getBytes(), false), opt, null);
         long ts2 = System.currentTimeMillis();
         Message msg2 = mbox.addMessage(null, new ParsedMessage("From: from1@zimbra.com\r\nTo: to1@zimbra.com".getBytes(), false), opt, null);
-        MailboxTestUtil.index(mbox);
         long ts3 = System.currentTimeMillis();
         Iterable<MailboxBlobInfo> allBlobs = null;
         Volume vol = VolumeManager.getInstance().getCurrentMessageVolume();

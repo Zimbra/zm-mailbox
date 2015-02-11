@@ -35,13 +35,21 @@ public class ReindexMailbox extends RedoableOp {
 
     private Set<MailItem.Type> types = null;
     private Set<Integer> mItemIds = null;
-    private int mCompletionId = 0;
+    @Deprecated private int mCompletionId = 0;
     @Deprecated private boolean mSkipDelete = false;
 
     public ReindexMailbox() {
         super(MailboxOperation.ReindexMailbox);
     }
 
+    public ReindexMailbox(int mailboxId, Set<MailItem.Type> types, Set<Integer> itemIds) {
+        this();
+        setMailboxId(mailboxId);
+        assert(types == null || itemIds == null);
+        this.types = types;
+        mItemIds = itemIds;
+    }
+    
     public ReindexMailbox(int mailboxId, Set<MailItem.Type> types, Set<Integer> itemIds, int completionId, boolean skipDelete) {
         this();
         setMailboxId(mailboxId);

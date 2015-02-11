@@ -138,7 +138,6 @@ public final class MessageTest {
         opt.setFolderId(Mailbox.ID_FOLDER_SPAM);
         Message msg = mbox.addMessage(null, new ParsedMessage(
                 "From: spammer@zimbra.com\r\nTo: test@zimbra.com".getBytes(), false), opt, null);
-        MailboxTestUtil.index(mbox);
 
         SearchParams params = new SearchParams();
         params.setSortBy(SortBy.NONE);
@@ -148,7 +147,6 @@ public final class MessageTest {
         Assert.assertFalse(result.hasNext());
 
         mbox.move(new OperationContext(mbox), msg.getId(), MailItem.Type.MESSAGE, Mailbox.ID_FOLDER_INBOX);
-        MailboxTestUtil.index(mbox);
 
         result = mbox.index.search(SoapProtocol.Soap12, new OperationContext(mbox), params);
         Assert.assertTrue(result.hasNext());

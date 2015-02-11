@@ -49,6 +49,8 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.HSQLDB;
 import com.zimbra.cs.index.IndexStore;
+import com.zimbra.cs.index.IndexingQueueAdapter;
+import com.zimbra.cs.index.IndexingService;
 import com.zimbra.cs.index.solr.EmbeddedSolrIndex;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mime.Mime;
@@ -128,16 +130,28 @@ public final class MailboxTestUtil {
         LC.zimbra_class_database.setDefault(HSQLDB.class.getName());
         DbPool.startup();
         HSQLDB.createDatabase(zimbraServerDir, false);
-        Provisioning.getInstance().getLocalServer().setIndexManualCommit(true);
+        
+        //use EmbeddedSolrIndex for indexing, because Solr webapp is nor running
         LC.zimbra_class_index_store_factory.setDefault(EmbeddedSolrIndex.Factory.class.getName());
         IndexStore.setFactory(LC.zimbra_class_index_store_factory.value());
         LC.zimbra_class_store.setDefault(storeManagerClass.getName());
         LC.zimbra_class_soapsessionfactory.setDefault(DefaultSoapSessionFactory.class.getName());
         deleteAllIndexFolders();
         setupEmbeddedSolrDirs(true);
+        
         Zimbra.startupTest(configClass);
         MailboxManager.setInstance(Zimbra.getAppContext().getBean(MailboxManager.class));
         StoreManager.getInstance().startup();
+        
+        //set server into synchronous indexing mode
+        Provisioning.getInstance().getLocalServer().setIndexManualCommit(true);
+        
+        //disable indexing queue
+        Provisioning.getInstance().getLocalServer().setIndexingQueueProvider("");
+        
+        //stop indexing service, it does not do anything without an indexing queue
+        Zimbra.getAppContext().getBean(IndexingService.class).shutDown();
+        
     }
 
     private static void setupEmbeddedSolrDirs(boolean recreateIfExists) throws Exception {
@@ -237,12 +251,16 @@ public final class MailboxTestUtil {
     public static void clearData(String zimbraServerDir) throws Exception {
         HSQLDB.clearDatabase(zimbraServerDir);
         MailboxManager.getInstance().clearCache();
+        IndexStore.getFactory().destroy();
         try {
             cleanupAllIndexStores();
         } catch (SolrException ex) {
             //ignore. We are deleting the folders anyway
         }
-        MailboxIndex.shutdown();
+        if(Zimbra.getAppContext().getBean(IndexingQueueAdapter.class) != null) {
+            Zimbra.getAppContext().getBean(IndexingQueueAdapter.class).drain();
+        }
+        
         StoreManager sm = StoreManager.getInstance();
         if (sm instanceof MockStoreManager) {
             ((MockStoreManager) sm).purge();
@@ -250,6 +268,7 @@ public final class MailboxTestUtil {
             MockHttpStore.purge();
         }
         DocumentHandler.resetLocalHost();
+        setupEmbeddedSolrDirs(true);
     }
 
     public static void deleteAllIndexFolders() throws Exception {
@@ -331,23 +350,85 @@ public final class MailboxTestUtil {
         mbox.setTags(null, itemId, item.getType(), flags, null, null);
     }
 
-    public static void index(Mailbox mbox) throws ServiceException {
-        mbox.index.indexDeferredItems();
+    public static void waitForIndexing(Mailbox mbox) throws ServiceException {
 
-        //wait until all index threads are done
         int timeWaited = 0;
         int waitIncrement  = 100;
         int maxWaitTime = 5000;
-        while (mbox.index.indexTasksRunning() && timeWaited < maxWaitTime) {
+
+        IndexStore indexStore = mbox.index.getIndexStore();
+        
+        //wait for index to be initialized
+        while(!indexStore.indexExists() && timeWaited < maxWaitTime) {
             try {
                 Thread.sleep(waitIncrement);
                 timeWaited += waitIncrement;
             } catch (InterruptedException e) {
             }
         }
+
+        //time check
         if (timeWaited >= maxWaitTime) {
-            throw ServiceException.FAILURE(String.format("waiting for mailbox %s to finish indexing took longer than %s ms", mbox.getAccountId(), maxWaitTime), new Throwable());
+            throw ServiceException.FAILURE(String.format("Mailbox %s is taking longer than %d ms waiting for IndexStore to get initialized.", mbox.getAccountId(), maxWaitTime), new Throwable());
         }
+        
+        //wait for the indexing queue to be empty (should be empty at this point, unless we got here before IndexingService got the head of the queue)
+        if(Zimbra.getAppContext().getBean(IndexingQueueAdapter.class) != null) {
+            //wait until all indexing threads are done
+            while (Zimbra.getAppContext().getBean(IndexingService.class).isRunning() && 
+                    Zimbra.getAppContext().getBean(IndexingService.class).getNumActiveTasks() > 0 && 
+                        timeWaited < maxWaitTime) {
+                try {
+                    Thread.sleep(waitIncrement);
+                    timeWaited += waitIncrement;
+                } catch (InterruptedException e) {
+                }
+            }
+            
+            //time check
+            if (timeWaited >= maxWaitTime) {
+                throw ServiceException.FAILURE(String.format("Mailbox %s is taking longer than %d ms waiting for IndexingService to finish all tasks.", mbox.getAccountId(), maxWaitTime), new Throwable());
+            }
+            
+            //wait for indexing queue to be emptied
+            while(Zimbra.getAppContext().getBean(IndexingService.class).isRunning() &&
+                    Zimbra.getAppContext().getBean(IndexingQueueAdapter.class).peek() != null && 
+                        timeWaited < maxWaitTime) {
+                try {
+                    Thread.sleep(waitIncrement);
+                    timeWaited += waitIncrement;
+                } catch (InterruptedException e) {
+                }
+            }
+            
+            //time check
+            if (timeWaited >= maxWaitTime) {
+                throw ServiceException.FAILURE(String.format("Mailbox %s is taking longer than %d ms waiting for indexing queue to be emptied.", mbox.getAccountId(), maxWaitTime), new Throwable());
+            }
+            
+            //wait for batch re-index counter to go to 0
+            int completed = Zimbra.getAppContext().getBean(IndexingQueueAdapter.class).getSucceededMailboxTaskCount(mbox.getAccountId());
+            int failed = Zimbra.getAppContext().getBean(IndexingQueueAdapter.class).getFailedMailboxTaskCount(mbox.getAccountId());
+            int total = Zimbra.getAppContext().getBean(IndexingQueueAdapter.class).getTotalMailboxTaskCount(mbox.getAccountId()); 
+            while(Zimbra.getAppContext().getBean(IndexingService.class).isRunning() && completed + failed < total && total > 0 && timeWaited < maxWaitTime) {
+                try {
+                    Thread.sleep(waitIncrement);
+                    timeWaited += waitIncrement;
+                    failed = Zimbra.getAppContext().getBean(IndexingQueueAdapter.class).getFailedMailboxTaskCount(mbox.getAccountId());
+                    completed = Zimbra.getAppContext().getBean(IndexingQueueAdapter.class).getSucceededMailboxTaskCount(mbox.getAccountId());
+                    total = Zimbra.getAppContext().getBean(IndexingQueueAdapter.class).getTotalMailboxTaskCount(mbox.getAccountId()); 
+                } catch (InterruptedException e) {
+                }
+            }
+            
+            //time check
+            if (timeWaited >= maxWaitTime) {
+                throw ServiceException.FAILURE(String.format("Mailbox %s is taking longer than %d ms waiting for indexing task counter to go to 0. Current task counter: %d", mbox.getAccountId(), maxWaitTime,  Zimbra.getAppContext().getBean(IndexingQueueAdapter.class).getSucceededMailboxTaskCount(mbox.getAccountId())), new Throwable());
+            }
+        }
+        
+        //now wait for EmbeddedSolrServer to finish processing update requests
+        ((EmbeddedSolrIndex)(mbox.index.getIndexStore())).waitForIndexCommit(((EmbeddedSolrIndex)mbox.index.getIndexStore()).getSolrServer());
     }
 
     public static ParsedMessage generateMessage(String subject) throws Exception {
@@ -415,9 +496,5 @@ public final class MailboxTestUtil {
                 true);
 
         return invites.get(0);
-    }
-
-    public static synchronized void forceIndexing(Mailbox mbox) throws Exception {
-        index(mbox);
     }
 }
