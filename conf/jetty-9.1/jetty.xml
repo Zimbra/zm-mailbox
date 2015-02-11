@@ -85,6 +85,7 @@
 		<Set name="KeyStorePassword">zimbra</Set>
 		<Set name="KeyManagerPassword">zimbra</Set>
 		<Set name="EndpointIdentificationAlgorithm"></Set>
+		<Set name="renegotiationAllowed">true</Set>
 		<Set name="IncludeProtocols">
 			<Array type="java.lang.String">
 				<!-- <Item>SSLv3</Item> -->
