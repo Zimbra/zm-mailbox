@@ -1109,6 +1109,7 @@ public final class MailConstants {
     public static final String A_DS_IMPORT_CLASS = "importClass";
     public static final String A_DS_FAILING_SINCE = "failingSince";
     public static final String A_DS_OAUTH_TOKEN = "oauthToken";
+    public static final String A_DS_TEST = "test";
 
     public static final String A_CREATOR = "cr";
     public static final String A_TYPE = "t";
