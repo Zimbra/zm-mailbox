@@ -126,6 +126,7 @@
 		<Set name="KeyStorePassword">@@mailboxd_keystore_password@@</Set>
 		<Set name="KeyManagerPassword">@@mailboxd_keystore_password@@</Set>
 		<Set name="EndpointIdentificationAlgorithm"></Set>
+		<Set name="renegotiationAllowed">%%zimbraMailboxdSSLRenegotiationAllowed%%</Set>
 		<!-- SSLPROTOCOLSBEGIN %%comment VAR:zimbraMailboxdSSLProtocolsXML,-->%%
 		<Set name="IncludeProtocols">
 			<Array type="java.lang.String">
