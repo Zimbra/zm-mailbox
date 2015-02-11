@@ -3475,7 +3475,8 @@ emailAddress="changed-phoebe@google.com"
     [defaultSignature="{default-signature-id}"]
     [fromDisplay="{from-display}"]
     [replyToAddress="{replyto-address}"]
-    [replyToDisplay="{replyto-display}"]/>
+    [replyToDisplay="{replyto-display}"]
+    [test="0|1"]/>
 </CreateDataSourceRequest>
 
 or
@@ -3491,7 +3492,8 @@ or
 	    [defaultSignature="{default-signature-id}"]
 	    [fromDisplay="{from-display}"]
 	    [replyToAddress="{replyto-address}"]
-	    [replyToDisplay="{replyto-display}"]/>
+	    [replyToDisplay="{replyto-display}"]
+	    [test="0|1"]/>
 </CreateDataSourceRequest>
 
 <CreateDataSourceResponse>
@@ -3572,7 +3574,8 @@ Client can refresh the OAuthToken in two ways
     [forwardReplySignature="{forward-reply-signature-id}"]
     [fromDisplay="{from-display}"]
     [replyToAddress="{replyto-address}"]
-    [replyToDisplay="{replyto-display}"]/>
+    [replyToDisplay="{replyto-display}"]
+    [test="0|1"]/>
 </ModifyDataSourceRequest>
 
 or
@@ -3588,7 +3591,8 @@ or
     [forwardReplySignature="{forward-reply-signature-id}"]
     [fromDisplay="{from-display}"]
     [replyToAddress="{replyto-address}"]
-    [replyToDisplay="{replyto-display}"]/>
+    [replyToDisplay="{replyto-display}"]
+    [test="0|1"]/>
 </ModifyDataSourceRequest>
 
 <ModifyDataSourceResponse/>

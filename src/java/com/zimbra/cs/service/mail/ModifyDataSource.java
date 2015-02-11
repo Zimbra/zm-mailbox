@@ -130,6 +130,10 @@ public class ModifyDataSource extends MailDocumentHandler {
         	dsAttrs.put(Provisioning.A_zimbraDataSourceImportClassName, importClass);
         }
 
+        if (eDataSource.getAttributeBool(MailConstants.A_DS_TEST, false)) {
+            TestDataSource.testDataSourceConnection(prov, eDataSource, type, account);
+        }
+
         processCommonOptionalAttrs(dsAttrs, eDataSource);
 
         prov.modifyDataSource(account, id, dsAttrs);

@@ -54,7 +54,11 @@ public class CreateDataSource extends MailDocumentHandler {
         doZMGAppProvisioningIfReq(zsc, prov, eDataSource, type);
 
         Account account = getRequestedAccount(zsc);
-
+        
+        if (eDataSource.getAttributeBool(MailConstants.A_DS_TEST, false)
+            && !zsc.getAuthToken().isZMGAppBootstrap()) {
+            TestDataSource.testDataSourceConnection(prov, eDataSource, type, account);
+        }
         if (!canModifyOptions(zsc, account))
             throw ServiceException.PERM_DENIED("can not modify options");
         
@@ -149,10 +153,11 @@ public class CreateDataSource extends MailDocumentHandler {
             Account acct = prov.createZMGAppAccount(acctId, authToken.getDigest());
 
             // test the data source to make sure it is a valid one
-            String error = TestDataSource.testDataSource(prov, acct, eDataSource, type);
-            if (error != null) {
+            try {
+                TestDataSource.testDataSourceConnection(prov, eDataSource, type, acct);
+            } catch (Exception e) {
                 prov.deleteAccount(acctId);
-                throw ServiceException.INVALID_REQUEST("DataSource test failed with error: " + error, null);
+                throw e;
             }
 
             MailboxManager mailboxManager = MailboxManager.getInstance();
