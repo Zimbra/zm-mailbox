@@ -22,6 +22,7 @@ import javax.xml.bind.annotation.XmlAttribute;
 import com.google.common.base.Objects;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.type.ImapDataSource;
+import com.zimbra.soap.type.ZmBoolean;
 
 public class MailImapDataSource
 extends MailDataSource
@@ -34,6 +35,14 @@ implements ImapDataSource {
     @XmlAttribute(name=MailConstants.A_DS_OAUTH_TOKEN /* oauthToken */, required=false)
     private String oauthToken;
 
+    /**
+     * @zm-api-field-tag test-data-source
+     * @zm-api-field-description boolean field for client to denote if it wants
+     *                           to test the data source before creating
+     */
+    @XmlAttribute(name = MailConstants.A_DS_TEST , required = false)
+    private ZmBoolean test;
+
     public MailImapDataSource() {
     }
 
@@ -44,6 +53,9 @@ implements ImapDataSource {
     
     public void setOAuthToken(String oauthToken) { this.oauthToken = oauthToken; }
     public String getOAuthToken() { return oauthToken; }
+
+    public void setTest(boolean test) { this.test = ZmBoolean.fromBool(test, false); }
+    public boolean isTest() { return ZmBoolean.toBool(test, false); }
 
     @Override
     public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
