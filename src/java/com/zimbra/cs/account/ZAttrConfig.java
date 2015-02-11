@@ -26312,6 +26312,83 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * Whether TLS renegotiation is allowed. See also RFC 5746 and
+     * CVE-2011-1473 for concerns about possible SSL renegotiation DoS
+     *
+     * @return zimbraMailboxdSSLRenegotiationAllowed, or true if unset
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1832)
+    public boolean isMailboxdSSLRenegotiationAllowed() {
+        return getBooleanAttr(Provisioning.A_zimbraMailboxdSSLRenegotiationAllowed, true);
+    }
+
+    /**
+     * Whether TLS renegotiation is allowed. See also RFC 5746 and
+     * CVE-2011-1473 for concerns about possible SSL renegotiation DoS
+     *
+     * @param zimbraMailboxdSSLRenegotiationAllowed new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1832)
+    public void setMailboxdSSLRenegotiationAllowed(boolean zimbraMailboxdSSLRenegotiationAllowed) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxdSSLRenegotiationAllowed, zimbraMailboxdSSLRenegotiationAllowed ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether TLS renegotiation is allowed. See also RFC 5746 and
+     * CVE-2011-1473 for concerns about possible SSL renegotiation DoS
+     *
+     * @param zimbraMailboxdSSLRenegotiationAllowed new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1832)
+    public Map<String,Object> setMailboxdSSLRenegotiationAllowed(boolean zimbraMailboxdSSLRenegotiationAllowed, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxdSSLRenegotiationAllowed, zimbraMailboxdSSLRenegotiationAllowed ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether TLS renegotiation is allowed. See also RFC 5746 and
+     * CVE-2011-1473 for concerns about possible SSL renegotiation DoS
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1832)
+    public void unsetMailboxdSSLRenegotiationAllowed() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxdSSLRenegotiationAllowed, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether TLS renegotiation is allowed. See also RFC 5746 and
+     * CVE-2011-1473 for concerns about possible SSL renegotiation DoS
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1832)
+    public Map<String,Object> unsetMailboxdSSLRenegotiationAllowed(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxdSSLRenegotiationAllowed, "");
+        return attrs;
+    }
+
+    /**
      * port number on which memcached server should listen
      *
      * <p>Use getMemcachedBindPortAsString to access value as a string.

@@ -8496,4 +8496,8 @@ TODO: delete them permanently from here
   <defaultCOSValue>BASE32</defaultCOSValue>
   <desc>scratch code encoding</desc>
 </attr>
+<attr id="1832" name="zimbraMailboxdSSLRenegotiationAllowed" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="8.7.0">
+  <globalConfigValue>TRUE</globalConfigValue>
+  <desc>Whether TLS renegotiation is allowed. See also RFC 5746 and CVE-2011-1473 for concerns about possible SSL renegotiation DoS</desc>
+</attr>
 </attrs>
