@@ -17,16 +17,13 @@
 
 package com.zimbra.cs.account.ldap;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import com.google.common.collect.Maps;
 import com.zimbra.common.account.Key;
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.util.EmailUtil;
@@ -213,28 +210,6 @@ public class RenameDomain {
          * 7. flush account cache on all servers
          */
         flushCacheOnAllServers(CacheEntryType.account);
-
-        /*
-         * 8. Determine and prompt user if any local config values pointing to old domain name.
-         */
-        List<String> lcRef = new ArrayList<String>();
-        String domainName = mOldDomainName.toLowerCase();
-        String emailDomainPart = "@" + domainName;
-        for (String key : LC.getAllKeys()) {
-            String value = LC.get(key);
-            if (!StringUtil.isNullOrEmpty(value)) {
-                value = value.toLowerCase();
-                //matching entries with domain name or email address belongs to the domain.
-                if (value.equals(domainName) || value.contains(emailDomainPart)) {
-                    lcRef.add(key);
-                }
-            }
-        }
-        if (!lcRef.isEmpty()) {
-            System.err.println("*[Warning] Found following local config references with domain name: " + domainName);
-            System.err.println("Review and update the values for these local config parameters with new domain name if required.");
-            System.err.println("Local Config Keys: " + lcRef.toString());
-        }
     }
 
     public static enum RenamePhase {

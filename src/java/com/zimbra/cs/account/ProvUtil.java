@@ -1438,6 +1438,8 @@ public class ProvUtil implements HttpDebugListener {
         Domain domain = lookupDomain(args[1]);
         lp.renameDomain(domain.getId(), args[2]);
         printOutput("domain " + args[1] + " renamed to " + args[2]);
+        printOutput("Note: use zmlocalconfig to check and update any localconfig settings referencing domain '" + args[1] 
+            + "' on all servers.");
     }
 
     private void doGetQuotaUsage(String[] args) throws ServiceException {
