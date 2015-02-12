@@ -216,7 +216,7 @@ public class EmbeddedSolrIndex  extends SolrIndexBase {
 
         @Override
         protected void setAction(UpdateRequest req) {
-            req.setAction(ACTION.COMMIT, false, true, false);
+            req.setAction(ACTION.COMMIT, true, true, true);
         }
 
         @Override
