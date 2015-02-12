@@ -7559,6 +7559,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMailboxdSSLProtocols = "zimbraMailboxdSSLProtocols";
 
     /**
+     * Whether TLS renegotiation is allowed. See also RFC 5746 and
+     * CVE-2011-1473 for concerns about possible SSL renegotiation DoS
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1832)
+    public static final String A_zimbraMailboxdSSLRenegotiationAllowed = "zimbraMailboxdSSLRenegotiationAllowed";
+
+    /**
      * serverId:mboxId of mailbox before being moved
      */
     @ZAttr(id=346)
