@@ -732,9 +732,9 @@ public class DefangFilter extends DefaultFilter {
 
         if (aName.equalsIgnoreCase("href")) {
             if (AV_JAVASCRIPT.matcher(result).find())
-                result = AV_JAVASCRIPT.matcher(result).replaceAll("JAVASCRIPT-BLOCKED");
+                result = AV_JAVASCRIPT.matcher(result).replaceAll("JAVASCRIPT-BLOCKED:");
             else if (!VALID_INT_IMG.matcher(result).find()) {
-                result = result.replaceAll("(?i)data:", "DATAURI-BLOCKED");
+                result = result.replaceAll("(?i)data:", "DATAURI-BLOCKED:");
             }
 
         }

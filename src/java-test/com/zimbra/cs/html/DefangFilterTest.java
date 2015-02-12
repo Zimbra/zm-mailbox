@@ -500,6 +500,28 @@ public class DefangFilterTest {
 
 
     @Test
+    public void testBug97443() throws Exception {
+        String html = "<html><head></head><body><table><tr><td><B>javascript-blocked test </B></td>"
+            + "</tr><tr><td><a href=\"javascript:alert('Hello!');\">alert</a>"
+            + "</td></tr></table></body></html>";
+        InputStream htmlStream = new ByteArrayInputStream(html.getBytes());
+        String result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML)
+                .defang(htmlStream, true);
+        Assert.assertTrue(result
+            .contains("href=\"JAVASCRIPT-BLOCKED:alert('Hello!');\""));
+
+        html = "<html><head><base href=\"http://lbpe.wikispaces.com/\" /></head><body>"
+            + "<table><tr><td><B>javascript-blocked test</B></td></tr><tr><td>"
+            + "<a href=\"javascript:alert('Hello!');\">alert</a></td></tr></table>"
+            + "</body></html>";
+        htmlStream = new ByteArrayInputStream(html.getBytes());
+        result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML)
+                .defang(htmlStream, true);
+        Assert.assertTrue(result
+                .contains("href=\"JAVASCRIPT-BLOCKED:alert('Hello!');\""));
+    }
+
+    @Test
     public void testBug78902() throws Exception {
 
         String html = "<html><head></head><body><a target=\"_blank\" href=\"Neptune.gif\"></a></body></html>";
