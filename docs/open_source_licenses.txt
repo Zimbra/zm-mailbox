@@ -407,7 +407,7 @@ SECTION 12: GNU Library General Public License, V2.0
 
 SECTION 13: IBM Public License, V1.0
 
-   >>> postfix-2.11.3
+   >>> postfix-2.11.4
 
 
 
@@ -35126,7 +35126,7 @@ Boston, MA 02111-1307, USA.
 IBM Public License, V1.0 is applicable to the following component(s).
 
 
->>> postfix-2.11.3
+>>> postfix-2.11.4
 
 License: IBM Public License 1.0
 
@@ -35134,7 +35134,7 @@ Additional license information:
 
 >BSD
 
-postfix_2.11.3.orig.tar.gz\postfix_2.11.3.orig.tar\postfix-2.11.3\COPYRIGHT
+postfix_2.11.4.orig.tar.gz\postfix_2.11.4.orig.tar\postfix-2.11.4\COPYRIGHT
 
 Copyright (c) 1987, 1993
 The Regents of the University of California.  All rights reserved.
