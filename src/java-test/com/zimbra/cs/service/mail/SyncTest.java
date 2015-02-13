@@ -29,6 +29,7 @@ import org.junit.Test;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 import com.zimbra.common.account.Key;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mailbox.Color;
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.soap.Element;
@@ -36,6 +37,8 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.index.IndexStore;
+import com.zimbra.cs.index.solr.MockSolrIndex;
 import com.zimbra.cs.mailbox.DeliveryOptions;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -52,6 +55,8 @@ public class SyncTest {
     @BeforeClass
     public static void init() throws Exception {
         MailboxTestUtil.initServer();
+        LC.zimbra_class_index_store_factory.setDefault(MockSolrIndex.Factory.class.getName());
+        IndexStore.setFactory(LC.zimbra_class_index_store_factory.value());
         Provisioning prov = Provisioning.getInstance();
         prov.createAccount("test@zimbra.com", "secret", new HashMap<String, Object>());
     }

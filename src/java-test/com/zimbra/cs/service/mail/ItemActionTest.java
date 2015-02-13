@@ -29,23 +29,26 @@ import org.junit.Test;
 import com.google.common.collect.Maps;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.ZAttrProvisioning.MailThreadingAlgorithm;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.index.IndexStore;
+import com.zimbra.cs.index.solr.MockSolrIndex;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.DeliveryOptions;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailSender;
-import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
 import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.util.ItemId;
 
@@ -53,6 +56,8 @@ public class ItemActionTest {
     @BeforeClass
     public static void init() throws Exception {
         MailboxTestUtil.initServer();
+        LC.zimbra_class_index_store_factory.setDefault(MockSolrIndex.Factory.class.getName());
+        IndexStore.setFactory(LC.zimbra_class_index_store_factory.value());
         Provisioning prov = Provisioning.getInstance();
 
         prov.createAccount("test@zimbra.com", "secret", Maps.<String, Object>newHashMap());

@@ -30,6 +30,7 @@ import javax.mail.internet.MimeMessage;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.google.common.collect.Maps;
@@ -38,11 +39,14 @@ import com.zimbra.common.calendar.ICalTimeZone;
 import com.zimbra.common.calendar.ParsedDateTime;
 import com.zimbra.common.calendar.ZCalendar.ZComponent;
 import com.zimbra.common.calendar.ZCalendar.ZVCalendar;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.index.IndexStore;
 import com.zimbra.cs.index.SortBy;
+import com.zimbra.cs.index.solr.MockSolrIndex;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
@@ -59,6 +63,13 @@ import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 
 public class GetMsgTest {
 
+    @BeforeClass
+    public static void init() throws Exception {
+        MailboxTestUtil.initServer();
+        LC.zimbra_class_index_store_factory.setDefault(MockSolrIndex.Factory.class.getName());
+        IndexStore.setFactory(LC.zimbra_class_index_store_factory.value());
+    }
+    
     /**
      * @throws java.lang.Exception
      */

@@ -34,12 +34,15 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbPool.DbConnection;
+import com.zimbra.cs.index.IndexStore;
+import com.zimbra.cs.index.solr.MockSolrIndex;
 import com.zimbra.cs.mailbox.DeliveryOptions;
 import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.MailItem;
@@ -66,6 +69,9 @@ public class DbVolumeBlobsTest {
     @BeforeClass
     public static void init() throws Exception {
         MailboxTestUtil.initServer();
+        LC.zimbra_class_index_store_factory.setDefault(MockSolrIndex.Factory.class.getName());
+        IndexStore.setFactory(LC.zimbra_class_index_store_factory.value());
+        
         Provisioning prov = Provisioning.getInstance();
         prov.createAccount("test@zimbra.com", "secret", new HashMap<String, Object>());
         System.setProperty("zimbra.native.required", "false");
