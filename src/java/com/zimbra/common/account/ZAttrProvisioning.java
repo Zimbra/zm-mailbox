@@ -9266,6 +9266,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMtaHeaderChecks = "zimbraMtaHeaderChecks";
 
     /**
+     * Value for postconf hopcount_limit
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1835)
+    public static final String A_zimbraMtaHopcountLimit = "zimbraMtaHopcountLimit";
+
+    /**
      * Value for postconf import_environment
      *
      * @since ZCS 8.5.0
