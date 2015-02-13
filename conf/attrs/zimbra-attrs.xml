@@ -8500,4 +8500,11 @@ TODO: delete them permanently from here
   <globalConfigValue>TRUE</globalConfigValue>
   <desc>Whether TLS renegotiation is allowed. See also RFC 5746 and CVE-2011-1473 for concerns about possible SSL renegotiation DoS</desc>
 </attr>
+
+<attr id="1835" name="zimbraMtaHopcountLimit" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.7.0">
+  <globalConfigValue>50</globalConfigValue>
+  <desc>Value for postconf hopcount_limit</desc>
+</attr>
+
 </attrs>
+
