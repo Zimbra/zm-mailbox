@@ -3381,12 +3381,12 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>whether or not zimlet tree is expanded</desc>
 </attr>
 
-<attr id="639" name="zimbraSSLExcludeCipherSuites" type="string" cardinality="multi" optionalIn="globalConfig" requiresRestart="mailbox" since="5.0.5">
+<attr id="639" name="zimbraSSLExcludeCipherSuites" type="string" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="5.0.5">
   <globalConfigValue>.*_RC4_.*</globalConfigValue>
   <desc>exact name or regular expression of cipher suites to exclude</desc>
 </attr>
 
-<attr id="640" name="zimbraReverseProxySSLCiphers" type="string" cardinality="single" optionalIn="globalConfig" requiresRestart="nginxproxy" since="5.0.5">
+<attr id="640" name="zimbraReverseProxySSLCiphers" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="nginxproxy" since="5.0.5">
   <globalConfigValue>ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-DSS-AES128-GCM-SHA256:kEDH+AESGCM:ECDHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA:ECDHE-ECDSA-AES256-SHA:DHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA:DHE-DSS-AES128-SHA256:DHE-RSA-AES256-SHA256:DHE-DSS-AES256-SHA:DHE-RSA-AES256-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128:AES256:HIGH:!aNULL:!eNULL:!EXPORT:!DES:!MD5:!PSK:!RC4</globalConfigValue>
   <desc>permitted ciphers for reverse proxy. Ciphers are in the formats supported by OpenSSL 
         e.g. ALL:!ADH:!EXPORT56:RC4+RSA:+HIGH:+MEDIUM:+LOW:+SSLv2:+EXP;
@@ -8051,7 +8051,7 @@ TODO: delete them permanently from here
   The servers configured here will only affect the proxy of login URL requests.</desc>
 </attr>
 
-<attr id="1604" name="zimbraSSLIncludeCipherSuites" type="string" cardinality="multi" optionalIn="globalConfig" requiresRestart="mailbox" since="8.5.0">
+<attr id="1604" name="zimbraSSLIncludeCipherSuites" type="string" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="8.5.0">
   <desc>List of included cipher suites for Jetty. If any value is set only these ciphers will be used, in effect superseding zimbraSSLExcludeCipherSuites. Order of selection is based on client preference and default Java order since Java SSLEngine does not allow changing the preference order.</desc>
 </attr>
 

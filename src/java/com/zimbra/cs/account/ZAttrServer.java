@@ -45825,6 +45825,93 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * permitted ciphers for reverse proxy. Ciphers are in the formats
+     * supported by OpenSSL e.g.
+     * ALL:!ADH:!EXPORT56:RC4+RSA:+HIGH:+MEDIUM:+LOW:+SSLv2:+EXP; if not set,
+     * default ciphers permitted by nginx will apply
+     *
+     * @return zimbraReverseProxySSLCiphers, or "ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-DSS-AES128-GCM-SHA256:kEDH+AESGCM:ECDHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA:ECDHE-ECDSA-AES256-SHA:DHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA:DHE-DSS-AES128-SHA256:DHE-RSA-AES256-SHA256:DHE-DSS-AES256-SHA:DHE-RSA-AES256-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128:AES256:HIGH:!aNULL:!eNULL:!EXPORT:!DES:!MD5:!PSK:!RC4" if unset
+     *
+     * @since ZCS 5.0.5
+     */
+    @ZAttr(id=640)
+    public String getReverseProxySSLCiphers() {
+        return getAttr(Provisioning.A_zimbraReverseProxySSLCiphers, "ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-DSS-AES128-GCM-SHA256:kEDH+AESGCM:ECDHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA:ECDHE-ECDSA-AES256-SHA:DHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA:DHE-DSS-AES128-SHA256:DHE-RSA-AES256-SHA256:DHE-DSS-AES256-SHA:DHE-RSA-AES256-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128:AES256:HIGH:!aNULL:!eNULL:!EXPORT:!DES:!MD5:!PSK:!RC4");
+    }
+
+    /**
+     * permitted ciphers for reverse proxy. Ciphers are in the formats
+     * supported by OpenSSL e.g.
+     * ALL:!ADH:!EXPORT56:RC4+RSA:+HIGH:+MEDIUM:+LOW:+SSLv2:+EXP; if not set,
+     * default ciphers permitted by nginx will apply
+     *
+     * @param zimbraReverseProxySSLCiphers new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.5
+     */
+    @ZAttr(id=640)
+    public void setReverseProxySSLCiphers(String zimbraReverseProxySSLCiphers) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxySSLCiphers, zimbraReverseProxySSLCiphers);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * permitted ciphers for reverse proxy. Ciphers are in the formats
+     * supported by OpenSSL e.g.
+     * ALL:!ADH:!EXPORT56:RC4+RSA:+HIGH:+MEDIUM:+LOW:+SSLv2:+EXP; if not set,
+     * default ciphers permitted by nginx will apply
+     *
+     * @param zimbraReverseProxySSLCiphers new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.5
+     */
+    @ZAttr(id=640)
+    public Map<String,Object> setReverseProxySSLCiphers(String zimbraReverseProxySSLCiphers, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxySSLCiphers, zimbraReverseProxySSLCiphers);
+        return attrs;
+    }
+
+    /**
+     * permitted ciphers for reverse proxy. Ciphers are in the formats
+     * supported by OpenSSL e.g.
+     * ALL:!ADH:!EXPORT56:RC4+RSA:+HIGH:+MEDIUM:+LOW:+SSLv2:+EXP; if not set,
+     * default ciphers permitted by nginx will apply
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.5
+     */
+    @ZAttr(id=640)
+    public void unsetReverseProxySSLCiphers() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxySSLCiphers, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * permitted ciphers for reverse proxy. Ciphers are in the formats
+     * supported by OpenSSL e.g.
+     * ALL:!ADH:!EXPORT56:RC4+RSA:+HIGH:+MEDIUM:+LOW:+SSLv2:+EXP; if not set,
+     * default ciphers permitted by nginx will apply
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.5
+     */
+    @ZAttr(id=640)
+    public Map<String,Object> unsetReverseProxySSLCiphers(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxySSLCiphers, "");
+        return attrs;
+    }
+
+    /**
      * SSL protocols enabled for the proxy
      *
      * @return zimbraReverseProxySSLProtocols, or empty array if unset
@@ -47690,6 +47777,310 @@ public abstract class ZAttrServer extends NamedEntry {
     public Map<String,Object> unsetSSLCertificate(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraSSLCertificate, "");
+        return attrs;
+    }
+
+    /**
+     * exact name or regular expression of cipher suites to exclude
+     *
+     * @return zimbraSSLExcludeCipherSuites, or empty array if unset
+     *
+     * @since ZCS 5.0.5
+     */
+    @ZAttr(id=639)
+    public String[] getSSLExcludeCipherSuites() {
+        String[] value = getMultiAttr(Provisioning.A_zimbraSSLExcludeCipherSuites); return value.length > 0 ? value : new String[] {".*_RC4_.*"};
+    }
+
+    /**
+     * exact name or regular expression of cipher suites to exclude
+     *
+     * @param zimbraSSLExcludeCipherSuites new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.5
+     */
+    @ZAttr(id=639)
+    public void setSSLExcludeCipherSuites(String[] zimbraSSLExcludeCipherSuites) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSSLExcludeCipherSuites, zimbraSSLExcludeCipherSuites);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * exact name or regular expression of cipher suites to exclude
+     *
+     * @param zimbraSSLExcludeCipherSuites new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.5
+     */
+    @ZAttr(id=639)
+    public Map<String,Object> setSSLExcludeCipherSuites(String[] zimbraSSLExcludeCipherSuites, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSSLExcludeCipherSuites, zimbraSSLExcludeCipherSuites);
+        return attrs;
+    }
+
+    /**
+     * exact name or regular expression of cipher suites to exclude
+     *
+     * @param zimbraSSLExcludeCipherSuites new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.5
+     */
+    @ZAttr(id=639)
+    public void addSSLExcludeCipherSuites(String zimbraSSLExcludeCipherSuites) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraSSLExcludeCipherSuites, zimbraSSLExcludeCipherSuites);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * exact name or regular expression of cipher suites to exclude
+     *
+     * @param zimbraSSLExcludeCipherSuites new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.5
+     */
+    @ZAttr(id=639)
+    public Map<String,Object> addSSLExcludeCipherSuites(String zimbraSSLExcludeCipherSuites, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraSSLExcludeCipherSuites, zimbraSSLExcludeCipherSuites);
+        return attrs;
+    }
+
+    /**
+     * exact name or regular expression of cipher suites to exclude
+     *
+     * @param zimbraSSLExcludeCipherSuites existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.5
+     */
+    @ZAttr(id=639)
+    public void removeSSLExcludeCipherSuites(String zimbraSSLExcludeCipherSuites) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraSSLExcludeCipherSuites, zimbraSSLExcludeCipherSuites);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * exact name or regular expression of cipher suites to exclude
+     *
+     * @param zimbraSSLExcludeCipherSuites existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.5
+     */
+    @ZAttr(id=639)
+    public Map<String,Object> removeSSLExcludeCipherSuites(String zimbraSSLExcludeCipherSuites, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraSSLExcludeCipherSuites, zimbraSSLExcludeCipherSuites);
+        return attrs;
+    }
+
+    /**
+     * exact name or regular expression of cipher suites to exclude
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.5
+     */
+    @ZAttr(id=639)
+    public void unsetSSLExcludeCipherSuites() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSSLExcludeCipherSuites, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * exact name or regular expression of cipher suites to exclude
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.5
+     */
+    @ZAttr(id=639)
+    public Map<String,Object> unsetSSLExcludeCipherSuites(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSSLExcludeCipherSuites, "");
+        return attrs;
+    }
+
+    /**
+     * List of included cipher suites for Jetty. If any value is set only
+     * these ciphers will be used, in effect superseding
+     * zimbraSSLExcludeCipherSuites. Order of selection is based on client
+     * preference and default Java order since Java SSLEngine does not allow
+     * changing the preference order.
+     *
+     * @return zimbraSSLIncludeCipherSuites, or empty array if unset
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1604)
+    public String[] getSSLIncludeCipherSuites() {
+        return getMultiAttr(Provisioning.A_zimbraSSLIncludeCipherSuites);
+    }
+
+    /**
+     * List of included cipher suites for Jetty. If any value is set only
+     * these ciphers will be used, in effect superseding
+     * zimbraSSLExcludeCipherSuites. Order of selection is based on client
+     * preference and default Java order since Java SSLEngine does not allow
+     * changing the preference order.
+     *
+     * @param zimbraSSLIncludeCipherSuites new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1604)
+    public void setSSLIncludeCipherSuites(String[] zimbraSSLIncludeCipherSuites) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSSLIncludeCipherSuites, zimbraSSLIncludeCipherSuites);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * List of included cipher suites for Jetty. If any value is set only
+     * these ciphers will be used, in effect superseding
+     * zimbraSSLExcludeCipherSuites. Order of selection is based on client
+     * preference and default Java order since Java SSLEngine does not allow
+     * changing the preference order.
+     *
+     * @param zimbraSSLIncludeCipherSuites new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1604)
+    public Map<String,Object> setSSLIncludeCipherSuites(String[] zimbraSSLIncludeCipherSuites, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSSLIncludeCipherSuites, zimbraSSLIncludeCipherSuites);
+        return attrs;
+    }
+
+    /**
+     * List of included cipher suites for Jetty. If any value is set only
+     * these ciphers will be used, in effect superseding
+     * zimbraSSLExcludeCipherSuites. Order of selection is based on client
+     * preference and default Java order since Java SSLEngine does not allow
+     * changing the preference order.
+     *
+     * @param zimbraSSLIncludeCipherSuites new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1604)
+    public void addSSLIncludeCipherSuites(String zimbraSSLIncludeCipherSuites) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraSSLIncludeCipherSuites, zimbraSSLIncludeCipherSuites);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * List of included cipher suites for Jetty. If any value is set only
+     * these ciphers will be used, in effect superseding
+     * zimbraSSLExcludeCipherSuites. Order of selection is based on client
+     * preference and default Java order since Java SSLEngine does not allow
+     * changing the preference order.
+     *
+     * @param zimbraSSLIncludeCipherSuites new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1604)
+    public Map<String,Object> addSSLIncludeCipherSuites(String zimbraSSLIncludeCipherSuites, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraSSLIncludeCipherSuites, zimbraSSLIncludeCipherSuites);
+        return attrs;
+    }
+
+    /**
+     * List of included cipher suites for Jetty. If any value is set only
+     * these ciphers will be used, in effect superseding
+     * zimbraSSLExcludeCipherSuites. Order of selection is based on client
+     * preference and default Java order since Java SSLEngine does not allow
+     * changing the preference order.
+     *
+     * @param zimbraSSLIncludeCipherSuites existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1604)
+    public void removeSSLIncludeCipherSuites(String zimbraSSLIncludeCipherSuites) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraSSLIncludeCipherSuites, zimbraSSLIncludeCipherSuites);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * List of included cipher suites for Jetty. If any value is set only
+     * these ciphers will be used, in effect superseding
+     * zimbraSSLExcludeCipherSuites. Order of selection is based on client
+     * preference and default Java order since Java SSLEngine does not allow
+     * changing the preference order.
+     *
+     * @param zimbraSSLIncludeCipherSuites existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1604)
+    public Map<String,Object> removeSSLIncludeCipherSuites(String zimbraSSLIncludeCipherSuites, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraSSLIncludeCipherSuites, zimbraSSLIncludeCipherSuites);
+        return attrs;
+    }
+
+    /**
+     * List of included cipher suites for Jetty. If any value is set only
+     * these ciphers will be used, in effect superseding
+     * zimbraSSLExcludeCipherSuites. Order of selection is based on client
+     * preference and default Java order since Java SSLEngine does not allow
+     * changing the preference order.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1604)
+    public void unsetSSLIncludeCipherSuites() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSSLIncludeCipherSuites, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * List of included cipher suites for Jetty. If any value is set only
+     * these ciphers will be used, in effect superseding
+     * zimbraSSLExcludeCipherSuites. Order of selection is based on client
+     * preference and default Java order since Java SSLEngine does not allow
+     * changing the preference order.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=1604)
+    public Map<String,Object> unsetSSLIncludeCipherSuites(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSSLIncludeCipherSuites, "");
         return attrs;
     }
 
