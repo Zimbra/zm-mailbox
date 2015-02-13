@@ -20237,6 +20237,78 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Value for postconf hopcount_limit
+     *
+     * @return zimbraMtaHopcountLimit, or 50 if unset
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1835)
+    public int getMtaHopcountLimit() {
+        return getIntAttr(Provisioning.A_zimbraMtaHopcountLimit, 50);
+    }
+
+    /**
+     * Value for postconf hopcount_limit
+     *
+     * @param zimbraMtaHopcountLimit new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1835)
+    public void setMtaHopcountLimit(int zimbraMtaHopcountLimit) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaHopcountLimit, Integer.toString(zimbraMtaHopcountLimit));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf hopcount_limit
+     *
+     * @param zimbraMtaHopcountLimit new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1835)
+    public Map<String,Object> setMtaHopcountLimit(int zimbraMtaHopcountLimit, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaHopcountLimit, Integer.toString(zimbraMtaHopcountLimit));
+        return attrs;
+    }
+
+    /**
+     * Value for postconf hopcount_limit
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1835)
+    public void unsetMtaHopcountLimit() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaHopcountLimit, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf hopcount_limit
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1835)
+    public Map<String,Object> unsetMtaHopcountLimit(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaHopcountLimit, "");
+        return attrs;
+    }
+
+    /**
      * Value for postconf import_environment
      *
      * @return zimbraMtaImportEnvironment, or empty array if unset
