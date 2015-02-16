@@ -11,7 +11,6 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlValue;
 
-import com.zimbra.common.account.Key.AlwaysOnClusterBy;
 import com.zimbra.common.soap.AdminConstants;
 
 
@@ -26,7 +25,7 @@ public class ClusterSelector {
      * @zm-api-field-description Select the meaning of <b>{cluster-selector-key}</b>
      */
     @XmlAttribute(name=AdminConstants.A_BY, required=true)
-    private final AlwaysOnClusterBy clusterBy;
+    private final ClusterBy clusterBy;
 
     /**
      * @zm-api-field-tag cluster-selector-key
@@ -44,21 +43,21 @@ public class ClusterSelector {
         this.key = null;
     }
 
-    public ClusterSelector(AlwaysOnClusterBy by, String key) {
+    public ClusterSelector(ClusterBy by, String key) {
         this.clusterBy = by;
         this.key = key;
     }
 
     public String getKey() { return key; }
 
-    public AlwaysOnClusterBy getBy() { return clusterBy; }
+    public ClusterBy getBy() { return clusterBy; }
 
     public static ClusterSelector fromId(String id) {
-        return new ClusterSelector(AlwaysOnClusterBy.id, id);
+        return new ClusterSelector(ClusterBy.id, id);
     }
 
     public static ClusterSelector fromName(String name) {
-        return new ClusterSelector(AlwaysOnClusterBy.name, name);
+        return new ClusterSelector(ClusterBy.name, name);
     }
 
 }
