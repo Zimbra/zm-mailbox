@@ -39,12 +39,16 @@ import com.zimbra.common.account.Key;
 import com.zimbra.common.account.ZAttrProvisioning.MailThreadingAlgorithm;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.InternetAddress;
+import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.ArrayUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.index.BrowseTerm;
+import com.zimbra.cs.index.SearchParams;
+import com.zimbra.cs.index.SortBy;
+import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.mailbox.util.TypedIdList;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.session.PendingModifications;
@@ -512,7 +516,30 @@ public final class MailboxTest {
         mbox.recover(null, new int[] { msgId }, MailItem.Type.MESSAGE,
                 Mailbox.ID_FOLDER_INBOX);
     }
+    
+    @Test
+    public void moveOutOfSpam() throws Exception {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        mbox.getAccount().setJunkMessagesIndexingEnabled(false);
+        DeliveryOptions opt = new DeliveryOptions();
+        opt.setFolderId(Mailbox.ID_FOLDER_SPAM);
+        Message msg = mbox.addMessage(null, new ParsedMessage(
+                "From: spammer@zimbra.com\r\nTo: test@zimbra.com".getBytes(), false), opt, null);
 
+        SearchParams params = new SearchParams();
+        params.setSortBy(SortBy.NONE);
+        params.setTypes(EnumSet.of(MailItem.Type.MESSAGE));
+        params.setQueryString("from:spammer");
+        ZimbraQueryResults result = mbox.index.search(SoapProtocol.Soap12, new OperationContext(mbox), params);
+        Assert.assertFalse(result.hasNext());
+
+        mbox.move(new OperationContext(mbox), msg.getId(), MailItem.Type.MESSAGE, Mailbox.ID_FOLDER_INBOX);
+
+        result = mbox.index.search(SoapProtocol.Soap12, new OperationContext(mbox), params);
+        Assert.assertTrue(result.hasNext());
+        Assert.assertEquals(msg.getId(), result.getNext().getItemId());
+    }
+    
     @Test
     public void deleteMailbox() throws Exception {
         MockStoreManager sm = (MockStoreManager) StoreManager.getInstance();

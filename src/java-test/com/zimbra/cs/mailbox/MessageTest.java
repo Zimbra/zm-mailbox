@@ -21,7 +21,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
-import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 
@@ -32,10 +31,10 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.google.common.io.ByteStreams;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.Element.XMLElement;
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
@@ -44,10 +43,9 @@ import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.db.DbUtil;
 import com.zimbra.cs.index.IndexDocument;
+import com.zimbra.cs.index.IndexStore;
 import com.zimbra.cs.index.LuceneFields;
-import com.zimbra.cs.index.SearchParams;
-import com.zimbra.cs.index.SortBy;
-import com.zimbra.cs.index.ZimbraQueryResults;
+import com.zimbra.cs.index.solr.MockSolrIndex;
 import com.zimbra.cs.mailbox.Flag.FlagInfo;
 import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 import com.zimbra.cs.mime.ParsedMessage;
@@ -65,6 +63,9 @@ public final class MessageTest {
     @BeforeClass
     public static void init() throws Exception {
         MailboxTestUtil.initServer();
+
+        LC.zimbra_class_index_store_factory.setDefault(MockSolrIndex.Factory.class.getName());
+        IndexStore.setFactory(LC.zimbra_class_index_store_factory.value());
 
         Provisioning prov = Provisioning.getInstance();
         prov.createAccount("test@zimbra.com", "secret", new HashMap<String, Object>());
@@ -130,28 +131,7 @@ public final class MessageTest {
         conn.closeQuietly();
     }
 
-    @Test
-    public void moveOutOfSpam() throws Exception {
-        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-        mbox.getAccount().setJunkMessagesIndexingEnabled(false);
-        DeliveryOptions opt = new DeliveryOptions();
-        opt.setFolderId(Mailbox.ID_FOLDER_SPAM);
-        Message msg = mbox.addMessage(null, new ParsedMessage(
-                "From: spammer@zimbra.com\r\nTo: test@zimbra.com".getBytes(), false), opt, null);
 
-        SearchParams params = new SearchParams();
-        params.setSortBy(SortBy.NONE);
-        params.setTypes(EnumSet.of(MailItem.Type.MESSAGE));
-        params.setQueryString("from:spammer");
-        ZimbraQueryResults result = mbox.index.search(SoapProtocol.Soap12, new OperationContext(mbox), params);
-        Assert.assertFalse(result.hasNext());
-
-        mbox.move(new OperationContext(mbox), msg.getId(), MailItem.Type.MESSAGE, Mailbox.ID_FOLDER_INBOX);
-
-        result = mbox.index.search(SoapProtocol.Soap12, new OperationContext(mbox), params);
-        Assert.assertTrue(result.hasNext());
-        Assert.assertEquals(msg.getId(), result.getNext().getItemId());
-    }
 
     @Test
     public void post() throws Exception {
