@@ -20,6 +20,7 @@ import junit.framework.TestCase;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.zimbra.client.ZMailbox;
@@ -27,7 +28,7 @@ import com.zimbra.client.ZMailbox.ZOutgoingMessage;
 import com.zimbra.client.ZSearchParams;
 import com.zimbra.client.ZSearchResult;
 import com.zimbra.common.service.ServiceException;
-
+@Ignore ("ignore until https://bugzilla.zimbra.com/show_bug.cgi?id=97240 is fixed")
 public class TestMinusOperator extends TestCase {
 
     private static final String USER_NAME = "testuser123";
