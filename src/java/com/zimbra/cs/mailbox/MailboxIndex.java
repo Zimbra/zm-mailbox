@@ -336,11 +336,30 @@ public final class MailboxIndex {
     }
 
     /**
-     * Migrate to mailbox version 1.5 by removing 'DEFERRED' flag that was used to track indexed/unindexed items
-     * https://bugzilla.zimbra.com/show_bug.cgi?id=37668
+     * Mailbox version (1.0,1.1)->1.2 Re-Index all contacts.
+     */
+    void upgradeMailboxTo1_2() throws ServiceException {
+        startReIndex();
+        mailbox.lock.lock();
+        try {
+            if (!mailbox.getVersion().atLeast(1, 2)) {
+                try {
+                    mailbox.updateVersion(new MailboxVersion((short) 1, (short) 2));
+                } catch (ServiceException e) {
+                    ZimbraLog.mailbox.warn("Failed to update mbox version after " +
+                            "reindexing contacts on mailbox upgrade initialization.", e);
+                }
+            }
+        } finally {
+            mailbox.lock.release();
+        }
+    }
+    
+    /**
+     * Migrate to mailbox version 1.5.
      */
     @SuppressWarnings("deprecation")
-    void clearDeferredFlagFromAllItems() throws ServiceException {
+    void indexAllDeferredFlagItems() throws ServiceException {
         startReIndex();
         try {
             mailbox.lock.lock();
@@ -373,7 +392,8 @@ public final class MailboxIndex {
                     try {
                         mailbox.updateVersion(new MailboxVersion((short) 1, (short) 5));
                     } catch (ServiceException se) {
-                        ZimbraLog.mailbox.warn("Failed to remove deprecated 'deferred' flag from mail items", se);
+                        ZimbraLog.mailbox.warn("Failed to update mbox version after " +
+                                "reindex all deferred items during mailbox upgrade initialization.", se);
                     }
                 }
             } finally {
