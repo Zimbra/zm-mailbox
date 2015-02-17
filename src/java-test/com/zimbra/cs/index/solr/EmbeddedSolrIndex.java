@@ -536,13 +536,6 @@ public class EmbeddedSolrIndex  extends SolrIndexBase {
     }
 
     @Override
-    public synchronized void waitForIndexCommit(SolrServer solrServer)
-            throws ServiceException {
-        // TODO Auto-generated method stub
-        super.waitForIndexCommit(solrServer);
-    }
-
-    @Override
     public synchronized long getLatestIndexGeneration(String accountId)
             throws ServiceException {
         // TODO Auto-generated method stub

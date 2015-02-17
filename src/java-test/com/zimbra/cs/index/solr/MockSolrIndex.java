@@ -58,10 +58,9 @@ public class MockSolrIndex extends SolrIndexBase {
     }
 
     @Override
-    public void waitForIndexCommit(SolrServer solrServer)
+    public void waitForIndexCommit(int maxWaitTimeMillis)
             throws ServiceException {
-        // TODO Auto-generated method stub
-        super.waitForIndexCommit(solrServer);
+        return;
     }
 
     @Override

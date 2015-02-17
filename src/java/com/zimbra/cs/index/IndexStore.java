@@ -22,24 +22,12 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.solr.client.solrj.SolrServerException;
-import org.apache.solr.client.solrj.impl.HttpSolrServer;
-import org.apache.solr.client.solrj.request.QueryRequest;
-import org.apache.solr.common.params.CommonParams;
-import org.apache.solr.common.params.ModifiableSolrParams;
-import org.apache.solr.common.util.NamedList;
-
 import com.google.common.annotations.VisibleForTesting;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.extension.ExtensionUtil;
-import com.zimbra.cs.mailbox.Appointment;
-import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.MailItem;
-import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.Message;
-import com.zimbra.cs.mailbox.Task;
 import com.zimbra.cs.util.Zimbra;
 
 /**
@@ -189,4 +177,6 @@ public abstract class IndexStore {
 	public List<Map<String, Object>> fetchFileList(long gen, String accountId) throws ServiceException {
 		return Collections.emptyList();
 	}
+
+    public abstract void waitForIndexCommit(int maxWaitTimeMillis) throws ServiceException;
 }

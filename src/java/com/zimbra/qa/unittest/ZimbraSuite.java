@@ -126,6 +126,7 @@ public class ZimbraSuite extends TestSuite
         sClasses.add(TestCollectConfigServletsAccess.class);
         sClasses.add(TestCommunityIntegration.class);
         sClasses.add(TestSearchSortByDate.class);
+        sClasses.add(TestReIndex.class);
     }
 
     /**

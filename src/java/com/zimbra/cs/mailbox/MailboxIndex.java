@@ -30,6 +30,7 @@ import java.util.regex.Pattern;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import com.google.common.io.Closeables;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.InternetAddress;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapProtocol;
@@ -46,6 +47,7 @@ import com.zimbra.cs.index.IndexStore;
 import com.zimbra.cs.index.Indexer;
 import com.zimbra.cs.index.IndexingQueueAdapter;
 import com.zimbra.cs.index.IndexingQueueItemLocator;
+import com.zimbra.cs.index.IndexingService;
 import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.ReSortingQueryResults;
 import com.zimbra.cs.index.SearchParams;
@@ -334,10 +336,11 @@ public final class MailboxIndex {
     }
 
     /**
-     * Migrate to mailbox version 1.5.
+     * Migrate to mailbox version 1.5 by removing 'DEFERRED' flag that was used to track indexed/unindexed items
+     * https://bugzilla.zimbra.com/show_bug.cgi?id=37668
      */
     @SuppressWarnings("deprecation")
-    void indexAllDeferredFlagItems() throws ServiceException {
+    void clearDeferredFlagFromAllItems() throws ServiceException {
         startReIndex();
         try {
             mailbox.lock.lock();
@@ -370,8 +373,7 @@ public final class MailboxIndex {
                     try {
                         mailbox.updateVersion(new MailboxVersion((short) 1, (short) 5));
                     } catch (ServiceException se) {
-                        ZimbraLog.mailbox.warn("Failed to update mbox version after " +
-                                "reindex all deferred items during mailbox upgrade initialization.", se);
+                        ZimbraLog.mailbox.warn("Failed to remove deprecated 'deferred' flag from mail items", se);
                     }
                 }
             } finally {
@@ -385,15 +387,16 @@ public final class MailboxIndex {
 
 
     /**
-     * Mailbox version (1.0,1.1)->1.2 Re-Index all contacts.
+     * Mailbox version 2.7->3.0 Re-Index everything. 
+     * Calls {@link #startReIndex()} to queue all items for re-indexing
      */
-    void upgradeMailboxTo1_2() throws ServiceException {
+    void upgradeMailboxTo3_0() throws ServiceException {
         startReIndex();
         mailbox.lock.lock();
         try {
-            if (!mailbox.getVersion().atLeast(1, 2)) {
+            if (!mailbox.getVersion().atLeast(3, 0)) {
                 try {
-                    mailbox.updateVersion(new MailboxVersion((short) 1, (short) 2));
+                    mailbox.updateVersion(new MailboxVersion((short) 3, (short) 0));
                 } catch (ServiceException e) {
                     ZimbraLog.mailbox.warn("Failed to update mbox version after " +
                             "reindexing contacts on mailbox upgrade initialization.", e);
@@ -749,6 +752,86 @@ public final class MailboxIndex {
         }
     }
 
+    public void waitForIndexing(int maxWaitTimeMillis) throws ServiceException {
+        if(maxWaitTimeMillis == 0) {
+            maxWaitTimeMillis = LC.zimbra_index_commit_wait.intValue();
+        }
+        int timeWaited = 0;
+        int waitIncrement  = 100;
+
+        //wait for index to be initialized
+        while(!indexStore.indexExists() && timeWaited < maxWaitTimeMillis) {
+            try {
+                Thread.sleep(waitIncrement);
+                timeWaited += waitIncrement;
+            } catch (InterruptedException e) {
+            }
+        }
+
+        //time check
+        if (timeWaited >= maxWaitTimeMillis) {
+            throw ServiceException.NOT_FOUND(String.format("Mailbox %s is taking longer than %d ms waiting for IndexStore to get initialized.", mailbox.getAccountId(), maxWaitTimeMillis), new Throwable());
+        }
+        
+        //wait for the indexing queue to be empty (should be empty at this point, unless we got here before IndexingService got the head of the queue)
+        if(Zimbra.getAppContext().getBean(IndexingQueueAdapter.class) != null) {
+            //wait until all indexing threads are done
+            while (Zimbra.getAppContext().getBean(IndexingService.class).isRunning() && 
+                    Zimbra.getAppContext().getBean(IndexingService.class).getNumActiveTasks() > 0 && 
+                        timeWaited < maxWaitTimeMillis) {
+                try {
+                    Thread.sleep(waitIncrement);
+                    timeWaited += waitIncrement;
+                } catch (InterruptedException e) {
+                }
+            }
+            
+            //time check
+            if (timeWaited >= maxWaitTimeMillis) {
+                throw ServiceException.FAILURE(String.format("Mailbox %s is taking longer than %d ms waiting for IndexingService to finish all tasks.", mailbox.getAccountId(), maxWaitTimeMillis), new Throwable());
+            }
+            
+            //wait for indexing queue to be emptied
+            while(Zimbra.getAppContext().getBean(IndexingService.class).isRunning() &&
+                    Zimbra.getAppContext().getBean(IndexingQueueAdapter.class).peek() != null && 
+                        timeWaited < maxWaitTimeMillis) {
+                try {
+                    Thread.sleep(waitIncrement);
+                    timeWaited += waitIncrement;
+                } catch (InterruptedException e) {
+                }
+            }
+            
+            //time check
+            if (timeWaited >= maxWaitTimeMillis) {
+                throw ServiceException.FAILURE(String.format("Mailbox %s is taking longer than %d ms waiting for indexing queue to be emptied.", mailbox.getAccountId(), maxWaitTimeMillis), new Throwable());
+            }
+            
+            //wait for batch re-index counter to go to 0
+            int completed = Zimbra.getAppContext().getBean(IndexingQueueAdapter.class).getSucceededMailboxTaskCount(mailbox.getAccountId());
+            int failed = Zimbra.getAppContext().getBean(IndexingQueueAdapter.class).getFailedMailboxTaskCount(mailbox.getAccountId());
+            int total = Zimbra.getAppContext().getBean(IndexingQueueAdapter.class).getTotalMailboxTaskCount(mailbox.getAccountId()); 
+            while(Zimbra.getAppContext().getBean(IndexingService.class).isRunning() && completed + failed < total && total > 0 && timeWaited < maxWaitTimeMillis) {
+                try {
+                    Thread.sleep(waitIncrement);
+                    timeWaited += waitIncrement;
+                    failed = Zimbra.getAppContext().getBean(IndexingQueueAdapter.class).getFailedMailboxTaskCount(mailbox.getAccountId());
+                    completed = Zimbra.getAppContext().getBean(IndexingQueueAdapter.class).getSucceededMailboxTaskCount(mailbox.getAccountId());
+                    total = Zimbra.getAppContext().getBean(IndexingQueueAdapter.class).getTotalMailboxTaskCount(mailbox.getAccountId()); 
+                } catch (InterruptedException e) {
+                }
+            }
+            
+            //time check
+            if (timeWaited >= maxWaitTimeMillis) {
+                throw ServiceException.FAILURE(String.format("Mailbox %s is taking longer than %d ms waiting for indexing task counter to go to 0. Current task counter: %d", mailbox.getAccountId(), maxWaitTimeMillis,  Zimbra.getAppContext().getBean(IndexingQueueAdapter.class).getSucceededMailboxTaskCount(mailbox.getAccountId())), new Throwable());
+            }
+        }
+        
+        //now wait for the IndexStore to finish processing updates
+        indexStore.waitForIndexCommit(maxWaitTimeMillis - timeWaited);
+    }
+    
     /**
      * Converts conversation type to message type if the type set contains it. We need to index message items when
      * a conversation search is requested.

@@ -352,83 +352,9 @@ public final class MailboxTestUtil {
 
     public static void waitForIndexing(Mailbox mbox) throws ServiceException {
 
-        int timeWaited = 0;
-        int waitIncrement  = 100;
         int maxWaitTime = 5000;
 
-        IndexStore indexStore = mbox.index.getIndexStore();
-        
-        //wait for index to be initialized
-        while(!indexStore.indexExists() && timeWaited < maxWaitTime) {
-            try {
-                Thread.sleep(waitIncrement);
-                timeWaited += waitIncrement;
-            } catch (InterruptedException e) {
-            }
-        }
-
-        //time check
-        if (timeWaited >= maxWaitTime) {
-            throw ServiceException.FAILURE(String.format("Mailbox %s is taking longer than %d ms waiting for IndexStore to get initialized.", mbox.getAccountId(), maxWaitTime), new Throwable());
-        }
-        
-        //wait for the indexing queue to be empty (should be empty at this point, unless we got here before IndexingService got the head of the queue)
-        if(Zimbra.getAppContext().getBean(IndexingQueueAdapter.class) != null) {
-            //wait until all indexing threads are done
-            while (Zimbra.getAppContext().getBean(IndexingService.class).isRunning() && 
-                    Zimbra.getAppContext().getBean(IndexingService.class).getNumActiveTasks() > 0 && 
-                        timeWaited < maxWaitTime) {
-                try {
-                    Thread.sleep(waitIncrement);
-                    timeWaited += waitIncrement;
-                } catch (InterruptedException e) {
-                }
-            }
-            
-            //time check
-            if (timeWaited >= maxWaitTime) {
-                throw ServiceException.FAILURE(String.format("Mailbox %s is taking longer than %d ms waiting for IndexingService to finish all tasks.", mbox.getAccountId(), maxWaitTime), new Throwable());
-            }
-            
-            //wait for indexing queue to be emptied
-            while(Zimbra.getAppContext().getBean(IndexingService.class).isRunning() &&
-                    Zimbra.getAppContext().getBean(IndexingQueueAdapter.class).peek() != null && 
-                        timeWaited < maxWaitTime) {
-                try {
-                    Thread.sleep(waitIncrement);
-                    timeWaited += waitIncrement;
-                } catch (InterruptedException e) {
-                }
-            }
-            
-            //time check
-            if (timeWaited >= maxWaitTime) {
-                throw ServiceException.FAILURE(String.format("Mailbox %s is taking longer than %d ms waiting for indexing queue to be emptied.", mbox.getAccountId(), maxWaitTime), new Throwable());
-            }
-            
-            //wait for batch re-index counter to go to 0
-            int completed = Zimbra.getAppContext().getBean(IndexingQueueAdapter.class).getSucceededMailboxTaskCount(mbox.getAccountId());
-            int failed = Zimbra.getAppContext().getBean(IndexingQueueAdapter.class).getFailedMailboxTaskCount(mbox.getAccountId());
-            int total = Zimbra.getAppContext().getBean(IndexingQueueAdapter.class).getTotalMailboxTaskCount(mbox.getAccountId()); 
-            while(Zimbra.getAppContext().getBean(IndexingService.class).isRunning() && completed + failed < total && total > 0 && timeWaited < maxWaitTime) {
-                try {
-                    Thread.sleep(waitIncrement);
-                    timeWaited += waitIncrement;
-                    failed = Zimbra.getAppContext().getBean(IndexingQueueAdapter.class).getFailedMailboxTaskCount(mbox.getAccountId());
-                    completed = Zimbra.getAppContext().getBean(IndexingQueueAdapter.class).getSucceededMailboxTaskCount(mbox.getAccountId());
-                    total = Zimbra.getAppContext().getBean(IndexingQueueAdapter.class).getTotalMailboxTaskCount(mbox.getAccountId()); 
-                } catch (InterruptedException e) {
-                }
-            }
-            
-            //time check
-            if (timeWaited >= maxWaitTime) {
-                throw ServiceException.FAILURE(String.format("Mailbox %s is taking longer than %d ms waiting for indexing task counter to go to 0. Current task counter: %d", mbox.getAccountId(), maxWaitTime,  Zimbra.getAppContext().getBean(IndexingQueueAdapter.class).getSucceededMailboxTaskCount(mbox.getAccountId())), new Throwable());
-            }
-        }
-        
-        //now wait for EmbeddedSolrServer to finish processing update requests
-        ((EmbeddedSolrIndex)(mbox.index.getIndexStore())).waitForIndexCommit(((EmbeddedSolrIndex)mbox.index.getIndexStore()).getSolrServer());
+        mbox.index.getIndexStore().waitForIndexCommit(maxWaitTime);;
     }
 
     public static ParsedMessage generateMessage(String subject) throws Exception {
