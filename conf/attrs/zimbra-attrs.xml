@@ -9159,11 +9159,11 @@ TODO: delete them permanently from here
   <defaultCOSValue>FALSE</defaultCOSValue>
 </attr>
 
-<attr id="1821" name="zimbraTwoFactorAuthSecret" type="string" cardinality="single" optionalIn="account" since="8.7.0">
+<attr id="1821" name="zimbraTwoFactorAuthSecret" type="ostring" cardinality="single" optionalIn="account" since="8.7.0">
   <desc>encrypted shared secret</desc>
 </attr>
 
-<attr id="1822" name="zimbraTwoFactorAuthScratchCodes" type="string" cardinality="single" optionalIn="account" since="8.7.0">
+<attr id="1822" name="zimbraTwoFactorAuthScratchCodes" type="ostring" cardinality="single" optionalIn="account" since="8.7.0">
   <desc>encrypted comma-separated list of valid scratch codes</desc>
 </attr>
 
@@ -9229,6 +9229,30 @@ TODO: delete them permanently from here
 <attr id="1835" name="zimbraMtaHopcountLimit" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.7.0">
   <globalConfigValue>50</globalConfigValue>
   <desc>Value for postconf hopcount_limit</desc>
+</attr>
+
+<attr id="1836" name="zimbraAppSpecificPassword" type="ostring" cardinality="multi" optionalIn="account,cos" since="8.7.0">
+  <desc>application-specific password</desc>
+</attr>
+
+<attr id="1837" name="zimbraMaxAppSpecificPasswords" type="integer" min="1" cardinality="single" optionalIn="account,cos" since="8.7.0">
+  <defaultCOSValue>25</defaultCOSValue>
+  <desc>maximum number of application-specific passwords allowed for an account</desc>
+</attr>
+
+<attr id="1838" name="zimbraRevokeAppSpecificPasswordsOnPasswordChange" type="boolean" cardinality="single" optionalIn="account,cos" since="8.7.0">
+  <defaultCOSValue>TRUE</defaultCOSValue>
+  <desc>whether or not to revoke app-specific passwords when the main password is changed</desc>
+</attr>
+
+<attr id="1839" name="zimbraAppSpecificPasswordDuration" type="duration" cardinality="single" optionalIn="account,cos" since="8.7.0">
+  <defaultCOSValue>30d</defaultCOSValue>
+  <desc>lifetime of app-specific passwords, or 0 for no expiry</desc>
+</attr>
+
+<attr id="1840" name="zimbraAppSpecificPasswordLength" type="integer" cardinality="single" optionalIn="account,cos" since="8.7.0">
+  <defaultCOSValue>16</defaultCOSValue>
+  <desc>length of app-specific passwords</desc>
 </attr>
 
 </attrs>

@@ -3447,6 +3447,324 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * application-specific password
+     *
+     * @return zimbraAppSpecificPassword, or empty array if unset
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1836)
+    public String[] getAppSpecificPassword() {
+        return getMultiAttr(Provisioning.A_zimbraAppSpecificPassword);
+    }
+
+    /**
+     * application-specific password
+     *
+     * @param zimbraAppSpecificPassword new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1836)
+    public void setAppSpecificPassword(String[] zimbraAppSpecificPassword) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAppSpecificPassword, zimbraAppSpecificPassword);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * application-specific password
+     *
+     * @param zimbraAppSpecificPassword new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1836)
+    public Map<String,Object> setAppSpecificPassword(String[] zimbraAppSpecificPassword, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAppSpecificPassword, zimbraAppSpecificPassword);
+        return attrs;
+    }
+
+    /**
+     * application-specific password
+     *
+     * @param zimbraAppSpecificPassword new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1836)
+    public void addAppSpecificPassword(String zimbraAppSpecificPassword) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraAppSpecificPassword, zimbraAppSpecificPassword);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * application-specific password
+     *
+     * @param zimbraAppSpecificPassword new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1836)
+    public Map<String,Object> addAppSpecificPassword(String zimbraAppSpecificPassword, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraAppSpecificPassword, zimbraAppSpecificPassword);
+        return attrs;
+    }
+
+    /**
+     * application-specific password
+     *
+     * @param zimbraAppSpecificPassword existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1836)
+    public void removeAppSpecificPassword(String zimbraAppSpecificPassword) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraAppSpecificPassword, zimbraAppSpecificPassword);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * application-specific password
+     *
+     * @param zimbraAppSpecificPassword existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1836)
+    public Map<String,Object> removeAppSpecificPassword(String zimbraAppSpecificPassword, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraAppSpecificPassword, zimbraAppSpecificPassword);
+        return attrs;
+    }
+
+    /**
+     * application-specific password
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1836)
+    public void unsetAppSpecificPassword() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAppSpecificPassword, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * application-specific password
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1836)
+    public Map<String,Object> unsetAppSpecificPassword(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAppSpecificPassword, "");
+        return attrs;
+    }
+
+    /**
+     * lifetime of app-specific passwords, or 0 for no expiry. Must be in
+     * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * <p>Use getAppSpecificPasswordDurationAsString to access value as a string.
+     *
+     * @see #getAppSpecificPasswordDurationAsString()
+     *
+     * @return zimbraAppSpecificPasswordDuration in millseconds, or 2592000000 (30d)  if unset
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1839)
+    public long getAppSpecificPasswordDuration() {
+        return getTimeInterval(Provisioning.A_zimbraAppSpecificPasswordDuration, 2592000000L);
+    }
+
+    /**
+     * lifetime of app-specific passwords, or 0 for no expiry. Must be in
+     * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @return zimbraAppSpecificPasswordDuration, or "30d" if unset
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1839)
+    public String getAppSpecificPasswordDurationAsString() {
+        return getAttr(Provisioning.A_zimbraAppSpecificPasswordDuration, "30d");
+    }
+
+    /**
+     * lifetime of app-specific passwords, or 0 for no expiry. Must be in
+     * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @param zimbraAppSpecificPasswordDuration new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1839)
+    public void setAppSpecificPasswordDuration(String zimbraAppSpecificPasswordDuration) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAppSpecificPasswordDuration, zimbraAppSpecificPasswordDuration);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * lifetime of app-specific passwords, or 0 for no expiry. Must be in
+     * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @param zimbraAppSpecificPasswordDuration new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1839)
+    public Map<String,Object> setAppSpecificPasswordDuration(String zimbraAppSpecificPasswordDuration, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAppSpecificPasswordDuration, zimbraAppSpecificPasswordDuration);
+        return attrs;
+    }
+
+    /**
+     * lifetime of app-specific passwords, or 0 for no expiry. Must be in
+     * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1839)
+    public void unsetAppSpecificPasswordDuration() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAppSpecificPasswordDuration, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * lifetime of app-specific passwords, or 0 for no expiry. Must be in
+     * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1839)
+    public Map<String,Object> unsetAppSpecificPasswordDuration(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAppSpecificPasswordDuration, "");
+        return attrs;
+    }
+
+    /**
+     * length of app-specific passwords
+     *
+     * @return zimbraAppSpecificPasswordLength, or 16 if unset
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1840)
+    public int getAppSpecificPasswordLength() {
+        return getIntAttr(Provisioning.A_zimbraAppSpecificPasswordLength, 16);
+    }
+
+    /**
+     * length of app-specific passwords
+     *
+     * @param zimbraAppSpecificPasswordLength new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1840)
+    public void setAppSpecificPasswordLength(int zimbraAppSpecificPasswordLength) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAppSpecificPasswordLength, Integer.toString(zimbraAppSpecificPasswordLength));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * length of app-specific passwords
+     *
+     * @param zimbraAppSpecificPasswordLength new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1840)
+    public Map<String,Object> setAppSpecificPasswordLength(int zimbraAppSpecificPasswordLength, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAppSpecificPasswordLength, Integer.toString(zimbraAppSpecificPasswordLength));
+        return attrs;
+    }
+
+    /**
+     * length of app-specific passwords
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1840)
+    public void unsetAppSpecificPasswordLength() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAppSpecificPasswordLength, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * length of app-specific passwords
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1840)
+    public Map<String,Object> unsetAppSpecificPasswordLength(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAppSpecificPasswordLength, "");
+        return attrs;
+    }
+
+    /**
      * Mailboxes in which the current account in archived. Multi-value attr
      * with eg values { user-2006@example.com.archive,
      * user-2007@example.com.archive } that tells us that user@example.com
@@ -24953,6 +25271,83 @@ public abstract class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetMailboxLocationBeforeMove(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailboxLocationBeforeMove, "");
+        return attrs;
+    }
+
+    /**
+     * maximum number of application-specific passwords allowed for an
+     * account
+     *
+     * @return zimbraMaxAppSpecificPasswords, or 25 if unset
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1837)
+    public int getMaxAppSpecificPasswords() {
+        return getIntAttr(Provisioning.A_zimbraMaxAppSpecificPasswords, 25);
+    }
+
+    /**
+     * maximum number of application-specific passwords allowed for an
+     * account
+     *
+     * @param zimbraMaxAppSpecificPasswords new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1837)
+    public void setMaxAppSpecificPasswords(int zimbraMaxAppSpecificPasswords) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMaxAppSpecificPasswords, Integer.toString(zimbraMaxAppSpecificPasswords));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * maximum number of application-specific passwords allowed for an
+     * account
+     *
+     * @param zimbraMaxAppSpecificPasswords new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1837)
+    public Map<String,Object> setMaxAppSpecificPasswords(int zimbraMaxAppSpecificPasswords, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMaxAppSpecificPasswords, Integer.toString(zimbraMaxAppSpecificPasswords));
+        return attrs;
+    }
+
+    /**
+     * maximum number of application-specific passwords allowed for an
+     * account
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1837)
+    public void unsetMaxAppSpecificPasswords() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMaxAppSpecificPasswords, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * maximum number of application-specific passwords allowed for an
+     * account
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1837)
+    public Map<String,Object> unsetMaxAppSpecificPasswords(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMaxAppSpecificPasswords, "");
         return attrs;
     }
 
@@ -51894,6 +52289,83 @@ public abstract class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetReverseProxyUseExternalRoute(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraReverseProxyUseExternalRoute, "");
+        return attrs;
+    }
+
+    /**
+     * whether or not to revoke app-specific passwords when the main password
+     * is changed
+     *
+     * @return zimbraRevokeAppSpecificPasswordsOnPasswordChange, or true if unset
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1838)
+    public boolean isRevokeAppSpecificPasswordsOnPasswordChange() {
+        return getBooleanAttr(Provisioning.A_zimbraRevokeAppSpecificPasswordsOnPasswordChange, true);
+    }
+
+    /**
+     * whether or not to revoke app-specific passwords when the main password
+     * is changed
+     *
+     * @param zimbraRevokeAppSpecificPasswordsOnPasswordChange new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1838)
+    public void setRevokeAppSpecificPasswordsOnPasswordChange(boolean zimbraRevokeAppSpecificPasswordsOnPasswordChange) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRevokeAppSpecificPasswordsOnPasswordChange, zimbraRevokeAppSpecificPasswordsOnPasswordChange ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether or not to revoke app-specific passwords when the main password
+     * is changed
+     *
+     * @param zimbraRevokeAppSpecificPasswordsOnPasswordChange new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1838)
+    public Map<String,Object> setRevokeAppSpecificPasswordsOnPasswordChange(boolean zimbraRevokeAppSpecificPasswordsOnPasswordChange, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRevokeAppSpecificPasswordsOnPasswordChange, zimbraRevokeAppSpecificPasswordsOnPasswordChange ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * whether or not to revoke app-specific passwords when the main password
+     * is changed
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1838)
+    public void unsetRevokeAppSpecificPasswordsOnPasswordChange() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRevokeAppSpecificPasswordsOnPasswordChange, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether or not to revoke app-specific passwords when the main password
+     * is changed
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0
+     */
+    @ZAttr(id=1838)
+    public Map<String,Object> unsetRevokeAppSpecificPasswordsOnPasswordChange(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRevokeAppSpecificPasswordsOnPasswordChange, "");
         return attrs;
     }
 
