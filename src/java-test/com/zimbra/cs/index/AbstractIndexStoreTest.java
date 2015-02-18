@@ -633,7 +633,7 @@ public abstract class AbstractIndexStoreTest {
         try {
             fields = searcher.getIndexReader().getTermsForField(LuceneFields.L_SORT_DATE, "");
             checkNextTermFieldType(fields, LuceneFields.L_SORT_DATE);
-            // TODO:  Check fails on ES, because ElasticSearch has more.  Not sure why and not sure it matters.
+            // Check fails on ES, because ElasticSearch has more.  Not sure why and not sure it matters.
             // Check passes on Solr and on Lucene
             checkAtEnd(fields, LuceneFields.L_SORT_DATE);
         } finally {
@@ -644,7 +644,7 @@ public abstract class AbstractIndexStoreTest {
             fields = searcher.getIndexReader().getTermsForField(LuceneFields.L_MAILBOX_BLOB_ID, "");
             checkNextTermFieldType(fields, LuceneFields.L_MAILBOX_BLOB_ID);
             checkNextTermFieldType(fields, LuceneFields.L_MAILBOX_BLOB_ID);
-            // TODO: Check fails on ES, because ElasticSearch has more.  Investigate?  Believe it relates to fact that is a number field
+            // Check fails on ES, because ElasticSearch has more.  Investigate?  Believe it relates to fact that is a number field
             // Numbers have an associated precision step (number of terms generated for each number value)
             // which defaults to 4.
             //Check passes on Solr and on Lucene
