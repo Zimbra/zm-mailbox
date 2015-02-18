@@ -52,6 +52,7 @@ public class TestReindex {
     @BeforeClass
     public static void init() throws Exception {
         MailboxTestUtil.initServer();
+        Provisioning.getInstance().getLocalServer().setIndexManualCommit(false);
         Provisioning prov = Provisioning.getInstance();
         prov.createAccount("test@zimbra.com", "secret", new HashMap<String, Object>());
         
@@ -90,7 +91,7 @@ public class TestReindex {
 
     @Test
     public void testReIndexAllMessages() throws Exception {
-        Provisioning.getInstance().getLocalServer().setIndexManualCommit(false);
+        ////Provisioning.getInstance().getLocalServer().setIndexManualCommit(false);
         
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
         
@@ -124,7 +125,6 @@ public class TestReindex {
 
     @Test
     public void testReIndexContacts() throws Exception {
-        Provisioning.getInstance().getLocalServer().setIndexManualCommit(true);
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
         
         //add some messages
@@ -147,7 +147,7 @@ public class TestReindex {
                 new InternetAddress("Test <test1@zimbra.com>"), new InternetAddress("Test <test2@zimbra.com>"))));
 
         //disable manual commit for re-indexing
-        Provisioning.getInstance().getLocalServer().setIndexManualCommit(false);
+        //Provisioning.getInstance().getLocalServer().setIndexManualCommit(false);
         //kick off re-indexing of Contacts only
         mbox.index.startReIndexByType(EnumSet.of(MailItem.Type.CONTACT));
         
@@ -172,7 +172,6 @@ public class TestReindex {
     
     @Test
     public void testReIndexMessages() throws Exception {
-        Provisioning.getInstance().getLocalServer().setIndexManualCommit(true);
         
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
         
@@ -198,7 +197,7 @@ public class TestReindex {
                 new InternetAddress("Test <test1@zimbra.com>"), new InternetAddress("Test <test2@zimbra.com>"))));
         
         //disable manual commit for re-indexing
-        Provisioning.getInstance().getLocalServer().setIndexManualCommit(false);
+        //Provisioning.getInstance().getLocalServer().setIndexManualCommit(false);
         mbox.index.startReIndexByType(EnumSet.of(MailItem.Type.MESSAGE));
         
         IndexingQueueAdapter queueAdapter = Zimbra.getAppContext().getBean(IndexingQueueAdapter.class);
@@ -221,7 +220,6 @@ public class TestReindex {
     
     @Test
     public void testReIndexAppointments() throws Exception {
-        Provisioning.getInstance().getLocalServer().setIndexManualCommit(true);
         
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
 
@@ -256,7 +254,7 @@ public class TestReindex {
         Assert.assertEquals("should not be able to find an appointment at this point", 0, ids.size());
         
         //disable manual commit for re-indexing
-        Provisioning.getInstance().getLocalServer().setIndexManualCommit(false);
+        //Provisioning.getInstance().getLocalServer().setIndexManualCommit(false);
         mbox.index.startReIndexByType(EnumSet.of(MailItem.Type.APPOINTMENT));
         
         IndexingQueueAdapter queueAdapter = Zimbra.getAppContext().getBean(IndexingQueueAdapter.class);
@@ -281,7 +279,6 @@ public class TestReindex {
     
     @Test
     public void testReIndexAll() throws Exception {
-        Provisioning.getInstance().getLocalServer().setIndexManualCommit(true);
         
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
 
@@ -316,7 +313,7 @@ public class TestReindex {
         Assert.assertEquals("should not be able to find an appointment at this point", 0, ids.size());
         
         //disable manual commit for re-indexing
-        Provisioning.getInstance().getLocalServer().setIndexManualCommit(false);
+        //Provisioning.getInstance().getLocalServer().setIndexManualCommit(false);
         mbox.index.startReIndex();
         
         IndexingQueueAdapter queueAdapter = Zimbra.getAppContext().getBean(IndexingQueueAdapter.class);
@@ -341,7 +338,6 @@ public class TestReindex {
     
     @Test
     public void testReIndexAllIn1Batch() throws Exception {
-        Provisioning.getInstance().getLocalServer().setIndexManualCommit(true);
         Provisioning.getInstance().getLocalServer().setReindexBatchSize(6);
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
 
@@ -376,7 +372,7 @@ public class TestReindex {
         Assert.assertEquals("should not be able to find an appointment at this point", 0, ids.size());
         
         //disable manual commit for re-indexing
-        Provisioning.getInstance().getLocalServer().setIndexManualCommit(false);
+        //Provisioning.getInstance().getLocalServer().setIndexManualCommit(false);
         mbox.index.startReIndex();
         
         IndexingQueueAdapter queueAdapter = Zimbra.getAppContext().getBean(IndexingQueueAdapter.class);
@@ -401,7 +397,6 @@ public class TestReindex {
     
     @Test
     public void testReIndexAllIn1Batch2() throws Exception {
-        Provisioning.getInstance().getLocalServer().setIndexManualCommit(true);
         Provisioning.getInstance().getLocalServer().setReindexBatchSize(10);
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
 
@@ -436,7 +431,7 @@ public class TestReindex {
         Assert.assertEquals("should not be able to find an appointment at this point", 0, ids.size());
         
         //disable manual commit for re-indexing
-        Provisioning.getInstance().getLocalServer().setIndexManualCommit(false);
+        //Provisioning.getInstance().getLocalServer().setIndexManualCommit(false);
         mbox.index.startReIndex();
         
         IndexingQueueAdapter queueAdapter = Zimbra.getAppContext().getBean(IndexingQueueAdapter.class);
@@ -461,7 +456,6 @@ public class TestReindex {
     
     @Test
     public void testReIndexAllIn2Batches() throws Exception {
-        Provisioning.getInstance().getLocalServer().setIndexManualCommit(true);
         Provisioning.getInstance().getLocalServer().setReindexBatchSize(3);
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
 
@@ -496,7 +490,7 @@ public class TestReindex {
         Assert.assertEquals("should not be able to find an appointment at this point", 0, ids.size());
         
         //disable manual commit for re-indexing
-        Provisioning.getInstance().getLocalServer().setIndexManualCommit(false);
+        //Provisioning.getInstance().getLocalServer().setIndexManualCommit(false);
         mbox.index.startReIndex();
         
         IndexingQueueAdapter queueAdapter = Zimbra.getAppContext().getBean(IndexingQueueAdapter.class);
@@ -521,7 +515,6 @@ public class TestReindex {
     
     @Test
     public void testReIndexAllIn3Batches() throws Exception {
-        Provisioning.getInstance().getLocalServer().setIndexManualCommit(true);
         Provisioning.getInstance().getLocalServer().setReindexBatchSize(3);
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
 
@@ -558,7 +551,7 @@ public class TestReindex {
         Assert.assertEquals("should not be able to find an appointment at this point", 0, ids.size());
         
         //disable manual commit for re-indexing
-        Provisioning.getInstance().getLocalServer().setIndexManualCommit(false);
+        //Provisioning.getInstance().getLocalServer().setIndexManualCommit(false);
         mbox.index.startReIndex();
         
         IndexingQueueAdapter queueAdapter = Zimbra.getAppContext().getBean(IndexingQueueAdapter.class);
@@ -583,7 +576,6 @@ public class TestReindex {
     
     @Test
     public void testInvalidBatchSize() throws Exception {
-        Provisioning.getInstance().getLocalServer().setIndexManualCommit(true);
         Provisioning.getInstance().getLocalServer().setReindexBatchSize(0);
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
 
@@ -618,7 +610,7 @@ public class TestReindex {
         Assert.assertEquals("should not be able to find an appointment at this point", 0, ids.size());
         
         //disable manual commit for re-indexing
-        Provisioning.getInstance().getLocalServer().setIndexManualCommit(false);
+        //Provisioning.getInstance().getLocalServer().setIndexManualCommit(false);
         mbox.index.startReIndex();
         
         IndexingQueueAdapter queueAdapter = Zimbra.getAppContext().getBean(IndexingQueueAdapter.class);
@@ -648,7 +640,7 @@ public class TestReindex {
     
     @Test
     public void testReIndexByID() throws Exception {
-        Provisioning.getInstance().getLocalServer().setIndexManualCommit(false);
+        //Provisioning.getInstance().getLocalServer().setIndexManualCommit(false);
         Provisioning.getInstance().getLocalServer().setReindexBatchSize(10);
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
         
@@ -689,7 +681,7 @@ public class TestReindex {
     
     @Test
     public void testReindexStatus() throws Exception {
-        Provisioning.getInstance().getLocalServer().setIndexManualCommit(false);
+        //Provisioning.getInstance().getLocalServer().setIndexManualCommit(false);
         Provisioning.getInstance().getLocalServer().setReindexBatchSize(10);
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
         
@@ -736,7 +728,7 @@ public class TestReindex {
     
     @Test
     public void cancelReIndex() throws Exception {
-        Provisioning.getInstance().getLocalServer().setIndexManualCommit(false);
+        //Provisioning.getInstance().getLocalServer().setIndexManualCommit(false);
         Provisioning.getInstance().getLocalServer().setReindexBatchSize(10);
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
         

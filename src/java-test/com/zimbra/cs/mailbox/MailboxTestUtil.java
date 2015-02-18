@@ -352,7 +352,7 @@ public final class MailboxTestUtil {
 
     public static void waitForIndexing(Mailbox mbox) throws ServiceException {
 
-        int maxWaitTime = 5000;
+        int maxWaitTime = 1000;
 
         mbox.index.getIndexStore().waitForIndexCommit(maxWaitTime);;
     }

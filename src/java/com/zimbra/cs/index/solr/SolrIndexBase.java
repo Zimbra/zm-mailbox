@@ -886,6 +886,7 @@ public abstract class SolrIndexBase extends IndexStore {
     @Override
     public void waitForIndexCommit(int maxWaitTimeMillis) throws ServiceException  {
         SolrServer solrServer = getSolrServer();
+        int waitIncrement = Math.max(maxWaitTimeMillis/3, 500);
         while (maxWaitTimeMillis > 0) {
             if(indexExists()) {
                 SolrQuery q = new SolrQuery().setParam("action", "get");
@@ -900,11 +901,11 @@ public abstract class SolrIndexBase extends IndexStore {
                         break;
                     } else {
                         try {
-                            Thread.sleep(100);
+                            Thread.sleep(waitIncrement);
                         } catch (InterruptedException e) {
                             break;
                         }
-                        maxWaitTimeMillis = maxWaitTimeMillis - 100;
+                        maxWaitTimeMillis = maxWaitTimeMillis - waitIncrement;
                     }
                 } catch (SolrServerException e) {
                     ZimbraLog.index.error("Problem waiting for index commit count to go to zero for Core: %s", accountId,e);
@@ -912,11 +913,11 @@ public abstract class SolrIndexBase extends IndexStore {
                 }
             } else {
                 try {
-                    Thread.sleep(100);
+                    Thread.sleep(waitIncrement);
                 } catch (InterruptedException e) {
                     break;
                 }
-                maxWaitTimeMillis = maxWaitTimeMillis - 100;
+                maxWaitTimeMillis = maxWaitTimeMillis - waitIncrement;
             }
         }
     }
