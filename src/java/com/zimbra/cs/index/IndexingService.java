@@ -7,6 +7,8 @@ import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import javax.annotation.PreDestroy;
+
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.zimbra.common.account.ZAttrProvisioning;
 import com.zimbra.common.util.ZimbraLog;
@@ -32,9 +34,9 @@ public class IndexingService {
     private IndexingQueueAdapter queueAdapter;
     private volatile boolean running = false;
     private Thread queueMonitor;
-    
+
     public IndexingService() {
-        
+
     }
 
     public synchronized void startUp() {
@@ -49,10 +51,11 @@ public class IndexingService {
         queueMonitor = new Thread(new IndexQueueMonitor());
         queueMonitor.start();
     }
-    
+
     /**
      * orderly shutdown the service
      */
+    @PreDestroy
     public synchronized void shutDown() {
         running = false;
         if(queueMonitor != null && queueMonitor.isAlive()) {
@@ -64,12 +67,12 @@ public class IndexingService {
             INDEX_EXECUTOR = null;
         }
     }
-    
+
 
     public int getNumActiveTasks() {
         return INDEX_EXECUTOR.getActiveCount();
     }
-    
+
     class IndexQueueMonitor implements Runnable {
         @Override
         public void run() {
@@ -77,13 +80,13 @@ public class IndexingService {
             while(running) {
                 try {
                     IndexingQueueItemLocator queueItem = queueAdapter.take();
-                    
+
                     if(INDEX_EXECUTOR.isTerminating() || INDEX_EXECUTOR.isShutdown()) {
                         //this thread will not process this item, so put it back in the queue for other threads to process
                         queueAdapter.put(queueItem);
                         break;
                     }
-                    
+
                     //negative number indicates a cancelled task
                     if(queueAdapter.getTotalMailboxTaskCount(queueItem.getAccountID()) > 0) {
                         try {
@@ -96,16 +99,16 @@ public class IndexingService {
                     }
                 } catch (InterruptedException e) {
                     //must be shutting down, if !running will break automatically, otherwise will continue
-                } 
+                }
             }
             ZimbraLog.index.info("Stopping indexing thread " + Thread.currentThread().getName());
         }
     }
-    
+
     public boolean isRunning() {
         return running;
     }
-    
+
     class IndexingTask implements Runnable {
         private IndexingQueueItemLocator queueItem;
         public IndexingTask(IndexingQueueItemLocator item) {
@@ -127,11 +130,11 @@ public class IndexingService {
                     for(IndexingQueueItemLocator.MailItemIdentifier itemID : itemsToIndex) {
                         try {
                             ud = DbMailItem.getById(queueItem.getMailboxID(), queueItem.getMailboxSchemaGroupID(), itemID.getId(), itemID.getType(), itemID.isInDumpster(), conn);
-                        } catch (NoSuchItemException ex) {//item may have been moved to/from Dumpster after being queued for indexing 
+                        } catch (NoSuchItemException ex) {//item may have been moved to/from Dumpster after being queued for indexing
                             try {
                                 ud = DbMailItem.getById(queueItem.getMailboxID(), queueItem.getMailboxSchemaGroupID(), itemID.getId(), itemID.getType(), !itemID.isInDumpster(), conn);
                             } catch (NoSuchItemException nex) {//could not find this item in Dumpster either.
-                                 //Log an error.  
+                                 //Log an error.
                                 ZimbraLog.index.error("Could not find item %d in mailbox %d account %s", itemID.getId(), queueItem.getMailboxID(), queueItem.getAccountID(), nex);
                                 //Log a failed item for status reporting
                                 queueAdapter.incrementFailedMailboxTaskCount(queueItem.getAccountID(),1);
@@ -139,7 +142,7 @@ public class IndexingService {
                                 continue;
                             }
                         }
-                   
+
                         if(ud != null) {
                             //get the mail item's body and send it to indexing
                             MailItem item = MailItem.constructItem(Provisioning.getInstance().getAccountById(queueItem.getAccountID()),ud,queueItem.getMailboxID());
@@ -166,15 +169,15 @@ public class IndexingService {
                         }
                     }
                     conn.commit();
-                    
-                    /* These MailItems may already be cached on this server with indexId==0, so we should kick them from cache now. 
+
+                    /* These MailItems may already be cached on this server with indexId==0, so we should kick them from cache now.
                      * When they are returned by new DB search, they will have indexIds.
                      */
                     if(MailboxManager.getInstance().isMailboxLoadedAndAvailable(queueItem.getMailboxID())) {
                         Mailbox mailbox = MailboxManager.getInstance().getMailboxById(queueItem.getMailboxID());
                         mailbox.batchUncache(indexedItems);
                     }
-                    
+
                     //status reporting
                     queueAdapter.incrementSucceededMailboxTaskCount(queueItem.getAccountID(),indexedItems.size());
                     ZimbraLog.index.debug("%s processed %d items", Thread.currentThread().getName(), itemsToIndex.size());
@@ -187,7 +190,7 @@ public class IndexingService {
                 * sending an item to Solr index twice does not skew or corrupt the index even if the item was previously indexed
                 */
                 queueAdapter.put(queueItem);
-                
+
                 //status reporting
                 queueAdapter.incrementFailedMailboxTaskCount(queueItem.getAccountID(),indexedItems.size());
             } finally {
