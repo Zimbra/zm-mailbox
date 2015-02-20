@@ -19,12 +19,18 @@ package com.zimbra.cs.util;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.context.annotation.Lazy;
 
+import redis.clients.jedis.HostAndPort;
+import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisCluster;
 import redis.clients.jedis.JedisPool;
 
 import com.zimbra.common.localconfig.LC;
@@ -46,6 +52,8 @@ import com.zimbra.cs.mailbox.MailboxLockFactory;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxPubSubAdapter;
 import com.zimbra.cs.mailbox.MemcachedFoldersAndTagsCache;
+import com.zimbra.cs.mailbox.RedisClusterMailboxPubSubAdapter;
+import com.zimbra.cs.mailbox.RedisClusterSharedDeliveryCoordinator;
 import com.zimbra.cs.mailbox.RedisMailboxPubSubAdapter;
 import com.zimbra.cs.mailbox.RedisSharedDeliveryCoordinator;
 import com.zimbra.cs.mailbox.SharedDeliveryCoordinator;
@@ -120,17 +128,57 @@ public class ZimbraConfig {
         }
     }
 
+    /** Returns whether Redis services are available, whether cluster or master/slave/stand-alone */
     public boolean isRedisAvailable() throws ServiceException {
-        return redisUri() != null;
+        Set<HostAndPort> uris = redisUris();
+        if (uris.isEmpty()) {
+            return false;
+        }
+        JedisPool jedisPool = jedisPoolBean();
+        Jedis jedis = jedisPool.getResource();
+        try {
+            jedis.get("");
+            return true;
+        } catch (Exception e) {
+            return false;
+        } finally {
+            jedisPool.returnResource(jedis);
+        }
     }
 
-    @Bean(name="jedisPool")
-    public JedisPool jedisPoolBean() throws ServiceException {
-        if (!isRedisAvailable()) {
+    public boolean isRedisClusterAvailable() throws ServiceException {
+        try {
+            return jedisClusterBean() != null;
+        } catch (Exception e) {
+            ZimbraLog.misc.warn("Failed connecting to a Redis Cluster; defaulting to non-cluster mode Redis access (%s)", e.getLocalizedMessage());
+            return false;
+        }
+    }
+
+    /** Returns a JedisCluster client if possible, or null */
+    @Bean(name="jedisCluster")
+    public JedisCluster jedisClusterBean() throws ServiceException {
+        Set<HostAndPort> uris = redisUris();
+        if (uris.isEmpty()) {
             return null;
         }
-        URI uri = redisUri();
-        return new JedisPool(uri.getHost(), uri.getPort());
+        try {
+            return new JedisCluster(uris);
+        } catch (Exception e) {
+            ZimbraLog.misc.warn("Failed connecting to a Redis Cluster; defaulting to non-cluster mode Redis access (%s)", e.getLocalizedMessage());
+            return null;
+        }
+    }
+
+    /** Returns a JedisPool client if possible, or null */
+    @Bean(name="jedisPool")
+    public JedisPool jedisPoolBean() throws ServiceException {
+        Set<HostAndPort> uris = redisUris();
+        if (uris.isEmpty()) {
+            return null;
+        }
+        HostAndPort hostAndPort = uris.iterator().next();
+        return new JedisPool(hostAndPort.getHost(), hostAndPort.getPort() == -1 ? 6379 : hostAndPort.getPort());
     }
 
     @Bean(name="mailboxLockFactory")
@@ -166,7 +214,9 @@ public class ZimbraConfig {
      */
     @Bean(name="mailboxPubSubAdapter")
     public MailboxPubSubAdapter mailboxPubSubAdapter() throws Exception {
-        if (isRedisAvailable()) {
+        if (isRedisClusterAvailable()) {
+            return new RedisClusterMailboxPubSubAdapter();
+        } else if (isRedisAvailable()) {
             return new RedisMailboxPubSubAdapter();
         } else {
             return null;
@@ -193,10 +243,18 @@ public class ZimbraConfig {
         return instance;
     }
 
-    public URI redisUri() throws ServiceException {
+    public Set<HostAndPort> redisUris() throws ServiceException {
         String[] uris = Provisioning.getInstance().getLocalServer().getRedisUrl();
+        if (uris.length == 0) {
+            return Collections.emptySet();
+        }
+        Set<HostAndPort> result = new HashSet<>();
         try {
-            return (uris.length == 0 ? null : new URI(uris[0]));
+            for (String uriStr: uris) {
+                URI uri = new URI(uriStr);
+                result.add(new HostAndPort(uri.getHost(), uri.getPort() == -1 ? 6379 : uri.getPort()));
+            }
+            return result;
         } catch (URISyntaxException e) {
             throw ServiceException.PARSE_ERROR("Invalid Redis URI", e);
         }
@@ -236,7 +294,9 @@ public class ZimbraConfig {
             }
         }
         if (instance == null) {
-            if (isRedisAvailable()) {
+            if (isRedisClusterAvailable()) {
+                instance = new RedisClusterSharedDeliveryCoordinator();
+            } else if (isRedisAvailable()) {
                 instance = new RedisSharedDeliveryCoordinator();
 //            } else if (isMemcachedAvailable()) {
 //                TODO: Future Memcached-based shared delivery coordination support

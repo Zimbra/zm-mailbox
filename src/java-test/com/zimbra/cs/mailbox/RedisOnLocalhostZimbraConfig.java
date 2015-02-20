@@ -13,15 +13,18 @@
  */
 package com.zimbra.cs.mailbox;
 
-import java.net.URI;
-import java.net.URISyntaxException;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.springframework.context.annotation.Configuration;
 
+import redis.clients.jedis.HostAndPort;
 import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisCluster;
 import redis.clients.jedis.JedisPool;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.util.ZimbraConfig;
 
 /**
@@ -32,12 +35,14 @@ public class RedisOnLocalhostZimbraConfig extends ZimbraConfig {
 
     @Override
     public boolean isRedisAvailable() throws ServiceException {
-        JedisPool jedisPool = new JedisPool(redisUri().getHost(), redisUri().getPort());
+        HostAndPort hostAndPort = redisUris().iterator().next();
+        JedisPool jedisPool = new JedisPool(hostAndPort.getHost(), hostAndPort.getPort());
         try {
             Jedis jedis = jedisPool.getResource();
             jedisPool.returnResource(jedis);
             return true;
         } catch (Exception e) {
+            ZimbraLog.test.warn("Failed connecting to Redis", e);
             return false;
         } finally {
             jedisPool.destroy();
@@ -45,11 +50,21 @@ public class RedisOnLocalhostZimbraConfig extends ZimbraConfig {
     }
 
     @Override
-    public URI redisUri() throws ServiceException {
+    public boolean isRedisClusterAvailable() throws ServiceException {
         try {
-            return new URI("redis://localhost:6379");
-        } catch (URISyntaxException e) {
-            throw ServiceException.PARSE_ERROR("Invalid Redis URI", e);
+            JedisCluster jedisCluster = new JedisCluster(redisUris());
+            jedisCluster.get("");
+            return true;
+        } catch (Exception e) {
+            ZimbraLog.test.warn("Failed connecting to Redis", e);
+            return false;
         }
+    }
+
+    @Override
+    public Set<HostAndPort> redisUris() throws ServiceException {
+        Set<HostAndPort> set = new HashSet<>();
+        set.add(new HostAndPort("127.0.0.1", 6379));
+        return set;
     }
 }

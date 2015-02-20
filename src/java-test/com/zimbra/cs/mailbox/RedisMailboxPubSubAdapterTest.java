@@ -61,7 +61,7 @@ public final class RedisMailboxPubSubAdapterTest {
     }
 
     protected boolean isExternalCacheAvailableForTest() throws Exception {
-        return Zimbra.getAppContext().getBean(ZimbraConfig.class).isRedisAvailable();
+        return Zimbra.getAppContext().getBean(ZimbraConfig.class).isRedisAvailable() && !Zimbra.getAppContext().getBean(ZimbraConfig.class).isRedisClusterAvailable();
     }
 
     protected void flushCacheBetweenTests() throws Exception {

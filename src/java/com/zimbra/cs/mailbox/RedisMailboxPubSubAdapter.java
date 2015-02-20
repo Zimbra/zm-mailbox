@@ -76,7 +76,7 @@ public class RedisMailboxPubSubAdapter implements MailboxPubSubAdapter {
 
     protected Set<Session> getSubscribedSessions(String accountId) {
         Set<Session> sessions = subscribedSessionsByAccountId.get(accountId);
-        return sessions != null ? sessions : Collections.EMPTY_SET;
+        return sessions != null ? sessions : Collections.emptySet();
     }
 
     @Override
