@@ -34,12 +34,12 @@ import com.zimbra.cs.redolog.op.RedoableOp;
 
 public class HttpLogWriter extends AbstractLogWriter implements LogWriter {
 
-    public HttpLogWriter(RedoLogManager redoLogMgr) {
-        super(redoLogMgr, new CommitNotifyQueue(100));
-    }
+    private String url;
 
-    //TODO: config
-    private String URL = "http://localhost:8080/redolog";
+    public HttpLogWriter(RedoLogManager redoLogMgr, String url) {
+        super(redoLogMgr, new CommitNotifyQueue(100));
+        this.url = url;
+    }
 
     @Override
     public void open() throws IOException {
@@ -59,7 +59,7 @@ public class HttpLogWriter extends AbstractLogWriter implements LogWriter {
     @Override
     public void log(final RedoableOp op, final InputStream data, boolean synchronous) throws IOException {
         HttpClient client = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
-        PostMethod post = new PostMethod(URL);
+        PostMethod post = new PostMethod(url);
         try {
             post.setRequestEntity(new InputStreamRequestEntity(data));
             int code = client.executeMethod(post);

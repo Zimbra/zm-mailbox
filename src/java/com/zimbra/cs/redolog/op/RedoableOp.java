@@ -355,6 +355,8 @@ public abstract class RedoableOp {
 
     /**
      * Repeat the operation.
+     * Must be implemented in an idempotent manner, since a given operation may be replayed at any time and from any starting state.
+     * For example, this may involve checking if an item exists before creating it.
      */
     public abstract void redo() throws Exception;
 

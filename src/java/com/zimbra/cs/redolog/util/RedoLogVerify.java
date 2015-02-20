@@ -46,7 +46,6 @@ import com.google.common.collect.Sets;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.CliUtil;
-import com.zimbra.cs.redolog.FileRolloverManager;
 import com.zimbra.cs.redolog.logger.FileHeader;
 import com.zimbra.cs.redolog.logger.FileLogReader;
 import com.zimbra.cs.redolog.op.RedoableOp;
@@ -346,7 +345,7 @@ public class RedoLogVerify {
 
         File[] files = new File[fileList.size()];
         fileList.toArray(files);
-        FileRolloverManager.sortArchiveLogFiles(files);
+        RedoLogFileUtil.sortArchiveLogFiles(files);
         return verifyFiles(files);
     }
 

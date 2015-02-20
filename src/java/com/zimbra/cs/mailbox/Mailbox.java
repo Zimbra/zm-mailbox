@@ -6032,6 +6032,7 @@ public class Mailbox {
                     // Subsequent CreateMessage ops will reference this blob.
                     storeRedoRecorder = new StoreIncomingBlob(digest, msgSize, dctxt.getMailboxIdList());
                     storeRedoRecorder.start(getOperationTimestampMillis());
+                    //TODO: keep staged locator; not incoming path...
                     storeRedoRecorder.setBlobBodyInfo(blob.getFile());
                     storeRedoRecorder.log();
                 }

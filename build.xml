@@ -1532,7 +1532,7 @@
         </exec>
     </target>
 
-  <target name="ldap-load">
+  <target name="ldap-load" depends="generate-ldap-config-db">
     <waitfor checkevery="5" checkeveryunit="second" maxwait="60" maxwaitunit="second" timeoutproperty="ldap.timeout">
       <socket server="${ldap.host}" port="${ldap.port}"/>
     </waitfor>
@@ -1973,6 +1973,16 @@
         </exec>
     </target>
 
+	<target name="generate-ldap-config-db">
+	   <mkdir dir="${zimbra.home.dir}/data/ldap/config"/>
+       <exec executable="${zimbra.home.dir}/openldap/sbin/slaptest">
+           <arg value="-F"/>
+       	   <arg value="${zimbra.home.dir}/data/ldap/config"/>
+       	   <arg value="-f"/>
+           <arg value="${zimbra.home.dir}/conf/slapd.conf"/>
+	   </exec>
+	</target>
+	
     <target name="start-jetty-windows" if="is-windows">
         <if>
             <isset property="jetty-use-service"/>

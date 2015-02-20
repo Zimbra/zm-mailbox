@@ -17,7 +17,6 @@
 
 package com.zimbra.cs.redolog;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -533,7 +532,7 @@ public abstract class AbstractRedoLogManager implements RedoLogManager {
     }
 
     @Override
-    public long getCurrentLogSequence() {
+    public long getCurrentLogSequence() throws IOException {
         return mRolloverMgr.getCurrentSequence();
     }
 
@@ -581,16 +580,8 @@ public abstract class AbstractRedoLogManager implements RedoLogManager {
         }
     }
 
-    /**
-     * @param seq
-     * @return
-     * @throws IOException
-     */
     @Override
-    public abstract File[] getArchivedLogsFromSequence(long seq) throws IOException;
-
-    @Override
-    public File[] getArchivedLogs() throws IOException {
+    public RedoLogFile[] getArchivedLogs() throws IOException {
         return getArchivedLogsFromSequence(Long.MIN_VALUE);
     }
 

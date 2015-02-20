@@ -87,8 +87,9 @@ public interface RedoLogManager {
 
     /**
      * Get the current log sequence number
+     * @throws IOException
      */
-    public abstract long getCurrentLogSequence();
+    public abstract long getCurrentLogSequence() throws IOException;
 
     /**
      * Create a new log writer with specified sync/flush interval
@@ -116,21 +117,36 @@ public interface RedoLogManager {
 
     /**
      * Get a copy of the current log file. This may be a direct link to the file or a locally cached copy if the original data is stored remotely
+     * @throws IOException
      */
-    public abstract File getLogFile();
+    public abstract File getLogFile() throws IOException;
 
     /**
      * Get the archived log files starting with a given sequence number
      * @param seq
+     * @return empty array if no logs exist. null is not expected
      * @throws IOException
      */
-    public abstract File[] getArchivedLogsFromSequence(long seq)
+    public abstract RedoLogFile[] getArchivedLogsFromSequence(long seq)
             throws IOException;
+
+    /**
+     * Get the archived log file with given sequence number if it exists
+     * @return null if does not exist
+     */
+    public abstract RedoLogFile getArchivedLog(long seq);
 
     /**
      * Get all the archived log files
      * @throws IOException
      */
-    public abstract File[] getArchivedLogs() throws IOException;
+    public abstract RedoLogFile[] getArchivedLogs() throws IOException;
+
+    /**
+     * Delete all redolog files which contain events older than the given timestamp
+     * @param redoLogCopyStartTime
+     * @throws IOException
+     */
+    public abstract void deleteArchivedLogFiles(long oldestTimestamp) throws IOException;
 
 }

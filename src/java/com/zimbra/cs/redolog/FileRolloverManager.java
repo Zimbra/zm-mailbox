@@ -18,23 +18,18 @@
 package com.zimbra.cs.redolog;
 
 import java.io.File;
-import java.io.FilenameFilter;
 import java.io.IOException;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Arrays;
-import java.util.Comparator;
 import java.util.Date;
-import java.util.TimeZone;
 
 import com.zimbra.common.util.FileUtil;
 import com.zimbra.common.util.Log;
-import com.zimbra.common.util.LogFactory;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.redolog.util.RedoLogFileUtil;
+import com.zimbra.cs.redolog.util.RedoLogFileUtil.TempLogFilenameFilter;
 
 public class FileRolloverManager implements RolloverManager {
 
-    private static Log mLog = LogFactory.getLog(FileRolloverManager.class);
+    private static Log log4j = ZimbraLog.redolog;
 
 	private FileRedoLogManager mRedoLogMgr;
 	private File mRedoLogFile;
@@ -69,10 +64,11 @@ public class FileRolloverManager implements RolloverManager {
 		        File mostRecent = logs[logs.length - 1];
 		        String name = mostRecent.getName();
 		        String currName = mRedoLogFile.getName();
-		        if (mostRecent.renameTo(mRedoLogFile))
-			        mLog.info("Renamed " + name + " to " + currName);
-		        else
+		        if (mostRecent.renameTo(mRedoLogFile)) {
+		            log4j.info("Renamed " + name + " to " + currName);
+		        } else {
 		        	throw new IOException("Unable to rename " + name + " to " + currName);
+		        }
 
 		        logs[logs.length - 1] = null;	// remove most recent temp log from array
 	        }
@@ -86,170 +82,31 @@ public class FileRolloverManager implements RolloverManager {
 	        	String oldName = log.getName();
 	        	String newName = oldName + ".bak";
 	        	File newLog = new File(log.getParentFile(), newName);
-	        	if (log.renameTo(newLog))
-	        		mLog.info("Renamed " + oldName + " to " + newName);
-	        	else {
+	        	if (log.renameTo(newLog)) {
+	        	    log4j.info("Renamed " + oldName + " to " + newName);
+	        	} else {
 	        		numErrors++;
-	        		mLog.error("Unable to rename " + oldName + " to " + newName);
+	        		log4j.error("Unable to rename " + oldName + " to " + newName);
 	        	}
 	        }
 
-	        if (numErrors > 0)
+	        if (numErrors > 0) {
 	        	throw new IOException("Error(s) occurred while renaming temporary redo log files");
-		}
-	}
-
-
-	/**
-	 * Returns the archive log files in the specified directory, sorted
-	 * by the sequence number encoded in the filename.
-	 * @param archiveDir
-	 * @return
-	 */
-	public static File[] getArchiveLogs(File archiveDir) {
-        return getArchiveLogs(archiveDir, Long.MIN_VALUE, Long.MAX_VALUE);
-	}
-
-    public static File[] getArchiveLogs(File archiveDir, long from) {
-        return getArchiveLogs(archiveDir, from, Long.MAX_VALUE);
-    }
-
-    public static File[] getArchiveLogs(File archiveDir, final long from, final long to) {
-        File logs[] = archiveDir.listFiles(new FilenameFilter() {
-            @Override
-            public boolean accept(File dir, String name) {
-                if (name.indexOf(ARCH_FILENAME_PREFIX) == 0 &&
-                    name.lastIndexOf(FILENAME_SUFFIX) == name.length() - FILENAME_SUFFIX.length()) {
-                    long seq = getSeqForFile(new File(dir, name));
-                    if (from <= seq && seq <= to)
-                        return true;
-                }
-                return false;
-            }
-        });
-        if (logs != null && logs.length > 0)
-            FileRolloverManager.sortArchiveLogFiles(logs);
-        return logs;
-    }
-
-    /**
-	 * Sorts an array of archive log files by the timestamp encoded into
-	 * the filenames.
-	 * @param files
-	 */
-	public static void sortArchiveLogFiles(File[] files) {
-		ArchiveLogFilenameComparator comp = new ArchiveLogFilenameComparator();
-		Arrays.sort(files, comp);
-	}
-
-	/*
-	 * Orders archive log filenames by parsing the timestamp embedded in
-	 * the filename.  Earlier-stamped file is considered "less" by the
-	 * comparison.
-	 */
-	private static class ArchiveLogFilenameComparator
-	implements Comparator<File> {
-		@Override
-        public int compare(File f1, File f2) {
-			long t1 = getSeqForFile(f1);
-			long t2 = getSeqForFile(f2);
-			if (t1 < t2)
-				return -1;
-			else if (t1 > t2)
-				return 1;
-
-			// We should never get here, but let's be safe.
-			t1 = getEndTimeForFile(f1);
-			t2 = getEndTimeForFile(f2);
-			if (t1 < t2)
-				return -1;
-			else if (t1 > t2)
-				return 1;
-			return 0;
-		}
-	}
-
-	public static long getSeqForFile(File f) {
-        //FileLogReader logReader = new FileLogReader(f);
-        //return logReader.getHeader().getSequence();
-		String fname = f.getName();
-		int start = fname.lastIndexOf(SEQUENCE_PREFIX);
-		if (start == -1) return -1;
-		start += SEQUENCE_PREFIX.length();
-		int end = fname.indexOf(FILENAME_SUFFIX, start);
-		if (end == -1) return -1;
-		try {
-			String val = fname.substring(start, end);
-			return Long.parseLong(val);
-		} catch (StringIndexOutOfBoundsException se) {
-			return -1;
-		} catch (NumberFormatException ne) {
-			return -1;
-		}
-	}
-
-	public static long getEndTimeForFile(File f) {
-        DateFormat fmt = new SimpleDateFormat(TIMESTAMP_FORMAT);
-        fmt.setLenient(false);
-        int prefixLen = ARCH_FILENAME_PREFIX.length();
-        try {
-            Date d = fmt.parse(f.getName().substring(prefixLen));
-            return d.getTime();
-        } catch(ParseException e) {
-            return f.lastModified();
-        }
-    }
-
-    public static String toArchiveLogFilename(Date date, long seq) {
-        StringBuilder fname = new StringBuilder(ARCH_FILENAME_PREFIX);
-        DateFormat fmt = new SimpleDateFormat(TIMESTAMP_FORMAT);
-        fmt.setTimeZone(TimeZone.getTimeZone("GMT"));
-        fname.append(fmt.format(date));
-        fname.append(SEQUENCE_PREFIX).append(seq);
-        fname.append(FILENAME_SUFFIX);
-        // "redo-<yyyyMMdd.HHmmss>-s<seq>.log"
-        return fname.toString();
-    }
-
-	private static final String ARCH_FILENAME_PREFIX = "redo-";
-	private static final String TEMP_FILENAME_PREFIX = "~tmp-redo-";
-	private static final String SEQUENCE_PREFIX = "-seq";
-	private static final String FILENAME_SUFFIX = ".log";
-	private static final String TIMESTAMP_FORMAT = "yyyyMMdd.HHmmss.SSS";
-
-	private static class TempLogFilenameFilter implements FilenameFilter {
-		@Override
-        public boolean accept(File dir, String name) {
-			if (name.indexOf(TEMP_FILENAME_PREFIX) == 0 &&
-				name.lastIndexOf(FILENAME_SUFFIX) == name.length() - FILENAME_SUFFIX.length())
-				return true;
-			else
-				return false;
+	        }
 		}
 	}
 
 	public File getRolloverFile(long seq) {
-        String fname = toArchiveLogFilename(new Date(), seq);
+        String fname = RedoLogFileUtil.toArchiveLogFilename(new Date(), seq);
         File destDir = mRedoLogMgr.getRolloverDestDir();
         if (!destDir.exists()) {
             // Guard against someone messing around on server and
             // deleting the directory manually.
             if (!destDir.mkdir() && !destDir.exists()) {
-                mLog.error("Unable to create rollover destination directory " + destDir.getAbsolutePath());
+                log4j.error("Unable to create rollover destination directory " + destDir.getAbsolutePath());
             }
         }
 		return new File(destDir, fname);
-	}
-
-	public String getTempFilename(long seq) {
-        StringBuilder fname = new StringBuilder(TEMP_FILENAME_PREFIX);
-        DateFormat fmt = new SimpleDateFormat(TIMESTAMP_FORMAT);
-        fmt.setTimeZone(TimeZone.getTimeZone("GMT"));
-        fname.append(fmt.format(new Date()));
-        fname.append(SEQUENCE_PREFIX).append(seq);
-        fname.append(FILENAME_SUFFIX);
-        // "~tmp-redo-<yyyyMMdd.HHmmss>-s<seq>.log"
-        return fname.toString();
 	}
 
     @Override
@@ -264,10 +121,11 @@ public class FileRolloverManager implements RolloverManager {
 
     @Override
     public synchronized long incrementSequence() {
-        if (mSequence < Long.MAX_VALUE)
+        if (mSequence < Long.MAX_VALUE) {
             ++mSequence;
-        else
+        } else {
             mSequence = 0;
+        }
         return mSequence;
     }
 

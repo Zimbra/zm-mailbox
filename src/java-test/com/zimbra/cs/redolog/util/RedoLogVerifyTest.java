@@ -44,7 +44,9 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Folder.FolderOptions;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
+import com.zimbra.cs.redolog.FilesystemRedoLogFile;
 import com.zimbra.cs.redolog.MockRedoLogProvider;
+import com.zimbra.cs.redolog.RedoLogFile;
 import com.zimbra.cs.redolog.RedoLogManager;
 import com.zimbra.cs.redolog.RedoLogProvider;
 import com.zimbra.cs.redolog.op.MockRedoableOp;
@@ -72,14 +74,14 @@ public class RedoLogVerifyTest {
 
     private void clearRedoLogs() throws IOException, ServiceException {
         RedoLogManager mgr = RedoLogProvider.getInstance().getRedoLogManager();
-        Set<File> redoLogFiles = new HashSet<File>();
-        File[] archived = mgr.getArchivedLogs();
+        Set<RedoLogFile> redoLogFiles = new HashSet<RedoLogFile>();
+        RedoLogFile[] archived = mgr.getArchivedLogs();
         if (archived != null && archived.length > 0) {
             redoLogFiles.addAll(Arrays.asList(archived));
         }
-        redoLogFiles.add(mgr.getLogFile());
-        for (File file : redoLogFiles) {
-            file.delete();
+        redoLogFiles.add(new FilesystemRedoLogFile(mgr.getLogFile()));
+        for (RedoLogFile file : redoLogFiles) {
+            file.getFile().delete();
         }
     }
 

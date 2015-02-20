@@ -21,6 +21,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.util.HashMap;
 import java.util.List;
@@ -30,7 +31,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.DevNullOutputStream;
 import com.zimbra.cs.account.Account;
@@ -39,6 +39,7 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.redolog.RedoLogProvider;
 import com.zimbra.cs.redolog.RedoPlayer;
 import com.zimbra.cs.redolog.util.RedoLogVerify;
 import com.zimbra.cs.store.MailboxBlob;
@@ -107,8 +108,8 @@ public class TestRedoLog {
         assertEquals(destContent, sourceContent);
     }
 
-    private File getRedoLogFile() {
-        return new File("/opt/zimbra/redolog/redo.log");
+    private File getRedoLogFile() throws IOException {
+        return RedoLogProvider.getInstance().getRedoLogManager().getLogFile();//new File("/opt/zimbra/redolog/redo.log");
     }
 
     @After

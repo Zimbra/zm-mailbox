@@ -34,6 +34,7 @@ import com.zimbra.cs.redolog.FileRedoLogManager;
 import com.zimbra.cs.redolog.FileRolloverManager;
 import com.zimbra.cs.redolog.RedoConfig;
 import com.zimbra.cs.redolog.op.RedoableOp;
+import com.zimbra.cs.redolog.util.RedoLogFileUtil;
 import com.zimbra.cs.util.Zimbra;
 
 public class FileLogWriter extends AbstractLogWriter implements LogWriter {
@@ -341,7 +342,7 @@ public class FileLogWriter extends AbstractLogWriter implements LogWriter {
         String currentPath = file.getAbsolutePath();
 
         // Open a temporary logger.
-        File tempLogfile = new File(file.getParentFile(), romgr.getTempFilename(lastSeq + 1));
+        File tempLogfile = new File(file.getParentFile(), RedoLogFileUtil.getTempFilename(lastSeq + 1));
         FileLogWriter tempLogger =
             new FileLogWriter((FileRedoLogManager) redoLogMgr, tempLogfile, 0);
         tempLogger.open();

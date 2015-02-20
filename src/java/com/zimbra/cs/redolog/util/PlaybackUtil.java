@@ -50,7 +50,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.db.DbPool;
-import com.zimbra.cs.redolog.FileRolloverManager;
+import com.zimbra.cs.redolog.FilesystemRedoLogFile;
 import com.zimbra.cs.redolog.RedoPlayer;
 import com.zimbra.cs.redolog.logger.FileHeader;
 import com.zimbra.cs.redolog.logger.FileLogReader;
@@ -295,9 +295,9 @@ public class PlaybackUtil {
 
             File archiveDir = new File(archiveDirPath);
             if (archiveDir.exists()) {
-                File[] archiveLogs = FileRolloverManager.getArchiveLogs(archiveDir, params.fromSeq, params.toSeq);
-                for (File f : archiveLogs) {
-                    logList.add(f);
+                FilesystemRedoLogFile[] archiveLogs = RedoLogFileUtil.getArchiveLogs(archiveDir, params.fromSeq, params.toSeq);
+                for (FilesystemRedoLogFile f : archiveLogs) {
+                    logList.add(f.getFile());
                 }
             }
             File redoLog = new File(redoLogPath);

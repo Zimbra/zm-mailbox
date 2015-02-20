@@ -69,15 +69,15 @@ public class RedoPlayerTest {
 
     private void clearRedoLogs() throws IOException, ServiceException {
         RedoLogManager mgr = RedoLogProvider.getInstance().getRedoLogManager();
-        Set<File> redoLogFiles = new HashSet<File>();
-        File[] archived = mgr.getArchivedLogs();
+        Set<RedoLogFile> redoLogFiles = new HashSet<RedoLogFile>();
+        RedoLogFile[] archived = mgr.getArchivedLogs();
         if (archived != null && archived.length > 0) {
             redoLogFiles.addAll(Arrays.asList(archived));
         }
-        redoLogFiles.add(mgr.getLogFile());
-        for (File file : redoLogFiles) {
-            ZimbraLog.test.debug("deleting redolog file %s", file.getAbsolutePath());
-            file.delete();
+        redoLogFiles.add(new FilesystemRedoLogFile(mgr.getLogFile()));
+        for (RedoLogFile file : redoLogFiles) {
+            ZimbraLog.test.debug("deleting redolog file %s", file.getFile().getAbsolutePath());
+            file.getFile().delete();
         }
     }
 

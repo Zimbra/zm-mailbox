@@ -31,6 +31,7 @@ import com.zimbra.cs.redolog.logger.FileLogWriter;
 import com.zimbra.cs.redolog.logger.LogWriter;
 import com.zimbra.cs.redolog.op.CommitTxn;
 import com.zimbra.cs.redolog.op.RedoableOp;
+import com.zimbra.cs.redolog.util.RedoLogFileUtil;
 import com.zimbra.znative.IO;
 
 public class FileRedoLogManager extends AbstractRedoLogManager implements
@@ -88,8 +89,8 @@ public class FileRedoLogManager extends AbstractRedoLogManager implements
     }
 
     @Override
-    public File[] getArchivedLogsFromSequence(long seq) throws IOException {
-        return FileRolloverManager.getArchiveLogs(mArchiveDir, seq);
+    public FilesystemRedoLogFile[] getArchivedLogsFromSequence(long seq) throws IOException {
+        return RedoLogFileUtil.getArchiveLogs(mArchiveDir, seq);
     }
 
     @Override
@@ -119,7 +120,7 @@ public class FileRedoLogManager extends AbstractRedoLogManager implements
         try {
             try {
                 long seq = cid.getRedoSeq();
-                File[] archived = getArchivedLogsFromSequence(seq);
+                File[] archived = RedoLogFileUtil.getArchiveLogFiles(mArchiveDir, seq, Long.MAX_VALUE);
                 if (archived != null) {
                     logs = new File[archived.length + 1];
                     System.arraycopy(archived, 0, logs, 0, archived.length);
@@ -212,6 +213,32 @@ public class FileRedoLogManager extends AbstractRedoLogManager implements
                                     + linkDir.getAbsolutePath(), e);
                 }
             }
+        }
+    }
+
+    @Override
+    public void deleteArchivedLogFiles(long oldestTimestamp) throws IOException {
+        for (RedoLogFile logWrapper : getArchivedLogs()) {
+            @SuppressWarnings("deprecation")
+            File log = logWrapper.getFile();
+            FileLogReader reader = new FileLogReader(log);
+            if (reader.getHeader().getLastOpTstamp() < oldestTimestamp) {
+                ZimbraLog.redolog.info("Marking redo log " + log.getAbsolutePath() + " for deletion");
+                boolean deleted = log.delete();
+                if (!deleted) {
+                    log.deleteOnExit();
+                }
+            }
+        }
+    }
+
+    @Override
+    public RedoLogFile getArchivedLog(long seq) {
+        RedoLogFile[] files = RedoLogFileUtil.getArchiveLogs(mArchiveDir, seq, seq);
+        if (files.length > 0) {
+            return files[0];
+        } else {
+            return null;
         }
     }
 
