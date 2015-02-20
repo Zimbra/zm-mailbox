@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -19,8 +19,11 @@ package com.zimbra.qa.unittest;
 import java.util.ArrayList;
 import java.util.List;
 
-import junit.framework.Assert;
-import junit.framework.TestCase;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Assume;
+import org.junit.Before;
+import org.junit.Test;
 
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -36,28 +39,25 @@ import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.volume.Volume;
 import com.zimbra.cs.volume.VolumeManager;
 import com.zimbra.znative.IO;
+import com.zimbra.znative.Util;
 
-public final class TestBlobDeduper extends TestCase {
+public final class TestBlobDeduper {
 
     private static String USER_NAME = "user1";
     private static String TEST_NAME = "TestBlobDeduper";
     private Mailbox mbox;
     private Account account;
 
-    public TestBlobDeduper(String testName) {
-        super(testName);
-    }
-
-    @Override
+    @Before
     public void setUp() throws Exception {
-        super.setUp();
+        Assume.assumeTrue(Util.loadLibrary());
         account = TestUtil.getAccount(USER_NAME);
         mbox = MailboxManager.getInstance().getMailboxByAccount(account);
         // Clean up data, in case a previous test didn't exit cleanly
         cleanUp();
     }
 
-
+    @Test
     public void testBlobDeduper() throws Exception {
         if (!(StoreManager.getInstance() instanceof FileBlobStore)) {
             ZimbraLog.test.info("Skipping deduper test for non-FileBlobStore");
@@ -90,7 +90,8 @@ public final class TestBlobDeduper extends TestCase {
         }
     }
 
-    @Override public void tearDown()
+    @After
+    public void tearDown()
     throws Exception {
         try {
             cleanUp();
