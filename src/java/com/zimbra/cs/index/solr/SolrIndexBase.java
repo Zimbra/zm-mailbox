@@ -887,6 +887,7 @@ public abstract class SolrIndexBase extends IndexStore {
     public void waitForIndexCommit(int maxWaitTimeMillis) throws ServiceException  {
         SolrServer solrServer = getSolrServer();
         int waitIncrement = Math.max(maxWaitTimeMillis/3, 500);
+        long startWait = System.currentTimeMillis();
         while (maxWaitTimeMillis > 0) {
             if(indexExists()) {
                 SolrQuery q = new SolrQuery().setParam("action", "get");
@@ -899,7 +900,11 @@ public abstract class SolrIndexBase extends IndexStore {
                     Integer outstandingCommits = (Integer)resp.getResponse().get("count");
                     if(outstandingCommits == null || outstandingCommits == 0) {
                         break;
+                    } else if (outstandingCommits < 0) {
+                        ZimbraLog.index.warn("outstanding commits is less than zero, this may be a problem in solr?");
+                        break;
                     } else {
+                        ZimbraLog.index.debug("waiting for %d outstanding commits", outstandingCommits);
                         try {
                             Thread.sleep(waitIncrement);
                         } catch (InterruptedException e) {
@@ -920,5 +925,6 @@ public abstract class SolrIndexBase extends IndexStore {
                 maxWaitTimeMillis = maxWaitTimeMillis - waitIncrement;
             }
         }
+        ZimbraLog.index.debug("waited %dms for commit", System.currentTimeMillis() - startWait);
     }
 }
