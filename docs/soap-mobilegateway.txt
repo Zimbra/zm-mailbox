@@ -26,9 +26,8 @@ The app should persist the app uuid and the app key on the device in a secure ma
 ----
 
 To add an email account (like gmail) the app would need to use the CreateDataSourceRequest API (refer base SOAP API).
-An app is allowed to specify the folder id as "-1" to indicate that the server should create the folder into which
-the external data would be imported. The created folder name would be same as datasource name. The created folder's id
-would be returned in the response.
+An app is allowed to specify the folder id as "-1" to indicate that the server should create the folder itself into
+which the external data would be imported. The created folder's id would be returned in the response.
 
 <CreateDataSourceRequest/>
   <imap ... l="-1" .../>

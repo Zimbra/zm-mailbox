@@ -19,15 +19,16 @@ package com.zimbra.cs.service.mail;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.soap.admin.type.DataSourceType;
 import com.zimbra.common.account.ZAttrProvisioning.DataSourceAuthMechanism;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DataSource;
@@ -44,7 +45,7 @@ public class CreateDataSource extends MailDocumentHandler {
 
     @Override
     public Element handle(Element request, Map<String, Object> context)
-    throws ServiceException, SoapFaultException {
+    throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
 
@@ -70,15 +71,14 @@ public class CreateDataSource extends MailDocumentHandler {
         String name = eDataSource.getAttribute(MailConstants.A_NAME);
         boolean returnFolderId = false;
         if (folderId == -1) {
-            folderId = mbox.createFolder(null, "/" + name, new Folder.FolderOptions()).
-                    getId();
+            folderId = mbox.createFolder(null, "/" + getUniqueDSFolderName(mbox, name), new Folder.FolderOptions()).getId();
             folderIdStr = String.valueOf(folderId);
             returnFolderId = true;
         } else {
             validateFolderId(account, mbox, eDataSource, type);
         }
 
-        Map<String, Object> dsAttrs = new HashMap<String, Object>();
+        Map<String, Object> dsAttrs = new HashMap<>();
 
         // Common attributes
         dsAttrs.put(Provisioning.A_zimbraDataSourceFolderId, folderIdStr);
@@ -128,8 +128,17 @@ public class CreateDataSource extends MailDocumentHandler {
             dsAttrs.put(Provisioning.A_zimbraDataSourceOAuthToken, value);
             dsAttrs.put(Provisioning.A_zimbraDataSourceAuthMechanism, DataSourceAuthMechanism.XOAUTH2.name());
         }
-        
-        DataSource ds = prov.createDataSource(account, type, name, dsAttrs);
+
+        DataSource ds;
+        try {
+            ds = prov.createDataSource(account, type, name, dsAttrs);
+        } catch (ServiceException e) {
+            if (returnFolderId) {
+                // we should delete the auto-created folder
+                mbox.delete(null, folderId, MailItem.Type.FOLDER);
+            }
+            throw e;
+        }
         ZimbraLog.addDataSourceNameToContext(ds.getName());
         
         // Assemble response
@@ -141,6 +150,19 @@ public class CreateDataSource extends MailDocumentHandler {
         }
 
         return response;
+    }
+
+    private static String getUniqueDSFolderName(Mailbox mbox, String dsName) throws ServiceException {
+        String name = dsName;
+        while (true) {
+            try {
+                mbox.getFolderByName(null, Mailbox.ID_FOLDER_USER_ROOT, name);
+                name = dsName + "_" + new Random().nextInt(1000);
+            } catch (NoSuchItemException e) {
+                break;
+            }
+        }
+        return name;
     }
 
     private static synchronized boolean doZMGAppProvisioningIfReq(ZimbraSoapContext zsc, Provisioning prov,
