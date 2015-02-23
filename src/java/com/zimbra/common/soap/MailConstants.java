@@ -759,6 +759,7 @@ public final class MailConstants {
     public static final String E_MSG_ID_HDR = "mid";
     public static final String E_IN_REPLY_TO = "irt";
     public static final String E_CONTENT = "content";
+    public static final String E_ORIG_CONTENT = "origContent";
     public static final String E_SHARE_NOTIFICATION = "shr";
     public static final String E_DL_SUBSCRIPTION_NOTIFICATION = "dlSubs";
     public static final String A_PART = "part";
@@ -779,6 +780,7 @@ public final class MailConstants {
     public static final String A_MAX_INLINED_LENGTH = "max";
     public static final String A_TRUNCATED_CONTENT = "truncated";
     public static final String A_FILTER_SENT = "filterSent";
+    public static final String A_WANT_CONTENT = "wantContent";
 
     // send/save draft
     public static final String E_ATTACH = "attach";
