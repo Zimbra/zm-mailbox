@@ -53,17 +53,12 @@ import com.zimbra.soap.type.ZmBoolean;
  * </p><p>
  * The client may specify a custom timeout-length for their request if they know something about the particular
  * underlying network.  The server may or may not honor this request (depending on server configured max/min values).
- * See LocalConfig values:
- * </p>
- * <pre>
- * zimbra_waitset_default_request_timeout,
- * zimbra_waitset_min_request_timeout,
- * zimbra_waitset_max_request_timeout,
- * </pre>
- * <p>
  * See ServerConfig values:
  * </p>
  * <pre>
+ * zimbraMailboxWaitsetDefaultRequestTimeout
+ * zimbraMailboxWaitsetMinRequestTimeout
+ * zimbraMailboxWaitsetMaxRequestTimeout
  * zimbraAdminWaitsetDefaultRequestTimeout,
  * zimbraAdminWaitsetMinRequestTimeout, and
  * zimbraAdminWaitsetMaxRequestTimeout

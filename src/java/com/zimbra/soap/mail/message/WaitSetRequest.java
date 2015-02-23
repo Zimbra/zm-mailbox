@@ -55,9 +55,9 @@ import com.zimbra.soap.type.ZmBoolean;
  * See LocalConfig values:
  * </p>
  * <pre>
- * zimbra_waitset_default_request_timeout,
- * zimbra_waitset_min_request_timeout,
- * zimbra_waitset_max_request_timeout,
+ * zimbraMailboxWaitsetDefaultRequestTimeout
+ * zimbraMailboxWaitsetMinRequestTimeout
+ * zimbraMailboxWaitsetMaxRequestTimeout
  * zimbraAdminWaitsetDefaultRequestTimeout,
  * zimbraAdminWaitsetMinRequestTimeout, and
  * zimbraAdminWaitsetMaxRequestTimeout
