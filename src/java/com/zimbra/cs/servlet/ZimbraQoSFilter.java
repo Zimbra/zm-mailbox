@@ -37,8 +37,10 @@ import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.servlet.util.AuthUtil;
+import com.zimbra.cs.util.ProvisioningUtil;
 
 /**
  * This Servlet {@link Filter} limits the number of concurrent HTTP requests per
@@ -97,12 +99,11 @@ public class ZimbraQoSFilter implements Filter {
             suspendMs=Integer.parseInt(filterConfig.getInitParameter(SUSPEND_INIT_PARAM));
         }
     }
-    
-    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) 
+    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
     throws IOException, ServletException {
         try {
             String user = extractUserId(request);
-            int max = LC.servlet_max_concurrent_http_requests_per_account.intValue();
+            int max = ProvisioningUtil.getServerAttribute(Provisioning.A_zimbraMailboxMaxConcurrentHttpRequestsPerAccount, 10);
             if (user == null || max <= 0) {
                 chain.doFilter(request,response);
                 return;

@@ -38,6 +38,7 @@ import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.HttpUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
@@ -48,6 +49,7 @@ import com.zimbra.cs.service.formatter.FormatterFactory.FormatType;
 import com.zimbra.cs.service.mail.ImportContacts;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.servlet.util.JettyUtil;
+import com.zimbra.cs.util.ProvisioningUtil;
 
 public class CsvFormatter extends Formatter {
 
@@ -181,7 +183,7 @@ public class CsvFormatter extends Formatter {
      * @throws IOException
      */
     private void disableJettyTimeout(UserServletContext context) {
-        if (LC.zimbra_csv_formatter_disable_timeout.booleanValue()) {
+        if (ProvisioningUtil.getServerAttribute(Provisioning.A_zimbraMailboxCsvFormatterDisableTimeout, true)) {
             JettyUtil.setIdleTimeout(0, context.req);
         }
     }

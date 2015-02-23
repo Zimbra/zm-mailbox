@@ -52,6 +52,7 @@ import com.zimbra.common.account.ZAttrProvisioning;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.index.BrowseTerm;
 import com.zimbra.cs.index.IndexDocument;
 import com.zimbra.cs.index.IndexStore;
@@ -109,7 +110,7 @@ public abstract class SolrIndexBase extends IndexStore {
     // cache lucene index of GAL sync account separately with no automatic eviction
     protected static final ConcurrentMap<Integer, SolrIndexSearcher> GAL_SEARCHER_CACHE =
         new ConcurrentLinkedHashMap.Builder<Integer, SolrIndexSearcher>()
-        .maximumWeightedCapacity(LC.zimbra_galsync_index_reader_cache_size.intValue())
+        .maximumWeightedCapacity(ProvisioningUtil.getServerAttribute(Provisioning.A_zimbraIndexReaderGalSyncCacheSize, 5))
         .listener(new EvictionListener<Integer, SolrIndexSearcher>() {
             @Override
             public void onEviction(Integer mboxId, SolrIndexSearcher searcher) {
@@ -344,7 +345,7 @@ public abstract class SolrIndexBase extends IndexStore {
     private String buildComplexPhraseQuery(String text, String[] searchedFields) {
         StringBuilder sb = new StringBuilder("_query_:\"{!zimbrawildcard ");
         sb.append("fields=\\\"").append(Joiner.on(" ").join(searchedFields)).append("\\\"")
-        .append(" maxExpansions=\\\"").append(LC.zimbra_index_wildcard_max_terms_expanded.intValue()).append("\\\"}")
+        .append(" maxExpansions=\\\"").append(ProvisioningUtil.getServerAttribute(Provisioning.A_zimbraIndexWildcardMaxTermsExpanded, 20000)).append("\\\"}")
         .append(SolrUtils.escapeQuotes(text))
         .append("\"");
         return sb.toString();
@@ -650,7 +651,7 @@ public abstract class SolrIndexBase extends IndexStore {
                 setupRequest(q, solrServer);
                 q.setTerms(true);
                 q.addTermsField(fieldName);
-                q.setTermsLimit(LC.zimbra_terms_cachesize.intValue());
+                q.setTermsLimit(Provisioning.getInstance().getLocalServer().getIndexTermsCacheSize());
                 if(firstTermValue != null && !firstTermValue.isEmpty()) {
                     q.setTermsLower(firstTermValue);
                     q.setTermsLowerInclusive(includeLower);

@@ -61,11 +61,7 @@ import com.zimbra.cs.servlet.ZimbraServlet;
  * 1. In com.zimbra.cs.service.AuthProvider, uncomment
  *    // register(new com.zimbra.qa.unittest.TestAccessKeyGrant.DummyAuthProvider());
  *
- * 2. In /opt/zimbra/conf/localconfig.xml, set:
-<key name="zimbra_auth_provider">
-    <value>DUMMY_AUTH_PROVIDER</value>
-</key>
-
+ * 2. zmprov ms `zmhostname` zimbraAuthProvider DUMMY_AUTH_PROVIDER
  *
 */
 
@@ -424,10 +420,7 @@ public class TestAccessKeyGrant extends TestCase {
      *
      * 4. ant deploy-war
      *
-     * 5. modify localconfig.xml, add:
-     *    <key name="zimbra_auth_provider">
-     *        <value>DUMMY_AUTH_PROVIDER</value>
-     *    </key>
+     * 5. zmprov ms `zmhostname` zimbraAuthProvider DUMMY_AUTH_PROVIDER
      *
      * 6. retstart server
      *

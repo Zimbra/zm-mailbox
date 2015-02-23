@@ -34,6 +34,8 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.util.ProvisioningUtil;
 import com.zimbra.soap.SoapServlet;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -52,9 +54,9 @@ public class NoOp extends MailDocumentHandler  {
     private static final long MAX_TIMEOUT;
 
     static {
-        DEFAULT_TIMEOUT = LC.zimbra_noop_default_timeout.longValue() * 1000;
-        MIN_TIMEOUT = LC.zimbra_noop_min_timeout.longValue() * 1000;
-        MAX_TIMEOUT = LC.zimbra_noop_max_timeout.longValue() * 1000;
+        DEFAULT_TIMEOUT = ProvisioningUtil.getTimeIntervalServerAttribute(Provisioning.A_zimbraMailboxNoopDefaultTimeout, 300000L);
+        MIN_TIMEOUT = ProvisioningUtil.getTimeIntervalServerAttribute(Provisioning.A_zimbraMailboxNoopMinTimeout, 1200000L);
+        MAX_TIMEOUT = ProvisioningUtil.getTimeIntervalServerAttribute(Provisioning.A_zimbraMailboxNoopMaxTimeout, 30000L);
     }
 
     private static long parseTimeout(Element request) throws ServiceException {

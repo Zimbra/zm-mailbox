@@ -48,6 +48,8 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.BufferStream;
 import com.zimbra.common.util.Props2Js;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.util.ProvisioningUtil;
 
 /**
  * The equivalent of Props2JsServlet in ZimbraWebClient, handles .properties within deployed zimlets only.
@@ -126,7 +128,7 @@ public class ZimletProps2JsServlet extends HttpServlet {
                 gzos.close();
                 buffer = bos.toByteArray();
             }
-            if (!LC.zimbra_minimize_resources.booleanValue()) {
+            if (!ProvisioningUtil.getServerAttribute(Provisioning.A_zimbraMailboxResourceBundleMinimizeResources, false)) {
                 localeBuffers.put(uri, buffer);
             }
         }

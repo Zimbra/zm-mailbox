@@ -53,6 +53,7 @@ import com.zimbra.cs.mailbox.acl.EffectiveACLCache;
 import com.zimbra.cs.redolog.op.CreateMailbox;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.util.AccountUtil;
+import com.zimbra.cs.util.ProvisioningUtil;
 import com.zimbra.cs.util.Zimbra;
 
 public class MailboxManager {
@@ -179,7 +180,7 @@ public class MailboxManager {
     }
 
     protected MailboxMap createCache() {
-        return new MailboxMap(LC.zimbra_mailbox_manager_hardref_cache.intValue());
+        return new MailboxMap(ProvisioningUtil.getServerAttribute(Provisioning.A_zimbraMailboxManagerHardrefCache, 2500));
     }
 
     /**

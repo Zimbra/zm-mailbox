@@ -341,8 +341,8 @@ public class ZimbraLmtpBackend implements LmtpBackend {
 //            }
 
             Rfc822ValidationInputStream validator = null;
-            if (LC.zimbra_lmtp_validate_messages.booleanValue()) {
-                validator = new Rfc822ValidationInputStream(in, LC.zimbra_lmtp_max_line_length.longValue());
+            if (ProvisioningUtil.getServerAttribute(Provisioning.A_zimbraLmtpValidateMessages, true)) {
+                validator = new Rfc822ValidationInputStream(in, ProvisioningUtil.getServerAttribute(Provisioning.A_zimbraLmtpMaxLineLength, 10240));
                 in = validator;
             }
 

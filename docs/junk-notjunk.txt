@@ -91,8 +91,8 @@ handled by a queue.  The queue is processed by a long lived thread
 dedicated to sending this junk/not junk feedback.  The queue size is
 throttled so if this thread falls behind we choose to ignore sending
 the feedback (warnigs are logged when queue if full and feedback
-sending is ignored).  You can change queue size in local config
-(zimbra_spam_report_queue_size, defaulted to 100).  Also the feedback
+sending is ignored).  You can change queue size in server config
+(zimbraMailboxSpamHandlerSpamReportQueueSize, defaulted to 100).  Also the feedback
 queue is not persisted - it is in memory only, and does not survive
 server restarts.
 

@@ -43,7 +43,9 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.LruMap;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.service.admin.FlushCache;
+import com.zimbra.cs.util.ProvisioningUtil;
 
 /**
  * Base class for servlets that cache resources to disk.
@@ -179,7 +181,7 @@ public abstract class DiskCacheServlet extends ZimbraServlet {
 
     @SuppressWarnings({ "serial" })
     protected void createCache() {
-        cacheSize = LC.zimbra_disk_cache_servlet_size.intValue();
+        cacheSize = ProvisioningUtil.getServerAttribute(Provisioning.A_zimbraMailboxDiskCacheSize, 1000);
         String value = getServletConfig().getInitParameter(P_CACHE_SIZE);
         if (value != null) {
             try {
@@ -207,7 +209,7 @@ public abstract class DiskCacheServlet extends ZimbraServlet {
             subDirName = subDirName.replace('/', File.separatorChar);
             cacheDir = new File(getTempDir(), subDirName);
             if (cacheDir.exists()) {
-                if (LC.zimbra_disk_cache_servlet_flush.booleanValue()) {
+                if (ProvisioningUtil.getServerAttribute(Provisioning.A_zimbraMailboxDiskCacheFlush, false)) {
                     Date date = new Date(cacheDir.lastModified());
                     String timestamp = new SimpleDateFormat("yyyy-MM-dd-HHmmss").format(date);
                     File parentDir = cacheDir.getParentFile();

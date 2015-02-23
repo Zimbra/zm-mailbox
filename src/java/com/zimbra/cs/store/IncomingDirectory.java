@@ -25,6 +25,8 @@ import java.util.List;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.util.ProvisioningUtil;
 
 public class IncomingDirectory {
     private String mPath;
@@ -79,8 +81,7 @@ public class IncomingDirectory {
     public synchronized static void startSweeper() {
         if (mSweeper != null)
             return;
-
-        long sweepMaxAgeMS = LC.zimbra_store_sweeper_max_age.intValue() * 60 * 1000;
+        long sweepMaxAgeMS = ProvisioningUtil.getTimeIntervalServerAttribute(Provisioning.A_zimbraBlobStoreSweeperMaxAge, 480*60*1000L);
         IncomingDirectorySweeper sweeper = new IncomingDirectorySweeper(SWEEP_INTERVAL_MS, sweepMaxAgeMS);
         sweeper.start();
         mSweeper = sweeper;

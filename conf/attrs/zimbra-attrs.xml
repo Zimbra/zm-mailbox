@@ -89,6 +89,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
                 and personal part is optional.
     id..........^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$
     integer.....32 bit signed, min/max checked
+    long.....   64 bit signed, min/max checked
     port........0-65535
     regex.......value attr is a regular expression. Should explicitly
                 add ^ to front and $ at the end
@@ -8665,8 +8666,7 @@ TODO: delete them permanently from here
 </attr>
 
 <attr id="1721" name="zimbraDomainAllowedIPs" type="string" max="256" cardinality="multi" optionalIn="domain" since="8.7.0">
-  <desc>Client IP/IPRange whitelist for this domain (IPRange needs to be in CIDR notation e.g:192.168.1.0/24). 
-        If configured, all IPs outside this whitelist will be blocked. If unset, all IPs are allowed</desc>  
+  <desc>Client IP/IPRange whitelist for this domain (IPRange needs to be in CIDR notation e.g:192.168.1.0/24). If configured, all IPs outside this whitelist will be blocked. If unset, all IPs are allowed</desc>  
 </attr>
 
 <attr id="1722" name="zimbraReverseProxyZSSHostname" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="nginxproxy" since="8.7.0">
@@ -8703,20 +8703,19 @@ TODO: delete them permanently from here
   <desc> zimbra admin url scheme </desc>
 </attr>
 
-<attr id="1729" name="zimbraAdminWaitsetDefaultRequestTimeout" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
-  <globalConfigValue>300</globalConfigValue>
-  <desc> Default timeout in seconds for zimbra admin wait set request  </desc>
+<attr id="1729" name="zimbraAdminWaitsetDefaultRequestTimeout" type="duration" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
+  <globalConfigValue>300s</globalConfigValue>
+  <desc> Default timeout in seconds for zimbra admin wait set request</desc>
 </attr>
 
-<attr id="1730" name="zimbraAdminWaitsetMaxRequestTimeout" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
-  <globalConfigValue>3600</globalConfigValue>
-  <desc> Maximum timeout in seconds for zimbra admin waitset request </desc>
+<attr id="1730" name="zimbraAdminWaitsetMaxRequestTimeout" type="duration" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
+  <globalConfigValue>3600s</globalConfigValue>
+  <desc> Maximum timeout in seconds for zimbra admin waitset request</desc>
 </attr>
 
-
-<attr id="1731" name="zimbraAdminWaitsetMinRequestTimeout" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
-  <globalConfigValue>0</globalConfigValue>
-  <desc>  Minimum timeout for zimbra admin waitset request </desc>
+<attr id="1731" name="zimbraAdminWaitsetMinRequestTimeout" type="duration" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
+  <globalConfigValue>0s</globalConfigValue>
+  <desc> Minimum timeout in seconds for zimbra admin waitset request</desc>
 </attr>
 
 <attr id="1732" name="zimbraMailboxLockMaxWaitingThreads" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
@@ -8731,7 +8730,7 @@ TODO: delete them permanently from here
 
 <attr id="1734" name="zimbraMailBoxLockTimeout" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
   <globalConfigValue>60</globalConfigValue>
-  <desc> Maximum timeout in seconds for mailbox lock </desc>
+  <desc>Maximum timeout in seconds for mailbox lock </desc>
 </attr>
 
 <attr id="1735" name="zimbraSmtpUseZimbraClient" type="boolean" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
@@ -8841,7 +8840,7 @@ TODO: delete them permanently from here
 
 <attr id="1756" name="zimbraImapEnableStartTls" type="boolean" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
   <globalConfigValue>TRUE</globalConfigValue>
-  <desc> Enable STARTTLS for Imap</desc>
+  <desc>Enable STARTTLS for Imap</desc>
 </attr>
 
 <attr id="1757" name="zimbraAutoProvInitialSleep" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
@@ -9135,7 +9134,7 @@ TODO: delete them permanently from here
   <desc> When batching index operations, the maximum number of mail items we allow in a single transaction.</desc>
 </attr>
 
-<attr id="1816" name="zimbraContactRankingEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="solr"  since="9.0">
+<attr id="1816" name="zimbraContactRankingEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
   <globalConfigValue>TRUE</globalConfigValue>
   <desc>Enable contact ranking table</desc>
 </attr>
@@ -9206,6 +9205,7 @@ TODO: delete them permanently from here
   <defaultCOSValue>1</defaultCOSValue>
   <desc>Determines the number of windows to check when trying to validate a TOTP code (NOW-n through NOW+n). This number should typically be small, but a minimum value of 1 is usually necessary to account for network latency and clock drift.  See also: zimbraTwoFactorTimeWindowLength and https://tools.ietf.org/html/rfc6238#section-5.2</desc>
 </attr>
+
 <attr id="1831" name="zimbraTwoFactorAuthScratchCodeEncoding" type="enum" value="BASE32,BASE64" cardinality="single" optionalIn="account,cos" since="8.7.0">
   <defaultCOSValue>BASE32</defaultCOSValue>
   <desc>scratch code encoding</desc>
@@ -9255,5 +9255,293 @@ TODO: delete them permanently from here
   <desc>length of app-specific passwords</desc>
 </attr>
 
-</attrs>
+<attr id="1841" name="zimbraAuthDeregisteredAuthTokenQueueSize" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
+  <globalConfigValue>5000</globalConfigValue>
+  <desc>Queue size for the deregistered auth tokens</desc>
+</attr>
 
+<attr id="1842" name="zimbraMailboxDiskCacheFlush" type="boolean" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
+  <globalConfigValue>FALSE</globalConfigValue>
+  <desc>Flag to enable disk cache servlet flush</desc>
+</attr>
+
+<attr id="1843" name="zimbraMailboxDiskCacheSize" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
+  <globalConfigValue>1000</globalConfigValue>
+  <desc>Size of the cache used by Disk Cache Servlet</desc>
+</attr>
+
+<attr id="1844" name="zimbraEwsAutoDiscoverUseServiceUrl" type="boolean" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
+  <globalConfigValue>FALSE</globalConfigValue>
+  <desc>Flag to use auto discover service url for the ews</desc>
+</attr>
+
+<attr id="1845" name="zimbraGalSyncConnectionDisableTimeout" type="boolean" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
+  <globalConfigValue>TRUE</globalConfigValue>
+  <desc>Flag to disable the gal sync timeout</desc>
+</attr>
+
+<attr id="1846" name="zimbraIndexReaderGalSyncCacheSize" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
+  <globalConfigValue>5</globalConfigValue>
+  <desc>The maximum number of IndexReaders in the GAL search index cache. The GAL sync account Lucene index is cached separately with no automatic eviction.</desc>
+</attr>
+
+<attr id="1847" name="zimbraIndexWildcardMaxTermsExpanded" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
+  <globalConfigValue>20000</globalConfigValue>
+  <desc>Maximum wildcard expansions for each individual term in the query.</desc>
+</attr>
+
+<attr id="1848" name="zimbraLmtpMaxLineLength" type="integer"  cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
+  <globalConfigValue>10240</globalConfigValue>
+  <desc>Max line length for in the lmtp message as per the rfc 822</desc>
+</attr>
+
+<attr id="1849" name="zimbraLmtpValidateMessages" type="boolean" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
+  <globalConfigValue>TRUE</globalConfigValue>
+  <desc>If true, validate the content of incoming LMTP messages</desc>
+</attr>
+
+<attr id="1850" name="zimbraMailboxMailItemActiveCache" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
+  <globalConfigValue>500</globalConfigValue>
+  <desc>The maximum size of a mailboxs internal LRU item cache when there are sessions active.</desc>
+</attr>
+
+<attr id="1851" name="zimbraMailboxChangeCheckpointFrequency" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
+  <globalConfigValue>100</globalConfigValue>
+  <desc>The frequency, in number of changes, at which a mailbox's ZIMBRA.MAILBOX.CHANGE_CHECKPOINT   highwater change value is written.</desc>
+</attr>
+
+<attr id="1852" name="zimbraGalSyncMailboxMailItemCache" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
+  <globalConfigValue>10000</globalConfigValue>
+  <desc>Sets the maximum galsync mailbox contact item cache.Set value to at least the number of contact items in the galsync mailbox.</desc>
+</attr>
+
+<attr id="1853" name="zimbraMimeEnableTextExtraction" type="boolean" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
+  <globalConfigValue>TRUE</globalConfigValue>
+  <desc>Enable text extraction for the during mime parsing</desc>
+</attr>
+
+<attr id="1855" name="zimbraMailboxMailItemInactiveCache" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
+  <globalConfigValue>30</globalConfigValue>
+  <desc> The maximum size of a mailbox's internal LRU item cache when it has no active sessions.</desc>
+</attr>
+
+<attr id="1856" name="zimbraMailboxManagerHardrefCache" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
+  <globalConfigValue>2500</globalConfigValue>
+  <desc>The maximum number of mailboxes that will be pinned in memory before the mailbox manager starts allowing them to be purged via SoftReference garbage collection.</desc>
+</attr>
+
+<attr id="1857" name="zimbraMailboxResourceBundleMinimizeResources" type="boolean" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
+  <globalConfigValue>FALSE</globalConfigValue>
+  <desc>Minimise server resources for small servers such as Zimbra Desktop.</desc>
+</attr>
+
+<attr id="1858" name="zimbraZimletDeployTimeout" type="duration" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="zimlet,service"  since="9.0" >
+  <globalConfigValue>10s</globalConfigValue>
+  <desc>Timeout for zimlet deployment specified in seconds.</desc>
+</attr>
+
+<attr id="1859" name="zimbraMailboxNoopDefaultTimeout" type="duration" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
+  <globalConfigValue>300s</globalConfigValue>
+  <desc>Time in seconds the server will allow a NoOpRequest to block if wait=1 is specified by the client</desc>
+</attr>
+
+<attr id="1860" name="zimbraMailboxNoopMaxTimeout" type="duration"  cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
+  <globalConfigValue>1200s</globalConfigValue>
+  <desc>Maximum allowable timeout (seconds) specified to NoOpRequest</desc>
+</attr>
+
+<attr id="1861" name="zimbraMailboxNoopMinTimeout" type="duration" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
+  <globalConfigValue>30s</globalConfigValue>
+  <desc>Minimum allowable timeout (seconds) specified to NoOpRequest</desc>
+</attr>
+
+<attr id="1862" name="zimbraIndexReIndexThreads" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="solr"  since="9.0">
+  <globalConfigValue>10</globalConfigValue>
+  <desc>Maximum number of threads for re-index. Re-index threads are not pooled.</desc>
+</attr>
+
+<attr id="1863" name="zimbraMailboxVolumeRelativePath" type="boolean" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
+  <globalConfigValue>FALSE</globalConfigValue>
+  <desc>Whether volume paths are relative or absolute.</desc>
+</attr>
+
+<attr id="1864" name="zimbraMailboxRightsDelegatedAdminSupported" type="boolean" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
+  <globalConfigValue>TRUE</globalConfigValue>
+  <desc>Whether delegated admin rights are supported or not</desc>
+</attr>
+
+<attr id="1865" name="zimbraMailboxSmtpHostRetryWait" type="duration" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
+  <globalConfigValue>60000ms</globalConfigValue>
+  <desc> Number of milliseconds to wait before retrying after a failed connection to an SMTP host</desc>
+</attr>
+
+<attr id="1866" name="zimbraMailboxSoapApiSlowLoggingEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
+  <globalConfigValue>FALSE</globalConfigValue>
+  <desc>Flag to enable logging of slow soap api calls.</desc>
+</attr>
+
+<attr id="1867" name="zimbraMailboxSoapApiSlowLoggingThreshold" type="duration" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
+  <globalConfigValue>5000ms</globalConfigValue>
+  <desc>Threshold time to determine slow soap api calls.make sure it's less than nginx's zimbraReverseProxyUpstreamPollingTimeout, which is now 3600 seconds</desc>
+</attr>
+
+<attr id="1868" name="zimbraMailboxSpamHandlerSpamReportQueueSize" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
+  <globalConfigValue>100</globalConfigValue>
+  <desc>For Junk/Not Junk Msg/ConvActionRequests this queue size limits the the server workqueue for processing the forwards.</desc>
+</attr>
+
+<attr id="1869" name="zimbraMailboxThreadPoolWarnPercent" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
+  <globalConfigValue>100</globalConfigValue>
+  <desc>Print warn logs when the specified percentage of threads are used out of total in tcpserver</desc>
+</attr>
+
+<attr id="1870" name="zimbraBlobStoreSweeperMaxAge" type="duration"  cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
+  <globalConfigValue>480m</globalConfigValue>
+  <desc>Files older than this many minutes are auto-deleted from store incoming directory. Default is 8 hours</desc>
+</attr>
+
+<attr id="1871" name="zimbraIndexTermsCacheSize" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="solr"  since="9.0">
+  <globalConfigValue>1024</globalConfigValue>
+  <desc>Minimum allowable timeout (seconds) specified to NoOpRequest</desc>
+</attr>
+
+<attr id="1872" name="zimbraMailboxWaitsetDefaultRequestTimeout" type="duration" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
+  <globalConfigValue>300s</globalConfigValue>
+  <desc>Default Timeout in seconds a non-admin WaitSetRequest will block.</desc>
+</attr>
+
+<attr id="1873" name="zimbraMailboxWaitsetInitialSleepTime" type="duration" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
+  <globalConfigValue>1000ms</globalConfigValue>
+  <desc>Initial timeout in milliseconds to wait before processing any WaitSetRequest.</desc>
+</attr>
+
+<attr id="1874" name="zimbraMailboxWaitsetMaxPerAccount" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
+  <globalConfigValue>5</globalConfigValue>
+  <desc> Maximum number of non-admin WaitSets a single account may have open.</desc>
+</attr>
+
+<attr id="1875" name="zimbraMailboxWaitsetMaxRequestTimeout" type="duration" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
+  <globalConfigValue>1200s</globalConfigValue>
+  <desc>Maximum Timeout in seconds a non-admin WaitSetRequest will block.</desc>
+</attr>
+
+<attr id="1876" name="zimbraMailboxWaitsetMinRequestTimeout" type="duration" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
+  <globalConfigValue>30s</globalConfigValue>
+  <desc>Minimum Timeout (seconds) a non-admin WaitSetRequest will block</desc>
+</attr>
+
+<attr id="1877" name="zimbraMailboxWaitsetNoDataSleepTime" type="duration" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
+  <globalConfigValue>3000ms</globalConfigValue>
+  <desc>Time in milliseconds to sleep handling a WaitSetRequest if there is no data after initial check</desc>
+</attr>
+
+<attr id="1878" name="zimbraMailboxPurgeInitialSleep" type="duration" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
+  <globalConfigValue>10ms</globalConfigValue>
+  <desc>Initial sleep time in millis  for mailbox purge thread</desc>
+</attr>
+
+<attr id="1879" name="zimbraMailboxRestResponseCacheControl" type="string" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
+  <globalConfigValue>no-store, no-cache</globalConfigValue>
+  <desc> Cache control value for the rest api response</desc>
+</attr>
+
+<attr id="1880" name="zimbraIndexDbFirstTermCutOffPercentage" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="solr"  since="9.0">
+  <globalConfigValue>80</globalConfigValue>
+  <desc> Zimbra index db first term cutoff percentage</desc>
+</attr>
+
+<attr id="1881" name="zimbraIndexDisableDatabaseHints" type="boolean" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="solr"  since="9.0">
+  <globalConfigValue>FALSE</globalConfigValue>
+  <desc>flag to enable and disable the database hints.</desc>
+</attr>
+
+<attr id="1882" name="zimbraIndexTaggedItemCountJoinQueryCutoff" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="solr"  since="9.0">
+  <globalConfigValue>1000</globalConfigValue>
+  <desc> Tagged item count join query cut off </desc>
+</attr>
+
+<attr id="1883" name="zimbraMailboxMaxConcurrentHttpRequestsPerAccount" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
+  <globalConfigValue>10</globalConfigValue>
+  <desc> Maximum number of HTTP requests per account before ZimbraQoSFilter suspends further requests. Aligns with "Exceeded the max requests limit. Suspending..." warnings in mailbox.log..</desc>
+</attr>
+
+<attr id="1884" name="zimbraMailboxMaxConcurrentRequestsPerSession" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
+  <globalConfigValue>0</globalConfigValue>
+  <desc>max number of concurrent HTTP requests per HTTP session .0 means no limit. A change is in effect from new session.</desc>
+</attr>
+
+<attr id="1885" name="zimbraMailboxSmtpToLmtpEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
+  <globalConfigValue>FALSE</globalConfigValue>
+  <desc> Flag to enable smtptolmtp server</desc>
+</attr>
+
+<attr id="1886" name="zimbraMailboxSmtpToLmtpPort" type="port" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
+  <globalConfigValue>7024</globalConfigValue>
+  <desc>SmtptoLmtp port</desc>
+</attr>
+
+<attr id="1887" name="zimbraAuthProvider" type="string" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
+  <desc>An ordered comma-seperated list of auth providers</desc>
+</attr>
+
+<attr id="1888" name="zimbaAuthTokenCacheSize" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
+  <globalConfigValue>5000</globalConfigValue>
+  <desc>Size of the zimbra auth token cache size</desc>
+</attr>
+
+<attr id="1889" name="zimbraMailboxTombstoneMaxAge" type="duration" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
+  <globalConfigValue>8035200000</globalConfigValue>
+  <desc>Max age in millis used for purging the items in tombstone. Default is 3 months</desc>
+</attr>
+
+<attr id="1890" name="zimbraBlobStoreUncompressedCacheMinLifetime" type="duration" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
+  <globalConfigValue>60000ms</globalConfigValue>
+  <desc>Minimum TTL in millis for uncompressed file cache used by File blob store</desc>
+</attr>
+
+<attr id="1991" name="zimbraMailboxArchiveFormatterDisableTimeout" type="boolean"  cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
+  <globalConfigValue>TRUE</globalConfigValue>
+  <desc>Disable timeout for archive formatter.Introduced in bug 56458. This is a workaround for an issue in Jetty 6.1.22.zc6m when we upgrade we should re-evaluate/remove these settings and the code that uses them. </desc>
+</attr>
+
+<attr id="1992" name="zimbraMailboxCsvFormatterDisableTimeout" type="boolean" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
+  <globalConfigValue>TRUE</globalConfigValue>
+  <desc>Disable timeout for csv formatter. Introduced in bug 56458. This is a workaround for an issue in Jetty 6.1.22.zc6m when we upgrade we should re-evaluate/remove these settings and the code that uses them. </desc>
+</attr>
+
+<attr id="1993" name="zimbraMailboxArchiveFormatterSearchChunkSize" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
+  <globalConfigValue>4096</globalConfigValue>
+  <desc>Archive formatter search chunk size in bytes</desc>
+</attr>
+
+<attr id="1894" name="zimbraMimeOverrideDefaultTransferEncodingToBase64" type="boolean" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
+  <globalConfigValue>TRUE</globalConfigValue>
+  <desc>If true, always encode text attachments as base64</desc>
+</attr>
+
+<attr id="1895" name="zimbraBlobStoreInputStreamBufferSize" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
+  <globalConfigValue>1</globalConfigValue>
+  <desc>Blob store input stream buffer size in kilobytes</desc>
+</attr>
+
+<attr id="1896" name="zimbraMailboxDAVConnectionMaxIdleTime" type="duration" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
+  <globalConfigValue>0ms</globalConfigValue>
+  <desc>The max idle time for an HTTP DAV Method in milliseconds. Timeout 0 implies an infinite timeout If not setting to 0, suggest at least 600000, 10 minutes. Introduced in bug 79865</desc>
+</attr>
+
+<attr id="1897" name="zimbraMimeConverterMaxMimepartDepth" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
+  <globalConfigValue>100</globalConfigValue>
+  <desc>Recursive MIME part depth beneath which converters will not act</desc>
+</attr>
+
+<attr id="1898" name="zimbraMimeConverterEnabledTnef" type="boolean"  cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
+  <globalConfigValue>TRUE</globalConfigValue>
+  <desc>Whether the TNEF decoder is run when parsing messages from the store</desc>
+</attr>
+
+<attr id="1899" name="zimbraMimeConverterEnableUuencode" type="boolean" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service"  since="9.0">
+  <globalConfigValue>TRUE</globalConfigValue>
+  <desc>Whether the UUENCODE decoder is run when parsing messages from the store</desc>
+</attr>
+
+</attrs>

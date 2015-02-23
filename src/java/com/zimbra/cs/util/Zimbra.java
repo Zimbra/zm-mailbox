@@ -350,9 +350,10 @@ public final class Zimbra {
                 AutoProvisionThread.switchAutoProvThreadIfNecessary();
             }
 
-            if (LC.smtp_to_lmtp_enabled.booleanValue()) {
-                int smtpPort = LC.smtp_to_lmtp_port.intValue();
-                int lmtpPort = Provisioning.getInstance().getLocalServer().getLmtpBindPort();
+            ZimbraLog.misc.info("SmtpToLmtpEnabled : " + prov.getLocalServer().isMailboxSmtpToLmtpEnabled());
+            if (prov.getLocalServer().isMailboxSmtpToLmtpEnabled()) {
+                int smtpPort = prov.getLocalServer().getMailboxSmtpToLmtpPort();
+                int lmtpPort = prov.getLocalServer().getLmtpBindPort();
                 SmtpToLmtp smtpServer = SmtpToLmtp.startup(smtpPort, "localhost", lmtpPort);
                 smtpServer.setRecipientValidator(new SmtpRecipientValidator());
             }
@@ -524,15 +525,15 @@ public final class Zimbra {
         //DbSessions Cleanup
         DbConnection conn = null;
         try {
-        	if (isAlwaysOn()) {
-        		conn = DbPool.getConnection();
-        		DbSession.deleteSessions(conn,
-        				Provisioning.getInstance().getLocalServer().getId());
-        		conn.commit();
-        	}
+            if (isAlwaysOn()) {
+                conn = DbPool.getConnection();
+                DbSession.deleteSessions(conn,
+                        Provisioning.getInstance().getLocalServer().getId());
+                conn.commit();
+            }
         } finally {
-        	if (conn != null)
-        		conn.closeQuietly();
+            if (conn != null)
+                conn.closeQuietly();
         }
     }
 }

@@ -32,10 +32,12 @@ import org.dom4j.io.XMLWriter;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.DavProtocol;
 import com.zimbra.cs.servlet.util.JettyUtil;
+import com.zimbra.cs.util.ProvisioningUtil;
 
 /**
  * Base class for DAV methods.
@@ -136,7 +138,7 @@ public abstract class DavMethod {
      */
     protected void disableJettyTimeout(DavContext context) throws IOException {
         // millisecond value.  0 or negative means infinite.
-        long maxIdleTime = LC.zimbra_dav_max_idle_time_ms.intValue();
+        long maxIdleTime = ProvisioningUtil.getTimeIntervalServerAttribute(Provisioning.A_zimbraMailboxDAVConnectionMaxIdleTime, 0L);
         JettyUtil.setIdleTimeout(maxIdleTime, context.getRequest());
     }
 

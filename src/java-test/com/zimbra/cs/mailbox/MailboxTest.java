@@ -55,6 +55,7 @@ import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.PendingModifications.ModificationKey;
 import com.zimbra.cs.store.MockStoreManager;
 import com.zimbra.cs.store.StoreManager;
+import com.zimbra.cs.util.ProvisioningUtil;
 
 /**
  * Unit test for {@link Mailbox}.
@@ -173,11 +174,11 @@ public final class MailboxTest {
         mbox.addMessage(null,
                 new ParsedMessage("From: test4-1@sub4.zimbra.com".getBytes(),
                         false), dopt, null);
-        String defaultLimit = LC.zimbra_terms_cachesize.value();
-        LC.zimbra_terms_cachesize.setDefault("5");
+        int defaultLimit = ProvisioningUtil.getServerAttribute(Provisioning.A_zimbraIndexTermsCacheSize, 1024);
+        Provisioning.getInstance().getLocalServer().setIndexTermsCacheSize(5);
         List<BrowseTerm> terms = mbox.browse(null, Mailbox.BrowseBy.domains,
                 null, 100);
-        LC.zimbra_terms_cachesize.setDefault(defaultLimit);
+        Provisioning.getInstance().getLocalServer().setIndexTermsCacheSize(defaultLimit);
         if(terms.size() != 4) {
             //we've got some garbage in indexed terms, lets print it out for investigation
            for(BrowseTerm term : terms) {
@@ -199,8 +200,9 @@ public final class MailboxTest {
     public void browseOverLimit() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(
                 MockProvisioning.DEFAULT_ACCOUNT_ID);
-        int numDomains = LC.zimbra_terms_cachesize.intValue()
-                + LC.zimbra_terms_cachesize.intValue() / 3;
+        int indexTermsCacheSize = Provisioning.getInstance().getLocalServer().getIndexTermsCacheSize();
+		int numDomains = indexTermsCacheSize
+                + indexTermsCacheSize / 3;
         DeliveryOptions dopt = new DeliveryOptions()
                 .setFolderId(Mailbox.ID_FOLDER_INBOX);
         for (int i = 0; i < numDomains; i++) {
@@ -345,7 +347,7 @@ public final class MailboxTest {
                 .getTombstones(changeId2).contains(msgId));
 
         // purge the account and all its tombstones
-        LC.tombstone_max_age_ms.setDefault(0);
+        Provisioning.getInstance().getLocalServer().setMailboxTombstoneMaxAge("0ms");
         mbox.purgeMessages(null);
         try {
             mbox.getTombstones(changeId2);

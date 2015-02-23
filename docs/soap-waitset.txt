@@ -118,11 +118,10 @@ they know something about the particular underlying network.  The
 server may or may not honor this request (depending on server
 configured max/min values).  The server will allow a wider range of
 requested timeouts from admin auth tokens. 
-See LocalConfig values:
-zimbra_waitset_default_request_timeout,
-zimbra_waitset_min_request_timeout, 
-zimbra_waitset_max_request_timeout,
 See ServerConfig values:
+zimbraMailboxWaitsetDefaultRequestTimeout,
+zimbraMailboxWaitsetMinRequestTimeout, 
+zimbraMailboxWaitsetMaxRequestTimeout,
 zimbraAdminWaitsetDefaultRequestTimeout,
 zimbraAdminWaitsetMaxRequestTimeout, and
 zimbraAdminWaitsetMinRequestTimeout

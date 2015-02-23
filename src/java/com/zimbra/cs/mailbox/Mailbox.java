@@ -5646,8 +5646,8 @@ public class Mailbox {
             ParsedMessage pm = null;
 
             Rfc822ValidationInputStream validator = null;
-            if (LC.zimbra_lmtp_validate_messages.booleanValue()) {
-                validator = new Rfc822ValidationInputStream(cs, LC.zimbra_lmtp_max_line_length.longValue());
+            if (ProvisioningUtil.getServerAttribute(Provisioning.A_zimbraLmtpValidateMessages, true)) {
+                validator = new Rfc822ValidationInputStream(cs, ProvisioningUtil.getServerAttribute(Provisioning.A_zimbraLmtpMaxLineLength, 10240));
                 in = validator;
             }
 
@@ -8555,8 +8555,8 @@ public class Mailbox {
             }
 
             if (isTrackingSync()) {
-                long tombstoneTimeoutSecs = LC.tombstone_max_age_ms.longValue();
-                int largestTrimmed = DbMailItem.purgeTombstones(this, getOperationTimestampMillis() - tombstoneTimeoutSecs);
+                long tombstoneTimeoutMillis =  ProvisioningUtil.getTimeIntervalServerAttribute(Provisioning.A_zimbraMailboxTombstoneMaxAge, 8035200000L);
+                int largestTrimmed = DbMailItem.purgeTombstones(this, getOperationTimestampMillis() - tombstoneTimeoutMillis);
                 if (largestTrimmed > getSyncCutoff()) {
                     currentChange().sync = largestTrimmed;
                     DbMailbox.setSyncCutoff(this, currentChange().sync);

@@ -36,6 +36,8 @@ import javax.servlet.http.HttpSessionBindingListener;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.RemoteIP;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.util.ProvisioningUtil;
 
 /**
  * This Servlet {@link Filter} limits the number of concurrent HTTP requests per
@@ -67,7 +69,7 @@ public final class ThrottlingFilter implements Filter {
         HttpServletResponse hresp = (HttpServletResponse) resp;
         HttpSession session = hreq.getSession(false);
         // always get the latest value from LC
-        int max = LC.servlet_max_concurrent_requests_per_session.intValue();
+        int max = ProvisioningUtil.getServerAttribute(Provisioning.A_zimbraMailboxMaxConcurrentRequestsPerSession, 0);
         if (session == null || max <= 0) {
             // don't throttle if no session or disabled
             chain.doFilter(req, resp);

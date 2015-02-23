@@ -72,21 +72,30 @@ public class WaitSetRequest extends MailDocumentHandler {
     private static final long NODATA_SLEEP_TIME_MILLIS;
 
     static {
-    	DEFAULT_TIMEOUT = LC.zimbra_waitset_default_request_timeout.longValueWithinRange(1, Constants.SECONDS_PER_DAY);
-        MIN_TIMEOUT = LC.zimbra_waitset_min_request_timeout.longValueWithinRange(1, Constants.SECONDS_PER_DAY);
-        MAX_TIMEOUT = LC.zimbra_waitset_max_request_timeout.longValueWithinRange(1, Constants.SECONDS_PER_DAY);
+        DEFAULT_TIMEOUT = RangeUtil.longValueWithinRange(
+                ProvisioningUtil.getTimeIntervalServerAttribute(Provisioning.A_zimbraMailboxWaitsetDefaultRequestTimeout, 300*Constants.MILLIS_PER_SECOND),
+                Constants.MILLIS_PER_SECOND, Constants.MILLIS_PER_DAY)/1000;
+        MIN_TIMEOUT = RangeUtil.longValueWithinRange(
+                ProvisioningUtil.getTimeIntervalServerAttribute(Provisioning.A_zimbraMailboxWaitsetMinRequestTimeout, 30*Constants.MILLIS_PER_SECOND),
+                Constants.MILLIS_PER_SECOND, Constants.MILLIS_PER_DAY)/1000;
+        MAX_TIMEOUT = RangeUtil.longValueWithinRange(
+                ProvisioningUtil.getTimeIntervalServerAttribute(Provisioning.A_zimbraMailboxWaitsetMaxRequestTimeout, 1200*Constants.MILLIS_PER_SECOND),
+                Constants.MILLIS_PER_SECOND, Constants.MILLIS_PER_DAY)/1000;
         DEFAULT_ADMIN_TIMEOUT = RangeUtil.longValueWithinRange(
-                ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraAdminWaitsetDefaultRequestTimeout, 3000),
-                1, Constants.SECONDS_PER_DAY);
+                ProvisioningUtil.getTimeIntervalServerAttribute(ZAttrProvisioning.A_zimbraAdminWaitsetDefaultRequestTimeout, 300*Constants.MILLIS_PER_SECOND),
+                Constants.MILLIS_PER_SECOND, Constants.MILLIS_PER_DAY)/1000;
         MIN_ADMIN_TIMEOUT = RangeUtil.longValueWithinRange(
-                ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraAdminWaitsetMinRequestTimeout, 0), 1,
-                Constants.SECONDS_PER_DAY);
+                ProvisioningUtil.getTimeIntervalServerAttribute(ZAttrProvisioning.A_zimbraAdminWaitsetMinRequestTimeout, 0L),
+                Constants.MILLIS_PER_SECOND, Constants.MILLIS_PER_DAY)/1000;
         MAX_ADMIN_TIMEOUT = RangeUtil.longValueWithinRange(
-                ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraAdminWaitsetMaxRequestTimeout, 3600), 1,
-                Constants.SECONDS_PER_DAY);
-
-        INITIAL_SLEEP_TIME_MILLIS = LC.zimbra_waitset_initial_sleep_time.longValueWithinRange(1, 5 * Constants.SECONDS_PER_MINUTE * 1000);
-        NODATA_SLEEP_TIME_MILLIS = LC.zimbra_waitset_nodata_sleep_time.longValueWithinRange(1, 5 * Constants.SECONDS_PER_MINUTE * 1000);
+                ProvisioningUtil.getTimeIntervalServerAttribute(ZAttrProvisioning.A_zimbraAdminWaitsetMaxRequestTimeout, 3600*Constants.MILLIS_PER_SECOND),
+                Constants.MILLIS_PER_SECOND, Constants.MILLIS_PER_DAY)/1000;
+        INITIAL_SLEEP_TIME_MILLIS = RangeUtil.longValueWithinRange(
+                ProvisioningUtil.getTimeIntervalServerAttribute(ZAttrProvisioning.A_zimbraMailboxWaitsetInitialSleepTime, Constants.MILLIS_PER_SECOND),
+                1, 5 * Constants.SECONDS_PER_MINUTE * 1000)/1000;
+        NODATA_SLEEP_TIME_MILLIS = RangeUtil.longValueWithinRange(
+                ProvisioningUtil.getTimeIntervalServerAttribute(ZAttrProvisioning.A_zimbraMailboxWaitsetNoDataSleepTime, 3*Constants.MILLIS_PER_SECOND),
+                1, 5 * Constants.SECONDS_PER_MINUTE * 1000)/1000;
     }
 
     public static long getTimeoutMillis(Element request, boolean isAdminRequest) throws ServiceException {

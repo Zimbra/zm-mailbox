@@ -38,6 +38,7 @@ import com.zimbra.cs.gal.GalSearchControl;
 import com.zimbra.cs.gal.GalSearchParams;
 import com.zimbra.cs.gal.GalSearchResultCallback;
 import com.zimbra.cs.servlet.util.JettyUtil;
+import com.zimbra.cs.util.ProvisioningUtil;
 import com.zimbra.soap.SoapServlet;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.type.GalSearchType;
@@ -167,7 +168,7 @@ public class SyncGal extends GalDocumentHandler {
      * in this case.
      */
     private void disableJettyTimeout(Map<String, Object> context) {
-        if (LC.zimbra_gal_sync_disable_timeout.booleanValue()) {
+        if (ProvisioningUtil.getServerAttribute(Provisioning.A_zimbraGalSyncConnectionDisableTimeout, true)) {
             Object request = context.get(SoapServlet.SERVLET_REQUEST);
             if (request instanceof HttpServletRequest) {
                 JettyUtil.setIdleTimeout(0, (HttpServletRequest) request);

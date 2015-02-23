@@ -36,6 +36,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.util.ProvisioningUtil;
 
 /**
  * Base class for TCP servers using thread per connection model.
@@ -245,7 +246,7 @@ public abstract class TcpServer implements Runnable, Server {
 
     private void warnIfNecessary() {
         if (log.isWarnEnabled()) {
-            int warnPercent = LC.thread_pool_warn_percent.intValue();
+            int warnPercent = ProvisioningUtil.getServerAttribute(Provisioning.A_zimbraMailboxThreadPoolWarnPercent, 100);
             // Add 1 because the thread for this connection is not active yet.
             int active = pooledExecutor.getActiveCount() + 1;
             int max = pooledExecutor.getMaximumPoolSize();

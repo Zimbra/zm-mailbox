@@ -28,6 +28,8 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.MimePart.InputStreamSource;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.util.ProvisioningUtil;
 
 public class BlobInputStream extends InputStream
 implements SharedInputStream, InputStreamSource {
@@ -75,7 +77,7 @@ implements SharedInputStream, InputStreamSource {
 
     private BlobInputStream mRoot;
 
-    private static int BUFFER_SIZE = Math.max(LC.zimbra_blob_input_stream_buffer_size_kb.intValue(), 1) * 1024;
+    private static int BUFFER_SIZE = Math.max(ProvisioningUtil.getServerAttribute(Provisioning.A_zimbraBlobStoreInputStreamBufferSize, 1), 1) * 1024;
 
     /**
      * Read buffer.

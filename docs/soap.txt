@@ -3003,9 +3003,9 @@ the server right now, and the client should stop attempting them.
 The client may specifiy a custom timeout-length for their request if
 they know something about the particular underlying network.  The
 server may or may not honor this request (depending on server
-configured max/min values: see LocalConfig variables
-zimbra_noop_default_timeout, zimbra_noop_min_timeout and
-zimbra_noop_max_timeout)
+configured max/min values: see Server attributes
+zimbraMailboxNoopDefaultTimeout, zimbraMailboxNoopMinTimeout and
+zimbraMailboxNoopMaxTimeout)
 
 -----------------------
 

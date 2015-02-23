@@ -36,6 +36,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ListUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.imap.ImapMessage;
 import com.zimbra.cs.index.DbSearchConstraints;
@@ -46,6 +47,7 @@ import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Tag;
+import com.zimbra.cs.util.ProvisioningUtil;
 
 /**
  * Search related DAO.
@@ -216,7 +218,7 @@ public final class DbSearch {
     }
 
     private String getForceIndexClause(DbSearchConstraints node, SortBy sort, boolean hasLimit) {
-        if (LC.search_disable_database_hints.booleanValue()) {
+        if (ProvisioningUtil.getServerAttribute(Provisioning.A_zimbraIndexDisableDatabaseHints, false)) {
             return NO_HINT;
         }
         if (!Db.supports(Db.Capability.FORCE_INDEX_EVEN_IF_NO_SORT) && sort.getKey() == SortBy.Key.NONE) {
@@ -748,7 +750,7 @@ public final class DbSearch {
                         count = tag.getSize(); //user tag
                     }
 
-                    if (count < LC.search_tagged_item_count_join_query_cutoff.intValue())
+                    if (count < Provisioning.getInstance().getLocalServer().getIndexTaggedItemCountJoinQueryCutoff())
                         joinTaggedItem = true;
                 }
             }

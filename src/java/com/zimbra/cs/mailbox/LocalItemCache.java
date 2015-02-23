@@ -6,11 +6,13 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.util.ProvisioningUtil;
 
 public class LocalItemCache {
-    static final int MAX_ITEM_CACHE_WITH_LISTENERS = LC.zimbra_mailbox_active_cache.intValue();
-    static final int MAX_ITEM_CACHE_WITHOUT_LISTENERS = LC.zimbra_mailbox_inactive_cache.intValue();
-    static final int MAX_ITEM_CACHE_FOR_GALSYNC_MAILBOX = LC.zimbra_mailbox_galsync_cache.intValue();
+    static final int MAX_ITEM_CACHE_WITH_LISTENERS = ProvisioningUtil.getServerAttribute(Provisioning.A_zimbraMailboxMailItemActiveCache, 500);
+    static final int MAX_ITEM_CACHE_WITHOUT_LISTENERS = ProvisioningUtil.getServerAttribute(Provisioning.A_zimbraMailboxMailItemInactiveCache, 30);
+    static final int MAX_ITEM_CACHE_FOR_GALSYNC_MAILBOX = ProvisioningUtil.getServerAttribute(Provisioning.A_zimbraGalSyncMailboxMailItemCache, 10000);
     private final Map<Integer, MailItem> itemsById;
     private final Map<String, Integer> idsByUuid;
 

@@ -26,6 +26,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.cs.account.soap.SoapProvisioning;
+import com.zimbra.cs.util.ProvisioningUtil;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.soap.admin.message.RefreshRegisteredAuthTokensRequest;
 
@@ -47,7 +48,7 @@ public final class AuthTokenRegistry {
      * @param token
      */
     final public static void addTokenToQueue(ZimbraAuthToken token) {
-        while(deregisteredOutAuthTokens.size() > LC.zimbra_deregistered_authtoken_queue_size.intValue() && !deregisteredOutAuthTokens.isEmpty()) {
+        while(deregisteredOutAuthTokens.size() > ProvisioningUtil.getServerAttribute(Provisioning.A_zimbraAuthDeregisteredAuthTokenQueueSize, 5000) && !deregisteredOutAuthTokens.isEmpty()) {
             //throw out oldest tokens to make space
             deregisteredOutAuthTokens.remove();
         }

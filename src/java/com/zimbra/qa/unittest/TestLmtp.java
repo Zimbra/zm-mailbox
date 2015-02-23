@@ -569,7 +569,7 @@ extends TestCase {
     public void testValidation()
     throws Exception {
         StringBuilder buf = new StringBuilder();
-        for (int i = 0; i <= LC.zimbra_lmtp_max_line_length.longValue(); i++) {
+        for (int i = 0; i <= ProvisioningUtil.getServerAttribute(Provisioning.A_zimbraLmtpMaxLineLength, 10240); i++) {
             buf.append('x');
         }
         assertFalse(TestUtil.addMessageLmtp(new String[] { USER_NAME }, USER_NAME, buf.toString()));

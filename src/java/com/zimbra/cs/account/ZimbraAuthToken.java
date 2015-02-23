@@ -47,6 +47,7 @@ import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.MapUtil;
 import com.zimbra.common.util.ZimbraCookie;
 import com.zimbra.cs.account.auth.AuthMechanism.AuthMech;
+import com.zimbra.cs.util.ProvisioningUtil;
 
 /**
  * @since May 30, 2004
@@ -73,7 +74,7 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
     //mailbox server version where this account resides
     private static final String C_SERVER_VERSION = "version";
     private static final String C_CSRF = "csrf";
-    private static final Map<String, ZimbraAuthToken> CACHE = MapUtil.newLruMap(LC.zimbra_authtoken_cache_size.intValue());
+    private static final Map<String, ZimbraAuthToken> CACHE = MapUtil.newLruMap(ProvisioningUtil.getServerAttribute(Provisioning.A_zimbaAuthTokenCacheSize, 5000));
     private static final Log LOG = LogFactory.getLog(AuthToken.class);
 
     private String accountId;

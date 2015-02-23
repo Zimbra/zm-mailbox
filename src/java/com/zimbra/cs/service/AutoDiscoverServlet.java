@@ -101,14 +101,14 @@ public class AutoDiscoverServlet extends ZimbraServlet {
         String serviceUrl = "";
 
         if (!isEwsClient(client)) {
-	        if (Provisioning.getInstance().getLocalServer().isActiveSyncAutoDiscoverUseServiceUrl()) {
+	        if (prov.getLocalServer().isActiveSyncAutoDiscoverUseServiceUrl()) {
 	            serviceUrl = URLUtil.getServiceURL(server, AutoDiscoverServlet.MS_ACTIVESYNC_PATH, true);
 	        } else {
 	            serviceUrl = URLUtil.getPublicURLForDomain(server, domain, AutoDiscoverServlet.MS_ACTIVESYNC_PATH, true);
 	        }
         } else {
 
-            if (LC.zimbra_ews_autodiscover_use_service_url.booleanValue()) {
+            if (prov.getLocalServer().isEwsAutoDiscoverUseServiceUrl()) {
                 serviceUrl = URLUtil.getServiceURL(server, AutoDiscoverServlet.EWS_SERVICE_PATH, true);
             } else {
                 serviceUrl = URLUtil.getPublicURLForDomain(server, domain, AutoDiscoverServlet.EWS_SERVICE_PATH, true);

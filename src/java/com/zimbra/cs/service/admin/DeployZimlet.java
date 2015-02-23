@@ -37,6 +37,7 @@ import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.service.FileUploadServlet.Upload;
+import com.zimbra.cs.util.ProvisioningUtil;
 import com.zimbra.cs.util.WebClientServiceUtil;
 import com.zimbra.cs.zimlet.ZimletFile;
 import com.zimbra.cs.zimlet.ZimletUtil;
@@ -157,7 +158,7 @@ public class DeployZimlet extends AdminDocumentHandler {
         t.start();
         if (!synchronous) {
             try {
-                t.join(TimeUnit.MILLISECONDS.convert(LC.zimlet_deploy_timeout.intValue(), TimeUnit.SECONDS));
+                t.join(ProvisioningUtil.getTimeIntervalServerAttribute("zimbraZimletDeployTimeout", 10*1000L));
             } catch (InterruptedException e) {
                 ZimbraLog.zimlet.warn("error while deploying Zimlet", e);
             }
@@ -214,7 +215,7 @@ public class DeployZimlet extends AdminDocumentHandler {
                 }
             }
             try {
-                latch.await(LC.zimlet_deploy_timeout.intValue() * servers.size(), TimeUnit.SECONDS);
+                latch.await(ProvisioningUtil.getTimeIntervalServerAttribute("zimbraZimletDeployTimeout", 10*1000L), TimeUnit.MILLISECONDS);
             } catch (InterruptedException e) {
                 ZimbraLog.zimlet.warn("CountDownLatch failed %d", latch.getCount(), e);
             }

@@ -68,6 +68,7 @@ import com.zimbra.cs.session.SoapSession;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.BuildInfo;
+import com.zimbra.cs.util.ProvisioningUtil;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.soap.ZimbraSoapContext.SessionInfo;
 
@@ -570,7 +571,7 @@ public class SoapEngine {
                 response = handler.handle(request, context);
                 ZimbraPerf.SOAP_TRACKER.addStat(getStatName(request), startTime);
                 long duration = System.currentTimeMillis() - startTime;
-                if (LC.zimbra_slow_logging_enabled.booleanValue() && duration > LC.zimbra_slow_logging_threshold.longValue() &&
+                if (ProvisioningUtil.getServerAttribute(Provisioning.A_zimbraMailboxSoapApiSlowLoggingEnabled, false) && duration > ProvisioningUtil.getTimeIntervalServerAttribute(Provisioning.A_zimbraMailboxSoapApiSlowLoggingThreshold, 5000L)&&
                         !request.getQName().getName().equals(MailConstants.SYNC_REQUEST.getName())) {
                     ZimbraLog.soap.warn("Slow SOAP request (start=" + startTime + "):\n" + request.prettyPrint(true));
                     ZimbraLog.soap.warn("Slow SOAP response (time=" + duration + "):\n" + response.prettyPrint());

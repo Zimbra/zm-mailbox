@@ -62,7 +62,7 @@ public class SaveDraftTest {
     }
 
     // string lengths should be greater than both MessageCache.MESSAGE_CACHE_DISK_STREAMING_THRESHOLD
-    //   and LC.zimbra_blob_input_stream_buffer_size_kb * 1024
+    //   and SERVER.zimbraBlobStoreInputStreamBufferSize * 1024
     static final String ORIGINAL_CONTENT = nCopiesOf('a', 8192);
     static final String MODIFIED_CONTENT = nCopiesOf('b', 8192);
 

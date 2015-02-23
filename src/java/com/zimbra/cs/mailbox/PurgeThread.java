@@ -22,13 +22,14 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.account.ZAttrProvisioning;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.util.Config;
+import com.zimbra.cs.util.ProvisioningUtil;
 import com.zimbra.cs.util.Zimbra;
 
 /**
@@ -117,7 +118,7 @@ extends Thread {
     @Override public void run() {
         // Sleep before doing work, to give the server time to warm up.  Also limits the amount
         // of random effect when determining the next mailbox id.
-        long sleepTime = LC.purge_initial_sleep_ms.longValue();
+        long sleepTime = ProvisioningUtil.getTimeIntervalServerAttribute(ZAttrProvisioning.A_zimbraMailboxPurgeInitialSleep, 10L);
         ZimbraLog.purge.info("Purge thread sleeping for %dms before doing work.", sleepTime);
 
         try {

@@ -25,9 +25,9 @@ import java.util.Set;
 import java.util.TimerTask;
 
 import com.zimbra.common.account.Key;
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Pair;
+import com.zimbra.common.util.RangeUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
@@ -39,6 +39,7 @@ import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.service.admin.AdminDocumentHandler;
 import com.zimbra.soap.ZimbraSoapContext;
+import com.zimbra.cs.util.ProvisioningUtil;
 import com.zimbra.cs.util.Zimbra;
 
 /**
@@ -47,7 +48,9 @@ import com.zimbra.cs.util.Zimbra;
 public class WaitSetMgr {
     public static final String ALL_ACCOUNTS_ID_PREFIX = "AllWaitSet-";
 
-    private static final int MAX_WAITSETS_PER_NONADMIN_ACCOUNT = LC.zimbra_waitset_max_per_account.intValueWithinRange(1,Integer.MAX_VALUE);
+    private static final int MAX_WAITSETS_PER_NONADMIN_ACCOUNT = RangeUtil.intValueWithinRange(
+            ProvisioningUtil.getServerAttribute(Provisioning.A_zimbraMailboxWaitsetMaxPerAccount, 5),
+            1,Integer.MAX_VALUE);
     private static final TimerTask sSweeper = new TimerTask() {
         @Override
         public void run() {

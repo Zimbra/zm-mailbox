@@ -90,6 +90,7 @@ import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.servlet.util.AuthUtil;
 import com.zimbra.cs.servlet.util.CsrfUtil;
 import com.zimbra.cs.util.AccountUtil;
+import com.zimbra.cs.util.ProvisioningUtil;
 
 /**
  *
@@ -518,8 +519,7 @@ public class UserServlet extends ZimbraServlet {
         // authentication, call the formatter and let it deal with preventing harvest attacks.
         if (mbox == null && context.formatter.requiresAuth())
             throw ServiceException.PERM_DENIED(L10nUtil.getMessage(MsgKey.errPermissionDenied, req));
-
-        String cacheControlValue = LC.rest_response_cache_control_value.value();
+        String cacheControlValue = ProvisioningUtil.getServerAttribute(Provisioning.A_zimbraMailboxRestResponseCacheControl, "no-store, no-cache");
         if (!StringUtil.isNullOrEmpty(cacheControlValue)) {
             resp.addHeader("Cache-Control", cacheControlValue);
         }

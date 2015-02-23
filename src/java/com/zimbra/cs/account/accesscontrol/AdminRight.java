@@ -18,6 +18,7 @@ package com.zimbra.cs.account.accesscontrol;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.generated.AdminRights;
 
 public abstract class AdminRight extends Right {
@@ -33,31 +34,28 @@ public abstract class AdminRight extends Right {
     // permission checking code.
     public static AdminRight PR_ALWAYS_ALLOW;
     public static AdminRight PR_SYSTEM_ADMIN_ONLY;
-    
+
     // pseudo right for collecting effective admin preset right grants
     public static AdminRight PR_ADMIN_PRESET_RIGHT;
-    
     static void init(RightManager rm) throws ServiceException {
-        
         PR_GET_ATTRS = (AttrRight)newAdminSystemRight("PSEUDO_GET_ATTRS", RightType.getAttrs);
         PR_SET_ATTRS = (AttrRight)newAdminSystemRight("PSEUDO_SET_ATTRS", RightType.setAttrs);
-        
         PR_ALWAYS_ALLOW = newAdminSystemRight("PSEUDO_ALWAYS_ALLOW", RightType.preset);
         PR_SYSTEM_ADMIN_ONLY = newAdminSystemRight("PSEUDO_SYSTEM_ADMIN_ONLY", RightType.preset);
         PR_ADMIN_PRESET_RIGHT = newAdminSystemRight("PSEUDO_ADMIN_PRESET_RIGHT", RightType.preset);
-        
-        if (LC.zimbra_rights_delegated_admin_supported.booleanValue())
+
+        if (Provisioning.getInstance().getLocalServer().isMailboxRightsDelegatedAdminSupported())
             AdminRights.init(rm);
     }
-    
+
     protected AdminRight(String name, RightType rightType) {
         super(name, rightType);
     }
-    
+
     static AdminRight newAdminSystemRight(String name, RightType rightType) throws ServiceException {
         return newAdminRight(name, rightType);
     }
-    
+
     private static AdminRight newAdminRight(String name, RightType rightType) throws ServiceException {
         if (rightType == RightType.getAttrs || rightType == RightType.setAttrs)
             return new AttrRight(name, rightType);

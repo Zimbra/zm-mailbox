@@ -25,6 +25,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.store.IncomingDirectory;
+import com.zimbra.cs.util.ProvisioningUtil;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.soap.admin.type.VolumeInfo;
 
@@ -90,10 +91,10 @@ public final class Volume {
             
             //to handle pre-9.0 serialized metadata
             if(this.lastSyncDate > 0 && this.lastSyncDate < Integer.MAX_VALUE) {
-            	this.lastSyncDate = this.lastSyncDate*1000;
+                this.lastSyncDate = this.lastSyncDate*1000;
             }
             if(this.currentSyncDate > 0 && this.currentSyncDate < Integer.MAX_VALUE) {
-            	this.currentSyncDate = this.currentSyncDate*1000;
+                this.currentSyncDate = this.currentSyncDate*1000;
             }
         }
         
@@ -328,30 +329,29 @@ public final class Volume {
     }
 
     public static String getAbsolutePath(String path) throws ServiceException {
-        //return LC.zimbra_relative_volume_path.booleanValue() ? LC.zimbra_home.value() + File.separator + getConfiguredRootPath(path) : path;
-    	return LC.zimbra_relative_volume_path.booleanValue() ? LC.zimbra_home.value() + File.separator + path : path;
+        return Provisioning.getInstance().getLocalServer().isMailboxVolumeRelativePath() ? LC.zimbra_home.value() + File.separator + path : path;
     }
-    
+
     public static String getConfiguredServerID() throws ServiceException
     {
         StringBuilder finalPath = new StringBuilder();
         if (Zimbra.isAlwaysOn())
         {
-        	String alwaysOnServerClusterId = Zimbra.getAlwaysOnClusterId();
-        	String localServerId = Provisioning.getInstance().getLocalServer().getId();
-        	if (alwaysOnServerClusterId != null)
-        	{
-        		finalPath.append(alwaysOnServerClusterId);
-        	}
-        	else
-        	{
-        		finalPath.append(localServerId);
-        	}
+            String alwaysOnServerClusterId = Zimbra.getAlwaysOnClusterId();
+            String localServerId = Provisioning.getInstance().getLocalServer().getId();
+            if (alwaysOnServerClusterId != null)
+            {
+                finalPath.append(alwaysOnServerClusterId);
+            }
+            else
+            {
+                finalPath.append(localServerId);
+            }
         }
         else
         {
-        	String localServerId = Provisioning.getInstance().getLocalServer().getId();
-        	finalPath.append(localServerId);
+            String localServerId = Provisioning.getInstance().getLocalServer().getId();
+            finalPath.append(localServerId);
         }
         return finalPath.toString();
     }
@@ -363,7 +363,7 @@ public final class Volume {
         result.append(rootPath).append(File.separator);
 
         if (Provisioning.getInstance().getLocalServer().isConfiguredServerIDForBlobDirEnabled())
-        	result.append(getConfiguredServerID()).append(File.separator);
+            result.append(getConfiguredServerID()).append(File.separator);
 
         result.append(dir).append(File.separator).append(mboxId);
         
@@ -398,7 +398,7 @@ public final class Volume {
      */
     private String normalizePath(String path) throws VolumeServiceException {
         // skip normalization for relative path
-        if (LC.zimbra_relative_volume_path.booleanValue()) {
+        if (ProvisioningUtil.getServerAttribute(Provisioning.A_zimbraMailboxVolumeRelativePath, false)) {
             return path;
         }
         StringBuilder result = new StringBuilder();

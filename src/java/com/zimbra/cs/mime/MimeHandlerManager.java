@@ -35,6 +35,7 @@ import com.zimbra.cs.account.Server;
 import com.zimbra.cs.extension.ExtensionUtil;
 import com.zimbra.cs.mime.handler.NoOpMimeHandler;
 import com.zimbra.cs.mime.handler.UnknownTypeHandler;
+import com.zimbra.cs.util.ProvisioningUtil;
 
 
 public class MimeHandlerManager {
@@ -76,10 +77,9 @@ public class MimeHandlerManager {
     throws MimeHandlerException {
         sLog.debug("Getting MIME handler for type %s, filename '%s'", mimeType, filename);
 
-        if (!LC.zimbra_enable_text_extraction.booleanValue()) {
+        if (!ProvisioningUtil.getServerAttribute(Provisioning.A_zimbraMimeEnableTextExtraction, true)) {
             return new NoOpMimeHandler();
         }
-        
         MimeHandler handler = null;
         if (!StringUtil.isNullOrEmpty(mimeType)) {
             mimeType = Mime.getContentType(mimeType);
@@ -91,8 +91,6 @@ public class MimeHandlerManager {
             handlerInfo = loadHandler(mimeType, extension);
             sHandlers.put(getKey(mimeType, extension), handlerInfo);
         }
-
-
         handler = handlerInfo.getInstance();
         sLog.debug("Returning MIME handler: %s", handler.getClass().getName());
         return handler;

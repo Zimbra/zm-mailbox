@@ -268,7 +268,7 @@ public final class JMSession {
      * the key is used.  The value is ignored.
      */
     private static Map<String, Object> sBadSmtpHosts =
-        Collections.synchronizedMap(new TimeoutMap<String, Object>(LC.smtp_host_retry_millis.intValue()));
+        Collections.synchronizedMap(new TimeoutMap<String, Object>(ProvisioningUtil.getServerAttribute(Provisioning.A_zimbraMailboxSmtpHostRetryWait, 60000L)));
 
     public static void resetSmtpHosts() {
         ZimbraLog.smtp.debug("Resetting bad SMTP hosts.");
@@ -315,7 +315,7 @@ public final class JMSession {
     /**
      * Mark the given SMTP host as bad.  We will not attempt to
      * connect to this host for the
-     * interval specified by {@link LC#smtp_host_retry_millis}.
+     * interval specified by {@link Server#zimbraMailboxSmtpHostRetryWait}.
      *
      * @param hostName the SMTP server hostname
      */
@@ -324,7 +324,7 @@ public final class JMSession {
             return;
         }
         ZimbraLog.smtp.info(
-            "Disallowing connections to %s for %d milliseconds.", hostName, LC.smtp_host_retry_millis.intValue());
+            "Disallowing connections to %s for %d milliseconds.", hostName, ProvisioningUtil.getServerAttribute(Provisioning.A_zimbraMailboxSmtpHostRetryWait, 60000L));
         sBadSmtpHosts.put(hostName.toLowerCase(), null);
     }
 

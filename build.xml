@@ -950,10 +950,6 @@
             <!-- Enable SMTP to LMTP bridge for development. -->
             <java classname="com.zimbra.cs.localconfig.LocalConfigCLI" fork="true" classpathref="class.path" failonerror="true">
               <sysproperty key="zimbra.config" value="${dist.dir}/conf/localconfig.xml"/>
-              <arg line="-e smtp_to_lmtp_enabled=true"/>
-            </java>
-            <java classname="com.zimbra.cs.localconfig.LocalConfigCLI" fork="true" classpathref="class.path" failonerror="true">
-              <sysproperty key="zimbra.config" value="${dist.dir}/conf/localconfig.xml"/>
               <arg line="-e ldap_read_timeout=0"/>
             </java>
             <java classname="com.zimbra.cs.localconfig.LocalConfigCLI" fork="true" classpathref="class.path" failonerror="true">
@@ -1566,6 +1562,15 @@
     </java>
     <echo>Running zmprov commands</echo>
     <antcall target="run-zmprov-commands"/>
+    <if>
+        <not><isset property="is-production"/></not>
+        <then>
+          <echo>Enabling smtptolmtp server for dev environment</echo>
+          <java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
+            <arg line="-l ms ${zimbra.server.hostname} zimbraMailboxSmtpToLmtpEnabled TRUE"/>
+          </java>
+        </then>
+    </if>
   </target>
 
   <target name="run-zmprov-commands" depends="zmprov-commands">

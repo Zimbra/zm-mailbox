@@ -86,6 +86,7 @@ import com.zimbra.cs.service.formatter.VCard;
 import com.zimbra.cs.service.mail.ToXML.EmailType;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.util.JMSession;
+import com.zimbra.cs.util.ProvisioningUtil;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -106,7 +107,7 @@ public final class ParseMimeMessage {
         @Override
         protected void updateHeaders() throws MessagingException {
             super.updateHeaders();
-            if (LC.text_attachments_base64.booleanValue()) {
+            if (ProvisioningUtil.getServerAttribute(Provisioning.A_zimbraMimeOverrideDefaultTransferEncodingToBase64, true)) {
                 String ct = Mime.getContentType(this);
                 if (!(ct.startsWith(MimeConstants.CT_MESSAGE_PREFIX) || ct.startsWith(MimeConstants.CT_MULTIPART_PREFIX))) {
                     setHeader("Content-Transfer-Encoding", "base64");

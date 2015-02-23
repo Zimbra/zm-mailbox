@@ -45,10 +45,12 @@ import com.google.common.io.Closeables;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.index.ZimbraIndexReader.TermFieldEnumeration;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.util.ProvisioningUtil;
 
 /**
  * {@link QueryOperation} which queries Lucene.
@@ -58,7 +60,7 @@ public final class LuceneQueryOperation extends QueryOperation {
     static {
         float f = 0.8f;
         try {
-            f = Float.parseFloat(LC.search_dbfirst_term_percentage_cutoff.value());
+            f = ProvisioningUtil.getServerAttribute(Provisioning.A_zimbraIndexDbFirstTermCutOffPercentage, 80)/100.0f;
         } catch (Exception e) {
         }
         if (f < 0.0 || f > 1.0) {
@@ -460,7 +462,7 @@ public final class LuceneQueryOperation extends QueryOperation {
     private Query expandLazyMultiPhraseQuery(Query query) throws IOException , ServiceException {
         if (query instanceof LazyMultiPhraseQuery) {
             LazyMultiPhraseQuery lazy = (LazyMultiPhraseQuery) query;
-            int max = LC.zimbra_index_wildcard_max_terms_expanded.intValue();
+            int max = Provisioning.getInstance().getLocalServer().getIndexWildcardMaxTermsExpanded();
             MultiPhraseQuery mquery = new MultiPhraseQuery();
             for (Term[] terms : lazy.getTermArrays()) {
                 if (terms.length != 1) {

@@ -249,7 +249,6 @@ public class Auth extends AccountDocumentHandler {
 
         Server localhost = Provisioning.getInstance().getLocalServer();
         String referMode = localhost.getAttr(Provisioning.A_zimbraMailReferMode, "wronghost");
-        // if (!isCorrectHost || LC.zimbra_auth_always_send_refer.booleanValue()) {
         if (Provisioning.MAIL_REFER_MODE_ALWAYS.equals(referMode) ||
             (Provisioning.MAIL_REFER_MODE_WRONGHOST.equals(referMode) && !isCorrectHost)) {
             response.addAttribute(AccountConstants.E_REFERRAL, acct.getAttr(Provisioning.A_zimbraMailHost), Element.Disposition.CONTENT);

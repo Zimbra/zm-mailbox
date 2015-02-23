@@ -46,8 +46,10 @@ import com.google.common.base.Strings;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.db.DbPool.PoolConfig;
+import com.zimbra.cs.util.ProvisioningUtil;
 
 public final class SQLite extends Db {
 

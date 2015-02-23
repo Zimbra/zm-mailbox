@@ -30,10 +30,12 @@ import javax.mail.internet.MimePart;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.mime.MimeConstants;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.util.ProvisioningUtil;
 
 /**
- * Walks a JavaMail MIME tree and calls the abstract methods for each node. 
- *   
+ * Walks a JavaMail MIME tree and calls the abstract methods for each node.
+ *
  * @author bburtin
  */
 public abstract class MimeVisitor {
@@ -47,14 +49,14 @@ public abstract class MimeVisitor {
 
         static {
             try {
-                if (LC.zimbra_converter_enabled_uuencode.booleanValue())
+                if (ProvisioningUtil.getServerAttribute(Provisioning.A_zimbraMimeConverterEnableUuencode, true))
                     registerConverter(UUEncodeConverter.class);
             } catch (Exception e) {
                 ZimbraLog.misc.error("error loading UUENCODE converter", e);
             }
 
             try {
-                if (LC.zimbra_converter_enabled_tnef.booleanValue())
+                if (ProvisioningUtil.getServerAttribute(Provisioning.A_zimbraMimeConverterEnabledTnef, true))
                     registerConverter(TnefConverter.class);
             } catch (Exception e) {
                 ZimbraLog.misc.error("error loading TNEF converter", e);
@@ -178,7 +180,7 @@ public abstract class MimeVisitor {
         return accept(mm, 0);
     }
 
-    private static final int MAX_VISITOR_DEPTH = LC.zimbra_converter_depth_max.intValue();
+    private static final int MAX_VISITOR_DEPTH = ProvisioningUtil.getServerAttribute(Provisioning.A_zimbraMimeConverterMaxMimepartDepth, 100);
 
     private synchronized final boolean accept(MimePart mp, int depth) throws MessagingException {
         // do not recurse beyond a fixed depth

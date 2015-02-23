@@ -39,6 +39,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.auth.AuthMechanism.AuthMech;
 import com.zimbra.cs.service.admin.AdminAccessControl;
 import com.zimbra.cs.servlet.ZimbraServlet;
+import com.zimbra.cs.util.ProvisioningUtil;
 
 public abstract class AuthProvider {
 
@@ -75,7 +76,7 @@ public abstract class AuthProvider {
      */
     public static void refresh() {
         List<AuthProvider> providerList = new ArrayList<AuthProvider>();
-        String[] providers = LC.zimbra_auth_provider.value().split(",");
+        String[] providers = ProvisioningUtil.getServerAttribute(Provisioning.A_zimbraAuthProvider, "").split(",");
         for (String provider : providers) {
 
             provider = provider.trim();

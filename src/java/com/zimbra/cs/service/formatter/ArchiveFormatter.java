@@ -107,6 +107,7 @@ import com.zimbra.cs.service.mail.ImportContacts;
 import com.zimbra.cs.service.util.ItemData;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.servlet.util.JettyUtil;
+import com.zimbra.cs.util.ProvisioningUtil;
 
 public abstract class ArchiveFormatter extends Formatter {
     private final Pattern ILLEGAL_FILE_CHARS = Pattern.compile("[\\/\\:\\*\\?\\\"\\<\\>\\|\\\0]");
@@ -331,7 +332,7 @@ public abstract class ArchiveFormatter extends Formatter {
                 for (Map.Entry<Set<MailItem.Type>, String> entry : typesMap.entrySet()) {
                     results = context.targetMailbox.index.search(context.opContext,
                             entry.getValue(), entry.getKey(), SortBy.NONE,
-                            LC.zimbra_archive_formatter_search_chunk_size.intValue());
+                            Provisioning.getInstance().getLocalServer().getMailboxArchiveFormatterSearchChunkSize());
                     try {
                         while (results.hasNext()) {
                             if (saveTargetFolder) {
@@ -389,7 +390,7 @@ public abstract class ArchiveFormatter extends Formatter {
      * @throws IOException
      */
     private void disableJettyTimeout(UserServletContext context) {
-        if (LC.zimbra_archive_formatter_disable_timeout.booleanValue()) {
+        if (ProvisioningUtil.getServerAttribute(Provisioning.A_zimbraMailboxArchiveFormatterDisableTimeout, true)) {
             JettyUtil.setIdleTimeout(0, context.req);
         }
     }

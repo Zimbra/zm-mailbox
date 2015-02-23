@@ -38,12 +38,14 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxVersion;
 import com.zimbra.cs.mailbox.Metadata;
+import com.zimbra.cs.util.ProvisioningUtil;
 import com.zimbra.cs.util.Zimbra;
 
 /**
@@ -849,7 +851,7 @@ public final class DbMailbox {
         }
     }
 
-    private static final int DEFAULT_CHANGE_CHECKPOINT_INCREMENT = Math.max(1, LC.zimbra_mailbox_change_checkpoint_frequency.intValue());
+    private static final int DEFAULT_CHANGE_CHECKPOINT_INCREMENT = Math.max(1, ProvisioningUtil.getServerAttribute(Provisioning.A_zimbraMailboxChangeCheckpointFrequency, 100));
 
     public static int getChangeCheckpointIncrement() {
         return Zimbra.isAlwaysOn() ? 1 : DEFAULT_CHANGE_CHECKPOINT_INCREMENT;

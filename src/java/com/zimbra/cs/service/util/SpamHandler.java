@@ -56,6 +56,7 @@ import com.zimbra.cs.mime.MailboxBlobDataSource;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.store.MailboxBlob;
 import com.zimbra.cs.util.JMSession;
+import com.zimbra.cs.util.ProvisioningUtil;
 
 public class SpamHandler {
 
@@ -190,7 +191,7 @@ public class SpamHandler {
         }
     }
 
-    private static final int spamReportQueueSize = LC.zimbra_spam_report_queue_size.intValue();
+    private static final int spamReportQueueSize = ProvisioningUtil.getServerAttribute(Provisioning.A_zimbraMailboxSpamHandlerSpamReportQueueSize, 100);
 
     private final Object spamReportQueueLock = new Object();
 
