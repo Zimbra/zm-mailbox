@@ -323,6 +323,7 @@ SECTION 8: GNU General Public License, V2.0
    >>> perl-module-runtime-0.014
    >>> perl-mro-compat-0.12
    >>> perl-net-cidr-0.17
+   >>> perl-net-cidr-lite-0.21
    >>> perl-net-dns-0.74
    >>> perl-net-dns-resolver-programmable-0.003
    >>> perl-net-http-6.06
@@ -33900,6 +33901,17 @@ under the same terms as Perl itself.
 
 
 Copyright 2001 Sam Varshavchik.
+
+This program is free software; you can redistribute it
+and/or modify it under the same terms as Perl itself.
+
+
+>>> perl-net-cidr-lite-0.21
+
+[PLEASE NOTE:  ZIMBRA, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT UNDER THE TERMS OF THE GPL 2.0.  PLEASE SEE THE APPENDIX TO REVIEW THE FULL TEXT OF THE GPL 2.0.  THE ORIGINAL LICENSE TERMS ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
+
+
+Copyright (C) 2001 Douglas Wilson <dougw@cpan.org>
 
 This program is free software; you can redistribute it
 and/or modify it under the same terms as Perl itself.
