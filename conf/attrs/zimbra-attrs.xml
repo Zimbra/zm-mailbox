@@ -8454,12 +8454,12 @@ TODO: delete them permanently from here
   <desc>URL for accessing the Consul agent.</desc>
 </attr>
 
-<attr id="1679" name="zimbraReverseProxySSLSessionTimeout" type="duration" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="nginxproxy" since="8.7.0">
+<attr id="1679" name="zimbraReverseProxySSLSessionTimeout" type="duration" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="nginxproxy" since="8.7.0,9.0">
   <globalConfigValue>10m</globalConfigValue>
   <desc>SSL session timeout value for the proxy in minutes</desc>
 </attr>
 
-<attr id="1680" name="zimbraReverseProxySSLSessionCacheSize" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="nginxproxy" since="8.7.0">
+<attr id="1680" name="zimbraReverseProxySSLSessionCacheSize" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="nginxproxy" since="8.7.0,9.0">
   <globalConfigValue>10m</globalConfigValue>
   <desc>SSL session cache size in megabytes. Need to have 'm' (for megabytes) suffix at the end</desc>
 </attr>
@@ -8491,11 +8491,11 @@ TODO: delete them permanently from here
   <desc>User Agents that need to be blocked by the proxy (Case insensitive eg. Firefox, chrome, SAFARI etc)</desc>
 </attr>
 
-<attr id="1686" name="zimbraFeatureAdminPreferencesEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="8.7.0">
+<attr id="1686" name="zimbraFeatureAdminPreferencesEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="8.7.0,9.0">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>Whether email related configuration categories in Preference tab are enabled in the web client even if the zimbraFeatureAdminMailEnabled is set to FALSE (Email tab is disabled), and accessed from the admin console.  If the zimbraFeatureAdminMailEnabled is TRUE, this key is ignored.</desc>
 </attr>
-<attr id="1687" name="zimbraWebClientStaySignedInDisabled" type="boolean" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainInfo,domainAdminModifiable" since="8.7.0">
+<attr id="1687" name="zimbraWebClientStaySignedInDisabled" type="boolean" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainInfo,domainAdminModifiable" since="8.7.0,9.0">
   <globalConfigValue>FALSE</globalConfigValue>
   <desc>Whether the Stay Signed In checkbox should be disabled on the login screen</desc>
 </attr>
@@ -8665,11 +8665,11 @@ TODO: delete them permanently from here
   <desc>Max no of elements in admin acl target cache</desc>
 </attr>
 
-<attr id="1721" name="zimbraDomainAllowedIPs" type="string" max="256" cardinality="multi" optionalIn="domain" since="8.7.0">
+<attr id="1721" name="zimbraDomainAllowedIPs" type="string" max="256" cardinality="multi" optionalIn="domain" since="8.7.0,9.0">
   <desc>Client IP/IPRange whitelist for this domain (IPRange needs to be in CIDR notation e.g:192.168.1.0/24). If configured, all IPs outside this whitelist will be blocked. If unset, all IPs are allowed</desc>  
 </attr>
 
-<attr id="1722" name="zimbraReverseProxyZSSHostname" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="nginxproxy" since="8.7.0">
+<attr id="1722" name="zimbraReverseProxyZSSHostname" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="nginxproxy" since="8.7.0,9.0">
   <desc>Hostname of the upstream ZSS server being reverse-proxied</desc>
 </attr>
 
@@ -8853,16 +8853,16 @@ TODO: delete them permanently from here
   <desc> Activates the hack that converts standalone VEVENT/VTODO components with STATUS:CANCELLED into EXDATEs on the series component. Introduced in bug 36434 </desc>
 </attr>
 
-<attr id="1759" name="zimbraMobileGatewayDefaultAppAccountDomainId" type="id" cardinality="single" optionalIn="globalConfig" since="8.7.0">
+<attr id="1759" name="zimbraMobileGatewayDefaultAppAccountDomainId" type="id" cardinality="single" optionalIn="globalConfig" since="8.7.0,9.0">
   <desc>id of the doamin under which temporary/hidden accounts for apps would be created</desc>
 </attr>
 
-<attr id="1760" name="zimbraIsMobileGatewayAppAccount" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.7.0">
+<attr id="1760" name="zimbraIsMobileGatewayAppAccount" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.7.0,9.0">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>whether or not an account represents a temporary/hidden mobile gateway app</desc>
 </attr>
 
-<attr id="1761" name="zimbraDataSourceOAuthToken" type="string" cardinality="single" optionalIn="imapDataSource" since="8.7.0">
+<attr id="1761" name="zimbraDataSourceOAuthToken" type="string" cardinality="single" optionalIn="imapDataSource" since="8.7.0,9.0">
   <desc>OAuth token for authentication using OAuth</desc>
 </attr>
 
@@ -8965,22 +8965,22 @@ TODO: delete them permanently from here
   <desc> No of threads used by lucene indexer</desc>
 </attr>
 
-<attr id="1782" name="zimbraMtaSmtpTlsMandatoryProtocols" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.7.0">
+<attr id="1782" name="zimbraMtaSmtpTlsMandatoryProtocols" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.7.0,9.0">
   <globalConfigValue>!SSLv2, !SSLv3</globalConfigValue>
   <desc>Value for postconf smtp_tls_mandatory_protocols</desc>
 </attr>
 
-<attr id="1783" name="zimbraMtaSmtpdTlsMandatoryProtocols" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.7.0">
+<attr id="1783" name="zimbraMtaSmtpdTlsMandatoryProtocols" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.7.0,9.0">
   <globalConfigValue>!SSLv2, !SSLv3</globalConfigValue>
   <desc>Value for postconf smtpd_tls_mandatory_protocols</desc>
 </attr>
 
-<attr id="1784" name="zimbraMtaLmtpTlsMandatoryProtocols" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.7.0">
+<attr id="1784" name="zimbraMtaLmtpTlsMandatoryProtocols" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.7.0,9.0">
   <globalConfigValue>!SSLv2, !SSLv3</globalConfigValue>
   <desc>Value for postconf lmtp_tls_mandatory_protocols</desc>
 </attr>
 
-<attr id="1785" name="zimbraReverseProxyZmlookupCachingEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="nginxproxy" since="8.7.0">
+<attr id="1785" name="zimbraReverseProxyZmlookupCachingEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="nginxproxy" since="8.7.0,9.0">
   <globalConfigValue>TRUE</globalConfigValue>
   <desc>whether nginx should cache upstream routes in memcache</desc>
 </attr>
@@ -8990,7 +8990,7 @@ TODO: delete them permanently from here
   <desc>Maximum number of items that can be held in memory while queued for indexing</desc>
 </attr>
 
-<attr id="1787" name="zimbraPrefShowChatsFolderInMail" type="boolean" cardinality="single" optionalIn="account,cos,domain" flags="accountInfo,accountCosDomainInherited,domainAdminModifiable" since="8.7.0">
+<attr id="1787" name="zimbraPrefShowChatsFolderInMail" type="boolean" cardinality="single" optionalIn="account,cos,domain" flags="accountInfo,accountCosDomainInherited,domainAdminModifiable" since="8.7.0,9.0">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>Show Chats folder even if zimbraFeatureIMEnabled is false</desc>
 </attr>
@@ -9148,70 +9148,70 @@ TODO: delete them permanently from here
   <globalConfigValue>FALSE</globalConfigValue>
   <desc>Enable the use of Server Name Indication (SNI) TLS extension in the proxy. When set to TRUE, and using SNI capable clients, there is no need for a separate IP address per domain (zimbraVirtualIPAddress)</desc>
 </attr>
-<attr id="1819" name="zimbraTwoFactorAuthUserEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="domainAdminModifiable" since="8.7.0">
+<attr id="1819" name="zimbraTwoFactorAuthUserEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="domainAdminModifiable" since="8.7.0,9.0">
   <desc>whether two-factor authentication is enabled by the user</desc>
   <defaultCOSValue>FALSE</defaultCOSValue>
 </attr>
 
-<attr id="1820" name="zimbraTwoFactorAuthRequired" type="boolean" cardinality="single" optionalIn="account,cos" flags="domainAdminModifiable" since="8.7.0">
+<attr id="1820" name="zimbraTwoFactorAuthRequired" type="boolean" cardinality="single" optionalIn="account,cos" flags="domainAdminModifiable" since="8.7.0,9.0">
   <desc>whether two-factor authentication is required</desc>
   <defaultCOSValue>FALSE</defaultCOSValue>
 </attr>
 
-<attr id="1821" name="zimbraTwoFactorAuthSecret" type="ostring" cardinality="single" optionalIn="account" since="8.7.0">
+<attr id="1821" name="zimbraTwoFactorAuthSecret" type="ostring" cardinality="single" optionalIn="account" since="8.7.0,9.0">
   <desc>encrypted shared secret</desc>
 </attr>
 
-<attr id="1822" name="zimbraTwoFactorAuthScratchCodes" type="ostring" cardinality="single" optionalIn="account" since="8.7.0">
+<attr id="1822" name="zimbraTwoFactorAuthScratchCodes" type="ostring" cardinality="single" optionalIn="account" since="8.7.0,9.0">
   <desc>encrypted comma-separated list of valid scratch codes</desc>
 </attr>
 
-<attr id="1823" name="zimbraTwoFactorAuthNumScratchCodes" type="integer" min="1" cardinality="single" optionalIn="account,cos" since="8.7.0">
+<attr id="1823" name="zimbraTwoFactorAuthNumScratchCodes" type="integer" min="1" cardinality="single" optionalIn="account,cos" since="8.7.0,9.0">
   <defaultCOSValue>3</defaultCOSValue>
   <desc>number of scratch codes to generate for two-factor auth</desc>
 </attr>
 
-<attr id="1824" name="zimbraTwoFactorAuthSecretLength" type="integer" min="8" cardinality="single" optionalIn="account,cos" since="8.7.0">
+<attr id="1824" name="zimbraTwoFactorAuthSecretLength" type="integer" min="8" cardinality="single" optionalIn="account,cos" since="8.7.0,9.0">
   <defaultCOSValue>16</defaultCOSValue>
   <desc>length of shared secret</desc>
 </attr>
 
-<attr id="1825" name="zimbraTwoFactorAuthHashAlgorithm" type="enum" value="SHA1,SHA256,SHA512" cardinality="single" optionalIn="account,cos" since="8.7.0">
+<attr id="1825" name="zimbraTwoFactorAuthHashAlgorithm" type="enum" value="SHA1,SHA256,SHA512" cardinality="single" optionalIn="account,cos" since="8.7.0,9.0">
   <defaultCOSValue>SHA256</defaultCOSValue>
   <desc>hash algorithm used in TOTP generation</desc>
 </attr>
 
-<attr id="1826" name="zimbraTwoFactorAuthSecretEncoding" type="enum" value="BASE32,BASE64" cardinality="single" optionalIn="account,cos" since="8.7.0">
+<attr id="1826" name="zimbraTwoFactorAuthSecretEncoding" type="enum" value="BASE32,BASE64" cardinality="single" optionalIn="account,cos" since="8.7.0,9.0">
   <defaultCOSValue>BASE32</defaultCOSValue>
   <desc>shared secret encoding</desc>
 </attr>
 
-<attr id="1827" name="zimbraTwoFactorScratchCodeLength" type="integer" cardinality="single" optionalIn="account,cos" since="8.7.0">
+<attr id="1827" name="zimbraTwoFactorScratchCodeLength" type="integer" cardinality="single" optionalIn="account,cos" since="8.7.0,9.0">
   <defaultCOSValue>8</defaultCOSValue>
   <desc>length of scratch codes</desc>
 </attr>
 
-<attr id="1828" name="zimbraTwoFactorCodeLength" type="integer" cardinality="single" optionalIn="account,cos" since="8.7.0">
+<attr id="1828" name="zimbraTwoFactorCodeLength" type="integer" cardinality="single" optionalIn="account,cos" since="8.7.0,9.0">
   <defaultCOSValue>6</defaultCOSValue>
   <desc>length of TOTP code required for two-factor authentication</desc>
 </attr>
 
-<attr id="1829" name="zimbraTwoFactorTimeWindowLength" type="duration" cardinality="single" optionalIn="account,cos" since="8.7.0">
+<attr id="1829" name="zimbraTwoFactorTimeWindowLength" type="duration" cardinality="single" optionalIn="account,cos" since="8.7.0,9.0">
   <defaultCOSValue>30s</defaultCOSValue>
   <desc>length of time that a TOTP code is valid for</desc>
 </attr>
 
-<attr id="1830" name="zimbraTwoFactorTimeWindowOffset" type="integer" min="1" cardinality="single" optionalIn="account,cos" since="8.7.0">
+<attr id="1830" name="zimbraTwoFactorTimeWindowOffset" type="integer" min="1" cardinality="single" optionalIn="account,cos" since="8.7.0,9.0">
   <defaultCOSValue>1</defaultCOSValue>
   <desc>Determines the number of windows to check when trying to validate a TOTP code (NOW-n through NOW+n). This number should typically be small, but a minimum value of 1 is usually necessary to account for network latency and clock drift.  See also: zimbraTwoFactorTimeWindowLength and https://tools.ietf.org/html/rfc6238#section-5.2</desc>
 </attr>
 
-<attr id="1831" name="zimbraTwoFactorAuthScratchCodeEncoding" type="enum" value="BASE32,BASE64" cardinality="single" optionalIn="account,cos" since="8.7.0">
+<attr id="1831" name="zimbraTwoFactorAuthScratchCodeEncoding" type="enum" value="BASE32,BASE64" cardinality="single" optionalIn="account,cos" since="8.7.0,9.0">
   <defaultCOSValue>BASE32</defaultCOSValue>
   <desc>scratch code encoding</desc>
 </attr>
 
-<attr id="1832" name="zimbraMailboxdSSLRenegotiationAllowed" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="8.7.0">
+<attr id="1832" name="zimbraMailboxdSSLRenegotiationAllowed" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="8.7.0,9.0">
   <globalConfigValue>TRUE</globalConfigValue>
   <desc>Whether TLS renegotiation is allowed. See also RFC 5746 and CVE-2011-1473 for concerns about possible SSL renegotiation DoS</desc>
 </attr>
@@ -9226,31 +9226,31 @@ TODO: delete them permanently from here
   <desc>Maximum number of items to put into a single reindexing task.</desc>
  </attr>
 
-<attr id="1835" name="zimbraMtaHopcountLimit" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.7.0">
+<attr id="1835" name="zimbraMtaHopcountLimit" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.7.0,9.0">
   <globalConfigValue>50</globalConfigValue>
   <desc>Value for postconf hopcount_limit</desc>
 </attr>
 
-<attr id="1836" name="zimbraAppSpecificPassword" type="ostring" cardinality="multi" optionalIn="account,cos" since="8.7.0">
+<attr id="1836" name="zimbraAppSpecificPassword" type="ostring" cardinality="multi" optionalIn="account,cos" since="8.7.0,9.0">
   <desc>application-specific password</desc>
 </attr>
 
-<attr id="1837" name="zimbraMaxAppSpecificPasswords" type="integer" min="1" cardinality="single" optionalIn="account,cos" since="8.7.0">
+<attr id="1837" name="zimbraMaxAppSpecificPasswords" type="integer" min="1" cardinality="single" optionalIn="account,cos" since="8.7.0,9.0">
   <defaultCOSValue>25</defaultCOSValue>
   <desc>maximum number of application-specific passwords allowed for an account</desc>
 </attr>
 
-<attr id="1838" name="zimbraRevokeAppSpecificPasswordsOnPasswordChange" type="boolean" cardinality="single" optionalIn="account,cos" since="8.7.0">
+<attr id="1838" name="zimbraRevokeAppSpecificPasswordsOnPasswordChange" type="boolean" cardinality="single" optionalIn="account,cos" since="8.7.0,9.0">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>whether or not to revoke app-specific passwords when the main password is changed</desc>
 </attr>
 
-<attr id="1839" name="zimbraAppSpecificPasswordDuration" type="duration" cardinality="single" optionalIn="account,cos" since="8.7.0">
+<attr id="1839" name="zimbraAppSpecificPasswordDuration" type="duration" cardinality="single" optionalIn="account,cos" since="8.7.0,9.0">
   <defaultCOSValue>30d</defaultCOSValue>
   <desc>lifetime of app-specific passwords, or 0 for no expiry</desc>
 </attr>
 
-<attr id="1840" name="zimbraAppSpecificPasswordLength" type="integer" cardinality="single" optionalIn="account,cos" since="8.7.0">
+<attr id="1840" name="zimbraAppSpecificPasswordLength" type="integer" cardinality="single" optionalIn="account,cos" since="8.7.0,9.0">
   <defaultCOSValue>16</defaultCOSValue>
   <desc>length of app-specific passwords</desc>
 </attr>
@@ -9544,7 +9544,7 @@ TODO: delete them permanently from here
   <desc>Whether the UUENCODE decoder is run when parsing messages from the store</desc>
 </attr>
 
-<attr id="1900" name="zimbraShortTermGranteeCacheSize" type="integer" min="0" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="all"  since="8.7">
+<attr id="1900" name="zimbraShortTermGranteeCacheSize" type="integer" min="0" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="all"  since="8.7,9.0">
   <globalConfigValue>128</globalConfigValue>
   <desc>Maximum number of entries in the short term Grantee cache.
   This cache can improve performance by avoiding recomputing details frequently in a short period of time, for instance for each entry in search results.
@@ -9552,7 +9552,7 @@ TODO: delete them permanently from here
   </desc>
 </attr>
 
-<attr id="1901" name="zimbraShortTermGranteeCacheExpiration" type="duration" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="all"  since="8.7">
+<attr id="1901" name="zimbraShortTermGranteeCacheExpiration" type="duration" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="all"  since="8.7,9.0">
   <globalConfigValue>50s</globalConfigValue>
   <desc>Maximum time an entry in the Grantee cache will be regarded as valid.
   If value is 0, the cache is disabled.
@@ -9564,7 +9564,7 @@ TODO: delete them permanently from here
   </desc>
 </attr>
 
-<attr id="1902" name="zimbraShortTermAllEffectiveRightsCacheSize" type="integer" min="0" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="all"  since="8.7">
+<attr id="1902" name="zimbraShortTermAllEffectiveRightsCacheSize" type="integer" min="0" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="all"  since="8.7,9.0">
   <globalConfigValue>128</globalConfigValue>
   <desc>Maximum number of entries in the short term All Effective Rights cache.
   This cache can improve performance by avoiding recomputing All Effective Rights of named entries like accounts frequently in a short period of time.
@@ -9572,7 +9572,7 @@ TODO: delete them permanently from here
   </desc>
 </attr>
 
-<attr id="1903" name="zimbraShortTermAllEffectiveRightsCacheExpiration" type="duration" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="all"  since="8.7">
+<attr id="1903" name="zimbraShortTermAllEffectiveRightsCacheExpiration" type="duration" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="all"  since="8.7,9.0">
   <globalConfigValue>50s</globalConfigValue>
   <desc>Maximum time an entry in the short term All Effective Rights cache will be regarded as valid.
   If value is 0, the cache is disabled.

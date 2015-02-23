@@ -28701,7 +28701,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @return zimbraMailboxdSSLRenegotiationAllowed, or true if unset
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.7.0,9.0
      */
     @ZAttr(id=1832)
     public boolean isMailboxdSSLRenegotiationAllowed() {
@@ -28715,7 +28715,7 @@ public abstract class ZAttrServer extends NamedEntry {
      * @param zimbraMailboxdSSLRenegotiationAllowed new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.7.0,9.0
      */
     @ZAttr(id=1832)
     public void setMailboxdSSLRenegotiationAllowed(boolean zimbraMailboxdSSLRenegotiationAllowed) throws com.zimbra.common.service.ServiceException {
@@ -28732,7 +28732,7 @@ public abstract class ZAttrServer extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.7.0,9.0
      */
     @ZAttr(id=1832)
     public Map<String,Object> setMailboxdSSLRenegotiationAllowed(boolean zimbraMailboxdSSLRenegotiationAllowed, Map<String,Object> attrs) {
@@ -28747,7 +28747,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.7.0,9.0
      */
     @ZAttr(id=1832)
     public void unsetMailboxdSSLRenegotiationAllowed() throws com.zimbra.common.service.ServiceException {
@@ -28763,7 +28763,7 @@ public abstract class ZAttrServer extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.7.0,9.0
      */
     @ZAttr(id=1832)
     public Map<String,Object> unsetMailboxdSSLRenegotiationAllowed(Map<String,Object> attrs) {
@@ -33315,7 +33315,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @return zimbraMtaHopcountLimit, or 50 if unset
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.7.0,9.0
      */
     @ZAttr(id=1835)
     public int getMtaHopcountLimit() {
@@ -33328,7 +33328,7 @@ public abstract class ZAttrServer extends NamedEntry {
      * @param zimbraMtaHopcountLimit new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.7.0,9.0
      */
     @ZAttr(id=1835)
     public void setMtaHopcountLimit(int zimbraMtaHopcountLimit) throws com.zimbra.common.service.ServiceException {
@@ -33344,7 +33344,7 @@ public abstract class ZAttrServer extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.7.0,9.0
      */
     @ZAttr(id=1835)
     public Map<String,Object> setMtaHopcountLimit(int zimbraMtaHopcountLimit, Map<String,Object> attrs) {
@@ -33358,7 +33358,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.7.0,9.0
      */
     @ZAttr(id=1835)
     public void unsetMtaHopcountLimit() throws com.zimbra.common.service.ServiceException {
@@ -33373,7 +33373,7 @@ public abstract class ZAttrServer extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.7.0,9.0
      */
     @ZAttr(id=1835)
     public Map<String,Object> unsetMtaHopcountLimit(Map<String,Object> attrs) {
@@ -34548,7 +34548,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @return zimbraMtaLmtpTlsMandatoryProtocols, or "!SSLv2, !SSLv3" if unset
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.7.0,9.0
      */
     @ZAttr(id=1784)
     public String getMtaLmtpTlsMandatoryProtocols() {
@@ -34561,7 +34561,7 @@ public abstract class ZAttrServer extends NamedEntry {
      * @param zimbraMtaLmtpTlsMandatoryProtocols new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.7.0,9.0
      */
     @ZAttr(id=1784)
     public void setMtaLmtpTlsMandatoryProtocols(String zimbraMtaLmtpTlsMandatoryProtocols) throws com.zimbra.common.service.ServiceException {
@@ -34577,7 +34577,7 @@ public abstract class ZAttrServer extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.7.0,9.0
      */
     @ZAttr(id=1784)
     public Map<String,Object> setMtaLmtpTlsMandatoryProtocols(String zimbraMtaLmtpTlsMandatoryProtocols, Map<String,Object> attrs) {
@@ -34591,7 +34591,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.7.0,9.0
      */
     @ZAttr(id=1784)
     public void unsetMtaLmtpTlsMandatoryProtocols() throws com.zimbra.common.service.ServiceException {
@@ -34606,7 +34606,7 @@ public abstract class ZAttrServer extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.7.0,9.0
      */
     @ZAttr(id=1784)
     public Map<String,Object> unsetMtaLmtpTlsMandatoryProtocols(Map<String,Object> attrs) {
@@ -38297,7 +38297,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @return zimbraMtaSmtpTlsMandatoryProtocols, or "!SSLv2, !SSLv3" if unset
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.7.0,9.0
      */
     @ZAttr(id=1782)
     public String getMtaSmtpTlsMandatoryProtocols() {
@@ -38310,7 +38310,7 @@ public abstract class ZAttrServer extends NamedEntry {
      * @param zimbraMtaSmtpTlsMandatoryProtocols new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.7.0,9.0
      */
     @ZAttr(id=1782)
     public void setMtaSmtpTlsMandatoryProtocols(String zimbraMtaSmtpTlsMandatoryProtocols) throws com.zimbra.common.service.ServiceException {
@@ -38326,7 +38326,7 @@ public abstract class ZAttrServer extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.7.0,9.0
      */
     @ZAttr(id=1782)
     public Map<String,Object> setMtaSmtpTlsMandatoryProtocols(String zimbraMtaSmtpTlsMandatoryProtocols, Map<String,Object> attrs) {
@@ -38340,7 +38340,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.7.0,9.0
      */
     @ZAttr(id=1782)
     public void unsetMtaSmtpTlsMandatoryProtocols() throws com.zimbra.common.service.ServiceException {
@@ -38355,7 +38355,7 @@ public abstract class ZAttrServer extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.7.0,9.0
      */
     @ZAttr(id=1782)
     public Map<String,Object> unsetMtaSmtpTlsMandatoryProtocols(Map<String,Object> attrs) {
@@ -40884,7 +40884,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @return zimbraMtaSmtpdTlsMandatoryProtocols, or "!SSLv2, !SSLv3" if unset
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.7.0,9.0
      */
     @ZAttr(id=1783)
     public String getMtaSmtpdTlsMandatoryProtocols() {
@@ -40897,7 +40897,7 @@ public abstract class ZAttrServer extends NamedEntry {
      * @param zimbraMtaSmtpdTlsMandatoryProtocols new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.7.0,9.0
      */
     @ZAttr(id=1783)
     public void setMtaSmtpdTlsMandatoryProtocols(String zimbraMtaSmtpdTlsMandatoryProtocols) throws com.zimbra.common.service.ServiceException {
@@ -40913,7 +40913,7 @@ public abstract class ZAttrServer extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.7.0,9.0
      */
     @ZAttr(id=1783)
     public Map<String,Object> setMtaSmtpdTlsMandatoryProtocols(String zimbraMtaSmtpdTlsMandatoryProtocols, Map<String,Object> attrs) {
@@ -40927,7 +40927,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.7.0,9.0
      */
     @ZAttr(id=1783)
     public void unsetMtaSmtpdTlsMandatoryProtocols() throws com.zimbra.common.service.ServiceException {
@@ -40942,7 +40942,7 @@ public abstract class ZAttrServer extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.7.0,9.0
      */
     @ZAttr(id=1783)
     public Map<String,Object> unsetMtaSmtpdTlsMandatoryProtocols(Map<String,Object> attrs) {
@@ -51101,7 +51101,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @return zimbraReverseProxySSLSessionCacheSize, or "10m" if unset
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.7.0,9.0
      */
     @ZAttr(id=1680)
     public String getReverseProxySSLSessionCacheSize() {
@@ -51115,7 +51115,7 @@ public abstract class ZAttrServer extends NamedEntry {
      * @param zimbraReverseProxySSLSessionCacheSize new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.7.0,9.0
      */
     @ZAttr(id=1680)
     public void setReverseProxySSLSessionCacheSize(String zimbraReverseProxySSLSessionCacheSize) throws com.zimbra.common.service.ServiceException {
@@ -51132,7 +51132,7 @@ public abstract class ZAttrServer extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.7.0,9.0
      */
     @ZAttr(id=1680)
     public Map<String,Object> setReverseProxySSLSessionCacheSize(String zimbraReverseProxySSLSessionCacheSize, Map<String,Object> attrs) {
@@ -51147,7 +51147,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.7.0,9.0
      */
     @ZAttr(id=1680)
     public void unsetReverseProxySSLSessionCacheSize() throws com.zimbra.common.service.ServiceException {
@@ -51163,7 +51163,7 @@ public abstract class ZAttrServer extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.7.0,9.0
      */
     @ZAttr(id=1680)
     public Map<String,Object> unsetReverseProxySSLSessionCacheSize(Map<String,Object> attrs) {
@@ -51185,7 +51185,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @return zimbraReverseProxySSLSessionTimeout in millseconds, or 600000 (10m)  if unset
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.7.0,9.0
      */
     @ZAttr(id=1679)
     public long getReverseProxySSLSessionTimeout() {
@@ -51201,7 +51201,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @return zimbraReverseProxySSLSessionTimeout, or "10m" if unset
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.7.0,9.0
      */
     @ZAttr(id=1679)
     public String getReverseProxySSLSessionTimeoutAsString() {
@@ -51218,7 +51218,7 @@ public abstract class ZAttrServer extends NamedEntry {
      * @param zimbraReverseProxySSLSessionTimeout new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.7.0,9.0
      */
     @ZAttr(id=1679)
     public void setReverseProxySSLSessionTimeout(String zimbraReverseProxySSLSessionTimeout) throws com.zimbra.common.service.ServiceException {
@@ -51238,7 +51238,7 @@ public abstract class ZAttrServer extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.7.0,9.0
      */
     @ZAttr(id=1679)
     public Map<String,Object> setReverseProxySSLSessionTimeout(String zimbraReverseProxySSLSessionTimeout, Map<String,Object> attrs) {
@@ -51256,7 +51256,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.7.0,9.0
      */
     @ZAttr(id=1679)
     public void unsetReverseProxySSLSessionTimeout() throws com.zimbra.common.service.ServiceException {
@@ -51275,7 +51275,7 @@ public abstract class ZAttrServer extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.7.0,9.0
      */
     @ZAttr(id=1679)
     public Map<String,Object> unsetReverseProxySSLSessionTimeout(Map<String,Object> attrs) {
@@ -52619,7 +52619,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @return zimbraReverseProxyZSSHostname, or null if unset
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.7.0,9.0
      */
     @ZAttr(id=1722)
     public String getReverseProxyZSSHostname() {
@@ -52632,7 +52632,7 @@ public abstract class ZAttrServer extends NamedEntry {
      * @param zimbraReverseProxyZSSHostname new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.7.0,9.0
      */
     @ZAttr(id=1722)
     public void setReverseProxyZSSHostname(String zimbraReverseProxyZSSHostname) throws com.zimbra.common.service.ServiceException {
@@ -52648,7 +52648,7 @@ public abstract class ZAttrServer extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.7.0,9.0
      */
     @ZAttr(id=1722)
     public Map<String,Object> setReverseProxyZSSHostname(String zimbraReverseProxyZSSHostname, Map<String,Object> attrs) {
@@ -52662,7 +52662,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.7.0,9.0
      */
     @ZAttr(id=1722)
     public void unsetReverseProxyZSSHostname() throws com.zimbra.common.service.ServiceException {
@@ -52677,7 +52677,7 @@ public abstract class ZAttrServer extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.7.0,9.0
      */
     @ZAttr(id=1722)
     public Map<String,Object> unsetReverseProxyZSSHostname(Map<String,Object> attrs) {
@@ -52691,7 +52691,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @return zimbraReverseProxyZmlookupCachingEnabled, or true if unset
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.7.0,9.0
      */
     @ZAttr(id=1785)
     public boolean isReverseProxyZmlookupCachingEnabled() {
@@ -52704,7 +52704,7 @@ public abstract class ZAttrServer extends NamedEntry {
      * @param zimbraReverseProxyZmlookupCachingEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.7.0,9.0
      */
     @ZAttr(id=1785)
     public void setReverseProxyZmlookupCachingEnabled(boolean zimbraReverseProxyZmlookupCachingEnabled) throws com.zimbra.common.service.ServiceException {
@@ -52720,7 +52720,7 @@ public abstract class ZAttrServer extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.7.0,9.0
      */
     @ZAttr(id=1785)
     public Map<String,Object> setReverseProxyZmlookupCachingEnabled(boolean zimbraReverseProxyZmlookupCachingEnabled, Map<String,Object> attrs) {
@@ -52734,7 +52734,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.7.0,9.0
      */
     @ZAttr(id=1785)
     public void unsetReverseProxyZmlookupCachingEnabled() throws com.zimbra.common.service.ServiceException {
@@ -52749,7 +52749,7 @@ public abstract class ZAttrServer extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.7.0,9.0
      */
     @ZAttr(id=1785)
     public Map<String,Object> unsetReverseProxyZmlookupCachingEnabled(Map<String,Object> attrs) {
@@ -54845,7 +54845,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @return zimbraShortTermAllEffectiveRightsCacheExpiration in millseconds, or 50000 (50s)  if unset
      *
-     * @since ZCS 8.7
+     * @since ZCS 8.7,9.0
      */
     @ZAttr(id=1903)
     public long getShortTermAllEffectiveRightsCacheExpiration() {
@@ -54870,7 +54870,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @return zimbraShortTermAllEffectiveRightsCacheExpiration, or "50s" if unset
      *
-     * @since ZCS 8.7
+     * @since ZCS 8.7,9.0
      */
     @ZAttr(id=1903)
     public String getShortTermAllEffectiveRightsCacheExpirationAsString() {
@@ -54896,7 +54896,7 @@ public abstract class ZAttrServer extends NamedEntry {
      * @param zimbraShortTermAllEffectiveRightsCacheExpiration new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.7
+     * @since ZCS 8.7,9.0
      */
     @ZAttr(id=1903)
     public void setShortTermAllEffectiveRightsCacheExpiration(String zimbraShortTermAllEffectiveRightsCacheExpiration) throws com.zimbra.common.service.ServiceException {
@@ -54925,7 +54925,7 @@ public abstract class ZAttrServer extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.7
+     * @since ZCS 8.7,9.0
      */
     @ZAttr(id=1903)
     public Map<String,Object> setShortTermAllEffectiveRightsCacheExpiration(String zimbraShortTermAllEffectiveRightsCacheExpiration, Map<String,Object> attrs) {
@@ -54952,7 +54952,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.7
+     * @since ZCS 8.7,9.0
      */
     @ZAttr(id=1903)
     public void unsetShortTermAllEffectiveRightsCacheExpiration() throws com.zimbra.common.service.ServiceException {
@@ -54980,7 +54980,7 @@ public abstract class ZAttrServer extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.7
+     * @since ZCS 8.7,9.0
      */
     @ZAttr(id=1903)
     public Map<String,Object> unsetShortTermAllEffectiveRightsCacheExpiration(Map<String,Object> attrs) {
@@ -54997,7 +54997,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @return zimbraShortTermAllEffectiveRightsCacheSize, or 128 if unset
      *
-     * @since ZCS 8.7
+     * @since ZCS 8.7,9.0
      */
     @ZAttr(id=1902)
     public int getShortTermAllEffectiveRightsCacheSize() {
@@ -55013,7 +55013,7 @@ public abstract class ZAttrServer extends NamedEntry {
      * @param zimbraShortTermAllEffectiveRightsCacheSize new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.7
+     * @since ZCS 8.7,9.0
      */
     @ZAttr(id=1902)
     public void setShortTermAllEffectiveRightsCacheSize(int zimbraShortTermAllEffectiveRightsCacheSize) throws com.zimbra.common.service.ServiceException {
@@ -55032,7 +55032,7 @@ public abstract class ZAttrServer extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.7
+     * @since ZCS 8.7,9.0
      */
     @ZAttr(id=1902)
     public Map<String,Object> setShortTermAllEffectiveRightsCacheSize(int zimbraShortTermAllEffectiveRightsCacheSize, Map<String,Object> attrs) {
@@ -55049,7 +55049,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.7
+     * @since ZCS 8.7,9.0
      */
     @ZAttr(id=1902)
     public void unsetShortTermAllEffectiveRightsCacheSize() throws com.zimbra.common.service.ServiceException {
@@ -55067,7 +55067,7 @@ public abstract class ZAttrServer extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.7
+     * @since ZCS 8.7,9.0
      */
     @ZAttr(id=1902)
     public Map<String,Object> unsetShortTermAllEffectiveRightsCacheSize(Map<String,Object> attrs) {
@@ -55097,7 +55097,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @return zimbraShortTermGranteeCacheExpiration in millseconds, or 50000 (50s)  if unset
      *
-     * @since ZCS 8.7
+     * @since ZCS 8.7,9.0
      */
     @ZAttr(id=1901)
     public long getShortTermGranteeCacheExpiration() {
@@ -55121,7 +55121,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @return zimbraShortTermGranteeCacheExpiration, or "50s" if unset
      *
-     * @since ZCS 8.7
+     * @since ZCS 8.7,9.0
      */
     @ZAttr(id=1901)
     public String getShortTermGranteeCacheExpirationAsString() {
@@ -55146,7 +55146,7 @@ public abstract class ZAttrServer extends NamedEntry {
      * @param zimbraShortTermGranteeCacheExpiration new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.7
+     * @since ZCS 8.7,9.0
      */
     @ZAttr(id=1901)
     public void setShortTermGranteeCacheExpiration(String zimbraShortTermGranteeCacheExpiration) throws com.zimbra.common.service.ServiceException {
@@ -55174,7 +55174,7 @@ public abstract class ZAttrServer extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.7
+     * @since ZCS 8.7,9.0
      */
     @ZAttr(id=1901)
     public Map<String,Object> setShortTermGranteeCacheExpiration(String zimbraShortTermGranteeCacheExpiration, Map<String,Object> attrs) {
@@ -55200,7 +55200,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.7
+     * @since ZCS 8.7,9.0
      */
     @ZAttr(id=1901)
     public void unsetShortTermGranteeCacheExpiration() throws com.zimbra.common.service.ServiceException {
@@ -55227,7 +55227,7 @@ public abstract class ZAttrServer extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.7
+     * @since ZCS 8.7,9.0
      */
     @ZAttr(id=1901)
     public Map<String,Object> unsetShortTermGranteeCacheExpiration(Map<String,Object> attrs) {
@@ -55244,7 +55244,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @return zimbraShortTermGranteeCacheSize, or 128 if unset
      *
-     * @since ZCS 8.7
+     * @since ZCS 8.7,9.0
      */
     @ZAttr(id=1900)
     public int getShortTermGranteeCacheSize() {
@@ -55260,7 +55260,7 @@ public abstract class ZAttrServer extends NamedEntry {
      * @param zimbraShortTermGranteeCacheSize new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.7
+     * @since ZCS 8.7,9.0
      */
     @ZAttr(id=1900)
     public void setShortTermGranteeCacheSize(int zimbraShortTermGranteeCacheSize) throws com.zimbra.common.service.ServiceException {
@@ -55279,7 +55279,7 @@ public abstract class ZAttrServer extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.7
+     * @since ZCS 8.7,9.0
      */
     @ZAttr(id=1900)
     public Map<String,Object> setShortTermGranteeCacheSize(int zimbraShortTermGranteeCacheSize, Map<String,Object> attrs) {
@@ -55296,7 +55296,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.7
+     * @since ZCS 8.7,9.0
      */
     @ZAttr(id=1900)
     public void unsetShortTermGranteeCacheSize() throws com.zimbra.common.service.ServiceException {
@@ -55314,7 +55314,7 @@ public abstract class ZAttrServer extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.7
+     * @since ZCS 8.7,9.0
      */
     @ZAttr(id=1900)
     public Map<String,Object> unsetShortTermGranteeCacheSize(Map<String,Object> attrs) {
