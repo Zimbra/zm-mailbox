@@ -9544,4 +9544,44 @@ TODO: delete them permanently from here
   <desc>Whether the UUENCODE decoder is run when parsing messages from the store</desc>
 </attr>
 
+<attr id="1900" name="zimbraShortTermGranteeCacheSize" type="integer" min="0" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="all"  since="8.7">
+  <globalConfigValue>128</globalConfigValue>
+  <desc>Maximum number of entries in the short term Grantee cache.
+  This cache can improve performance by avoiding recomputing details frequently in a short period of time, for instance for each entry in search results.
+  Can disable the cache be specifying a value of 0
+  </desc>
+</attr>
+
+<attr id="1901" name="zimbraShortTermGranteeCacheExpiration" type="duration" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="all"  since="8.7">
+  <globalConfigValue>50s</globalConfigValue>
+  <desc>Maximum time an entry in the Grantee cache will be regarded as valid.
+  If value is 0, the cache is disabled.
+  This cache can improve performance by avoiding recomputing details frequently in a short period of time, for instance for each entry in search results.
+  The cache is particularly useful when significant use is made of delegated administration.
+  Grantees objects provide a view of what rights a grantee has - although those are checked separately.
+  The longer the value of this setting is, the more stale the view of the details is likely to be.  For this reason, the maximum accepted value is 30m.
+  Larger values will be treated as being 30m
+  </desc>
+</attr>
+
+<attr id="1902" name="zimbraShortTermAllEffectiveRightsCacheSize" type="integer" min="0" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="all"  since="8.7">
+  <globalConfigValue>128</globalConfigValue>
+  <desc>Maximum number of entries in the short term All Effective Rights cache.
+  This cache can improve performance by avoiding recomputing All Effective Rights of named entries like accounts frequently in a short period of time.
+  Can disable the cache be specifying a value of 0
+  </desc>
+</attr>
+
+<attr id="1903" name="zimbraShortTermAllEffectiveRightsCacheExpiration" type="duration" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="all"  since="8.7">
+  <globalConfigValue>50s</globalConfigValue>
+  <desc>Maximum time an entry in the short term All Effective Rights cache will be regarded as valid.
+  If value is 0, the cache is disabled.
+  The cache is particularly useful when significant use is made of delegated administration.
+  This cache can improve performance by avoiding recomputing All Effective Rights of named entries like accounts frequently in a short period of time.
+  All Effective Rights are computations of the rights that named entries like accounts have - although when used, they are checked separately.
+  The longer the value of this setting is, the more stale the view of the details is likely to be.  For this reason, the maximum accepted value is 30m.
+  Larger values will be treated as being 30m
+  </desc>
+</attr>
+
 </attrs>
