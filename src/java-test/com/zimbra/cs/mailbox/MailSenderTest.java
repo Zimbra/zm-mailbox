@@ -26,7 +26,10 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 import javax.mail.util.SharedByteArrayInputStream;
 
+import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -68,6 +71,26 @@ public final class MailSenderTest {
         prov.createAccount("test@zimbra.com", "secret", attrs);
     }
 
+    @AfterClass
+    public static void destroy() throws Exception {
+        Provisioning prov = Provisioning.getInstance();
+        prov.deleteAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
+    }
+    
+    @Before
+    public void setUp() throws Exception {
+        cleanup();
+    }
+    
+    @After
+    public void tearDown() throws Exception {
+        cleanup();
+    }
+    
+    private void cleanup() throws Exception {
+        MailboxTestUtil.clearData();
+    }
+    
     @Test
     public void getSenderHeadersSimpleAuth() throws Exception {
         Provisioning prov = Provisioning.getInstance();

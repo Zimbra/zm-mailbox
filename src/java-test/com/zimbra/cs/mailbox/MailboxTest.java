@@ -26,6 +26,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -37,7 +38,6 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.ZAttrProvisioning.MailThreadingAlgorithm;
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.InternetAddress;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.ArrayUtil;
@@ -46,6 +46,8 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.index.BrowseTerm;
+import com.zimbra.cs.index.IndexingQueueAdapter;
+import com.zimbra.cs.index.IndexingService;
 import com.zimbra.cs.index.SearchParams;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.index.ZimbraQueryResults;
@@ -56,6 +58,7 @@ import com.zimbra.cs.session.PendingModifications.ModificationKey;
 import com.zimbra.cs.store.MockStoreManager;
 import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.util.ProvisioningUtil;
+import com.zimbra.cs.util.Zimbra;
 
 /**
  * Unit test for {@link Mailbox}.
@@ -63,7 +66,7 @@ import com.zimbra.cs.util.ProvisioningUtil;
  * @author ysasaki
  */
 public final class MailboxTest {
-
+    int defaultCacheSizeSetting = 1024;
     @BeforeClass
     public static void init() throws Exception {
         MailboxTestUtil.initServer();
@@ -74,6 +77,7 @@ public final class MailboxTest {
 
     @Before
     public void setUp() throws Exception {
+        defaultCacheSizeSetting =  Provisioning.getInstance().getLocalServer().getIndexTermsCacheSize();
         MailboxTestUtil.clearData();
     }
 
@@ -198,6 +202,7 @@ public final class MailboxTest {
 
     @Test
     public void browseOverLimit() throws Exception {
+        Provisioning.getInstance().getLocalServer().setIndexTermsCacheSize(256);
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(
                 MockProvisioning.DEFAULT_ACCOUNT_ID);
         int indexTermsCacheSize = Provisioning.getInstance().getLocalServer().getIndexTermsCacheSize();
@@ -841,13 +846,89 @@ public final class MailboxTest {
                 MockProvisioning.DEFAULT_ACCOUNT_ID);
         mbox.getVisibleFolders(new OperationContext(mbox));
     }
+    
+    @Test
+    public void testUpdateVersion() throws Exception {
+        //don't use default account to avoid messing up other tests
+        Map<String, Object> attrs = Maps.newHashMap();
+        attrs.put(Provisioning.A_zimbraId, UUID.randomUUID().toString());
+        Account acc = Provisioning.getInstance().createAccount("upgradetest@zimbra.com", "secret", attrs);
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acc);
+        
+        short currentMajor = MailboxVersion.CURRENT.getMajor();
+        short currentMinor = MailboxVersion.CURRENT.getMinor();
+        short oldMajor = (short)(currentMajor-1);
+        short oldMinor = (short)1;
+        short newMajor = (short)(currentMajor+1);
+        short newMinor = (short)(currentMinor+1);
+        
+        //check that mailbox has latest version upon creation
+        assertEquals("wrong minor version", currentMinor,mbox.getVersion().getMinor());
+        assertEquals("wrong minor version", currentMajor,mbox.getVersion().getMajor());
 
+        //test downgrading version
+        MailboxVersion olderVersion = new MailboxVersion(oldMajor,oldMinor);
+        mbox.updateVersion(olderVersion);
+        MailboxVersion updatedVersion = mbox.getVersion();
+        assertEquals("wrong major version after downgrading version",oldMajor,updatedVersion.getMajor());
+        assertEquals("wrong minor version after downgrading version",oldMinor,updatedVersion.getMinor());
+        
+        //test upgrading version
+        MailboxVersion newerVersion = new MailboxVersion(newMajor,newMinor);
+        mbox.updateVersion(newerVersion);
+        updatedVersion = mbox.getVersion();
+        assertEquals("wrong major version after upgrading ersion",newMajor,updatedVersion.getMajor());
+        assertEquals("wrong minor version after upgrading ersion",newMinor,updatedVersion.getMinor());
+    }
+
+    @Test
+    public void testUpgradePreKissMailbox() throws Exception {
+        //don't use default account to avoid messing up other tests
+        Map<String, Object> attrs = Maps.newHashMap();
+        attrs.put(Provisioning.A_zimbraId, UUID.randomUUID().toString());
+        Account acc = Provisioning.getInstance().createAccount("upgradetest@zimbra.com", "secret", attrs);
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acc);
+
+        //indexing service should not be running at the beginning of this test
+        Zimbra.getAppContext().getBean(IndexingService.class).shutDown();
+        
+        MailboxVersion olderVersion = new MailboxVersion((short)2,(short)7);
+        mbox.updateVersion(olderVersion);
+        MailboxVersion updatedVersion = mbox.getVersion();
+        assertEquals("wrong major version after downgrading version",2,updatedVersion.getMajor());
+        assertEquals("wrong minor version after downgrading version",7,updatedVersion.getMinor());
+        
+        DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX);
+        mbox.addMessage(null, new ParsedMessage(
+                "From: greg@zimbra.com\r\nTo: test@zimbra.com\r\nSubject: Shall I compare thee to a summer's day".getBytes(), false), dopt, null);
+        mbox.addMessage(null, new ParsedMessage(
+                "From: greg@zimbra.com\r\nTo: test@zimbra.com\r\nSubject: Thou art more lovely and more temperate".getBytes(), false), dopt, null);
+
+        IndexingQueueAdapter queueAdapter = Zimbra.getAppContext().getBean(IndexingQueueAdapter.class);
+        assertEquals("at this point total count should be 0", 0, queueAdapter.getTotalMailboxTaskCount(acc.getId()));
+        assertEquals("at this point succeeded count should be 0", 0, queueAdapter.getSucceededMailboxTaskCount(acc.getId()));
+        
+        mbox.index.deleteIndex();
+        mbox.migrate();
+        
+        assertEquals("at this point total count should be 2", 2, queueAdapter.getTotalMailboxTaskCount(acc.getId()));
+        assertEquals("at this point succeeded count should be 0", 0, queueAdapter.getSucceededMailboxTaskCount(acc.getId()));
+        //start indexing service
+        Zimbra.getAppContext().getBean(IndexingService.class).startUp();
+
+        MailboxTestUtil.waitForIndexing(mbox);
+        assertEquals("at this point total count should be 2", 2, queueAdapter.getTotalMailboxTaskCount(acc.getId()));
+        assertEquals("at this point succeeded count should be 2", 2, queueAdapter.getSucceededMailboxTaskCount(acc.getId()));
+        
+        assertEquals("wrong major version after downgrading version",MailboxVersion.CURRENT.getMajor(),mbox.getVersion().getMajor());
+        assertEquals("wrong minor version after downgrading version",MailboxVersion.CURRENT.getMinor(),mbox.getVersion().getMinor());
+    }
     /**
      * @throws java.lang.Exception
      */
     @After
     public void tearDown() throws Exception {
         MailboxTestUtil.clearData();
-
+        Provisioning.getInstance().getLocalServer().setIndexTermsCacheSize(defaultCacheSizeSetting);
     }
 }

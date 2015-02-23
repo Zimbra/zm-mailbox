@@ -716,14 +716,14 @@ public class Mailbox {
                 return false;
             }
             index.open(); // init the index
-            migrate(mData);
+            migrate();
             return open = true;
         } finally {
             lock.release();
         }
     }
 
-    void migrate(MailboxData mData) throws ServiceException {
+    void migrate() throws ServiceException {
         if (mData.version == null) {
             // if we've just initialized() the mailbox, then the version will
             // be set in the config, but it won't be committed yet -- and unfortunately
@@ -741,11 +741,6 @@ public class Mailbox {
         }
 
         if (!mData.version.atLeast(MailboxVersion.CURRENT)) { // check for mailbox upgrade
-            if (!mData.version.atLeast(1, 2)) {
-                ZimbraLog.mailbox.info("Upgrade mailbox from %s to 1.2", getVersion());
-                index.upgradeMailboxTo1_2();
-            }
-
             // same prescription for both the 1.2 -> 1.3 and 1.3 -> 1.4 migrations
             if (!mData.version.atLeast(1, 4)) {
                 ZimbraLog.mailbox.info("Upgrade mailbox from %s to 1.4", getVersion());
@@ -837,6 +832,15 @@ public class Mailbox {
                 ZimbraLog.mailbox.info("Upgrade mailbox from %s to 2.7", getVersion());
                 MailboxUpgrade.upgradeTo2_7(this);
                 updateVersion(new MailboxVersion((short) 2, (short) 7));
+            }
+            
+            /*
+             * 9.0 introduced a new external index store that is not backwards compatible with old index stores
+             * queue all items for re-indexing into the new index store
+             */
+            if(!mData.version.atLeast(3, 0)) {
+                ZimbraLog.mailbox.info("Upgrade mailbox from %s to 3.0", getVersion());
+                index.upgradeMailboxTo3_0();
             }
         }
     }
