@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2009, 2010, 2011, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -19,6 +19,9 @@
  * Created on Jun 17, 2004
  */
 package com.zimbra.cs.service.admin;
+
+import java.util.List;
+import java.util.Map;
 
 import com.zimbra.common.account.Key;
 import com.zimbra.common.service.ServiceException;
@@ -37,9 +40,6 @@ import com.zimbra.cs.session.AdminSession;
 import com.zimbra.cs.session.Session;
 import com.zimbra.soap.ZimbraSoapContext;
 
-import java.util.List;
-import java.util.Map;
-
 /**
  * @author schemers
  */
@@ -48,10 +48,12 @@ public class SearchAccounts extends AdminDocumentHandler {
     /**
      * must be careful and only allow access to domain if domain admin
      */
+    @Override
     public boolean domainAuthSufficient(Map context) {
         return true;
     }
-    
+
+    @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
@@ -73,7 +75,7 @@ public class SearchAccounts extends AdminDocumentHandler {
 
         // if we are a domain admin only, restrict to domain
         //
-        // Note: isDomainAdminOnly *always* returns false for pure ACL based AccessManager 
+        // Note: isDomainAdminOnly *always* returns false for pure ACL based AccessManager
         if (isDomainAdminOnly(zsc)) {
             if (domain == null) {
                 domain = getAuthTokenAccountDomain(zsc).getName();
@@ -90,33 +92,34 @@ public class SearchAccounts extends AdminDocumentHandler {
         }
 
         AdminAccessControl aac = AdminAccessControl.getAdminAccessControl(zsc);
-        AdminAccessControl.SearchDirectoryRightChecker rightChecker = 
+        AdminAccessControl.SearchDirectoryRightChecker rightChecker =
             new AdminAccessControl.SearchDirectoryRightChecker(aac, prov, null);
-        
-        
+
+
         SearchDirectoryOptions searchOpts = new SearchDirectoryOptions(d, attrs);
         searchOpts.setTypes(types);
         searchOpts.setSortOpt(sortAscending ? SortOpt.SORT_ASCENDING : SortOpt.SORT_DESCENDING);
         searchOpts.setSortAttr(sortBy);
         searchOpts.setFilterString(FilterId.ADMIN_SEARCH, query);
-            
-        List accounts;
+
+        List<NamedEntry> accounts;
+        int limitMax = offset+limit;
         AdminSession session = (AdminSession) getSession(zsc, Session.Type.ADMIN);
         if (session != null) {
             accounts = session.searchDirectory(searchOpts, offset, rightChecker);
         } else {
             accounts = prov.searchDirectory(searchOpts);
-            accounts = rightChecker.getAllowed(accounts);
+            accounts = rightChecker.getAllowed(accounts, limitMax);
         }
 
         Element response = zsc.createElement(AdminConstants.SEARCH_ACCOUNTS_RESPONSE);
-        int i, limitMax = offset+limit;
-        for (i=offset; i < limitMax && i < accounts.size(); i++) {
-            NamedEntry entry = (NamedEntry) accounts.get(i);
+        int numAccounts;
+        for (numAccounts=offset; numAccounts < limitMax && numAccounts < accounts.size(); numAccounts++) {
+            NamedEntry entry = accounts.get(numAccounts);
             SearchDirectory.encodeEntry(prov, response, entry, applyCos, null, aac);
-        }          
+        }
 
-        response.addAttribute(AdminConstants.A_MORE, i < accounts.size());
+        response.addAttribute(AdminConstants.A_MORE, numAccounts < accounts.size());
         response.addAttribute(AdminConstants.A_SEARCH_TOTAL, accounts.size());
         return response;
     }
@@ -131,7 +134,7 @@ public class SearchAccounts extends AdminDocumentHandler {
         relatedRights.add(Admin.R_listCalendarResource);
         relatedRights.add(Admin.R_listDistributionList);
         relatedRights.add(Admin.R_listDomain);
-        
+
         notes.add(AdminRightCheckPoint.Notes.LIST_ENTRY);
     }
 }

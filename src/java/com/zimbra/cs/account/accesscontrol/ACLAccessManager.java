@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -43,6 +43,7 @@ import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.account.accesscontrol.Rights.User;
 import com.zimbra.cs.account.accesscontrol.generated.UserRights;
 import com.zimbra.cs.account.names.NameUtil;
+
 
 /**
  * @author pshao
@@ -319,8 +320,9 @@ public class ACLAccessManager extends AccessManager implements AdminConsoleCapab
         } else if (hardRulesResult == Boolean.FALSE) {
             return AllowedAttrs.DENY_ALL_ATTRS();
         } else {
-            return CheckAttrRight.accessibleAttrs(new Grantee(credentials), target,
-                    AdminRight.PR_GET_ATTRS, false);
+            Grantee grantee = Grantee.getGrantee(credentials);
+            AttrRightChecker rightChecker = CheckAttrRight.accessibleAttrs(grantee, target, AdminRight.PR_GET_ATTRS, false);
+            return rightChecker;
         }
     }
 
@@ -362,7 +364,7 @@ public class ACLAccessManager extends AccessManager implements AdminConsoleCapab
             return hardRulesResult.booleanValue();
         }
 
-        Grantee grantee = new Grantee(granteeAcct);
+        Grantee grantee = Grantee.getGrantee(granteeAcct);
         AllowedAttrs allowedAttrs = CheckAttrRight.accessibleAttrs(grantee, target, AdminRight.PR_SET_ATTRS, false);
         return allowedAttrs.canSetAttrsWithinConstraints(grantee, target, attrsNeeded);
     }
@@ -638,14 +640,14 @@ public class ACLAccessManager extends AccessManager implements AdminConsoleCapab
     private boolean checkAttrRight(Account granteeAcct, Entry target,
             AttrRight rightNeeded, boolean canDelegateNeeded) throws ServiceException {
         AllowedAttrs allowedAttrs =
-            CheckAttrRight.accessibleAttrs(new Grantee(granteeAcct), target, rightNeeded, canDelegateNeeded);
+            CheckAttrRight.accessibleAttrs(Grantee.getGrantee(granteeAcct), target, rightNeeded, canDelegateNeeded);
         return allowedAttrs.canAccessAttrs(rightNeeded.getAttrs(), target);
     }
 
     private boolean canGetAttrsInternal(Account granteeAcct, Entry target,
             Set<String> attrsNeeded, boolean canDelegateNeeded) throws ServiceException {
         AllowedAttrs allowedAttrs =
-            CheckAttrRight.accessibleAttrs(new Grantee(granteeAcct), target,
+            CheckAttrRight.accessibleAttrs(Grantee.getGrantee(granteeAcct), target,
                     AdminRight.PR_GET_ATTRS, canDelegateNeeded);
 
         return allowedAttrs.canAccessAttrs(attrsNeeded, target);
@@ -654,7 +656,7 @@ public class ACLAccessManager extends AccessManager implements AdminConsoleCapab
     private boolean canSetAttrsInternal(Account granteeAcct, Entry target,
             Set<String> attrsNeeded, boolean canDelegateNeeded) throws ServiceException {
         AllowedAttrs allowedAttrs =
-            CheckAttrRight.accessibleAttrs(new Grantee(granteeAcct), target,
+            CheckAttrRight.accessibleAttrs(Grantee.getGrantee(granteeAcct), target,
                     AdminRight.PR_SET_ATTRS, canDelegateNeeded);
         return allowedAttrs.canAccessAttrs(attrsNeeded, target);
     }
