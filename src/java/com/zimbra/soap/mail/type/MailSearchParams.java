@@ -34,6 +34,7 @@ import com.zimbra.soap.base.SearchParameters;
 import com.zimbra.soap.json.jackson.annotate.ZimbraJsonAttribute;
 import com.zimbra.soap.type.AttributeName;
 import com.zimbra.soap.type.CursorInfo;
+import com.zimbra.soap.type.MsgContent;
 import com.zimbra.soap.type.WantRecipsSetting;
 import com.zimbra.soap.type.ZmBoolean;
 
@@ -372,7 +373,18 @@ public class MailSearchParams implements SearchParameters {
     @XmlElement(name=MailConstants.E_CURSOR /* cursor */, required=false)
     private CursorInfo cursor;
 
+    /**
+     * @zm-api-field-tag want-content
+     * @zm-api-field-description used by clients if they want mail content with/without quoted text
+     */
+    @XmlAttribute(name=MailConstants.A_WANT_CONTENT  /*content*/ , required=false)
+    private MsgContent wantContent;
+
     public MailSearchParams() {
+    }
+
+    public void setWantContent(MsgContent msgContent) {
+        this.wantContent = msgContent;
     }
 
     @Override
@@ -505,6 +517,10 @@ public class MailSearchParams implements SearchParameters {
     public ZmBoolean getFullConversation() { return fullConversation; }
     public void setFullConversation(ZmBoolean fullConversation) { this.fullConversation = fullConversation; }
 
+    public MsgContent getWantContent() {
+        return wantContent;
+    }
+
     public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("includeTagDeleted", includeTagDeleted)
@@ -534,7 +550,8 @@ public class MailSearchParams implements SearchParameters {
             .add("headers", headers)
             .add("calTz", calTz)
             .add("locale", locale)
-            .add("cursor", cursor);
+            .add("cursor", cursor)
+            .add("wantContent", wantContent);
     }
 
     @Override
