@@ -17,7 +17,9 @@
 package com.zimbra.common.util;
 
 import java.io.File;
+import java.text.SimpleDateFormat;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -768,6 +770,15 @@ public final class ZimbraLog {
                 break;
             }
         }
+        return sb.toString();
+    }
+
+    public static String elapsedTime(long start, long end) {
+        StringBuilder sb = new StringBuilder("#ELAPSED_TIME=").append(end - start).append("ms (");
+        sb.append(new SimpleDateFormat("HH:mm:ss.SSS").format(new Date(start)));
+        sb.append('-');
+        sb.append(new SimpleDateFormat("HH:mm:ss.SSS").format(new Date(end)));
+        sb.append(')');
         return sb.toString();
     }
 
