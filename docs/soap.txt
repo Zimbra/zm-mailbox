@@ -1786,7 +1786,7 @@ message-part result:
 -----------
 
 <SearchConvRequest cid="conversation-id" [limit="..."] [offset="..."] [sortBy="{sort-by}"] [types="{types}"] [nest="0|1"]
-    [fetch="0|1|u|u1|hits|all|!|hits!|u!|u1!|{comma-separated item-ids}] [max="{max-inlined-length}"] [html="1"] [read="1"] [neuter="0"] [needExp="1|0"]>
+    [fetch="0|1|u|u1|hits|all|!|hits!|u!|u1!|{comma-separated item-ids}] [max="{max-inlined-length}"] [html="1"] [read="1"] [neuter="0"] [needExp="1|0"] [wantContent="full|original|both"]>
   *(<header n="{header-name}/>)
   <query>{query-string}</query>
 </SearchConvRequest>
@@ -1805,6 +1805,13 @@ message-part result:
     hits!: if there are matching messages, they are expanded inline, otherwise the first message is expanded
     all: all messages are expanded inline
     {comma-separated item-ids}: only the messages with {item-id} in the list are expanded inline
+
+wantContent = "full" to get the complete message along with the quoted content
+wantContent = "original" to get the message without quoted content
+wantContent = "both" to get complete message as well as the message without quoted content
+By default wantContent = "full"
+
+Note: Quoted text identification is a best effort. It is not supported by any RFCs
 
   SEE SearchRequest for more info
 
@@ -1981,7 +1988,7 @@ needExp="1" to return group info (isGroup and exp flags) on <e> elements in the 
 
 <GetMsgRequest>
   <m id="{msg-id}" [read="1"] [raw="1"] [max="{max-inlined-length}"] [html="1"] [neuter="0"] [part="{part}"]
-     [ridZ="YYYYMMDD[ThhmmssZ]"] [needExp="1|0"]>
+     [ridZ="YYYYMMDD[ThhmmssZ]"] [needExp="1|0"] [wantContent="full|original|both"]>
     *(<header n="{header-name}/>)
   </m>
 </GetMsgRequest>
@@ -2010,6 +2017,13 @@ ridZ="YYYYMMDD[ThhmmssZ]" is used only when making GetMsg call to open an instan
 needExp="1" to return group info (isGroup and exp flags) on <e> elements in the response
        (default is 0.)
 
+wantContent = "full" to get the complete message along with the quoted content
+wantContent = "original" to get the message without quoted content
+wantContent = "both" to get complete message as well as the message without quoted content
+By default wantContent = "full"
+
+Note: Quoted text identification is a best effort. It is not supported by any RFCs
+
 if <header>s are requested, any matching headers are inlined into the response
     (not available when raw="1")
 
@@ -2027,6 +2041,7 @@ if <header>s are requested, any matching headers are inlined into the response
     [<shr><content>{share-announcement-in-xml}</content</shr>]
     [<dlSubs><content>{dl-subscription-request-in-xml}</content</dlSubs>]
     [<content (url="...")>...</content>]
+    [<origContent>...</origContent>]
   </m>
 </GetMsgResponse>
 
@@ -2035,7 +2050,7 @@ if <header>s are requested, any matching headers are inlined into the response
   managed by this user.  The attribute is set to the email of the forwarding user, for whom the invite was
   originally intended.
 - when a message has been re-sent, there will be "rf" <e> elements (Resent-From) and an "rd" attribute (Resent-Date)
-
+- origContent contains the message without quoted content
 
 If needExp is "1" in the request, two additional flags will be included in <e> elements for the message:
   - isGroup: "1" if the email address is a group

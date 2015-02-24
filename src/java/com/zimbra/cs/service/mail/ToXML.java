@@ -77,6 +77,7 @@ import com.zimbra.common.util.L10nUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.Pair;
+import com.zimbra.common.util.QuotedTextUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.TruncatingWriter;
 import com.zimbra.common.util.ZimbraLog;
@@ -159,6 +160,7 @@ import com.zimbra.soap.mail.type.Policy;
 import com.zimbra.soap.mail.type.RetentionPolicy;
 import com.zimbra.soap.mail.type.XParam;
 import com.zimbra.soap.mail.type.XProp;
+import com.zimbra.soap.type.MsgContent;
 import com.zimbra.soap.type.WantRecipsSetting;
 
 /**
@@ -1304,11 +1306,37 @@ public final class ToXML {
             OperationContext octxt, Message msg, String part, int maxSize, boolean wantHTML,
             boolean neuter, Set<String> headers, boolean serializeType, boolean wantExpandGroupInfo, boolean encodeMissingBlobs)
     throws ServiceException {
+        return encodeMessageAsMP(parent, ifmt, octxt, msg, part, maxSize, wantHTML, neuter,
+            headers, serializeType, wantExpandGroupInfo, encodeMissingBlobs,
+            MsgContent.full);
+    }
+
+    /** Encodes a Message object into <m> element with <mp> elements for
+     *  message body.
+     * @param parent  The Element to add the new <tt>&lt;m></tt> to.
+     * @param ifmt    The formatter to sue when serializing item ids.
+     * @param msg     The Message to serialize.
+     * @param part    If non-null, serialize this message/rfc822 subpart of
+     *                the Message instead of the Message itself.
+     * @param maxSize TODO
+     * @param wantHTML  <tt>true</tt> to prefer HTML parts as the "body",
+     *                  <tt>false</tt> to prefer text/plain parts.
+     * @param neuter  Whether to rename "src" attributes on HTML <img> tags.
+     * @param headers Extra message headers to include in the returned element.
+     * @param serializeType If <tt>false</tt>, always serializes as an
+     *                      <tt>&lt;m></tt> element.
+     * @return The newly-created <tt>&lt;m></tt> Element, which has already
+     *         been added as a child to the passed-in <tt>parent</tt>.
+     * @throws ServiceException */
+    public static Element encodeMessageAsMP(Element parent, ItemIdFormatter ifmt,
+            OperationContext octxt, Message msg, String part, int maxSize, boolean wantHTML,
+            boolean neuter, Set<String> headers, boolean serializeType, boolean wantExpandGroupInfo, boolean encodeMissingBlobs, MsgContent wantContent)
+    throws ServiceException {
         Mailbox mbox = msg.getMailbox();
         int changeId = msg.getSavedSequence();
         while (true) {
             try {
-                return encodeMessageAsMP(parent, ifmt, octxt, msg, part, maxSize, wantHTML, neuter, headers, serializeType, wantExpandGroupInfo, false, encodeMissingBlobs);
+                return encodeMessageAsMP(parent, ifmt, octxt, msg, part, maxSize, wantHTML, neuter, headers, serializeType, wantExpandGroupInfo, false, encodeMissingBlobs, wantContent);
             } catch (ServiceException e) {
                 // problem writing the message structure to the response
                 //   (this case generally means that the blob backing the MimeMessage disappeared halfway through)
@@ -1328,7 +1356,7 @@ public final class ToXML {
                 // we're kinda screwed here -- we weren't able to write the message structure and it's not clear what went wrong.
                 //   best we can do now is send back what we got and apologize.
                 ZimbraLog.soap.warn("could not serialize full message structure in response", e);
-                return encodeMessageAsMP(parent, ifmt, octxt, msg, part, maxSize, wantHTML, neuter, headers, serializeType, wantExpandGroupInfo, true);
+                return encodeMessageAsMP(parent, ifmt, octxt, msg, part, maxSize, wantHTML, neuter, headers, serializeType, wantExpandGroupInfo, true, wantContent);
             }
         }
     }
@@ -1355,7 +1383,7 @@ public final class ToXML {
     private static Element encodeMessageAsMP(Element parent, ItemIdFormatter ifmt,
             OperationContext octxt, Message msg, String part, int maxSize, boolean wantHTML,
             boolean neuter, Set<String> headers, boolean serializeType, boolean wantExpandGroupInfo,
-            boolean bestEffort, boolean encodeMissingBlobs)
+            boolean bestEffort, boolean encodeMissingBlobs, MsgContent wantContent)
     throws ServiceException {
         Element m = null;
         boolean success = false;
@@ -1501,7 +1529,7 @@ public final class ToXML {
             List<MPartInfo> parts = Mime.getParts(mm, getDefaultCharset(msg));
             if (parts != null && !parts.isEmpty()) {
                 Set<MPartInfo> bodies = Mime.getBody(parts, wantHTML);
-                addParts(m, parts.get(0), bodies, part, maxSize, neuter, false, getDefaultCharset(msg), bestEffort);
+                addParts(m, parts.get(0), bodies, part, maxSize, neuter, false, getDefaultCharset(msg), bestEffort, wantContent);
             }
 
             if (wantExpandGroupInfo) {
@@ -2425,7 +2453,13 @@ public final class ToXML {
     private enum VisitPhase { PREVISIT, POSTVISIT }
 
     private static void addParts(Element root, MPartInfo mpiRoot, Set<MPartInfo> bodies, String prefix, int maxSize,
-            boolean neuter, boolean excludeCalendarParts, String defaultCharset, boolean swallowContentExceptions)
+        boolean neuter, boolean excludeCalendarParts, String defaultCharset, boolean swallowContentExceptions)
+throws ServiceException {
+        addParts(root, mpiRoot, bodies, prefix, maxSize, neuter, excludeCalendarParts, defaultCharset, swallowContentExceptions, MsgContent.full);
+    }
+
+    private static void addParts(Element root, MPartInfo mpiRoot, Set<MPartInfo> bodies, String prefix, int maxSize,
+            boolean neuter, boolean excludeCalendarParts, String defaultCharset, boolean swallowContentExceptions, MsgContent wantContent)
     throws ServiceException {
         MPartInfo mpi = mpiRoot;
         LinkedList<Pair<Element, LinkedList<MPartInfo>>> queue = new LinkedList<Pair<Element, LinkedList<MPartInfo>>>();
@@ -2443,7 +2477,7 @@ public final class ToXML {
 
             mpi = parts.getFirst();
             Element child = addPart(phase, level.getFirst(), root, mpi, bodies, prefix, maxSize, neuter,
-                    excludeCalendarParts, defaultCharset, swallowContentExceptions);
+                    excludeCalendarParts, defaultCharset, swallowContentExceptions, wantContent);
             if (phase == VisitPhase.PREVISIT && child != null && mpi.hasChildren()) {
                 queue.addLast(new Pair<Element, LinkedList<MPartInfo>>(child, new LinkedList<MPartInfo>(mpi.getChildren())));
             } else {
@@ -2454,7 +2488,7 @@ public final class ToXML {
 
     private static Element addPart(VisitPhase phase, Element parent, Element root, MPartInfo mpi,
             Set<MPartInfo> bodies, String prefix, int maxSize, boolean neuter, boolean excludeCalendarParts,
-            String defaultCharset, boolean swallowContentExceptions)
+            String defaultCharset, boolean swallowContentExceptions, MsgContent wantContent)
     throws ServiceException {
         if (phase == VisitPhase.POSTVISIT) {
             return null;
@@ -2584,7 +2618,7 @@ public final class ToXML {
             }
 
             try {
-                addContent(el, mpi, maxSize, neuter, defaultCharset);
+                addContent(el, mpi, maxSize, neuter, defaultCharset, wantContent);
             } catch (IOException e) {
                 if (!swallowContentExceptions) {
                     throw ServiceException.FAILURE("error serializing part content", e);
@@ -2631,6 +2665,24 @@ public final class ToXML {
      * @see HtmlDefang#defang(String, boolean) */
     private static void addContent(Element elt, MPartInfo mpi, int maxSize, boolean neuter, String defaultCharset)
     throws IOException, MessagingException {
+        addContent(elt, mpi, maxSize, neuter, defaultCharset, MsgContent.full);
+    }
+
+    /** Adds the decoded text content of a message part to the {@link Element}.
+     *  The content is added as the value of a new <tt>&lt;content></tt>
+     *  sub-element.  <i>Note: This method will only extract the content of a
+     *  <b>text/*</b> or <b>xml/*</b> message part.</i>
+     *
+     * @param elt     The element to add the <tt>&lt;content></tt> to.
+     * @param mpi     The message part to extract the content from.
+     * @param maxSize The maximum number of characters to inline (<=0 is unlimited).
+     * @param neuter  Whether to "neuter" image <tt>src</tt> attributes.
+     * @parame defaultCharset  The user's default charset preference.
+     * @throws MessagingException when message parsing or CTE-decoding fails
+     * @throws IOException on error during parsing or defanging
+     * @see HtmlDefang#defang(String, boolean) */
+    private static void addContent(Element elt, MPartInfo mpi, int maxSize, boolean neuter, String defaultCharset, MsgContent wantContent)
+    throws IOException, MessagingException {
         // TODO: support other parts
         String ctype = mpi.getContentType();
         if (!ctype.matches(MimeConstants.CT_TEXT_WILD) && !ctype.matches(MimeConstants.CT_XML_WILD)) {
@@ -2640,6 +2692,8 @@ public final class ToXML {
         Mime.repairTransferEncoding(mp);
 
         String data = null;
+        String originalContent = null;
+        wantContent = wantContent == null ? MsgContent.full : wantContent;
         try {
             if (maxSize <= 0) {
                 maxSize = (int) Provisioning.getInstance().getLocalServer().getMailContentMaxSize();
@@ -2686,6 +2740,9 @@ public final class ToXML {
                         data = sw.toString();
                     }
                 }
+                if (wantContent.equals(MsgContent.original) || wantContent.equals(MsgContent.both)) {
+                    originalContent = removeQuotedText(data, true);
+                }
             } finally {
                 if (tw != null) {
                     wasTruncated = tw.wasTruncated();
@@ -2709,6 +2766,10 @@ public final class ToXML {
                     // of the source, so set the attr here.
                     wasTruncated = true;
                 }
+                if (wantContent.equals(MsgContent.original) || wantContent.equals(MsgContent.both)) {
+                    originalContent = TextEnrichedHandler.convertToHTML(removeQuotedText(enriched,
+                        false));
+                }
                 data = TextEnrichedHandler.convertToHTML(enriched);
             } finally {
                 ByteUtil.closeStream(stream);
@@ -2721,6 +2782,9 @@ public final class ToXML {
                 reader = Mime.getTextReader(stream, mp.getContentType(), defaultCharset);
                 int maxChars = (maxSize > 0 ? maxSize + 1 : -1);
                 data = ByteUtil.getContent(reader, maxChars, false);
+                if (wantContent.equals(MsgContent.original) || wantContent.equals(MsgContent.both)) {
+                    originalContent = removeQuotedText(data, false);
+                }
                 if (data.length() == maxChars) {
                     wasTruncated = true;
                 }
@@ -2730,7 +2794,7 @@ public final class ToXML {
             }
         }
 
-        if (data != null) {
+        if (data != null && !wantContent.equals(MsgContent.original)) {
             data = StringUtil.stripControlCharacters(data);
             if (wasTruncated) {
                 elt.addAttribute(MailConstants.A_TRUNCATED_CONTENT, true);
@@ -2740,9 +2804,21 @@ public final class ToXML {
             }
             elt.addAttribute(MailConstants.E_CONTENT, data, Element.Disposition.CONTENT);
         }
+        if (originalContent != null && (wantContent.equals(MsgContent.original) || wantContent.equals(MsgContent.both))) {
+            originalContent = StringUtil.stripControlCharacters(originalContent);
+            elt.addUniqueElement(MailConstants.E_ORIG_CONTENT).setText(originalContent);
+        }
         // TODO: CDATA worth the effort?
     }
 
+
+    /**
+     * @param data
+     * @return
+     */
+    private static String removeQuotedText(String data, boolean isHtml) {
+        return data != null ? new QuotedTextUtil().getOriginalContent(data, isHtml) : data;
+    }
 
     public enum EmailType {
         NONE(null), FROM("f"), TO("t"), CC("c"), BCC("b"), REPLY_TO("r"), SENDER("s"), READ_RECEIPT("n"), RESENT_FROM("rf");

@@ -259,7 +259,7 @@ final class SearchResponse {
         if (expandMsg) {
             el = ToXML.encodeMessageAsMP(element, ifmt, octxt, msg, null, params.getMaxInlinedLength(),
                     params.getWantHtml(), params.getNeuterImages(), params.getInlinedHeaders(), true,
-                    params.getWantExpandGroupInfo(), Provisioning.getInstance().getLocalServer().isMimeEncodeMissingBlob());
+                    params.getWantExpandGroupInfo(), Provisioning.getInstance().getLocalServer().isMimeEncodeMissingBlob(), params.getWantContent());
         } else {
             el = ToXML.encodeMessageSummary(element, ifmt, octxt, msg, params.getWantRecipients(),
                     params.isQuick() ? PendingModifications.Change.CONTENT : ToXML.NOTIFY_FIELDS);

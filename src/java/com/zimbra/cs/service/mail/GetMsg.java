@@ -39,6 +39,7 @@ import com.zimbra.cs.redolog.RedoLogProvider;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.soap.ZimbraSoapContext;
+import com.zimbra.soap.type.MsgContent;
 
 /**
  * @author schemers
@@ -68,6 +69,8 @@ public class GetMsg extends MailDocumentHandler {
         Element eMsg = request.getElement(MailConstants.E_MSG);
         ItemId iid = new ItemId(eMsg.getAttribute(MailConstants.A_ID), zsc);
         String part = eMsg.getAttribute(MailConstants.A_PART, null);
+        MsgContent wantContent = MsgContent.fromString(eMsg.getAttribute(MailConstants.A_WANT_CONTENT, null));
+        wantContent = wantContent == null ? MsgContent.full : wantContent;
 
         boolean raw = eMsg.getAttributeBool(MailConstants.A_RAW, false);
         boolean read = eMsg.getAttributeBool(MailConstants.A_MARK_READ, false);
@@ -111,7 +114,7 @@ public class GetMsg extends MailDocumentHandler {
                 ToXML.encodeMessageAsMIME(response, ifmt, octxt, msg, part, false);
             } else {
                 ToXML.encodeMessageAsMP(response, ifmt, octxt, msg, part, maxSize,
-                        wantHTML, neuter, headers, false, needGroupInfo, Provisioning.getInstance().getLocalServer().isMimeEncodeMissingBlob());
+                        wantHTML, neuter, headers, false, needGroupInfo, Provisioning.getInstance().getLocalServer().isMimeEncodeMissingBlob(), wantContent);
             }
         }
 

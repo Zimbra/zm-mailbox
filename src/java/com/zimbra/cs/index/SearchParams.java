@@ -52,6 +52,7 @@ import com.zimbra.soap.base.SearchParameters;
 import com.zimbra.soap.mail.type.MailSearchParams;
 import com.zimbra.soap.type.AttributeName;
 import com.zimbra.soap.type.CursorInfo;
+import com.zimbra.soap.type.MsgContent;
 import com.zimbra.soap.type.WantRecipsSetting;
 import com.zimbra.soap.type.ZmBoolean;
 
@@ -94,6 +95,7 @@ public final class SearchParams implements Cloneable {
     private long calItemExpandEnd = -1;
     private boolean inDumpster = false;  // search live data or dumpster data
     private boolean fullConversation = false;  // All messages in a matching conversation should be returned
+    private MsgContent wantContent;
 
     /** If FALSE, then items with the \Deleted tag set are not returned. */
     private boolean includeTagDeleted = false;
@@ -235,6 +237,10 @@ public final class SearchParams implements Cloneable {
 
     public void setFullConversation(boolean value) {
         fullConversation = value;
+    }
+
+    public MsgContent getWantContent() {
+        return wantContent;
     }
 
     public void setHopCount(int value) {
@@ -425,6 +431,10 @@ public final class SearchParams implements Cloneable {
         fetch = value;
     }
 
+    public void setWantContent(MsgContent wantContent) {
+        this.wantContent = wantContent;
+    }
+
     /**
      * Encode the necessary parameters into a {@code <SearchRequest>} (or similar element) in cases where we have to
      * proxy a search request over to a remote server.
@@ -483,6 +493,10 @@ public final class SearchParams implements Cloneable {
         el.addAttribute(MailConstants.A_IN_DUMPSTER, inDumpster);
         if (quick) {
             el.addAttribute(MailConstants.A_QUICK, quick);
+        }
+
+        if (getWantContent() != null) {
+            el.addAttribute(MailConstants.A_WANT_CONTENT, getWantContent().toString());
         }
 
         // skip cursor data
@@ -584,6 +598,11 @@ public final class SearchParams implements Cloneable {
             MailSearchParams mailParams = (MailSearchParams) soapParams;
             params.setFullConversation(ZmBoolean.toBool(mailParams.getFullConversation(), false));
         }
+
+        if (soapParams instanceof MailSearchParams) {
+            MailSearchParams mailParams = (MailSearchParams) soapParams;
+            params.setWantContent(Objects.firstNonNull(mailParams.getWantContent(), MsgContent.full));
+        }
         return params;
     }
 
@@ -678,6 +697,10 @@ public final class SearchParams implements Cloneable {
         if (cursor != null) {
             params.parseCursor(cursor, zsc.getRequestedAccountId());
         }
+
+        params.setWantContent(Objects.firstNonNull(
+            MsgContent.fromString(request.getAttribute(MailConstants.A_WANT_CONTENT, null)),
+            MsgContent.full));
 
         return params;
     }
