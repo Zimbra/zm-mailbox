@@ -40,6 +40,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.SoapProtocol;
+import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -347,22 +348,26 @@ public class ContactAutoComplete {
 
     public AutoCompleteResult query(String str, Collection<Integer> folders, int limit) throws ServiceException {
         ZimbraLog.gal.debug("AutoComplete querying: %s", str);
-        long t0 = System.currentTimeMillis();
+        str = str.toLowerCase();
         AutoCompleteResult result = new AutoCompleteResult(limit);
         result.rankings = new ContactRankings(getRequestedAcctId());
         if (limit <= 0) {
             return result;
         }
+        Pair<List<Folder>, Map<ItemId, Mountpoint>> pFolders = getLocalRemoteContactFolders(folders);
+        List<Folder> listFolders = pFolders.getFirst();
+        Map<ItemId, Mountpoint> mountpoints = pFolders.getSecond();
+        final String searchContactFolderQuery = generateFolderQuery(listFolders);
 
-        if (result.entries.size() >= limit) {
-            return result;
-        }
-
+        long t0 = System.currentTimeMillis();
+        //Search in ranking table first.
+        addExistingContactsFromRankingTable(str, searchContactFolderQuery, mountpoints, limit, result);
         long t1 = System.currentTimeMillis();
 
         // search other folders
         if (result.entries.size() < limit) {
-            queryFolders(str, folders, limit, result);
+            String query = searchContactFolderQuery + generateQuery(str);
+            queryFolders(str, query, mountpoints, limit, result);
         }
         long t2 = System.currentTimeMillis();
 
@@ -685,39 +690,44 @@ public class ContactAutoComplete {
         }
     }
 
-    private void queryFolders(String str, Collection<Integer> folderIDs, int limit, AutoCompleteResult result) throws ServiceException {
-        str = str.toLowerCase();
+    private Pair<List<Folder>, Map<ItemId, Mountpoint>> getLocalRemoteContactFolders(Collection<Integer> folderIDs) throws ServiceException {
+        List<Folder> folders = new ArrayList<Folder>();
+        Map<ItemId, Mountpoint> mountpoints = new HashMap<ItemId, Mountpoint>();
+        Pair<List<Folder>, Map<ItemId, Mountpoint>> pair = new Pair<List<Folder>, Map<ItemId,Mountpoint>>(folders, mountpoints);
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(getRequestedAcctId());
+        if (folderIDs == null) {
+            for (Folder folder : mbox.getFolderList(octxt, SortBy.NONE)) {
+                if (folder.getDefaultView() != MailItem.Type.CONTACT || folder.inTrash()) {
+                    continue;
+                } else if (folder instanceof Mountpoint) {
+                    Mountpoint mp = (Mountpoint) folder;
+                    mountpoints.put(mp.getTarget(), mp);
+                    if (mIncludeSharedFolders) {
+                        folders.add(folder);
+                    }
+                } else {
+                    folders.add(folder);
+                }
+            }
+        } else {
+            for (int fid : folderIDs) {
+                Folder folder = mbox.getFolderById(octxt, fid);
+                folders.add(folder);
+                if (folder instanceof Mountpoint) {
+                    Mountpoint mp = (Mountpoint) folder;
+                    mountpoints.put(mp.getTarget(), mp);
+                }
+            }
+        }
+        return pair;
+    }
+
+    private void queryFolders(String str, String generatedQuery, Map<ItemId, Mountpoint> mountpoints ,int limit, AutoCompleteResult result) throws ServiceException {
         ZimbraQueryResults qres = null;
         try {
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(getRequestedAcctId());
-            List<Folder> folders = new ArrayList<Folder>();
-            Map<ItemId, Mountpoint> mountpoints = new HashMap<ItemId, Mountpoint>();
-            if (folderIDs == null) {
-                for (Folder folder : mbox.getFolderList(octxt, SortBy.NONE)) {
-                    if (folder.getDefaultView() != MailItem.Type.CONTACT || folder.inTrash()) {
-                        continue;
-                    } else if (folder instanceof Mountpoint) {
-                        Mountpoint mp = (Mountpoint) folder;
-                        mountpoints.put(mp.getTarget(), mp);
-                        if (mIncludeSharedFolders) {
-                            folders.add(folder);
-                        }
-                    } else {
-                        folders.add(folder);
-                    }
-                }
-            } else {
-                for (int fid : folderIDs) {
-                    Folder folder = mbox.getFolderById(octxt, fid);
-                    folders.add(folder);
-                    if (folder instanceof Mountpoint) {
-                        Mountpoint mp = (Mountpoint) folder;
-                        mountpoints.put(mp.getTarget(), mp);
-                    }
-                }
-            }
             SearchParams params = new SearchParams();
-            params.setQueryString(generateQuery(str, folders));
+            params.setQueryString(generatedQuery);
             params.setDefaultField("contact:");
             params.setTypes(CONTACT_TYPES);
             params.setSortBy(SortBy.NONE);
@@ -773,7 +783,7 @@ public class ContactAutoComplete {
         }
     }
 
-    private String generateQuery(String query, Collection<Folder> folders) {
+    private String generateFolderQuery(Collection<Folder> folders) {
         StringBuilder buf = new StringBuilder("(");
         boolean first = true;
         for (Folder folder : folders) {
@@ -791,9 +801,60 @@ public class ContactAutoComplete {
             buf.append(fid);
         }
         buf.append(')');
+        return buf.toString();
+    }
+
+    private String generateQuery(String query) {
+        StringBuilder buf = new StringBuilder("(");
         for (String token : TOKEN_SPLITTER.split(query)) {
             buf.append(" \"").append(token.replace("\"", "\\\"")).append('"');
         }
+        buf.append(')');
         return buf.toString();
+    }
+
+    private String generateQuery(List<String> query) {
+        StringBuilder buf = new StringBuilder("(");
+        boolean first = true;
+        for (String str : query) {
+            if (first) {
+                first = false;
+            } else {
+                buf.append(" OR ");
+            }
+            for (String token : TOKEN_SPLITTER.split(str)) {
+                buf.append(" \"").append(token.replace("\"", "\\\"")).append('"');
+            }
+        }
+        buf.append(')');
+        return buf.toString();
+    }
+
+    /**
+     * Get matching entries from ranking table and validates each matching email address in contact ranking table has corresponding contact.
+     * @param str
+     * @param folderBasicQuery
+     * @param mountpoints
+     * @param limit
+     * @param result
+     * @throws ServiceException
+     */
+    private void addExistingContactsFromRankingTable(String str, String folderBasicQuery, Map<ItemId, Mountpoint> mountpoints ,int limit, AutoCompleteResult result) throws ServiceException {
+        Collection<ContactEntry> rankingTableEntires = result.rankings.search(str);
+        List<String> emailAddress = Lists.newArrayListWithExpectedSize(limit+1);
+        int batchSize = limit;
+        for (ContactEntry contactEntry : rankingTableEntires) {
+            if (batchSize-- == 0) {
+                break;
+            }
+            String email = contactEntry.getEmail();
+            if (!StringUtil.isNullOrEmpty(email)) {
+                emailAddress.add(email);
+            }
+        }
+        if (!emailAddress.isEmpty()) {
+            String queryRanking = folderBasicQuery + generateQuery(emailAddress);
+            queryFolders(str, queryRanking, mountpoints, limit, result);
+        }
     }
 }
