@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2006, 2007, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -21,7 +21,6 @@ import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.account.Key;
-import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
@@ -53,10 +52,12 @@ public class SearchCalendarResources extends AdminDocumentHandler {
     /**
      * must be careful and only allow access if domain admin
      */
+    @Override
     public boolean domainAuthSufficient(Map context) {
         return true;
     }
 
+    @Override
     public Element handle(Element request, Map<String, Object> context)
     throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
@@ -77,7 +78,7 @@ public class SearchCalendarResources extends AdminDocumentHandler {
 
         // if we are a domain admin only, restrict to domain
         //
-        // Note: isDomainAdminOnly *always* returns false for pure ACL based AccessManager 
+        // Note: isDomainAdminOnly *always* returns false for pure ACL based AccessManager
         if (isDomainAdminOnly(zsc)) {
             if (domain == null) {
                 domain = getAuthTokenAccountDomain(zsc).getName();
@@ -94,13 +95,13 @@ public class SearchCalendarResources extends AdminDocumentHandler {
         }
 
         AdminAccessControl aac = AdminAccessControl.getAdminAccessControl(zsc);
-        AdminAccessControl.SearchDirectoryRightChecker rightChecker = 
+        AdminAccessControl.SearchDirectoryRightChecker rightChecker =
             new AdminAccessControl.SearchDirectoryRightChecker(aac, prov, null);
-        
-        // filter is not RFC 2254 escaped 
+
+        // filter is not RFC 2254 escaped
         // query is RFC 2254 escaped
         String query = LdapEntrySearchFilter.toLdapCalendarResourcesFilter(filter);
-        
+
         SearchDirectoryOptions options = new SearchDirectoryOptions();
         options.setDomain(d);
         options.setTypes(SearchDirectoryOptions.ObjectType.resources);
@@ -109,33 +110,35 @@ public class SearchCalendarResources extends AdminDocumentHandler {
         options.setSortOpt(sortAscending ? SortOpt.SORT_ASCENDING : SortOpt.SORT_DESCENDING);
         options.setSortAttr(sortBy);
         options.setConvertIDNToAscii(true);
-        
-        List resources;
+
+        List<NamedEntry>resources;
+        int limitMax = offset+limit;
         AdminSession session = (AdminSession) getSession(zsc, Session.Type.ADMIN);
         if (session != null) {
             resources = session.searchDirectory(options, offset, rightChecker);
         } else {
             resources = prov.searchDirectory(options);
-            resources = rightChecker.getAllowed(resources);
+            resources = rightChecker.getAllowed(resources, limitMax);
         }
 
         Element response = zsc.createElement(AdminConstants.SEARCH_CALENDAR_RESOURCES_RESPONSE);
-        int i, limitMax = offset+limit;
-        for (i=offset; i < limitMax && i < resources.size(); i++) {
-            NamedEntry entry = (NamedEntry) resources.get(i);
-            ToXML.encodeCalendarResource(response, (CalendarResource)entry, applyCos, null, aac.getAttrRightChecker((CalendarResource)entry));
+        int numEntries;
+        for (numEntries=offset; numEntries < limitMax && numEntries < resources.size(); numEntries++) {
+            NamedEntry entry = resources.get(numEntries);
+            ToXML.encodeCalendarResource(response, (CalendarResource)entry, applyCos, null,
+                    aac.getAttrRightChecker(entry));
         }
 
-        response.addAttribute(AdminConstants.A_MORE, i < resources.size());
+        response.addAttribute(AdminConstants.A_MORE, numEntries < resources.size());
         response.addAttribute(AdminConstants.A_SEARCH_TOTAL, resources.size());
         return response;
     }
-    
+
     @Override
     public void docRights(List<AdminRight> relatedRights, List<String> notes) {
         relatedRights.add(Admin.R_getCalendarResource);
         relatedRights.add(Admin.R_listCalendarResource);
-        
+
         notes.add(AdminRightCheckPoint.Notes.LIST_ENTRY);
     }
 }

@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2009, 2010, 2011, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -18,9 +18,16 @@ package com.zimbra.cs.account.accesscontrol;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.Constants;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
@@ -28,6 +35,7 @@ import com.zimbra.cs.account.DynamicGroup;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.GroupMembership;
+import com.zimbra.cs.account.Server;
 
 public abstract class RightBearer {
     protected NamedEntry mRightBearer;
@@ -36,7 +44,7 @@ public abstract class RightBearer {
         if (entry instanceof Account && AccessControlUtil.isGlobalAdmin((Account)entry, true)) {
             return new GlobalAdmin(entry);
         } else {
-            return new Grantee(entry);
+            return Grantee.getGrantee(entry);
         }
     }
 
@@ -126,6 +134,44 @@ public abstract class RightBearer {
             }
         }
 
+        protected static Grantee getGrantee(NamedEntry namedEntry) throws ServiceException {
+            return getGrantee(namedEntry, (Set<Right>) null, true);
+        }
+
+        protected static Grantee getGrantee(NamedEntry namedEntry, boolean adminOnly) throws ServiceException {
+            return getGrantee(namedEntry, (Set<Right>) null, adminOnly);
+        }
+
+        private static Grantee getGranteeFromCache(NamedEntry namedEntry, Set <Right> right, boolean adminOnly)
+                throws ServiceException {
+            Grantee grntee = null;
+            final GranteeCacheKey key = new GranteeCacheKey(namedEntry, right, adminOnly);
+            try {
+                grntee = GRANTEE_CACHE.get(key, new Callable<Grantee>() {
+                    @Override
+                    public Grantee call() throws ServiceException {
+                        return new Grantee(key.namedEntry, key.rights, key.adminOnly);
+                    }
+                });
+            } catch (ExecutionException e) {
+                Throwable throwable = e.getCause();
+                if (throwable != null && throwable instanceof ServiceException) {
+                    throw (ServiceException) throwable;
+                }
+                ZimbraLog.acl.debug("Unexpected escape getting from GRANTEE_CACHE", e);
+            }
+            return grntee;
+        }
+
+        protected static Grantee getGrantee(NamedEntry namedEntry, Set <Right> right, boolean adminOnly)
+        throws ServiceException {
+            if (null == GRANTEE_CACHE) {
+                return new Grantee(namedEntry, right, adminOnly);
+            } else {
+                return getGranteeFromCache(namedEntry, right, adminOnly);
+            }
+        }
+
         boolean isAccount() {
             return mGranteeType == GranteeType.GT_USER;
         }
@@ -145,6 +191,79 @@ public abstract class RightBearer {
             return mIdAndGroupIds;
         }
 
+        private static final Cache<GranteeCacheKey, Grantee> GRANTEE_CACHE;
+        private static final long MAX_CACHE_EXPIRY = 30 * Constants.MILLIS_PER_MINUTE;
+
+        static {
+            long granteeCacheSize= 0;
+            long granteeCacheExpireAfterMillis = 0;
+            try {
+                Server server = Provisioning.getInstance().getLocalServer();
+                granteeCacheSize = server.getShortTermGranteeCacheSize();
+                if (granteeCacheSize > 0) {
+                    granteeCacheExpireAfterMillis = server.getShortTermGranteeCacheExpiration();
+                    if (granteeCacheExpireAfterMillis < 0) {
+                        granteeCacheExpireAfterMillis = 0;
+                        granteeCacheSize = 0;
+                    } else if (granteeCacheExpireAfterMillis > MAX_CACHE_EXPIRY) {
+                        granteeCacheExpireAfterMillis = MAX_CACHE_EXPIRY;
+                    }
+                }
+            } catch (ServiceException e) {
+                granteeCacheSize = 0;
+            }
+            if (granteeCacheSize > 0) {
+                GRANTEE_CACHE =
+                        CacheBuilder.newBuilder()
+                        .maximumSize(granteeCacheSize)
+                        .expireAfterWrite(granteeCacheExpireAfterMillis,
+                                TimeUnit.MILLISECONDS) /* regard data as potentially stale after this time */
+                                .build();
+                ZimbraLog.acl.trace("RightBearer GRANTEE_CACHE BUILD size=%d expire=%dms",
+                        granteeCacheSize, granteeCacheExpireAfterMillis);
+            } else {
+                GRANTEE_CACHE = null;
+            }
+        }
+
+        private final static class GranteeCacheKey {
+            private final NamedEntry namedEntry;
+            private final Set <Right> rights;
+            private final boolean adminOnly;
+            private GranteeCacheKey(NamedEntry namedEntry, Set <Right> rights, boolean adminOnly) {
+                this.namedEntry = namedEntry;
+                this.rights = rights;
+                this.adminOnly = adminOnly;
+            }
+
+            @Override
+            public boolean equals(final Object other) {
+                if (!(other instanceof GranteeCacheKey)) {
+                    return false;
+                }
+                GranteeCacheKey ogck = (GranteeCacheKey) other;
+                if (adminOnly != ogck.adminOnly) {
+                    return false;
+                }
+                if (!namedEntry.getName().equals(ogck.namedEntry.getName())) {
+                    return false;
+                }
+                if (rights == null) {
+                    return (ogck.rights == null);
+                } else {
+                    return rights.equals(ogck.rights);
+                }
+            }
+
+            @Override
+            public int hashCode() {
+                int code = namedEntry.getName().hashCode() + Boolean.valueOf(adminOnly).hashCode();
+                if (rights != null) {
+                    code += rights.hashCode();
+                }
+                return code;
+            }
+        }
     }
 
     /**

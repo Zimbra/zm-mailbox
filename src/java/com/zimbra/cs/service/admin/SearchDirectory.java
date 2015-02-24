@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -27,11 +27,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.collect.Sets;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Alias;
@@ -183,11 +185,12 @@ public class SearchDirectory extends AdminDocumentHandler {
         // objects returned from searchDirectory are not cached anywhere.
         options.setMakeObjectOpt(MakeObjectOpt.NO_DEFAULTS);
 
+        int limitMax = offset+limit;
         if (session != null) {
             accounts = session.searchDirectory(options, offset, rightChecker);
         } else {
             accounts = prov.searchDirectory(options);
-            accounts = rightChecker.getAllowed(accounts);
+            accounts = rightChecker.getAllowed(accounts, limitMax);
         }
 
         if (isCountOnly) {
@@ -195,11 +198,12 @@ public class SearchDirectory extends AdminDocumentHandler {
         } else {
             // use originally requested attrs for encoding
             String[] origAttrs = origAttrsStr == null ? null : origAttrsStr.split(",");
-            Set<String> origReqAttrs = origAttrs == null ? null : new HashSet(Arrays.asList(origAttrs));
+            Set<String> origReqAttrs = origAttrs == null ? null : Sets.newHashSet(Arrays.asList(origAttrs));
 
-            int i, limitMax = offset+limit;
-            for (i=offset; i < limitMax && i < accounts.size(); i++) {
-                NamedEntry entry = accounts.get(i);
+            long start = System.currentTimeMillis();
+            int numEntries;
+            for (numEntries=offset; numEntries < limitMax && numEntries < accounts.size(); numEntries++) {
+                NamedEntry entry = accounts.get(numEntries);
 
                 boolean applyDefault = true;
 
@@ -212,11 +216,14 @@ public class SearchDirectory extends AdminDocumentHandler {
 
                 encodeEntry(prov, response, entry, applyDefault, origReqAttrs, aac);
             }
+            if (ZimbraLog.search.isTraceEnabled()) {
+                ZimbraLog.search.trace("SearchDirectory - encoding entries %s i=%s",
+                        ZimbraLog.elapsedTime(start, System.currentTimeMillis()), numEntries);
+            }
 
-            response.addAttribute(AdminConstants.A_MORE, i < accounts.size());
+            response.addAttribute(AdminConstants.A_MORE, numEntries < accounts.size());
             response.addAttribute(AdminConstants.A_SEARCH_TOTAL, accounts.size());
         }
-
         return response;
     }
 
