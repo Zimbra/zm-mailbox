@@ -35,6 +35,7 @@ import org.apache.commons.httpclient.ProtocolException;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.collect.MapMaker;
+import com.zimbra.common.account.ZAttrProvisioning.MailMode;
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
@@ -48,6 +49,7 @@ import com.zimbra.common.util.RemoteIP;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.util.ZimbraServletOutputStream;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.consul.CatalogRegistration;
 import com.zimbra.cs.consul.ServiceLocator;
 import com.zimbra.cs.servlet.ZimbraServlet;
@@ -75,6 +77,8 @@ public class SoapServlet extends ZimbraServlet {
     /** Flag for requests that want to force invalidation of client cookies */
     public static final String INVALIDATE_COOKIES = "zimbra.invalidateCookies";
 
+    protected ServiceLocator serviceLocator;
+    protected String httpServiceID, httpsServiceID;
 
     // Used by sExtraServices
     private static class ArrayListFactory implements Function<String, List<DocumentService>> {
@@ -126,6 +130,7 @@ public class SoapServlet extends ZimbraServlet {
 
         try {
             Zimbra.startup();
+            serviceLocator = Zimbra.getAppContext().getBean(ServiceLocator.class);
             registerWithServiceLocator();
         } catch (OutOfMemoryError e) {
             Zimbra.halt("out of memory", e);
@@ -384,23 +389,44 @@ public class SoapServlet extends ZimbraServlet {
         envelope.destroy();
     }
 
-    protected CatalogRegistration.Service getServiceLocatorService() {
-        String name = "zimbra:mailstore:soap";
-        int port = 7070; // TODO what about 80, 443?
-        String id = name + ":" + port;
-        return new CatalogRegistration.Service(id, name, port);
-        // TODO tag with http vs https
-    }
-
     /**
      * Register with service locator.
      *
      * @see https://www.consul.io/docs/agent/http.html#_v1_catalog_register
      */
-    protected CatalogRegistration.Service registerWithServiceLocator() {
-        CatalogRegistration.Service serviceLocatorService = getServiceLocatorService();
-        Zimbra.getAppContext().getBean(ServiceLocator.class).registerSilent(serviceLocatorService);
-        return serviceLocatorService;
+    protected void registerWithServiceLocator() throws ServletException {
+
+        try {
+            // Read protocol and port configuration
+            Server localServer = Provisioning.getInstance().getLocalServer();
+            MailMode mailMode = localServer.getMailMode();
+            int httpPort = localServer.getMailPort();
+            int httpsPort = localServer.getMailSSLPort();
+
+            // Register http endpoint
+            if (MailMode.http.equals(mailMode) || MailMode.both.equals(mailMode)) {
+                httpServiceID = registerWithServiceLocator("zimbra:MailStoreServer", httpPort, "http");
+            }
+
+            // Register https endpoint
+            if (MailMode.https.equals(mailMode) || MailMode.both.equals(mailMode)) {
+                httpsServiceID = registerWithServiceLocator("zimbra:MailStoreSSLServer", httpsPort, "https");
+            }
+        } catch (ServiceException e) {
+            throw new ServletException("Failed reading provisioning before registering mailstore with service locator", e);
+        }
+    }
+
+    protected String registerWithServiceLocator(String serviceName, int port, String checkScheme) {
+        String serviceID = serviceName + ":" + port;
+        CatalogRegistration.Service service = new CatalogRegistration.Service(serviceID, serviceName, port);
+        String url = checkScheme + "://localhost:" + port + "/";
+        CatalogRegistration.Check check = new CatalogRegistration.Check(serviceID + ":health", serviceName);
+        check.script = "/opt/zimbra/libexec/zmhealthcheck-mailstore " + url;
+        check.interval = "1m";
+        service.check = check;
+        serviceLocator.registerSilent(service);
+        return serviceID;
     }
 
     /**
@@ -409,6 +435,13 @@ public class SoapServlet extends ZimbraServlet {
      * @see https://www.consul.io/docs/agent/http.html#_v1_catalog_deregister
      */
     protected void deregisterWithServiceLocator() {
-        Zimbra.getAppContext().getBean(ServiceLocator.class).deregisterSilent(getServiceLocatorService().id);
+        if (httpServiceID != null) {
+            serviceLocator.deregisterSilent(httpServiceID);
+            httpServiceID = null;
+        }
+        if (httpsServiceID != null) {
+            serviceLocator.deregisterSilent(httpsServiceID);
+            httpsServiceID = null;
+        }
     }
 }
