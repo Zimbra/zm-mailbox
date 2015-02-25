@@ -6238,7 +6238,7 @@ TODO: delete them permanently from here
 </attr>
 
 <attr id="1268" name="zimbraMailProxyReconnectTimeout" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.0.0">
-  <globalConfigValue>60</globalConfigValue>
+  <globalConfigValue>10</globalConfigValue>
   <desc>the time in sec that proxy will reconnect the current server (as an upstream) after connection errors happened before</desc>
 </attr>
 

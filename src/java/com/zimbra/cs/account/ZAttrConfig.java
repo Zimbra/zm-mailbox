@@ -32430,13 +32430,13 @@ public abstract class ZAttrConfig extends Entry {
      * the time in sec that proxy will reconnect the current server (as an
      * upstream) after connection errors happened before
      *
-     * @return zimbraMailProxyReconnectTimeout, or "60" if unset
+     * @return zimbraMailProxyReconnectTimeout, or "10" if unset
      *
      * @since ZCS 8.0.0
      */
     @ZAttr(id=1268)
     public String getMailProxyReconnectTimeout() {
-        return getAttr(Provisioning.A_zimbraMailProxyReconnectTimeout, "60");
+        return getAttr(Provisioning.A_zimbraMailProxyReconnectTimeout, "10");
     }
 
     /**
