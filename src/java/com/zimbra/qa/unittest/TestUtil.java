@@ -508,7 +508,7 @@ extends Assert {
      */
     public static List<ZMessage> waitForMessages(ZMailbox mbox, String query, int numMsgsExpected, int timeout_millis)
     throws ServiceException {
-        int orig_timeout_millis = timeout_millis;
+        int orig_timeout_millis = TestUtil.getMailbox(mbox.getName()).index.waitForIndexing(timeout_millis);
         List<ZMessage> msgs = Lists.newArrayListWithExpectedSize(0);
         while (timeout_millis > 0) {
             msgs = search(mbox, query);
@@ -519,9 +519,9 @@ extends Assert {
                 Assert.fail("Unexpected number of messages (" + msgs.size() + ") returned by query '" + query + "'");
             }
             try {
-                if (timeout_millis > 100) {
-                    Thread.sleep(100);
-                    timeout_millis = timeout_millis - 100;
+                if (timeout_millis > 500) {
+                    Thread.sleep(500);
+                    timeout_millis = timeout_millis - 500;
                 } else {
                     Thread.sleep(timeout_millis);
                     timeout_millis = 0;

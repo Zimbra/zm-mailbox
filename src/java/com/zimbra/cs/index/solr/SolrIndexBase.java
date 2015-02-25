@@ -885,7 +885,7 @@ public abstract class SolrIndexBase extends IndexStore {
     }
 
     @Override
-    public void waitForIndexCommit(int maxWaitTimeMillis) throws ServiceException  {
+    public int waitForIndexCommit(int maxWaitTimeMillis) throws ServiceException  {
         SolrServer solrServer = getSolrServer();
         int waitIncrement = Math.max(maxWaitTimeMillis/3, 500);
         long startWait = System.currentTimeMillis();
@@ -927,5 +927,6 @@ public abstract class SolrIndexBase extends IndexStore {
             }
         }
         ZimbraLog.index.debug("waited %dms for commit", System.currentTimeMillis() - startWait);
+        return maxWaitTimeMillis;
     }
 }

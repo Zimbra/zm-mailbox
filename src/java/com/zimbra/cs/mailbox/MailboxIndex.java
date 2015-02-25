@@ -392,8 +392,7 @@ public final class MailboxIndex {
                     try {
                         mailbox.updateVersion(new MailboxVersion((short) 1, (short) 5));
                     } catch (ServiceException se) {
-                        ZimbraLog.mailbox.warn("Failed to update mbox version after " +
-                                "reindex all deferred items during mailbox upgrade initialization.", se);
+                        ZimbraLog.mailbox.warn("Failed to remove deprecated 'deferred' flag from mail items", se);
                     }
                 }
             } finally {
@@ -772,12 +771,13 @@ public final class MailboxIndex {
         }
     }
 
-    public void waitForIndexing(int maxWaitTimeMillis) throws ServiceException {
+    @VisibleForTesting
+    public int waitForIndexing(int maxWaitTimeMillis) throws ServiceException {
         if(maxWaitTimeMillis == 0) {
             maxWaitTimeMillis = LC.zimbra_index_commit_wait.intValue();
         }
         int timeWaited = 0;
-        int waitIncrement  = 100;
+        int waitIncrement  = Math.max(maxWaitTimeMillis/3,500);
 
         //wait for index to be initialized
         while(!indexStore.indexExists() && timeWaited < maxWaitTimeMillis) {
@@ -849,7 +849,7 @@ public final class MailboxIndex {
         }
         
         //now wait for the IndexStore to finish processing updates
-        indexStore.waitForIndexCommit(maxWaitTimeMillis - timeWaited);
+        return indexStore.waitForIndexCommit(maxWaitTimeMillis - timeWaited);
     }
     
     /**

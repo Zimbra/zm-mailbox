@@ -65,18 +65,23 @@ public class RunUnitTests extends AdminDocumentHandler {
 
         Element resultsElement = response.addUniqueElement("results");
 
+        double totalExecSeconds = 0;
+        
         int numPassed = 0;
-        for (TestResults.Result result : results.getResults(TestStatus.SUCCESS)) {
+        List<TestResults.Result> passedTests = results.getResults(TestStatus.SUCCESS);
+        for (TestResults.Result result : passedTests) {
             Element completedElement = resultsElement.addNonUniqueElement("completed");
             completedElement.addAttribute("name", result.methodName);
             double execSeconds = (double) result.execMillis / 1000;
+            totalExecSeconds+=execSeconds;
             completedElement.addAttribute("execSeconds", String.format("%.2f", execSeconds));
             completedElement.addAttribute("class", result.className);
             numPassed++;
         }
 
         int numSkipped = 0;
-        for (TestResults.Result result : results.getResults(TestStatus.SKIPPED)) {
+        List<TestResults.Result> skippedTests = results.getResults(TestStatus.SKIPPED);
+        for (TestResults.Result result : skippedTests) {
             Element skippedElement = resultsElement.addNonUniqueElement("skipped");
             skippedElement.addAttribute("name", result.methodName);
             if (result.errorMessage != null) {
@@ -87,10 +92,12 @@ public class RunUnitTests extends AdminDocumentHandler {
         }
 
         int numFailed = 0;
-        for (TestResults.Result result : results.getResults(TestStatus.FAILURE)) {
+        List<TestResults.Result> failedTests = results.getResults(TestStatus.FAILURE);
+        for (TestResults.Result result : failedTests) {
             Element failureElement = resultsElement.addNonUniqueElement("failure");
             failureElement.addAttribute("name", result.methodName);
             double execSeconds = (double) result.execMillis / 1000;
+            totalExecSeconds+=execSeconds;
             failureElement.addAttribute("execSeconds", String.format("%.2f", execSeconds));
             if (result.errorMessage != null) {
                 failureElement.setText(result.errorMessage);
@@ -102,7 +109,8 @@ public class RunUnitTests extends AdminDocumentHandler {
         response.addAttribute(AdminConstants.A_NUM_EXECUTED, numPassed + numFailed);
         response.addAttribute(AdminConstants.A_NUM_SKIPPED, numSkipped);
         response.addAttribute(AdminConstants.A_NUM_FAILED, numFailed);
-
+        response.addAttribute("execSeconds", totalExecSeconds);
+        
         return response;
     }
 

@@ -178,5 +178,5 @@ public abstract class IndexStore {
 		return Collections.emptyList();
 	}
 
-    public abstract void waitForIndexCommit(int maxWaitTimeMillis) throws ServiceException;
+    public abstract int waitForIndexCommit(int maxWaitTimeMillis) throws ServiceException;
 }

@@ -105,7 +105,6 @@ public class TestInvite  {
         assertNotNull("null ModifyPrefs Response for forwarding calendar invites", createMpResp);
 
         TestUtil.createAppointment(mboxOrganizer, subject, attendee.getName(), startDate, endDate);
-        Thread.sleep(10000);
         ZMessage inviteMsg = TestUtil.waitForMessage(mboxDelegate, "in:inbox " + subject);
         assertNotNull("null inviteMsg in delegate inbox", inviteMsg);
 

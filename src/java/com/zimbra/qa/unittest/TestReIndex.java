@@ -17,7 +17,8 @@
 
 package com.zimbra.qa.unittest;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -26,12 +27,14 @@ import org.junit.Test;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.account.soap.SoapProvisioning.ReIndexInfo;
 import com.zimbra.cs.index.IndexingQueueAdapter;
 import com.zimbra.cs.index.IndexingService;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.util.ProvisioningUtil;
 import com.zimbra.cs.util.Zimbra;
 
 /**
@@ -48,7 +51,7 @@ import com.zimbra.cs.util.Zimbra;
 public class TestReIndex {
     private static final String NAME_PREFIX = TestReIndex.class.getSimpleName();
     private static final String RECIPIENT = NAME_PREFIX + "user1";
-    
+    private boolean originalLCSetting = false;
     @Test
     public void testStartReindex() throws Exception {
         //shut down the service so it does not finish before we can check its status
@@ -108,7 +111,6 @@ public class TestReIndex {
         //add some messages
         Mailbox recieverMbox = TestUtil.getMailbox(RECIPIENT);
         TestUtil.addMessage(recieverMbox, NAME_PREFIX);
-        recieverMbox.index.waitForIndexing(5000);
         TestUtil.waitForMessage(TestUtil.getZMailbox(RECIPIENT), String.format("subject:%s", NAME_PREFIX));
         
         //delete index
@@ -138,12 +140,15 @@ public class TestReIndex {
     @Before
     public void setUp() throws Exception {
         cleanup();
+        originalLCSetting = ProvisioningUtil.getServerAttribute(Provisioning.A_zimbraIndexManualCommit, true);
+        Provisioning.getInstance().getLocalServer().setIndexManualCommit(true);
         MailboxManager.getInstance().getMailboxByAccount(TestUtil.createAccount(RECIPIENT), true);
     }
     
     @After
     public void tearDown() throws Exception {
         cleanup();
+        Provisioning.getInstance().getLocalServer().setIndexManualCommit(originalLCSetting);
     }
     
     private void cleanup() throws Exception {

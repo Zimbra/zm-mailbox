@@ -448,7 +448,7 @@ public class TestCalDav  {
     public static String waitForItemInCalendarCollectionByUID(String url, Account acct, String UID, boolean expected,
             int timeout_millis)
     throws ServiceException, IOException {
-        int orig_timeout_millis = timeout_millis;
+        int orig_timeout_millis = TestUtil.getMailbox(acct.getName()).index.waitForIndexing(timeout_millis);
         while (timeout_millis > 0) {
             Document doc = calendarQuery(url, acct);
             XPath xpath = XPathFactory.newInstance().newXPath();
@@ -476,9 +476,9 @@ public class TestCalDav  {
                 ZimbraLog.test.debug("xpath problem", e1);
             }
             try {
-                if (timeout_millis > 100) {
-                    Thread.sleep(100);
-                    timeout_millis = timeout_millis - 100;
+                if (timeout_millis > 500) {
+                    Thread.sleep(500);
+                    timeout_millis = timeout_millis - 500;
                 } else {
                     Thread.sleep(timeout_millis);
                     timeout_millis = 0;
@@ -507,7 +507,7 @@ public class TestCalDav  {
     public static String waitForNewSchedulingRequestByUID(Account acct, String UID)
             throws ServiceException, IOException {
         String url = getSchedulingInboxUrl(acct, acct);
-        return waitForItemInCalendarCollectionByUID(url, acct, UID, true, 10000);
+        return waitForItemInCalendarCollectionByUID(url, acct, UID, true, 5000);
     }
 
     @Test
@@ -1246,7 +1246,7 @@ public class TestCalDav  {
         List<ZMessage> msgs;
         if (suppressReply) {
             // timeout may be a bit short but don't want long time wastes in test suite.
-            msgs = TestUtil.waitForMessages(organizer, "is:invite is:unread inid:2 after:\"-1month\"", 0, 2000);
+            msgs = TestUtil.waitForMessages(organizer, "is:invite is:unread inid:2 after:\"-1month\"", 0, 5000);
             if (msgs != null) {
                 assertEquals("Should be no DECLINE reply msg", 0, msgs.size());
             }
