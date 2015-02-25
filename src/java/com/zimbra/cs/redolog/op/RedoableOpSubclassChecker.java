@@ -38,7 +38,7 @@ public class RedoableOpSubclassChecker {
 
 
     public static void main(String[] args) throws ServiceException {
-        Zimbra.startupTest(MyZimbraConfig.class);
+        Zimbra.startupMinimal(MyZimbraConfig.class);
         if (!checkSubclasses()) {
             mLog.error(
                     "Some RedoableOp subclasses are incomplete.  " +

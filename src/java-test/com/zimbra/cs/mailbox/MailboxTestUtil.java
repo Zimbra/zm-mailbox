@@ -139,7 +139,7 @@ public final class MailboxTestUtil {
         deleteAllIndexFolders();
         setupEmbeddedSolrDirs(true);
         
-        Zimbra.startupTest(configClass);
+        Zimbra.startupMinimal(configClass);
         MailboxManager.setInstance(Zimbra.getAppContext().getBean(MailboxManager.class));
         StoreManager.getInstance().startup();
         

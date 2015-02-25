@@ -37,7 +37,7 @@ public final class ConsulServiceLocatorTest {
     @Before
     public void setUp() throws Exception {
         MailboxTestUtil.initServer(MockStoreManager.class);
-        Zimbra.startupTest();
+        Zimbra.startupMinimal();
         serviceLocator = Zimbra.getAppContext().getBean(ServiceLocator.class);
         try {
             serviceLocator.ping();

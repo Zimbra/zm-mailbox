@@ -404,33 +404,38 @@ public class RedoLogVerify {
 
     public static void main(String[] cmdlineargs) throws ServiceException {
         CliUtil.toolSetup();
-        Zimbra.startupCLI();
+
         CommandLine cl = parseArgs(cmdlineargs);
         Params params = initParams(cl);
-        if (params.help)
+        if (params.help) {
             usage(null);
+        }
 
         String[] args = cl.getArgs();
 
-        if (args.length < 1)
+        if (args.length < 1) {
             usage("No redolog file/directory list specified");
-
-        boolean allGood = true;
-        RedoLogVerify verify = new RedoLogVerify(params, System.out);
-
-        for (int i = 0; i < args.length; i++) {
-            File f = new File(args[i]);
-            boolean good = false;
-            if (f.isDirectory())
-                good = verify.verifyDirectory(f);
-            else
-                good = verify.verifyFile(f);
-            allGood = allGood && good;
         }
-        Zimbra.shutdown();
-        if (!allGood) {
-            verify.listErrors();
-            System.exit(1);
+        Zimbra.startupMinimal(RedoLogVerifyConfig.class);
+        try {
+            boolean allGood = true;
+            RedoLogVerify verify = new RedoLogVerify(params, System.out);
+
+            for (int i = 0; i < args.length; i++) {
+                File f = new File(args[i]);
+                boolean good = false;
+                if (f.isDirectory())
+                    good = verify.verifyDirectory(f);
+                else
+                    good = verify.verifyFile(f);
+                allGood = allGood && good;
+            }
+            if (!allGood) {
+                verify.listErrors();
+                System.exit(1);
+            }
+        } finally {
+            Zimbra.shutdown();
         }
     }
 }

@@ -73,8 +73,9 @@ import com.zimbra.znative.Util;
  * logging and indexing.
  */
 public final class Zimbra {
-    private static boolean sInited = false;
-    private static boolean sIsMailboxd = false;
+    private static boolean inited = false;
+    private static boolean isMailboxd = false;
+    private static boolean minimal = false;
     private static AbstractApplicationContext appContext = null;
 
     /** Sets system properties before the server fully starts up.  Note that
@@ -189,24 +190,26 @@ public final class Zimbra {
         startup(false);
     }
 
-    /** Perform minimum start-up necessary for unit tests */
-    public static void startupTest() throws ServiceException {
+    /** Perform minimal startup with default config class */
+    public static void startupMinimal() throws ServiceException {
+        minimal = true;
         initAppContext();
     }
 
-    /** Perform minimum start-up necessary for unit tests */
-    public static void startupTest(Class configClass) throws ServiceException {
-        initAppContext(configClass);
+    /** Perform minimal start-up with supplied config classes */
+    public static void startupMinimal(Class<?> ...configClasses) throws ServiceException {
+        minimal = true;
+        initAppContext(configClasses);
     }
 
-    public static void initAppContext() {
+    private static void initAppContext() {
         initAppContext(ZimbraConfig.class);
     }
 
-    public static void initAppContext(Class configClass) {
+    public static void initAppContext(Class<?> ...configClasses) {
         AnnotationConfigApplicationContext appContext_ = new AnnotationConfigApplicationContext();
         appContext = appContext_; // required before refresh() below, for @PostConstruct handlers that do their own wiring
-        appContext_.register(configClass);
+        appContext_.register(configClasses);
         appContext_.refresh();
     }
 
@@ -215,12 +218,12 @@ public final class Zimbra {
      * @param forMailboxd true if this is the mailboxd process; false for CLI processes
      * @throws ServiceException
      */
-    private static synchronized void startup(boolean forMailboxd) throws ServiceException {
-        if (sInited)
+    private static synchronized void startup(boolean forMailboxd, Class<?> ...configClasses) throws ServiceException {
+        if (inited)
             return;
 
-        sIsMailboxd = forMailboxd;
-        if (sIsMailboxd) {
+        isMailboxd = forMailboxd;
+        if (isMailboxd) {
             FirstServlet.waitForInitialization();
         }
 
@@ -237,7 +240,11 @@ public final class Zimbra {
 
         // Initialize a Spring ApplicationContext. Objects initialized before this point
         // are not (yet) managed by Spring.
-        initAppContext();
+        if (configClasses == null || configClasses.length == 0) {
+            initAppContext();
+        } else {
+            initAppContext(configClasses);
+        }
 
         ZimbraApplication app = ZimbraApplication.getInstance();
         app.initializeZimbraDb(forMailboxd);
@@ -306,7 +313,7 @@ public final class Zimbra {
        appContext.getBean(IndexingService.class).startUp();
 
         RedoLogProvider redoLog = RedoLogProvider.getInstance();
-        if (sIsMailboxd) {
+        if (isMailboxd) {
             redoLog.startup();
         } else {
             redoLog.initRedoLogManager();
@@ -316,8 +323,8 @@ public final class Zimbra {
 
         MailboxManager.getInstance().startup();
 
-        app.initialize(sIsMailboxd);
-        if (sIsMailboxd) {
+        app.initialize(isMailboxd);
+        if (isMailboxd) {
             SessionCache.startup();
             AuthTokenRegistry.startup(prov.getConfig(Provisioning.A_zimbraAuthTokenNotificationInterval).getIntAttr(Provisioning.A_zimbraAuthTokenNotificationInterval, 60000));
             dbSessionCleanup();
@@ -399,16 +406,20 @@ public final class Zimbra {
 
         ExtensionUtil.postInitAll();
 
-        sInited = true;
+        inited = true;
     }
 
     public static synchronized void shutdown() throws ServiceException {
-        if (!sInited)
+        if (minimal) {
+            closeAppContext();
             return;
+        } else if (!inited) {
+            return;
+        }
 
-        sInited = false;
+        inited = false;
 
-        if (sIsMailboxd) {
+        if (isMailboxd) {
             PurgeThread.shutdown();
             AutoProvisionThread.shutdown();
         }
@@ -417,7 +428,8 @@ public final class Zimbra {
 
         app.shutdown();
 
-        if (sIsMailboxd) {
+
+        if (isMailboxd) {
             if (app.supports(MemoryStats.class.getName())) {
                 MemoryStats.shutdown();
             }
@@ -428,7 +440,7 @@ public final class Zimbra {
         }
 
         RedoLogProvider redoLog = RedoLogProvider.getInstance();
-        if (sIsMailboxd) {
+        if (isMailboxd) {
             if (!redoLog.isSlave()) {
                 ServerManager.getInstance().stopServers();
             }
@@ -438,7 +450,7 @@ public final class Zimbra {
             SessionCache.shutdown();
         }
 
-        if (sIsMailboxd) {
+        if (isMailboxd) {
             redoLog.shutdown();
         }
 
@@ -450,7 +462,7 @@ public final class Zimbra {
             EhcacheManager.getInstance().shutdown();
         }
 
-        if (sIsMailboxd) {
+        if (isMailboxd) {
             StoreManager.getInstance().shutdown();
         }
 
@@ -463,6 +475,10 @@ public final class Zimbra {
         } catch (Exception ignored) {
         }
 
+        closeAppContext();
+    }
+
+    private static void closeAppContext() throws ServiceException {
         if (Zimbra.getAppContext() instanceof Closeable) {
             try {
                 ((Closeable)Zimbra.getAppContext()).close();
@@ -473,7 +489,7 @@ public final class Zimbra {
     }
 
     public static synchronized boolean started() {
-        return sInited;
+        return inited;
     }
 
     public static Timer sTimer = new Timer("Timer-Zimbra", true);
