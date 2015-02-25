@@ -152,7 +152,7 @@ public class HttpRedoLogManager extends AbstractRedoLogManager {
         if (seqNum < 0 || (System.currentTimeMillis() - lastSeqUpdateTime > SEQ_UPDATE_INTERVAL)) {
             HttpClient client = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
             GetMethod get = new GetMethod(URL);
-            get.setQueryString("?fmt=seq");
+            get.setQueryString("fmt=seq");
             int code = client.executeMethod(get);
             if (code != HttpStatus.SC_OK) {
                 throw new IOException("unexpected response from redolog servlet [" + code + "] message:[" + get.getResponseBodyAsString() + "]");
