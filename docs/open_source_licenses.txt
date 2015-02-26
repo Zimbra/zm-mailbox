@@ -147,7 +147,7 @@ SECTION 2: Apache License, V2.0
    >>> ridl-4.0.2
    >>> selenium-2.43.0
    >>> smack-3.2.1
-   >>> spamassassin-3.4.0
+   >>> spamassassin-3.4.1-r1658380
    >>> spring-framework-3.0.7
    >>> stax2-api-3.1.1
    >>> testng-5.12.1
@@ -27580,7 +27580,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 
 
->>> spamassassin-3.4.0
+>>> spamassassin-3.4.1-r1658380
 
 License: Apache 2.0
 
