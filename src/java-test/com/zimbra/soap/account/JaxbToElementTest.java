@@ -39,9 +39,9 @@ import junit.framework.Assert;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
+import org.custommonkey.xmlunit.XMLAssert;
 import org.dom4j.QName;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.base.Charsets;
@@ -109,6 +109,7 @@ import com.zimbra.soap.util.JaxbNodeInfo;
  *
  * @author Gren Elliot
  */
+
 public class JaxbToElementTest {
     private static final Logger LOG = Logger.getLogger(JaxbToElementTest.class);
     private static Unmarshaller unmarshaller;
@@ -211,18 +212,12 @@ public class JaxbToElementTest {
     }
 
     @Test
-    @Ignore("element order changes in jdk8?")
     public void jaxBToElementTest() throws Exception {
         for (int cnt = 1; cnt <= iterationNum;cnt++) {
             Element el = JaxbUtil.jaxbToElement(getInfoRespJaxb);
             String actual = el.prettyPrint();
-            // TODO: At present some stuff is wrong/missing
-            // so just check the first part.
-            Assert.assertEquals(getInfoResponseXml.substring(0, 1000),
-                    actual.substring(0, 1000));
-            // validateLongString("XML response differs from expected\n",
-            //     getInfoResponseXml, actual,
-            //             "GetInfoResponse.xml", "/tmp/GetInfoResponse.xml");
+            String expected = getInfoResponseXml;
+            XMLAssert.assertXMLEqual(expected, actual);
         }
     }
 
@@ -788,7 +783,6 @@ Caused by: javax.xml.bind.UnmarshalException: Namespace URIs and local names to 
     }
 
     @Test
-    @Ignore("Element order changes in JDK8?")
     public void standalonElementToJaxbTest() throws Exception {
         InputStream is = getClass().getResourceAsStream("retentionPolicy.xml");
         Element elem = Element.parseXML(is);
@@ -799,12 +793,11 @@ Caused by: javax.xml.bind.UnmarshalException: Namespace URIs and local names to 
         Element elem2 = JaxbUtil.jaxbToElement(rp, XMLElement.mFactory);
         String eXml2 = elem2.toString();
         LOG.debug("Round tripped retentionPolicy.xml from Element:\n" + eXml2);
-        Assert.assertEquals("elementToJaxb RetentionPolicy Xml after", eXml, eXml2);
+        XMLAssert.assertXMLEqual(eXml, eXml2);
     }
 
     @Test
-    @Ignore("Element order changes in JDK8?")
-    public void IdentityToStringTest () throws Exception {
+    public void IdentityToStringTest() throws Exception {
         com.zimbra.soap.account.type.Identity id =
                 new com.zimbra.soap.account.type.Identity("hello", null);
         Map<String, String> attrs = Maps.newHashMap();
@@ -812,9 +805,12 @@ Caused by: javax.xml.bind.UnmarshalException: Namespace URIs and local names to 
         attrs.put("key2", "value2 wonderful");
         id.setAttrs(attrs);
         CreateIdentityRequest request = new CreateIdentityRequest(id);
-        Assert.assertEquals("toString output",
-            "CreateIdentityRequest{identity=Identity{a=[Attr{name=key2, value=value2 wonderful}, Attr{name=key1, value=value1}], name=hello, id=null}}",
-            request.toString());
+        String toString = request.toString();
+        Assert.assertTrue("toString start chars", toString.startsWith("CreateIdentityRequest{identity=Identity{a="));
+        Assert.assertTrue("toString key1", toString.contains("Attr{name=key1, value=value1}"));
+        Assert.assertTrue("toString key2", toString.contains("Attr{name=key2, value=value2 wonderful}"));
+        Assert.assertTrue("toString name", toString.contains("name=hello"));
+        Assert.assertTrue("toString id", toString.contains("id=null"));
     }
 
     /*
