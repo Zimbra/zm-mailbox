@@ -420,9 +420,9 @@ public class SoapServlet extends ZimbraServlet {
     protected String registerWithServiceLocator(String serviceName, int port, String checkScheme) {
         String serviceID = serviceName + ":" + port;
         CatalogRegistration.Service service = new CatalogRegistration.Service(serviceID, serviceName, port);
-        String url = checkScheme + "://localhost:" + port + "/";
+        String url = checkScheme + "://localhost:" + port + "/service/soap";
         CatalogRegistration.Check check = new CatalogRegistration.Check(serviceID + ":health", serviceName);
-        check.script = "/opt/zimbra/libexec/zmhealthcheck-mailstore " + url;
+        check.script = "/opt/zimbra/libexec/zmhealthcheck-mailstore -url " + url;
         check.interval = "1m";
         service.check = check;
         serviceLocator.registerSilent(service);
