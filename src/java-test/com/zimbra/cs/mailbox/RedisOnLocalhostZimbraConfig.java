@@ -13,6 +13,8 @@
  */
 package com.zimbra.cs.mailbox;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -64,7 +66,26 @@ public class RedisOnLocalhostZimbraConfig extends ZimbraConfig {
     @Override
     public Set<HostAndPort> redisUris() throws ServiceException {
         Set<HostAndPort> set = new HashSet<>();
-        set.add(new HostAndPort("127.0.0.1", 6379));
+
+        // First try and read from env. Support: mvn test -Dtest= -DREDIS_URL=redis://host:port,redis://host:port,...
+        String value = System.getProperty("REDIS_URL");
+        if (value != null) {
+            String[] values = value.split(",");
+            try {
+                for (String str: values) {
+                    URI uri = new URI(str);
+                    set.add(new HostAndPort(uri.getHost(), uri.getPort() == -1 ? 6379 : uri.getPort()));
+                }
+            } catch (URISyntaxException e) {
+                throw ServiceException.PARSE_ERROR("Invalid Redis URI", e);
+            }
+        }
+
+        // Default to localhost
+        if (set.isEmpty()) {
+            set.add(new HostAndPort("127.0.0.1", 6379));
+        }
+
         return set;
     }
 }
