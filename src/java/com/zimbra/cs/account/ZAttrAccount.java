@@ -48318,6 +48318,88 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * By default, new mail notifications are only displayed for new items
+     * placed in the inbox. To get new mail notifications for items filtered
+     * to other folders as well, set this to TRUE
+     *
+     * @return zimbraPrefShowAllNewMailNotifications, or false if unset
+     *
+     * @since ZCS 8.7,9.0
+     */
+    @ZAttr(id=1904)
+    public boolean isPrefShowAllNewMailNotifications() {
+        return getBooleanAttr(Provisioning.A_zimbraPrefShowAllNewMailNotifications, false);
+    }
+
+    /**
+     * By default, new mail notifications are only displayed for new items
+     * placed in the inbox. To get new mail notifications for items filtered
+     * to other folders as well, set this to TRUE
+     *
+     * @param zimbraPrefShowAllNewMailNotifications new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7,9.0
+     */
+    @ZAttr(id=1904)
+    public void setPrefShowAllNewMailNotifications(boolean zimbraPrefShowAllNewMailNotifications) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefShowAllNewMailNotifications, zimbraPrefShowAllNewMailNotifications ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * By default, new mail notifications are only displayed for new items
+     * placed in the inbox. To get new mail notifications for items filtered
+     * to other folders as well, set this to TRUE
+     *
+     * @param zimbraPrefShowAllNewMailNotifications new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7,9.0
+     */
+    @ZAttr(id=1904)
+    public Map<String,Object> setPrefShowAllNewMailNotifications(boolean zimbraPrefShowAllNewMailNotifications, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefShowAllNewMailNotifications, zimbraPrefShowAllNewMailNotifications ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * By default, new mail notifications are only displayed for new items
+     * placed in the inbox. To get new mail notifications for items filtered
+     * to other folders as well, set this to TRUE
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7,9.0
+     */
+    @ZAttr(id=1904)
+    public void unsetPrefShowAllNewMailNotifications() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefShowAllNewMailNotifications, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * By default, new mail notifications are only displayed for new items
+     * placed in the inbox. To get new mail notifications for items filtered
+     * to other folders as well, set this to TRUE
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7,9.0
+     */
+    @ZAttr(id=1904)
+    public Map<String,Object> unsetPrefShowAllNewMailNotifications(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefShowAllNewMailNotifications, "");
+        return attrs;
+    }
+
+    /**
      * show calendar week in calendar views
      *
      * @return zimbraPrefShowCalendarWeek, or false if unset
