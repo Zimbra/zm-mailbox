@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -33,7 +33,6 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.httpclient.Cookie;
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpClient;
@@ -61,10 +60,8 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Domain;
-import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
-import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.servlet.util.AuthUtil;
@@ -268,7 +265,7 @@ public class ZimbraServlet extends HttpServlet {
 
             if (authToken.isExpired())
                 return null;
-            
+
             if (!authToken.isRegistered())
                 return null;
 
@@ -420,78 +417,15 @@ public class ZimbraServlet extends HttpServlet {
         return at;
     }
 
+    /**
+     * Note that if this method returns null, it isn't clear whether resp.sendError has been called or not.
+     * For that reason, it has been deprecated.  Believe there is no Zimbra code which still calls it but
+     * left in case customization code uses it.
+     */
+    @Deprecated
     public Account basicAuthRequest(HttpServletRequest req, HttpServletResponse resp, boolean sendChallenge)
     throws IOException, ServiceException {
-
-        if (!AuthProvider.allowBasicAuth(req, this))
-            return null;
-
-        String auth = req.getHeader(AuthUtil.HTTP_AUTH_HEADER);
-
-        // TODO: more liberal parsing of Authorization value...
-        if (auth == null || !auth.startsWith("Basic ")) {
-            if (sendChallenge) {
-                resp.addHeader(AuthUtil.WWW_AUTHENTICATE_HEADER, getRealmHeader(req, null));
-                ZimbraLog.dav.debug("calling sendError [%s] 'must authenticate'", HttpServletResponse.SC_UNAUTHORIZED);
-                resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, "must authenticate");
-            }
-            return null;
-        }
-
-        // 6 comes from "Basic ".length();
-        String userPass = new String(Base64.decodeBase64(auth.substring(6).getBytes()), "UTF-8");
-
-        int loc = userPass.indexOf(":");
-        if (loc == -1) {
-            ZimbraLog.dav.debug("calling sendError [%s] 'invalid basic auth credentials'",
-                    HttpServletResponse.SC_BAD_REQUEST);
-            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "invalid basic auth credentials");
-            return null;
-        }
-
-        String userPassedIn = userPass.substring(0, loc);
-        String user = userPassedIn;
-        String pass = userPass.substring(loc + 1);
-
-        Provisioning prov = Provisioning.getInstance();
-
-        if (user.indexOf('@') == -1) {
-            String host = HttpUtil.getVirtualHost(req);
-            if (host != null) {
-                Domain d = prov.get(Key.DomainBy.virtualHostname, host.toLowerCase());
-                if (d != null) user += "@" + d.getName();
-            }
-        }
-        ZimbraLog.dav.debug("Auth user passed in '%s'.  User being used '%s'", userPassedIn, user);
-
-        Account acct = prov.get(AccountBy.name, user);
-        if (acct == null) {
-            if (sendChallenge) {
-                resp.addHeader(AuthUtil.WWW_AUTHENTICATE_HEADER, getRealmHeader(req, null));
-                ZimbraLog.dav.debug("calling sendError [%s] 'invalid username/password'",
-                        HttpServletResponse.SC_UNAUTHORIZED);
-                resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, "invalid username/password");
-                return null;  // Makes no sense to return a guest account if we've already done sendError
-            }
-            return new GuestAccount(user, pass);
-        }
-        try {
-            Map<String, Object> authCtxt = new HashMap<String, Object>();
-            authCtxt.put(AuthContext.AC_ORIGINATING_CLIENT_IP, ZimbraServlet.getOrigIp(req));
-            authCtxt.put(AuthContext.AC_REMOTE_IP, ZimbraServlet.getClientIp(req));
-            authCtxt.put(AuthContext.AC_ACCOUNT_NAME_PASSEDIN, userPassedIn);
-            authCtxt.put(AuthContext.AC_USER_AGENT, req.getHeader("User-Agent"));
-            prov.authAccount(acct, pass, AuthContext.Protocol.http_basic, authCtxt);
-        } catch (ServiceException se) {
-            if (sendChallenge) {
-                resp.addHeader(AuthUtil.WWW_AUTHENTICATE_HEADER, getRealmHeader(req, prov.getDomain(acct)));
-                ZimbraLog.dav.debug("calling sendError [%s] 'invalid username/password'",
-                        HttpServletResponse.SC_UNAUTHORIZED);
-                resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, "invalid username/password");
-            }
-            return null;
-        }
-        return acct;
+        return AuthUtil.basicAuthRequest(req, resp, this, sendChallenge);
     }
 
     public static String getAccountPath(Account acct) {
