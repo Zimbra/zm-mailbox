@@ -125,7 +125,7 @@ SECTION 2: Apache License, V2.0
    >>> apache-httpd-2.4.10
    >>> apache-jcs-1.3
    >>> apache-log4j-1.2.17
-   >>> apache-log4j-extras-1.0
+   >>> apache-log4j-extras-1.2.17
    >>> apache-neethi-3.0.2
    >>> commons-lang-2.6
    >>> concurrentlinkedhashmap-lru-1.3.1
@@ -21511,7 +21511,7 @@ The Apache Software Foundation (http://www.apache.org/).
    limitations under the License.
 
 
->>> apache-log4j-extras-1.0
+>>> apache-log4j-extras-1.2.17
 
 Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
