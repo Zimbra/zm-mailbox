@@ -20,10 +20,10 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.custommonkey.xmlunit.XMLAssert;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.collect.Maps;
@@ -45,7 +45,6 @@ import com.zimbra.soap.SoapEngine;
 import com.zimbra.soap.SoapServlet;
 import com.zimbra.soap.ZimbraSoapContext;
 
-@Ignore("xml string order dependent")
 public class GetFilterRulesTest {
     @BeforeClass
     public static void init() throws Exception {
@@ -103,7 +102,7 @@ public class GetFilterRulesTest {
         Element rules = response.getOptionalElement(MailConstants.E_FILTER_RULES);
         ZimbraLog.filter.info(rules.prettyPrint());
         ZimbraLog.filter.info(expectedSoap);
-        Assert.assertEquals(expectedSoap, rules.prettyPrint());
+        XMLAssert.assertXMLEqual(expectedSoap, rules.prettyPrint());
 
     }
     // allof(with multi conditions) then anyof
@@ -151,7 +150,7 @@ public class GetFilterRulesTest {
         Element rules = response.getOptionalElement(MailConstants.E_FILTER_RULES);
         //ZimbraLog.filter.info(rules.prettyPrint());
         //ZimbraLog.filter.info(expectedSoap);
-        Assert.assertEquals(expectedSoap, rules.prettyPrint());
+        XMLAssert.assertXMLEqual(expectedSoap, rules.prettyPrint());
 
     }
 
@@ -200,7 +199,7 @@ public class GetFilterRulesTest {
         Element rules = response.getOptionalElement(MailConstants.E_FILTER_RULES);
         //ZimbraLog.filter.info(rules.prettyPrint());
         //ZimbraLog.filter.info(expectedSoap);
-        Assert.assertEquals(expectedSoap, rules.prettyPrint());
+        XMLAssert.assertXMLEqual(expectedSoap, rules.prettyPrint());
 
     }
 
@@ -251,7 +250,7 @@ public class GetFilterRulesTest {
         Element rules = response.getOptionalElement(MailConstants.E_FILTER_RULES);
         //ZimbraLog.filter.info(rules.prettyPrint());
         //ZimbraLog.filter.info(expectedSoap);
-        Assert.assertEquals(expectedSoap, rules.prettyPrint());
+        XMLAssert.assertXMLEqual(expectedSoap, rules.prettyPrint());
 
     }
 
@@ -302,7 +301,7 @@ public class GetFilterRulesTest {
         Element rules = response.getOptionalElement(MailConstants.E_FILTER_RULES);
         //ZimbraLog.filter.info(rules.prettyPrint());
         //ZimbraLog.filter.info(expectedSoap);
-        Assert.assertEquals(expectedSoap, rules.prettyPrint());
+        XMLAssert.assertXMLEqual(expectedSoap, rules.prettyPrint());
 
     }
 
@@ -426,7 +425,7 @@ public class GetFilterRulesTest {
         Element rules = response.getOptionalElement(MailConstants.E_FILTER_RULES);
         //ZimbraLog.filter.info(rules.prettyPrint());
         //ZimbraLog.filter.info(expectedSoap);
-        Assert.assertEquals(expectedSoap, rules.prettyPrint());
+        XMLAssert.assertXMLEqual(expectedSoap, rules.prettyPrint());
 
     }
 
@@ -484,7 +483,7 @@ public class GetFilterRulesTest {
         Element rules = response.getOptionalElement(MailConstants.E_FILTER_RULES);
         //ZimbraLog.filter.info(rules.prettyPrint());
         //ZimbraLog.filter.info(expectedSoap);
-        Assert.assertEquals(expectedSoap, rules.prettyPrint());
+        XMLAssert.assertXMLEqual(expectedSoap, rules.prettyPrint());
 
     }
 
