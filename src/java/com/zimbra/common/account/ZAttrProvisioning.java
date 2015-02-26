@@ -11981,6 +11981,16 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefShortEmailAddress = "zimbraPrefShortEmailAddress";
 
     /**
+     * By default, new mail notifications are only displayed for new items
+     * placed in the inbox. To get new mail notifications for items filtered
+     * to other folders as well, set this to TRUE
+     *
+     * @since ZCS 8.7,9.0
+     */
+    @ZAttr(id=1904)
+    public static final String A_zimbraPrefShowAllNewMailNotifications = "zimbraPrefShowAllNewMailNotifications";
+
+    /**
      * show calendar week in calendar views
      *
      * @since ZCS 6.0.0_GA
