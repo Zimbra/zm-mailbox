@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -133,17 +133,43 @@ public class AuthUtil {
         return getAuthTokenFromHttpReq(req, resp, true, doNotSendHttpError);
     }
 
-    public static Account basicAuthRequest(HttpServletRequest req,
-                                           HttpServletResponse resp,
-                                           ZimbraServlet servlet,
-                                           boolean sendChallenge) throws IOException, ServiceException
+    /**
+     * Note - this method can return null having called "sendError" and NOT having called "sendError".
+     * Seems like a bad idea...
+     */
+    public static Account basicAuthRequest(HttpServletRequest req, HttpServletResponse resp,
+                                           ZimbraServlet servlet, boolean sendChallenge)
+    throws IOException, ServiceException
     {
-        if (!AuthProvider.allowBasicAuth(req, servlet))
+        if (!AuthProvider.allowBasicAuth(req, servlet)) {
             return null;
+        }
 
         return basicAuthRequest(req, resp, sendChallenge);
     }
 
+    public static final class AuthResult {
+        public final boolean sendErrorCalled;
+        public final Account authorizedAccount;
+        public AuthResult(Account authAcct, boolean calledSendError) {
+            sendErrorCalled = calledSendError;
+            authorizedAccount = authAcct;
+        }
+    }
+
+    public static AuthResult basicAuthRequest(HttpServletRequest req, HttpServletResponse resp,
+                                           boolean sendChallenge, ZimbraServlet servlet)
+    throws IOException, ServiceException {
+        if (!AuthProvider.allowBasicAuth(req, servlet)) {
+            return new AuthResult(null, false);
+        }
+        Account acct = basicAuthRequest(req, resp, sendChallenge);
+        return new AuthResult(acct, (acct == null));
+    }
+
+    /**
+     * If returns null, then resp.sendError has been called.
+     */
     public static Account basicAuthRequest(HttpServletRequest req, HttpServletResponse resp, boolean sendChallenge)
             throws IOException, ServiceException
     {
