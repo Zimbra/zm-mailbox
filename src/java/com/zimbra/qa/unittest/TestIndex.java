@@ -24,12 +24,14 @@ import static org.junit.Assert.fail;
 import java.util.List;
 
 import org.junit.After;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 
 import com.zimbra.client.ZMailbox;
 import com.zimbra.client.ZMessage;
 import com.zimbra.client.ZSearchParams;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
@@ -80,7 +82,9 @@ public class TestIndex  {
         //create an account
         assertTrue("failed to create an account", TestUtil.accountExists(acct.getName()));
         TestUtil.addMessage(TestUtil.getMailbox(acct.getName()), "chorus at end by pupils from the Fourth Form Music Class Islington Green School, London");
-        assertEquals("failed to find injected message", 1,TestUtil.search(TestUtil.getMailbox(acct.getName()), "chorus", MailItem.Type.MESSAGE).size());
+        if(!(indexStoreFactory instanceof SolrCloudIndex.Factory)) {
+            assertEquals("failed to find injected message", 1,TestUtil.search(TestUtil.getMailbox(acct.getName()), "chorus", MailItem.Type.MESSAGE).size());
+        }
         IndexStore indexStore = indexStoreFactory.getIndexStore(acct.getId());
         assertTrue("failed to create an index", indexStore.indexExists());
 
@@ -100,7 +104,9 @@ public class TestIndex  {
         //create an account
         assertTrue("failed to create an account", TestUtil.accountExists(acct.getName()));
         TestUtil.addMessage(TestUtil.getMailbox(acct.getName()), "chorus at end by pupils from the Fourth Form Music Class Islington Green School, London");
-        assertEquals("failed to find injected message", 1,TestUtil.search(TestUtil.getMailbox(acct.getName()), "chorus", MailItem.Type.MESSAGE).size());
+        if(!(indexStoreFactory instanceof SolrCloudIndex.Factory)) {
+            assertEquals("failed to find injected message", 1,TestUtil.search(TestUtil.getMailbox(acct.getName()), "chorus", MailItem.Type.MESSAGE).size());
+        }
         IndexStore indexStore = indexStoreFactory.getIndexStore(acct.getId());
         assertTrue("failed to create an index", indexStore.indexExists());
 
@@ -135,7 +141,9 @@ public class TestIndex  {
         //create an account
         assertTrue("failed to create an account", TestUtil.accountExists(acct.getName()));
         TestUtil.addMessage(TestUtil.getMailbox(acct.getName()), "chorus at end by pupils from the Fourth Form Music Class Islington Green School, London");
-        assertEquals("failed to find injected message", 1,TestUtil.search(TestUtil.getMailbox(acct.getName()), "chorus", MailItem.Type.MESSAGE).size());
+        if(!(indexStoreFactory instanceof SolrCloudIndex.Factory)) {
+            assertEquals("failed to find injected message", 1,TestUtil.search(TestUtil.getMailbox(acct.getName()), "chorus", MailItem.Type.MESSAGE).size());
+        }
         IndexStore indexStore = indexStoreFactory.getIndexStore(acct.getId());
         assertTrue("failed to create an index", indexStore.indexExists());
 
@@ -148,8 +156,10 @@ public class TestIndex  {
         assertFalse("failed to delete an index", indexStore.indexExists());
         
         TestUtil.addMessage(TestUtil.getMailbox(acct.getName()), "We found the enemy and he is us");
-        assertEquals("failed to find injected message", 1,TestUtil.search(TestUtil.getMailbox(acct.getName()), "enemy", MailItem.Type.MESSAGE).size());
-        assertEquals("Should not be finding message added before index was deleted", 0,TestUtil.search(TestUtil.getMailbox(acct.getName()), "chorus", MailItem.Type.MESSAGE).size());
+        if(!(indexStoreFactory instanceof SolrCloudIndex.Factory)) {
+            assertEquals("failed to find injected message", 1,TestUtil.search(TestUtil.getMailbox(acct.getName()), "enemy", MailItem.Type.MESSAGE).size());
+            assertEquals("Should not be finding message added before index was deleted", 0,TestUtil.search(TestUtil.getMailbox(acct.getName()), "chorus", MailItem.Type.MESSAGE).size());
+        }
     }
     
     @Test
@@ -159,7 +169,9 @@ public class TestIndex  {
         //create an account
         assertTrue("failed to create an account", TestUtil.accountExists(acct.getName()));
         TestUtil.addMessage(TestUtil.getMailbox(acct.getName()), "chorus at end by pupils from the Fourth Form Music Class Islington Green School, London");
-        assertEquals("failed to find injected message", 1,TestUtil.search(TestUtil.getMailbox(acct.getName()), "chorus", MailItem.Type.MESSAGE).size());
+        if(!(indexStoreFactory instanceof SolrCloudIndex.Factory)) {
+            assertEquals("failed to find injected message", 1,TestUtil.search(TestUtil.getMailbox(acct.getName()), "chorus", MailItem.Type.MESSAGE).size());
+        }
         IndexStore indexStore = indexStoreFactory.getIndexStore(acct.getId());
         assertTrue("failed to create an index", indexStore.indexExists());
         
@@ -183,6 +195,7 @@ public class TestIndex  {
     
     @Test
     public void testIndexedTextLimit() throws Exception {
+        Assume.assumeTrue("com.zimbra.cs.index.solr.SolrIndex$Factory".equals(LC.zimbra_class_index_store_factory.value()));
         // Test text attachment
         StringBuilder body = new StringBuilder();
         for (int i = 1; i < 100; i++) {
@@ -232,6 +245,7 @@ public class TestIndex  {
      */
     @Test
     public void testFilenameSearch() throws Exception {
+        Assume.assumeTrue("com.zimbra.cs.index.solr.SolrIndex$Factory".equals(LC.zimbra_class_index_store_factory.value()));
         ZMailbox mbox = TestUtil.getZMailbox(acct.getName());
         String filename = NAME_PREFIX + " testFilenameSearch.txt";
         TestUtil.createDocument(mbox, Integer.toString(Mailbox.ID_FOLDER_BRIEFCASE),
@@ -252,11 +266,14 @@ public class TestIndex  {
      */
     private ZMessage sendMessage(String subject, byte[] attData, String attName, String attContentType)
     throws Exception {
-
+        Factory indexStoreFactory = IndexStore.getFactory();
         // Send message
         ZMailbox mbox = TestUtil.getZMailbox(acct.getName());
         String attachmentId = mbox.uploadAttachment(attName, attData, attContentType, 5000);
         TestUtil.sendMessage(mbox, acct.getName(), subject, "Cranberry sauce", attachmentId);
+        if(indexStoreFactory instanceof SolrCloudIndex.Factory) {
+            Thread.sleep(5000); //let ZK update clusterstate.json
+        }
         String query = "in:inbox subject:\"" + subject + "\"";
         return TestUtil.waitForMessage(mbox, query);
     }
