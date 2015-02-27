@@ -239,8 +239,12 @@ public class ZLdapHelper extends LdapHelper {
         ZLdapContext zlc = initZlc;
         try {
             if (zlc == null) {
-                assert(ldapServerType != null);
-                assert(usage != null);
+                if (ldapServerType == null) {
+                    throw ServiceException.FAILURE("Unexpected null ldapServerType with null ldap context.", null);
+                }
+                if (usage == null) {
+                    throw ServiceException.FAILURE("Unexpected null usage with null ldap context.", null);
+                }
                 zlc = LdapClient.getContext(ldapServerType, usage);
             }
             return zlc.getAttributes(dn, returnAttrs);
