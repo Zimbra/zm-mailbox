@@ -516,7 +516,9 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             throw ServiceException.FAILURE("unable to modify attrs: "
                     + e.getMessage(), e);
         } finally {
-            refreshEntry(entry, zlc);
+            if (zlc != null) {
+                refreshEntry(entry, zlc);
+            }
             if (initZlc == null) {
                 LdapClient.closeContext(zlc);
             }
@@ -536,7 +538,9 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             throw ServiceException.FAILURE("unable to set password: "
                     + e.getMessage(), e);
         } finally {
-            refreshEntry(entry, zlc);
+            if (zlc != null) {
+                refreshEntry(entry, zlc);
+            }
             if (initZlc == null) {
                 LdapClient.closeContext(zlc);
             }

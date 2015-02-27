@@ -184,7 +184,9 @@ public abstract class LdapHelper {
 
     public ZAttributes getAttributes(ZLdapContext initZlc, String dn, String[] returnAttrs)
     throws LdapEntryNotFoundException, ServiceException {
-        assert(initZlc != null);
+        if (initZlc == null) {
+            throw ServiceException.FAILURE("Unexpected null ldap context.", null);
+        }
         return getAttributes(initZlc, (LdapServerType) null, (LdapUsage) null, dn, returnAttrs);
     }
 
