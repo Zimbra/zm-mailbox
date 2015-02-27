@@ -19,7 +19,6 @@ import org.apache.solr.common.util.NamedList;
 import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import com.zimbra.common.localconfig.LC;
@@ -34,7 +33,6 @@ import com.zimbra.cs.mailbox.MailItem;
  * @author Greg Solovyev
  *
  */
-@Ignore ("run this test manually in cloud setting only")
 public class TestSolrCloud {
 
 	protected static final String BASE_DOMAIN_NAME = TestLdap.baseDomainName(TestSolrCloud.class);
@@ -111,8 +109,7 @@ public class TestSolrCloud {
 		String node2Name = replica2.get("node_name").toString();
 		assertFalse("should be provisioned on different nodes", node1Name.equalsIgnoreCase(node2Name));
 	}
-
-
+	
     private String genAccountName() {
         return USER_NAME + "@" + BASE_DOMAIN_NAME;
     }

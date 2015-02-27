@@ -15,30 +15,21 @@ import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.HttpSolrServer;
 import org.apache.solr.client.solrj.impl.HttpSolrServer.RemoteSolrException;
-import org.apache.solr.client.solrj.request.AbstractUpdateRequest.ACTION;
 import org.apache.solr.client.solrj.request.CoreAdminRequest;
 import org.apache.solr.client.solrj.request.QueryRequest;
-import org.apache.solr.client.solrj.request.UpdateRequest;
 import org.apache.solr.client.solrj.response.CoreAdminResponse;
 import org.apache.solr.common.SolrException;
-import org.apache.solr.common.SolrInputDocument;
 import org.apache.solr.common.params.CollectionParams.CollectionAction;
 import org.apache.solr.common.params.CommonParams;
 import org.apache.solr.common.params.ModifiableSolrParams;
 import org.apache.solr.common.util.NamedList;
 
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.index.IndexDocument;
 import com.zimbra.cs.index.IndexStore;
 import com.zimbra.cs.index.Indexer;
 import com.zimbra.cs.index.ZimbraIndexSearcher;
-import com.zimbra.cs.mailbox.Folder;
-import com.zimbra.cs.mailbox.MailItem;
-import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.Mailbox.IndexItemEntry;
 
 //TODO let Solr control batching of documents instead of MailboxIndex class
 /**
@@ -131,11 +122,9 @@ public class SolrIndex extends SolrIndexBase {
                 ((HttpSolrServer)solrServer).setBaseURL(Provisioning.getInstance().getLocalServer().getSolrURLBase());
                 CoreAdminResponse resp = CoreAdminRequest.getStatus(accountId, solrServer);
                 solrCoreProvisioned = resp.getCoreStatus(accountId).size() > 0;
-            } catch (SolrServerException e) {
-                ZimbraLog.index.error("Problem checking if Solr Core exists for account %s" ,accountId, e);
-            } catch (SolrException e) {
+            } catch (SolrServerException | SolrException e) {
                 ZimbraLog.index.info("Solr Core for account %s does not exist", accountId);
-            } catch (IOException e) {
+            }  catch (IOException e) {
                  ZimbraLog.index.error("failed to check if Solr Core for account %s exists", accountId,e);
             }  catch (ServiceException e) {
                 ZimbraLog.index.error("failed to check if Solr Core for account %s exists", accountId,e);
