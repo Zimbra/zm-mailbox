@@ -83,12 +83,12 @@ $ sudo vi /usr/local/etc/my.cnf
 ````
 [client-server]
 port = 7306
-socket = /opt/zimbra/db/mysql.sock
+socket = /opt/zimbra/data/tmp/mysql/mysql.sock
 ````
 
 ````
 $ mysql.server restart
-$ /opt/zimbra/mariadb/bin/mysqladmin -S /opt/zimbra/db/mysql.sock -u root password zimbra
+$ /opt/zimbra/mariadb/bin/mysqladmin -S /opt/zimbra/data/tmp/mysql/mysql.sock -u root password zimbra
 ````
 
 ## Install Consul
