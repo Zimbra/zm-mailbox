@@ -530,22 +530,22 @@ public final class LC {
     // with abundant precaution, re-generate my.cnf and restart MySQL server for
     // the change to take effect.
     @Supported
-    public static final KnownKey mysql_directory = KnownKey.newKey("${zimbra_home}/mariadb");
+    public static final KnownKey mysql_directory = KnownKey.newKey("/opt/zimbra/mariadb");
 
     @Supported
     public static final KnownKey mysql_data_directory = KnownKey.newKey("${zimbra_db_directory}/data");
 
     @Supported
-    public static final KnownKey mysql_socket = KnownKey.newKey("${zimbra_db_directory}/mysql.sock");
+    public static final KnownKey mysql_socket = KnownKey.newKey("/opt/zimbra/data/tmp/mysql/mysql.sock");
 
     @Supported
-    public static final KnownKey mysql_pidfile = KnownKey.newKey("${zimbra_db_directory}/mysql.pid");
+    public static final KnownKey mysql_pidfile = KnownKey.newKey("/opt/zimbra/log/mysql.pid");
 
     @Supported
-    public static final KnownKey mysql_mycnf = KnownKey.newKey("${zimbra_home}/conf/my.cnf");
+    public static final KnownKey mysql_mycnf = KnownKey.newKey("/opt/zimbra/conf/my.cnf");
 
     @Supported
-    public static final KnownKey mysql_errlogfile = KnownKey.newKey("${zimbra_home}/log/mysql_error.log");
+    public static final KnownKey mysql_errlogfile = KnownKey.newKey("/opt/zimbra/log/mysql_error.log");
 
     @Supported
     public static final KnownKey mysql_bind_address = KnownKey.newKey(null);
