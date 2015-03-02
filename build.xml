@@ -1369,7 +1369,7 @@
         <echo message="to stop (or stop jetty manually)"/>
         <echo message="and try again later."/>
         <delete failonerror="no">
-            <fileset dir="${zimbra.home.dir}/db" excludes="data/**,mysql.sock"/>
+            <fileset dir="${zimbra.home.dir}/data/tmp" excludes="mysql/**,mysql.sock"/>
         </delete>
 
         <delete dir="${zimbra.home.dir}/zmstat"/>
