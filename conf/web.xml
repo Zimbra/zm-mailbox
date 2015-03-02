@@ -694,7 +694,38 @@
     <url-pattern>/Autodiscover/*</url-pattern>
     <url-pattern>/AutoDiscover/*</url-pattern>
   </servlet-mapping>
-  
+
+  <servlet id="jsp">
+    <servlet-name>jsp</servlet-name>
+    <servlet-class>org.apache.jasper.servlet.JspServlet</servlet-class>
+    <async-supported>true</async-supported>
+    <init-param>
+        <param-name>fork</param-name>
+        <param-value>false</param-value>
+    </init-param>
+    <init-param>
+        <param-name>xpoweredBy</param-name>
+        <param-value>false</param-value>
+    </init-param>
+    <init-param>
+        <param-name>trimSpaces</param-name>
+        <param-value>true</param-value>
+    </init-param>
+    <init-param>
+        <param-name>classpath</param-name>
+        <param-value>?</param-value>
+    </init-param>
+    <load-on-startup>0</load-on-startup>
+  </servlet>
+
+  <servlet-mapping>
+    <servlet-name>jsp</servlet-name>
+    <url-pattern>/spnego/snoop.jsp</url-pattern>
+    <url-pattern>/error/403.jsp</url-pattern>
+    <url-pattern>/error/attachment_blocked.jsp</url-pattern>
+    <url-pattern>/error/sfdc_preauth.jsp</url-pattern>
+  </servlet-mapping>
+
   <env-entry>
     <description>
         Zimbra Services Installed on the server.
