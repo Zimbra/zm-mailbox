@@ -64,7 +64,7 @@ http://www.perforce.com/perforce/doc.current/manuals/p4guide/01_install.html#107
 
   [mysqld]
   port = 7306
-  socket = /opt/zimbra/mysql/data/mysql.sock
+  socket = /opt/zimbra/data/tmp/mysql/mysql.sock
 
 16. $ sudo -b /opt/zimbra/mysql/bin/mysqld_safe --user=mysql
   * With MySQLStartupItem package installed, mysqld will start automatically on reboot.
@@ -72,7 +72,7 @@ http://www.perforce.com/perforce/doc.current/manuals/p4guide/01_install.html#107
   * MySQL log file can be found at: /opt/zimbra/mysql/data/{server-name}.err
   * May need to press Enter to return to the prompt
 
-17. $ /opt/zimbra/mysql/bin/mysqladmin  -S /opt/zimbra/mysql/data/mysql.sock -u root password zimbra
+17. $ /opt/zimbra/mysql/bin/mysqladmin  -S /opt/zimbra/data/tmp/mysql/mysql.sock -u root password zimbra
 
 
 18. $ sudo visudo
