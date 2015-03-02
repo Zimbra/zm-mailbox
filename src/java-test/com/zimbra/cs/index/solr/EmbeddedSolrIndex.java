@@ -57,7 +57,6 @@ import com.zimbra.cs.util.ProvisioningUtil;
  */
 public class EmbeddedSolrIndex  extends SolrIndexBase {
     private static EmbeddedSolrServer server = null;
-    private CoreContainer coreContainer = null;
     private static final String solrHome = "../ZimbraServer/build/test/solr/";
     public static String TEST_CORE_NAME = "zsolrtestcore";
 
