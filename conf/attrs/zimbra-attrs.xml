@@ -9591,5 +9591,8 @@ TODO: delete them permanently from here
   To get new mail notifications for items filtered to other folders as well, set this to TRUE
   </desc>
 </attr>
-
+<attr id="1905" name="zimbraSolrMaxRetries" type="integer" min="0" max="4" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="9.0">
+  <globalConfigValue>1</globalConfigValue>
+  <desc>Value for HttpSolrServer.setMaxRetries. 1 is the recommended setting</desc>
+</attr>
 </attrs>

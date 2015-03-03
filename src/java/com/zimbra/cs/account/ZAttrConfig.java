@@ -72533,6 +72533,78 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * Value for HttpSolrServer.setMaxRetries. 1 is the recommended setting
+     *
+     * @return zimbraSolrMaxRetries, or 1 if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1905)
+    public int getSolrMaxRetries() {
+        return getIntAttr(Provisioning.A_zimbraSolrMaxRetries, 1);
+    }
+
+    /**
+     * Value for HttpSolrServer.setMaxRetries. 1 is the recommended setting
+     *
+     * @param zimbraSolrMaxRetries new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1905)
+    public void setSolrMaxRetries(int zimbraSolrMaxRetries) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSolrMaxRetries, Integer.toString(zimbraSolrMaxRetries));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for HttpSolrServer.setMaxRetries. 1 is the recommended setting
+     *
+     * @param zimbraSolrMaxRetries new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1905)
+    public Map<String,Object> setSolrMaxRetries(int zimbraSolrMaxRetries, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSolrMaxRetries, Integer.toString(zimbraSolrMaxRetries));
+        return attrs;
+    }
+
+    /**
+     * Value for HttpSolrServer.setMaxRetries. 1 is the recommended setting
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1905)
+    public void unsetSolrMaxRetries() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSolrMaxRetries, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for HttpSolrServer.setMaxRetries. 1 is the recommended setting
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=1905)
+    public Map<String,Object> unsetSolrMaxRetries(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSolrMaxRetries, "");
+        return attrs;
+    }
+
+    /**
      * Base URL for accessing Solr. Must include port number. Should point to
      * ZooKeeper when Solr is running in cloud mode.
      *

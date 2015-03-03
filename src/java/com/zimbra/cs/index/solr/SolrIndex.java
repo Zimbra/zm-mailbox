@@ -7,7 +7,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.solr.client.solrj.SolrRequest;
@@ -27,11 +29,11 @@ import org.apache.solr.common.util.NamedList;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.index.IndexStore;
 import com.zimbra.cs.index.Indexer;
 import com.zimbra.cs.index.ZimbraIndexSearcher;
 
-//TODO let Solr control batching of documents instead of MailboxIndex class
 /**
  * Index adapter for standalone Solr
  * @author gsolovyev
@@ -137,6 +139,7 @@ public class SolrIndex extends SolrIndexBase {
 
     @Override
     public void initIndex() throws IOException, ServiceException {
+        solrCoreProvisioned = false;
         SolrServer solrServer = getSolrServer();
         try {
             ((HttpSolrServer)solrServer).setBaseURL(Provisioning.getInstance().getLocalServer().getSolrURLBase());
@@ -148,12 +151,14 @@ public class SolrIndex extends SolrIndexBase {
             req.setPath("/admin/cores");
             req.process(solrServer);
             //TODO check for errors
+            ZimbraLog.index.info("Created Solr Core for account ", accountId);
         } catch (SolrServerException e) {
             String errorMsg = String.format("Problem creating new Solr Core for account %s",accountId);
             ZimbraLog.index.error(errorMsg, e);
             throw ServiceException.FAILURE(errorMsg,e);
         } catch (RemoteSolrException e) {
             if(e.getMessage() != null && e.getMessage().indexOf("already exists") > 0) {
+                solrCoreProvisioned = true;
                 return;
             }
             String errorMsg = String.format("Problem creating new Solr Core for account %s",accountId);
@@ -170,6 +175,7 @@ public class SolrIndex extends SolrIndexBase {
         }  finally {
             shutdown(solrServer);
         }
+        solrCoreProvisioned = true;
     }
 
     @Override
@@ -223,7 +229,10 @@ public class SolrIndex extends SolrIndexBase {
 
     @Override
     public SolrServer getSolrServer() throws ServiceException {
-        return new HttpSolrServer(Provisioning.getInstance().getLocalServer().getSolrURLBase() + "/" + accountId, httpClient);
+        Server localServer = Provisioning.getInstance().getLocalServer();
+        HttpSolrServer server = new HttpSolrServer(localServer.getSolrURLBase() + "/" + accountId, httpClient);
+        server.setMaxRetries(localServer.getSolrMaxRetries());
+        return server;
     }
 
     @Override
@@ -242,7 +251,14 @@ public class SolrIndex extends SolrIndexBase {
 
         @Override
         public SolrIndex getIndexStore(String accountId) {
-            return new SolrIndex(accountId, HttpClients.createMinimal(cm));
+            RequestConfig requestConfig = RequestConfig.custom().
+                    setConnectionRequestTimeout(1000).setConnectTimeout(1000).setSocketTimeout(1000).build();
+            
+            HttpClientBuilder builder = HttpClientBuilder.create();
+            builder.setConnectionManager(cm);
+            builder.setDefaultRequestConfig(requestConfig);    
+            CloseableHttpClient client = HttpClients.createMinimal(cm);
+            return new SolrIndex(accountId, client);
         }
 
         /**
