@@ -7,9 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.http.client.config.RequestConfig;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.solr.client.solrj.SolrRequest;
@@ -251,12 +249,6 @@ public class SolrIndex extends SolrIndexBase {
 
         @Override
         public SolrIndex getIndexStore(String accountId) {
-            RequestConfig requestConfig = RequestConfig.custom().
-                    setConnectionRequestTimeout(1000).setConnectTimeout(1000).setSocketTimeout(1000).build();
-            
-            HttpClientBuilder builder = HttpClientBuilder.create();
-            builder.setConnectionManager(cm);
-            builder.setDefaultRequestConfig(requestConfig);    
             CloseableHttpClient client = HttpClients.createMinimal(cm);
             return new SolrIndex(accountId, client);
         }
