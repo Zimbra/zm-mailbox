@@ -31970,6 +31970,83 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * interface address on which Admin HTTPS connector for MTA Auth should
+     * listen; defaults to localhost
+     *
+     * @return zimbraMtaAuthBindAddress, or "127.0.0.1" if unset
+     *
+     * @since ZCS 8.7.0,9.0
+     */
+    @ZAttr(id=1908)
+    public String getMtaAuthBindAddress() {
+        return getAttr(Provisioning.A_zimbraMtaAuthBindAddress, "127.0.0.1");
+    }
+
+    /**
+     * interface address on which Admin HTTPS connector for MTA Auth should
+     * listen; defaults to localhost
+     *
+     * @param zimbraMtaAuthBindAddress new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0
+     */
+    @ZAttr(id=1908)
+    public void setMtaAuthBindAddress(String zimbraMtaAuthBindAddress) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaAuthBindAddress, zimbraMtaAuthBindAddress);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * interface address on which Admin HTTPS connector for MTA Auth should
+     * listen; defaults to localhost
+     *
+     * @param zimbraMtaAuthBindAddress new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0
+     */
+    @ZAttr(id=1908)
+    public Map<String,Object> setMtaAuthBindAddress(String zimbraMtaAuthBindAddress, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaAuthBindAddress, zimbraMtaAuthBindAddress);
+        return attrs;
+    }
+
+    /**
+     * interface address on which Admin HTTPS connector for MTA Auth should
+     * listen; defaults to localhost
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0
+     */
+    @ZAttr(id=1908)
+    public void unsetMtaAuthBindAddress() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaAuthBindAddress, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * interface address on which Admin HTTPS connector for MTA Auth should
+     * listen; defaults to localhost
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0
+     */
+    @ZAttr(id=1908)
+    public Map<String,Object> unsetMtaAuthBindAddress(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaAuthBindAddress, "");
+        return attrs;
+    }
+
+    /**
      * Deprecated since: 6.0.0_BETA1. deprecated in favor of
      * zimbraMtaTlsSecurityLevel and zimbraMtaSaslAuthEnable. Orig desc:
      * Value for postconf smtpd_tls_security_level
@@ -32190,6 +32267,125 @@ public abstract class ZAttrServer extends NamedEntry {
     public Map<String,Object> unsetMtaAuthHost(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMtaAuthHost, "");
+        return attrs;
+    }
+
+    /**
+     * Internal port used by saslauthd to authenticate over SOAP
+     *
+     * <p>Use getMtaAuthPortAsString to access value as a string.
+     *
+     * @see #getMtaAuthPortAsString()
+     *
+     * @return zimbraMtaAuthPort, or 7073 if unset
+     *
+     * @since ZCS 8.7,9.0
+     */
+    @ZAttr(id=1906)
+    public int getMtaAuthPort() {
+        return getIntAttr(Provisioning.A_zimbraMtaAuthPort, 7073);
+    }
+
+    /**
+     * Internal port used by saslauthd to authenticate over SOAP
+     *
+     * @return zimbraMtaAuthPort, or "7073" if unset
+     *
+     * @since ZCS 8.7,9.0
+     */
+    @ZAttr(id=1906)
+    public String getMtaAuthPortAsString() {
+        return getAttr(Provisioning.A_zimbraMtaAuthPort, "7073");
+    }
+
+    /**
+     * Internal port used by saslauthd to authenticate over SOAP
+     *
+     * @param zimbraMtaAuthPort new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7,9.0
+     */
+    @ZAttr(id=1906)
+    public void setMtaAuthPort(int zimbraMtaAuthPort) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaAuthPort, Integer.toString(zimbraMtaAuthPort));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Internal port used by saslauthd to authenticate over SOAP
+     *
+     * @param zimbraMtaAuthPort new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7,9.0
+     */
+    @ZAttr(id=1906)
+    public Map<String,Object> setMtaAuthPort(int zimbraMtaAuthPort, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaAuthPort, Integer.toString(zimbraMtaAuthPort));
+        return attrs;
+    }
+
+    /**
+     * Internal port used by saslauthd to authenticate over SOAP
+     *
+     * @param zimbraMtaAuthPort new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7,9.0
+     */
+    @ZAttr(id=1906)
+    public void setMtaAuthPortAsString(String zimbraMtaAuthPort) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaAuthPort, zimbraMtaAuthPort);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Internal port used by saslauthd to authenticate over SOAP
+     *
+     * @param zimbraMtaAuthPort new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7,9.0
+     */
+    @ZAttr(id=1906)
+    public Map<String,Object> setMtaAuthPortAsString(String zimbraMtaAuthPort, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaAuthPort, zimbraMtaAuthPort);
+        return attrs;
+    }
+
+    /**
+     * Internal port used by saslauthd to authenticate over SOAP
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7,9.0
+     */
+    @ZAttr(id=1906)
+    public void unsetMtaAuthPort() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaAuthPort, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Internal port used by saslauthd to authenticate over SOAP
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7,9.0
+     */
+    @ZAttr(id=1906)
+    public Map<String,Object> unsetMtaAuthPort(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaAuthPort, "");
         return attrs;
     }
 

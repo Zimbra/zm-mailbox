@@ -9148,12 +9148,12 @@ TODO: delete them permanently from here
   <globalConfigValue>FALSE</globalConfigValue>
   <desc>Enable the use of Server Name Indication (SNI) TLS extension in the proxy. When set to TRUE, and using SNI capable clients, there is no need for a separate IP address per domain (zimbraVirtualIPAddress)</desc>
 </attr>
-<attr id="1819" name="zimbraTwoFactorAuthUserEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="domainAdminModifiable" since="8.7.0,9.0">
+<attr id="1819" name="zimbraPrefTwoFactorAuthEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="domainAdminModifiable" since="8.7.0,9.0">
   <desc>whether two-factor authentication is enabled by the user</desc>
   <defaultCOSValue>FALSE</defaultCOSValue>
 </attr>
 
-<attr id="1820" name="zimbraTwoFactorAuthRequired" type="boolean" cardinality="single" optionalIn="account,cos" flags="domainAdminModifiable" since="8.7.0,9.0">
+<attr id="1820" name="zimbraFeatureTwoFactorAuthRequired" type="boolean" cardinality="single" optionalIn="account,cos" flags="domainAdminModifiable" since="8.7.0,9.0">
   <desc>whether two-factor authentication is required</desc>
   <defaultCOSValue>FALSE</defaultCOSValue>
 </attr>
@@ -9246,7 +9246,7 @@ TODO: delete them permanently from here
 </attr>
 
 <attr id="1839" name="zimbraAppSpecificPasswordDuration" type="duration" cardinality="single" optionalIn="account,cos" since="8.7.0,9.0">
-  <defaultCOSValue>30d</defaultCOSValue>
+  <defaultCOSValue>0</defaultCOSValue>
   <desc>lifetime of app-specific passwords, or 0 for no expiry</desc>
 </attr>
 
@@ -9591,8 +9591,25 @@ TODO: delete them permanently from here
   To get new mail notifications for items filtered to other folders as well, set this to TRUE
   </desc>
 </attr>
+
 <attr id="1905" name="zimbraSolrMaxRetries" type="integer" min="0" max="4" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="9.0">
   <globalConfigValue>1</globalConfigValue>
   <desc>Value for HttpSolrServer.setMaxRetries. 1 is the recommended setting</desc>
 </attr>
+
+<attr id="1906" name="zimbraMtaAuthPort" type="port" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" callback="CheckPortConflict" since="8.7,9.0">
+  <globalConfigValue>7073</globalConfigValue>
+  <desc>Internal port used by saslauthd to authenticate over SOAP</desc>
+</attr>
+
+<attr id="1907" name="zimbraFeatureAppSpecificPasswordsEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="domainAdminModifiable" since="8.7.0,9.0">
+  <desc>Whether app-specific passwords are enabled when two-factor auth is enabled</desc>
+  <defaultCOSValue>TRUE</defaultCOSValue>
+</attr>
+
+<attr id="1908" name="zimbraMtaAuthBindAddress" type="string" max="128" cardinality="single" optionalIn="globalConfig,server" requiresRestart="mta" flags="serverInherited" since="8.7.0,9.0">
+  <globalConfigValue>127.0.0.1</globalConfigValue>
+  <desc>interface address on which Admin HTTPS connector for MTA Auth should listen; defaults to localhost</desc>
+</attr>
+
 </attrs>
