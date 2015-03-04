@@ -144,7 +144,7 @@ public abstract class ExternalStoreManager extends StoreManager implements Exter
         int consecutiveIoExceptions = 0;
         for (MailboxBlob.MailboxBlobInfo mbinfo : blobs) {
             try {
-                delete(getMailboxBlob(mailboxData, mbinfo.itemId, mbinfo.revision, mbinfo.locator));
+                delete(getMailboxBlob(mailboxData, mbinfo.itemId, mbinfo.revision, mbinfo.locator, false));
                 consecutiveIoExceptions = 0;
             } catch (IOException ioe) {
                 if (ioException == null) {
@@ -222,9 +222,9 @@ public abstract class ExternalStoreManager extends StoreManager implements Exter
     }
 
     @Override
-    public MailboxBlob getMailboxBlob(Mailbox.MailboxData mailboxData, int itemId, int revision, String locator) throws ServiceException {
+    public MailboxBlob getMailboxBlob(Mailbox.MailboxData mailboxData, int itemId, int revision, String locator, boolean validate) throws ServiceException {
         ExternalMailboxBlob mblob = new ExternalMailboxBlob(mailboxData, itemId, revision, locator);
-        return mblob.validateBlob() ? mblob : null;
+        return (!validate || mblob.validateBlob()) ? mblob : null;
     }
 
     @Override

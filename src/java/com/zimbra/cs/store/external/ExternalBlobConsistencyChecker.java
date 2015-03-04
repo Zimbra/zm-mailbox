@@ -105,7 +105,7 @@ public class ExternalBlobConsistencyChecker extends BlobConsistencyChecker {
     }
 
     private void checkExternalBlob(Mailbox.MailboxData mboxData, boolean checkSize, BlobInfo blobInfo, ExternalStoreManager sm) throws ServiceException {
-        MailboxBlob mblob = sm.getMailboxBlob(mboxData, blobInfo.itemId, blobInfo.version, blobInfo.path);
+        MailboxBlob mblob = sm.getMailboxBlob(mboxData, blobInfo.itemId, blobInfo.version, blobInfo.path, false);
         if (mblob == null) {
             results.missingBlobs.put(blobInfo.itemId, blobInfo);
         } else {
@@ -128,8 +128,8 @@ public class ExternalBlobConsistencyChecker extends BlobConsistencyChecker {
                         }
                     }
                 }
-            } catch (IOException ioe) {
-                blobInfo.fetchException = ioe;
+            } catch (Exception e) {
+                blobInfo.fetchException = e instanceof IOException ? (IOException) e : new IOException("Exception fetching blob", e);
                 results.missingBlobs.put(blobInfo.itemId, blobInfo);
             }
         }

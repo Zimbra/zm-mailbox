@@ -166,7 +166,7 @@ public final class MockStoreManager extends StoreManager {
     }
 
     @Override
-    public MailboxBlob getMailboxBlob(Mailbox.MailboxData mboxData, int itemId, int revision, String locator) {
+    public MailboxBlob getMailboxBlob(Mailbox.MailboxData mboxData, int itemId, int revision, String locator, boolean validate) {
         return blobs.get(blobKey(mboxData.id, itemId, revision));
     }
 
@@ -184,7 +184,7 @@ public final class MockStoreManager extends StoreManager {
     public boolean deleteStore(Mailbox.MailboxData mboxData, Iterable<MailboxBlob.MailboxBlobInfo> mblobs) throws IOException {
         assert mblobs != null : "we require a blob iterator for testing purposes";
         for (MailboxBlob.MailboxBlobInfo mbinfo : mblobs) {
-            delete(getMailboxBlob(mboxData,  mbinfo.itemId, mbinfo.revision, mbinfo.locator));
+            delete(getMailboxBlob(mboxData,  mbinfo.itemId, mbinfo.revision, mbinfo.locator, true));
         }
         return true;
     }

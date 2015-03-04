@@ -359,9 +359,9 @@ public final class FileBlobStore extends StoreManager {
     }
 
     @Override
-    public MailboxBlob getMailboxBlob(Mailbox.MailboxData mboxData, int itemId, int revision, String locator) throws ServiceException {
+    public MailboxBlob getMailboxBlob(Mailbox.MailboxData mboxData, int itemId, int revision, String locator, boolean validate) throws ServiceException {
         short volumeId = Short.valueOf(locator);
-        File file = getMailboxBlobFile(mboxData,  itemId, revision, volumeId, true);
+        File file = getMailboxBlobFile(mboxData,  itemId, revision, volumeId, validate);
         if (file == null) {
             return null;
         }

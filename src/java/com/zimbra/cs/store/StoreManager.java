@@ -418,12 +418,29 @@ public abstract class StoreManager {
      * @param mbox
      * @param itemId mail_item.id value for item
      * @param revision mail_item.mod_content value for item
+     * @param locator the volume, url, or other identifier used by blob store to locate an entry
      * @return the <code>MailboxBlob</code>, or <code>null</code> if the file
      * does not exist
      *
      * @throws ServiceException
      */
-    public abstract MailboxBlob getMailboxBlob(Mailbox.MailboxData mailboxData, int itemId, int revision, String locator)
+    public MailboxBlob getMailboxBlob(Mailbox.MailboxData mailboxData, int itemId, int revision, String locator) throws ServiceException {
+        return getMailboxBlob(mailboxData, itemId, revision, locator, true);
+    }
+
+    /**
+     * Find the MailboxBlob in int mailboxId, String accountId with matching item ID.
+     * @param mbox
+     * @param itemId mail_item.id value for item
+     * @param revision mail_item.mod_content value for item
+     * @param locator the volume, url, or other identifier used by blob store to locate an entry
+     * @param validate whether to validate the blob before return; used to disable validation on delete and other similar operations
+     * @return the <code>MailboxBlob</code>, or <code>null</code> if the file
+     * does not exist
+     *
+     * @throws ServiceException
+     */
+    public abstract MailboxBlob getMailboxBlob(Mailbox.MailboxData mailboxData, int itemId, int revision, String locator, boolean validate)
     throws ServiceException;
 
     /**
