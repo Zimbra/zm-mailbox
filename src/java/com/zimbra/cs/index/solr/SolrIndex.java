@@ -5,11 +5,8 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.solr.client.solrj.SolrRequest;
 import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.SolrServerException;
@@ -25,12 +22,14 @@ import org.apache.solr.common.params.ModifiableSolrParams;
 import org.apache.solr.common.util.NamedList;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraHttpClientManager;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.index.IndexStore;
 import com.zimbra.cs.index.Indexer;
 import com.zimbra.cs.index.ZimbraIndexSearcher;
+import com.zimbra.cs.util.Zimbra;
 
 /**
  * Index adapter for standalone Solr
@@ -241,16 +240,13 @@ public class SolrIndex extends SolrIndexBase {
     }
 
     public static final class Factory implements IndexStore.Factory {
-        PoolingHttpClientConnectionManager cm;
         public Factory() {
-            cm = new PoolingHttpClientConnectionManager();
-            ZimbraLog.index.info("Created SolrlIndexStore\n");
+            ZimbraLog.index.info("Created SolrlIndexStore.Factory\n");
         }
 
         @Override
         public SolrIndex getIndexStore(String accountId) {
-            CloseableHttpClient client = HttpClients.createMinimal(cm);
-            return new SolrIndex(accountId, client);
+            return new SolrIndex(accountId, Zimbra.getAppContext().getBean(ZimbraHttpClientManager.class).getInternalHttpClient());
         }
 
         /**
@@ -258,7 +254,7 @@ public class SolrIndex extends SolrIndexBase {
          */
         @Override
         public void destroy() {
-            cm.closeIdleConnections(0, TimeUnit.MILLISECONDS);
+            ZimbraLog.index.info("Destroyed SolrlIndexStore.Factory\n");
         }
     }
 

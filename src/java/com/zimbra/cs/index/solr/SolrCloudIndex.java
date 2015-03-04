@@ -5,10 +5,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrRequest;
 import org.apache.solr.client.solrj.SolrResponse;
@@ -29,6 +26,7 @@ import org.apache.solr.common.params.ModifiableSolrParams;
 import org.apache.solr.common.util.NamedList;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraHttpClientManager;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.index.IndexDocument;
@@ -39,6 +37,7 @@ import com.zimbra.cs.index.ZimbraIndexSearcher;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.IndexItemEntry;
+import com.zimbra.cs.util.Zimbra;
 
 public class SolrCloudIndex extends SolrIndexBase {
 
@@ -248,17 +247,17 @@ public class SolrCloudIndex extends SolrIndexBase {
     }
 
     public static final class Factory implements IndexStore.Factory {
-        PoolingHttpClientConnectionManager cm = null;
         CloudSolrServer cloudSolrServer = null;
         public Factory() {
-            cm = new PoolingHttpClientConnectionManager();
-            ZimbraLog.index.info("Created SolrlIndexStore\n");
+            ZimbraLog.index.info("Created SolrCloudIndex.Factory\n");
         }
 
         @Override
         public SolrIndexBase getIndexStore(String accountId) throws ServiceException {
             //TODO set zk timeout from LDAP config
-            cloudSolrServer = new CloudSolrServer(Provisioning.getInstance().getLocalServer().getAttr(Provisioning.A_zimbraSolrURLBase, true), new LBHttpSolrServer(HttpClients.createMinimal(cm)));
+            cloudSolrServer = new CloudSolrServer(
+                    Provisioning.getInstance().getLocalServer().getAttr(Provisioning.A_zimbraSolrURLBase, true), 
+                        new LBHttpSolrServer(Zimbra.getAppContext().getBean(ZimbraHttpClientManager.class).getInternalHttpClient()));
             return new SolrCloudIndex(accountId,  cloudSolrServer);
         }
 
@@ -267,8 +266,8 @@ public class SolrCloudIndex extends SolrIndexBase {
          */
         @Override
         public void destroy() {
-            cm.closeIdleConnections(0, TimeUnit.MILLISECONDS);
             cloudSolrServer.shutdown();
+            ZimbraLog.index.info("Destroyed SolrCloudIndex.Factory\n");
         }
     }
 

@@ -35,6 +35,7 @@ import redis.clients.jedis.JedisPool;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraHttpClientManager;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.util.memcached.ZimbraMemcachedClient;
 import com.zimbra.cs.account.Provisioning;
@@ -384,4 +385,9 @@ public class ZimbraConfig {
         }
         return instance;
 	}
+	
+	@Bean(name="httpClientManager")
+    public ZimbraHttpClientManager httpClientManagerBean() throws Exception {
+        return new ZimbraHttpClientManager();
+    }
 }
