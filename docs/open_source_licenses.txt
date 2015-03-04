@@ -52,7 +52,7 @@ SECTION 1: BSD-STYLE, MIT-STYLE, OR SIMILAR STYLE LICENSES
    >>> ical4j-0.9.16
    >>> icu4j-4.8.1.1
    >>> iscroll-3.5.1
-   >>> j2sdk-1.8.0-internal-build_2014_07_29_16_56-b00
+   >>> j2sdk-1.8.0-internal-build_2015_03_04_14_17-b00
    >>> javamail-1.4.5
    >>> jaxen-1.1.3
    >>> jce_policy-7
@@ -1587,7 +1587,7 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE.
 
 
->>> j2sdk-1.8.0-internal-build_2014_07_29_16_56-b00
+>>> j2sdk-1.8.0-internal-build_2015_03_04_14_17-b00
 
 The GNU General Public License (GPL)
 
