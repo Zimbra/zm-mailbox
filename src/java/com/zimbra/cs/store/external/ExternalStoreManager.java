@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -137,7 +137,7 @@ public abstract class ExternalStoreManager extends StoreManager implements Exter
         int consecutiveIoExceptions = 0;
         for (MailboxBlob.MailboxBlobInfo mbinfo : blobs) {
             try {
-                delete(getMailboxBlob(mbox, mbinfo.itemId, mbinfo.revision, mbinfo.locator));
+                delete(getMailboxBlob(mbox, mbinfo.itemId, mbinfo.revision, mbinfo.locator, false));
                 consecutiveIoExceptions = 0;
             } catch (IOException ioe) {
                 if (ioException == null) {
@@ -206,9 +206,9 @@ public abstract class ExternalStoreManager extends StoreManager implements Exter
     }
 
     @Override
-    public MailboxBlob getMailboxBlob(Mailbox mbox, int itemId, int revision, String locator) throws ServiceException {
+    public MailboxBlob getMailboxBlob(Mailbox mbox, int itemId, int revision, String locator, boolean validate) throws ServiceException {
         ExternalMailboxBlob mblob = new ExternalMailboxBlob(mbox, itemId, revision, locator);
-        return mblob.validateBlob() ? mblob : null;
+        return (!validate || mblob.validateBlob()) ? mblob : null;
     }
 
     @Override

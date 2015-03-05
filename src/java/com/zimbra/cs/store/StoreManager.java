@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -335,7 +335,22 @@ public abstract class StoreManager {
      *
      * @throws ServiceException
      */
-    public abstract MailboxBlob getMailboxBlob(Mailbox mbox, int itemId, int revision, String locator)
+    public MailboxBlob getMailboxBlob(Mailbox mbox, int itemId, int revision, String locator)
+    throws ServiceException {
+        return getMailboxBlob(mbox, itemId, revision, locator, true);
+    }
+
+    /**
+     * Find the MailboxBlob in int mailboxId, String accountId with matching item ID.
+     * @param mbox
+     * @param itemId mail_item.id value for item
+     * @param revision mail_item.mod_content value for item
+     * @return the <code>MailboxBlob</code>, or <code>null</code> if the file
+     * does not exist
+     *
+     * @throws ServiceException
+     */
+    public abstract MailboxBlob getMailboxBlob(Mailbox mbox, int itemId, int revision, String locator, boolean validate)
     throws ServiceException;
 
     /**

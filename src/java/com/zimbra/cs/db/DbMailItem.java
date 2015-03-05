@@ -806,6 +806,7 @@ public class DbMailItem {
         return ids;
     }
 
+
     public static void setIndexIds(DbConnection conn, Mailbox mbox, List<Integer> ids) throws ServiceException {
         if (ids.isEmpty()) {
             return;
@@ -3156,7 +3157,7 @@ public class DbMailItem {
                     info.blobDigests.add(blobDigest);
                     String locator = rs.getString(LEAF_CI_LOCATOR);
                     try {
-                        MailboxBlob mblob = sm.getMailboxBlob(mbox, id, revision, locator);
+                        MailboxBlob mblob = sm.getMailboxBlob(mbox, id, revision, locator, false);
                         if (mblob == null) {
                             ZimbraLog.mailbox.warn("missing blob for id: %d, change: %d", id, revision);
                         } else {
@@ -3224,7 +3225,7 @@ public class DbMailItem {
                     if (blobDigest != null) {
                         info.blobDigests.add(blobDigest);
                         try {
-                            MailboxBlob mblob = sm.getMailboxBlob(mbox, rs.getInt(1), rs.getInt(4), rs.getString(5));
+                            MailboxBlob mblob = sm.getMailboxBlob(mbox, rs.getInt(1), rs.getInt(4), rs.getString(5), false);
                             if (mblob == null) {
                                 ZimbraLog.mailbox.error("missing blob for id: %d, change: %s",
                                         rs.getInt(1), rs.getInt(4));

@@ -71,8 +71,8 @@ public class ExternalMailboxBlob extends MailboxBlob {
         try {
             getLocalBlob();
             return true;
-        } catch (IOException e) {
-            ZimbraLog.store.debug("Unable to validate blob [%s] due to IOException", this, e);
+        } catch (Exception e) {
+            ZimbraLog.store.debug("Unable to validate blob [%s] due to exception", this, e);
             return false;
         }
     }
