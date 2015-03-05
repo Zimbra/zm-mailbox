@@ -25,7 +25,6 @@ import java.util.Timer;
 
 import org.apache.mina.core.buffer.IoBuffer;
 import org.dom4j.DocumentException;
-import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.support.AbstractApplicationContext;
@@ -38,7 +37,6 @@ import com.zimbra.common.localconfig.LocalConfig;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapTransport;
 import com.zimbra.common.util.FileUtil;
-import com.zimbra.common.util.ZimbraHttpClientManager;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.AuthTokenRegistry;
@@ -292,8 +290,6 @@ public final class Zimbra {
             Util.halt("cannot initialize RightManager", e);
         }
 
-        appContext.getBean(ZimbraHttpClientManager.class).start();
-        
         ExtensionUtil.initAll();
 
         try {
@@ -465,12 +461,6 @@ public final class Zimbra {
 
         if (isMailboxd) {
             StoreManager.getInstance().shutdown();
-        }
-
-        try {
-            appContext.getBean(ZimbraHttpClientManager.class).shutDown();
-        } catch (BeansException | IOException e) {
-            ZimbraLog.system.error("Cought an exception while shutting down http clients", e);
         }
 
         sTimer.cancel();
