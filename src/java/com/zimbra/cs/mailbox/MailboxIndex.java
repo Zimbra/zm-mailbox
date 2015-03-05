@@ -40,13 +40,14 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbSearch;
 import com.zimbra.cs.db.DbTag;
+import com.zimbra.cs.index.AddToIndexTaskLocator;
 import com.zimbra.cs.index.BrowseTerm;
 import com.zimbra.cs.index.DbSearchConstraints;
+import com.zimbra.cs.index.DeleteFromIndexTaskLocator;
 import com.zimbra.cs.index.IndexPendingDeleteException;
 import com.zimbra.cs.index.IndexStore;
 import com.zimbra.cs.index.Indexer;
 import com.zimbra.cs.index.IndexingQueueAdapter;
-import com.zimbra.cs.index.IndexingQueueItemLocator;
 import com.zimbra.cs.index.IndexingService;
 import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.ReSortingQueryResults;
@@ -268,7 +269,7 @@ public final class MailboxIndex {
                 for(int i=0; i<batchSize && ix < items.length; i++, ix++) {
                     batch.add(items[ix]);
                 }
-                success = add(batch);
+                success = add(batch, true);
             }
         }
         mailbox.endTransaction(success);
@@ -307,7 +308,7 @@ public final class MailboxIndex {
                 for(int i=0;i<batchSize && ix < items.size(); i++, ix++) {
                     batch.add(items.get(ix));
                 }
-                success = add(batch);
+                success = add(batch, true);
             }
         }
         mailbox.endTransaction(success);
@@ -448,30 +449,36 @@ public final class MailboxIndex {
         if (ids.isEmpty()) {
             return;
         }
-
-        Indexer indexer;
-        try {
-            indexer = indexStore.openIndexer();
-        } catch (IndexPendingDeleteException e) {
-            ZimbraLog.index.debug("delete of ids from index aborted as it is pending delete");
-            lastFailedTime = System.currentTimeMillis();
-            return;
-        } catch (IOException | ServiceException e) {
-            ZimbraLog.index.warn("Failed to open Indexer", e);
-            lastFailedTime = System.currentTimeMillis();
-            return;
-        }
-
-        try {
-            indexer.deleteDocument(ids);
-        } catch (IOException | ServiceException e) {
-            ZimbraLog.index.warn("Failed to delete index documents", e);
-        } finally {
+        if(!Zimbra.started()) {
+            ZimbraLog.index.debug("Application is not started yet. Queueing items for deleting from index instead of deleting immediately.");
+            IndexingQueueAdapter queueAdapter = Zimbra.getAppContext().getBean(IndexingQueueAdapter.class);
+            DeleteFromIndexTaskLocator itemLocator = new DeleteFromIndexTaskLocator(ids, mailbox.getAccountId(), mailbox.getId(), mailbox.getSchemaGroupId());
+            queueAdapter.put(itemLocator);            
+        } else {
+            Indexer indexer;
             try {
-                indexer.close();
-            } catch (IOException e) {
-                ZimbraLog.index.error("Failed to close Indexer", e);
+                indexer = indexStore.openIndexer();
+            } catch (IndexPendingDeleteException e) {
+                ZimbraLog.index.debug("delete of ids from index aborted as it is pending delete");
+                lastFailedTime = System.currentTimeMillis();
                 return;
+            } catch (IOException | ServiceException e) {
+                ZimbraLog.index.warn("Failed to open Indexer", e);
+                lastFailedTime = System.currentTimeMillis();
+                return;
+            }
+    
+            try {
+                indexer.deleteDocument(ids);
+            } catch (IOException | ServiceException e) {
+                ZimbraLog.index.warn("Failed to delete index documents", e);
+            } finally {
+                try {
+                    indexer.close();
+                } catch (IOException e) {
+                    ZimbraLog.index.error("Failed to close Indexer", e);
+                    return;
+                }
             }
         }
     }
@@ -481,13 +488,13 @@ public final class MailboxIndex {
      * @throws TemporaryIndexingException 
      */
     @VisibleForTesting
-    public synchronized boolean add(List<MailItem> items) throws ServiceException {
+    public synchronized boolean add(List<MailItem> items, boolean isReindexing) throws ServiceException {
         if (items.isEmpty()) {
             return false;
         }
         assert(mailbox.lock.isWriteLockedByCurrentThread());
         IndexingQueueAdapter queueAdapter = Zimbra.getAppContext().getBean(IndexingQueueAdapter.class);
-        IndexingQueueItemLocator itemLocator = new IndexingQueueItemLocator(items, mailbox.getAccountId(), mailbox.getId(),mailbox.getSchemaGroupId(), mailbox.attachmentsIndexingEnabled());
+        AddToIndexTaskLocator itemLocator = new AddToIndexTaskLocator(items, mailbox.getAccountId(), mailbox.getId(), mailbox.getSchemaGroupId(), mailbox.attachmentsIndexingEnabled(), isReindexing);
         queueAdapter.put(itemLocator);
         return true;
     }
@@ -745,28 +752,35 @@ public final class MailboxIndex {
      * @throws ServiceException 
      */
     synchronized void add(MailItem item) throws ServiceException {
-        Indexer indexer = null;
-        try {
-            indexer = indexStore.openIndexer();
-            indexer.addDocument(item,  item.generateIndexDataAsync(mailbox.attachmentsIndexingEnabled()));
-            DbMailItem.setIndexId(mailbox.getOperationConnection(), mailbox, item.getId());
-            item.mData.indexId = item.getId();
-        } catch (TemporaryIndexingException e) {
-            ZimbraLog.index.error("Failed to index mail item %d for account %s. This item will need to be reindexed manually", item.getId(), item.getAccountId(), e);
-            lastFailedTime = System.currentTimeMillis();
-        } catch (IndexPendingDeleteException e) {
-            ZimbraLog.index.debug("add of entries to index aborted as index is pending delete");
-            lastFailedTime = System.currentTimeMillis();
-        } catch (IOException e) {
-            ZimbraLog.index.warn("Failed to open Indexer", e);
-            lastFailedTime = System.currentTimeMillis();
-        } finally {
+        if(!Zimbra.started()) {
+            ZimbraLog.index.debug("Application is not started yet. Queueing message for indexing instead of immediate indexing.");
+            IndexingQueueAdapter queueAdapter = Zimbra.getAppContext().getBean(IndexingQueueAdapter.class);
+            AddToIndexTaskLocator itemLocator = new AddToIndexTaskLocator(item, mailbox.getAccountId(), mailbox.getId(), mailbox.getSchemaGroupId(), mailbox.attachmentsIndexingEnabled());
+            queueAdapter.put(itemLocator);
+        } else {
+            Indexer indexer = null;
             try {
-                if(indexer != null) {
-                    indexer.close();
-                }
+                indexer = indexStore.openIndexer();
+                indexer.addDocument(item,  item.generateIndexDataAsync(mailbox.attachmentsIndexingEnabled()));
+                DbMailItem.setIndexId(mailbox.getOperationConnection(), mailbox, item.getId());
+                item.mData.indexId = item.getId();
+            } catch (TemporaryIndexingException e) {
+                ZimbraLog.index.error("Failed to index mail item %d for account %s. This item will need to be reindexed manually", item.getId(), item.getAccountId(), e);
+                lastFailedTime = System.currentTimeMillis();
+            } catch (IndexPendingDeleteException e) {
+                ZimbraLog.index.debug("add of entries to index aborted as index is pending delete");
+                lastFailedTime = System.currentTimeMillis();
             } catch (IOException e) {
-                ZimbraLog.index.error("Failed to close Indexer", e);
+                ZimbraLog.index.warn("Failed to open Indexer", e);
+                lastFailedTime = System.currentTimeMillis();
+            } finally {
+                try {
+                    if(indexer != null) {
+                        indexer.close();
+                    }
+                } catch (IOException e) {
+                    ZimbraLog.index.error("Failed to close Indexer", e);
+                }
             }
         }
     }

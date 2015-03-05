@@ -12,22 +12,22 @@ public interface IndexingQueueAdapter {
 
     /**
      * Add an item to the tail of the queue
-     * @param {@link com.zimbra.cs.index.IndexingQueueItemLocator} item
+     * @param {@link com.zimbra.cs.index.AbstractIndexingTasksLocator} item
      */
-    public boolean put(IndexingQueueItemLocator item);
+    public boolean put(AbstractIndexingTasksLocator item);
     
     /**
      * Return the next element from the queue and remove it from the queue. Blocks until an element is available in the queue.
-      * @return {@link com.zimbra.cs.index.IndexingQueueItemLocator}
+      * @return {@link com.zimbra.cs.index.AbstractIndexingTasksLocator}
       * @throws InterruptedException
      */
-    public IndexingQueueItemLocator take() throws InterruptedException;
+    public AbstractIndexingTasksLocator take() throws InterruptedException;
 
     /**
      * Return the next element in the queue and keep it in the queue. Returns null if the queue is empty.
-     * @return {@link com.zimbra.cs.index.IndexingQueueItemLocator}
+     * @return {@link com.zimbra.cs.index.AbstractIndexingTasksLocator}
      */
-    public IndexingQueueItemLocator peek();
+    public AbstractIndexingTasksLocator peek();
     
     /**
      * 

@@ -484,11 +484,7 @@ public final class Zimbra {
     }
 
     public static synchronized boolean started() {
-        return inited;
-    }
-    
-    public static synchronized boolean minimal() {
-        return minimal;
+        return inited | minimal;
     }
 
     public static Timer sTimer = new Timer("Timer-Zimbra", true);

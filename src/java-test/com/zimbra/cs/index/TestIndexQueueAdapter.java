@@ -66,7 +66,7 @@ public class TestIndexQueueAdapter {
     }
 
     @Test
-    public void testPutTakeSingle() throws Exception {
+    public void testPutTakeSingleIndexingTask() throws Exception {
         //publish a message
         Account account = Provisioning.getInstance().getAccountById(MockProvisioning.DEFAULT_ACCOUNT_ID);
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
@@ -78,29 +78,93 @@ public class TestIndexQueueAdapter {
         underlyingData.uuid = account.getUid();
         underlyingData.setBlobDigest("test digest");
         MailItem item = new MockMailItem(mbox,underlyingData);
-        adapter.put(new IndexingQueueItemLocator(mbox.getId(),mbox.getSchemaGroupId(),item, account.getId(), false));
+        adapter.put(new AddToIndexTaskLocator(item, account.getId(), mbox.getId(),mbox.getSchemaGroupId(),false));
 
         //verify that message is in the queue
         assertTrue("item queue should not be empty", adapter.hasMoreItems());
-        IndexingQueueItemLocator queuedItem = adapter.peek();
+        AbstractIndexingTasksLocator queuedItem = adapter.peek();
         assertNotNull("empty queued item", queuedItem);
+        assertTrue("task in the queue should be AddToIndexTaskLocator", queuedItem instanceof AddToIndexTaskLocator);
         assertEquals("queued item's mailbox ID is different from test mailbox ID", mbox.getId(),queuedItem.getMailboxID());
-        assertEquals("queued item's ID is different from test item's ID", item.getId(),queuedItem.getMailItems().get(0).getId());
-        assertEquals("queued item's type is different from test item's type", item.getType(),queuedItem.getMailItems().get(0).getType());
+        assertEquals("queued item's ID is different from test item's ID", item.getId(),((AddToIndexTaskLocator)queuedItem).getMailItems().get(0).getId());
+        assertEquals("queued item's type is different from test item's type", item.getType(),((AddToIndexTaskLocator)queuedItem).getMailItems().get(0).getType());
 
         //pop the message
-        IndexingQueueItemLocator nextItem = adapter.take();
+        AbstractIndexingTasksLocator nextItem = adapter.take();
         assertNotNull("empty dequeued item", nextItem);
+        assertTrue("task taken from queue should be AddToIndexTaskLocator", queuedItem instanceof AddToIndexTaskLocator);
         assertEquals("dequeued item's mailbox ID is different from test mailbox ID", mbox.getId(),nextItem.getMailboxID());
-        assertEquals("dequeued item's ID is different from test item's ID", item.getId(),queuedItem.getMailItems().get(0).getId());
-        assertEquals("dequeued item's type is different from test item's type", item.getType(),queuedItem.getMailItems().get(0).getType());
+        assertEquals("dequeued item's ID is different from test item's ID", item.getId(),((AddToIndexTaskLocator)queuedItem).getMailItems().get(0).getId());
+        assertEquals("dequeued item's type is different from test item's type", item.getType(),((AddToIndexTaskLocator)queuedItem).getMailItems().get(0).getType());
 
         //verify that there are no more messages
         assertFalse("item queue should be empty", adapter.hasMoreItems());
     }
     
     @Test
-    public void testPutTakeMultiple() throws Exception {
+    public void testPutTakeSingleDeleteTask() throws Exception {
+        //publish a message
+        Account account = Provisioning.getInstance().getAccountById(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+        Integer itemId = 1;
+        adapter.put(new DeleteFromIndexTaskLocator(itemId, account.getId(), mbox.getId(),mbox.getSchemaGroupId()));
+
+        //verify that message is in the queue
+        assertTrue("item queue should not be empty", adapter.hasMoreItems());
+        AbstractIndexingTasksLocator queuedItem = adapter.peek();
+        assertNotNull("empty queued item", queuedItem);
+        assertTrue("task in the queue should be DeleteFromIndexTaskLocator", queuedItem instanceof DeleteFromIndexTaskLocator);
+        assertEquals("queued item's mailbox ID is different from test mailbox ID", mbox.getId(),queuedItem.getMailboxID());
+        assertEquals("queued item's ID is different from test item's ID", itemId, ((DeleteFromIndexTaskLocator)queuedItem).getItemIds().get(0));
+
+        //pop the message
+        AbstractIndexingTasksLocator nextItem = adapter.take();
+        assertNotNull("empty dequeued item", nextItem);
+        assertTrue("task taken from queue should be DeleteFromIndexTaskLocator", queuedItem instanceof DeleteFromIndexTaskLocator);
+        assertEquals("dequeued item's mailbox ID is different from test mailbox ID", mbox.getId(),nextItem.getMailboxID());
+        assertEquals("dequeued item's ID is different from test item's ID", itemId,((DeleteFromIndexTaskLocator)queuedItem).getItemIds().get(0));
+
+        //verify that there are no more messages
+        assertFalse("item queue should be empty", adapter.hasMoreItems());
+    }
+    
+    @Test
+    public void testPutTakeMultipleItemsForDelete() throws Exception {
+        //publish a message
+        Account account = Provisioning.getInstance().getAccountById(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+        Integer itemId1 = 1;
+        Integer itemId2 = 2;
+        ArrayList<Integer> itemIds = new ArrayList<Integer>();
+        itemIds.add(itemId1);
+        itemIds.add(itemId2);
+        adapter.put(new DeleteFromIndexTaskLocator(itemIds, account.getId(), mbox.getId(),mbox.getSchemaGroupId()));
+
+        //verify that message is in the queue
+        assertTrue("item queue should not be empty", adapter.hasMoreItems());
+        AbstractIndexingTasksLocator queuedItem = adapter.peek();
+        assertNotNull("empty queued item", queuedItem);
+        assertTrue("task in the queue should be DeleteFromIndexTaskLocator", queuedItem instanceof DeleteFromIndexTaskLocator);
+        assertEquals("queued item's mailbox ID is different from test mailbox ID", mbox.getId(),queuedItem.getMailboxID());
+        assertEquals("queued item has wrong number of item IDs", itemIds.size(), ((DeleteFromIndexTaskLocator)queuedItem).getItemIds().size());
+        assertEquals("queued item's ID is different from test item's ID", itemId1, ((DeleteFromIndexTaskLocator)queuedItem).getItemIds().get(0));
+        assertEquals("queued item's ID is different from test item's ID", itemId2, ((DeleteFromIndexTaskLocator)queuedItem).getItemIds().get(1));
+
+        //pop the message
+        AbstractIndexingTasksLocator nextItem = adapter.take();
+        assertNotNull("empty dequeued item", nextItem);
+        assertTrue("task taken from queue should be DeleteFromIndexTaskLocator", queuedItem instanceof DeleteFromIndexTaskLocator);
+        assertEquals("dequeued item's mailbox ID is different from test mailbox ID", mbox.getId(),nextItem.getMailboxID());
+        assertEquals("dequeued item has wrong number of item IDs", itemIds.size(), ((DeleteFromIndexTaskLocator)queuedItem).getItemIds().size());
+        assertEquals("dequeued item's ID is different from test item's ID", itemId1, ((DeleteFromIndexTaskLocator)queuedItem).getItemIds().get(0));
+        assertEquals("dequeued item's ID is different from test item's ID", itemId2, ((DeleteFromIndexTaskLocator)queuedItem).getItemIds().get(1));
+
+        //verify that there are no more messages
+        assertFalse("item queue should be empty", adapter.hasMoreItems());
+    }
+    
+    @Test
+    public void testPutTakeMultipleItemsForIndexing() throws Exception {
         //publish a message
         Account account = Provisioning.getInstance().getAccountById(MockProvisioning.DEFAULT_ACCOUNT_ID);
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
@@ -131,30 +195,32 @@ public class TestIndexQueueAdapter {
         List<MailItem> items = new ArrayList<MailItem>();
         items.add(item1);
         items.add(item2);
-        adapter.put(new IndexingQueueItemLocator(mbox.getId(),mbox.getSchemaGroupId(),items, account.getId(), false));
+        adapter.put(new AddToIndexTaskLocator(items, account.getId(), mbox.getId(),mbox.getSchemaGroupId(),false));
 
         //verify that message is in the queue
         assertTrue("item queue should not be empty", adapter.hasMoreItems());
-        IndexingQueueItemLocator queuedItem = adapter.peek();
+        AbstractIndexingTasksLocator queuedItem = adapter.peek();
         assertNotNull("empty queued item", queuedItem);
+        assertTrue("item in queue should be AddToIndexTaskLocator", queuedItem instanceof AddToIndexTaskLocator);
         assertEquals("queued item's mailbox ID is different from test mailbox ID", mbox.getId(),queuedItem.getMailboxID());
-        assertEquals("queued item's first mail mail item ID is different from test item's ID", item1.getId(),queuedItem.getMailItems().get(0).getId());
-        assertEquals("queued item's first mail item type is different from test item's type", item1.getType(),queuedItem.getMailItems().get(0).getType());
-        assertEquals("queued item's second mail item ID is different from test item's ID", item2.getId(),queuedItem.getMailItems().get(1).getId());
-        assertEquals("queued item's second mail item type is different from test item's type", item2.getType(),queuedItem.getMailItems().get(1).getType());
-        assertTrue("queued item's first mail item dumpster flag should be set", queuedItem.getMailItems().get(0).isInDumpster());
-        assertFalse("queued item's second mail item dumpster flag should NOT be set",queuedItem.getMailItems().get(1).isInDumpster());
+        assertEquals("queued item's first mail mail item ID is different from test item's ID", item1.getId(),((AddToIndexTaskLocator)queuedItem).getMailItems().get(0).getId());
+        assertEquals("queued item's first mail item type is different from test item's type", item1.getType(),((AddToIndexTaskLocator)queuedItem).getMailItems().get(0).getType());
+        assertEquals("queued item's second mail item ID is different from test item's ID", item2.getId(),((AddToIndexTaskLocator)queuedItem).getMailItems().get(1).getId());
+        assertEquals("queued item's second mail item type is different from test item's type", item2.getType(),((AddToIndexTaskLocator)queuedItem).getMailItems().get(1).getType());
+        assertTrue("queued item's first mail item dumpster flag should be set", ((AddToIndexTaskLocator)queuedItem).getMailItems().get(0).isInDumpster());
+        assertFalse("queued item's second mail item dumpster flag should NOT be set",((AddToIndexTaskLocator)queuedItem).getMailItems().get(1).isInDumpster());
         
         //pop the message
-        IndexingQueueItemLocator nextItem = adapter.take();
+        AbstractIndexingTasksLocator nextItem = adapter.take();
         assertNotNull("empty dequeued item", nextItem);
+        assertTrue("item taken from queue should be AddToIndexTaskLocator", queuedItem instanceof AddToIndexTaskLocator);
         assertEquals("dequeued item's mailbox ID is different from test mailbox ID", mbox.getId(),nextItem.getMailboxID());
-        assertEquals("dequeued item's first mail item ID is different from test item's ID", item1.getId(),nextItem.getMailItems().get(0).getId());
-        assertEquals("dequeued item's first mail item type is different from test item's type", item1.getType(),nextItem.getMailItems().get(0).getType());
-        assertEquals("dequeued item's second mail item ID is different from test item's ID", item2.getId(),nextItem.getMailItems().get(1).getId());
-        assertEquals("dequeued item's second mail item type is different from test item's type", item2.getType(),nextItem.getMailItems().get(1).getType());
-        assertTrue("dequeued item's first mail item dumpster flag should be set", nextItem.getMailItems().get(0).isInDumpster());
-        assertFalse("dequeued item's second mail item dumpster flag should NOT be set",nextItem.getMailItems().get(1).isInDumpster());
+        assertEquals("dequeued item's first mail item ID is different from test item's ID", item1.getId(),((AddToIndexTaskLocator)nextItem).getMailItems().get(0).getId());
+        assertEquals("dequeued item's first mail item type is different from test item's type", item1.getType(),((AddToIndexTaskLocator)nextItem).getMailItems().get(0).getType());
+        assertEquals("dequeued item's second mail item ID is different from test item's ID", item2.getId(),((AddToIndexTaskLocator)nextItem).getMailItems().get(1).getId());
+        assertEquals("dequeued item's second mail item type is different from test item's type", item2.getType(),((AddToIndexTaskLocator)nextItem).getMailItems().get(1).getType());
+        assertTrue("dequeued item's first mail item dumpster flag should be set", ((AddToIndexTaskLocator)nextItem).getMailItems().get(0).isInDumpster());
+        assertFalse("dequeued item's second mail item dumpster flag should NOT be set",((AddToIndexTaskLocator)nextItem).getMailItems().get(1).isInDumpster());
 
         //verify that there are no more messages
         assertFalse("item queue should be empty", adapter.hasMoreItems());

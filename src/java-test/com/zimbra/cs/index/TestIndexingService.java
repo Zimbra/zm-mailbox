@@ -14,6 +14,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.google.common.collect.Lists;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
@@ -67,7 +68,6 @@ public class TestIndexingService {
 
     @Test
     public void testAsyncIndex() throws Exception {
-        //Provisioning.getInstance().getLocalServer().setIndexManualCommit(false);
         Provisioning.getInstance().getLocalServer().setIndexManualCommit(true);
         Provisioning.getInstance().getLocalServer().setReindexBatchSize(10);
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
@@ -93,11 +93,8 @@ public class TestIndexingService {
         Assert.assertEquals(0, ids.size());
         
         mbox.lock.lock();
-        assertTrue("MailboxIndex.add should return TRUE", mbox.index.add(mailItems));
+        assertTrue("MailboxIndex.add should return TRUE", mbox.index.add(mailItems, false));
         mbox.lock.release();
-        
-        IndexingQueueAdapter queueAdapter = Zimbra.getAppContext().getBean(IndexingQueueAdapter.class);
-        queueAdapter.setTotalMailboxTaskCount(MockProvisioning.DEFAULT_ACCOUNT_ID,3);
         
         //start indexing service
         Zimbra.getAppContext().getBean(IndexingService.class).startUp();
@@ -110,7 +107,6 @@ public class TestIndexingService {
     
     @Test
     public void testDeletedItem() throws Exception {
-        //Provisioning.getInstance().getLocalServer().setIndexManualCommit(false);
         Provisioning.getInstance().getLocalServer().setIndexManualCommit(true);
         Provisioning.getInstance().getLocalServer().setReindexBatchSize(10);
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
@@ -129,18 +125,15 @@ public class TestIndexingService {
         
         MailboxTestUtil.waitForIndexing(mbox);
         List<Integer> ids = TestUtil.search(mbox, "from:greg", MailItem.Type.MESSAGE);
-        Assert.assertEquals(3, ids.size());
+        Assert.assertEquals("should find 3 items", 3, ids.size());
         
         mbox.index.deleteIndex();
         ids = TestUtil.search(mbox, "from:greg", MailItem.Type.MESSAGE);
         Assert.assertEquals(0, ids.size());
         mbox.delete(null, mailItems.get(0).getId(), MailItem.Type.MESSAGE);
         mbox.lock.lock();
-        assertTrue("MailboxIndex.add should return TRUE", mbox.index.add(mailItems));
+        assertTrue("MailboxIndex.add should return TRUE", mbox.index.add(mailItems, false));
         mbox.lock.release();
-        
-        IndexingQueueAdapter queueAdapter = Zimbra.getAppContext().getBean(IndexingQueueAdapter.class);
-        queueAdapter.setTotalMailboxTaskCount(MockProvisioning.DEFAULT_ACCOUNT_ID,3);
         
         //start indexing service
         Zimbra.getAppContext().getBean(IndexingService.class).startUp();
@@ -149,14 +142,10 @@ public class TestIndexingService {
         
         ids = TestUtil.search(mbox, "from:greg", MailItem.Type.MESSAGE);
         assertEquals(2, ids.size());
-        assertEquals("'total' counter should be 3",3, queueAdapter.getTotalMailboxTaskCount(MockProvisioning.DEFAULT_ACCOUNT_ID));
-        assertEquals("'succeeded' counter should be 3",3, queueAdapter.getSucceededMailboxTaskCount(MockProvisioning.DEFAULT_ACCOUNT_ID));
-        assertEquals("'failed' counter should be 0",0,queueAdapter.getFailedMailboxTaskCount(MockProvisioning.DEFAULT_ACCOUNT_ID));
     }
     
     @Test
     public void testInvalidItem() throws Exception {
-        //Provisioning.getInstance().getLocalServer().setIndexManualCommit(false);
         Provisioning.getInstance().getLocalServer().setIndexManualCommit(true);
         Provisioning.getInstance().getLocalServer().setReindexBatchSize(10);
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
@@ -175,7 +164,7 @@ public class TestIndexingService {
         
         MailboxTestUtil.waitForIndexing(mbox);
         List<Integer> ids = TestUtil.search(mbox, "from:greg", MailItem.Type.MESSAGE);
-        Assert.assertEquals(3, ids.size());
+        Assert.assertEquals("should find 3 items", 3, ids.size());
         
         mbox.index.deleteIndex();
         ids = TestUtil.search(mbox, "from:greg", MailItem.Type.MESSAGE);
@@ -184,11 +173,8 @@ public class TestIndexingService {
         int [] deletedIds = {mailItems.get(0).getId()};
         mbox.deleteFromDumpster(null, deletedIds);
         mbox.lock.lock();
-        assertTrue("MailboxIndex.add should return TRUE", mbox.index.add(mailItems));
+        assertTrue("MailboxIndex.add should return TRUE", mbox.index.add(mailItems, false));
         mbox.lock.release();
-        
-        IndexingQueueAdapter queueAdapter = Zimbra.getAppContext().getBean(IndexingQueueAdapter.class);
-        queueAdapter.setTotalMailboxTaskCount(MockProvisioning.DEFAULT_ACCOUNT_ID,3);
         
         //start indexing service
         Zimbra.getAppContext().getBean(IndexingService.class).startUp();
@@ -197,8 +183,115 @@ public class TestIndexingService {
         
         ids = TestUtil.search(mbox, "from:greg", MailItem.Type.MESSAGE);
         assertEquals(2, ids.size());
-        assertEquals("'total' counter should be 3",3, queueAdapter.getTotalMailboxTaskCount(MockProvisioning.DEFAULT_ACCOUNT_ID));
-        assertEquals("'succeeded' counter should be 2",2, queueAdapter.getSucceededMailboxTaskCount(MockProvisioning.DEFAULT_ACCOUNT_ID));
-        assertEquals("'failed' counter should be 1",1,queueAdapter.getFailedMailboxTaskCount(MockProvisioning.DEFAULT_ACCOUNT_ID));
+    }
+    
+    @Test
+    public void testAsyncDeleteAllFromIndex() throws Exception {
+        Provisioning.getInstance().getLocalServer().setIndexManualCommit(true);
+        Provisioning.getInstance().getLocalServer().setReindexBatchSize(10);
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX);
+        
+        //the only real-life case when Zimbra is indexing multiple items via a shared queue is re-indexing. Here we will simulate this scenario
+        List<MailItem> mailItems = new ArrayList<MailItem>();
+        mailItems.add(mbox.addMessage(null, new ParsedMessage(
+                "From: greg@zimbra.com\r\nTo: test@zimbra.com\r\nSubject: Shall I compare thee to a summer's day".getBytes(), false), dopt, null));
+        
+        mailItems.add(mbox.addMessage(null, new ParsedMessage(
+                "From: greg@zimbra.com\r\nTo: test@zimbra.com\r\nSubject: Thou art more lovely and more temperate".getBytes(), false), dopt, null));
+        
+        mailItems.add(mbox.addMessage(null, new ParsedMessage(
+                "From: greg@zimbra.com\r\nTo: test@zimbra.com\r\nSubject: Rough winds do shake the darling buds of May".getBytes(), false), dopt, null));
+        
+        MailboxTestUtil.waitForIndexing(mbox);
+        List<Integer> ids = TestUtil.search(mbox, "from:greg", MailItem.Type.MESSAGE);
+        Assert.assertEquals("should find 3 items", 3, ids.size());
+        
+        //queue items for deletion from index
+        IndexingQueueAdapter queueAdapter = Zimbra.getAppContext().getBean(IndexingQueueAdapter.class);
+        DeleteFromIndexTaskLocator itemLocator = new DeleteFromIndexTaskLocator(ids, mbox.getAccountId(), mbox.getId(), mbox.getSchemaGroupId());
+        queueAdapter.put(itemLocator);           
+        
+        //start indexing service
+        Zimbra.getAppContext().getBean(IndexingService.class).startUp();
+
+        MailboxTestUtil.waitForIndexing(mbox);
+        
+        ids = TestUtil.search(mbox, "from:greg", MailItem.Type.MESSAGE);
+        assertEquals("should not be ale to find any items after deletion from indes", 0, ids.size());
+    }
+    
+    @Test
+    public void testAsyncDeleteOneFromIndex() throws Exception {
+        Provisioning.getInstance().getLocalServer().setIndexManualCommit(true);
+        Provisioning.getInstance().getLocalServer().setReindexBatchSize(10);
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX);
+        
+        //the only real-life case when Zimbra is indexing multiple items via a shared queue is re-indexing. Here we will simulate this scenario
+        List<MailItem> mailItems = new ArrayList<MailItem>();
+        mailItems.add(mbox.addMessage(null, new ParsedMessage(
+                "From: greg@zimbra.com\r\nTo: test@zimbra.com\r\nSubject: Shall I compare thee to a summer's day".getBytes(), false), dopt, null));
+        
+        mailItems.add(mbox.addMessage(null, new ParsedMessage(
+                "From: greg@zimbra.com\r\nTo: test@zimbra.com\r\nSubject: Thou art more lovely and more temperate".getBytes(), false), dopt, null));
+        
+        mailItems.add(mbox.addMessage(null, new ParsedMessage(
+                "From: greg@zimbra.com\r\nTo: test@zimbra.com\r\nSubject: Rough winds do shake the darling buds of May".getBytes(), false), dopt, null));
+        
+        MailboxTestUtil.waitForIndexing(mbox);
+        List<Integer> ids = TestUtil.search(mbox, "from:greg", MailItem.Type.MESSAGE);
+        Assert.assertEquals("should find 3 items", 3, ids.size());
+        
+        //queue items for deletion from index
+        IndexingQueueAdapter queueAdapter = Zimbra.getAppContext().getBean(IndexingQueueAdapter.class);
+        DeleteFromIndexTaskLocator itemLocator = new DeleteFromIndexTaskLocator(ids.get(0), mbox.getAccountId(), mbox.getId(), mbox.getSchemaGroupId());
+        queueAdapter.put(itemLocator);           
+        //start indexing service
+        Zimbra.getAppContext().getBean(IndexingService.class).startUp();
+
+        MailboxTestUtil.waitForIndexing(mbox);
+        
+        ids = TestUtil.search(mbox, "from:greg", MailItem.Type.MESSAGE);
+        Assert.assertEquals("should find 2 items", 2, ids.size());
+    }
+    
+    @Test
+    public void testAsyncDeleteSomeFromIndex() throws Exception {
+        Provisioning.getInstance().getLocalServer().setIndexManualCommit(true);
+        Provisioning.getInstance().getLocalServer().setReindexBatchSize(10);
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX);
+        
+        //the only real-life case when Zimbra is indexing multiple items via a shared queue is re-indexing. Here we will simulate this scenario
+        List<MailItem> mailItems = new ArrayList<MailItem>();
+        mailItems.add(mbox.addMessage(null, new ParsedMessage(
+                "From: greg@zimbra.com\r\nTo: test@zimbra.com\r\nSubject: Shall I compare thee to a summer's day".getBytes(), false), dopt, null));
+        
+        mailItems.add(mbox.addMessage(null, new ParsedMessage(
+                "From: greg@zimbra.com\r\nTo: test@zimbra.com\r\nSubject: Thou art more lovely and more temperate".getBytes(), false), dopt, null));
+        
+        mailItems.add(mbox.addMessage(null, new ParsedMessage(
+                "From: greg@zimbra.com\r\nTo: test@zimbra.com\r\nSubject: Rough winds do shake the darling buds of May".getBytes(), false), dopt, null));
+        
+        MailboxTestUtil.waitForIndexing(mbox);
+        List<Integer> ids = TestUtil.search(mbox, "from:greg", MailItem.Type.MESSAGE);
+        Assert.assertEquals("should find 3 items", 3, ids.size());
+        
+        //queue items for deletion from index
+        List<Integer> idsToDelete = Lists.newArrayList();
+        idsToDelete.add(ids.get(0));
+        idsToDelete.add(ids.get(1));
+        IndexingQueueAdapter queueAdapter = Zimbra.getAppContext().getBean(IndexingQueueAdapter.class);
+        DeleteFromIndexTaskLocator itemLocator = new DeleteFromIndexTaskLocator(idsToDelete, mbox.getAccountId(), mbox.getId(), mbox.getSchemaGroupId());
+        queueAdapter.put(itemLocator);           
+        
+        //start indexing service
+        Zimbra.getAppContext().getBean(IndexingService.class).startUp();
+
+        MailboxTestUtil.waitForIndexing(mbox);
+        
+        ids = TestUtil.search(mbox, "from:greg", MailItem.Type.MESSAGE);
+        Assert.assertEquals("should find 1 item", 1, ids.size());
     }
 }

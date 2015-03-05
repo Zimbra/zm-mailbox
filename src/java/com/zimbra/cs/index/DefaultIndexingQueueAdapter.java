@@ -16,7 +16,7 @@ import com.zimbra.cs.util.Zimbra;
  * Default implementation of the indexing queue for non-cluster environment
  */
 public class DefaultIndexingQueueAdapter implements IndexingQueueAdapter {
-    private final ArrayBlockingQueue<IndexingQueueItemLocator> itemQueue;
+    private final ArrayBlockingQueue<AbstractIndexingTasksLocator> itemQueue;
     private final HashMap<String, Integer> totalCounters;
     private final HashMap<String, Integer> succeededCounters;
     private final HashMap<String, Integer> failedCounters;
@@ -32,7 +32,7 @@ public class DefaultIndexingQueueAdapter implements IndexingQueueAdapter {
      *
      */
     public DefaultIndexingQueueAdapter() {
-        itemQueue = new ArrayBlockingQueue<IndexingQueueItemLocator>(ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraIndexingQueueMaxSize, 10000));
+        itemQueue = new ArrayBlockingQueue<AbstractIndexingTasksLocator>(ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraIndexingQueueMaxSize, 10000));
         totalCounters = new HashMap<String, Integer>();
         succeededCounters = new HashMap<String, Integer>();
         failedCounters = new HashMap<String, Integer>();
@@ -40,10 +40,10 @@ public class DefaultIndexingQueueAdapter implements IndexingQueueAdapter {
 
     /**
      * Add an item to the tail of the queue
-     * @param {@link com.zimbra.cs.index.IndexingQueueItemLocator} item
+     * @param {@link com.zimbra.cs.index.AbstractIndexingTasksLocator} item
      */
     @Override
-    public boolean put(IndexingQueueItemLocator item) {
+    public boolean put(AbstractIndexingTasksLocator item) {
         try {
             itemQueue.put(item);
         } catch (InterruptedException e) {
@@ -55,20 +55,20 @@ public class DefaultIndexingQueueAdapter implements IndexingQueueAdapter {
 
     /**
      * Return the next element from the queue and remove it from the queue. Blocks until an element is available in the queue.
-      * @return {@link com.zimbra.cs.index.IndexingQueueItemLocator}
+      * @return {@link com.zimbra.cs.index.AbstractIndexingTasksLocator}
       * @throws InterruptedException
      */
     @Override
-    public IndexingQueueItemLocator take() throws InterruptedException {
+    public AbstractIndexingTasksLocator take() throws InterruptedException {
         return itemQueue.take();
     }
 
     /**
      * Return the next element in the queue and keep it in the queue
-     * @return {@link com.zimbra.cs.index.IndexingQueueItemLocator}
+     * @return {@link com.zimbra.cs.index.AbstractIndexingTasksLocator}
      */
     @Override
-    public IndexingQueueItemLocator peek() {
+    public AbstractIndexingTasksLocator peek() {
         return itemQueue.peek();
     }
 
