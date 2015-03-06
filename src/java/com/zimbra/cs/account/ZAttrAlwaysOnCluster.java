@@ -696,7 +696,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      *
      * @return zimbraShortTermAllEffectiveRightsCacheExpiration in millseconds, or -1 if unset
      *
-     * @since ZCS 8.7
+     * @since ZCS 8.7.0
      */
     @ZAttr(id=1903)
     public long getShortTermAllEffectiveRightsCacheExpiration() {
@@ -721,7 +721,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      *
      * @return zimbraShortTermAllEffectiveRightsCacheExpiration, or null if unset
      *
-     * @since ZCS 8.7
+     * @since ZCS 8.7.0
      */
     @ZAttr(id=1903)
     public String getShortTermAllEffectiveRightsCacheExpirationAsString() {
@@ -747,7 +747,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      * @param zimbraShortTermAllEffectiveRightsCacheExpiration new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.7
+     * @since ZCS 8.7.0
      */
     @ZAttr(id=1903)
     public void setShortTermAllEffectiveRightsCacheExpiration(String zimbraShortTermAllEffectiveRightsCacheExpiration) throws com.zimbra.common.service.ServiceException {
@@ -776,7 +776,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.7
+     * @since ZCS 8.7.0
      */
     @ZAttr(id=1903)
     public Map<String,Object> setShortTermAllEffectiveRightsCacheExpiration(String zimbraShortTermAllEffectiveRightsCacheExpiration, Map<String,Object> attrs) {
@@ -803,7 +803,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.7
+     * @since ZCS 8.7.0
      */
     @ZAttr(id=1903)
     public void unsetShortTermAllEffectiveRightsCacheExpiration() throws com.zimbra.common.service.ServiceException {
@@ -831,7 +831,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.7
+     * @since ZCS 8.7.0
      */
     @ZAttr(id=1903)
     public Map<String,Object> unsetShortTermAllEffectiveRightsCacheExpiration(Map<String,Object> attrs) {
@@ -848,7 +848,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      *
      * @return zimbraShortTermAllEffectiveRightsCacheSize, or -1 if unset
      *
-     * @since ZCS 8.7
+     * @since ZCS 8.7.0
      */
     @ZAttr(id=1902)
     public int getShortTermAllEffectiveRightsCacheSize() {
@@ -864,7 +864,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      * @param zimbraShortTermAllEffectiveRightsCacheSize new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.7
+     * @since ZCS 8.7.0
      */
     @ZAttr(id=1902)
     public void setShortTermAllEffectiveRightsCacheSize(int zimbraShortTermAllEffectiveRightsCacheSize) throws com.zimbra.common.service.ServiceException {
@@ -883,7 +883,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.7
+     * @since ZCS 8.7.0
      */
     @ZAttr(id=1902)
     public Map<String,Object> setShortTermAllEffectiveRightsCacheSize(int zimbraShortTermAllEffectiveRightsCacheSize, Map<String,Object> attrs) {
@@ -900,7 +900,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.7
+     * @since ZCS 8.7.0
      */
     @ZAttr(id=1902)
     public void unsetShortTermAllEffectiveRightsCacheSize() throws com.zimbra.common.service.ServiceException {
@@ -918,7 +918,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.7
+     * @since ZCS 8.7.0
      */
     @ZAttr(id=1902)
     public Map<String,Object> unsetShortTermAllEffectiveRightsCacheSize(Map<String,Object> attrs) {
@@ -948,7 +948,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      *
      * @return zimbraShortTermGranteeCacheExpiration in millseconds, or -1 if unset
      *
-     * @since ZCS 8.7
+     * @since ZCS 8.7.0
      */
     @ZAttr(id=1901)
     public long getShortTermGranteeCacheExpiration() {
@@ -972,7 +972,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      *
      * @return zimbraShortTermGranteeCacheExpiration, or null if unset
      *
-     * @since ZCS 8.7
+     * @since ZCS 8.7.0
      */
     @ZAttr(id=1901)
     public String getShortTermGranteeCacheExpirationAsString() {
@@ -997,7 +997,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      * @param zimbraShortTermGranteeCacheExpiration new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.7
+     * @since ZCS 8.7.0
      */
     @ZAttr(id=1901)
     public void setShortTermGranteeCacheExpiration(String zimbraShortTermGranteeCacheExpiration) throws com.zimbra.common.service.ServiceException {
@@ -1025,7 +1025,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.7
+     * @since ZCS 8.7.0
      */
     @ZAttr(id=1901)
     public Map<String,Object> setShortTermGranteeCacheExpiration(String zimbraShortTermGranteeCacheExpiration, Map<String,Object> attrs) {
@@ -1051,7 +1051,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.7
+     * @since ZCS 8.7.0
      */
     @ZAttr(id=1901)
     public void unsetShortTermGranteeCacheExpiration() throws com.zimbra.common.service.ServiceException {
@@ -1078,7 +1078,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.7
+     * @since ZCS 8.7.0
      */
     @ZAttr(id=1901)
     public Map<String,Object> unsetShortTermGranteeCacheExpiration(Map<String,Object> attrs) {
@@ -1095,7 +1095,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      *
      * @return zimbraShortTermGranteeCacheSize, or -1 if unset
      *
-     * @since ZCS 8.7
+     * @since ZCS 8.7.0
      */
     @ZAttr(id=1900)
     public int getShortTermGranteeCacheSize() {
@@ -1111,7 +1111,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      * @param zimbraShortTermGranteeCacheSize new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.7
+     * @since ZCS 8.7.0
      */
     @ZAttr(id=1900)
     public void setShortTermGranteeCacheSize(int zimbraShortTermGranteeCacheSize) throws com.zimbra.common.service.ServiceException {
@@ -1130,7 +1130,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.7
+     * @since ZCS 8.7.0
      */
     @ZAttr(id=1900)
     public Map<String,Object> setShortTermGranteeCacheSize(int zimbraShortTermGranteeCacheSize, Map<String,Object> attrs) {
@@ -1147,7 +1147,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.7
+     * @since ZCS 8.7.0
      */
     @ZAttr(id=1900)
     public void unsetShortTermGranteeCacheSize() throws com.zimbra.common.service.ServiceException {
@@ -1165,7 +1165,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.7
+     * @since ZCS 8.7.0
      */
     @ZAttr(id=1900)
     public Map<String,Object> unsetShortTermGranteeCacheSize(Map<String,Object> attrs) {

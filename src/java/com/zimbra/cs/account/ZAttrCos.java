@@ -37005,7 +37005,7 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @return zimbraPrefShowAllNewMailNotifications, or false if unset
      *
-     * @since ZCS 8.7,9.0
+     * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=1904)
     public boolean isPrefShowAllNewMailNotifications() {
@@ -37020,7 +37020,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * @param zimbraPrefShowAllNewMailNotifications new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.7,9.0
+     * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=1904)
     public void setPrefShowAllNewMailNotifications(boolean zimbraPrefShowAllNewMailNotifications) throws com.zimbra.common.service.ServiceException {
@@ -37038,7 +37038,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.7,9.0
+     * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=1904)
     public Map<String,Object> setPrefShowAllNewMailNotifications(boolean zimbraPrefShowAllNewMailNotifications, Map<String,Object> attrs) {
@@ -37054,7 +37054,7 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.7,9.0
+     * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=1904)
     public void unsetPrefShowAllNewMailNotifications() throws com.zimbra.common.service.ServiceException {
@@ -37071,7 +37071,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.7,9.0
+     * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=1904)
     public Map<String,Object> unsetPrefShowAllNewMailNotifications(Map<String,Object> attrs) {

@@ -8506,7 +8506,7 @@ TODO: delete them permanently from here
   <desc>Value for postconf hopcount_limit</desc>
 </attr>
 
-<attr id="1900" name="zimbraShortTermGranteeCacheSize" type="integer" min="0" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="8.7">
+<attr id="1900" name="zimbraShortTermGranteeCacheSize" type="integer" min="0" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="8.7.0">
   <globalConfigValue>128</globalConfigValue>
   <desc>Maximum number of entries in the short term Grantee cache.
   This cache can improve performance by avoiding recomputing details frequently in a short period of time, for instance for each entry in search results.
@@ -8514,7 +8514,7 @@ TODO: delete them permanently from here
   </desc>
 </attr>
 
-<attr id="1901" name="zimbraShortTermGranteeCacheExpiration" type="duration" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="8.7">
+<attr id="1901" name="zimbraShortTermGranteeCacheExpiration" type="duration" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="8.7.0">
   <globalConfigValue>50s</globalConfigValue>
   <desc>Maximum time an entry in the Grantee cache will be regarded as valid.
   If value is 0, the cache is disabled.
@@ -8526,7 +8526,7 @@ TODO: delete them permanently from here
   </desc>
 </attr>
 
-<attr id="1902" name="zimbraShortTermAllEffectiveRightsCacheSize" type="integer" min="0" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="8.7">
+<attr id="1902" name="zimbraShortTermAllEffectiveRightsCacheSize" type="integer" min="0" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="8.7.0">
   <globalConfigValue>128</globalConfigValue>
   <desc>Maximum number of entries in the short term All Effective Rights cache.
   This cache can improve performance by avoiding recomputing All Effective Rights of named entries like accounts frequently in a short period of time.
@@ -8534,7 +8534,7 @@ TODO: delete them permanently from here
   </desc>
 </attr>
 
-<attr id="1903" name="zimbraShortTermAllEffectiveRightsCacheExpiration" type="duration" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="8.7">
+<attr id="1903" name="zimbraShortTermAllEffectiveRightsCacheExpiration" type="duration" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="8.7.0">
   <globalConfigValue>50s</globalConfigValue>
   <desc>Maximum time an entry in the short term All Effective Rights cache will be regarded as valid.
   If value is 0, the cache is disabled.
@@ -8546,7 +8546,7 @@ TODO: delete them permanently from here
   </desc>
 </attr>
 
-<attr id="1904" name="zimbraPrefShowAllNewMailNotifications" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="8.7,9.0">
+<attr id="1904" name="zimbraPrefShowAllNewMailNotifications" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="8.7.0,9.0.0">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>
   By default, new mail notifications are only displayed for new items placed in the inbox.
