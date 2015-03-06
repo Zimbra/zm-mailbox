@@ -48559,7 +48559,10 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * whether IMAP SASL PLAIN is enabled for reverse proxy
+     * Deprecated since: 8.7.0. deprecated as IMAP SASL PLAIN is enabled by
+     * default and only way to disable it is to use GSSAPI instead by setting
+     * zimbraReverseProxyImapSaslGssapiEnabled to TRUE. Orig desc: whether
+     * IMAP SASL PLAIN is enabled for reverse proxy
      *
      * @return zimbraReverseProxyImapSaslPlainEnabled, or true if unset
      *
@@ -48571,7 +48574,10 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * whether IMAP SASL PLAIN is enabled for reverse proxy
+     * Deprecated since: 8.7.0. deprecated as IMAP SASL PLAIN is enabled by
+     * default and only way to disable it is to use GSSAPI instead by setting
+     * zimbraReverseProxyImapSaslGssapiEnabled to TRUE. Orig desc: whether
+     * IMAP SASL PLAIN is enabled for reverse proxy
      *
      * @param zimbraReverseProxyImapSaslPlainEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -48586,7 +48592,10 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * whether IMAP SASL PLAIN is enabled for reverse proxy
+     * Deprecated since: 8.7.0. deprecated as IMAP SASL PLAIN is enabled by
+     * default and only way to disable it is to use GSSAPI instead by setting
+     * zimbraReverseProxyImapSaslGssapiEnabled to TRUE. Orig desc: whether
+     * IMAP SASL PLAIN is enabled for reverse proxy
      *
      * @param zimbraReverseProxyImapSaslPlainEnabled new value
      * @param attrs existing map to populate, or null to create a new map
@@ -48602,7 +48611,10 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * whether IMAP SASL PLAIN is enabled for reverse proxy
+     * Deprecated since: 8.7.0. deprecated as IMAP SASL PLAIN is enabled by
+     * default and only way to disable it is to use GSSAPI instead by setting
+     * zimbraReverseProxyImapSaslGssapiEnabled to TRUE. Orig desc: whether
+     * IMAP SASL PLAIN is enabled for reverse proxy
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -48616,7 +48628,10 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * whether IMAP SASL PLAIN is enabled for reverse proxy
+     * Deprecated since: 8.7.0. deprecated as IMAP SASL PLAIN is enabled by
+     * default and only way to disable it is to use GSSAPI instead by setting
+     * zimbraReverseProxyImapSaslGssapiEnabled to TRUE. Orig desc: whether
+     * IMAP SASL PLAIN is enabled for reverse proxy
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -50328,7 +50343,10 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * whether POP3 SASL PLAIN is enabled for reverse proxy
+     * Deprecated since: 8.7.0. deprecated as POP3 SASL PLAIN is enabled by
+     * default and only way to disable it is to use GSSAPI instead by setting
+     * zimbraReverseProxyPop3SaslGssapiEnabled to TRUE. Orig desc: whether
+     * POP3 SASL PLAIN is enabled for reverse proxy
      *
      * @return zimbraReverseProxyPop3SaslPlainEnabled, or true if unset
      *
@@ -50340,7 +50358,10 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * whether POP3 SASL PLAIN is enabled for reverse proxy
+     * Deprecated since: 8.7.0. deprecated as POP3 SASL PLAIN is enabled by
+     * default and only way to disable it is to use GSSAPI instead by setting
+     * zimbraReverseProxyPop3SaslGssapiEnabled to TRUE. Orig desc: whether
+     * POP3 SASL PLAIN is enabled for reverse proxy
      *
      * @param zimbraReverseProxyPop3SaslPlainEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -50355,7 +50376,10 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * whether POP3 SASL PLAIN is enabled for reverse proxy
+     * Deprecated since: 8.7.0. deprecated as POP3 SASL PLAIN is enabled by
+     * default and only way to disable it is to use GSSAPI instead by setting
+     * zimbraReverseProxyPop3SaslGssapiEnabled to TRUE. Orig desc: whether
+     * POP3 SASL PLAIN is enabled for reverse proxy
      *
      * @param zimbraReverseProxyPop3SaslPlainEnabled new value
      * @param attrs existing map to populate, or null to create a new map
@@ -50371,7 +50395,10 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * whether POP3 SASL PLAIN is enabled for reverse proxy
+     * Deprecated since: 8.7.0. deprecated as POP3 SASL PLAIN is enabled by
+     * default and only way to disable it is to use GSSAPI instead by setting
+     * zimbraReverseProxyPop3SaslGssapiEnabled to TRUE. Orig desc: whether
+     * POP3 SASL PLAIN is enabled for reverse proxy
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -50385,7 +50412,10 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * whether POP3 SASL PLAIN is enabled for reverse proxy
+     * Deprecated since: 8.7.0. deprecated as POP3 SASL PLAIN is enabled by
+     * default and only way to disable it is to use GSSAPI instead by setting
+     * zimbraReverseProxyPop3SaslGssapiEnabled to TRUE. Orig desc: whether
+     * POP3 SASL PLAIN is enabled for reverse proxy
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
