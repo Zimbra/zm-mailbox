@@ -5503,7 +5503,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @return zimbraDomainAllowedIPs, or empty array if unset
      *
-     * @since ZCS 8.7.0,9.0
+     * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=1721)
     public String[] getDomainAllowedIPs() {
@@ -5518,7 +5518,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * @param zimbraDomainAllowedIPs new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.7.0,9.0
+     * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=1721)
     public void setDomainAllowedIPs(String[] zimbraDomainAllowedIPs) throws com.zimbra.common.service.ServiceException {
@@ -5536,7 +5536,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.7.0,9.0
+     * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=1721)
     public Map<String,Object> setDomainAllowedIPs(String[] zimbraDomainAllowedIPs, Map<String,Object> attrs) {
@@ -5553,7 +5553,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * @param zimbraDomainAllowedIPs new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.7.0,9.0
+     * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=1721)
     public void addDomainAllowedIPs(String zimbraDomainAllowedIPs) throws com.zimbra.common.service.ServiceException {
@@ -5571,7 +5571,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.7.0,9.0
+     * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=1721)
     public Map<String,Object> addDomainAllowedIPs(String zimbraDomainAllowedIPs, Map<String,Object> attrs) {
@@ -5588,7 +5588,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * @param zimbraDomainAllowedIPs existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.7.0,9.0
+     * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=1721)
     public void removeDomainAllowedIPs(String zimbraDomainAllowedIPs) throws com.zimbra.common.service.ServiceException {
@@ -5606,7 +5606,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.7.0,9.0
+     * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=1721)
     public Map<String,Object> removeDomainAllowedIPs(String zimbraDomainAllowedIPs, Map<String,Object> attrs) {
@@ -5622,7 +5622,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.7.0,9.0
+     * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=1721)
     public void unsetDomainAllowedIPs() throws com.zimbra.common.service.ServiceException {
@@ -5639,7 +5639,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.7.0,9.0
+     * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=1721)
     public Map<String,Object> unsetDomainAllowedIPs(Map<String,Object> attrs) {
@@ -15790,7 +15790,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @return zimbraPrefShowChatsFolderInMail, or false if unset
      *
-     * @since ZCS 8.7.0,9.0
+     * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=1787)
     public boolean isPrefShowChatsFolderInMail() {
@@ -15803,7 +15803,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * @param zimbraPrefShowChatsFolderInMail new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.7.0,9.0
+     * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=1787)
     public void setPrefShowChatsFolderInMail(boolean zimbraPrefShowChatsFolderInMail) throws com.zimbra.common.service.ServiceException {
@@ -15819,7 +15819,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.7.0,9.0
+     * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=1787)
     public Map<String,Object> setPrefShowChatsFolderInMail(boolean zimbraPrefShowChatsFolderInMail, Map<String,Object> attrs) {
@@ -15833,7 +15833,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.7.0,9.0
+     * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=1787)
     public void unsetPrefShowChatsFolderInMail() throws com.zimbra.common.service.ServiceException {
@@ -15848,7 +15848,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.7.0,9.0
+     * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=1787)
     public Map<String,Object> unsetPrefShowChatsFolderInMail(Map<String,Object> attrs) {
@@ -21844,7 +21844,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @return zimbraWebClientStaySignedInDisabled, or false if unset
      *
-     * @since ZCS 8.7.0,9.0
+     * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=1687)
     public boolean isWebClientStaySignedInDisabled() {
@@ -21858,7 +21858,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * @param zimbraWebClientStaySignedInDisabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.7.0,9.0
+     * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=1687)
     public void setWebClientStaySignedInDisabled(boolean zimbraWebClientStaySignedInDisabled) throws com.zimbra.common.service.ServiceException {
@@ -21875,7 +21875,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.7.0,9.0
+     * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=1687)
     public Map<String,Object> setWebClientStaySignedInDisabled(boolean zimbraWebClientStaySignedInDisabled, Map<String,Object> attrs) {
@@ -21890,7 +21890,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.7.0,9.0
+     * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=1687)
     public void unsetWebClientStaySignedInDisabled() throws com.zimbra.common.service.ServiceException {
@@ -21906,7 +21906,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.7.0,9.0
+     * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=1687)
     public Map<String,Object> unsetWebClientStaySignedInDisabled(Map<String,Object> attrs) {
