@@ -11985,7 +11985,7 @@ public class ZAttrProvisioning {
      * placed in the inbox. To get new mail notifications for items filtered
      * to other folders as well, set this to TRUE
      *
-     * @since ZCS 8.7,9.0
+     * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=1904)
     public static final String A_zimbraPrefShowAllNewMailNotifications = "zimbraPrefShowAllNewMailNotifications";
@@ -13467,7 +13467,7 @@ public class ZAttrProvisioning {
      * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
      * unit is not specified, the default is s(seconds).
      *
-     * @since ZCS 8.7
+     * @since ZCS 8.7.0
      */
     @ZAttr(id=1903)
     public static final String A_zimbraShortTermAllEffectiveRightsCacheExpiration = "zimbraShortTermAllEffectiveRightsCacheExpiration";
@@ -13478,7 +13478,7 @@ public class ZAttrProvisioning {
      * Effective Rights of named entries like accounts frequently in a short
      * period of time. Can disable the cache be specifying a value of 0
      *
-     * @since ZCS 8.7
+     * @since ZCS 8.7.0
      */
     @ZAttr(id=1902)
     public static final String A_zimbraShortTermAllEffectiveRightsCacheSize = "zimbraShortTermAllEffectiveRightsCacheSize";
@@ -13498,7 +13498,7 @@ public class ZAttrProvisioning {
      * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
      * unit is not specified, the default is s(seconds).
      *
-     * @since ZCS 8.7
+     * @since ZCS 8.7.0
      */
     @ZAttr(id=1901)
     public static final String A_zimbraShortTermGranteeCacheExpiration = "zimbraShortTermGranteeCacheExpiration";
@@ -13509,7 +13509,7 @@ public class ZAttrProvisioning {
      * a short period of time, for instance for each entry in search results.
      * Can disable the cache be specifying a value of 0
      *
-     * @since ZCS 8.7
+     * @since ZCS 8.7.0
      */
     @ZAttr(id=1900)
     public static final String A_zimbraShortTermGranteeCacheSize = "zimbraShortTermGranteeCacheSize";
