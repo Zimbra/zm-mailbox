@@ -3801,14 +3801,16 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>The error message with which a connection attempt from an IP address will be throttled, if the connection count exceeds the configured limit</desc>
 </attr>
 
-<attr id="728" name="zimbraReverseProxyImapSaslPlainEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="nginxproxy" since="5.0.10">
+<attr id="728" name="zimbraReverseProxyImapSaslPlainEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="nginxproxy" since="5.0.10" deprecatedSince="8.7.0">
   <globalConfigValue>TRUE</globalConfigValue>
   <desc>whether IMAP SASL PLAIN is enabled for reverse proxy</desc>
+  <deprecateDesc>deprecated as IMAP SASL PLAIN is enabled by default and only way to disable it is to use GSSAPI instead by setting zimbraReverseProxyImapSaslGssapiEnabled to TRUE</deprecateDesc>
 </attr>
 
-<attr id="729" name="zimbraReverseProxyPop3SaslPlainEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="nginxproxy" since="5.0.10">
+<attr id="729" name="zimbraReverseProxyPop3SaslPlainEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="nginxproxy" since="5.0.10" deprecatedSince="8.7.0">
   <globalConfigValue>TRUE</globalConfigValue>
   <desc>whether POP3 SASL PLAIN is enabled for reverse proxy</desc>
+  <deprecateDesc>deprecated as POP3 SASL PLAIN is enabled by default and only way to disable it is to use GSSAPI instead by setting zimbraReverseProxyPop3SaslGssapiEnabled to TRUE</deprecateDesc>
 </attr>
 
 <attr id="730" name="zimbraReverseProxyCacheReconnectInterval" type="duration" cardinality="single" optionalIn="globalConfig" requiresRestart="nginxproxy" since="5.0.10">
