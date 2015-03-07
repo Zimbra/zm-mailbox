@@ -2077,11 +2077,28 @@ abstract class ImapHandler {
                 folders = mbox.getFolderById(getContext(), relativeTo == null ?
                         Mailbox.ID_FOLDER_USER_ROOT : relativeTo.asItemId().getId()).getSubfolderHierarchy();
             }
+            boolean isMailFolders =  Provisioning.getInstance().getLocalServer().isImapDisplayMailFoldersOnly();
             for (Folder folder : folders) {
                 if (!folder.getPath().startsWith(root) || folder.getPath().equals(root)) {
                     continue;
                 }
-                ImapPath path = relativeTo == null ? new ImapPath(owner, folder, credentials) :
+               //bug 6418 ..filter out folders which are contacts and chat for LIST command.
+               if(isMailFolders) {
+	               MailItem.Type view = folder.getDefaultView(); //  chat has item type of message.hence ignoring the chat folder by name.
+	               if((view == MailItem.Type.CHAT) || (folder.getName().equals ("Chats"))) {
+	                continue;
+               }
+               while((view.equals(MailItem.Type.UNKNOWN))) {
+               Folder parent = (Folder)folder.getParent();
+               view = parent.getDefaultView();
+               int ID = parent.getId();
+               folder = parent;
+               if ((ID == Mailbox.ID_FOLDER_ROOT)) {
+               break;
+               }
+               }
+             }
+               ImapPath path = relativeTo == null ? new ImapPath(owner, folder, credentials) :
                     new ImapPath(owner, folder, relativeTo);
                 if (path.isVisible()) {
                     if (userAgent != null && userAgent.startsWith(IDInfo.DATASOURCE_IMAP_CLIENT_NAME)
@@ -4412,16 +4429,16 @@ abstract class ImapHandler {
         consecutiveError++;
         sendResponse(tag, "NO " + (Strings.isNullOrEmpty(response) ? " " : response), true);
     }
-
+    //Bug 97697 - Move imap "BAD parse error" to debug level logging versus warn.
     void sendBAD(String tag, String response) throws IOException {
         consecutiveError++;
-        ZimbraLog.imap.warn("BAD %s", response);
+        ZimbraLog.imap.debug("BAD %s", response);
         sendResponse(tag, "BAD " + (Strings.isNullOrEmpty(response) ? " " : response), true);
     }
 
     void sendBAD(String response) throws IOException {
         consecutiveError++;
-        ZimbraLog.imap.warn("BAD %s", response);
+        ZimbraLog.imap.debug("BAD %s", response);
         sendResponse("*", "BAD " + (Strings.isNullOrEmpty(response) ? " " : response), true);
     }
 

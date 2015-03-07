@@ -571,29 +571,31 @@ public class ImapPath implements Comparable<ImapPath> {
         }
         return (mReferent == this ? true : mReferent.isSelectable());
     }
-
     /**
      * Calendars, briefcases, etc. are not surfaced in IMAP.
      */
-    private boolean isVisible(MailItem.Type type) {
-        switch (type) {
-            case APPOINTMENT:
-            case TASK:
-            case WIKI:
-            case DOCUMENT:
-                return false;
-            default:
-                return true;
+    private boolean isVisible(MailItem.Type type, boolean isMailFolders) {
+    switch (type) {
+        case APPOINTMENT:
+	    case TASK:
+	    case WIKI:
+        case DOCUMENT:
+        return false;
+        case CONTACT:
+        case CHAT:
+        return !isMailFolders;
+        default:
+        return true;
         }
     }
-
+    
     boolean isVisible() throws ServiceException {
-        // check the folder type before hitting a remote server if it's a mountpoint
-        if (mFolder instanceof Folder && !isVisible(((Folder) mFolder).getDefaultView())) {
-            return false;
-        }
-
-        if (mCredentials != null) {
+     boolean isMailFolders = Provisioning.getInstance().getLocalServer().isImapDisplayMailFoldersOnly();
+    // check the folder type before hitting a remote server if it's a mountpoint
+     if (mFolder instanceof Folder && !isVisible(((Folder) mFolder).getDefaultView(), isMailFolders)) {
+         return false;
+     }
+     if (mCredentials != null) {
             if (mCredentials.isFolderHidden(this)) {
                 return false;
             }
@@ -648,8 +650,9 @@ public class ImapPath implements Comparable<ImapPath> {
                 if (folder.getId() == Mailbox.ID_FOLDER_SPAM && !getOwnerAccount().isFeatureAntispamEnabled()) {
                     return false;
                 }
-                if (!isVisible(folder.getDefaultView())) {
-                    return false;
+                boolean isMailFolders = Provisioning.getInstance().getLocalServer().isImapDisplayMailFoldersOnly();
+                if (!isVisible(folder.getDefaultView(), isMailFolders)) {
+                return false;
                 }
                 // hide subfolders of trashed mountpoints
                 if (mReferent != this && folder.inTrash() &&

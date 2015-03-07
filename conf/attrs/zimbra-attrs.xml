@@ -9614,4 +9614,8 @@ TODO: delete them permanently from here
   <desc>interface address on which Admin HTTPS connector for MTA Auth should listen; defaults to localhost</desc>
 </attr>
 
+<attr id="1909" name="zimbraImapDisplayMailFoldersOnly" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="8.7.0,9.0">
+  <globalConfigValue>TRUE</globalConfigValue>
+  <desc>whether to display IMAP Mail folders only </desc>
+</attr>
 </attrs>
