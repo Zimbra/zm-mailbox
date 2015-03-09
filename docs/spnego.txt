@@ -49,7 +49,9 @@ I. SPNEGO SSO
        3. Server send a 401 to challenge for a SPNEGO token.
 
        4. Now, if browser is not properly configured, it will *not* respond to the challenge
-          and will just give up there.  The user experience is a 401 HTTP error.
+          and will just give up there.
+          It will show the custom 401 page, where user can find steps to configure browser 
+          or link to zimbraSpnegoAuthErrorURL if set, else ZWC default login page where he/she can enter username/password.
 
        If The browser is properly configured, it will respond to the challenge.  If the user is
        logged on as a local user, the SPNEGO token in the response will not be accepted by the server.

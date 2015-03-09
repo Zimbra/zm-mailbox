@@ -18,9 +18,12 @@
 package com.zimbra.cs.service.authenticator;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.security.Principal;
 import java.util.Arrays;
 
+import javax.servlet.RequestDispatcher;
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -43,7 +46,10 @@ import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.krb5.Krb5Principal;
+import com.zimbra.cs.service.SSOServlet;
+import com.zimbra.cs.servlet.util.AuthUtil;
 
 public class SpnegoAuthenticator extends SSOAuthenticator {
 
@@ -172,9 +178,30 @@ public class SpnegoAuthenticator extends SSOAuthenticator {
     public void sendChallenge(LoginService realm, Request request, HttpServletResponse response) throws IOException {
         ZimbraLog.account.debug("SpengoAuthenticator: sending challenge");
         response.setHeader(HttpHeader.WWW_AUTHENTICATE.toString(), HttpHeader.NEGOTIATE.toString());
-        response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+        //Custom 401 error page.
+        try {
+            request.setAttribute("spnego.redirect.url", getErrorRedirectUrl(request));
+            RequestDispatcher requestDispatcher = request.getRequestDispatcher("/spnego/error401.jsp");
+            requestDispatcher.forward(request, response);
+        } catch (Exception e) {
+            //jetty default error page.
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+        }
     }
 
+    private String getErrorRedirectUrl(HttpServletRequest req)
+        throws ServiceException, MalformedURLException {
+        String redirectUrl = Provisioning.getInstance().getConfig().getSpnegoAuthErrorURL();
+        if (redirectUrl == null) {
+            Server server = Provisioning.getInstance().getLocalServer();
+            boolean isAdminRequest = AuthUtil.isAdminRequest(req);
+            redirectUrl = AuthUtil.getRedirectURL(req, server, isAdminRequest, true);
+            // always append the ignore loginURL query so we do not get into a redirect loop.
+            redirectUrl = redirectUrl.endsWith("/") ? redirectUrl : redirectUrl + "/";
+            redirectUrl = redirectUrl + AuthUtil.IGNORE_LOGIN_URL;
+        }
+        return redirectUrl;
+    }
 
     private static class MockSpnegoUser implements Principal {
         String name;

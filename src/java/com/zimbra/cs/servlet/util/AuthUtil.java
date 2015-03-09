@@ -17,6 +17,8 @@
 package com.zimbra.cs.servlet.util;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -37,7 +39,9 @@ import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.auth.AuthContext;
+import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.UserServletException;
 import com.zimbra.cs.servlet.ZimbraServlet;
@@ -47,6 +51,7 @@ public class AuthUtil {
 
     public static final String WWW_AUTHENTICATE_HEADER = "WWW-Authenticate";
     public static final String HTTP_AUTH_HEADER = "Authorization";
+    public final static String IGNORE_LOGIN_URL = "?ignoreLoginURL=1";
 
     /**
      * Checks to see if this is an admin request
@@ -277,4 +282,44 @@ public class AuthUtil {
         return "BASIC realm=\"" + realm + "\"";
     }
 
+    private static String getAdminURL(Server server, boolean relative) throws ServiceException {
+        String serviceUrl = server.getAdminURL();
+        if (relative) {
+            return serviceUrl;
+        } else {
+            return URLUtil.getAdminURL(server, serviceUrl, true);
+        }
+    }
+
+    private static String getMailURL(Server server, boolean relative) throws ServiceException {
+        String serviceUrl = server.getMailURL();
+        if (relative) {
+            return serviceUrl;
+        } else {
+            return URLUtil.getServiceURL(server, serviceUrl, true);
+        }
+    }
+
+    public static String getRedirectURL(HttpServletRequest req, Server server,
+        boolean isAdminRequest, boolean relative) throws ServiceException, MalformedURLException {
+        String redirectUrl;
+        if (isAdminRequest) {
+            redirectUrl = getAdminURL(server, relative);
+        } else {
+            redirectUrl = getMailURL(server, relative);
+        }
+        if (!relative) {
+            URL url = new URL(redirectUrl);
+
+            // replace host of the URL to the host the request was sent to
+            String reqHost = req.getServerName();
+            String host = url.getHost();
+
+            if (!reqHost.equalsIgnoreCase(host)) {
+                URL destUrl = new URL(url.getProtocol(), reqHost, url.getPort(), url.getFile());
+                redirectUrl = destUrl.toString();
+            }
+        }
+        return redirectUrl;
+    }
 }
