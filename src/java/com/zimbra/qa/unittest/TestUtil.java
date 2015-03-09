@@ -118,6 +118,10 @@ import com.zimbra.cs.client.soap.LmcAdminAuthResponse;
 import com.zimbra.cs.client.soap.LmcAuthRequest;
 import com.zimbra.cs.client.soap.LmcAuthResponse;
 import com.zimbra.cs.client.soap.LmcSoapClientException;
+import com.zimbra.cs.db.DbMailItem;
+import com.zimbra.cs.db.DbPool;
+import com.zimbra.cs.db.DbPool.DbConnection;
+import com.zimbra.cs.db.DbUtil;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.index.ZimbraQueryResults;
@@ -1286,6 +1290,27 @@ extends Assert {
                 }
             }
             return true;
+        }
+    }
+
+    public static void updateMailItemChangeDateAndFlag (Mailbox mbox, int itemId, long changeDate, int flagValue) throws ServiceException {
+        DbConnection conn = DbPool.getConnection(mbox);;
+        try {
+            StringBuilder sql = new StringBuilder();
+            sql.append("UPDATE ")
+                .append(DbMailItem.getMailItemTableName(mbox))
+                .append(" SET change_date = ")
+                .append(changeDate);
+            if (flagValue > 0) {
+                sql.append(", flags = ")
+                    .append(flagValue);
+            }
+            sql.append(" WHERE id = ")
+                .append(itemId);
+            DbUtil.executeUpdate(conn, sql.toString());
+        } finally {
+            conn.commit();
+            conn.closeQuietly();
         }
     }
 }
