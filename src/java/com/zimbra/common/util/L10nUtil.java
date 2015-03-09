@@ -261,7 +261,14 @@ public class L10nUtil {
         octopus_share_notification_email_message,
         octopus_share_notification_email_accept,
         octopus_share_notification_email_ignore,
-        octopus_share_notification_email_bodyFolderDesc
+        octopus_share_notification_email_bodyFolderDesc,
+
+        //Spnego 401 error page
+        spnego_401_error_message,
+        spnego_redirect_message,
+        spnego_browser_setup_message,
+        spnego_browser_config
+
         // add other messages in the future...
     }
 
