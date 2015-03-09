@@ -405,12 +405,12 @@ public class SoapServlet extends ZimbraServlet {
 
             // Register http endpoint
             if (MailMode.http.equals(mailMode) || MailMode.both.equals(mailMode)) {
-                httpServiceID = registerWithServiceLocator("zimbra:MailStoreServer", httpPort, "http");
+                httpServiceID = registerWithServiceLocator("zimbra-mailstore", httpPort, "http");
             }
 
             // Register https endpoint
             if (MailMode.https.equals(mailMode) || MailMode.both.equals(mailMode)) {
-                httpsServiceID = registerWithServiceLocator("zimbra:MailStoreSSLServer", httpsPort, "https");
+                httpsServiceID = registerWithServiceLocator("zimbra-mailstore", httpsPort, "https");
             }
         } catch (ServiceException e) {
             throw new ServletException("Failed reading provisioning before registering mailstore with service locator", e);
@@ -420,6 +420,9 @@ public class SoapServlet extends ZimbraServlet {
     protected String registerWithServiceLocator(String serviceName, int port, String checkScheme) {
         String serviceID = serviceName + ":" + port;
         CatalogRegistration.Service service = new CatalogRegistration.Service(serviceID, serviceName, port);
+        if ("https".equals(checkScheme)) {
+            service.tags.add("ssl");
+        }
         String url = checkScheme + "://localhost:" + port + "/service/soap";
         CatalogRegistration.Check check = new CatalogRegistration.Check(serviceID + ":health", serviceName);
         check.script = "/opt/zimbra/libexec/zmhealthcheck-mailstore -url " + url;

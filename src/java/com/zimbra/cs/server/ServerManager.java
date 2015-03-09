@@ -120,7 +120,7 @@ public final class ServerManager {
         ImapConfig config = new ImapConfig(ssl);
         ImapServer server = NIO_ENABLED || isEnabled(Provisioning.A_zimbraImapNioEnabled) ?
             new NioImapServer(config) : new TcpImapServer(config);
-        server.start();	
+        server.start();
         return server;
     }
 
@@ -161,13 +161,20 @@ public final class ServerManager {
         return lmtpServer;
     }
 
+    protected String getServiceLocatorServiceName(Server server) {
+        return "zimbra-" + server.getName().replace("Server", "").replace("SSL", "").toLowerCase();
+    }
+
     /**
      * Register with service locator.
      */
-    public static CatalogRegistration.Service registerWithServiceLocator(Server server, String script) throws ServiceException {
-        String name = "zimbra:" + server.getName();
+    public CatalogRegistration.Service registerWithServiceLocator(Server server, String script) throws ServiceException {
+        String name = getServiceLocatorServiceName(server);
         String id = name + ":" + server.getConfig().getBindPort();
         CatalogRegistration.Service service = new CatalogRegistration.Service(id, name, server.getConfig().getBindPort());
+        if (server.getConfig().isSslEnabled()) {
+            service.tags.add("ssl");
+        }
 
         if (script != null) {
             CatalogRegistration.Check check = new CatalogRegistration.Check(id + ":health", name);
@@ -192,8 +199,8 @@ public final class ServerManager {
     /**
      * De-register with service locator.
      */
-    public static void deregisterWithServiceLocator(Server server) {
-        String name = "zimbra:" + server.getName();
+    public void deregisterWithServiceLocator(Server server) {
+        String name = getServiceLocatorServiceName(server);
         String id = name + ":" + server.getConfig().getBindPort();
         Zimbra.getAppContext().getBean(ServiceLocator.class).deregisterSilent(id);
     }
