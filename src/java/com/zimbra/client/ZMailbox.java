@@ -99,7 +99,6 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.Element.Disposition;
 import com.zimbra.common.soap.Element.JSONElement;
 import com.zimbra.common.soap.Element.XMLElement;
 import com.zimbra.common.soap.HeaderConstants;
@@ -123,6 +122,10 @@ import com.zimbra.soap.account.message.AuthRequest;
 import com.zimbra.soap.account.message.AuthResponse;
 import com.zimbra.soap.account.message.ChangePasswordRequest;
 import com.zimbra.soap.account.message.ChangePasswordResponse;
+import com.zimbra.soap.account.message.DisableTwoFactorAuthRequest;
+import com.zimbra.soap.account.message.DisableTwoFactorAuthResponse;
+import com.zimbra.soap.account.message.EnableTwoFactorAuthRequest;
+import com.zimbra.soap.account.message.EnableTwoFactorAuthResponse;
 import com.zimbra.soap.account.message.EndSessionRequest;
 import com.zimbra.soap.account.message.GetIdentitiesRequest;
 import com.zimbra.soap.account.message.GetIdentitiesResponse;
@@ -130,8 +133,6 @@ import com.zimbra.soap.account.message.GetInfoRequest;
 import com.zimbra.soap.account.message.GetInfoResponse;
 import com.zimbra.soap.account.message.GetSignaturesRequest;
 import com.zimbra.soap.account.message.GetSignaturesResponse;
-import com.zimbra.soap.account.message.TwoFactorAuthRequest;
-import com.zimbra.soap.account.message.TwoFactorAuthResponse;
 import com.zimbra.soap.account.type.AuthToken;
 import com.zimbra.soap.account.type.InfoSection;
 import com.zimbra.soap.mail.message.CheckSpellingRequest;
@@ -275,6 +276,7 @@ public class ZMailbox implements ToZJSONObject {
         private String mTwoFactorCode;
         private String mTwoFactorScratchCode;
         private boolean mTwoFactorSupported;
+        private boolean mAppSpecificPasswordsSupported;
 
         public Options() {
         }
@@ -399,6 +401,9 @@ public class ZMailbox implements ToZJSONObject {
 
         public boolean getTwoFactorSupported() { return mTwoFactorSupported; }
         public Options setTwoFactorSupported(boolean bool) { mTwoFactorSupported = bool; return this; }
+
+        public boolean getAppSpecificPasswordsSupported() { return mAppSpecificPasswordsSupported; }
+        public Options setAppSpecificPasswordsSupported(boolean bool) { mAppSpecificPasswordsSupported = bool; return this; }
 
         public Map<String, String> getCustomHeaders() {
             if (mCustomHeaders == null) {
@@ -643,7 +648,6 @@ public class ZMailbox implements ToZJSONObject {
         auth.setVirtualHost(options.getVirtualHost());
         auth.setRequestedSkin(options.getRequestedSkin());
         auth.setCsrfSupported(options.getCsrfSupported());
-        auth.setTwoFactorAuthSupported(true);
         addAttrsAndPrefs(auth, options);
 
         AuthResponse authRes = invokeJaxb(auth);
@@ -5540,23 +5544,17 @@ public class ZMailbox implements ToZJSONObject {
         return new Pair<ZFolder, String>(folder, unmatched);
     }
 
-    public ZTwoFactorAuthResponse enableTwoFactorAuth(String password) throws ServiceException {
-        return twoFactorAuthRequest(password, TwoFactorAuthAction.enable);
+    public EnableTwoFactorAuthResponse enableTwoFactorAuth(String password) throws ServiceException {
+        EnableTwoFactorAuthRequest req = new EnableTwoFactorAuthRequest();
+        req.setName(getName());
+        req.setPassword(password);
+        EnableTwoFactorAuthResponse resp = invokeJaxb(req);
+        return resp;
     }
 
-    public ZTwoFactorAuthResponse disableTwoFactorAuth(String password) throws ServiceException {
-        return twoFactorAuthRequest(password, TwoFactorAuthAction.disable);
-    }
-
-    private ZTwoFactorAuthResponse twoFactorAuthRequest(String password, TwoFactorAuthAction action) throws ServiceException {
-        TwoFactorAuthRequest req = new TwoFactorAuthRequest();
-        req.setAction(action.toString());
-        TwoFactorAuthResponse resp = invokeJaxb(req);
-        return new ZTwoFactorAuthResponse(resp);
-    }
-
-    private enum TwoFactorAuthAction {
-        enable, disable;
+    public DisableTwoFactorAuthResponse disableTwoFactorAuth(String password) throws ServiceException {
+        DisableTwoFactorAuthRequest req = new DisableTwoFactorAuthRequest();
+        return invokeJaxb(req);
     }
 }
 
