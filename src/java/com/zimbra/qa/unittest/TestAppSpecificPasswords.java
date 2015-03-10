@@ -35,11 +35,15 @@ import com.zimbra.soap.account.message.EnableTwoFactorAuthResponse;
 import com.zimbra.soap.account.message.GetAppSpecificPasswordsRequest;
 import com.zimbra.soap.account.message.GetAppSpecificPasswordsResponse;
 import com.zimbra.soap.account.message.RevokeAppSpecificPasswordRequest;
+import com.zimbra.soap.admin.message.GetAllServersRequest;
+import com.zimbra.soap.admin.message.GetAllServersResponse;
 import com.zimbra.soap.admin.message.GetCosRequest;
 import com.zimbra.soap.admin.message.GetCosResponse;
 import com.zimbra.soap.admin.message.ModifyCosRequest;
+import com.zimbra.soap.admin.message.ModifyServerRequest;
 import com.zimbra.soap.admin.type.CosSelector;
 import com.zimbra.soap.admin.type.CosSelector.CosBy;
+import com.zimbra.soap.admin.type.ServerInfo;
 import com.zimbra.soap.type.AccountBy;
 import com.zimbra.soap.type.AccountSelector;
 
@@ -66,7 +70,22 @@ public class TestAppSpecificPasswords extends TestCase {
         //reauthenticating to get new auth token
         mbox = TestUtil.getZMailbox(USER, resp.getCredentials().getScratchCodes().remove(0));
         transport = TestUtil.getAdminSoapTransport();
+        enableAppSpecificPasswords();
         revokeAllAppPasswords();
+    }
+
+    private void enableAppSpecificPasswords() throws ServiceException, IOException {
+        GetAllServersRequest req = new GetAllServersRequest();
+        req.setService((String) null);
+        GetAllServersResponse resp = SoapTest.invokeJaxb(transport, req);
+        Map<String, Object> attrs = new HashMap<String, Object>();
+        attrs.put(Provisioning.A_zimbraFeatureAppSpecificPasswordsEnabled, ProvisioningConstants.TRUE);
+        for (ServerInfo server: resp.getServerList()) {
+            ModifyServerRequest modifyRequest = new ModifyServerRequest();
+            modifyRequest.setId(server.getId());
+            modifyRequest.setAttrs(attrs);
+            SoapTest.invokeJaxb(transport, modifyRequest);
+        }
     }
 
     private String generatePassword(String name) throws ServiceException, IOException {
