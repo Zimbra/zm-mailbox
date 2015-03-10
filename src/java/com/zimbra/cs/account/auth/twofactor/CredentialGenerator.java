@@ -1,12 +1,16 @@
 package com.zimbra.cs.account.auth.twofactor;
 
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.Random;
+import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.codec.binary.Base32;
 import org.apache.commons.codec.binary.Base64;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.auth.twofactor.CredentialConfig.Encoding;
 
 public class CredentialGenerator {
@@ -16,9 +20,13 @@ public class CredentialGenerator {
         this.config = config;
     }
 
-    protected byte[] generateBytes(int n) {
+    protected byte[] generateBytes(int n) throws ServiceException {
         byte[] bytes = new byte[n];
-        new Random().nextBytes(bytes);
+        try {
+			SecureRandom.getInstance("SHA1PRNG").nextBytes(bytes);
+		} catch (NoSuchAlgorithmException e) {
+			throw ServiceException.FAILURE("error generating random bytes", e);
+		}
         return bytes;
     }
 
@@ -30,22 +38,24 @@ public class CredentialGenerator {
         return masked;
     }
 
-    public TOTPCredentials generateCredentials() {
+    public TOTPCredentials generateCredentials() throws ServiceException {
         byte[] secretBytes = generateBytes(config.getBytesPerSecret());
         String encoded = encodeBytes(mask(secretBytes), config.getEncoding());
-        Set<String> scratchCodes = generateScratchCodes();
+        List<String> scratchCodes = generateScratchCodes();
         return new TOTPCredentials(encoded, scratchCodes);
     }
 
-    protected Set<String> generateScratchCodes() {
-        Set<String> scratchCodes = new HashSet<String>();
-        while (scratchCodes.size() < config.getNumScratchCodes()) {
-            scratchCodes.add(generateScratchCode());
+    public List<String> generateScratchCodes() throws ServiceException {
+        Set<String> scratchCodeSet = new HashSet<String>();
+        while (scratchCodeSet.size() < config.getNumScratchCodes()) {
+            scratchCodeSet.add(generateScratchCode());
         }
+        List<String> scratchCodes = new ArrayList<String>(scratchCodeSet.size());
+        scratchCodes.addAll(scratchCodeSet);
         return scratchCodes;
     }
 
-    private String generateScratchCode() {
+    private String generateScratchCode() throws ServiceException {
         byte[] randomBytes = generateBytes(config.getBytesPerScratchCode());
         return encodeBytes(mask(randomBytes), config.getScratchCodeEncoding());
     }

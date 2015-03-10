@@ -128,6 +128,7 @@ public class ZimbraSuite extends TestSuite
         //sClasses.add(TestDLMembership.class);
         sClasses.add(TestTwoFactorAuth.class);
         sClasses.add(TestTwoFactorAuthAdmin.class);
+        sClasses.add(TestAppSpecificPasswords.class);
     }
 
     /**

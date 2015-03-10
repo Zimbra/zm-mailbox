@@ -49,7 +49,6 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.auth.AuthContext;
-import com.zimbra.cs.account.auth.AuthMechanism;
 import com.zimbra.cs.account.auth.twofactor.TwoFactorManager;
 import com.zimbra.cs.account.krb5.Krb5Principal;
 import com.zimbra.cs.account.names.NameUtil.EmailAddress;
@@ -79,7 +78,6 @@ public class Auth extends AccountDocumentHandler {
         Account acct = null;
         Element acctEl = request.getOptionalElement(AccountConstants.E_ACCOUNT);
         boolean csrfSupport = request.getAttributeBool(AccountConstants.A_CSRF_SUPPORT, false);
-        boolean supportsTwoFactorAuth = request.getAttributeBool(AccountConstants.A_TWO_FACTOR_AUTH_SUPPORTED, false);
         if (acctEl != null) {
             acctValuePassedIn = acctEl.getText();
             acctValue = acctValuePassedIn;
@@ -154,7 +152,7 @@ public class Auth extends AccountDocumentHandler {
             authCtxt.put(AuthContext.AC_USER_AGENT, zsc.getUserAgent());
 
             boolean acctAutoProvisioned = false;
-            boolean usingTwoFactorAuth = acct != null? supportsTwoFactorAuth && TwoFactorManager.twoFactorAuthRequired(acct): false;
+            boolean usingTwoFactorAuth = acct != null? TwoFactorManager.twoFactorAuthRequired(acct): false;
 
             if (acct == null) {
                 //
@@ -205,9 +203,19 @@ public class Auth extends AccountDocumentHandler {
             // if account was auto provisioned, we had already authenticated the principal
             if (!acctAutoProvisioned) {
                 if (password != null) {
-                    //if two-factor auth enabled but credentials not specified, throw error
                     if (usingTwoFactorAuth && totp == null && scratchCode == null) {
-                        needTwoFactorAuth(acct);
+                        int mtaAuthPort = acct.getServer().getMtaAuthPort();
+                        boolean supportsAppSpecificPaswords =  acct.getServer().isFeatureAppSpecificPasswordsEnabled() && zsc.getPort() == mtaAuthPort;
+                        if (supportsAppSpecificPaswords) {
+                            // if we are here, it means we are authenticating SMTP,
+                            // so app-specific passwords are accepted. Other protocols (pop, imap)
+                            // doesn't touch this code, so their authentication happens in ZimbraAuth.
+                            TwoFactorManager manager = new TwoFactorManager(acct);
+                            manager.authenticateAppSpecificPassword(password);
+                        } else {
+                            //if two-factor auth enabled but credentials not specified, throw error
+                            needTwoFactorAuth(acct);
+                        }
                     } else {
                         prov.authAccount(acct, password, AuthContext.Protocol.soap, authCtxt);
                         if (usingTwoFactorAuth) {
@@ -249,7 +257,7 @@ public class Auth extends AccountDocumentHandler {
          * 2) the user needs to set up two-factor auth.
          *    this can happen if it's required at the COS level but the user hasn't received a secret yet.
          */
-        if (TwoFactorManager.twoFactorAuthEnabled(account)) {
+        if (!TwoFactorManager.twoFactorAuthEnabled(account)) {
             throw AccountServiceException.TWO_FACTOR_SETUP_REQUIRED();
         }
         throw ServiceException.TWO_FACTOR_AUTH_REQUIRED();

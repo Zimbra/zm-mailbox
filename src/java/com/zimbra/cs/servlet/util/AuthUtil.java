@@ -41,6 +41,8 @@ import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.auth.AuthContext;
+import com.zimbra.cs.account.auth.AuthContext.Protocol;
+import com.zimbra.cs.dav.service.DavServlet;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.UserServletException;
@@ -168,18 +170,24 @@ public class AuthUtil {
         if (!AuthProvider.allowBasicAuth(req, servlet)) {
             return new AuthResult(null, false);
         }
-        Account acct = basicAuthRequest(req, resp, sendChallenge);
+        boolean isDav = (servlet instanceof DavServlet);
+        Account acct = basicAuthRequest(req, resp, sendChallenge, isDav);
         return new AuthResult(acct, (acct == null));
+    }
+
+    public static Account basicAuthRequest(HttpServletRequest req, HttpServletResponse resp, boolean sendChallenge)
+            throws IOException, ServiceException {
+        return basicAuthRequest(req, resp, sendChallenge, false);
     }
 
     /**
      * If returns null, then resp.sendError has been called.
      */
-    public static Account basicAuthRequest(HttpServletRequest req, HttpServletResponse resp, boolean sendChallenge)
+    public static Account basicAuthRequest(HttpServletRequest req, HttpServletResponse resp, boolean sendChallenge, boolean isDav)
             throws IOException, ServiceException
     {
         try {
-            return basicAuthRequest(req, !sendChallenge);
+            return basicAuthRequest(req, !sendChallenge, isDav);
         } catch (UserServletException e) {
             if (e.getHttpStatusCode() == HttpServletResponse.SC_UNAUTHORIZED) {
                 if (sendChallenge) {
@@ -194,6 +202,11 @@ public class AuthUtil {
     }
 
     public static Account basicAuthRequest(HttpServletRequest req, boolean allowGuest)
+            throws IOException, ServiceException, UserServletException {
+        return basicAuthRequest(req, allowGuest, false);
+    }
+
+    public static Account basicAuthRequest(HttpServletRequest req, boolean allowGuest, boolean isDav)
         throws IOException, ServiceException, UserServletException
     {
         String auth = req.getHeader(HTTP_AUTH_HEADER);
@@ -240,7 +253,8 @@ public class AuthUtil {
             authCtxt.put(AuthContext.AC_REMOTE_IP, ZimbraServlet.getClientIp(req));
             authCtxt.put(AuthContext.AC_ACCOUNT_NAME_PASSEDIN, userPassedIn);
             authCtxt.put(AuthContext.AC_USER_AGENT, req.getHeader("User-Agent"));
-            prov.authAccount(acct, pass, AuthContext.Protocol.http_basic, authCtxt);
+            Protocol proto = isDav? Protocol.http_dav: Protocol.http_basic;
+            prov.authAccount(acct, pass, proto, authCtxt);
         } catch (ServiceException se) {
             throw new UserServletException(HttpServletResponse.SC_UNAUTHORIZED, "invalid username/password");
         }

@@ -427,7 +427,6 @@ global soap/system errors used with zimbra:Error/Code:
    [<attrs>[<attr name="..."/>...]</attrs>]
    [<twoFactorCode>...</twoFactorCode>]
    [<scratchCode>…</scratchCode>]
-   [<twoFactorAuthSupported>0|1<twoFactorAuthSupported>]
    [<requestedSkin>{skin}</requestedSkin>]
  </AuthRequest>
 
@@ -504,20 +503,17 @@ If two-factor authentication is enabled, AuthRequest requires one of two extra p
 
 5. If all three credentials are valid, the user is authenticated.
 
-Currently, two-factor authentication is only supported via SOAP, and requires that the client implements the two-factor user flow.
-Therefore, it’s up to the client to notify the server that two-factor authentication is supported, using the twoFactorAuthSupported parameter.
-
 Additionally, if two-factor auth is enabled on the COS level but the user has not received the shared secret yet, the server will throw a TWO_FACTOR_AUTH_SETUP_REQUIRED error.
 
 
 ---------
 
- <TwoFactorAuthRequest xmlns="urn:zimbraAccount">
-   <action>enable|disable</action>
+ <EnableTwoFactorAuthRequest xmlns="urn:zimbraAccount">
+  <name>...</name>
+  <password>...</password>
  </TwoFactorAuthRequest>
 
- <TwoFactorAuthResponse>
-   [<info>...</info>]
+ <EnableTwoFactorAuthResponse>
    [<credentials>
       <secret>...</secret>
       <scratchCodes>
@@ -527,12 +523,59 @@ Additionally, if two-factor auth is enabled on the COS level but the user has no
     </credentials>]
  </TwoFactorAuthResponse>
 
-This endpoint is used for enabling/disabling two-factor authentication by the client. The "credentials" block is returned only if the action is "enable".
-If the "disable" action is specified when two-factor authentication is required on the COS level, a CANNOT_DISABLE_TWO_FACTOR_AUTH
-error is returned.
+This endpoint is used for enabling two-factor authentication by the client.
+The account name and password must be explicitly passed as parameters because this endpoint bypasses authentication;
+it does so because when two-factor authentication is required but not yet enabled, the auth mechanism would require
+a second factor that the user would not be able to provide.
 
 ---------
 
+ DisableTwoFactorAuthRequest xmlns="urn:zimbraAccount">
+ </TwoFactorAuthRequest>
+
+ <DisableTwoFactorAuthResponse>
+ </TwoFactorAuthResponse>
+
+This endpoint is used for disabling two-factor authentication by the client.
+
+---------
+
+ <CreateAppSpecificPasswordRequest xmlns="urn:zimbraAccount" appName="{name}">
+ </CreateAppSpecificPasswordRequest>
+
+ <CreateAppSpecificPasswordResponse pw="{randomly generated password}">
+ </CreateAppSpecificPasswordResponse>
+
+Creates and returns a new app-specific password for the specified app name.
+
+---------
+
+ <RevokeAppSpecificPasswordRequest xmlns="urn:zimbraAccount" appName="{name}">
+ </RevokeAppSpecificPasswordRequest>
+
+ <RevokeAppSpecificPasswordResponse>
+ </RevokeAppSpecificPasswordResponse>
+
+Revokes the app-specific password for the specified name.
+
+---------
+
+ <GetAppSpecificPasswordsRequest xmlns="urn:zimbraAccount" appName="{name}">
+ </GetAppSpecificPasswordsRequest>
+
+ <GetAppSpecificPasswordsResponse>
+   <appSpecificPasswords>
+     <passwordData appName="{name1}" created="{time created}" lastUsed="{time last used}"/>
+     <passwordData appName="{name2}" created="{time created}" lastUsed="{time last used}"/>
+     ...
+   </appSpecificPasswords>
+   <maxAppPasswords>...</maxAppPasswords>
+ </GetAppSpecificPasswordsResponse>
+
+Returns info on all app-specific passwords provisioned for this account.
+Only the app name, password creation time, and last used time is returned.
+
+---------
 
  <ChangePasswordRequest>
    <account by="name">...</account>

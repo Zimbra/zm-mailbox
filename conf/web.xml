@@ -295,7 +295,7 @@
     <async-supported>true</async-supported>
     <init-param>
       <param-name>allowed.ports</param-name>
-      <param-value>7071</param-value>
+      <param-value>7071, 7073</param-value>
     </init-param>
     <!-- Admin servlet allows both admin and user commands -->
     <init-param>

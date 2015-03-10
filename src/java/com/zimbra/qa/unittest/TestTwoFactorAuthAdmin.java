@@ -1,8 +1,8 @@
 package com.zimbra.qa.unittest;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import junit.framework.TestCase;
 
@@ -19,6 +19,7 @@ import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.qa.unittest.prov.soap.SoapTest;
+import com.zimbra.soap.account.message.EnableTwoFactorAuthResponse;
 import com.zimbra.soap.admin.message.GetCosRequest;
 import com.zimbra.soap.admin.message.GetCosResponse;
 import com.zimbra.soap.admin.message.ModifyCosRequest;
@@ -30,7 +31,7 @@ public class TestTwoFactorAuthAdmin extends TestCase {
     private static final String PASSWORD = "test123";
     private static ZMailbox mbox;
     private String secret;
-    private Set<String> scratchCodes;
+    private List<String> scratchCodes;
     private static SoapProvisioning prov;
     private static SoapTransport transport;
     private static Cos cos;
@@ -52,7 +53,7 @@ public class TestTwoFactorAuthAdmin extends TestCase {
 
     private static void setTwoFactorStatus(String value) throws Exception {
         Map<String, Object> attrs = new HashMap<String, Object>();
-        attrs.put(Provisioning.A_zimbraTwoFactorAuthRequired, value);
+        attrs.put(Provisioning.A_zimbraFeatureTwoFactorAuthRequired, value);
 
         ModifyCosRequest modifyRequest = new ModifyCosRequest();
         modifyRequest.setId(getCosId());
@@ -66,6 +67,7 @@ public class TestTwoFactorAuthAdmin extends TestCase {
 
     private static void disableTwoFactorAuthRequired() throws Exception {
         setTwoFactorStatus(ProvisioningConstants.FALSE);
+        mbox.disableTwoFactorAuth(PASSWORD);
     }
 
     @AfterClass
@@ -81,6 +83,23 @@ public class TestTwoFactorAuthAdmin extends TestCase {
             fail("should not be able to authenticate without a code");
         } catch (ServiceException e) {
             assertEquals(AccountServiceException.TWO_FACTOR_SETUP_REQUIRED, e.getCode());
+        }
+    }
+
+    @Test
+    public void testEnableTwoFactorAuth() throws ServiceException {
+        try {
+            EnableTwoFactorAuthResponse resp = mbox.enableTwoFactorAuth(PASSWORD);
+            //have to re-authenticate since the previous auth token was invalidated by enabling two-factor auth
+            mbox = TestUtil.getZMailbox(USER_NAME, resp.getCredentials().getScratchCodes().get(0));
+        } catch (ServiceException e) {
+            fail("should be able to enable two-factor auth");
+        }
+        try {
+            mbox.disableTwoFactorAuth(PASSWORD);
+            fail("should not be able to disable two-factor auth");
+        } catch (ServiceException e) {
+            assertEquals(AccountServiceException.CANNOT_DISABLE_TWO_FACTOR_AUTH, e.getCode());
         }
     }
 

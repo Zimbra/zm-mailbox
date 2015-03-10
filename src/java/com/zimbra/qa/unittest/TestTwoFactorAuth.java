@@ -1,6 +1,6 @@
 package com.zimbra.qa.unittest;
 
-import java.util.Set;
+import java.util.List;
 
 import junit.framework.TestCase;
 
@@ -9,8 +9,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.zimbra.client.ZMailbox;
-import com.zimbra.client.ZTOTPCredentials;
-import com.zimbra.client.ZTwoFactorAuthResponse;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.auth.twofactor.AuthenticatorConfig;
@@ -18,6 +16,10 @@ import com.zimbra.cs.account.auth.twofactor.AuthenticatorConfig.CodeLength;
 import com.zimbra.cs.account.auth.twofactor.AuthenticatorConfig.HashAlgorithm;
 import com.zimbra.cs.account.auth.twofactor.CredentialConfig.Encoding;
 import com.zimbra.cs.account.auth.twofactor.TOTPAuthenticator;
+import com.zimbra.soap.account.message.EnableTwoFactorAuthResponse;
+import com.zimbra.soap.account.message.GenerateScratchCodesRequest;
+import com.zimbra.soap.account.message.GenerateScratchCodesResponse;
+import com.zimbra.soap.account.message.TwoFactorCredentials;
 
 /**
  *
@@ -29,7 +31,7 @@ public class TestTwoFactorAuth extends TestCase {
     private static final String PASSWORD = "test123";
     private static ZMailbox mbox;
     private String secret;
-    private Set<String> scratchCodes;
+    private List<String> scratchCodes;
 
     /*
      * Make sure these settings match those on the server! Otherwise the TOTP
@@ -45,23 +47,18 @@ public class TestTwoFactorAuth extends TestCase {
     @BeforeClass
     public void setUp() throws ServiceException {
         mbox = TestUtil.getZMailbox(USER_NAME);
-        ZTwoFactorAuthResponse resp = mbox.enableTwoFactorAuth(PASSWORD);
-        if (resp.twoFactorAuthEnabled()) {
-            ZTOTPCredentials creds = resp.getCredentials();
-            secret = creds.getSecret();
-            scratchCodes = creds.getScratchCodes();
-        } else {
-            fail("could not enable two-factor authentication");
-        }
+        EnableTwoFactorAuthResponse resp = mbox.enableTwoFactorAuth(PASSWORD);
+        //have to re-authenticate since the previous auth token was invalidated by enabling two-factor auth
+        mbox = TestUtil.getZMailbox(USER_NAME, resp.getCredentials().getScratchCodes().remove(0));
+        TwoFactorCredentials creds = resp.getCredentials();
+        secret = creds.getSharedSecret();
+        scratchCodes = creds.getScratchCodes();
     }
 
     @Override
     @AfterClass
     public void tearDown() throws ServiceException {
-        ZTwoFactorAuthResponse resp = mbox.disableTwoFactorAuth(PASSWORD);
-        assertEquals("two-factor authentication has been disabled", resp.getInfo());
-        resp = mbox.disableTwoFactorAuth(PASSWORD);
-        assertEquals("two-factor authentication is already disabled", resp.getInfo());
+        mbox.disableTwoFactorAuth(PASSWORD);
     }
 
     @Test
@@ -138,8 +135,23 @@ public class TestTwoFactorAuth extends TestCase {
 
     @Test
     public void testAlreadyEnabled() throws ServiceException {
-        ZTwoFactorAuthResponse resp = mbox.enableTwoFactorAuth(PASSWORD);
+        EnableTwoFactorAuthResponse resp = mbox.enableTwoFactorAuth(PASSWORD);
         assertNull(resp.getCredentials());
-        assertEquals("two-factor authentication is already enabled on this account", resp.getInfo());
+    }
+
+    @Test
+    public void testGenerateNewScratchCodes() throws ServiceException {
+        GenerateScratchCodesResponse resp = mbox.invokeJaxb(new GenerateScratchCodesRequest());
+        List<String> newCodes = resp.getScratchCodes();
+        tryCode(PASSWORD, newCodes.remove(0), true, true);
+        List<String> oldCodes = newCodes;
+        resp = mbox.invokeJaxb(new GenerateScratchCodesRequest());
+        newCodes = resp.getScratchCodes();
+        //check that the old codes don't work
+        tryCode(PASSWORD, oldCodes.remove(0), true, false);
+        //but the new ones do
+        tryCode(PASSWORD, newCodes.remove(0), true, true);
+        //store remaining in case some other test wants to use them
+        this.scratchCodes = newCodes;
     }
 }

@@ -1,11 +1,9 @@
 package com.zimbra.cs.account.auth.twofactor;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.math.BigInteger;
 import java.util.List;
-import java.util.Set;
-import java.util.concurrent.TimeUnit;
 
 import org.junit.Test;
 
@@ -87,16 +85,16 @@ public class TestTOTPAuthenticator {
         testScratchCodes(Encoding.BASE64, 16, 4);
     }
 
-    private void testScratchCodes(Encoding encoding, int length, int numCodes) {
+    private void testScratchCodes(Encoding encoding, int length, int numCodes) throws ServiceException {
         TOTPCredentials credentials = getCredentials(Encoding.BASE32, encoding, 16, length, numCodes);
-        Set<String> codes = credentials.getScratchCodes();
+        List<String> codes = credentials.getScratchCodes();
         assertEquals(numCodes, codes.size());
         for (String code: codes) {
             assertEquals(length, code.length());
         }
     }
 
-    private TOTPCredentials getCredentials(Encoding secretEncoding, Encoding scratchCodeEncoding, int secretLength, int scratchCodeLength, int numScratchCodes) {
+    private TOTPCredentials getCredentials(Encoding secretEncoding, Encoding scratchCodeEncoding, int secretLength, int scratchCodeLength, int numScratchCodes) throws ServiceException{
         CredentialConfig config = new CredentialConfig()
         .setNumScratchCodes(numScratchCodes)
         .setSecretLength(secretLength)

@@ -375,7 +375,10 @@ public abstract class Provisioning extends ZAttrProvisioning {
         if (name.equalsIgnoreCase(Provisioning.A_userPassword) ||
             name.equalsIgnoreCase(Provisioning.A_zimbraDataSourcePassword) ||
             name.equalsIgnoreCase(Provisioning.A_zimbraFreebusyExchangeAuthPassword) ||
-            name.equalsIgnoreCase(Provisioning.A_zimbraUCPassword)) {
+            name.equalsIgnoreCase(Provisioning.A_zimbraUCPassword) ||
+            name.equalsIgnoreCase(Provisioning.A_zimbraTwoFactorAuthSecret) ||
+            name.equalsIgnoreCase(Provisioning.A_zimbraTwoFactorAuthScratchCodes) ||
+            name.equalsIgnoreCase(Provisioning.A_zimbraAppSpecificPassword)) {
             return "VALUE-BLOCKED";
         }
         return realValue;

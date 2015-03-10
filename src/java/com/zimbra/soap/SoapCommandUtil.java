@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -430,10 +430,8 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
         account.addAttribute(AdminConstants.A_BY, StringUtil.isUUID(mAuthAccountName) ? AdminConstants.BY_ID : AdminConstants.BY_NAME);
         auth.addElement(AccountConstants.E_PASSWORD).setText(mPassword);
         if (mTwoFactorCode != null) {
-            auth.addAttribute(AccountConstants.A_TWO_FACTOR_AUTH_SUPPORTED, true);
             auth.addElement(AccountConstants.E_TWO_FACTOR_CODE).setText(mTwoFactorCode);
         } else if (mTwoFactorScratchCode != null) {
-            auth.addAttribute(AccountConstants.A_TWO_FACTOR_AUTH_SUPPORTED, true);
             auth.addElement(AccountConstants.E_TWO_FACTOR_SCRATCH_CODE).setText(mTwoFactorScratchCode);
         }
         // Authenticate and get auth token

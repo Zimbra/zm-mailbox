@@ -102,6 +102,9 @@ public class SoapEngine {
     /** context name of IP of the origin client */
     public static final String ORIG_REQUEST_IP = "orig.request.ip";
 
+    /** context name of request port */
+    public static final String REQUEST_PORT = "request.port";
+
     private final DocumentDispatcher dispatcher = new DocumentDispatcher();
 
     SoapEngine() {

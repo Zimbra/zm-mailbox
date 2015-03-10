@@ -675,11 +675,19 @@ extends Assert {
 
     public static ZMailbox getZMailbox(String username)
     throws ServiceException {
+        return getZMailbox(username, null);
+    }
+
+    public static ZMailbox getZMailbox(String username, String scratchCode)
+    throws ServiceException {
         ZMailbox.Options options = new ZMailbox.Options();
         options.setAccount(getAddress(username));
-        options.setAccountBy(AccountBy.name);
+        options.setAccountBy(Key.AccountBy.name);
         options.setPassword(DEFAULT_PASSWORD);
-        options.setUri(getSoapUrl());
+        options.setUri(TestUtil.getSoapUrl());
+        if (scratchCode != null) {
+            options.setTwoFactorScratchCode(scratchCode);
+        }
         return ZMailbox.getMailbox(options);
     }
 

@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -24,21 +24,21 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.Element.KeyValuePair;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.service.account.zmg.BootstrapMobileGatewayApp;
 import com.zimbra.cs.service.account.zmg.RenewMobileGatewayAppToken;
 import com.zimbra.soap.DocumentDispatcher;
 import com.zimbra.soap.DocumentService;
-import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.Element.KeyValuePair;
 
 /**
- * 
+ *
  * @zm-service-description		The Account Service includes commands for retrieving,
  * storing and managing information user account information.
- * 
+ *
  * @author schemers
  */
 public class AccountService implements DocumentService {
@@ -50,7 +50,12 @@ public class AccountService implements DocumentService {
         dispatcher.registerHandler(AccountConstants.AUTH_REQUEST, new Auth());
         dispatcher.registerHandler(AccountConstants.CHANGE_PASSWORD_REQUEST, new ChangePassword());
         dispatcher.registerHandler(AccountConstants.END_SESSION_REQUEST, new EndSession());
-        dispatcher.registerHandler(AccountConstants.TWO_FACTOR_REQUEST, new TwoFactorAuth());
+        dispatcher.registerHandler(AccountConstants.ENABLE_TWO_FACTOR_AUTH_REQUEST, new EnableTwoFactorAuth());
+        dispatcher.registerHandler(AccountConstants.DISABLE_TWO_FACTOR_AUTH_REQUEST, new DisableTwoFactorAuth());
+        dispatcher.registerHandler(AccountConstants.CREATE_APP_SPECIFIC_PASSWORD_REQUEST, new CreateAppSpecificPassword());
+        dispatcher.registerHandler(AccountConstants.REVOKE_APP_SPECIFIC_PASSWORD_REQUEST, new RevokeAppSpecificPassword());
+        dispatcher.registerHandler(AccountConstants.GET_APP_SPECIFIC_PASSWORDS_REQUEST, new GetAppSpecificPasswords());
+        dispatcher.registerHandler(AccountConstants.GENERATE_SCRATCH_CODES_REQUEST, new GenerateScratchCodes());
 
         // prefs
         dispatcher.registerHandler(AccountConstants.GET_PREFS_REQUEST, new GetPrefs());
@@ -77,7 +82,7 @@ public class AccountService implements DocumentService {
         dispatcher.registerHandler(AccountConstants.MODIFY_IDENTITY_REQUEST, new ModifyIdentity());
         dispatcher.registerHandler(AccountConstants.DELETE_IDENTITY_REQUEST, new DeleteIdentity());
         dispatcher.registerHandler(AccountConstants.GET_IDENTITIES_REQUEST, new GetIdentities());
-        
+
         // signature
         dispatcher.registerHandler(AccountConstants.CREATE_SIGNATURE_REQUEST, new CreateSignature());
         dispatcher.registerHandler(AccountConstants.MODIFY_SIGNATURE_REQUEST, new ModifySignature());
@@ -90,7 +95,7 @@ public class AccountService implements DocumentService {
         // white/black list
         dispatcher.registerHandler(AccountConstants.GET_WHITE_BLACK_LIST_REQUEST, new GetWhiteBlackList());
         dispatcher.registerHandler(AccountConstants.MODIFY_WHITE_BLACK_LIST_REQUEST, new ModifyWhiteBlackList());
-        
+
         // distribution list
         dispatcher.registerHandler(AccountConstants.CREATE_DISTRIBUTION_LIST_REQUEST, new CreateDistributionList());
         dispatcher.registerHandler(AccountConstants.DISTRIBUTION_LIST_ACTION_REQUEST, new DistributionListAction());
@@ -98,7 +103,7 @@ public class AccountService implements DocumentService {
         dispatcher.registerHandler(AccountConstants.GET_DISTRIBUTION_LIST_REQUEST, new GetDistributionList());
         dispatcher.registerHandler(AccountConstants.GET_DISTRIBUTION_LIST_MEMBERS_REQUEST, new GetDistributionListMembers());
         dispatcher.registerHandler(AccountConstants.SUBSCRIBE_DISTRIBUTION_LIST_REQUEST, new SubscribeDistributionList());
-        
+
         // rights
         dispatcher.registerHandler(AccountConstants.CHECK_RIGHTS_REQUEST, new CheckRights());
         dispatcher.registerHandler(AccountConstants.DISCOVER_RIGHTS_REQUEST, new DiscoverRights());
@@ -122,7 +127,7 @@ public class AccountService implements DocumentService {
     public static Map<String, Object> getAttrs(Element request, String nameAttr) throws ServiceException {
         return getAttrs(request, false, nameAttr);
     }
-    
+
     /**
      * @param request
      * @return
@@ -137,23 +142,23 @@ public class AccountService implements DocumentService {
                 StringUtil.addToMultiMap(result, name, value);
         }
         return result;
-    } 
-    
-    
+    }
+
+
     /**
-     * parse key values pairs in the form of: 
+     * parse key values pairs in the form of:
      *     <{elemName} {attrName}="{key}">{value}</{elemName}>
-     *     
+     *
      *     e.g.
      *     <a n="boo">bar</a>
-     *     
+     *
      * @param parent
      * @param elemName
      * @param attrName
      * @return
      * @throws ServiceException
      */
-    public static Map<String, Object> getKeyValuePairs(Element parent, String elemName, String attrName) 
+    public static Map<String, Object> getKeyValuePairs(Element parent, String elemName, String attrName)
     throws ServiceException {
         Map<String, Object> result = new HashMap<String, Object>();
         for (Element eKV : parent.listElements(elemName)) {
@@ -162,5 +167,5 @@ public class AccountService implements DocumentService {
             StringUtil.addToMultiMap(result, key, value);
         }
         return result;
-    } 
+    }
 }

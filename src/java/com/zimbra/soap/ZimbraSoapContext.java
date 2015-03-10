@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -149,6 +149,7 @@ public final class ZimbraSoapContext {
 
     private String mUserAgent;
     private String mRequestIP;
+    private Integer mPort;
     private String mVia;
     private String soapRequestId;
 
@@ -225,6 +226,7 @@ public final class ZimbraSoapContext {
     throws ServiceException {
         mUserAgent = zsc.mUserAgent;
         mRequestIP = zsc.mRequestIP;
+        mPort = zsc.mPort;
         mVia = zsc.mVia;
         soapRequestId = zsc.soapRequestId;
 
@@ -446,6 +448,8 @@ public final class ZimbraSoapContext {
         }
 
         mRequestIP = (String) context.get(SoapEngine.REQUEST_IP);
+        mPort = (Integer) context.get(SoapEngine.REQUEST_PORT);
+
     }
 
     /**
@@ -919,6 +923,10 @@ public final class ZimbraSoapContext {
 
     public String getRequestIP() {
         return mRequestIP;
+    }
+
+    public Integer getPort() {
+        return mPort;
     }
 
     public String getSoapRequestId() {
