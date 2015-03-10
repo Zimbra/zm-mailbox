@@ -1028,7 +1028,7 @@ public final class ToXML {
             if (expand == ExpandResults.FIRST || expand == ExpandResults.ALL || expand.matches(msg)) {
                 encodeMessageAsMP(c, ifmt, octxt, msg, null, params.getMaxInlinedLength(), params.getWantHtml(),
                         params.getNeuterImages(), params.getInlinedHeaders(), true, params.getWantExpandGroupInfo(),
-                        LC.mime_encode_missing_blob.booleanValue());
+                        LC.mime_encode_missing_blob.booleanValue(), params.getWantContent());
                 if (expand == ExpandResults.FIRST) {
                     expand = ExpandResults.NONE;
                 }

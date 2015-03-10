@@ -292,7 +292,7 @@ public final class SearchConv extends Search {
         Element el;
         if (inline) {
             el = ToXML.encodeMessageAsMP(response, ifmt, octxt, msg, null, params.getMaxInlinedLength(),
-                    params.getWantHtml(), params.getNeuterImages(), null, true, params.getWantExpandGroupInfo(), LC.mime_encode_missing_blob.booleanValue());
+                    params.getWantHtml(), params.getNeuterImages(), null, true, params.getWantExpandGroupInfo(), LC.mime_encode_missing_blob.booleanValue(), params.getWantContent());
             if (!Strings.isNullOrEmpty(msg.getFragment())) {
                 el.addAttribute(MailConstants.E_FRAG, msg.getFragment(), Element.Disposition.CONTENT);
             }
