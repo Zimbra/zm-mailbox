@@ -2830,6 +2830,34 @@ public class ZAttrProvisioning {
     public static final String A_zimbraAntispamExtractionBatchSize = "zimbraAntispamExtractionBatchSize";
 
     /**
+     * application-specific password
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1836)
+    public static final String A_zimbraAppSpecificPassword = "zimbraAppSpecificPassword";
+
+    /**
+     * lifetime of app-specific passwords, or 0 for no expiry. Must be in
+     * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1839)
+    public static final String A_zimbraAppSpecificPasswordDuration = "zimbraAppSpecificPasswordDuration";
+
+    /**
+     * length of app-specific passwords
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1840)
+    public static final String A_zimbraAppSpecificPasswordLength = "zimbraAppSpecificPasswordLength";
+
+    /**
      * Mailboxes in which the current account in archived. Multi-value attr
      * with eg values { user-2006@example.com.archive,
      * user-2007@example.com.archive } that tells us that user@example.com
@@ -5358,6 +5386,16 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureAntispamEnabled = "zimbraFeatureAntispamEnabled";
 
     /**
+     * Whether app-specific passwords are enabled when two-factor auth is
+     * enabled. If TRUE, the port specified by zimbraMtaAuthPort must be
+     * accessible by the MTA.
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1907)
+    public static final String A_zimbraFeatureAppSpecificPasswordsEnabled = "zimbraFeatureAppSpecificPasswordsEnabled";
+
+    /**
      * Docs features enabled in briefcase
      *
      * @since ZCS 6.0.2
@@ -5934,6 +5972,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1636)
     public static final String A_zimbraFeatureTouchClientEnabled = "zimbraFeatureTouchClientEnabled";
+
+    /**
+     * whether two-factor authentication is required
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1820)
+    public static final String A_zimbraFeatureTwoFactorAuthRequired = "zimbraFeatureTwoFactorAuthRequired";
 
     /**
      * option to view attachments in html
@@ -8220,6 +8266,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMailWhitelistMaxNumEntries = "zimbraMailWhitelistMaxNumEntries";
 
     /**
+     * maximum number of application-specific passwords allowed for an
+     * account
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1837)
+    public static final String A_zimbraMaxAppSpecificPasswords = "zimbraMaxAppSpecificPasswords";
+
+    /**
      * max number of contacts per page, Web client (not server) verifies that
      * zimbraPrefContactsPerPage should not exceed this attribute.
      *
@@ -9116,6 +9171,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMtaAntiSpamLockMethod = "zimbraMtaAntiSpamLockMethod";
 
     /**
+     * interface address on which Admin HTTPS connector for MTA Auth should
+     * listen; defaults to localhost
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1908)
+    public static final String A_zimbraMtaAuthBindAddress = "zimbraMtaAuthBindAddress";
+
+    /**
      * Deprecated since: 6.0.0_BETA1. deprecated in favor of
      * zimbraMtaTlsSecurityLevel and zimbraMtaSaslAuthEnable. Orig desc:
      * Value for postconf smtpd_tls_security_level
@@ -9132,6 +9196,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=309)
     public static final String A_zimbraMtaAuthHost = "zimbraMtaAuthHost";
+
+    /**
+     * Internal port used by saslauthd to authenticate over SOAP
+     *
+     * @since ZCS 8.7,9.0.0
+     */
+    @ZAttr(id=1906)
+    public static final String A_zimbraMtaAuthPort = "zimbraMtaAuthPort";
 
     /**
      * whether this server is a mta auth target
@@ -12135,6 +12207,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefTrashLifetime = "zimbraPrefTrashLifetime";
 
     /**
+     * whether two-factor authentication is enabled by the user
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1819)
+    public static final String A_zimbraPrefTwoFactorAuthEnabled = "zimbraPrefTwoFactorAuthEnabled";
+
+    /**
      * Deprecated since: 5.0. no longer used in account or identity. Orig
      * desc: TRUE if we this identity should get settings from the default
      * identity
@@ -13247,6 +13327,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraReverseProxyZSSHostname = "zimbraReverseProxyZSSHostname";
 
     /**
+     * whether or not to revoke app-specific passwords when the main password
+     * is changed
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1838)
+    public static final String A_zimbraRevokeAppSpecificPasswordsOnPasswordChange = "zimbraRevokeAppSpecificPasswordsOnPasswordChange";
+
+    /**
      * whether TLS is required for IMAP/POP GSSAPI auth
      *
      * @since ZCS 5.0.20
@@ -14261,9 +14350,12 @@ public class ZAttrProvisioning {
     public static final String A_zimbraTouchJSErrorTrackingKey = "zimbraTouchJSErrorTrackingKey";
 
     /**
-     * hash algorithm used in TOTP generation
+     * Hash algorithm used in TOTP generation. SHA1 is the current accepted
+     * standard per RFC 6238. Only consider changing this to another hashing
+     * function when working with authenticators that deviate from this
+     * standard.
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=1825)
     public static final String A_zimbraTwoFactorAuthHashAlgorithm = "zimbraTwoFactorAuthHashAlgorithm";
@@ -14271,23 +14363,15 @@ public class ZAttrProvisioning {
     /**
      * number of scratch codes to generate for two-factor auth
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=1823)
     public static final String A_zimbraTwoFactorAuthNumScratchCodes = "zimbraTwoFactorAuthNumScratchCodes";
 
     /**
-     * whether two-factor authentication is required
-     *
-     * @since ZCS 8.7.0
-     */
-    @ZAttr(id=1820)
-    public static final String A_zimbraTwoFactorAuthRequired = "zimbraTwoFactorAuthRequired";
-
-    /**
      * scratch code encoding
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=1831)
     public static final String A_zimbraTwoFactorAuthScratchCodeEncoding = "zimbraTwoFactorAuthScratchCodeEncoding";
@@ -14295,7 +14379,7 @@ public class ZAttrProvisioning {
     /**
      * encrypted comma-separated list of valid scratch codes
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=1822)
     public static final String A_zimbraTwoFactorAuthScratchCodes = "zimbraTwoFactorAuthScratchCodes";
@@ -14303,15 +14387,16 @@ public class ZAttrProvisioning {
     /**
      * encrypted shared secret
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=1821)
     public static final String A_zimbraTwoFactorAuthSecret = "zimbraTwoFactorAuthSecret";
 
     /**
-     * shared secret encoding
+     * Shared secret encoding. Keep at BASE32 for compatability with common
+     * TOTP clients.
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=1826)
     public static final String A_zimbraTwoFactorAuthSecretEncoding = "zimbraTwoFactorAuthSecretEncoding";
@@ -14319,23 +14404,16 @@ public class ZAttrProvisioning {
     /**
      * length of shared secret
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=1824)
     public static final String A_zimbraTwoFactorAuthSecretLength = "zimbraTwoFactorAuthSecretLength";
 
     /**
-     * whether two-factor authentication is enabled by the user
+     * Length of TOTP code required for two-factor authentication. Keep at 6
+     * for compatability with common TOTP clients.
      *
-     * @since ZCS 8.7.0
-     */
-    @ZAttr(id=1819)
-    public static final String A_zimbraTwoFactorAuthUserEnabled = "zimbraTwoFactorAuthUserEnabled";
-
-    /**
-     * length of TOTP code required for two-factor authentication
-     *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=1828)
     public static final String A_zimbraTwoFactorCodeLength = "zimbraTwoFactorCodeLength";
@@ -14343,7 +14421,7 @@ public class ZAttrProvisioning {
     /**
      * length of scratch codes
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=1827)
     public static final String A_zimbraTwoFactorScratchCodeLength = "zimbraTwoFactorScratchCodeLength";
@@ -14355,7 +14433,7 @@ public class ZAttrProvisioning {
      * milliseconds. If time unit is not specified, the default is
      * s(seconds).
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=1829)
     public static final String A_zimbraTwoFactorTimeWindowLength = "zimbraTwoFactorTimeWindowLength";
@@ -14368,7 +14446,7 @@ public class ZAttrProvisioning {
      * zimbraTwoFactorTimeWindowLength and
      * https://tools.ietf.org/html/rfc6238#section-5.2
      *
-     * @since ZCS 8.7.0
+     * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=1830)
     public static final String A_zimbraTwoFactorTimeWindowOffset = "zimbraTwoFactorTimeWindowOffset";

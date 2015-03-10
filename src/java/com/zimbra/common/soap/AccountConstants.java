@@ -34,9 +34,18 @@ public class AccountConstants {
     public static final String E_CHANGE_PASSWORD_RESPONSE = "ChangePasswordResponse";
     public static final String E_END_SESSION_REQUEST = "EndSessionRequest";
     public static final String E_END_SESSION_RESPONSE = "EndSessionResponse";
-    public static final String E_TWO_FACTOR_AUTH_REQUEST = "TwoFactorAuthRequest";
-    public static final String E_TWO_FACTOR_AUTH_RESPONSE = "TwoFactorAuthResponse";
-
+    public static final String E_ENABLE_TWO_FACTOR_AUTH_REQUEST = "EnableTwoFactorAuthRequest";
+    public static final String E_ENABLE_TWO_FACTOR_AUTH_RESPONSE = "EnableTwoFactorAuthResponse";
+    public static final String E_DISABLE_TWO_FACTOR_AUTH_REQUEST = "DisableTwoFactorAuthRequest";
+    public static final String E_DISABLE_TWO_FACTOR_AUTH_RESPONSE = "DisableTwoFactorAuthResponse";
+    public static final String E_CREATE_APP_SPECIFIC_PASSWORD_REQUEST = "CreateAppSpecificPasswordRequest";
+    public static final String E_CREATE_APP_SPECIFIC_PASSWORD_RESPONSE = "CreateAppSpecificPasswordResponse";
+    public static final String E_REVOKE_APP_SPECIFIC_PASSWORD_REQUEST = "RevokeAppSpecificPasswordRequest";
+    public static final String E_REVOKE_APP_SPECIFIC_PASSWORD_RESPONSE = "RevokeAppSpecificPasswordResponse";
+    public static final String E_GET_APP_SPECIFIC_PASSWORDS_REQUEST = "GetAppSpecificPasswordsRequest";
+    public static final String E_GET_APP_SPECIFIC_PASSWORDS_RESPONSE = "GetAppSpecificPasswordsResponse";
+    public static final String E_GENERATE_SCRATCH_CODES_REQUEST = "GenerateScratchCodesRequest";
+    public static final String E_GENERATE_SCRATCH_CODES_RESPONSE = "GenerateScratchCodesResponse";
     public static final String E_GET_PREFS_REQUEST = "GetPrefsRequest";
     public static final String E_GET_PREFS_RESPONSE = "GetPrefsResponse";
     public static final String E_GET_INFO_REQUEST = "GetInfoRequest";
@@ -63,7 +72,7 @@ public class AccountConstants {
     public static final String E_MODIFY_WHITE_BLACK_LIST_RESPONSE = "ModifyWhiteBlackListResponse";
     public static final String E_MODIFY_ZIMLET_PREFS_REQUEST = "ModifyZimletPrefsRequest";
     public static final String E_MODIFY_ZIMLET_PREFS_RESPONSE = "ModifyZimletPrefsResponse";
-    
+
     // GAL
     public static final String E_AUTO_COMPLETE_GAL_REQUEST = "AutoCompleteGalRequest";
     public static final String E_AUTO_COMPLETE_GAL_RESPONSE = "AutoCompleteGalResponse";
@@ -145,8 +154,18 @@ public class AccountConstants {
     public static final QName CHANGE_PASSWORD_RESPONSE = QName.get(E_CHANGE_PASSWORD_RESPONSE, NAMESPACE);
     public static final QName END_SESSION_REQUEST = QName.get(E_END_SESSION_REQUEST, NAMESPACE);
     public static final QName END_SESSION_RESPONSE = QName.get(E_END_SESSION_RESPONSE, NAMESPACE);
-    public static final QName TWO_FACTOR_REQUEST = QName.get(E_TWO_FACTOR_AUTH_REQUEST, NAMESPACE);
-    public static final QName TWO_FACTOR_RESPONSE = QName.get(E_TWO_FACTOR_AUTH_RESPONSE, NAMESPACE);
+    public static final QName ENABLE_TWO_FACTOR_AUTH_REQUEST = QName.get(E_ENABLE_TWO_FACTOR_AUTH_REQUEST, NAMESPACE);
+    public static final QName ENABLE_TWO_FACTOR_AUTH_RESPONSE = QName.get(E_ENABLE_TWO_FACTOR_AUTH_RESPONSE, NAMESPACE);
+    public static final QName DISABLE_TWO_FACTOR_AUTH_REQUEST = QName.get(E_DISABLE_TWO_FACTOR_AUTH_REQUEST, NAMESPACE);
+    public static final QName DISABLE_TWO_FACTOR_AUTH_RESPONSE = QName.get(E_DISABLE_TWO_FACTOR_AUTH_RESPONSE, NAMESPACE);
+    public static final QName CREATE_APP_SPECIFIC_PASSWORD_REQUEST = QName.get(E_CREATE_APP_SPECIFIC_PASSWORD_REQUEST, NAMESPACE);
+    public static final QName CREATE_APP_SPECIFIC_PASSWORD_RESPONSE = QName.get(E_CREATE_APP_SPECIFIC_PASSWORD_RESPONSE, NAMESPACE);
+    public static final QName REVOKE_APP_SPECIFIC_PASSWORD_REQUEST = QName.get(E_REVOKE_APP_SPECIFIC_PASSWORD_REQUEST, NAMESPACE);
+    public static final QName REVOKE_APP_SPECIFIC_PASSWORD_RESPONSE = QName.get(E_REVOKE_APP_SPECIFIC_PASSWORD_RESPONSE, NAMESPACE);
+    public static final QName GET_APP_SPECIFIC_PASSWORDS_REQUEST = QName.get(E_GET_APP_SPECIFIC_PASSWORDS_REQUEST, NAMESPACE);
+    public static final QName GET_APP_SPECIFIC_PASSWORDS_RESPONSE = QName.get(E_GET_APP_SPECIFIC_PASSWORDS_RESPONSE, NAMESPACE);
+    public static final QName GENERATE_SCRATCH_CODES_REQUEST = QName.get(E_GENERATE_SCRATCH_CODES_REQUEST, NAMESPACE);
+    public static final QName GENERATE_SCRATCH_CODES_RESPONSE = QName.get(E_GENERATE_SCRATCH_CODES_RESPONSE, NAMESPACE);
 
     // prefs
     public static final QName GET_PREFS_REQUEST = QName.get(E_GET_PREFS_REQUEST, NAMESPACE);
@@ -456,12 +475,17 @@ public class AccountConstants {
     // Zimbra Mobile Gateway
     public static final String E_APP_ID = "appId";
     public static final String E_APP_KEY = "appKey";
-    
+
     //two-factor auth attributes
     public static final String E_TWO_FACTOR_CODE = "twoFactorCode";
     public static final String E_TWO_FACTOR_SCRATCH_CODE = "scratchCode";
     public static final String E_TWO_FACTOR_SCRATCH_CODES = "scratchCodes";
     public static final String E_TWO_FACTOR_CREDENTIALS = "credentials";
-    public static final String A_TWO_FACTOR_AUTH_SUPPORTED = "twoFactorAuthSupported";
     public static final String E_TWO_FACTOR_SECRET = "secret";
+    public static final String E_APP_SPECIFIC_PASSWORD_DATA = "passwordData";
+    public static final String E_APP_SPECIFIC_PASSWORDS = "appSpecificPasswords";
+    public static final String E_MAX_APP_PASSWORDS = "maxAppPasswords";
+    public static final String A_APP_NAME = "appName";
+    public static final String A_DATE_CREATED = "created";
+    public static final String A_DATE_LAST_USED = "lastUsed";
 }
