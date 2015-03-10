@@ -18,6 +18,7 @@ import com.zimbra.cs.account.AppSpecificPassword.PasswordData;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.auth.twofactor.AuthenticatorConfig.CodeLength;
 import com.zimbra.cs.account.auth.twofactor.AuthenticatorConfig.HashAlgorithm;
 import com.zimbra.cs.account.auth.twofactor.CredentialConfig.Encoding;
@@ -66,7 +67,12 @@ public class TwoFactorManager {
 	 */
 	public static boolean appSpecificPasswordsEnabled(Account account) throws ServiceException {
 	    if (twoFactorAuthRequired(account)) {
-	        return account.getServer().isFeatureAppSpecificPasswordsEnabled();
+	        Server server = account.getServer();
+	        if (server == null) {
+	            return false;
+	        } else {
+	            return server.isFeatureAppSpecificPasswordsEnabled();
+	        }
 	    } else {
 	        return false;
 	    }

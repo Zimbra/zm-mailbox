@@ -514,11 +514,15 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
             return;
         }
 
-        // Authenticate
-        if (mAdminAccountName != null) {
-            adminAuth();
-        } else {
-            mailboxAuth();
+        // If this is an EnableTwoFactorAuthRequest, skip authentication
+        boolean skipAuth = request.getName().equals(AccountConstants.E_ENABLE_TWO_FACTOR_AUTH_REQUEST);
+        // Authenticate if necessary
+        if (!skipAuth) {
+             if (mAdminAccountName != null) {
+                adminAuth();
+            } else {
+                mailboxAuth();
+            }
         }
 
         // Send request and print response.
