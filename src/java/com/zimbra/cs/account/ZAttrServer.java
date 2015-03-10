@@ -12049,6 +12049,88 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Whether app-specific passwords are enabled when two-factor auth is
+     * enabled. If TRUE, the port specified by zimbraMtaAuthPort must be
+     * accessible by the MTA.
+     *
+     * @return zimbraFeatureAppSpecificPasswordsEnabled, or false if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1907)
+    public boolean isFeatureAppSpecificPasswordsEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraFeatureAppSpecificPasswordsEnabled, false);
+    }
+
+    /**
+     * Whether app-specific passwords are enabled when two-factor auth is
+     * enabled. If TRUE, the port specified by zimbraMtaAuthPort must be
+     * accessible by the MTA.
+     *
+     * @param zimbraFeatureAppSpecificPasswordsEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1907)
+    public void setFeatureAppSpecificPasswordsEnabled(boolean zimbraFeatureAppSpecificPasswordsEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureAppSpecificPasswordsEnabled, zimbraFeatureAppSpecificPasswordsEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether app-specific passwords are enabled when two-factor auth is
+     * enabled. If TRUE, the port specified by zimbraMtaAuthPort must be
+     * accessible by the MTA.
+     *
+     * @param zimbraFeatureAppSpecificPasswordsEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1907)
+    public Map<String,Object> setFeatureAppSpecificPasswordsEnabled(boolean zimbraFeatureAppSpecificPasswordsEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureAppSpecificPasswordsEnabled, zimbraFeatureAppSpecificPasswordsEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether app-specific passwords are enabled when two-factor auth is
+     * enabled. If TRUE, the port specified by zimbraMtaAuthPort must be
+     * accessible by the MTA.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1907)
+    public void unsetFeatureAppSpecificPasswordsEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureAppSpecificPasswordsEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether app-specific passwords are enabled when two-factor auth is
+     * enabled. If TRUE, the port specified by zimbraMtaAuthPort must be
+     * accessible by the MTA.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1907)
+    public Map<String,Object> unsetFeatureAppSpecificPasswordsEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureAppSpecificPasswordsEnabled, "");
+        return attrs;
+    }
+
+    /**
      * Maximum size in bytes for file uploads
      *
      * @return zimbraFileUploadMaxSize, or 10485760 if unset
