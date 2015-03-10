@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -152,8 +152,18 @@ public final class JaxbUtil {
             com.zimbra.soap.account.message.SubscribeDistributionListResponse.class,
             com.zimbra.soap.account.message.SyncGalRequest.class,
             com.zimbra.soap.account.message.SyncGalResponse.class,
-            com.zimbra.soap.account.message.TwoFactorAuthRequest.class,
-            com.zimbra.soap.account.message.TwoFactorAuthResponse.class,
+            com.zimbra.soap.account.message.EnableTwoFactorAuthRequest.class,
+            com.zimbra.soap.account.message.EnableTwoFactorAuthResponse.class,
+            com.zimbra.soap.account.message.DisableTwoFactorAuthRequest.class,
+            com.zimbra.soap.account.message.DisableTwoFactorAuthResponse.class,
+            com.zimbra.soap.account.message.CreateAppSpecificPasswordRequest.class,
+            com.zimbra.soap.account.message.CreateAppSpecificPasswordResponse.class,
+            com.zimbra.soap.account.message.RevokeAppSpecificPasswordRequest.class,
+            com.zimbra.soap.account.message.RevokeAppSpecificPasswordResponse.class,
+            com.zimbra.soap.account.message.GetAppSpecificPasswordsRequest.class,
+            com.zimbra.soap.account.message.GetAppSpecificPasswordsResponse.class,
+            com.zimbra.soap.account.message.GenerateScratchCodesRequest.class,
+            com.zimbra.soap.account.message.GenerateScratchCodesResponse.class,
 
             // zimbraMail
             com.zimbra.soap.mail.message.AddAppointmentInviteRequest.class,
