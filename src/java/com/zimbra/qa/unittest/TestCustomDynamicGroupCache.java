@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -48,9 +48,9 @@ import com.zimbra.soap.type.TargetBy;
 
 public class TestCustomDynamicGroupCache extends TestCase {
 
-    final String domainName = "cdgcache.test";
-    final String domainName1 = "cdgcache1.test";
-    final String domainName2 = "cdgcache2.test";
+    final String domainName = "tcdgcache.test";
+    final String domainName1 = "tcdgcache1.test";
+    final String domainName2 = "tcdgcache2.test";
     final String acctPatt = "person%03d@" + domainName;
     final String normalDLPatt = "normaldl%03d@" + domainName;
     final String dynamicDLPatt = "dynamicdl%03d@" + domainName;
@@ -98,21 +98,20 @@ public class TestCustomDynamicGroupCache extends TestCase {
         @Override
         public void run() {
             long before;
-            long after;
             GroupMembership membership;
             try {
                 for (int cnt = 0; cnt < 20; cnt++) {
                     // GroupMembership membership = prov.getCustomDynamicGroupMembership(acct, false);
                     before = System.currentTimeMillis();
                     membership = prov.getGroupMembership(acct, false);
-                    after = System.currentTimeMillis();
                     ZimbraLog.test.info("XXX getGroupMembership ms=%s acct=%s NUM=%s",
-                            after - before, acct.getName(), membership.groupIds().size());
+                            ZimbraLog.elapsedTime(before, System.currentTimeMillis()),
+                            acct.getName(), membership.groupIds().size());
                     before = System.currentTimeMillis();
                     membership = prov.getGroupMembershipWithRights(acct, urights, false);
-                    after = System.currentTimeMillis();
                     ZimbraLog.test.info("XXX getGroupMembershipWithRights ms=%s acct=%s NUM=%s",
-                            after - before, acct.getName(), membership.groupIds().size());
+                            ZimbraLog.elapsedTime(before, System.currentTimeMillis()),
+                            acct.getName(), membership.groupIds().size());
                 }
             } catch (Exception e) {
                 ZimbraLog.test.error("Unable to get membership for %s.", acct, e);
@@ -124,6 +123,7 @@ public class TestCustomDynamicGroupCache extends TestCase {
      * For testing performance (after adjusting setup parameters) - see Bug 89504
      */
     public void ENABLE_FOR_PERFORMANCE_TESTStestCustomDynamicGroups() throws Exception {
+        long start = System.currentTimeMillis();
         RightManager rightMgr = RightManager.getInstance();
         Set<Right>rights = Sets.newHashSet();
         rights.add(rightMgr.getUserRight(RightConsts.RT_createDistList));
@@ -139,6 +139,7 @@ public class TestCustomDynamicGroupCache extends TestCase {
         for (Thread thread : threads) {
             thread.join();
         }
+        ZimbraLog.test.info("ZZZ testCustomDynamicGroups %s", ZimbraLog.elapsedTime(start, System.currentTimeMillis()));
     }
 
     private GroupMembership doGetGroupMembershipWithRights(Account acct, Set<Right> rights,
@@ -191,7 +192,7 @@ public class TestCustomDynamicGroupCache extends TestCase {
             }
             Group grp = groups.get(groupID);
             if (grp == null) {
-                sb.append("UNKOWN-").append(groupID);
+                sb.append("UNKOWN (not created by this test):").append(groupID);
             } else {
                 sb.append(grp.getName()).append("(id=").append(groupID).append(")");
             }
@@ -218,45 +219,61 @@ public class TestCustomDynamicGroupCache extends TestCase {
     }
 
     public void testCustomDynamicGroupsAnyRights1() throws Exception {
+        long start = System.currentTimeMillis();
         // person001@cdgcache.test is not in any of the groups we've assigned rights to
         doAnyRightsTestForAccount(String.format(acctPatt, 1), 0, 0);
+        ZimbraLog.test.info("ZZZ testCustomDynamicGroupsAnyRights1 %s", ZimbraLog.elapsedTime(start, System.currentTimeMillis()));
     }
 
     public void testCustomDynamicGroupsCreateDistListRights1() throws Exception {
+        long start = System.currentTimeMillis();
         doRightsTestForAccount(String.format(acctPatt, 1), 0, 0); // person001@cdgcache.test
+        ZimbraLog.test.info("ZZZ testCustomDynamicGroupsCreateDistListRights1 %s", ZimbraLog.elapsedTime(start, System.currentTimeMillis()));
     }
 
     public void testCustomDynamicGroupsAnyRights2() throws Exception {
+        long start = System.currentTimeMillis();
         // person002@cdgcache.test is in all of the normaldl*@cdgcache.test DLs but no others
         // normaldl001@cdgcache.test DL has been assigned createDistList and sentToDistList rights
         doAnyRightsTestForAccount(String.format(acctPatt, 2), 1, 0);
+        ZimbraLog.test.info("ZZZ testCustomDynamicGroupsAnyRights2 %s", ZimbraLog.elapsedTime(start, System.currentTimeMillis()));
     }
 
     public void testCustomDynamicGroupsCreateDistListRights2() throws Exception {
+        long start = System.currentTimeMillis();
         doRightsTestForAccount(String.format(acctPatt, 2), 1, 0); // person002@cdgcache.test
+        ZimbraLog.test.info("ZZZ testCustomDynamicGroupsCreateDistListRights2 %s", ZimbraLog.elapsedTime(start, System.currentTimeMillis()));
     }
 
     public void testCustomDynamicGroupsAnyRights3() throws Exception {
+        long start = System.currentTimeMillis();
         // person003@cdgcache.test is in all of the dynamicdl*@cdgcache.test DLs but no others
         // dynamicdl001@cdgcache.test DL has been assigned createDistList rights
         // dynamicdl002@cdgcache.test DL has been assigned sendToDistList rights
         doAnyRightsTestForAccount(String.format(acctPatt, 3), 2, 0);
+        ZimbraLog.test.info("ZZZ testCustomDynamicGroupsCreateDistListRights3 %s", ZimbraLog.elapsedTime(start, System.currentTimeMillis()));
     }
 
     public void testCustomDynamicGroupsCreateDistListRights3() throws Exception {
+        long start = System.currentTimeMillis();
         doRightsTestForAccount(String.format(acctPatt, 3), 1, 0); // person003@cdgcache.test
+        ZimbraLog.test.info("ZZZ testCustomDynamicGroupsCreateDistListRights3 %s", ZimbraLog.elapsedTime(start, System.currentTimeMillis()));
     }
 
     public void testCustomDynamicGroupsAnyRights4() throws Exception {
+        long start = System.currentTimeMillis();
         // person004@cdgcache.test is in all of the normaldl*@cdgcache.test DLs but no others
         // normaldl001@cdgcache.test DL has been assigned createDistList and sentToDistList rights
         // cosdl001@cdgcache.test DL has been assigned createDistList rights
 
         doAnyRightsTestForAccount(String.format(acctPatt, 4), 2, 0); // person004@cdgcache.test
+        ZimbraLog.test.info("ZZZ testCustomDynamicGroupsCreateDistListRights4 %s", ZimbraLog.elapsedTime(start, System.currentTimeMillis()));
     }
 
     public void testCustomDynamicGroupsCreateDistListRights4() throws Exception {
+        long start = System.currentTimeMillis();
         doRightsTestForAccount(String.format(acctPatt, 4), 2, 0); // person004@cdgcache.test
+        ZimbraLog.test.info("ZZZ testCustomDynamicGroupsCreateDistListRights4 %s", ZimbraLog.elapsedTime(start, System.currentTimeMillis()));
     }
 
     private void doGetCustomDynamicGroupMembership(int acctNum)
@@ -269,17 +286,20 @@ public class TestCustomDynamicGroupCache extends TestCase {
                                     acct.getName(), groupNames), 1, membership.groupIds().size());
         String cosName = String.format(customDLPatt, acctNum % NUM_COS + 1);
         Group grp = groups.get(membership.groupIds().get(0));
-        String groupName = (grp == null) ? "UNKNOWN" : grp.getName();
+        String groupName = (grp == null) ? "UNKNOWN(not created by this test)" : grp.getName();
         assertEquals(String.format("Name of dynamic group with custom memberURL s which contains %s", acctName),
                     cosName, groupName);
     }
 
     public void testGetCustomDynamicGroups() throws Exception {
+        long start = System.currentTimeMillis();
         doGetCustomDynamicGroupMembership(1);
         doGetCustomDynamicGroupMembership(4);
+        ZimbraLog.test.info("ZZZ testGetCustomDynamicGroups %s", ZimbraLog.elapsedTime(start, System.currentTimeMillis()));
     }
 
     public void testInACLGRoup() throws Exception {
+        long start = System.currentTimeMillis();
         String acctName;
         acctName = String.format(acctPatt, 1);
         doInACLGroup(acctName, String.format(normalDLPatt, 1), false);
@@ -297,6 +317,7 @@ public class TestCustomDynamicGroupCache extends TestCase {
         doInACLGroup(acctName, String.format(normalDLPatt, 1), true);
         doInACLGroup(acctName, String.format(dynamicDLPatt, 1), false);
         doInACLGroup(acctName, String.format(customDLPatt, 1), true);
+        ZimbraLog.test.info("ZZZ testInACLGRoup %s", ZimbraLog.elapsedTime(start, System.currentTimeMillis()));
     }
 
     private void doInACLGroup(String acctName, String groupName, boolean expected) throws ServiceException {

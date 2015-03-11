@@ -19,6 +19,8 @@ package com.zimbra.cs.ldap.unboundid;
 import java.util.List;
 
 import com.unboundid.ldap.protocol.LDAPResponse;
+import com.unboundid.ldap.sdk.CompareRequest;
+import com.unboundid.ldap.sdk.CompareResult;
 import com.unboundid.ldap.sdk.Control;
 import com.unboundid.ldap.sdk.Entry;
 import com.unboundid.ldap.sdk.ExtendedRequest;
@@ -51,6 +53,7 @@ abstract class UBIDLdapOperation {
     static final CreateEntry CREATE_ENTRY = new CreateEntry();
     static final DeleteEntry DELETE_ENTRY = new DeleteEntry();
     static final Search SEARCH = new Search();
+    static final Compare COMPARE = new Compare();
     static final GetEntry GET_ENTRY = new GetEntry();
     static final GetSchema GET_SCHEMA = new GetSchema();
     static final ModifyAttrs MODIFY_ATTRS = new ModifyAttrs();
@@ -315,6 +318,60 @@ abstract class UBIDLdapOperation {
                                     ctls,
                                     searchRequest.getBaseDN(),
                                     searchRequest.getFilter().toString());
+
+                    debug(ctx,  startTime, result, extraInfo);
+                }
+            }
+        }
+    }
+
+    /**
+     * Compare
+     */
+    static class Compare extends UBIDLdapOperation {
+
+        @Override
+        protected LdapOp getOp() {
+            return LdapOp.COMPARE;
+        }
+
+        CompareResult execute(UBIDLdapContext ctx, CompareRequest compareRequest)
+        throws LDAPException {
+            CompareResult result = null;
+            long startTime = System.currentTimeMillis();
+            try {
+                result = ctx.getConn().compare(compareRequest);
+                stat(startTime);
+                return result;
+            } catch (LDAPException e) {
+                if (ResultCode.SERVER_DOWN == e.getResultCode()) {
+                    result = ctx.getConnectionPool().compare(compareRequest);
+                    stat(startTime);
+                    return result;
+                } else {
+                    throw e;
+                }
+            } finally {
+                if (debugEnabled()) {
+                    Control[] controls = compareRequest.getControls();
+                    StringBuffer ctls = new StringBuffer();
+                    if (controls != null) {
+                        boolean first = true;
+                        for (Control control : controls) {
+                            if (first) {
+                                first = false;
+                            } else {
+                                ctls.append(",");
+                            }
+                            ctls.append(control.getControlName());
+                        }
+                    }
+                    compareRequest.getAssertionValue();
+                    String extraInfo =
+                            String.format("[%sDN=[%s], attribute=[%s] assertionValue=[%s]",
+                                    ctls.length() == 0 ? "" : String.format("controls=[%s], ", ctls),
+                                    compareRequest.getDN(), compareRequest.getAttributeName(),
+                                    compareRequest.getAssertionValue());
 
                     debug(ctx,  startTime, result, extraInfo);
                 }

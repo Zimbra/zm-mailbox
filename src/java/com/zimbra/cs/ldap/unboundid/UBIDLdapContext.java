@@ -24,8 +24,11 @@ import java.util.Set;
 
 import javax.net.ssl.SSLContext;
 
+import com.google.common.collect.Lists;
 import com.unboundid.asn1.ASN1OctetString;
 import com.unboundid.ldap.sdk.BindResult;
+import com.unboundid.ldap.sdk.CompareRequest;
+import com.unboundid.ldap.sdk.CompareResult;
 import com.unboundid.ldap.sdk.Control;
 import com.unboundid.ldap.sdk.DN;
 import com.unboundid.ldap.sdk.DereferencePolicy;
@@ -41,6 +44,7 @@ import com.unboundid.ldap.sdk.SearchResult;
 import com.unboundid.ldap.sdk.SearchResultEntry;
 import com.unboundid.ldap.sdk.SearchScope;
 import com.unboundid.ldap.sdk.controls.AssertionRequestControl;
+import com.unboundid.ldap.sdk.controls.ManageDsaITRequestControl;
 import com.unboundid.ldap.sdk.controls.SimplePagedResultsControl;
 import com.unboundid.ldap.sdk.extensions.StartTLSExtendedRequest;
 import com.unboundid.ldap.sdk.schema.Schema;
@@ -79,7 +83,7 @@ public class UBIDLdapContext extends ZLdapContext {
 
     private LDAPConnectionPool connPool;
     private LDAPConnection conn;
-    private boolean isZimbraLdap;
+    private final boolean isZimbraLdap;
     private DereferencePolicy derefAliasPolicy;
 
     public static synchronized void init(boolean alwaysUseMaster) throws LdapException {
@@ -489,12 +493,14 @@ public class UBIDLdapContext extends ZLdapContext {
             ASN1OctetString cookie = null;
 
             do {
+                List<Control> controls = Lists.newArrayListWithCapacity(2);
                 if (searchOptions.isUseControl()) {
-                    searchRequest.setControls(
-                            new Control[] { new SimplePagedResultsControl(pageSize, cookie) });
-                } else {
-                    searchRequest.setControls(new Control[0]);
+                    controls.add(new SimplePagedResultsControl(pageSize, cookie));
                 }
+                if (searchOptions.isManageDSAit()) {
+                    controls.add(new ManageDsaITRequestControl(false));
+                }
+                searchRequest.setControls(controls.toArray(new Control[0]));
 
                 SearchResult result = null;
                 try {
@@ -542,6 +548,34 @@ public class UBIDLdapContext extends ZLdapContext {
         } catch (LDAPException e) {
             throw mapToLdapException("unable to search ldap", e);
         }
+    }
+
+    /**
+     * Perform an LDAPv3 compare operation, which may be used to determine whether a specified entry contains a given
+     * attribute value.  Compare requests include the DN of the target entry, the name of the target attribute,
+     * and the value for which to make the determination.
+     *
+     * @param  dn The DN of the entry in which the comparison is to be performed.  It must not be {@code null}.
+     * @param  attributeName   The name of the target attribute for which the comparison is to be performed.
+     *         It must not be {@code null}.
+     * @param  assertionValue  The assertion value to verify within the entry.  It must not be {@code null}.
+     */
+    @Override
+    public boolean compare(final String dn, final String attributeName, final String assertionValue)
+    throws ServiceException {
+        CompareRequest compareRequest = new CompareRequest(dn, attributeName, assertionValue);
+        CompareResult compareResult;
+        try {
+            compareResult = UBIDLdapOperation.COMPARE.execute(this, compareRequest);
+
+            // The compare operation didn't throw an exception, so we can try to
+            // determine whether the compare matched.
+            return compareResult.compareMatched();
+        } catch (LDAPException le) {
+            ZimbraLog.ldap.debug("Compare failed result code='%s' error message='%s'",
+                    le.getResultCode(), le.getDiagnosticMessage(), le);
+        }
+        return false;
     }
 
     @Override
@@ -614,6 +648,7 @@ public class UBIDLdapContext extends ZLdapContext {
         }
     }
 
+    @Override
     public void setPassword(String dn, String newPassword) throws LdapException {
         try {
             UBIDLdapOperation.SET_PASSWORD.execute(this, dn, newPassword);

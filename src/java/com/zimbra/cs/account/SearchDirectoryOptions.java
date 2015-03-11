@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -15,7 +15,7 @@
  * ***** END LICENSE BLOCK *****
  */
 /**
- * 
+ *
  */
 package com.zimbra.cs.account;
 
@@ -39,14 +39,14 @@ public class SearchDirectoryOptions {
      * honored only for Alias entries
      */
     public static final String SORT_BY_TARGET_NAME = "targetName";
-    
-    /* 
+
+    /*
      * Option to not set account defaults or secondard defaults.
      * bug 36017, 41533
-     * 
+     *
      * when large number of accounts are returned from Provisioning.searchDirectory,
-     * in the extreme case where the accounts span many different domains and the 
-     * domains are not loaded yet, loading all domains will cause slow response. 
+     * in the extreme case where the accounts span many different domains and the
+     * domains are not loaded yet, loading all domains will cause slow response.
      *
      *  Domain is needed for:
      *    - determine the cos if cos is not set on the account
@@ -57,13 +57,13 @@ public class SearchDirectoryOptions {
         NO_DEFAULTS,
         NO_SECONDARY_DEFAULTS
     };
-    
+
     public static enum SortOpt {
         NO_SORT,
         SORT_ASCENDING,
         SORT_DESCENDING
     };
-    
+
     public static enum ObjectType {
         accounts(Provisioning.SD_ACCOUNT_FLAG),
         aliases(Provisioning.SD_ALIAS_FLAG),
@@ -74,16 +74,16 @@ public class SearchDirectoryOptions {
         coses(Provisioning.SD_COS_FLAG),
         servers(Provisioning.SD_SERVER_FLAG),
         ucservices(Provisioning.SD_UC_SERVICE_FLAG),;
-        
+
         private int flag;
         private ObjectType(int flag) {
             this.flag = flag;
         }
-        
+
         public int getFlag() {
             return flag;
         }
-        
+
         public static int getAllTypesFlags() {
             int flags = 0;
             for (SearchDirectoryOptions.ObjectType type : ObjectType.values()) {
@@ -91,7 +91,7 @@ public class SearchDirectoryOptions {
             }
             return flags;
         }
-        
+
         public static int getFlags(Set<SearchDirectoryOptions.ObjectType> types) {
             int flags = 0;
             for (SearchDirectoryOptions.ObjectType type : types) {
@@ -99,8 +99,8 @@ public class SearchDirectoryOptions {
             }
             return flags;
         }
-    
-        public static Set<SearchDirectoryOptions.ObjectType> fromCSVString(String str) 
+
+        public static Set<SearchDirectoryOptions.ObjectType> fromCSVString(String str)
         throws ServiceException {
             Set<SearchDirectoryOptions.ObjectType> types = Sets.newHashSet();
             for (String type : Splitter.on(',').trimResults().split(str)) {
@@ -108,10 +108,10 @@ public class SearchDirectoryOptions {
             }
             return types;
         }
-        
+
         public static String toCSVString(Set<SearchDirectoryOptions.ObjectType> types) {
             StringBuilder sb = new StringBuilder();
-            
+
             boolean first = true;
             for (SearchDirectoryOptions.ObjectType type : types) {
                 if (!first) {
@@ -123,7 +123,7 @@ public class SearchDirectoryOptions {
             }
             return sb.toString();
         }
-        
+
         public static SearchDirectoryOptions.ObjectType fromString(String str) throws ServiceException {
             try {
                 return ObjectType.valueOf(str);
@@ -136,67 +136,68 @@ public class SearchDirectoryOptions {
     private boolean onMaster = false;
     private final boolean useConnPool = true; // TODO: retire this
     private int maxResults = ALL_RESULTS;
-    
+
     /*
      * search base
-     * 
+     *
      * if domain is set, search base is under the domain tree
      * Note: this does NOT affect the search filter not the return attrs
      */
     private Domain domain = null;
-    
+
     /*
      * search filter
-     * 
+     *
      * Either one of filter or filterId+filterStr is set.
-     * 
+     *
      * If filter is set, the filter will used as is, no objectClass will
      * be added to the search filter
-     * 
-     * If filterId+filterStr is set, objectClass filters computed from types 
+     *
+     * If filterId+filterStr is set, objectClass filters computed from types
      * will be prepended to the filterStr.
-     * 
+     *
      */
     private ZLdapFilter filter;
     private FilterId filterId;
     private String filterStr;
-    
+
     /*
-     * List of wanted object types. If null, it means no type, which is 
+     * List of wanted object types. If null, it means no type, which is
      * an error.
-     * 
+     *
      * types is for:
-     * - computing enough set of attributes to retrieve in order 
-     *   construct an object. 
+     * - computing enough set of attributes to retrieve in order
+     *   construct an object.
      * and
      * - computing objectClass filters to be prepended to filterStr
-     *   
+     *
      */
     private Set<ObjectType> types;
-    
+
     private String[] returnAttrs = ALL_ATTRS;
     private SearchDirectoryOptions.MakeObjectOpt makeObjOpt = MakeObjectOpt.ALL_DEFAULTS;
     private SearchDirectoryOptions.SortOpt sortOpt = DEFAULT_SORT_OPT;
     private String sortAttr = DEFAULT_SORT_ATTR;
     private boolean convertIDNToAscii;
     private boolean isUseControl = true;
+    private boolean isManageDSAit = false;
 
     public SearchDirectoryOptions() {
     }
-    
+
     public SearchDirectoryOptions(Domain domain) {
         setDomain(domain);
     }
-    
+
     public SearchDirectoryOptions(String[] returnAttrs) {
         setReturnAttrs(returnAttrs);
     }
-    
+
     public SearchDirectoryOptions(Domain domain, String[] returnAttrs) {
         setDomain(domain);
         setReturnAttrs(returnAttrs);
     }
-    
+
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof SearchDirectoryOptions)) {
@@ -205,21 +206,21 @@ public class SearchDirectoryOptions {
         if (o == this) {
             return true;
         }
-        
-        SearchDirectoryOptions other = (SearchDirectoryOptions) o; 
-        
+
+        SearchDirectoryOptions other = (SearchDirectoryOptions) o;
+
         if (onMaster != other.getOnMaster()) {
             return false;
         }
-        
+
         if (useConnPool != other.getUseConnPool()) {
             return false;
         }
-        
+
         if (maxResults != other.getMaxResults()) {
             return false;
         }
-        
+
         if (domain != null) {
             Domain otherDomain = other.getDomain();
             if (otherDomain == null) {
@@ -233,7 +234,7 @@ public class SearchDirectoryOptions {
                 return false;
             }
         }
-        
+
         if (filter != null) {
             ZLdapFilter otherFilter = other.getFilter();
             if (otherFilter == null) {
@@ -248,11 +249,11 @@ public class SearchDirectoryOptions {
                 return false;
             }
         }
-        
+
         if (filterId != other.getFilterId()) {
             return false;
         }
-        
+
         if (filterStr != null) {
             String otherFilterStr = other.getFilterString();
             if (otherFilterStr == null) {
@@ -267,11 +268,11 @@ public class SearchDirectoryOptions {
                 return false;
             }
         }
-        
+
         if (getTypesAsFlags() != other.getTypesAsFlags()) {
             return false;
         }
-        
+
         if (returnAttrs != null) {
             String[] otherReturnAttrs = other.getReturnAttrs();
             if (otherReturnAttrs == null) {
@@ -288,15 +289,15 @@ public class SearchDirectoryOptions {
                 return false;
             }
         }
-        
+
         if (makeObjOpt != other.getMakeObjectOpt()) {
             return false;
         }
-        
+
         if (sortOpt != other.getSortOpt()) {
             return false;
         }
-        
+
         if (sortAttr != null) {
             String otherSortAttr = other.getSortAttr();
             if (otherSortAttr == null) {
@@ -311,98 +312,98 @@ public class SearchDirectoryOptions {
                 return false;
             }
         }
-        
+
         if (convertIDNToAscii != other.getConvertIDNToAscii()) {
             return false;
         }
-        
+
         return true;
     }
-    
+
     public void setOnMaster(boolean onMaster) {
         this.onMaster = onMaster;
     }
-    
+
     public boolean getOnMaster() {
         return onMaster;
     }
-    
+
     public boolean getUseConnPool() {
         return useConnPool;
     }
-    
+
     public void setMaxResults(int maxResults) {
         this.maxResults = maxResults;
     }
-    
+
     public int getMaxResults() {
         return maxResults;
     }
-    
+
     public void setDomain(Domain domain) {
         this.domain = domain;
     }
-    
+
     public Domain getDomain() {
         return domain;
     }
-    
+
     public void setFilter(ZLdapFilter filter) {
         this.filter = filter;
     }
-    
+
     public ZLdapFilter getFilter() {
         return filter;
     }
-    
+
     public void setFilterString(FilterId filterId, String filterStr) {
         this.filterId = filterId;
         this.filterStr = filterStr;
     }
-    
+
     public FilterId getFilterId() {
         return filterId;
     }
-    
+
     public String getFilterString() {
         return filterStr;
     }
-    
+
     public void setReturnAttrs(String[] returnAttrs) {
         this.returnAttrs = returnAttrs;
     }
-    
+
     // from soap
     public void setTypes(String typesStr) throws ServiceException {
         types = SearchDirectoryOptions.ObjectType.fromCSVString(typesStr);
     }
-    
+
     public void setTypes(SearchDirectoryOptions.ObjectType... objTypes) throws ServiceException {
         setTypesInternal(objTypes);
     }
-    
+
     protected void setTypesInternal(SearchDirectoryOptions.ObjectType... objTypes) {
         types = Sets.newHashSet();
         for (SearchDirectoryOptions.ObjectType type : objTypes) {
             types.add(type);
         }
     }
-    
+
     public void addType(SearchDirectoryOptions.ObjectType objType) {
         if (types == null) {
             types = Sets.newHashSet();
         }
         types.add(objType);
     }
-    
+
     public Set<SearchDirectoryOptions.ObjectType> getTypes() {
         return types;
     }
-    
+
     public int getTypesAsFlags() {
         return getTypesAsFlags(types);
     }
-    
+
     public static int getTypesAsFlags(Set<ObjectType> types) {
         if (types == null) {
             return 0;
@@ -410,49 +411,49 @@ public class SearchDirectoryOptions {
             return SearchDirectoryOptions.ObjectType.getFlags(types);
         }
     }
-    
+
     public String[] getReturnAttrs() {
         return returnAttrs;
     }
-    
+
     public void setMakeObjectOpt(SearchDirectoryOptions.MakeObjectOpt makeObjOpt) {
         this.makeObjOpt = makeObjOpt;
     }
-    
+
     public SearchDirectoryOptions.MakeObjectOpt getMakeObjectOpt() {
         return makeObjOpt;
     }
-    
+
     public void setSortOpt(SearchDirectoryOptions.SortOpt sortOpt) {
         if (sortOpt == null) {
             sortOpt = DEFAULT_SORT_OPT;
         }
         this.sortOpt = sortOpt;
     }
-    
+
     public SearchDirectoryOptions.SortOpt getSortOpt() {
         return sortOpt;
     }
-    
+
     public void setSortAttr(String sortAttr) {
         this.sortAttr = sortAttr;
     }
-    
+
     public String getSortAttr() {
         return sortAttr;
     }
-    
+
     /*
-     * Applicable only when filterStr is used.  
+     * Applicable only when filterStr is used.
      * Ignored if filter is used.
-     * 
+     *
      * filterStr must be already RFC 2254 escaped.
      * RFC 2254 escaping will bot be done during the unicode -> conversion.
      */
     public void setConvertIDNToAscii(boolean convertIDNToAscii) {
         this.convertIDNToAscii = convertIDNToAscii;
     }
-    
+
     public boolean getConvertIDNToAscii() {
         return convertIDNToAscii;
     }
@@ -463,5 +464,13 @@ public class SearchDirectoryOptions {
 
     public void setUseControl(boolean isUseControl) {
         this.isUseControl = isUseControl;
+    }
+
+    public boolean isManageDSAit() {
+        return isManageDSAit;
+    }
+
+    public void setManageDSAit(boolean isManageDSAit) {
+        this.isManageDSAit = isManageDSAit;
     }
 }

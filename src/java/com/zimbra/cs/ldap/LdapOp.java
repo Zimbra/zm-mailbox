@@ -32,11 +32,16 @@ public enum LdapOp {
     MODIFY_ATTRS("modify attributes"),
     SEARCH("search"),
     TEST_AND_MODIFY_ATTRS("test and modify attributes"),
-    SET_PASSWORD("set password");
+    SET_PASSWORD("set password"),
+    COMPARE("compare");
 
     private String desc;
 
     private LdapOp(String desc) {
         this.desc = desc;
+    }
+
+    public String getDesc() {
+        return desc;
     }
 }
