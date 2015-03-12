@@ -876,6 +876,162 @@ public class ZAttrProvisioning {
         public boolean isBounce() { return this == bounce;}
     }
 
+    public static enum MtaPostscreenBareNewlineAction {
+        drop("drop"),
+        enforce("enforce"),
+        ignore("ignore");
+        private String mValue;
+        private MtaPostscreenBareNewlineAction(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static MtaPostscreenBareNewlineAction fromString(String s) throws ServiceException {
+            for (MtaPostscreenBareNewlineAction value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isDrop() { return this == drop;}
+        public boolean isEnforce() { return this == enforce;}
+        public boolean isIgnore() { return this == ignore;}
+    }
+
+    public static enum MtaPostscreenBareNewlineEnable {
+        yes("yes"),
+        no("no");
+        private String mValue;
+        private MtaPostscreenBareNewlineEnable(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static MtaPostscreenBareNewlineEnable fromString(String s) throws ServiceException {
+            for (MtaPostscreenBareNewlineEnable value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isYes() { return this == yes;}
+        public boolean isNo() { return this == no;}
+    }
+
+    public static enum MtaPostscreenBlacklistAction {
+        drop("drop"),
+        enforce("enforce"),
+        ignore("ignore");
+        private String mValue;
+        private MtaPostscreenBlacklistAction(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static MtaPostscreenBlacklistAction fromString(String s) throws ServiceException {
+            for (MtaPostscreenBlacklistAction value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isDrop() { return this == drop;}
+        public boolean isEnforce() { return this == enforce;}
+        public boolean isIgnore() { return this == ignore;}
+    }
+
+    public static enum MtaPostscreenDnsblAction {
+        drop("drop"),
+        enforce("enforce"),
+        ignore("ignore");
+        private String mValue;
+        private MtaPostscreenDnsblAction(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static MtaPostscreenDnsblAction fromString(String s) throws ServiceException {
+            for (MtaPostscreenDnsblAction value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isDrop() { return this == drop;}
+        public boolean isEnforce() { return this == enforce;}
+        public boolean isIgnore() { return this == ignore;}
+    }
+
+    public static enum MtaPostscreenGreetAction {
+        drop("drop"),
+        enforce("enforce"),
+        ignore("ignore");
+        private String mValue;
+        private MtaPostscreenGreetAction(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static MtaPostscreenGreetAction fromString(String s) throws ServiceException {
+            for (MtaPostscreenGreetAction value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isDrop() { return this == drop;}
+        public boolean isEnforce() { return this == enforce;}
+        public boolean isIgnore() { return this == ignore;}
+    }
+
+    public static enum MtaPostscreenNonSmtpCommandAction {
+        drop("drop"),
+        enforce("enforce"),
+        ignore("ignore");
+        private String mValue;
+        private MtaPostscreenNonSmtpCommandAction(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static MtaPostscreenNonSmtpCommandAction fromString(String s) throws ServiceException {
+            for (MtaPostscreenNonSmtpCommandAction value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isDrop() { return this == drop;}
+        public boolean isEnforce() { return this == enforce;}
+        public boolean isIgnore() { return this == ignore;}
+    }
+
+    public static enum MtaPostscreenNonSmtpCommandEnable {
+        yes("yes"),
+        no("no");
+        private String mValue;
+        private MtaPostscreenNonSmtpCommandEnable(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static MtaPostscreenNonSmtpCommandEnable fromString(String s) throws ServiceException {
+            for (MtaPostscreenNonSmtpCommandEnable value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isYes() { return this == yes;}
+        public boolean isNo() { return this == no;}
+    }
+
+    public static enum MtaPostscreenPipeliningAction {
+        drop("drop"),
+        enforce("enforce"),
+        ignore("ignore");
+        private String mValue;
+        private MtaPostscreenPipeliningAction(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static MtaPostscreenPipeliningAction fromString(String s) throws ServiceException {
+            for (MtaPostscreenPipeliningAction value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isDrop() { return this == drop;}
+        public boolean isEnforce() { return this == enforce;}
+        public boolean isIgnore() { return this == ignore;}
+    }
+
+    public static enum MtaPostscreenPipeliningEnable {
+        yes("yes"),
+        no("no");
+        private String mValue;
+        private MtaPostscreenPipeliningEnable(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static MtaPostscreenPipeliningEnable fromString(String s) throws ServiceException {
+            for (MtaPostscreenPipeliningEnable value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isYes() { return this == yes;}
+        public boolean isNo() { return this == no;}
+    }
+
     public static enum MtaPropagateUnmatchedExtensions {
         virtual("virtual"),
         generic("generic"),
@@ -9602,6 +9758,210 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1530)
     public static final String A_zimbraMtaPolicyTimeLimit = "zimbraMtaPolicyTimeLimit";
+
+    /**
+     * Value for postconf postscreen_access_list. Single valued, commas
+     * separated list.
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1917)
+    public static final String A_zimbraMtaPostscreenAccessList = "zimbraMtaPostscreenAccessList";
+
+    /**
+     * Value for postconf postscreen_bare_newline_action.
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1918)
+    public static final String A_zimbraMtaPostscreenBareNewlineAction = "zimbraMtaPostscreenBareNewlineAction";
+
+    /**
+     * Value for postconf postscreen_bare_newline_enable.
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1919)
+    public static final String A_zimbraMtaPostscreenBareNewlineEnable = "zimbraMtaPostscreenBareNewlineEnable";
+
+    /**
+     * Value for postconf postscreen_bare_newline_ttl.
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1920)
+    public static final String A_zimbraMtaPostscreenBareNewlineTTL = "zimbraMtaPostscreenBareNewlineTTL";
+
+    /**
+     * Value for postconf postscreen_blacklist_action.
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1921)
+    public static final String A_zimbraMtaPostscreenBlacklistAction = "zimbraMtaPostscreenBlacklistAction";
+
+    /**
+     * Value for postconf postscreen_cache_cleanup_interval.
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1922)
+    public static final String A_zimbraMtaPostscreenCacheCleanupInterval = "zimbraMtaPostscreenCacheCleanupInterval";
+
+    /**
+     * Value for postconf postscreen_cache_retention_time.
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1923)
+    public static final String A_zimbraMtaPostscreenCacheRetentionTime = "zimbraMtaPostscreenCacheRetentionTime";
+
+    /**
+     * Value for postconf postscreen_command_count_limit.
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1924)
+    public static final String A_zimbraMtaPostscreenCommandCountLimit = "zimbraMtaPostscreenCommandCountLimit";
+
+    /**
+     * Value for postconf postscreen_dnsbl_action.
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1925)
+    public static final String A_zimbraMtaPostscreenDnsblAction = "zimbraMtaPostscreenDnsblAction";
+
+    /**
+     * Value for postconf postscreen_dnsbl_reply_map. Single valued, comma
+     * separated list.
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1941)
+    public static final String A_zimbraMtaPostscreenDnsblReplyMap = "zimbraMtaPostscreenDnsblReplyMap";
+
+    /**
+     * Value for postconf postscreen_dnsbl_sites. Single valued, comma
+     * separated list.
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1926)
+    public static final String A_zimbraMtaPostscreenDnsblSites = "zimbraMtaPostscreenDnsblSites";
+
+    /**
+     * Value for postconf postscreen_dnsbl_threshold.
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1927)
+    public static final String A_zimbraMtaPostscreenDnsblThreshold = "zimbraMtaPostscreenDnsblThreshold";
+
+    /**
+     * Value for postconf postscreen_dnsbl_timeout.
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1928)
+    public static final String A_zimbraMtaPostscreenDnsblTimeout = "zimbraMtaPostscreenDnsblTimeout";
+
+    /**
+     * Value for postconf postscreen_dnsbl_ttl.
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1929)
+    public static final String A_zimbraMtaPostscreenDnsblTTL = "zimbraMtaPostscreenDnsblTTL";
+
+    /**
+     * Value for postconf postscreen_dnsbl_whitelist_threshold.
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1930)
+    public static final String A_zimbraMtaPostscreenDnsblWhitelistThreshold = "zimbraMtaPostscreenDnsblWhitelistThreshold";
+
+    /**
+     * Value for postconf postscreen_greet_action.
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1931)
+    public static final String A_zimbraMtaPostscreenGreetAction = "zimbraMtaPostscreenGreetAction";
+
+    /**
+     * Value for postconf postscreen_greet_ttl.
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1932)
+    public static final String A_zimbraMtaPostscreenGreetTTL = "zimbraMtaPostscreenGreetTTL";
+
+    /**
+     * Value for postconf postscreen_non_smtp_command_action.
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1933)
+    public static final String A_zimbraMtaPostscreenNonSmtpCommandAction = "zimbraMtaPostscreenNonSmtpCommandAction";
+
+    /**
+     * Value for postconf postscreen_non_smtp_command_enable.
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1934)
+    public static final String A_zimbraMtaPostscreenNonSmtpCommandEnable = "zimbraMtaPostscreenNonSmtpCommandEnable";
+
+    /**
+     * Value for postconf postscreen_non_smtp_command_ttl.
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1935)
+    public static final String A_zimbraMtaPostscreenNonSmtpCommandTTL = "zimbraMtaPostscreenNonSmtpCommandTTL";
+
+    /**
+     * Value for postconf postscreen_pipelining_action.
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1936)
+    public static final String A_zimbraMtaPostscreenPipeliningAction = "zimbraMtaPostscreenPipeliningAction";
+
+    /**
+     * Value for postconf postscreen_pipelining_enable.
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1937)
+    public static final String A_zimbraMtaPostscreenPipeliningEnable = "zimbraMtaPostscreenPipeliningEnable";
+
+    /**
+     * Value for postconf postscreen_pipelining_ttl.
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1938)
+    public static final String A_zimbraMtaPostscreenPipeliningTTL = "zimbraMtaPostscreenPipeliningTTL";
+
+    /**
+     * Value for postconf postscreen_watchdog_timeout.
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1939)
+    public static final String A_zimbraMtaPostscreenWatchdogTimeout = "zimbraMtaPostscreenWatchdogTimeout";
+
+    /**
+     * Value for postconf postscreen_whitelist_interfaces. Single valued,
+     * comma separated list.
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1940)
+    public static final String A_zimbraMtaPostscreenWhitelistInterfaces = "zimbraMtaPostscreenWhitelistInterfaces";
 
     /**
      * Value for postconf propagate_unmatched_extensions
