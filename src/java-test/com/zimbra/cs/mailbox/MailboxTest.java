@@ -41,11 +41,9 @@ import com.zimbra.common.account.ZAttrProvisioning.MailThreadingAlgorithm;
 import com.zimbra.common.mime.InternetAddress;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.ArrayUtil;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.index.BrowseTerm;
 import com.zimbra.cs.index.IndexingQueueAdapter;
 import com.zimbra.cs.index.IndexingService;
 import com.zimbra.cs.index.SearchParams;
@@ -57,7 +55,6 @@ import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.PendingModifications.ModificationKey;
 import com.zimbra.cs.store.MockStoreManager;
 import com.zimbra.cs.store.StoreManager;
-import com.zimbra.cs.util.ProvisioningUtil;
 import com.zimbra.cs.util.Zimbra;
 
 /**
@@ -83,170 +80,6 @@ public final class MailboxTest {
 
     public static final DeliveryOptions STANDARD_DELIVERY_OPTIONS = new DeliveryOptions()
             .setFolderId(Mailbox.ID_FOLDER_INBOX);
-
-    @Test
-    public void browse() throws Exception {
-        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(
-                MockProvisioning.DEFAULT_ACCOUNT_ID);
-
-        DeliveryOptions dopt = new DeliveryOptions()
-                .setFolderId(Mailbox.ID_FOLDER_INBOX);
-        mbox.addMessage(null,
-                new ParsedMessage("From: test1-1@sub1.zimbra.com".getBytes(),
-                        false), dopt, null);
-        mbox.addMessage(null,
-                new ParsedMessage("From: test1-2@sub1.zimbra.com".getBytes(),
-                        false), dopt, null);
-        mbox.addMessage(null,
-                new ParsedMessage("From: test1-3@sub1.zimbra.com".getBytes(),
-                        false), dopt, null);
-        mbox.addMessage(null,
-                new ParsedMessage("From: test1-4@sub1.zimbra.com".getBytes(),
-                        false), dopt, null);
-        mbox.addMessage(null,
-                new ParsedMessage("From: test2-1@sub2.zimbra.com".getBytes(),
-                        false), dopt, null);
-        mbox.addMessage(null,
-                new ParsedMessage("From: test2-2@sub2.zimbra.com".getBytes(),
-                        false), dopt, null);
-        mbox.addMessage(null,
-                new ParsedMessage("From: test2-3@sub2.zimbra.com".getBytes(),
-                        false), dopt, null);
-        mbox.addMessage(null,
-                new ParsedMessage("From: test3-1@sub3.zimbra.com".getBytes(),
-                        false), dopt, null);
-        mbox.addMessage(null,
-                new ParsedMessage("From: test3-2@sub3.zimbra.com".getBytes(),
-                        false), dopt, null);
-        mbox.addMessage(null,
-                new ParsedMessage("From: test4-1@sub4.zimbra.com".getBytes(),
-                        false), dopt, null);
-        List<BrowseTerm> terms = mbox.browse(null, Mailbox.BrowseBy.domains,
-                null, 100);
-
-        if(terms.size() != 4) {
-            //we've got some garbage in indexed terms, lets print it out for investigation
-           for(BrowseTerm term : terms) {
-               ZimbraLog.test.error(String.format("found term: %s", term.getText()));
-           }
-        }
-
-        Assert.assertEquals("Number of expected terms", 4, terms.size());
-        Assert.assertEquals("sub1.zimbra.com", terms.get(0).getText());
-        Assert.assertEquals("sub2.zimbra.com", terms.get(1).getText());
-        Assert.assertEquals("sub3.zimbra.com", terms.get(2).getText());
-        Assert.assertEquals("sub4.zimbra.com", terms.get(3).getText());
-        Assert.assertEquals(8, terms.get(0).getFreq());
-        Assert.assertEquals(6, terms.get(1).getFreq());
-        Assert.assertEquals(4, terms.get(2).getFreq());
-        Assert.assertEquals(2, terms.get(3).getFreq());
-    }
-
-    @Test
-    public void browseWithSmallLimit() throws Exception {
-        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(
-                MockProvisioning.DEFAULT_ACCOUNT_ID);
-        DeliveryOptions dopt = new DeliveryOptions()
-                .setFolderId(Mailbox.ID_FOLDER_INBOX);
-        mbox.addMessage(null,
-                new ParsedMessage("From: test1-1@sub1.zimbra.com".getBytes(),
-                        false), dopt, null);
-        mbox.addMessage(null,
-                new ParsedMessage("From: test1-2@sub1.zimbra.com".getBytes(),
-                        false), dopt, null);
-        mbox.addMessage(null,
-                new ParsedMessage("From: test1-3@sub1.zimbra.com".getBytes(),
-                        false), dopt, null);
-        mbox.addMessage(null,
-                new ParsedMessage("From: test1-4@sub1.zimbra.com".getBytes(),
-                        false), dopt, null);
-        mbox.addMessage(null,
-                new ParsedMessage("From: test2-1@sub2.zimbra.com".getBytes(),
-                        false), dopt, null);
-        mbox.addMessage(null,
-                new ParsedMessage("From: test2-2@sub2.zimbra.com".getBytes(),
-                        false), dopt, null);
-        mbox.addMessage(null,
-                new ParsedMessage("From: test2-3@sub2.zimbra.com".getBytes(),
-                        false), dopt, null);
-        mbox.addMessage(null,
-                new ParsedMessage("From: test3-1@sub3.zimbra.com".getBytes(),
-                        false), dopt, null);
-        mbox.addMessage(null,
-                new ParsedMessage("From: test3-2@sub3.zimbra.com".getBytes(),
-                        false), dopt, null);
-        mbox.addMessage(null,
-                new ParsedMessage("From: test4-1@sub4.zimbra.com".getBytes(),
-                        false), dopt, null);
-        int defaultLimit = ProvisioningUtil.getServerAttribute(Provisioning.A_zimbraIndexTermsCacheSize, 1024);
-        Provisioning.getInstance().getLocalServer().setIndexTermsCacheSize(5);
-        List<BrowseTerm> terms = mbox.browse(null, Mailbox.BrowseBy.domains,
-                null, 100);
-        Provisioning.getInstance().getLocalServer().setIndexTermsCacheSize(defaultLimit);
-        if(terms.size() != 4) {
-            //we've got some garbage in indexed terms, lets print it out for investigation
-           for(BrowseTerm term : terms) {
-               ZimbraLog.test.error(String.format("found term: %s", term.getText()));
-           }
-        }
-        Assert.assertEquals("Number of expected terms", 4, terms.size());
-        Assert.assertEquals("sub1.zimbra.com", terms.get(0).getText());
-        Assert.assertEquals("sub2.zimbra.com", terms.get(1).getText());
-        Assert.assertEquals("sub3.zimbra.com", terms.get(2).getText());
-        Assert.assertEquals("sub4.zimbra.com", terms.get(3).getText());
-        Assert.assertEquals(8, terms.get(0).getFreq());
-        Assert.assertEquals(6, terms.get(1).getFreq());
-        Assert.assertEquals(4, terms.get(2).getFreq());
-        Assert.assertEquals(2, terms.get(3).getFreq());
-    }
-
-    @Test
-    public void browseOverLimit() throws Exception {
-        Provisioning.getInstance().getLocalServer().setIndexTermsCacheSize(256);
-        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(
-                MockProvisioning.DEFAULT_ACCOUNT_ID);
-        int indexTermsCacheSize = Provisioning.getInstance().getLocalServer().getIndexTermsCacheSize();
-		int numDomains = indexTermsCacheSize
-                + indexTermsCacheSize / 3;
-        DeliveryOptions dopt = new DeliveryOptions()
-                .setFolderId(Mailbox.ID_FOLDER_INBOX);
-        for (int i = 0; i < numDomains; i++) {
-            mbox.addMessage(
-                    null,
-                    new ParsedMessage(String.format(
-                            "From: test1-1@sub%d.zimbra.com", i).getBytes(),
-                            false), dopt, null);
-            if (i % 2 == 0) {
-                mbox.addMessage(
-                        null,
-                        new ParsedMessage(
-                                String.format("From: test1-2@sub%d.zimbra.com",
-                                        i).getBytes(), false), dopt, null);
-            }
-            if (i % 3 == 0) {
-                mbox.addMessage(
-                        null,
-                        new ParsedMessage(
-                                String.format("From: test1-3@sub%d.zimbra.com",
-                                        i).getBytes(), false), dopt, null);
-            }
-        }
-        List<BrowseTerm> terms = mbox.browse(null, Mailbox.BrowseBy.domains,
-                null, 100);
-        Assert.assertEquals("Number of expected terms", 100, terms.size());
-
-        terms = mbox.browse(null, Mailbox.BrowseBy.domains, null,
-                numDomains * 2);
-
-        if(terms.size() != numDomains) {
-            //we've got some garbage in indexed domains, lets print it out for investigation
-           for(BrowseTerm term : terms) {
-               ZimbraLog.test.error(String.format("found term: %s", term.getText()));
-           }
-        }
-        Assert.assertEquals("Number of expected terms", numDomains,
-                terms.size());
-    }
 
     @Test
     public void threadDraft() throws Exception {
@@ -523,7 +356,7 @@ public final class MailboxTest {
         mbox.recover(null, new int[] { msgId }, MailItem.Type.MESSAGE,
                 Mailbox.ID_FOLDER_INBOX);
     }
-    
+
     @Test
     public void moveOutOfSpam() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
@@ -546,7 +379,7 @@ public final class MailboxTest {
         Assert.assertTrue(result.hasNext());
         Assert.assertEquals(msg.getId(), result.getNext().getItemId());
     }
-    
+
     @Test
     public void deleteMailbox() throws Exception {
         MockStoreManager sm = (MockStoreManager) StoreManager.getInstance();
@@ -846,7 +679,7 @@ public final class MailboxTest {
                 MockProvisioning.DEFAULT_ACCOUNT_ID);
         mbox.getVisibleFolders(new OperationContext(mbox));
     }
-    
+
     @Test
     public void testUpdateVersion() throws Exception {
         //don't use default account to avoid messing up other tests
@@ -854,14 +687,14 @@ public final class MailboxTest {
         attrs.put(Provisioning.A_zimbraId, UUID.randomUUID().toString());
         Account acc = Provisioning.getInstance().createAccount("upgradetest@zimbra.com", "secret", attrs);
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acc);
-        
+
         short currentMajor = MailboxVersion.CURRENT.getMajor();
         short currentMinor = MailboxVersion.CURRENT.getMinor();
         short oldMajor = (short)(currentMajor-1);
         short oldMinor = (short)1;
         short newMajor = (short)(currentMajor+1);
         short newMinor = (short)(currentMinor+1);
-        
+
         //check that mailbox has latest version upon creation
         assertEquals("wrong minor version", currentMinor,mbox.getVersion().getMinor());
         assertEquals("wrong minor version", currentMajor,mbox.getVersion().getMajor());
@@ -872,7 +705,7 @@ public final class MailboxTest {
         MailboxVersion updatedVersion = mbox.getVersion();
         assertEquals("wrong major version after downgrading version",oldMajor,updatedVersion.getMajor());
         assertEquals("wrong minor version after downgrading version",oldMinor,updatedVersion.getMinor());
-        
+
         //test upgrading version
         MailboxVersion newerVersion = new MailboxVersion(newMajor,newMinor);
         mbox.updateVersion(newerVersion);
@@ -891,13 +724,13 @@ public final class MailboxTest {
 
         //indexing service should not be running at the beginning of this test
         Zimbra.getAppContext().getBean(IndexingService.class).shutDown();
-        
+
         MailboxVersion olderVersion = new MailboxVersion((short)2,(short)7);
         mbox.updateVersion(olderVersion);
         MailboxVersion updatedVersion = mbox.getVersion();
         assertEquals("wrong major version after downgrading version",2,updatedVersion.getMajor());
         assertEquals("wrong minor version after downgrading version",7,updatedVersion.getMinor());
-        
+
         DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX);
         mbox.addMessage(null, new ParsedMessage(
                 "From: greg@zimbra.com\r\nTo: test@zimbra.com\r\nSubject: Shall I compare thee to a summer's day".getBytes(), false), dopt, null);
@@ -907,10 +740,10 @@ public final class MailboxTest {
         IndexingQueueAdapter queueAdapter = Zimbra.getAppContext().getBean(IndexingQueueAdapter.class);
         assertEquals("at this point total count should be 0", 0, queueAdapter.getTotalMailboxTaskCount(acc.getId()));
         assertEquals("at this point succeeded count should be 0", 0, queueAdapter.getSucceededMailboxTaskCount(acc.getId()));
-        
+
         mbox.index.deleteIndex();
         mbox.migrate();
-        
+
         assertEquals("at this point total count should be 2", 2, queueAdapter.getTotalMailboxTaskCount(acc.getId()));
         assertEquals("at this point succeeded count should be 0", 0, queueAdapter.getSucceededMailboxTaskCount(acc.getId()));
         //start indexing service
@@ -919,7 +752,7 @@ public final class MailboxTest {
         MailboxTestUtil.waitForIndexing(mbox);
         assertEquals("at this point total count should be 2", 2, queueAdapter.getTotalMailboxTaskCount(acc.getId()));
         assertEquals("at this point succeeded count should be 2", 2, queueAdapter.getSucceededMailboxTaskCount(acc.getId()));
-        
+
         assertEquals("wrong major version after downgrading version",MailboxVersion.CURRENT.getMajor(),mbox.getVersion().getMajor());
         assertEquals("wrong minor version after downgrading version",MailboxVersion.CURRENT.getMinor(),mbox.getVersion().getMinor());
     }
