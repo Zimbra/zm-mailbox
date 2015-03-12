@@ -25560,6 +25560,88 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Database URL for obtaining connection from mailstore using JDBC
+     * connectors. Example : jdbc:mysql://[ip:port]/ OR
+     * jdbc:mysql://[ip1:port],[ip2:port],[ip3:port]/
+     *
+     * @return zimbraMailboxDbConnectionUrl, or null if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1942)
+    public String getMailboxDbConnectionUrl() {
+        return getAttr(Provisioning.A_zimbraMailboxDbConnectionUrl, null);
+    }
+
+    /**
+     * Database URL for obtaining connection from mailstore using JDBC
+     * connectors. Example : jdbc:mysql://[ip:port]/ OR
+     * jdbc:mysql://[ip1:port],[ip2:port],[ip3:port]/
+     *
+     * @param zimbraMailboxDbConnectionUrl new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1942)
+    public void setMailboxDbConnectionUrl(String zimbraMailboxDbConnectionUrl) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxDbConnectionUrl, zimbraMailboxDbConnectionUrl);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Database URL for obtaining connection from mailstore using JDBC
+     * connectors. Example : jdbc:mysql://[ip:port]/ OR
+     * jdbc:mysql://[ip1:port],[ip2:port],[ip3:port]/
+     *
+     * @param zimbraMailboxDbConnectionUrl new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1942)
+    public Map<String,Object> setMailboxDbConnectionUrl(String zimbraMailboxDbConnectionUrl, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxDbConnectionUrl, zimbraMailboxDbConnectionUrl);
+        return attrs;
+    }
+
+    /**
+     * Database URL for obtaining connection from mailstore using JDBC
+     * connectors. Example : jdbc:mysql://[ip:port]/ OR
+     * jdbc:mysql://[ip1:port],[ip2:port],[ip3:port]/
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1942)
+    public void unsetMailboxDbConnectionUrl() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxDbConnectionUrl, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Database URL for obtaining connection from mailstore using JDBC
+     * connectors. Example : jdbc:mysql://[ip:port]/ OR
+     * jdbc:mysql://[ip1:port],[ip2:port],[ip3:port]/
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1942)
+    public Map<String,Object> unsetMailboxDbConnectionUrl(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxDbConnectionUrl, "");
+        return attrs;
+    }
+
+    /**
      * Sleep time in milliseconds to give other threads a chance to use the
      * mailbox between deletion batches.. Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -

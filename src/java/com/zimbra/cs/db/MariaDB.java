@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -16,7 +16,12 @@
  */
 package com.zimbra.cs.db;
 
+import com.zimbra.common.account.ZAttrProvisioning;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.util.StringUtil;
+import com.zimbra.cs.util.ProvisioningUtil;
+
+
 
 
 public class MariaDB extends MySQL {
@@ -35,13 +40,17 @@ public class MariaDB extends MySQL {
 
         @Override
         protected String getRootUrl() {
-            String bindAddress = LC.mysql_bind_address.value();
-            if (bindAddress.indexOf(':') > -1) {
-                bindAddress = "[" + bindAddress + "]";
+            String connectionUrl = ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraMailboxDbConnectionUrl,
+                null);
+            if (StringUtil.isNullOrEmpty(connectionUrl)) {
+                String bindAddress = LC.mysql_bind_address.value();
+                if (bindAddress.indexOf(':') > -1) {
+                    bindAddress = "[" + bindAddress + "]";
+                }
+                return "jdbc:mysql://" + bindAddress + ":" + LC.mysql_port.value() + "/";
+            } else {
+              return connectionUrl;
             }
-
-            return "jdbc:mysql://" + bindAddress + ":" + LC.mysql_port.value() + "/";
         }
-
     }
 }

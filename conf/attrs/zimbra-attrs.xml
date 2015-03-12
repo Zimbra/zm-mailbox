@@ -9771,4 +9771,10 @@ TODO: delete them permanently from here
   <desc>Value for postconf postscreen_dnsbl_reply_map. Single valued, comma separated list.</desc>
 </attr>
 
+<attr id="1942" name="zimbraMailboxDbConnectionUrl" type="string" cardinality="single" optionalIn="alwaysOnCluster,server" flags="serverPreferAlwaysOn" since="9.0.0">
+  <desc>Database URL for obtaining connection from mailstore using JDBC connectors. Example : jdbc:mysql://[ip:port]/
+  OR jdbc:mysql://[ip1:port],[ip2:port],[ip3:port]/
+  </desc>
+</attr>
+
 </attrs>
