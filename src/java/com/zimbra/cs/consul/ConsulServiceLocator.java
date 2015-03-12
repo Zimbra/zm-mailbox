@@ -58,8 +58,8 @@ public class ConsulServiceLocator implements ServiceLocator {
 
     /** Returns matching service instances. */
     @Override
-    public List<Entry> find(String serviceID, boolean healthyOnly) throws IOException, ServiceException {
-        List<ServiceHealthResponse> list = consulClient.health(serviceID, healthyOnly);
+    public List<Entry> find(String serviceName, boolean healthyOnly) throws IOException, ServiceException {
+        List<ServiceHealthResponse> list = consulClient.health(serviceName, healthyOnly);
 
         List<Entry> result = new ArrayList<>();
         for (ServiceHealthResponse health: list) {
@@ -70,7 +70,7 @@ public class ConsulServiceLocator implements ServiceLocator {
 
     /** Determines whether a given service instance is healthy. */
     @Override
-    public boolean isHealthy(String serviceID, String hostName) throws IOException, ServiceException {
+    public boolean isHealthy(String serviceName, String hostName) throws IOException, ServiceException {
 
 //        The following code would perform better, but isn't currently convenient to use due to
 //        ZCS internals lowercasing hostnames, and Consul being node name case-sensitive.
@@ -83,7 +83,7 @@ public class ConsulServiceLocator implements ServiceLocator {
 //            return "passing".equals(health.status);
 //        }
 
-        List<ServiceHealthResponse> list = consulClient.health(serviceID, false);
+        List<ServiceHealthResponse> list = consulClient.health(serviceName, false);
         for (ServiceHealthResponse health: list) {
             if (!hostName.equalsIgnoreCase(health.node.name)) {
                 continue;

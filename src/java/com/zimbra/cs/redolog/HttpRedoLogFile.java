@@ -50,7 +50,7 @@ public class HttpRedoLogFile implements RedoLogFile {
     //callers be sure to release the returned connection
     private GetMethod downloadFile() throws IOException {
         HttpClient client = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
-        GetMethod get = new GetMethod(HttpRedoLogManager.URL);
+        GetMethod get = new GetMethod(HttpRedoLogManager.getUrl());
         get.setQueryString("fmt=file&name="+name+"&seq="+seq);
         int code = client.executeMethod(get);
         if (code != HttpServletResponse.SC_OK) {

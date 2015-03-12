@@ -34,11 +34,18 @@ import org.apache.http.HttpStatus;
 import com.ibm.icu.util.StringTokenizer;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Pair;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraHttpConnectionManager;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.consul.CatalogRegistration;
+import com.zimbra.cs.consul.ConsulClient;
+import com.zimbra.cs.consul.LeaderResponse;
+import com.zimbra.cs.consul.ServiceHealthResponse;
+import com.zimbra.cs.consul.SessionResponse;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.redolog.logger.HttpLogWriter;
 import com.zimbra.cs.redolog.logger.LogWriter;
+import com.zimbra.cs.util.Zimbra;
 
 /**
  * Redolog manager which writes operations to http redolog service
@@ -61,7 +68,7 @@ public class HttpRedoLogManager extends AbstractRedoLogManager {
 
     @Override
     public LogWriter createLogWriter(long fsyncIntervalMS) {
-        return new HttpLogWriter(this, URL);
+        return new HttpLogWriter(this);
     }
 
     @Override
@@ -75,7 +82,7 @@ public class HttpRedoLogManager extends AbstractRedoLogManager {
     }
 
     private HttpRedoLogFile[] getLogRefs(String query) throws IOException {
-        GetMethod get = new GetMethod(URL);
+        GetMethod get = new GetMethod(getUrl());
         try {
             get.setQueryString(query);
             HttpClient client = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
@@ -135,8 +142,54 @@ public class HttpRedoLogManager extends AbstractRedoLogManager {
         return false;
     }
 
-    //TODO: config
-    static String URL = "http://localhost:8080/redolog";
+    public static String getUrl() throws IOException {
+        String url = null;
+        int attempts = 0;
+        int maxAttempts = 3;
+        do {
+            try {
+                CatalogRegistration.Service service = new CatalogRegistration.Service("zimbra-redolog");
+                ConsulClient consulClient = Zimbra.getAppContext().getBean(ConsulClient.class);
+                LeaderResponse leader = consulClient.findLeader(service);
+                if (leader == null || leader.sessionId == null) {
+                    ZimbraLog.redolog.warn("no redolog leader currently, try again later");
+                    //TODO: graceful handling; leader can come and go at times
+                    throw new IOException("no redolog leader");
+                } else {
+                    SessionResponse session = consulClient.getSessionInfo(leader.sessionId);
+                    if (session == null || session.nodeName == null) {
+                        ZimbraLog.redolog.warn("unable to find node info for session %s", leader.sessionId);
+                        //TODO: graceful handling
+                        throw new IOException("no redolog leader session info");
+                    } else {
+                        //TODO: currently sticking the serviceId in session name for convenience; bit awkward
+                        String serviceId = session.name;
+                        List<ServiceHealthResponse> healthyServices = consulClient.health(service.name, true);
+                        if (healthyServices == null || healthyServices.size() == 0) {
+                            throw new IOException("no healthy redolog service");
+                        } else {
+                            for (ServiceHealthResponse healthyService : healthyServices) {
+                                if (StringUtil.equalIgnoreCase(serviceId, healthyService.service.id)) {
+                                    String scheme = healthyService.service.tags.contains("ssl") ? "https" : "http";
+                                    url = scheme + "://" + healthyService.node.address + ":" + healthyService.service.port + "/redolog";
+                                    break;
+                                }
+                            }
+                            if (url == null) {
+                                ZimbraLog.redolog.warn("found leader, but no healthy service");
+                            }
+                        }
+                    }
+                }
+            } catch (IOException e) {
+                ZimbraLog.redolog.error("exception finding valid redolog service url", e);
+            }
+        } while (url == null && ++attempts < maxAttempts);
+        if (url == null) {
+            throw new IOException("unable to find redolog leader, giving up");
+        }
+        return url;
+    }
 
     private long seqNum = -1;
     private long lastSeqUpdateTime = -1;
@@ -151,7 +204,7 @@ public class HttpRedoLogManager extends AbstractRedoLogManager {
         //TODO: validate assumptions further
         if (seqNum < 0 || (System.currentTimeMillis() - lastSeqUpdateTime > SEQ_UPDATE_INTERVAL)) {
             HttpClient client = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
-            GetMethod get = new GetMethod(URL);
+            GetMethod get = new GetMethod(getUrl());
             get.setQueryString("fmt=seq");
             int code = client.executeMethod(get);
             if (code != HttpStatus.SC_OK) {
@@ -165,7 +218,7 @@ public class HttpRedoLogManager extends AbstractRedoLogManager {
     @Override
     public void deleteArchivedLogFiles(long oldestTimestamp) throws IOException {
         HttpClient client = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
-        PostMethod post = new PostMethod(URL);
+        PostMethod post = new PostMethod(getUrl());
         try {
             post.setParameter("cmd", "delete");
             post.setParameter("cutoff", System.currentTimeMillis()+"");

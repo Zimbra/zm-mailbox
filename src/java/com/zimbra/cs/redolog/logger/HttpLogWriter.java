@@ -27,6 +27,7 @@ import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.http.HttpStatus;
 
 import com.zimbra.common.util.ZimbraHttpConnectionManager;
+import com.zimbra.cs.redolog.HttpRedoLogManager;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogManager;
 import com.zimbra.cs.redolog.TransactionId;
@@ -34,11 +35,8 @@ import com.zimbra.cs.redolog.op.RedoableOp;
 
 public class HttpLogWriter extends AbstractLogWriter implements LogWriter {
 
-    private String url;
-
-    public HttpLogWriter(RedoLogManager redoLogMgr, String url) {
+    public HttpLogWriter(RedoLogManager redoLogMgr) {
         super(redoLogMgr, new CommitNotifyQueue(100));
-        this.url = url;
     }
 
     @Override
@@ -59,7 +57,7 @@ public class HttpLogWriter extends AbstractLogWriter implements LogWriter {
     @Override
     public void log(final RedoableOp op, final InputStream data, boolean synchronous) throws IOException {
         HttpClient client = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
-        PostMethod post = new PostMethod(url);
+        PostMethod post = new PostMethod(HttpRedoLogManager.getUrl());
         try {
             post.setRequestEntity(new InputStreamRequestEntity(data));
             int code = client.executeMethod(post);
