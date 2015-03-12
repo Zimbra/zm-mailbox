@@ -34643,13 +34643,13 @@ public abstract class ZAttrConfig extends Entry {
      * Value for postconf postscreen_dnsbl_reply_map. Single valued, comma
      * separated list.
      *
-     * @return zimbraMtaPostscreenDnsblReplyMap, or "" if unset
+     * @return zimbraMtaPostscreenDnsblReplyMap, or null if unset
      *
      * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=1941)
     public String getMtaPostscreenDnsblReplyMap() {
-        return getAttr(Provisioning.A_zimbraMtaPostscreenDnsblReplyMap, "");
+        return getAttr(Provisioning.A_zimbraMtaPostscreenDnsblReplyMap, null);
     }
 
     /**
