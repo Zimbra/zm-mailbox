@@ -42,6 +42,7 @@ import com.zimbra.qless.JSON;
  */
 public final class ConsulClientTest {
     ConsulClient consulClient = new ConsulClient();
+    boolean setup = false;
 
     @Before
     public void setUp() throws Exception {
@@ -50,12 +51,16 @@ public final class ConsulClientTest {
         } catch(IOException e) {
             Assume.assumeNoException(e);
         }
+        setup = true;
     }
 
     private String TEST_SERVICE_PREFIX = "zimbra-consulclienttest-";
 
     @After
     public void tearDown() throws Exception {
+        if (!setup) {
+            return;
+        }
         ServiceListResponse list = consulClient.listAgentServices();
         if (list != null && list.getServicesById() != null) {
             for (String key : list.getServicesById().keySet()) {
