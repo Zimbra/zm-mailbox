@@ -47866,13 +47866,13 @@ public abstract class ZAttrConfig extends Entry {
      * Value for postconf postscreen_dnsbl_sites. Single valued, comma
      * separated list.
      *
-     * @return zimbraMtaPostscreenDnsblSites, or "" if unset
+     * @return zimbraMtaPostscreenDnsblSites, or null if unset
      *
      * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=1926)
     public String getMtaPostscreenDnsblSites() {
-        return getAttr(Provisioning.A_zimbraMtaPostscreenDnsblSites, "");
+        return getAttr(Provisioning.A_zimbraMtaPostscreenDnsblSites, null);
     }
 
     /**
