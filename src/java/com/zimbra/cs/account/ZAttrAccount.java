@@ -23702,6 +23702,98 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * An account attribute which indicates whether an account&#039;s
+     * affinity to a server can be changed or not. If set to true, an account
+     * cannot be moved from its current server association. This is usually
+     * set to to true, when Admin operations associate an account with a
+     * server. Account rebalancing scripts do not set this attribute to true.
+     *
+     * @return zimbraMailHostToAccountBinding, or false if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1943)
+    public boolean isMailHostToAccountBinding() {
+        return getBooleanAttr(Provisioning.A_zimbraMailHostToAccountBinding, false);
+    }
+
+    /**
+     * An account attribute which indicates whether an account&#039;s
+     * affinity to a server can be changed or not. If set to true, an account
+     * cannot be moved from its current server association. This is usually
+     * set to to true, when Admin operations associate an account with a
+     * server. Account rebalancing scripts do not set this attribute to true.
+     *
+     * @param zimbraMailHostToAccountBinding new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1943)
+    public void setMailHostToAccountBinding(boolean zimbraMailHostToAccountBinding) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailHostToAccountBinding, zimbraMailHostToAccountBinding ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * An account attribute which indicates whether an account&#039;s
+     * affinity to a server can be changed or not. If set to true, an account
+     * cannot be moved from its current server association. This is usually
+     * set to to true, when Admin operations associate an account with a
+     * server. Account rebalancing scripts do not set this attribute to true.
+     *
+     * @param zimbraMailHostToAccountBinding new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1943)
+    public Map<String,Object> setMailHostToAccountBinding(boolean zimbraMailHostToAccountBinding, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailHostToAccountBinding, zimbraMailHostToAccountBinding ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * An account attribute which indicates whether an account&#039;s
+     * affinity to a server can be changed or not. If set to true, an account
+     * cannot be moved from its current server association. This is usually
+     * set to to true, when Admin operations associate an account with a
+     * server. Account rebalancing scripts do not set this attribute to true.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1943)
+    public void unsetMailHostToAccountBinding() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailHostToAccountBinding, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * An account attribute which indicates whether an account&#039;s
+     * affinity to a server can be changed or not. If set to true, an account
+     * cannot be moved from its current server association. This is usually
+     * set to to true, when Admin operations associate an account with a
+     * server. Account rebalancing scripts do not set this attribute to true.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1943)
+    public Map<String,Object> unsetMailHostToAccountBinding(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailHostToAccountBinding, "");
+        return attrs;
+    }
+
+    /**
      * idle timeout. Must be in valid duration format: {digits}{time-unit}.
      * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
      * seconds, d - days, ms - milliseconds. If time unit is not specified,

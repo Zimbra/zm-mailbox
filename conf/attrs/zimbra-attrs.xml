@@ -9775,4 +9775,10 @@ TODO: delete them permanently from here
   </desc>
 </attr>
 
+<attr id="1943" name="zimbraMailHostToAccountBinding" type="boolean" cardinality="single" optionalIn="account,cos" since="9.0.0">
+  <desc>An account attribute which indicates whether an account's affinity to a server can be changed or not.
+  If set to true, an account cannot be moved from its current server association. This is usually set to to true, when Admin operations associate an account with a server.
+  Account rebalancing scripts do not set this attribute to true.</desc>
+</attr>
+
 </attrs>
