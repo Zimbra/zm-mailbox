@@ -9767,7 +9767,6 @@ TODO: delete them permanently from here
 </attr>
 
 <attr id="1941" name="zimbraMtaPostscreenDnsblReplyMap" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.7.0,9.0.0">
-  <globalConfigValue></globalConfigValue>
   <desc>Value for postconf postscreen_dnsbl_reply_map. Single valued, comma separated list.</desc>
 </attr>
 
