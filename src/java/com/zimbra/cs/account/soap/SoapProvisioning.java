@@ -62,7 +62,6 @@ import com.zimbra.common.soap.SoapTransport.DebugListener;
 import com.zimbra.common.util.AccountLogger;
 import com.zimbra.common.util.Log.Level;
 import com.zimbra.common.util.StringUtil;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.zclient.ZClientException;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
@@ -95,8 +94,13 @@ import com.zimbra.cs.account.accesscontrol.RightCommand;
 import com.zimbra.cs.account.accesscontrol.RightModifier;
 import com.zimbra.cs.account.accesscontrol.ViaGrantImpl;
 import com.zimbra.cs.account.auth.AuthContext;
+import com.zimbra.cs.consul.ConsulClient;
+import com.zimbra.cs.consul.ConsulServiceLocator;
+import com.zimbra.cs.consul.ServiceLocator;
+import com.zimbra.cs.consul.ZimbraServiceNames;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.mime.MimeTypeInfo;
+import com.zimbra.cs.util.Zimbra;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.account.message.ChangePasswordRequest;
 import com.zimbra.soap.account.message.CreateIdentityRequest;
@@ -232,22 +236,29 @@ public class SoapProvisioning extends Provisioning {
     private DebugListener mDebugListener;
     private HttpDebugListener mHttpDebugListener;
     private final boolean mNeedSession;
-
-    public SoapProvisioning() {
-        mNeedSession = false;
-    }
+    private ServiceLocator serviceLocator;
 
     public SoapProvisioning(boolean needSession) {
         mNeedSession = needSession;
+
+        if (Zimbra.getAppContext() != null) {
+            serviceLocator = Zimbra.getAppContext().getBean(ServiceLocator.class);
+        } else {
+            serviceLocator = new ConsulServiceLocator(new ConsulClient());
+        }
+    }
+
+    public SoapProvisioning() {
+        this(false);
     }
 
     public SoapProvisioning(Options options) throws ServiceException {
+        this(options.getNeedSession());
         mTimeout = options.getTimeout();
         mRetryCount = options.getRetryCount();
         mDebugListener = options.getDebugListener();
         mAuthToken = options.getAuthToken();
-        mNeedSession = options.getNeedSession();
-        if (options.getUri() == null) options.setUri(getLocalConfigURI());
+        if (options.getUri() == null) options.setUri(lookupAdminServiceURI());
         soapSetURI(options.getUri());
 
         if (options.getLocalConfigAuth()) {
@@ -306,33 +317,31 @@ public class SoapProvisioning extends Provisioning {
             mTransport.setDebugListener(mDebugListener);
     }
 
-    public static String getLocalConfigURI() {
-        String server = LC.zimbra_zmprov_default_soap_server.value();
-        int port = LC.zimbra_admin_service_port.intValue();
-        String scheme;
+    /** Perform a service locator lookup of an admin service */
+    public String lookupAdminServiceURI() throws ServiceException {
         try {
-            scheme = Provisioning.getInstance().getLocalServer().getAdminServiceScheme();
-        } catch (ServiceException e) {
-            ZimbraLog.soap.error("Error while getting admin service scheme", e);
-            scheme = "https://";
+            List<ServiceLocator.Entry> list = serviceLocator.find(ZimbraServiceNames.MAILSTOREADMIN, true);
+            if (list.isEmpty()) {
+                throw ServiceException.NOT_FOUND("No healthy " + ZimbraServiceNames.MAILSTOREADMIN + " service found in service locator");
+            }
+            ServiceLocator.Entry entry = list.get(0);
+            String scheme = entry.tags.contains("ssl") ? "https" : "http";
+            return scheme + "://" + entry.hostName + ":" + entry.servicePort + AdminConstants.ADMIN_SERVICE_URI;
+        } catch (IOException e) {
+            throw ServiceException.FAILURE("Failed contacting service locator", e);
         }
-        return scheme+server+":"+port+ AdminConstants.ADMIN_SERVICE_URI;
     }
 
     /**
-     * Construct and return a SoapProvisioning instance using values from localconfig:
-     * zimbra_zmprov_default_soap_server, zimbra_admin_service_port, zimbra_admin_server_scheme
-     * and calling soapZimbraAdminAuthenticate.
-     * @return new SoapProvisionig instance
-     *
+     * Construct and return a SoapProvisioning instance and calling soapZimbraAdminAuthenticate.
+     * @return new SoapProvisioning instance
      * @throws ServiceException
      */
     public static SoapProvisioning getAdminInstance() throws ServiceException {
         return getAdminInstance(false);
     }
 
-    public static SoapProvisioning getAdminInstance(boolean needSession)
-    throws ServiceException {
+    public static SoapProvisioning getAdminInstance(boolean needSession) throws ServiceException {
         Options opts = new Options();
         opts.setLocalConfigAuth(true);
         opts.setNeedSession(needSession);

@@ -17,10 +17,10 @@
 package com.zimbra.cs.consul;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.Triple;
 
 
 /**
@@ -57,21 +57,20 @@ public interface ServiceLocator {
     public void registerSilent(CatalogRegistration.Service service);
 
 
-    public static class Entry extends Triple<String,String,Integer> {
+    public static class Entry {
+        public String hostName, hostAddress;
+        public Integer servicePort;
+        public List<String> tags;
+
+        public Entry(String hostName, String hostAddress, Integer servicePort, List<String> tags) {
+            this.hostName = hostName;
+            this.hostAddress = hostAddress;
+            this.servicePort = servicePort;
+            this.tags = tags;
+        }
+
         public Entry(String hostName, String hostAddress, Integer servicePort) {
-            super(hostName, hostAddress, servicePort);
-        }
-
-        public String getServiceID() {
-            return mFirst;
-        }
-
-        public String getHostName() {
-            return mSecond;
-        }
-
-        public Integer getServicePort() {
-            return mThird;
+            this(hostName, hostAddress, servicePort, new ArrayList<>());
         }
     }
 }

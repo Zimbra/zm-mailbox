@@ -157,7 +157,7 @@ public class ProvUtil implements HttpDebugListener {
     private String account = null;
     private String password = null;
     private ZAuthToken authToken = null;
-    private String serverHostname = LC.zimbra_zmprov_default_soap_server.value();
+    private String serverHostname;
     private int serverPort = LC.zimbra_admin_service_port.intValue();
     private Command command;
     private Map<String, Command> commandIndex;
@@ -807,8 +807,11 @@ public class ProvUtil implements HttpDebugListener {
             prov = Provisioning.getInstance();
         } else {
             SoapProvisioning sp = new SoapProvisioning();
-            sp.soapSetURI(Provisioning.getInstance().getLocalServer().getAdminServiceScheme() + serverHostname +
-                    ":" + serverPort + AdminConstants.ADMIN_SERVICE_URI);
+            if (serverHostname != null) {
+                sp.soapSetURI(URLUtil.getAdminURL(serverHostname));
+            } else {
+                sp.soapSetURI(sp.lookupAdminServiceURI());
+            }
             if (debugLevel != SoapDebugLevel.none) {
                 sp.soapSetHttpTransportDebugListener(this);
             }
@@ -1426,7 +1429,7 @@ public class ProvUtil implements HttpDebugListener {
         Domain domain = lookupDomain(args[1]);
         lp.renameDomain(domain.getId(), args[2]);
         printOutput("domain " + args[1] + " renamed to " + args[2]);
-        printOutput("Note: use zmlocalconfig to check and update any localconfig settings referencing domain '" + args[1] 
+        printOutput("Note: use zmlocalconfig to check and update any localconfig settings referencing domain '" + args[1]
             + "' on all servers.");
     }
 
@@ -4301,17 +4304,13 @@ public class ProvUtil implements HttpDebugListener {
             // Only named servers.
             for (int i = 1; i < args.length; ++i) {
                 String arg = args[i];
-                if (serverHostname.equalsIgnoreCase(arg)) {
-                    entries.add(new Pair<String, Integer>(serverHostname, serverPort));
-                } else {
-                    Server svr = prov.getServerByServiceHostname(arg);
-                    if (svr == null) {
-                        throw AccountServiceException.NO_SUCH_SERVER(arg);
-                    }
-                    // TODO: Verify svr has mailbox service enabled.
-                    int port = (int) svr.getLongAttr(Provisioning.A_zimbraAdminPort, serverPort);
-                    entries.add(new Pair<String, Integer>(arg, port));
+                Server svr = prov.getServerByServiceHostname(arg);
+                if (svr == null) {
+                    throw AccountServiceException.NO_SUCH_SERVER(arg);
                 }
+                // TODO: Verify svr has mailbox service enabled.
+                int port = (int) svr.getLongAttr(Provisioning.A_zimbraAdminPort, serverPort);
+                entries.add(new Pair<String, Integer>(arg, port));
             }
         }
         return entries;

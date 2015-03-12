@@ -63,7 +63,7 @@ public class ConsulServiceLocator implements ServiceLocator {
 
         List<Entry> result = new ArrayList<>();
         for (ServiceHealthResponse health: list) {
-            result.add(new Entry(health.node.name, health.node.address, new Integer(health.service.port)));
+            result.add(new Entry(health.node.name, health.node.address, new Integer(health.service.port), health.service.tags));
         }
         return result;
     }
