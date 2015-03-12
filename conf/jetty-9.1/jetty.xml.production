@@ -272,6 +272,38 @@
 		</Arg>
 	</Call>
     
+	<Call id="mtaAdminHttpsConnector" name="addConnector">
+		<Arg>
+			<New id="mtaAdmin" class="org.eclipse.jetty.server.ServerConnector">
+				<Arg name="server">
+					<Ref refid="Server" />
+				</Arg>
+				<Arg name="factories">
+					<Array type="org.eclipse.jetty.server.ConnectionFactory">
+						<Item>
+							<New class="org.eclipse.jetty.server.SslConnectionFactory">
+								<Arg name="next">http/1.1</Arg>
+								<Arg name="sslContextFactory">
+									<Ref refid="zimbraSslContextFactory" />
+								</Arg>
+							</New>
+						</Item>
+						<Item>
+							<New class="org.eclipse.jetty.server.HttpConnectionFactory">
+								<Arg name="config">
+									<Ref refid="sslHttpConfig" />
+								</Arg>
+							</New>
+						</Item>
+					</Array>
+				</Arg>
+				<Set name="host">%%zimbraMtaAuthBindAddress%%</Set>
+				<Set name="port">%%zimbraMtaAuthPort%%</Set>
+				<Set name="idleTimeout">0</Set>
+			</New>
+		</Arg>
+	</Call>
+
     <!-- ADMINLOCALBEGIN %%comment VAR:zimbraAdminLocalBind,-->%%
 	<Call id="adminLocalConnector" name="addConnector">
 		<Arg>
@@ -549,16 +581,7 @@
 		    <Set name="terminating">true</Set>
 		</New>
 	    </Arg>
-        </Call>    
-        <Call name="addRule">
-            <Arg>
-                <New class="org.eclipse.jetty.rewrite.handler.RewritePatternRule">
-                    <Set name="pattern">/solr/*</Set>
-                    <Set name="replacement">/solr</Set>
-                    <Set name="terminating">true</Set>
-                </New>
-            </Arg>
-        </Call>
+        </Call>                               
         <!-- assume all other requests handled by zimbra webapp -->
         <Call name="addRule">
 	    <Arg>        
@@ -702,53 +725,6 @@
       </Call>
     </New>
 
-
-    <!-- SOLRCONFIGBEGIN %%comment SERVICE:solr,-->%%
-    <Call id="solrConnector" name="addConnector">
-        <Arg>
-            <New id="solr" class="org.eclipse.jetty.server.ServerConnector">
-                <Arg name="server">
-                    <Ref refid="Server" />
-                </Arg>
-                <Arg name="factories">
-                    <Array type="org.eclipse.jetty.server.ConnectionFactory">
-                        <Item>
-                            <New class="org.eclipse.jetty.server.HttpConnectionFactory">
-                                <Arg name="config">
-                                    <Ref refid="httpConfig" />
-                                </Arg>
-                            </New>
-                        </Item>
-                    </Array>
-                </Arg>
-                <Set name="host">%%zimbraSolrBindAddress%%</Set>
-                <Set name="port">%%zimbraSolrBindPort%%</Set>
-                <Set name="idleTimeout">%%zimbraSolrConnectorMaxIdleTimeMillis%%</Set>
-                <Set name="name">SolrConnector</Set>
-            </New>
-        </Arg>
-    </Call> 
-    
-    <New id="solr" class="org.eclipse.jetty.webapp.WebAppContext">
-        <Arg>
-            <Ref id="Contexts" />
-        </Arg>
-        <Arg><SystemProperty name="jetty.home" default="." />/webapps/solr</Arg>
-        <Arg>/solr</Arg>
-        <Set name="configurationClasses">
-            <Ref id="plusConfig" />
-        </Set>
-        <Set name="defaultsDescriptor"><SystemProperty name="jetty.home"/>/etc/webdefault.xml</Set>
-        <Set name="tempDirectory"><Property name="jetty.home" default="."/>/work/solr</Set>
-        <Set name="virtualHosts">
-            <Array type="java.lang.String">
-                <Item>@SolrConnector</Item>
-            </Array>
-        </Set>
-    </New>
-    
-    %%comment SERVICE:solr,<!--%% SOLRCONFIGEND -->
-    
     <!-- Configure System and Server classes  -->
     <!-- By default, Jetty7 does not expose all the libraries to WebApps, so customize server/system classes -->
     <!-- Refer http://wiki.eclipse.org/Jetty/Reference/Jetty_Classloading -->
