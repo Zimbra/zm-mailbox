@@ -9646,4 +9646,129 @@ TODO: delete them permanently from here
   <desc>SMTP authentication password for this data source. If not set and if zimbraDataSourceSmtpAuthRequired is set to TRUE, then defaults to zimbraDataSourcePassword value.</desc>
 </attr>
 
+<attr id="1917" name="zimbraMtaPostscreenAccessList" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.7.0,9.0.0">
+  <globalConfigValue>permit_mynetworks</globalConfigValue>
+  <desc>Value for postconf postscreen_access_list.  Single valued, commas separated list.</desc>
+</attr>
+
+<attr id="1918" name="zimbraMtaPostscreenBareNewlineAction" type="enum" value="ignore,enforce,drop" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.7.0,9.0.0">
+  <globalConfigValue>ignore</globalConfigValue>
+  <desc>Value for postconf postscreen_bare_newline_action.</desc>
+</attr>
+
+<attr id="1919" name="zimbraMtaPostscreenBareNewlineEnable" type="enum" value="yes,no" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.7.0,9.0.0">
+  <globalConfigValue>no</globalConfigValue>
+  <desc>Value for postconf postscreen_bare_newline_enable.</desc>
+</attr>
+
+<attr id="1920" name="zimbraMtaPostscreenBareNewlineTTL" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.7.0,9.0.0">
+  <globalConfigValue>30d</globalConfigValue>
+  <desc>Value for postconf postscreen_bare_newline_ttl.</desc>
+</attr>
+
+<attr id="1921" name="zimbraMtaPostscreenBlacklistAction" type="enum" value="ignore,enforce,drop" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.7.0,9.0.0">
+  <globalConfigValue>ignore</globalConfigValue>
+  <desc>Value for postconf postscreen_blacklist_action.</desc>
+</attr>
+
+<attr id="1922" name="zimbraMtaPostscreenCacheCleanupInterval" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.7.0,9.0.0">
+  <globalConfigValue>12h</globalConfigValue>
+  <desc>Value for postconf postscreen_cache_cleanup_interval.</desc>
+</attr>
+
+<attr id="1923" name="zimbraMtaPostscreenCacheRetentionTime" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.7.0,9.0.0">
+  <globalConfigValue>7d</globalConfigValue>
+  <desc>Value for postconf postscreen_cache_retention_time.</desc>
+</attr>
+
+<attr id="1924" name="zimbraMtaPostscreenCommandCountLimit" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.7.0,9.0.0">
+  <globalConfigValue>20</globalConfigValue>
+  <desc>Value for postconf postscreen_command_count_limit.</desc>
+</attr>
+
+<attr id="1925" name="zimbraMtaPostscreenDnsblAction" type="enum" value="ignore,enforce,drop" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.7.0,9.0.0">
+  <globalConfigValue>ignore</globalConfigValue>
+  <desc>Value for postconf postscreen_dnsbl_action.</desc>
+</attr>
+
+<attr id="1926" name="zimbraMtaPostscreenDnsblSites" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.7.0,9.0.0">
+  <globalConfigValue></globalConfigValue>
+  <desc>Value for postconf postscreen_dnsbl_sites. Single valued, comma separated list.</desc>
+</attr>
+
+<attr id="1927" name="zimbraMtaPostscreenDnsblThreshold" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.7.0,9.0.0">
+  <globalConfigValue>1</globalConfigValue>
+  <desc>Value for postconf postscreen_dnsbl_threshold.</desc>
+</attr>
+
+<attr id="1928" name="zimbraMtaPostscreenDnsblTimeout" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.7.0,9.0.0">
+  <globalConfigValue>10s</globalConfigValue>
+  <desc>Value for postconf postscreen_dnsbl_timeout.</desc>
+</attr>
+
+<attr id="1929" name="zimbraMtaPostscreenDnsblTTL" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.7.0,9.0.0">
+  <globalConfigValue>1h</globalConfigValue>
+  <desc>Value for postconf postscreen_dnsbl_ttl.</desc>
+</attr>
+
+<attr id="1930" name="zimbraMtaPostscreenDnsblWhitelistThreshold" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.7.0,9.0.0">
+  <globalConfigValue>0</globalConfigValue>
+  <desc>Value for postconf postscreen_dnsbl_whitelist_threshold.</desc>
+</attr>
+
+<attr id="1931" name="zimbraMtaPostscreenGreetAction" type="enum" value="ignore,enforce,drop" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.7.0,9.0.0">
+  <globalConfigValue>ignore</globalConfigValue>
+  <desc>Value for postconf postscreen_greet_action.</desc>
+</attr>
+
+<attr id="1932" name="zimbraMtaPostscreenGreetTTL" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.7.0,9.0.0">
+  <globalConfigValue>1d</globalConfigValue>
+  <desc>Value for postconf postscreen_greet_ttl.</desc>
+</attr>
+
+<attr id="1933" name="zimbraMtaPostscreenNonSmtpCommandAction" type="enum" value="ignore,enforce,drop" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.7.0,9.0.0">
+  <globalConfigValue>drop</globalConfigValue>
+  <desc>Value for postconf postscreen_non_smtp_command_action.</desc>
+</attr>
+
+<attr id="1934" name="zimbraMtaPostscreenNonSmtpCommandEnable" type="enum" value="yes,no" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.7.0,9.0.0">
+  <globalConfigValue>no</globalConfigValue>
+  <desc>Value for postconf postscreen_non_smtp_command_enable.</desc>
+</attr>
+
+<attr id="1935" name="zimbraMtaPostscreenNonSmtpCommandTTL" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.7.0,9.0.0">
+  <globalConfigValue>30d</globalConfigValue>
+  <desc>Value for postconf postscreen_non_smtp_command_ttl.</desc>
+</attr>
+
+<attr id="1936" name="zimbraMtaPostscreenPipeliningAction" type="enum" value="ignore,enforce,drop" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.7.0,9.0.0">
+  <globalConfigValue>enforce</globalConfigValue>
+  <desc>Value for postconf postscreen_pipelining_action.</desc>
+</attr>
+
+<attr id="1937" name="zimbraMtaPostscreenPipeliningEnable" type="enum" value="yes,no" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.7.0,9.0.0">
+  <globalConfigValue>no</globalConfigValue>
+  <desc>Value for postconf postscreen_pipelining_enable.</desc>
+</attr>
+
+<attr id="1938" name="zimbraMtaPostscreenPipeliningTTL" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.7.0,9.0.0">
+  <globalConfigValue>30d</globalConfigValue>
+  <desc>Value for postconf postscreen_pipelining_ttl.</desc>
+</attr>
+
+<attr id="1939" name="zimbraMtaPostscreenWatchdogTimeout" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.7.0,9.0.0">
+  <globalConfigValue>10s</globalConfigValue>
+  <desc>Value for postconf postscreen_watchdog_timeout.</desc>
+</attr>
+
+<attr id="1940" name="zimbraMtaPostscreenWhitelistInterfaces" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.7.0,9.0.0">
+  <globalConfigValue>static:all</globalConfigValue>
+  <desc>Value for postconf postscreen_whitelist_interfaces. Single valued, comma separated list.</desc>
+</attr>
+
+<attr id="1941" name="zimbraMtaPostscreenDnsblReplyMap" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.7.0,9.0.0">
+  <globalConfigValue></globalConfigValue>
+  <desc>Value for postconf postscreen_dnsbl_reply_map. Single valued, comma separated list.</desc>
+</attr>
+
 </attrs>

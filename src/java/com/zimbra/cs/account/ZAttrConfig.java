@@ -46897,6 +46897,2357 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * Value for postconf postscreen_access_list. Single valued, commas
+     * separated list.
+     *
+     * @return zimbraMtaPostscreenAccessList, or "permit_mynetworks" if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1917)
+    public String getMtaPostscreenAccessList() {
+        return getAttr(Provisioning.A_zimbraMtaPostscreenAccessList, "permit_mynetworks");
+    }
+
+    /**
+     * Value for postconf postscreen_access_list. Single valued, commas
+     * separated list.
+     *
+     * @param zimbraMtaPostscreenAccessList new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1917)
+    public void setMtaPostscreenAccessList(String zimbraMtaPostscreenAccessList) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenAccessList, zimbraMtaPostscreenAccessList);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf postscreen_access_list. Single valued, commas
+     * separated list.
+     *
+     * @param zimbraMtaPostscreenAccessList new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1917)
+    public Map<String,Object> setMtaPostscreenAccessList(String zimbraMtaPostscreenAccessList, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenAccessList, zimbraMtaPostscreenAccessList);
+        return attrs;
+    }
+
+    /**
+     * Value for postconf postscreen_access_list. Single valued, commas
+     * separated list.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1917)
+    public void unsetMtaPostscreenAccessList() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenAccessList, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf postscreen_access_list. Single valued, commas
+     * separated list.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1917)
+    public Map<String,Object> unsetMtaPostscreenAccessList(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenAccessList, "");
+        return attrs;
+    }
+
+    /**
+     * Value for postconf postscreen_bare_newline_action.
+     *
+     * <p>Valid values: [drop, ignore, enforce]
+     *
+     * @return zimbraMtaPostscreenBareNewlineAction, or ZAttrProvisioning.MtaPostscreenBareNewlineAction.ignore if unset and/or has invalid value
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1918)
+    public ZAttrProvisioning.MtaPostscreenBareNewlineAction getMtaPostscreenBareNewlineAction() {
+        try { String v = getAttr(Provisioning.A_zimbraMtaPostscreenBareNewlineAction); return v == null ? ZAttrProvisioning.MtaPostscreenBareNewlineAction.ignore : ZAttrProvisioning.MtaPostscreenBareNewlineAction.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.MtaPostscreenBareNewlineAction.ignore; }
+    }
+
+    /**
+     * Value for postconf postscreen_bare_newline_action.
+     *
+     * <p>Valid values: [drop, ignore, enforce]
+     *
+     * @return zimbraMtaPostscreenBareNewlineAction, or "ignore" if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1918)
+    public String getMtaPostscreenBareNewlineActionAsString() {
+        return getAttr(Provisioning.A_zimbraMtaPostscreenBareNewlineAction, "ignore");
+    }
+
+    /**
+     * Value for postconf postscreen_bare_newline_action.
+     *
+     * <p>Valid values: [drop, ignore, enforce]
+     *
+     * @param zimbraMtaPostscreenBareNewlineAction new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1918)
+    public void setMtaPostscreenBareNewlineAction(ZAttrProvisioning.MtaPostscreenBareNewlineAction zimbraMtaPostscreenBareNewlineAction) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenBareNewlineAction, zimbraMtaPostscreenBareNewlineAction.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf postscreen_bare_newline_action.
+     *
+     * <p>Valid values: [drop, ignore, enforce]
+     *
+     * @param zimbraMtaPostscreenBareNewlineAction new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1918)
+    public Map<String,Object> setMtaPostscreenBareNewlineAction(ZAttrProvisioning.MtaPostscreenBareNewlineAction zimbraMtaPostscreenBareNewlineAction, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenBareNewlineAction, zimbraMtaPostscreenBareNewlineAction.toString());
+        return attrs;
+    }
+
+    /**
+     * Value for postconf postscreen_bare_newline_action.
+     *
+     * <p>Valid values: [drop, ignore, enforce]
+     *
+     * @param zimbraMtaPostscreenBareNewlineAction new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1918)
+    public void setMtaPostscreenBareNewlineActionAsString(String zimbraMtaPostscreenBareNewlineAction) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenBareNewlineAction, zimbraMtaPostscreenBareNewlineAction);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf postscreen_bare_newline_action.
+     *
+     * <p>Valid values: [drop, ignore, enforce]
+     *
+     * @param zimbraMtaPostscreenBareNewlineAction new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1918)
+    public Map<String,Object> setMtaPostscreenBareNewlineActionAsString(String zimbraMtaPostscreenBareNewlineAction, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenBareNewlineAction, zimbraMtaPostscreenBareNewlineAction);
+        return attrs;
+    }
+
+    /**
+     * Value for postconf postscreen_bare_newline_action.
+     *
+     * <p>Valid values: [drop, ignore, enforce]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1918)
+    public void unsetMtaPostscreenBareNewlineAction() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenBareNewlineAction, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf postscreen_bare_newline_action.
+     *
+     * <p>Valid values: [drop, ignore, enforce]
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1918)
+    public Map<String,Object> unsetMtaPostscreenBareNewlineAction(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenBareNewlineAction, "");
+        return attrs;
+    }
+
+    /**
+     * Value for postconf postscreen_bare_newline_enable.
+     *
+     * <p>Valid values: [no, yes]
+     *
+     * @return zimbraMtaPostscreenBareNewlineEnable, or ZAttrProvisioning.MtaPostscreenBareNewlineEnable.no if unset and/or has invalid value
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1919)
+    public ZAttrProvisioning.MtaPostscreenBareNewlineEnable getMtaPostscreenBareNewlineEnable() {
+        try { String v = getAttr(Provisioning.A_zimbraMtaPostscreenBareNewlineEnable); return v == null ? ZAttrProvisioning.MtaPostscreenBareNewlineEnable.no : ZAttrProvisioning.MtaPostscreenBareNewlineEnable.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.MtaPostscreenBareNewlineEnable.no; }
+    }
+
+    /**
+     * Value for postconf postscreen_bare_newline_enable.
+     *
+     * <p>Valid values: [no, yes]
+     *
+     * @return zimbraMtaPostscreenBareNewlineEnable, or "no" if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1919)
+    public String getMtaPostscreenBareNewlineEnableAsString() {
+        return getAttr(Provisioning.A_zimbraMtaPostscreenBareNewlineEnable, "no");
+    }
+
+    /**
+     * Value for postconf postscreen_bare_newline_enable.
+     *
+     * <p>Valid values: [no, yes]
+     *
+     * @param zimbraMtaPostscreenBareNewlineEnable new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1919)
+    public void setMtaPostscreenBareNewlineEnable(ZAttrProvisioning.MtaPostscreenBareNewlineEnable zimbraMtaPostscreenBareNewlineEnable) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenBareNewlineEnable, zimbraMtaPostscreenBareNewlineEnable.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf postscreen_bare_newline_enable.
+     *
+     * <p>Valid values: [no, yes]
+     *
+     * @param zimbraMtaPostscreenBareNewlineEnable new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1919)
+    public Map<String,Object> setMtaPostscreenBareNewlineEnable(ZAttrProvisioning.MtaPostscreenBareNewlineEnable zimbraMtaPostscreenBareNewlineEnable, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenBareNewlineEnable, zimbraMtaPostscreenBareNewlineEnable.toString());
+        return attrs;
+    }
+
+    /**
+     * Value for postconf postscreen_bare_newline_enable.
+     *
+     * <p>Valid values: [no, yes]
+     *
+     * @param zimbraMtaPostscreenBareNewlineEnable new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1919)
+    public void setMtaPostscreenBareNewlineEnableAsString(String zimbraMtaPostscreenBareNewlineEnable) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenBareNewlineEnable, zimbraMtaPostscreenBareNewlineEnable);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf postscreen_bare_newline_enable.
+     *
+     * <p>Valid values: [no, yes]
+     *
+     * @param zimbraMtaPostscreenBareNewlineEnable new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1919)
+    public Map<String,Object> setMtaPostscreenBareNewlineEnableAsString(String zimbraMtaPostscreenBareNewlineEnable, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenBareNewlineEnable, zimbraMtaPostscreenBareNewlineEnable);
+        return attrs;
+    }
+
+    /**
+     * Value for postconf postscreen_bare_newline_enable.
+     *
+     * <p>Valid values: [no, yes]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1919)
+    public void unsetMtaPostscreenBareNewlineEnable() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenBareNewlineEnable, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf postscreen_bare_newline_enable.
+     *
+     * <p>Valid values: [no, yes]
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1919)
+    public Map<String,Object> unsetMtaPostscreenBareNewlineEnable(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenBareNewlineEnable, "");
+        return attrs;
+    }
+
+    /**
+     * Value for postconf postscreen_bare_newline_ttl.
+     *
+     * @return zimbraMtaPostscreenBareNewlineTTL, or "30d" if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1920)
+    public String getMtaPostscreenBareNewlineTTL() {
+        return getAttr(Provisioning.A_zimbraMtaPostscreenBareNewlineTTL, "30d");
+    }
+
+    /**
+     * Value for postconf postscreen_bare_newline_ttl.
+     *
+     * @param zimbraMtaPostscreenBareNewlineTTL new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1920)
+    public void setMtaPostscreenBareNewlineTTL(String zimbraMtaPostscreenBareNewlineTTL) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenBareNewlineTTL, zimbraMtaPostscreenBareNewlineTTL);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf postscreen_bare_newline_ttl.
+     *
+     * @param zimbraMtaPostscreenBareNewlineTTL new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1920)
+    public Map<String,Object> setMtaPostscreenBareNewlineTTL(String zimbraMtaPostscreenBareNewlineTTL, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenBareNewlineTTL, zimbraMtaPostscreenBareNewlineTTL);
+        return attrs;
+    }
+
+    /**
+     * Value for postconf postscreen_bare_newline_ttl.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1920)
+    public void unsetMtaPostscreenBareNewlineTTL() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenBareNewlineTTL, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf postscreen_bare_newline_ttl.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1920)
+    public Map<String,Object> unsetMtaPostscreenBareNewlineTTL(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenBareNewlineTTL, "");
+        return attrs;
+    }
+
+    /**
+     * Value for postconf postscreen_blacklist_action.
+     *
+     * <p>Valid values: [drop, ignore, enforce]
+     *
+     * @return zimbraMtaPostscreenBlacklistAction, or ZAttrProvisioning.MtaPostscreenBlacklistAction.ignore if unset and/or has invalid value
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1921)
+    public ZAttrProvisioning.MtaPostscreenBlacklistAction getMtaPostscreenBlacklistAction() {
+        try { String v = getAttr(Provisioning.A_zimbraMtaPostscreenBlacklistAction); return v == null ? ZAttrProvisioning.MtaPostscreenBlacklistAction.ignore : ZAttrProvisioning.MtaPostscreenBlacklistAction.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.MtaPostscreenBlacklistAction.ignore; }
+    }
+
+    /**
+     * Value for postconf postscreen_blacklist_action.
+     *
+     * <p>Valid values: [drop, ignore, enforce]
+     *
+     * @return zimbraMtaPostscreenBlacklistAction, or "ignore" if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1921)
+    public String getMtaPostscreenBlacklistActionAsString() {
+        return getAttr(Provisioning.A_zimbraMtaPostscreenBlacklistAction, "ignore");
+    }
+
+    /**
+     * Value for postconf postscreen_blacklist_action.
+     *
+     * <p>Valid values: [drop, ignore, enforce]
+     *
+     * @param zimbraMtaPostscreenBlacklistAction new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1921)
+    public void setMtaPostscreenBlacklistAction(ZAttrProvisioning.MtaPostscreenBlacklistAction zimbraMtaPostscreenBlacklistAction) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenBlacklistAction, zimbraMtaPostscreenBlacklistAction.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf postscreen_blacklist_action.
+     *
+     * <p>Valid values: [drop, ignore, enforce]
+     *
+     * @param zimbraMtaPostscreenBlacklistAction new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1921)
+    public Map<String,Object> setMtaPostscreenBlacklistAction(ZAttrProvisioning.MtaPostscreenBlacklistAction zimbraMtaPostscreenBlacklistAction, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenBlacklistAction, zimbraMtaPostscreenBlacklistAction.toString());
+        return attrs;
+    }
+
+    /**
+     * Value for postconf postscreen_blacklist_action.
+     *
+     * <p>Valid values: [drop, ignore, enforce]
+     *
+     * @param zimbraMtaPostscreenBlacklistAction new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1921)
+    public void setMtaPostscreenBlacklistActionAsString(String zimbraMtaPostscreenBlacklistAction) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenBlacklistAction, zimbraMtaPostscreenBlacklistAction);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf postscreen_blacklist_action.
+     *
+     * <p>Valid values: [drop, ignore, enforce]
+     *
+     * @param zimbraMtaPostscreenBlacklistAction new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1921)
+    public Map<String,Object> setMtaPostscreenBlacklistActionAsString(String zimbraMtaPostscreenBlacklistAction, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenBlacklistAction, zimbraMtaPostscreenBlacklistAction);
+        return attrs;
+    }
+
+    /**
+     * Value for postconf postscreen_blacklist_action.
+     *
+     * <p>Valid values: [drop, ignore, enforce]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1921)
+    public void unsetMtaPostscreenBlacklistAction() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenBlacklistAction, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf postscreen_blacklist_action.
+     *
+     * <p>Valid values: [drop, ignore, enforce]
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1921)
+    public Map<String,Object> unsetMtaPostscreenBlacklistAction(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenBlacklistAction, "");
+        return attrs;
+    }
+
+    /**
+     * Value for postconf postscreen_cache_cleanup_interval.
+     *
+     * @return zimbraMtaPostscreenCacheCleanupInterval, or "12h" if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1922)
+    public String getMtaPostscreenCacheCleanupInterval() {
+        return getAttr(Provisioning.A_zimbraMtaPostscreenCacheCleanupInterval, "12h");
+    }
+
+    /**
+     * Value for postconf postscreen_cache_cleanup_interval.
+     *
+     * @param zimbraMtaPostscreenCacheCleanupInterval new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1922)
+    public void setMtaPostscreenCacheCleanupInterval(String zimbraMtaPostscreenCacheCleanupInterval) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenCacheCleanupInterval, zimbraMtaPostscreenCacheCleanupInterval);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf postscreen_cache_cleanup_interval.
+     *
+     * @param zimbraMtaPostscreenCacheCleanupInterval new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1922)
+    public Map<String,Object> setMtaPostscreenCacheCleanupInterval(String zimbraMtaPostscreenCacheCleanupInterval, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenCacheCleanupInterval, zimbraMtaPostscreenCacheCleanupInterval);
+        return attrs;
+    }
+
+    /**
+     * Value for postconf postscreen_cache_cleanup_interval.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1922)
+    public void unsetMtaPostscreenCacheCleanupInterval() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenCacheCleanupInterval, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf postscreen_cache_cleanup_interval.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1922)
+    public Map<String,Object> unsetMtaPostscreenCacheCleanupInterval(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenCacheCleanupInterval, "");
+        return attrs;
+    }
+
+    /**
+     * Value for postconf postscreen_cache_retention_time.
+     *
+     * @return zimbraMtaPostscreenCacheRetentionTime, or "7d" if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1923)
+    public String getMtaPostscreenCacheRetentionTime() {
+        return getAttr(Provisioning.A_zimbraMtaPostscreenCacheRetentionTime, "7d");
+    }
+
+    /**
+     * Value for postconf postscreen_cache_retention_time.
+     *
+     * @param zimbraMtaPostscreenCacheRetentionTime new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1923)
+    public void setMtaPostscreenCacheRetentionTime(String zimbraMtaPostscreenCacheRetentionTime) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenCacheRetentionTime, zimbraMtaPostscreenCacheRetentionTime);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf postscreen_cache_retention_time.
+     *
+     * @param zimbraMtaPostscreenCacheRetentionTime new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1923)
+    public Map<String,Object> setMtaPostscreenCacheRetentionTime(String zimbraMtaPostscreenCacheRetentionTime, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenCacheRetentionTime, zimbraMtaPostscreenCacheRetentionTime);
+        return attrs;
+    }
+
+    /**
+     * Value for postconf postscreen_cache_retention_time.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1923)
+    public void unsetMtaPostscreenCacheRetentionTime() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenCacheRetentionTime, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf postscreen_cache_retention_time.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1923)
+    public Map<String,Object> unsetMtaPostscreenCacheRetentionTime(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenCacheRetentionTime, "");
+        return attrs;
+    }
+
+    /**
+     * Value for postconf postscreen_command_count_limit.
+     *
+     * @return zimbraMtaPostscreenCommandCountLimit, or 20 if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1924)
+    public int getMtaPostscreenCommandCountLimit() {
+        return getIntAttr(Provisioning.A_zimbraMtaPostscreenCommandCountLimit, 20);
+    }
+
+    /**
+     * Value for postconf postscreen_command_count_limit.
+     *
+     * @param zimbraMtaPostscreenCommandCountLimit new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1924)
+    public void setMtaPostscreenCommandCountLimit(int zimbraMtaPostscreenCommandCountLimit) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenCommandCountLimit, Integer.toString(zimbraMtaPostscreenCommandCountLimit));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf postscreen_command_count_limit.
+     *
+     * @param zimbraMtaPostscreenCommandCountLimit new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1924)
+    public Map<String,Object> setMtaPostscreenCommandCountLimit(int zimbraMtaPostscreenCommandCountLimit, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenCommandCountLimit, Integer.toString(zimbraMtaPostscreenCommandCountLimit));
+        return attrs;
+    }
+
+    /**
+     * Value for postconf postscreen_command_count_limit.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1924)
+    public void unsetMtaPostscreenCommandCountLimit() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenCommandCountLimit, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf postscreen_command_count_limit.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1924)
+    public Map<String,Object> unsetMtaPostscreenCommandCountLimit(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenCommandCountLimit, "");
+        return attrs;
+    }
+
+    /**
+     * Value for postconf postscreen_dnsbl_action.
+     *
+     * <p>Valid values: [drop, ignore, enforce]
+     *
+     * @return zimbraMtaPostscreenDnsblAction, or ZAttrProvisioning.MtaPostscreenDnsblAction.ignore if unset and/or has invalid value
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1925)
+    public ZAttrProvisioning.MtaPostscreenDnsblAction getMtaPostscreenDnsblAction() {
+        try { String v = getAttr(Provisioning.A_zimbraMtaPostscreenDnsblAction); return v == null ? ZAttrProvisioning.MtaPostscreenDnsblAction.ignore : ZAttrProvisioning.MtaPostscreenDnsblAction.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.MtaPostscreenDnsblAction.ignore; }
+    }
+
+    /**
+     * Value for postconf postscreen_dnsbl_action.
+     *
+     * <p>Valid values: [drop, ignore, enforce]
+     *
+     * @return zimbraMtaPostscreenDnsblAction, or "ignore" if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1925)
+    public String getMtaPostscreenDnsblActionAsString() {
+        return getAttr(Provisioning.A_zimbraMtaPostscreenDnsblAction, "ignore");
+    }
+
+    /**
+     * Value for postconf postscreen_dnsbl_action.
+     *
+     * <p>Valid values: [drop, ignore, enforce]
+     *
+     * @param zimbraMtaPostscreenDnsblAction new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1925)
+    public void setMtaPostscreenDnsblAction(ZAttrProvisioning.MtaPostscreenDnsblAction zimbraMtaPostscreenDnsblAction) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenDnsblAction, zimbraMtaPostscreenDnsblAction.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf postscreen_dnsbl_action.
+     *
+     * <p>Valid values: [drop, ignore, enforce]
+     *
+     * @param zimbraMtaPostscreenDnsblAction new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1925)
+    public Map<String,Object> setMtaPostscreenDnsblAction(ZAttrProvisioning.MtaPostscreenDnsblAction zimbraMtaPostscreenDnsblAction, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenDnsblAction, zimbraMtaPostscreenDnsblAction.toString());
+        return attrs;
+    }
+
+    /**
+     * Value for postconf postscreen_dnsbl_action.
+     *
+     * <p>Valid values: [drop, ignore, enforce]
+     *
+     * @param zimbraMtaPostscreenDnsblAction new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1925)
+    public void setMtaPostscreenDnsblActionAsString(String zimbraMtaPostscreenDnsblAction) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenDnsblAction, zimbraMtaPostscreenDnsblAction);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf postscreen_dnsbl_action.
+     *
+     * <p>Valid values: [drop, ignore, enforce]
+     *
+     * @param zimbraMtaPostscreenDnsblAction new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1925)
+    public Map<String,Object> setMtaPostscreenDnsblActionAsString(String zimbraMtaPostscreenDnsblAction, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenDnsblAction, zimbraMtaPostscreenDnsblAction);
+        return attrs;
+    }
+
+    /**
+     * Value for postconf postscreen_dnsbl_action.
+     *
+     * <p>Valid values: [drop, ignore, enforce]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1925)
+    public void unsetMtaPostscreenDnsblAction() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenDnsblAction, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf postscreen_dnsbl_action.
+     *
+     * <p>Valid values: [drop, ignore, enforce]
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1925)
+    public Map<String,Object> unsetMtaPostscreenDnsblAction(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenDnsblAction, "");
+        return attrs;
+    }
+
+    /**
+     * Value for postconf postscreen_dnsbl_reply_map. Single valued, comma
+     * separated list.
+     *
+     * @return zimbraMtaPostscreenDnsblReplyMap, or "" if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1941)
+    public String getMtaPostscreenDnsblReplyMap() {
+        return getAttr(Provisioning.A_zimbraMtaPostscreenDnsblReplyMap, "");
+    }
+
+    /**
+     * Value for postconf postscreen_dnsbl_reply_map. Single valued, comma
+     * separated list.
+     *
+     * @param zimbraMtaPostscreenDnsblReplyMap new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1941)
+    public void setMtaPostscreenDnsblReplyMap(String zimbraMtaPostscreenDnsblReplyMap) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenDnsblReplyMap, zimbraMtaPostscreenDnsblReplyMap);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf postscreen_dnsbl_reply_map. Single valued, comma
+     * separated list.
+     *
+     * @param zimbraMtaPostscreenDnsblReplyMap new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1941)
+    public Map<String,Object> setMtaPostscreenDnsblReplyMap(String zimbraMtaPostscreenDnsblReplyMap, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenDnsblReplyMap, zimbraMtaPostscreenDnsblReplyMap);
+        return attrs;
+    }
+
+    /**
+     * Value for postconf postscreen_dnsbl_reply_map. Single valued, comma
+     * separated list.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1941)
+    public void unsetMtaPostscreenDnsblReplyMap() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenDnsblReplyMap, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf postscreen_dnsbl_reply_map. Single valued, comma
+     * separated list.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1941)
+    public Map<String,Object> unsetMtaPostscreenDnsblReplyMap(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenDnsblReplyMap, "");
+        return attrs;
+    }
+
+    /**
+     * Value for postconf postscreen_dnsbl_sites. Single valued, comma
+     * separated list.
+     *
+     * @return zimbraMtaPostscreenDnsblSites, or "" if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1926)
+    public String getMtaPostscreenDnsblSites() {
+        return getAttr(Provisioning.A_zimbraMtaPostscreenDnsblSites, "");
+    }
+
+    /**
+     * Value for postconf postscreen_dnsbl_sites. Single valued, comma
+     * separated list.
+     *
+     * @param zimbraMtaPostscreenDnsblSites new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1926)
+    public void setMtaPostscreenDnsblSites(String zimbraMtaPostscreenDnsblSites) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenDnsblSites, zimbraMtaPostscreenDnsblSites);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf postscreen_dnsbl_sites. Single valued, comma
+     * separated list.
+     *
+     * @param zimbraMtaPostscreenDnsblSites new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1926)
+    public Map<String,Object> setMtaPostscreenDnsblSites(String zimbraMtaPostscreenDnsblSites, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenDnsblSites, zimbraMtaPostscreenDnsblSites);
+        return attrs;
+    }
+
+    /**
+     * Value for postconf postscreen_dnsbl_sites. Single valued, comma
+     * separated list.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1926)
+    public void unsetMtaPostscreenDnsblSites() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenDnsblSites, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf postscreen_dnsbl_sites. Single valued, comma
+     * separated list.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1926)
+    public Map<String,Object> unsetMtaPostscreenDnsblSites(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenDnsblSites, "");
+        return attrs;
+    }
+
+    /**
+     * Value for postconf postscreen_dnsbl_ttl.
+     *
+     * @return zimbraMtaPostscreenDnsblTTL, or "1h" if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1929)
+    public String getMtaPostscreenDnsblTTL() {
+        return getAttr(Provisioning.A_zimbraMtaPostscreenDnsblTTL, "1h");
+    }
+
+    /**
+     * Value for postconf postscreen_dnsbl_ttl.
+     *
+     * @param zimbraMtaPostscreenDnsblTTL new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1929)
+    public void setMtaPostscreenDnsblTTL(String zimbraMtaPostscreenDnsblTTL) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenDnsblTTL, zimbraMtaPostscreenDnsblTTL);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf postscreen_dnsbl_ttl.
+     *
+     * @param zimbraMtaPostscreenDnsblTTL new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1929)
+    public Map<String,Object> setMtaPostscreenDnsblTTL(String zimbraMtaPostscreenDnsblTTL, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenDnsblTTL, zimbraMtaPostscreenDnsblTTL);
+        return attrs;
+    }
+
+    /**
+     * Value for postconf postscreen_dnsbl_ttl.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1929)
+    public void unsetMtaPostscreenDnsblTTL() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenDnsblTTL, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf postscreen_dnsbl_ttl.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1929)
+    public Map<String,Object> unsetMtaPostscreenDnsblTTL(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenDnsblTTL, "");
+        return attrs;
+    }
+
+    /**
+     * Value for postconf postscreen_dnsbl_threshold.
+     *
+     * @return zimbraMtaPostscreenDnsblThreshold, or 1 if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1927)
+    public int getMtaPostscreenDnsblThreshold() {
+        return getIntAttr(Provisioning.A_zimbraMtaPostscreenDnsblThreshold, 1);
+    }
+
+    /**
+     * Value for postconf postscreen_dnsbl_threshold.
+     *
+     * @param zimbraMtaPostscreenDnsblThreshold new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1927)
+    public void setMtaPostscreenDnsblThreshold(int zimbraMtaPostscreenDnsblThreshold) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenDnsblThreshold, Integer.toString(zimbraMtaPostscreenDnsblThreshold));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf postscreen_dnsbl_threshold.
+     *
+     * @param zimbraMtaPostscreenDnsblThreshold new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1927)
+    public Map<String,Object> setMtaPostscreenDnsblThreshold(int zimbraMtaPostscreenDnsblThreshold, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenDnsblThreshold, Integer.toString(zimbraMtaPostscreenDnsblThreshold));
+        return attrs;
+    }
+
+    /**
+     * Value for postconf postscreen_dnsbl_threshold.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1927)
+    public void unsetMtaPostscreenDnsblThreshold() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenDnsblThreshold, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf postscreen_dnsbl_threshold.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1927)
+    public Map<String,Object> unsetMtaPostscreenDnsblThreshold(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenDnsblThreshold, "");
+        return attrs;
+    }
+
+    /**
+     * Value for postconf postscreen_dnsbl_timeout.
+     *
+     * @return zimbraMtaPostscreenDnsblTimeout, or "10s" if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1928)
+    public String getMtaPostscreenDnsblTimeout() {
+        return getAttr(Provisioning.A_zimbraMtaPostscreenDnsblTimeout, "10s");
+    }
+
+    /**
+     * Value for postconf postscreen_dnsbl_timeout.
+     *
+     * @param zimbraMtaPostscreenDnsblTimeout new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1928)
+    public void setMtaPostscreenDnsblTimeout(String zimbraMtaPostscreenDnsblTimeout) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenDnsblTimeout, zimbraMtaPostscreenDnsblTimeout);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf postscreen_dnsbl_timeout.
+     *
+     * @param zimbraMtaPostscreenDnsblTimeout new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1928)
+    public Map<String,Object> setMtaPostscreenDnsblTimeout(String zimbraMtaPostscreenDnsblTimeout, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenDnsblTimeout, zimbraMtaPostscreenDnsblTimeout);
+        return attrs;
+    }
+
+    /**
+     * Value for postconf postscreen_dnsbl_timeout.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1928)
+    public void unsetMtaPostscreenDnsblTimeout() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenDnsblTimeout, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf postscreen_dnsbl_timeout.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1928)
+    public Map<String,Object> unsetMtaPostscreenDnsblTimeout(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenDnsblTimeout, "");
+        return attrs;
+    }
+
+    /**
+     * Value for postconf postscreen_dnsbl_whitelist_threshold.
+     *
+     * @return zimbraMtaPostscreenDnsblWhitelistThreshold, or 0 if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1930)
+    public int getMtaPostscreenDnsblWhitelistThreshold() {
+        return getIntAttr(Provisioning.A_zimbraMtaPostscreenDnsblWhitelistThreshold, 0);
+    }
+
+    /**
+     * Value for postconf postscreen_dnsbl_whitelist_threshold.
+     *
+     * @param zimbraMtaPostscreenDnsblWhitelistThreshold new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1930)
+    public void setMtaPostscreenDnsblWhitelistThreshold(int zimbraMtaPostscreenDnsblWhitelistThreshold) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenDnsblWhitelistThreshold, Integer.toString(zimbraMtaPostscreenDnsblWhitelistThreshold));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf postscreen_dnsbl_whitelist_threshold.
+     *
+     * @param zimbraMtaPostscreenDnsblWhitelistThreshold new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1930)
+    public Map<String,Object> setMtaPostscreenDnsblWhitelistThreshold(int zimbraMtaPostscreenDnsblWhitelistThreshold, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenDnsblWhitelistThreshold, Integer.toString(zimbraMtaPostscreenDnsblWhitelistThreshold));
+        return attrs;
+    }
+
+    /**
+     * Value for postconf postscreen_dnsbl_whitelist_threshold.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1930)
+    public void unsetMtaPostscreenDnsblWhitelistThreshold() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenDnsblWhitelistThreshold, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf postscreen_dnsbl_whitelist_threshold.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1930)
+    public Map<String,Object> unsetMtaPostscreenDnsblWhitelistThreshold(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenDnsblWhitelistThreshold, "");
+        return attrs;
+    }
+
+    /**
+     * Value for postconf postscreen_greet_action.
+     *
+     * <p>Valid values: [drop, ignore, enforce]
+     *
+     * @return zimbraMtaPostscreenGreetAction, or ZAttrProvisioning.MtaPostscreenGreetAction.ignore if unset and/or has invalid value
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1931)
+    public ZAttrProvisioning.MtaPostscreenGreetAction getMtaPostscreenGreetAction() {
+        try { String v = getAttr(Provisioning.A_zimbraMtaPostscreenGreetAction); return v == null ? ZAttrProvisioning.MtaPostscreenGreetAction.ignore : ZAttrProvisioning.MtaPostscreenGreetAction.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.MtaPostscreenGreetAction.ignore; }
+    }
+
+    /**
+     * Value for postconf postscreen_greet_action.
+     *
+     * <p>Valid values: [drop, ignore, enforce]
+     *
+     * @return zimbraMtaPostscreenGreetAction, or "ignore" if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1931)
+    public String getMtaPostscreenGreetActionAsString() {
+        return getAttr(Provisioning.A_zimbraMtaPostscreenGreetAction, "ignore");
+    }
+
+    /**
+     * Value for postconf postscreen_greet_action.
+     *
+     * <p>Valid values: [drop, ignore, enforce]
+     *
+     * @param zimbraMtaPostscreenGreetAction new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1931)
+    public void setMtaPostscreenGreetAction(ZAttrProvisioning.MtaPostscreenGreetAction zimbraMtaPostscreenGreetAction) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenGreetAction, zimbraMtaPostscreenGreetAction.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf postscreen_greet_action.
+     *
+     * <p>Valid values: [drop, ignore, enforce]
+     *
+     * @param zimbraMtaPostscreenGreetAction new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1931)
+    public Map<String,Object> setMtaPostscreenGreetAction(ZAttrProvisioning.MtaPostscreenGreetAction zimbraMtaPostscreenGreetAction, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenGreetAction, zimbraMtaPostscreenGreetAction.toString());
+        return attrs;
+    }
+
+    /**
+     * Value for postconf postscreen_greet_action.
+     *
+     * <p>Valid values: [drop, ignore, enforce]
+     *
+     * @param zimbraMtaPostscreenGreetAction new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1931)
+    public void setMtaPostscreenGreetActionAsString(String zimbraMtaPostscreenGreetAction) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenGreetAction, zimbraMtaPostscreenGreetAction);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf postscreen_greet_action.
+     *
+     * <p>Valid values: [drop, ignore, enforce]
+     *
+     * @param zimbraMtaPostscreenGreetAction new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1931)
+    public Map<String,Object> setMtaPostscreenGreetActionAsString(String zimbraMtaPostscreenGreetAction, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenGreetAction, zimbraMtaPostscreenGreetAction);
+        return attrs;
+    }
+
+    /**
+     * Value for postconf postscreen_greet_action.
+     *
+     * <p>Valid values: [drop, ignore, enforce]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1931)
+    public void unsetMtaPostscreenGreetAction() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenGreetAction, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf postscreen_greet_action.
+     *
+     * <p>Valid values: [drop, ignore, enforce]
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1931)
+    public Map<String,Object> unsetMtaPostscreenGreetAction(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenGreetAction, "");
+        return attrs;
+    }
+
+    /**
+     * Value for postconf postscreen_greet_ttl.
+     *
+     * @return zimbraMtaPostscreenGreetTTL, or "1d" if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1932)
+    public String getMtaPostscreenGreetTTL() {
+        return getAttr(Provisioning.A_zimbraMtaPostscreenGreetTTL, "1d");
+    }
+
+    /**
+     * Value for postconf postscreen_greet_ttl.
+     *
+     * @param zimbraMtaPostscreenGreetTTL new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1932)
+    public void setMtaPostscreenGreetTTL(String zimbraMtaPostscreenGreetTTL) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenGreetTTL, zimbraMtaPostscreenGreetTTL);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf postscreen_greet_ttl.
+     *
+     * @param zimbraMtaPostscreenGreetTTL new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1932)
+    public Map<String,Object> setMtaPostscreenGreetTTL(String zimbraMtaPostscreenGreetTTL, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenGreetTTL, zimbraMtaPostscreenGreetTTL);
+        return attrs;
+    }
+
+    /**
+     * Value for postconf postscreen_greet_ttl.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1932)
+    public void unsetMtaPostscreenGreetTTL() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenGreetTTL, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf postscreen_greet_ttl.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1932)
+    public Map<String,Object> unsetMtaPostscreenGreetTTL(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenGreetTTL, "");
+        return attrs;
+    }
+
+    /**
+     * Value for postconf postscreen_non_smtp_command_action.
+     *
+     * <p>Valid values: [drop, ignore, enforce]
+     *
+     * @return zimbraMtaPostscreenNonSmtpCommandAction, or ZAttrProvisioning.MtaPostscreenNonSmtpCommandAction.drop if unset and/or has invalid value
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1933)
+    public ZAttrProvisioning.MtaPostscreenNonSmtpCommandAction getMtaPostscreenNonSmtpCommandAction() {
+        try { String v = getAttr(Provisioning.A_zimbraMtaPostscreenNonSmtpCommandAction); return v == null ? ZAttrProvisioning.MtaPostscreenNonSmtpCommandAction.drop : ZAttrProvisioning.MtaPostscreenNonSmtpCommandAction.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.MtaPostscreenNonSmtpCommandAction.drop; }
+    }
+
+    /**
+     * Value for postconf postscreen_non_smtp_command_action.
+     *
+     * <p>Valid values: [drop, ignore, enforce]
+     *
+     * @return zimbraMtaPostscreenNonSmtpCommandAction, or "drop" if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1933)
+    public String getMtaPostscreenNonSmtpCommandActionAsString() {
+        return getAttr(Provisioning.A_zimbraMtaPostscreenNonSmtpCommandAction, "drop");
+    }
+
+    /**
+     * Value for postconf postscreen_non_smtp_command_action.
+     *
+     * <p>Valid values: [drop, ignore, enforce]
+     *
+     * @param zimbraMtaPostscreenNonSmtpCommandAction new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1933)
+    public void setMtaPostscreenNonSmtpCommandAction(ZAttrProvisioning.MtaPostscreenNonSmtpCommandAction zimbraMtaPostscreenNonSmtpCommandAction) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenNonSmtpCommandAction, zimbraMtaPostscreenNonSmtpCommandAction.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf postscreen_non_smtp_command_action.
+     *
+     * <p>Valid values: [drop, ignore, enforce]
+     *
+     * @param zimbraMtaPostscreenNonSmtpCommandAction new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1933)
+    public Map<String,Object> setMtaPostscreenNonSmtpCommandAction(ZAttrProvisioning.MtaPostscreenNonSmtpCommandAction zimbraMtaPostscreenNonSmtpCommandAction, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenNonSmtpCommandAction, zimbraMtaPostscreenNonSmtpCommandAction.toString());
+        return attrs;
+    }
+
+    /**
+     * Value for postconf postscreen_non_smtp_command_action.
+     *
+     * <p>Valid values: [drop, ignore, enforce]
+     *
+     * @param zimbraMtaPostscreenNonSmtpCommandAction new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1933)
+    public void setMtaPostscreenNonSmtpCommandActionAsString(String zimbraMtaPostscreenNonSmtpCommandAction) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenNonSmtpCommandAction, zimbraMtaPostscreenNonSmtpCommandAction);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf postscreen_non_smtp_command_action.
+     *
+     * <p>Valid values: [drop, ignore, enforce]
+     *
+     * @param zimbraMtaPostscreenNonSmtpCommandAction new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1933)
+    public Map<String,Object> setMtaPostscreenNonSmtpCommandActionAsString(String zimbraMtaPostscreenNonSmtpCommandAction, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenNonSmtpCommandAction, zimbraMtaPostscreenNonSmtpCommandAction);
+        return attrs;
+    }
+
+    /**
+     * Value for postconf postscreen_non_smtp_command_action.
+     *
+     * <p>Valid values: [drop, ignore, enforce]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1933)
+    public void unsetMtaPostscreenNonSmtpCommandAction() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenNonSmtpCommandAction, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf postscreen_non_smtp_command_action.
+     *
+     * <p>Valid values: [drop, ignore, enforce]
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1933)
+    public Map<String,Object> unsetMtaPostscreenNonSmtpCommandAction(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenNonSmtpCommandAction, "");
+        return attrs;
+    }
+
+    /**
+     * Value for postconf postscreen_non_smtp_command_enable.
+     *
+     * <p>Valid values: [no, yes]
+     *
+     * @return zimbraMtaPostscreenNonSmtpCommandEnable, or ZAttrProvisioning.MtaPostscreenNonSmtpCommandEnable.no if unset and/or has invalid value
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1934)
+    public ZAttrProvisioning.MtaPostscreenNonSmtpCommandEnable getMtaPostscreenNonSmtpCommandEnable() {
+        try { String v = getAttr(Provisioning.A_zimbraMtaPostscreenNonSmtpCommandEnable); return v == null ? ZAttrProvisioning.MtaPostscreenNonSmtpCommandEnable.no : ZAttrProvisioning.MtaPostscreenNonSmtpCommandEnable.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.MtaPostscreenNonSmtpCommandEnable.no; }
+    }
+
+    /**
+     * Value for postconf postscreen_non_smtp_command_enable.
+     *
+     * <p>Valid values: [no, yes]
+     *
+     * @return zimbraMtaPostscreenNonSmtpCommandEnable, or "no" if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1934)
+    public String getMtaPostscreenNonSmtpCommandEnableAsString() {
+        return getAttr(Provisioning.A_zimbraMtaPostscreenNonSmtpCommandEnable, "no");
+    }
+
+    /**
+     * Value for postconf postscreen_non_smtp_command_enable.
+     *
+     * <p>Valid values: [no, yes]
+     *
+     * @param zimbraMtaPostscreenNonSmtpCommandEnable new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1934)
+    public void setMtaPostscreenNonSmtpCommandEnable(ZAttrProvisioning.MtaPostscreenNonSmtpCommandEnable zimbraMtaPostscreenNonSmtpCommandEnable) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenNonSmtpCommandEnable, zimbraMtaPostscreenNonSmtpCommandEnable.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf postscreen_non_smtp_command_enable.
+     *
+     * <p>Valid values: [no, yes]
+     *
+     * @param zimbraMtaPostscreenNonSmtpCommandEnable new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1934)
+    public Map<String,Object> setMtaPostscreenNonSmtpCommandEnable(ZAttrProvisioning.MtaPostscreenNonSmtpCommandEnable zimbraMtaPostscreenNonSmtpCommandEnable, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenNonSmtpCommandEnable, zimbraMtaPostscreenNonSmtpCommandEnable.toString());
+        return attrs;
+    }
+
+    /**
+     * Value for postconf postscreen_non_smtp_command_enable.
+     *
+     * <p>Valid values: [no, yes]
+     *
+     * @param zimbraMtaPostscreenNonSmtpCommandEnable new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1934)
+    public void setMtaPostscreenNonSmtpCommandEnableAsString(String zimbraMtaPostscreenNonSmtpCommandEnable) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenNonSmtpCommandEnable, zimbraMtaPostscreenNonSmtpCommandEnable);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf postscreen_non_smtp_command_enable.
+     *
+     * <p>Valid values: [no, yes]
+     *
+     * @param zimbraMtaPostscreenNonSmtpCommandEnable new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1934)
+    public Map<String,Object> setMtaPostscreenNonSmtpCommandEnableAsString(String zimbraMtaPostscreenNonSmtpCommandEnable, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenNonSmtpCommandEnable, zimbraMtaPostscreenNonSmtpCommandEnable);
+        return attrs;
+    }
+
+    /**
+     * Value for postconf postscreen_non_smtp_command_enable.
+     *
+     * <p>Valid values: [no, yes]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1934)
+    public void unsetMtaPostscreenNonSmtpCommandEnable() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenNonSmtpCommandEnable, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf postscreen_non_smtp_command_enable.
+     *
+     * <p>Valid values: [no, yes]
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1934)
+    public Map<String,Object> unsetMtaPostscreenNonSmtpCommandEnable(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenNonSmtpCommandEnable, "");
+        return attrs;
+    }
+
+    /**
+     * Value for postconf postscreen_non_smtp_command_ttl.
+     *
+     * @return zimbraMtaPostscreenNonSmtpCommandTTL, or "30d" if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1935)
+    public String getMtaPostscreenNonSmtpCommandTTL() {
+        return getAttr(Provisioning.A_zimbraMtaPostscreenNonSmtpCommandTTL, "30d");
+    }
+
+    /**
+     * Value for postconf postscreen_non_smtp_command_ttl.
+     *
+     * @param zimbraMtaPostscreenNonSmtpCommandTTL new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1935)
+    public void setMtaPostscreenNonSmtpCommandTTL(String zimbraMtaPostscreenNonSmtpCommandTTL) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenNonSmtpCommandTTL, zimbraMtaPostscreenNonSmtpCommandTTL);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf postscreen_non_smtp_command_ttl.
+     *
+     * @param zimbraMtaPostscreenNonSmtpCommandTTL new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1935)
+    public Map<String,Object> setMtaPostscreenNonSmtpCommandTTL(String zimbraMtaPostscreenNonSmtpCommandTTL, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenNonSmtpCommandTTL, zimbraMtaPostscreenNonSmtpCommandTTL);
+        return attrs;
+    }
+
+    /**
+     * Value for postconf postscreen_non_smtp_command_ttl.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1935)
+    public void unsetMtaPostscreenNonSmtpCommandTTL() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenNonSmtpCommandTTL, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf postscreen_non_smtp_command_ttl.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1935)
+    public Map<String,Object> unsetMtaPostscreenNonSmtpCommandTTL(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenNonSmtpCommandTTL, "");
+        return attrs;
+    }
+
+    /**
+     * Value for postconf postscreen_pipelining_action.
+     *
+     * <p>Valid values: [drop, ignore, enforce]
+     *
+     * @return zimbraMtaPostscreenPipeliningAction, or ZAttrProvisioning.MtaPostscreenPipeliningAction.enforce if unset and/or has invalid value
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1936)
+    public ZAttrProvisioning.MtaPostscreenPipeliningAction getMtaPostscreenPipeliningAction() {
+        try { String v = getAttr(Provisioning.A_zimbraMtaPostscreenPipeliningAction); return v == null ? ZAttrProvisioning.MtaPostscreenPipeliningAction.enforce : ZAttrProvisioning.MtaPostscreenPipeliningAction.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.MtaPostscreenPipeliningAction.enforce; }
+    }
+
+    /**
+     * Value for postconf postscreen_pipelining_action.
+     *
+     * <p>Valid values: [drop, ignore, enforce]
+     *
+     * @return zimbraMtaPostscreenPipeliningAction, or "enforce" if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1936)
+    public String getMtaPostscreenPipeliningActionAsString() {
+        return getAttr(Provisioning.A_zimbraMtaPostscreenPipeliningAction, "enforce");
+    }
+
+    /**
+     * Value for postconf postscreen_pipelining_action.
+     *
+     * <p>Valid values: [drop, ignore, enforce]
+     *
+     * @param zimbraMtaPostscreenPipeliningAction new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1936)
+    public void setMtaPostscreenPipeliningAction(ZAttrProvisioning.MtaPostscreenPipeliningAction zimbraMtaPostscreenPipeliningAction) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenPipeliningAction, zimbraMtaPostscreenPipeliningAction.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf postscreen_pipelining_action.
+     *
+     * <p>Valid values: [drop, ignore, enforce]
+     *
+     * @param zimbraMtaPostscreenPipeliningAction new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1936)
+    public Map<String,Object> setMtaPostscreenPipeliningAction(ZAttrProvisioning.MtaPostscreenPipeliningAction zimbraMtaPostscreenPipeliningAction, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenPipeliningAction, zimbraMtaPostscreenPipeliningAction.toString());
+        return attrs;
+    }
+
+    /**
+     * Value for postconf postscreen_pipelining_action.
+     *
+     * <p>Valid values: [drop, ignore, enforce]
+     *
+     * @param zimbraMtaPostscreenPipeliningAction new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1936)
+    public void setMtaPostscreenPipeliningActionAsString(String zimbraMtaPostscreenPipeliningAction) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenPipeliningAction, zimbraMtaPostscreenPipeliningAction);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf postscreen_pipelining_action.
+     *
+     * <p>Valid values: [drop, ignore, enforce]
+     *
+     * @param zimbraMtaPostscreenPipeliningAction new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1936)
+    public Map<String,Object> setMtaPostscreenPipeliningActionAsString(String zimbraMtaPostscreenPipeliningAction, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenPipeliningAction, zimbraMtaPostscreenPipeliningAction);
+        return attrs;
+    }
+
+    /**
+     * Value for postconf postscreen_pipelining_action.
+     *
+     * <p>Valid values: [drop, ignore, enforce]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1936)
+    public void unsetMtaPostscreenPipeliningAction() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenPipeliningAction, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf postscreen_pipelining_action.
+     *
+     * <p>Valid values: [drop, ignore, enforce]
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1936)
+    public Map<String,Object> unsetMtaPostscreenPipeliningAction(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenPipeliningAction, "");
+        return attrs;
+    }
+
+    /**
+     * Value for postconf postscreen_pipelining_enable.
+     *
+     * <p>Valid values: [no, yes]
+     *
+     * @return zimbraMtaPostscreenPipeliningEnable, or ZAttrProvisioning.MtaPostscreenPipeliningEnable.no if unset and/or has invalid value
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1937)
+    public ZAttrProvisioning.MtaPostscreenPipeliningEnable getMtaPostscreenPipeliningEnable() {
+        try { String v = getAttr(Provisioning.A_zimbraMtaPostscreenPipeliningEnable); return v == null ? ZAttrProvisioning.MtaPostscreenPipeliningEnable.no : ZAttrProvisioning.MtaPostscreenPipeliningEnable.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.MtaPostscreenPipeliningEnable.no; }
+    }
+
+    /**
+     * Value for postconf postscreen_pipelining_enable.
+     *
+     * <p>Valid values: [no, yes]
+     *
+     * @return zimbraMtaPostscreenPipeliningEnable, or "no" if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1937)
+    public String getMtaPostscreenPipeliningEnableAsString() {
+        return getAttr(Provisioning.A_zimbraMtaPostscreenPipeliningEnable, "no");
+    }
+
+    /**
+     * Value for postconf postscreen_pipelining_enable.
+     *
+     * <p>Valid values: [no, yes]
+     *
+     * @param zimbraMtaPostscreenPipeliningEnable new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1937)
+    public void setMtaPostscreenPipeliningEnable(ZAttrProvisioning.MtaPostscreenPipeliningEnable zimbraMtaPostscreenPipeliningEnable) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenPipeliningEnable, zimbraMtaPostscreenPipeliningEnable.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf postscreen_pipelining_enable.
+     *
+     * <p>Valid values: [no, yes]
+     *
+     * @param zimbraMtaPostscreenPipeliningEnable new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1937)
+    public Map<String,Object> setMtaPostscreenPipeliningEnable(ZAttrProvisioning.MtaPostscreenPipeliningEnable zimbraMtaPostscreenPipeliningEnable, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenPipeliningEnable, zimbraMtaPostscreenPipeliningEnable.toString());
+        return attrs;
+    }
+
+    /**
+     * Value for postconf postscreen_pipelining_enable.
+     *
+     * <p>Valid values: [no, yes]
+     *
+     * @param zimbraMtaPostscreenPipeliningEnable new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1937)
+    public void setMtaPostscreenPipeliningEnableAsString(String zimbraMtaPostscreenPipeliningEnable) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenPipeliningEnable, zimbraMtaPostscreenPipeliningEnable);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf postscreen_pipelining_enable.
+     *
+     * <p>Valid values: [no, yes]
+     *
+     * @param zimbraMtaPostscreenPipeliningEnable new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1937)
+    public Map<String,Object> setMtaPostscreenPipeliningEnableAsString(String zimbraMtaPostscreenPipeliningEnable, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenPipeliningEnable, zimbraMtaPostscreenPipeliningEnable);
+        return attrs;
+    }
+
+    /**
+     * Value for postconf postscreen_pipelining_enable.
+     *
+     * <p>Valid values: [no, yes]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1937)
+    public void unsetMtaPostscreenPipeliningEnable() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenPipeliningEnable, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf postscreen_pipelining_enable.
+     *
+     * <p>Valid values: [no, yes]
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1937)
+    public Map<String,Object> unsetMtaPostscreenPipeliningEnable(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenPipeliningEnable, "");
+        return attrs;
+    }
+
+    /**
+     * Value for postconf postscreen_pipelining_ttl.
+     *
+     * @return zimbraMtaPostscreenPipeliningTTL, or "30d" if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1938)
+    public String getMtaPostscreenPipeliningTTL() {
+        return getAttr(Provisioning.A_zimbraMtaPostscreenPipeliningTTL, "30d");
+    }
+
+    /**
+     * Value for postconf postscreen_pipelining_ttl.
+     *
+     * @param zimbraMtaPostscreenPipeliningTTL new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1938)
+    public void setMtaPostscreenPipeliningTTL(String zimbraMtaPostscreenPipeliningTTL) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenPipeliningTTL, zimbraMtaPostscreenPipeliningTTL);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf postscreen_pipelining_ttl.
+     *
+     * @param zimbraMtaPostscreenPipeliningTTL new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1938)
+    public Map<String,Object> setMtaPostscreenPipeliningTTL(String zimbraMtaPostscreenPipeliningTTL, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenPipeliningTTL, zimbraMtaPostscreenPipeliningTTL);
+        return attrs;
+    }
+
+    /**
+     * Value for postconf postscreen_pipelining_ttl.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1938)
+    public void unsetMtaPostscreenPipeliningTTL() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenPipeliningTTL, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf postscreen_pipelining_ttl.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1938)
+    public Map<String,Object> unsetMtaPostscreenPipeliningTTL(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenPipeliningTTL, "");
+        return attrs;
+    }
+
+    /**
+     * Value for postconf postscreen_watchdog_timeout.
+     *
+     * @return zimbraMtaPostscreenWatchdogTimeout, or "10s" if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1939)
+    public String getMtaPostscreenWatchdogTimeout() {
+        return getAttr(Provisioning.A_zimbraMtaPostscreenWatchdogTimeout, "10s");
+    }
+
+    /**
+     * Value for postconf postscreen_watchdog_timeout.
+     *
+     * @param zimbraMtaPostscreenWatchdogTimeout new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1939)
+    public void setMtaPostscreenWatchdogTimeout(String zimbraMtaPostscreenWatchdogTimeout) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenWatchdogTimeout, zimbraMtaPostscreenWatchdogTimeout);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf postscreen_watchdog_timeout.
+     *
+     * @param zimbraMtaPostscreenWatchdogTimeout new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1939)
+    public Map<String,Object> setMtaPostscreenWatchdogTimeout(String zimbraMtaPostscreenWatchdogTimeout, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenWatchdogTimeout, zimbraMtaPostscreenWatchdogTimeout);
+        return attrs;
+    }
+
+    /**
+     * Value for postconf postscreen_watchdog_timeout.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1939)
+    public void unsetMtaPostscreenWatchdogTimeout() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenWatchdogTimeout, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf postscreen_watchdog_timeout.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1939)
+    public Map<String,Object> unsetMtaPostscreenWatchdogTimeout(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenWatchdogTimeout, "");
+        return attrs;
+    }
+
+    /**
+     * Value for postconf postscreen_whitelist_interfaces. Single valued,
+     * comma separated list.
+     *
+     * @return zimbraMtaPostscreenWhitelistInterfaces, or "static:all" if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1940)
+    public String getMtaPostscreenWhitelistInterfaces() {
+        return getAttr(Provisioning.A_zimbraMtaPostscreenWhitelistInterfaces, "static:all");
+    }
+
+    /**
+     * Value for postconf postscreen_whitelist_interfaces. Single valued,
+     * comma separated list.
+     *
+     * @param zimbraMtaPostscreenWhitelistInterfaces new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1940)
+    public void setMtaPostscreenWhitelistInterfaces(String zimbraMtaPostscreenWhitelistInterfaces) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenWhitelistInterfaces, zimbraMtaPostscreenWhitelistInterfaces);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf postscreen_whitelist_interfaces. Single valued,
+     * comma separated list.
+     *
+     * @param zimbraMtaPostscreenWhitelistInterfaces new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1940)
+    public Map<String,Object> setMtaPostscreenWhitelistInterfaces(String zimbraMtaPostscreenWhitelistInterfaces, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenWhitelistInterfaces, zimbraMtaPostscreenWhitelistInterfaces);
+        return attrs;
+    }
+
+    /**
+     * Value for postconf postscreen_whitelist_interfaces. Single valued,
+     * comma separated list.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1940)
+    public void unsetMtaPostscreenWhitelistInterfaces() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenWhitelistInterfaces, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf postscreen_whitelist_interfaces. Single valued,
+     * comma separated list.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1940)
+    public Map<String,Object> unsetMtaPostscreenWhitelistInterfaces(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaPostscreenWhitelistInterfaces, "");
+        return attrs;
+    }
+
+    /**
      * Value for postconf propagate_unmatched_extensions
      *
      * <p>Valid values: [alias, include, virtual, canonical, forward, generic]
