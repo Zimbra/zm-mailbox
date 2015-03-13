@@ -961,6 +961,16 @@ public class Mailbox {
         return maintenance;
     }
 
+    /** Returns a {@link MailSender} object that can be used to send mail
+     *  using the DataSource SMTP settings */
+    public MailSender getDataSourceMailSender(DataSource ds, boolean isCalMessage) throws ServiceException {
+        MailSender sender = new MailSender();
+        sender.setTrackBadHosts(true);
+        sender.setSession(ds);
+        sender.setCalendarMode(isCalMessage);
+        return sender;
+    }
+
     /** Returns a {@link MailSender} object that can be used to send mail,
      *  save a copy to the Sent folder, etc. */
     public MailSender getMailSender() throws ServiceException {

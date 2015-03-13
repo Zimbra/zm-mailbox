@@ -8596,6 +8596,34 @@ TODO: delete them permanently from here
   <desc>interface address on which Admin HTTPS connector for MTA Auth should listen; defaults to localhost</desc>
 </attr>
 
+<attr id="1910" name="zimbraDataSourceSmtpEnabled" type="boolean" cardinality="single" optionalIn="dataSource" since="8.7.0,9.0.0">
+  <desc>Whether sending outbound mail using external SMTP server is enabled in this data source</desc>
+</attr>
+
+<attr id="1911" name="zimbraDataSourceSmtpHost" type="string" cardinality="single" optionalIn="dataSource" since="8.7.0,9.0.0">
+  <desc>SMTP host name associated with this data source</desc>
+</attr>
+
+<attr id="1912" name="zimbraDataSourceSmtpPort" type="port" cardinality="single" optionalIn="dataSource" since="8.7.0,9.0.0">
+  <desc>SMTP port number associated with this data source</desc>
+</attr>
+
+<attr id="1913" name="zimbraDataSourceSmtpConnectionType" type="enum"  value="cleartext,ssl" cardinality="single" optionalIn="dataSource" since="8.7.0,9.0.0">
+  <desc>Which security layer to use for connecting to SMTP host associated with this data source</desc>
+</attr>
+
+<attr id="1914" name="zimbraDataSourceSmtpAuthRequired" type="boolean" cardinality="single" optionalIn="dataSource" since="8.7.0,9.0.0">
+  <desc>Whether SMTP server associated with this data source requires authentication</desc>
+</attr>
+
+<attr id="1915" name="zimbraDataSourceSmtpAuthUsername" type="string" cardinality="single" optionalIn="dataSource" since="8.7.0,9.0.0">
+  <desc>SMTP authentication username for this data source. If not set and if zimbraDataSourceSmtpAuthRequired is set to TRUE, then defaults to zimbraDataSourceUsername value.</desc>
+</attr>
+
+<attr id="1916" name="zimbraDataSourceSmtpAuthPassword" type="string" cardinality="single" optionalIn="dataSource" since="8.7.0,9.0.0">
+  <desc>SMTP authentication password for this data source. If not set and if zimbraDataSourceSmtpAuthRequired is set to TRUE, then defaults to zimbraDataSourcePassword value.</desc>
+</attr>
+
 <attr id="1917" name="zimbraMtaPostscreenAccessList" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.7.0,9.0.0">
   <globalConfigValue>permit_mynetworks</globalConfigValue>
   <desc>Value for postconf postscreen_access_list.  Single valued, commas separated list.</desc>

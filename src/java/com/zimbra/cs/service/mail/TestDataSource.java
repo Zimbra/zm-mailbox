@@ -16,14 +16,12 @@
  */
 package com.zimbra.cs.service.mail;
 
-import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.DataSourceBy;
 import com.zimbra.common.account.ZAttrProvisioning.DataSourceAuthMechanism;
 import com.zimbra.soap.admin.type.DataSourceType;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.common.util.SystemUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DataSource;
@@ -39,7 +37,7 @@ public class TestDataSource extends MailDocumentHandler {
 
     @Override
     public Element handle(Element request, Map<String, Object> context)
-    throws ServiceException, SoapFaultException {
+    throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
         Account account = getRequestedAccount(zsc);
@@ -72,7 +70,6 @@ public class TestDataSource extends MailDocumentHandler {
 
         String id = eDataSource.getAttribute(MailConstants.A_ID, null);
         String password = null;
-        String oauthToken = null;
         if (id != null) {
             // Testing existing data source
             DataSource dsOrig = prov.get(account, DataSourceBy.id, id);
@@ -80,8 +77,6 @@ public class TestDataSource extends MailDocumentHandler {
             for (String key : origAttrs.keySet()) {
                 if (key.equals(Provisioning.A_zimbraDataSourcePassword)) {
                     password = dsOrig.getDecryptedPassword();
-                } else if (key.equals(Provisioning.A_zimbraDataSourceOAuthToken)) {
-                    oauthToken = dsOrig.getDecryptedOAuthToken();
                 } else {
                     testAttrs.put(key, dsOrig.getAttr(key));
                 }
@@ -120,20 +115,20 @@ public class TestDataSource extends MailDocumentHandler {
         }
         value = eDataSource.getAttribute(MailConstants.A_DS_OAUTH_TOKEN, null);
         if (value != null) {
-            oauthToken = value;
+            testAttrs.put(Provisioning.A_zimbraDataSourceOAuthToken, DataSource.encryptData(testId, value));
+            testAttrs.put(Provisioning.A_zimbraDataSourceAuthMechanism, DataSourceAuthMechanism.XOAUTH2.name());
         }
-
         if (password != null) {
             // Password has to be encrypted explicitly since this is a temporary object.
             // The current implementation of LdapDataSource doesn't perform encryption until
             // the DataSource is saved.
             testAttrs.put(Provisioning.A_zimbraDataSourcePassword, DataSource.encryptData(testId, password));
         }
-        
-        if (oauthToken != null) {
-            //encryt oauthToken as we do for passwords
-            testAttrs.put(Provisioning.A_zimbraDataSourceOAuthToken, DataSource.encryptData(testId, oauthToken));
-            testAttrs.put(Provisioning.A_zimbraDataSourceAuthMechanism, DataSourceAuthMechanism.XOAUTH2.name());
+
+        value = eDataSource.getAttribute(MailConstants.A_DS_SMTP_PASSWORD, null);
+        if (value != null) {
+            // Again password has to be encrypted explicitly.
+            testAttrs.put(Provisioning.A_zimbraDataSourceSmtpAuthPassword, DataSource.encryptData(testId, value));
         }
 
         // import class
@@ -141,6 +136,9 @@ public class TestDataSource extends MailDocumentHandler {
         if (value != null) {
         	testAttrs.put(Provisioning.A_zimbraDataSourceImportClassName, value);
         }
+
+        // SMTP attributes
+        CreateDataSource.processSmtpAttrs(testAttrs, eDataSource, true, testId);
 
         // Common optional attributes
         ModifyDataSource.processCommonOptionalAttrs(testAttrs, eDataSource);
@@ -155,8 +153,9 @@ public class TestDataSource extends MailDocumentHandler {
         } catch (ServiceException x) {
         	Throwable t = SystemUtil.getInnermostException(x);
         	error = t.getMessage();
-        	if (error == null)
+        	if (error == null) {
         		error = "datasource test failed";
+            }
         }
         return error;
     }

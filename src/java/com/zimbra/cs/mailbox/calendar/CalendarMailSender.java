@@ -1017,15 +1017,28 @@ public class CalendarMailSender {
     }
 
     public static ItemId sendPartial(OperationContext octxt, Mailbox mbox, MimeMessage mm, List<Upload> uploads,
-            ItemId origMsgId, String replyType, String identityId, boolean replyToSender, boolean asAdmin) throws ServiceException {
+            ItemId origMsgId, String replyType, String identityId, boolean replyToSender, boolean asAdmin)
+            throws ServiceException {
+        return sendPartial(octxt, mbox, mm, uploads, origMsgId, replyType, identityId, null, replyToSender, asAdmin);
+    }
+
+    public static ItemId sendPartial(OperationContext octxt, Mailbox mbox, MimeMessage mm, List<Upload> uploads,
+            ItemId origMsgId, String replyType, String identityId, com.zimbra.cs.account.DataSource dataSource,
+            boolean replyToSender, boolean asAdmin)
+            throws ServiceException {
         ItemId id = null;
         try {
-            MailSender mailSender = getCalendarMailSender(mbox).setSendPartial(true);
-            if (asAdmin) {
-                mailSender.setSkipHeaderUpdate(true);
-                id = mailSender.sendMimeMessage(octxt, mbox, Boolean.FALSE, mm, uploads, origMsgId, replyType, null, replyToSender);
+            if (dataSource == null) {
+                MailSender mailSender = getCalendarMailSender(mbox).setSendPartial(true);
+                if (asAdmin) {
+                    mailSender.setSkipHeaderUpdate(true);
+                    id = mailSender.sendMimeMessage(octxt, mbox, Boolean.FALSE, mm, uploads, origMsgId, replyType, null, replyToSender);
+                } else {
+                    id = mailSender.sendMimeMessage(octxt, mbox, mm, uploads, origMsgId, replyType, identityId, replyToSender);
+                }
             } else {
-                id = mailSender.sendMimeMessage(octxt, mbox, mm, uploads, origMsgId, replyType, identityId, replyToSender);
+                MailSender mailSender = mbox.getDataSourceMailSender(dataSource, true).setSendPartial(true);
+                id = mailSender.sendDataSourceMimeMessage(octxt, mbox, mm, uploads, origMsgId, replyType);
             }
         } catch (MailServiceException e) {
             if (e.getCode().equals(MailServiceException.SEND_PARTIAL_ADDRESS_FAILURE)) {

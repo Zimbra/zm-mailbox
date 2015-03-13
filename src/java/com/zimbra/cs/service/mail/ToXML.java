@@ -3003,6 +3003,26 @@ throws ServiceException {
             LOG.warn("Unable to get polling interval from %s", ds, e);
         }
 
+        if (ds.getAttr(Provisioning.A_zimbraDataSourceSmtpEnabled) != null) {
+            m.addAttribute(MailConstants.A_DS_SMTP_ENABLED, ds.isSmtpEnabled());
+        }
+        if (ds.getSmtpHost() != null) {
+            m.addAttribute(MailConstants.A_DS_SMTP_HOST, ds.getSmtpHost());
+        }
+        if (ds.getSmtpPort() != null) {
+            m.addAttribute(MailConstants.A_DS_SMTP_PORT, ds.getSmtpPort());
+        }
+        if (ds.getAttr(Provisioning.A_zimbraDataSourceSmtpConnectionType) != null) {
+            // TODO - Fix hard coded strings
+            m.addAttribute(MailConstants.A_DS_SMTP_CONNECTION_TYPE, ds.isSmtpConnectionSecure() ? "ssl" : "cleartext");
+        }
+        if (ds.getAttr(Provisioning.A_zimbraDataSourceSmtpAuthRequired) != null) {
+            m.addAttribute(MailConstants.A_DS_SMTP_AUTH_REQUIRED, ds.isSmtpAuthRequired());
+        }
+        if (ds.getSmtpUsername() != null) {
+            m.addAttribute(MailConstants.A_DS_SMTP_USERNAME, ds.getSmtpUsername());
+        }
+
         m.addAttribute(MailConstants.A_DS_EMAIL_ADDRESS, ds.getEmailAddress());
         m.addAttribute(MailConstants.A_DS_USE_ADDRESS_FOR_FORWARD_REPLY, ds.useAddressForForwardReply());
         m.addAttribute(MailConstants.A_DS_DEFAULT_SIGNATURE, ds.getDefaultSignature());
