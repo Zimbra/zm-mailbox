@@ -774,8 +774,13 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
     }
 
     public Mailbox getMailbox() throws ServiceException {
-        if(mMailbox == null && mMailboxData != null) {
+        if(mMailbox != null) {
+            return mMailbox;
+        } else if(mMailboxData != null) {
             mMailbox = MailboxManager.getInstance().getMailboxById(mMailboxData.id);
+        } 
+        if(mMailbox == null ){
+            throw ServiceException.NOT_FOUND("Failed to find Mailbox for MailItem or MailItem object was not properly initialized");
         }
         return mMailbox;
     }
@@ -1177,7 +1182,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         if (mData.folderId <= Mailbox.HIGHEST_SYSTEM_ID) {
             return (mData.folderId == Mailbox.ID_FOLDER_TRASH);
         }
-        Folder folder = mMailbox.getFolderById(null, getFolderId());
+        Folder folder = getMailbox().getFolderById(null, getFolderId());
         return folder.inTrash();
     }
 
@@ -1213,7 +1218,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
      * @see ACL
      * @see Folder#checkRights(short, Account, boolean) */
     boolean canAccess(short rightsNeeded) throws ServiceException {
-        return canAccess(rightsNeeded, mMailbox.getAuthenticatedAccount(), mMailbox.isUsingAdminPrivileges());
+        return canAccess(rightsNeeded, getMailbox().getAuthenticatedAccount(), getMailbox().isUsingAdminPrivileges());
     }
 
     /** Returns whether the specified account has the requested access rights
@@ -1317,7 +1322,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
      * @return
      */
     protected boolean hasFullPermission(Account authuser) {
-        if (authuser == null || authuser.getId().equals(mMailbox.getAccountId()))
+        if (authuser == null || authuser.getId().equals(getAccountId()))
             return true;
         return false;
     }
@@ -1333,7 +1338,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         if (mBlob == null && getDigest() != null) {
             mBlob = StoreManager.getInstance().getMailboxBlob(this);
             if (mBlob == null) {
-                throw MailServiceException.NO_SUCH_BLOB(mMailbox.getId(), mId, mData.modContent);
+                throw MailServiceException.NO_SUCH_BLOB(getMailboxId(), mId, mData.modContent);
             }
         }
         return mBlob;
@@ -1628,7 +1633,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
     MailItem getParent() throws ServiceException {
         if (mData.parentId == -1 || inDumpster())
             return null;
-        return mMailbox.getItemById(mData.parentId, Type.UNKNOWN);
+        return getMailbox().getItemById(mData.parentId, Type.UNKNOWN);
     }
 
     /** Returns the item's {@link Folder}.  All non-dumpstered items in the system must
@@ -1637,7 +1642,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
      * @throws ServiceException should never be thrown, as the set of all
      *                          folders must already be cached. */
     Folder getFolder() throws ServiceException {
-        return !inDumpster() ? mMailbox.getFolderById(mData.folderId) : null;
+        return !inDumpster() ? getMailbox().getFolderById(mData.folderId) : null;
     }
 
     abstract boolean isTaggable();
@@ -1860,19 +1865,21 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
     }
 
     boolean checkChangeID() throws ServiceException {
-        return mMailbox.checkItemChangeID(this);
+        return getMailbox().checkItemChangeID(this);
     }
 
     /** Adds this item to the {@link Mailbox}'s list of items created during
-     *  the transaction. */
-    void markItemCreated() {
-        mMailbox.markItemCreated(this);
+     *  the transaction. 
+     * @throws ServiceException */
+    void markItemCreated() throws ServiceException {
+        getMailbox().markItemCreated(this);
     }
 
     /** Adds this item to the {@link Mailbox}'s list of items deleted during
-     *  the transaction. */
-    void markItemDeleted() {
-        mMailbox.markItemDeleted(this);
+     *  the transaction. 
+     * @throws ServiceException */
+    void markItemDeleted() throws ServiceException {
+        getMailbox().markItemDeleted(this);
     }
 
     /** Adds this item to the {@link Mailbox}'s list of items modified during
@@ -1881,7 +1888,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
      * @param reason  The bitmask of changes made to the item.
      * @see PendingModifications.Change */
     void markItemModified(int reason) throws ServiceException {
-        mMailbox.markItemModified(this, reason);
+        getMailbox().markItemModified(this, reason);
     }
 
     /** Adds this item to the {@link Mailbox}'s list of blobs to be removed
@@ -1896,13 +1903,14 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
 
     /** Adds this {@link MailboxBlob} to the {@link Mailbox}'s list of blobs
      *  to be removed upon <u>successful</u> completion of the current
-     *  transaction. */
-    void markBlobForDeletion(MailboxBlob mblob) {
+     *  transaction. 
+     * @throws ServiceException */
+    void markBlobForDeletion(MailboxBlob mblob) throws ServiceException {
         if (mblob == null)
             return;
         PendingDelete info = new PendingDelete();
         info.blobs.add(mblob);
-        mMailbox.markOtherItemDirty(info);
+        getMailbox().markOtherItemDirty(info);
     }
 
     /** Updates various lists and counts as the result of item creation.  This
@@ -1929,7 +1937,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         if (isLeafNode()) {
             boolean isDeleted = isTagged(Flag.FlagInfo.DELETED);
 
-            mMailbox.updateSize(mData.size, isQuotaCheckRequired());
+            getMailbox().updateSize(mData.size, isQuotaCheckRequired());
             folder.updateSize(1, isDeleted ? 1 : 0, mData.size);
             updateTagSizes(1, isDeleted ? 1 : 0, mData.size);
 
@@ -2041,7 +2049,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         markItemModified(Change.CONTENT  | Change.DATE | Change.IMAP_UID | Change.SIZE);
 
         // delete the old blob *unless* we've already rewritten it in this transaction
-        if (getSavedSequence() != mMailbox.getOperationChangeID()) {
+        if (getSavedSequence() != getMailbox().getOperationChangeID()) {
             if (!canAccess(ACL.RIGHT_WRITE)) {
                 throw ServiceException.PERM_DENIED("you do not have the necessary permissions on the item");
             }
@@ -2067,14 +2075,14 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         // update the object to reflect its new contents
         long size = staged == null ? 0 : staged.getSize();
         if (mData.size != size) {
-            mMailbox.updateSize(size - mData.size, isQuotaCheckRequired());
+            getMailbox().updateSize(size - mData.size, isQuotaCheckRequired());
             mData.size = size;
         }
         getFolder().updateSize(0, 0, size - mData.size);
 
         mData.setBlobDigest(staged == null ? null : staged.getDigest());
-        mData.date   = mMailbox.getOperationTimestampMillis();
-        mData.imapId = mMailbox.isTrackingImap() ? 0 : mData.id;
+        mData.date   = getMailbox().getOperationTimestampMillis();
+        mData.imapId = getMailbox().isTrackingImap() ? 0 : mData.id;
         contentChanged();
 
         // write the content (if any) to the store
@@ -2083,10 +2091,10 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
             StoreManager sm = StoreManager.getInstance();
             // under windows, a rename will fail if the incoming file is open
             if (SystemUtil.ON_WINDOWS)
-                mblob = sm.link(staged, mMailbox, mId, getSavedSequence());
+                mblob = sm.link(staged, getMailbox(), mId, getSavedSequence());
             else
-                mblob = sm.renameTo(staged, mMailbox, mId, getSavedSequence());
-            mMailbox.markOtherItemDirty(mblob);
+                mblob = sm.renameTo(staged, getMailbox(), mId, getSavedSequence());
+            getMailbox().markOtherItemDirty(mblob);
         }
         mBlob = null;
         mData.locator = mblob == null ? null : mblob.getLocator();
@@ -2108,7 +2116,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
 
             if (isTagged(Flag.FlagInfo.VERSIONED)) {
                 for (UnderlyingData data : DbMailItem.getRevisionInfo(this, inDumpster()))
-                    mRevisions.add(constructItem(mMailbox, data));
+                    mRevisions.add(constructItem(getMailbox(), data));
             }
         }
 
@@ -2121,7 +2129,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
 
     void addRevision(boolean persist, boolean updateFolderMODSEQ) throws ServiceException {
         // don't take two revisions for the same data
-        if (mData.modMetadata == mMailbox.getOperationChangeID())
+        if (mData.modMetadata == getMailbox().getOperationChangeID())
             return;
 
         Folder folder = getFolder();
@@ -2151,16 +2159,16 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
             UnderlyingData data = mData.clone();
             data.metadata = encodeMetadata().toString();
             data.setFlag(Flag.FlagInfo.UNCACHED);
-            mRevisions.add(constructItem(mMailbox, data));
+            mRevisions.add(constructItem(getMailbox(), data));
 
-            mMailbox.updateSize(mData.size, isQuotaCheckRequired());
+            getMailbox().updateSize(mData.size, isQuotaCheckRequired());
             folder.updateSize(0, 0, mData.size);
 
             ZimbraLog.mailop.debug("saving revision %d for %s", mVersion, getMailopContext(this));
 
             DbMailItem.snapshotRevision(this, mVersion);
             if (!isTagged(Flag.FlagInfo.VERSIONED)) {
-                tagChanged(mMailbox.getFlagById(Flag.ID_VERSIONED), true);
+                tagChanged(getMailbox().getFlagById(Flag.ID_VERSIONED), true);
             }
         }
 
@@ -2188,7 +2196,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
                     revisions.isEmpty() ? mData.modContent : revisions.get(0).getSavedSequence();
                 for (MailItem revision : toPurge) {
                     if (revision.getSavedSequence() < oldestRemainingSavedSequence) {
-                        mMailbox.updateSize(-revision.getSize());
+                        getMailbox().updateSize(-revision.getSize());
                         folder.updateSize(0, 0, -revision.getSize());
                         revision.markBlobForDeletion();
                     }
@@ -2198,13 +2206,13 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
                 DbMailItem.purgeRevisions(this, highestPurgedVer, true);
             }
             if (revisions.isEmpty()) {
-                tagChanged(mMailbox.getFlagById(Flag.ID_VERSIONED), false);
+                tagChanged(getMailbox().getFlagById(Flag.ID_VERSIONED), false);
             }
         }
 
         metadataChanged(updateFolderMODSEQ);
         if (persist) {
-            saveData(new DbMailItem(mMailbox));
+            saveData(new DbMailItem(getMailbox()));
         }
     }
 
@@ -2273,7 +2281,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
                     revisions.isEmpty() ? item.mData.modContent : revisions.get(0).getSavedSequence();
                 for (MailItem revision : toPurge) {
                     if (revision.getSavedSequence() < oldestRemainingSavedSequence) {
-                        item.mMailbox.updateSize(-revision.getSize());
+                        item.getMailbox().updateSize(-revision.getSize());
                         folder.updateSize(0, 0, -revision.getSize());
                         revision.markBlobForDeletion();
                     }
@@ -2285,7 +2293,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
                 DbMailItem.purgeRevisions(item, highestPurgedVer, true);
 
                 if (revisions.isEmpty()) {
-                    item.tagChanged(item.mMailbox.getFlagById(Flag.ID_VERSIONED), false);
+                    item.tagChanged(item.getMailbox().getFlagById(Flag.ID_VERSIONED), false);
                 }
             }
         }
@@ -2322,7 +2330,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         if (unread == isUnread()) {
             return;
         }
-        Flag unreadFlag = Flag.FlagInfo.UNREAD.toFlag(mMailbox);
+        Flag unreadFlag = Flag.FlagInfo.UNREAD.toFlag(getMailbox());
         if (!unreadFlag.canTag(this)) {
             throw MailServiceException.CANNOT_TAG(unreadFlag, this);
         } else if (!canAccess(ACL.RIGHT_WRITE)) {
@@ -2504,7 +2512,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         String[] tags = mData.getTags();
         for (String name : tags) {
             try {
-                mMailbox.getTagByName(name).updateUnread(delta, deletedDelta);
+                getMailbox().getTagByName(name).updateUnread(delta, deletedDelta);
             } catch (MailServiceException.NoSuchItemException nsie) {
                 ZimbraLog.mailbox.warn("item %d has nonexistent tag %s", mId, name);
                 continue;
@@ -2526,7 +2534,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         String[] tags = mData.getTags();
         for (String name : tags) {
             try {
-                mMailbox.getTagByName(name).updateSize(countDelta, deletedDelta);
+                getMailbox().getTagByName(name).updateSize(countDelta, deletedDelta);
             } catch (MailServiceException.NoSuchItemException nsie) {
                 ZimbraLog.mailbox.warn("item %d has nonexistent tag %s", mId, name);
                 continue;
@@ -2560,7 +2568,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         if (flags != mData.getFlags()) {
             markItemModified(Change.FLAGS);
             for (int flagId : Flag.toId(flags ^ mData.getFlags())) {
-                Flag flag = Flag.of(mMailbox, flagId);
+                Flag flag = Flag.of(getMailbox(), flagId);
                 if (flag != null) {
                     alterTag(flag, !isTagged(flag));
                 }
@@ -2575,12 +2583,12 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
 
             for (String tagName : removed) {
                 try {
-                    alterTag(mMailbox.getTagByName(tagName), false);
+                    alterTag(getMailbox().getTagByName(tagName), false);
                 } catch (MailServiceException.NoSuchItemException nsie) { }
             }
             for (String tagName : added) {
                 try {
-                    alterTag(mMailbox.getTagByName(tagName), true);
+                    alterTag(getMailbox().getTagByName(tagName), true);
                 } catch (MailServiceException.NoSuchItemException nsie) { }
             }
         }
@@ -2632,7 +2640,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         parent = detach ? null : parent;
 
         if (shareIndex && !isTagged(Flag.FlagInfo.COPIED)) {
-            alterSystemFlag(mMailbox.getFlagById(Flag.ID_COPIED), true);
+            alterSystemFlag(getMailbox().getFlagById(Flag.ID_COPIED), true);
             if (ZimbraLog.mailop.isDebugEnabled()) {
                 ZimbraLog.mailop.debug("setting copied flag for %s", getMailopContext(this));
             }
@@ -2643,8 +2651,8 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         String locator = null;
         MailboxBlob srcMblob = getBlob();
         if (srcMblob != null) {
-            MailboxBlob mblob = sm.copy(srcMblob, mMailbox, copyId, mMailbox.getOperationChangeID());
-            mMailbox.markOtherItemDirty(mblob);
+            MailboxBlob mblob = sm.copy(srcMblob, getMailbox(), copyId, getMailbox().getOperationChangeID());
+            getMailbox().markOtherItemDirty(mblob);
             locator = mblob.getLocator();
         }
 
@@ -2656,7 +2664,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         }
         data.unsetFlag(Flag.FlagInfo.IN_DUMPSTER);  // The copy is never in dumpster.
         data.metadata = encodeMetadata().toString();
-        data.contentChanged(mMailbox);
+        data.contentChanged(getMailbox());
 
         ZimbraLog.mailop.info("Copying %s: copyId=%d, folderId=%d, folderName=%s, parentId=%d.",
                               getMailopContext(this), copyId, folder.getId(), folder.getName(), data.parentId);
@@ -2673,18 +2681,18 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
                 String revLocator = null;
                 if (srcRevBlob != null) {
                     MailboxBlob copyRevBlob = sm.copy(srcRevBlob, mMailboxData, copyId, revision.getSavedSequence());
-                    mMailbox.markOtherItemDirty(copyRevBlob);
+                    getMailbox().markOtherItemDirty(copyRevBlob);
                     revLocator = copyRevBlob.getLocator();
                 }
                 DbMailItem.copyRevision(revision, copyId, revLocator, inDumpster);
             }
         }
 
-        MailItem copy = constructItem(mMailbox, data);
+        MailItem copy = constructItem(getMailbox(), data);
         copy.finishCreation(parent);
 
         if (!shareIndex) {
-            mMailbox.index.add(copy);
+            getMailbox().index.add(copy);
         }
 
         return copy;
@@ -2746,8 +2754,8 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         MailboxBlob srcMblob = getBlob();
         if (srcMblob != null) {
             StoreManager sm = StoreManager.getInstance();
-            MailboxBlob mblob = sm.copy(srcMblob, mMailbox, copyId, mMailbox.getOperationChangeID());
-            mMailbox.markOtherItemDirty(mblob);
+            MailboxBlob mblob = sm.copy(srcMblob, getMailbox(), copyId, getMailbox().getOperationChangeID());
+            getMailbox().markOtherItemDirty(mblob);
             locator = mblob.getLocator();
         }
 
@@ -2759,17 +2767,17 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         data.metadata = encodeMetadata().toString();
         data.imapId = copyId;
         data.indexId = shareIndex ? getIndexId() : IndexStatus.DEFERRED.id();
-        data.contentChanged(mMailbox);
+        data.contentChanged(getMailbox());
 
         ZimbraLog.mailop.info("Performing IMAP copy of %s: copyId=%d, folderId=%d, folderName=%s, parentId=%d.",
             getMailopContext(this), copyId, target.getId(), target.getName(), data.parentId);
         DbMailItem.icopy(this, data, shareIndex);
 
-        MailItem copy = constructItem(mMailbox, data);
+        MailItem copy = constructItem(getMailbox(), data);
         copy.finishCreation(null);
 
         if (shareIndex && !isTagged(Flag.FlagInfo.COPIED)) {
-            Flag copiedFlag = mMailbox.getFlagById(Flag.ID_COPIED);
+            Flag copiedFlag = getMailbox().getFlagById(Flag.ID_COPIED);
             tagChanged(copiedFlag, true);
             copy.tagChanged(copiedFlag, true);
             if (parent != null)
@@ -2784,7 +2792,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         }
 
         if (!shareIndex) {
-            mMailbox.index.add(copy);
+            getMailbox().index.add(copy);
         }
 
         return copy;
@@ -2917,7 +2925,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
             }
 
             try {
-                MailItem conflict = mMailbox.getItemByPath(null, name, target.getId());
+                MailItem conflict = getMailbox().getItemByPath(null, name, target.getId());
                 if (conflict != null && conflict != this) {
                     throw MailServiceException.ALREADY_EXISTS(name);
                 }
@@ -2933,7 +2941,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
             markItemModified(Change.NAME);
             mData.name = name;
             mData.setSubject(name);
-            mData.dateChanged = mMailbox.getOperationTimestampMillis();
+            mData.dateChanged = getMailbox().getOperationTimestampMillis();
             metadataChanged();
 
             saveName(target.getId());
@@ -3005,7 +3013,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         }
         // item moved out of spam, so update the index id (will be written to DB in DbMailItem.setFolder());
         if (inSpam() && !target.inSpam() && getIndexStatus() == IndexStatus.DONE) {
-            mMailbox.index.add(this);
+            getMailbox().index.add(this);
         }
 
         ZimbraLog.mailop.info("moving " + getMailopContext(this) + " to " + getMailopContext(target));
@@ -3026,9 +3034,9 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
             return;
         }
         markItemModified(Change.FOLDER);
-        mData.prevFolders = mMailbox.getOperationChangeID() + ":" + mData.folderId;
+        mData.prevFolders = getMailbox().getOperationChangeID() + ":" + mData.folderId;
         mData.folderId = newFolder.getId();
-        mData.imapId   = mMailbox.isTrackingImap() ? imapId : mData.imapId;
+        mData.imapId   = getMailbox().isTrackingImap() ? imapId : mData.imapId;
         metadataChanged();
     }
 
@@ -3176,7 +3184,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
             info.itemIds.remove(getType(), mId);
         }
 
-        delete(mMailbox, info, this, writeTombstones, inDumpster());
+        delete(getMailbox(), info, this, writeTombstones, inDumpster());
     }
 
     static void delete(Mailbox mbox, PendingDelete info, MailItem item, boolean writeTombstones, boolean fromDumpster)
@@ -3362,7 +3370,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         info.itemIds.add(getType(), id, mData.uuid);
 
         if (!inDumpster()) {
-            if (mData.unreadCount != 0 && mMailbox.getFlagById(Flag.ID_UNREAD).canTag(this)) {
+            if (mData.unreadCount != 0 && getMailbox().getFlagById(Flag.ID_UNREAD).canTag(this)) {
                 info.unreadIds.add(id);
             }
             boolean isDeleted = isTagged(Flag.FlagInfo.DELETED);
@@ -3409,23 +3417,23 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         if (!info.unreadIds.isEmpty()) {
             for (int i = 0, count = info.unreadIds.size(); i < count; i += UNREAD_ITEM_BATCH_SIZE) {
                 List<Integer> batch = info.unreadIds.subList(i, Math.min(i + UNREAD_ITEM_BATCH_SIZE, count));
-                for (UnderlyingData data : DbMailItem.getById(mMailbox, batch, Type.MESSAGE)) {
-                    Message msg = (Message) mMailbox.getItem(data);
+                for (UnderlyingData data : DbMailItem.getById(getMailbox(), batch, Type.MESSAGE)) {
+                    Message msg = (Message) getMailbox().getItem(data);
                     if (msg.isUnread()) {
                         msg.updateUnread(-1, msg.isTagged(Flag.FlagInfo.DELETED) ? -1 : 0);
                     }
-                    mMailbox.uncache(msg);
+                    getMailbox().uncache(msg);
                 }
             }
         }
 
         for (Map.Entry<Integer, DbMailItem.LocationCount> entry : info.folderCounts.entrySet()) {
-            Folder folder = mMailbox.getFolderById(entry.getKey());
+            Folder folder = getMailbox().getFolderById(entry.getKey());
             DbMailItem.LocationCount lcount = entry.getValue();
             folder.updateSize(-lcount.count, -lcount.deleted, -lcount.size);
         }
         for (Map.Entry<String, DbMailItem.LocationCount> entry : info.tagCounts.entrySet()) {
-            Tag tag = mMailbox.getTagByName(entry.getKey());
+            Tag tag = getMailbox().getTagByName(entry.getKey());
             DbMailItem.LocationCount lcount = entry.getValue();
             tag.updateSize(-lcount.count, -lcount.deleted);
         }
@@ -3433,9 +3441,9 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
 
     void purgeCache(PendingDelete info, boolean purgeItem) throws ServiceException {
         if (purgeItem) {
-            mMailbox.uncache(this);
+            getMailbox().uncache(this);
             for (int itemId : info.itemIds.getAllIds()) {
-                mMailbox.uncacheItem(itemId);
+                getMailbox().uncacheItem(itemId);
             }
         }
     }
@@ -3529,7 +3537,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         if (acl != null) {
             rights = acl.isEmpty() ? null : acl;
             if (!isTagged(Flag.FlagInfo.NO_INHERIT)) {
-                alterTag(mMailbox.getFlagById(Flag.ID_NO_INHERIT), true);
+                alterTag(getMailbox().getFlagById(Flag.ID_NO_INHERIT), true);
             }
         }
     }
@@ -3578,7 +3586,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
     }
 
     void markMetadataChanged() throws ServiceException {
-        saveData(new DbMailItem(mMailbox));
+        saveData(new DbMailItem(getMailbox()));
     }
 
     /**
@@ -3609,7 +3617,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         List<UnderlyingData> listData = DbMailItem.getByParent(this, sortBy, -1, inDumpster());
         ArrayList<Comment> comments = new ArrayList<Comment>();
         for (UnderlyingData data : listData) {
-            MailItem item = mMailbox.getItem(data);
+            MailItem item = getMailbox().getItem(data);
             if (item instanceof Comment) {
                 comments.add((Comment)item);
             }
@@ -3717,7 +3725,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
     public MailItem snapshotItem() throws ServiceException {
         UnderlyingData data = getUnderlyingData().clone();
         data.setFlag(Flag.FlagInfo.UNCACHED);
-        return MailItem.constructItem(mMailbox, data);
+        return MailItem.constructItem(getMailbox(), data);
     }
 
     protected short checkACL(short rightsNeeded, Account authuser, boolean asAdmin) throws ServiceException {
@@ -3784,7 +3792,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
             throw ServiceException.PERM_DENIED("cannot grant access to the owner of the item");
         }
         // if there's an ACL on the item, the item does not inherit from its parent
-        alterTag(mMailbox.getFlagById(Flag.ID_NO_INHERIT), true);
+        alterTag(getMailbox().getFlagById(Flag.ID_NO_INHERIT), true);
 
         markItemModified(Change.ACL);
         if (this.rights == null) {
@@ -3813,7 +3821,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
     }
 
     protected void queueForAclPush() throws ServiceException {
-        DbPendingAclPush.queue(mMailbox, mId);
+        DbPendingAclPush.queue(getMailbox(), mId);
     }
 
     /** Removes the set of rights granted to the specified (id, type) pair
@@ -3837,7 +3845,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
             return;
         }
         // if there's an ACL on the item, the item does not inherit from its parent
-        alterTag(mMailbox.getFlagById(Flag.ID_NO_INHERIT), true);
+        alterTag(getMailbox().getFlagById(Flag.ID_NO_INHERIT), true);
 
         markItemModified(Change.ACL);
         rights.revokeAccess(zimbraId);
@@ -3862,7 +3870,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
             throw ServiceException.PERM_DENIED("you do not have admin rights to item " + getPath());
         }
         // if we're setting an ACL on the folder, the folder does not inherit from its parent
-        alterTag(mMailbox.getFlagById(Flag.ID_NO_INHERIT), true);
+        alterTag(getMailbox().getFlagById(Flag.ID_NO_INHERIT), true);
 
         markItemModified(Change.ACL);
         if (acl != null && acl.isEmpty()) {
@@ -3898,9 +3906,9 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
 
     void metadataChanged(boolean updateFolderMODSEQ) throws ServiceException {
         ++mMetaVersion;
-        mData.metadataChanged(mMailbox, updateFolderMODSEQ);
+        mData.metadataChanged(getMailbox(), updateFolderMODSEQ);
         if (Zimbra.isAlwaysOn()) {
-            mMailbox.cache(this);
+            getMailbox().cache(this);
         }
     }
 
@@ -3910,9 +3918,9 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
 
     void contentChanged() throws ServiceException {
         ++mMetaVersion;
-        mData.contentChanged(mMailbox);
+        mData.contentChanged(getMailbox());
         if (Zimbra.isAlwaysOn()) {
-            mMailbox.cache(this);
+            getMailbox().cache(this);
         }
     }
 
