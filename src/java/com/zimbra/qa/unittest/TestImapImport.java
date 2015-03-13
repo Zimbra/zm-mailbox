@@ -64,11 +64,14 @@ public final class TestImapImport extends TestCase {
     private String mOriginalCleartextValue;
     private ZDataSource mDataSource;
     private boolean mOriginalEnableStarttls;
+    private boolean mDisplayMailFoldersOnly ;
     private boolean originalLCSetting = false;
     @Override
     public void setUp() throws Exception {
         cleanUp();
 
+        mDisplayMailFoldersOnly = Provisioning.getInstance().getLocalServer().isImapDisplayMailFoldersOnly();
+        Provisioning.getInstance().getLocalServer().setImapDisplayMailFoldersOnly(false);
         //turn on synchronous indexing
         originalLCSetting = ProvisioningUtil.getServerAttribute(Provisioning.A_zimbraIndexManualCommit, true);
         Provisioning.getInstance().getLocalServer().setIndexManualCommit(true);
@@ -357,6 +360,7 @@ public final class TestImapImport extends TestCase {
     @Override
     public void tearDown() throws Exception {
         cleanUp();
+        Provisioning.getInstance().getLocalServer().setImapDisplayMailFoldersOnly(mDisplayMailFoldersOnly);
 
         //reset configs to pre-test values
         Provisioning.getInstance().getLocalServer().setIndexManualCommit(originalLCSetting);

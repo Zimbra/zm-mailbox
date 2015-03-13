@@ -63,9 +63,13 @@ public class TestImapOneWayImport extends TestCase {
     private ZDataSource mDataSource;
     private boolean originalLCSetting = false;
     private boolean mOriginalEnableStarttls = false;
+    private boolean mDisplayMailFoldersOnly ;
     @Override
     public void setUp() throws Exception {
         cleanUp();
+        mDisplayMailFoldersOnly = Provisioning.getInstance().getLocalServer().isImapDisplayMailFoldersOnly();
+        Provisioning.getInstance().getLocalServer().setImapDisplayMailFoldersOnly(false);
+        
         // Turn on cleartext login
         mOriginalCleartextValue = TestUtil.getServerAttr(Provisioning.A_zimbraImapCleartextLoginEnabled);
         TestUtil.setServerAttr(Provisioning.A_zimbraImapCleartextLoginEnabled, ProvisioningConstants.TRUE);
@@ -353,6 +357,7 @@ public class TestImapOneWayImport extends TestCase {
             cleanUp();
 
             //reset config settings to pre-test values
+            Provisioning.getInstance().getLocalServer().setImapDisplayMailFoldersOnly(mDisplayMailFoldersOnly);
             Provisioning.getInstance().getLocalServer().setIndexManualCommit(originalLCSetting);
             Provisioning.getInstance().getLocalServer().setImapEnableStartTls(mOriginalEnableStarttls);
             TestUtil.setServerAttr(Provisioning.A_zimbraImapCleartextLoginEnabled, mOriginalCleartextValue);
