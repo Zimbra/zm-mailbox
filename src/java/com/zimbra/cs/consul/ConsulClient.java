@@ -33,7 +33,6 @@ import org.codehaus.jackson.type.JavaType;
 
 import com.zimbra.common.util.ZimbraHttpConnectionManager;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.qless.JSON;
 
 
 public class ConsulClient {

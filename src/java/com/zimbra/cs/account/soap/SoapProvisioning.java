@@ -100,7 +100,6 @@ import com.zimbra.cs.consul.ServiceLocator;
 import com.zimbra.cs.consul.ZimbraServiceNames;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.mime.MimeTypeInfo;
-import com.zimbra.cs.util.Zimbra;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.account.message.ChangePasswordRequest;
 import com.zimbra.soap.account.message.CreateIdentityRequest;
@@ -236,16 +235,10 @@ public class SoapProvisioning extends Provisioning {
     private DebugListener mDebugListener;
     private HttpDebugListener mHttpDebugListener;
     private final boolean mNeedSession;
-    private ServiceLocator serviceLocator;
+    private ServiceLocator serviceLocator = new ConsulServiceLocator(new ConsulClient());
 
     public SoapProvisioning(boolean needSession) {
         mNeedSession = needSession;
-
-        if (Zimbra.getAppContext() != null) {
-            serviceLocator = Zimbra.getAppContext().getBean(ServiceLocator.class);
-        } else {
-            serviceLocator = new ConsulServiceLocator(new ConsulClient());
-        }
     }
 
     public SoapProvisioning() {
@@ -321,6 +314,9 @@ public class SoapProvisioning extends Provisioning {
     public String lookupAdminServiceURI() throws ServiceException {
         try {
             List<ServiceLocator.Entry> list = serviceLocator.find(ZimbraServiceNames.MAILSTOREADMIN, true);
+            if (list.isEmpty()) {
+                list = serviceLocator.find(ZimbraServiceNames.MAILSTOREADMIN, false);
+            }
             if (list.isEmpty()) {
                 throw ServiceException.NOT_FOUND("No healthy " + ZimbraServiceNames.MAILSTOREADMIN + " service found in service locator");
             }
