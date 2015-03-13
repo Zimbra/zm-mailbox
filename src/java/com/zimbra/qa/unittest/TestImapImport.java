@@ -62,11 +62,14 @@ public final class TestImapImport extends TestCase {
     private String mOriginalCleartextValue;
     private ZDataSource mDataSource;
     private boolean mOriginalEnableStarttls;
+    private boolean mDisplayMailFoldersOnly ;
 
     @Override
     public void setUp() throws Exception {
         cleanUp();
-
+        mDisplayMailFoldersOnly = Provisioning.getInstance().getLocalServer().isImapDisplayMailFoldersOnly();
+        Provisioning.getInstance().getLocalServer().setImapDisplayMailFoldersOnly(false);
+        
         // Get mailbox references
         if (!TestUtil.accountExists(LOCAL_USER_NAME)) {
             TestUtil.createAccount(LOCAL_USER_NAME);
@@ -352,6 +355,8 @@ public final class TestImapImport extends TestCase {
     @Override
     public void tearDown() throws Exception {
         cleanUp();
+        Provisioning.getInstance().getLocalServer().setImapDisplayMailFoldersOnly(mDisplayMailFoldersOnly);
+
         TestUtil.setServerAttr(Provisioning.A_zimbraImapCleartextLoginEnabled, mOriginalCleartextValue);
         LC.javamail_imap_enable_starttls.setDefault(Boolean.toString(mOriginalEnableStarttls));
     }

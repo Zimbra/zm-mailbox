@@ -41,6 +41,8 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.AccessBoundedRegex;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Config;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailclient.CommandFailedException;
 import com.zimbra.cs.mailclient.imap.AppendMessage;
@@ -58,6 +60,7 @@ import com.zimbra.cs.mailclient.imap.MailboxInfo;
 import com.zimbra.cs.mailclient.imap.MailboxName;
 import com.zimbra.cs.mailclient.imap.MessageData;
 import com.zimbra.cs.mailclient.imap.ResponseHandler;
+import com.zimbra.qa.unittest.prov.ProvTestUtil;
 
 /**
  * IMAP server tests.
@@ -69,11 +72,15 @@ public class TestImap extends TestCase {
     private static final String PASS = "test123";
 
     private ImapConnection connection;
+    private boolean mDisplayMailFoldersOnly;
 
     @Override
     public void setUp() throws Exception {
         TestUtil.createAccount(USER);
         connection = connect();
+        mDisplayMailFoldersOnly = Provisioning.getInstance().getLocalServer().isImapDisplayMailFoldersOnly();
+        Provisioning.getInstance().getLocalServer().setImapDisplayMailFoldersOnly(false);
+        
     }
 
     @Override
@@ -84,6 +91,7 @@ public class TestImap extends TestCase {
         if (connection != null) {
             connection.close();
         }
+        Provisioning.getInstance().getLocalServer().setImapDisplayMailFoldersOnly(mDisplayMailFoldersOnly);
     }
 
     private void checkRegex(String regexPatt, String target, Boolean expected, int maxAccesses, Boolean timeoutOk) {
@@ -182,15 +190,15 @@ public class TestImap extends TestCase {
     }
     @Test
     public void testListContacts() throws Exception {
-        List<ListData> listResult = connection.list("", "*Contacts*");
-        assertNotNull(listResult);
-        // 'Contacts' and 'Emailed Contacts'
-        assertTrue("List result should have at least 2 entries", listResult.size() >= 2);
-        for (ListData le : listResult) {
+    List<ListData> listResult = connection.list("", "*Contacts*");
+         assertNotNull(listResult);
+         // 'Contacts' and 'Emailed Contacts'
+         assertTrue("List result should have at least 2 entries", listResult.size() >= 2);
+         for (ListData le : listResult) {
             assertTrue(String.format("mailbox '%s' contains 'Contacts'", le.getMailbox()),
                     le.getMailbox().contains("Contacts"));
-        }
-    }
+            }
+         }
 
     @Test
     public void testAppend() throws Exception {
