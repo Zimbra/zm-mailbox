@@ -134,7 +134,7 @@ public class ModifyDataSource extends MailDocumentHandler {
         	dsAttrs.put(Provisioning.A_zimbraDataSourceImportClassName, importClass);
         }
 
-        value = eDataSource.getAttribute(MailConstants.A_DS_SMTP_ENABLED);
+        value = eDataSource.getAttribute(MailConstants.A_DS_SMTP_ENABLED, null);
         if (value != null) {
             dsAttrs.put(Provisioning.A_zimbraDataSourceSmtpEnabled,
                     LdapUtil.getLdapBooleanString(eDataSource.getAttributeBool(MailConstants.A_DS_SMTP_ENABLED)));

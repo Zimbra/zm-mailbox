@@ -238,10 +238,12 @@ public class CreateDataSource extends MailDocumentHandler {
     static void processSmtpAttrs(Map<String, Object> dsAttrs, Element eDataSource, boolean encryptPasswordHere,
             String dsId)
             throws ServiceException {
-        String value;
-
-        boolean smtpEnabled = eDataSource.getAttributeBool(MailConstants.A_DS_SMTP_ENABLED);
-        dsAttrs.put(Provisioning.A_zimbraDataSourceSmtpEnabled, LdapUtil.getLdapBooleanString(smtpEnabled));
+        boolean smtpEnabled = false;
+        String value = eDataSource.getAttribute(MailConstants.A_DS_SMTP_ENABLED, null);
+        if (value != null) {
+            smtpEnabled = eDataSource.getAttributeBool(MailConstants.A_DS_SMTP_ENABLED);
+            dsAttrs.put(Provisioning.A_zimbraDataSourceSmtpEnabled, LdapUtil.getLdapBooleanString(smtpEnabled));
+        }
         if (smtpEnabled) {
             dsAttrs.put(Provisioning.A_zimbraDataSourceSmtpHost,
                     eDataSource.getAttribute(MailConstants.A_DS_SMTP_HOST));
