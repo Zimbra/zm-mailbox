@@ -10291,6 +10291,78 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * whether to display IMAP Mail folders only
+     *
+     * @return zimbraImapDisplayMailFoldersOnly, or true if unset
+     *
+     * @since ZCS 8.7.0,9.0
+     */
+    @ZAttr(id=1909)
+    public boolean isImapDisplayMailFoldersOnly() {
+        return getBooleanAttr(Provisioning.A_zimbraImapDisplayMailFoldersOnly, true);
+    }
+
+    /**
+     * whether to display IMAP Mail folders only
+     *
+     * @param zimbraImapDisplayMailFoldersOnly new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0
+     */
+    @ZAttr(id=1909)
+    public void setImapDisplayMailFoldersOnly(boolean zimbraImapDisplayMailFoldersOnly) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraImapDisplayMailFoldersOnly, zimbraImapDisplayMailFoldersOnly ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether to display IMAP Mail folders only
+     *
+     * @param zimbraImapDisplayMailFoldersOnly new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0
+     */
+    @ZAttr(id=1909)
+    public Map<String,Object> setImapDisplayMailFoldersOnly(boolean zimbraImapDisplayMailFoldersOnly, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraImapDisplayMailFoldersOnly, zimbraImapDisplayMailFoldersOnly ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * whether to display IMAP Mail folders only
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0
+     */
+    @ZAttr(id=1909)
+    public void unsetImapDisplayMailFoldersOnly() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraImapDisplayMailFoldersOnly, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether to display IMAP Mail folders only
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0
+     */
+    @ZAttr(id=1909)
+    public Map<String,Object> unsetImapDisplayMailFoldersOnly(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraImapDisplayMailFoldersOnly, "");
+        return attrs;
+    }
+
+    /**
      * Whether to expose version on IMAP banner
      *
      * @return zimbraImapExposeVersionOnBanner, or false if unset
