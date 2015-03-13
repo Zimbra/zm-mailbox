@@ -7248,6 +7248,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraImapDisabledCapability = "zimbraImapDisabledCapability";
 
     /**
+     * whether to display IMAP Mail folders only
+     *
+     * @since ZCS 8.7.0,9.0
+     */
+    @ZAttr(id=1909)
+    public static final String A_zimbraImapDisplayMailFoldersOnly = "zimbraImapDisplayMailFoldersOnly";
+    
+    /**
      * whether IMAP is enabled for an account
      */
     @ZAttr(id=174)
