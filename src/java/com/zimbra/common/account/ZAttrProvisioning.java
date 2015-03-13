@@ -266,6 +266,22 @@ public class ZAttrProvisioning {
         public boolean isCleartext() { return this == cleartext;}
     }
 
+    public static enum DataSourceSmtpConnectionType {
+        ssl("ssl"),
+        cleartext("cleartext");
+        private String mValue;
+        private DataSourceSmtpConnectionType(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static DataSourceSmtpConnectionType fromString(String s) throws ServiceException {
+            for (DataSourceSmtpConnectionType value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isSsl() { return this == ssl;}
+        public boolean isCleartext() { return this == cleartext;}
+    }
+
     public static enum DistributionListSubscriptionPolicy {
         APPROVAL("APPROVAL"),
         ACCEPT("ACCEPT"),
@@ -4821,6 +4837,69 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=770)
     public static final String A_zimbraDataSourceRssPollingInterval = "zimbraDataSourceRssPollingInterval";
+
+    /**
+     * SMTP authentication password for this data source. If not set and if
+     * zimbraDataSourceSmtpAuthRequired is set to TRUE, then defaults to
+     * zimbraDataSourcePassword value.
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1916)
+    public static final String A_zimbraDataSourceSmtpAuthPassword = "zimbraDataSourceSmtpAuthPassword";
+
+    /**
+     * Whether SMTP server associated with this data source requires
+     * authentication
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1914)
+    public static final String A_zimbraDataSourceSmtpAuthRequired = "zimbraDataSourceSmtpAuthRequired";
+
+    /**
+     * SMTP authentication username for this data source. If not set and if
+     * zimbraDataSourceSmtpAuthRequired is set to TRUE, then defaults to
+     * zimbraDataSourceUsername value.
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1915)
+    public static final String A_zimbraDataSourceSmtpAuthUsername = "zimbraDataSourceSmtpAuthUsername";
+
+    /**
+     * Which security layer to use for connecting to SMTP host associated
+     * with this data source
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1913)
+    public static final String A_zimbraDataSourceSmtpConnectionType = "zimbraDataSourceSmtpConnectionType";
+
+    /**
+     * Whether sending outbound mail using external SMTP server is enabled in
+     * this data source
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1910)
+    public static final String A_zimbraDataSourceSmtpEnabled = "zimbraDataSourceSmtpEnabled";
+
+    /**
+     * SMTP host name associated with this data source
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1911)
+    public static final String A_zimbraDataSourceSmtpHost = "zimbraDataSourceSmtpHost";
+
+    /**
+     * SMTP port number associated with this data source
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1912)
+    public static final String A_zimbraDataSourceSmtpPort = "zimbraDataSourceSmtpPort";
 
     /**
      * type of data source (pop3, imap, caldav, etc)

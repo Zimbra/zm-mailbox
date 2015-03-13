@@ -790,6 +790,7 @@ public final class MailConstants {
     public static final String A_ORIG_ID = "origid";
     public static final String A_REPLY_TYPE = "rt";
     public static final String A_IDENTITY_ID = "idnt";
+    public static final String A_DATASOURCE_ID = "dsId";
     public static final String A_NO_SAVE_TO_SENT = "noSave";
     public static final String A_SEND_UID = "suid";
     public static final String A_FOR_ACCOUNT = "forAcct";
@@ -1095,6 +1096,13 @@ public final class MailConstants {
     public static final String A_DS_CONNECTION_TYPE = "connectionType";
     public static final String A_DS_USERNAME = "username";
     public static final String A_DS_PASSWORD = "password";
+    public static final String A_DS_SMTP_ENABLED = "smtpEnabled";
+    public static final String A_DS_SMTP_HOST = "smtpHost";
+    public static final String A_DS_SMTP_PORT = "smtpPort";
+    public static final String A_DS_SMTP_CONNECTION_TYPE = "smtpConnectionType";
+    public static final String A_DS_SMTP_AUTH_REQUIRED = "smtpAuthRequired";
+    public static final String A_DS_SMTP_USERNAME = "smtpUsername";
+    public static final String A_DS_SMTP_PASSWORD = "smtpPassword";
     public static final String A_DS_TYPE = "type";
     public static final String A_DS_SUCCESS = "success";
     public static final String A_DS_ERROR = "error";
