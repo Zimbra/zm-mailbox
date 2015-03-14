@@ -37559,8 +37559,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Value for postconf postscreen_dnsbl_sites. Single valued, comma
-     * separated list.
+     * Value for postconf postscreen_dnsbl_sites. Multi valued, one DNSBL
+     * value pair per attribute value.
      *
      * @return zimbraMtaPostscreenDnsblSites, or null if unset
      *
@@ -37572,8 +37572,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Value for postconf postscreen_dnsbl_sites. Single valued, comma
-     * separated list.
+     * Value for postconf postscreen_dnsbl_sites. Multi valued, one DNSBL
+     * value pair per attribute value.
      *
      * @param zimbraMtaPostscreenDnsblSites new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -37588,8 +37588,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Value for postconf postscreen_dnsbl_sites. Single valued, comma
-     * separated list.
+     * Value for postconf postscreen_dnsbl_sites. Multi valued, one DNSBL
+     * value pair per attribute value.
      *
      * @param zimbraMtaPostscreenDnsblSites new value
      * @param attrs existing map to populate, or null to create a new map
@@ -37605,8 +37605,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Value for postconf postscreen_dnsbl_sites. Single valued, comma
-     * separated list.
+     * Value for postconf postscreen_dnsbl_sites. Multi valued, one DNSBL
+     * value pair per attribute value.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -37620,8 +37620,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Value for postconf postscreen_dnsbl_sites. Single valued, comma
-     * separated list.
+     * Value for postconf postscreen_dnsbl_sites. Multi valued, one DNSBL
+     * value pair per attribute value.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs

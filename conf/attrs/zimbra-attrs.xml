@@ -9692,7 +9692,7 @@ TODO: delete them permanently from here
 </attr>
 
 <attr id="1926" name="zimbraMtaPostscreenDnsblSites" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.7.0,9.0.0">
-  <desc>Value for postconf postscreen_dnsbl_sites. Single valued, comma separated list.</desc>
+  <desc>Value for postconf postscreen_dnsbl_sites. Multi valued, one DNSBL value pair per attribute value.</desc>
 </attr>
 
 <attr id="1927" name="zimbraMtaPostscreenDnsblThreshold" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.7.0,9.0.0">
