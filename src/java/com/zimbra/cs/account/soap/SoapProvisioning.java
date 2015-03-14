@@ -313,14 +313,7 @@ public class SoapProvisioning extends Provisioning {
     /** Perform a service locator lookup of an admin service */
     public String lookupAdminServiceURI() throws ServiceException {
         try {
-            List<ServiceLocator.Entry> list = serviceLocator.find(ZimbraServiceNames.MAILSTOREADMIN, true);
-            if (list.isEmpty()) {
-                list = serviceLocator.find(ZimbraServiceNames.MAILSTOREADMIN, false);
-            }
-            if (list.isEmpty()) {
-                throw ServiceException.NOT_FOUND("No healthy " + ZimbraServiceNames.MAILSTOREADMIN + " service found in service locator");
-            }
-            ServiceLocator.Entry entry = list.get(0);
+            ServiceLocator.Entry entry = serviceLocator.findOne(ZimbraServiceNames.MAILSTOREADMIN);
             String scheme = entry.tags.contains("ssl") ? "https" : "http";
             return scheme + "://" + entry.hostName + ":" + entry.servicePort + AdminConstants.ADMIN_SERVICE_URI;
         } catch (IOException e) {

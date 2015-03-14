@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2008, 2009, 2010, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -17,6 +17,8 @@
 package com.zimbra.cs.fb;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -26,8 +28,9 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.SoapHttpTransport;
 import com.zimbra.common.soap.Element.XMLElement;
+import com.zimbra.common.soap.SoapHttpTransport;
+import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.httpclient.URLUtil;
 
 public class FbCli {
@@ -65,7 +68,11 @@ public class FbCli {
         }
     }
     public FbCli() throws ServiceException {
-        setServer(LC.zimbra_zmprov_default_soap_server.value());
+        try {
+            setServer(new URI(new SoapProvisioning().lookupAdminServiceURI()).getHost());
+        } catch (URISyntaxException e) {
+            throw ServiceException.FAILURE("Failed looking up admin service", e);
+        }
     }
 
     public void setServer(String server) {

@@ -131,6 +131,10 @@ import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.account.soap.SoapProvisioning.DelegateAuthResponse;
 import com.zimbra.cs.analytics.BehaviorManager;
 import com.zimbra.cs.analytics.MessageBehavior;
+import com.zimbra.cs.consul.ConsulClient;
+import com.zimbra.cs.consul.ConsulServiceLocator;
+import com.zimbra.cs.consul.ServiceLocator;
+import com.zimbra.cs.consul.ZimbraServiceNames;
 import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.util.SoapCLI;
 import com.zimbra.soap.type.SearchSortBy;
@@ -149,7 +153,6 @@ public class ZMailboxUtil implements DebugListener {
     private String mPassword = null;
     private ZAuthToken mAdminAuthToken = null;
 
-    private static final String DEFAULT_ADMIN_URL = "https://"+LC.zimbra_zmprov_default_soap_server.value()+":" + LC.zimbra_admin_service_port.intValue()+"/";
     private static final String DEFAULT_URL = "http://" + LC.zimbra_zmprov_default_soap_server.value()
                     + (LC.zimbra_mail_service_port.intValue() == 80 ? "" : ":" + LC.zimbra_mail_service_port.intValue()) + "/";
 
@@ -3148,13 +3151,11 @@ public class ZMailboxUtil implements DebugListener {
             pu.setVerbose(cl.hasOption('v'));
             if (cl.hasOption('a')) {
                 pu.setAdminAccountName(cl.getOptionValue('a'));
-                pu.setUrl(DEFAULT_ADMIN_URL, true);
                 isAdmin = true;
             }
             if (cl.hasOption('z')) {
                 pu.setAdminAccountName(LC.zimbra_ldap_user.value());
                 pu.setPassword(LC.zimbra_ldap_password.value());
-                pu.setUrl(DEFAULT_ADMIN_URL, true);
                 isAdmin = true;
             }
 
@@ -3162,13 +3163,11 @@ public class ZMailboxUtil implements DebugListener {
                 pu.usage();
             if (cl.hasOption(SoapCLI.O_AUTHTOKEN)) {
                 pu.setAdminAuthToken(ZAuthToken.fromJSONString(cl.getOptionValue(SoapCLI.O_AUTHTOKEN)));
-                pu.setUrl(DEFAULT_ADMIN_URL, true);
                 isAdmin = true;
             }
             if (cl.hasOption(SoapCLI.O_AUTHTOKENFILE)) {
                 String authToken = StringUtil.readSingleLineFromFile(cl.getOptionValue(SoapCLI.O_AUTHTOKENFILE));
                 pu.setAdminAuthToken(ZAuthToken.fromJSONString(authToken));
-                pu.setUrl(DEFAULT_ADMIN_URL, true);
                 isAdmin = true;
             }
 
@@ -3198,7 +3197,13 @@ public class ZMailboxUtil implements DebugListener {
             if (!StringUtil.isNullOrEmpty(authAccount)) pu.setAuthAccountName(authAccount);
             if (!StringUtil.isNullOrEmpty(targetAccount)) pu.setTargetAccountName(targetAccount);
 
-            if (cl.hasOption('u')) pu.setUrl(cl.getOptionValue('u'), isAdmin);
+            if (cl.hasOption('u')) {
+                pu.setUrl(cl.getOptionValue('u'), isAdmin);
+            } else {
+                ServiceLocator.Entry entry = new ConsulServiceLocator(new ConsulClient()).findOne(ZimbraServiceNames.MAILSTOREADMIN);
+                String scheme = entry.tags.contains("ssl") ? "https" : "http";
+                pu.setUrl(scheme + "://" + entry.hostName + ":" + entry.servicePort + "/", isAdmin);
+            }
             if (cl.hasOption('p')) pu.setPassword(cl.getOptionValue('p'));
             if (cl.hasOption('P')) {
                 pu.setPassword(StringUtil.readSingleLineFromFile(cl.getOptionValue('P')));

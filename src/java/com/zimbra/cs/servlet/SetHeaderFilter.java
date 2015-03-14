@@ -33,13 +33,10 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.ZAttrProvisioning;
-import com.zimbra.common.localconfig.LC;
-import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.util.HttpUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Entry;
-import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 
 /** Sets headers for request. */
@@ -105,9 +102,7 @@ public class SetHeaderFilter implements Filter {
             headers = NO_HEADERS;
             try {
                 SoapProvisioning provisioning = new SoapProvisioning();
-                String soapUri = Provisioning.getInstance().getLocalServer().getAdminServiceScheme() + LC.zimbra_zmprov_default_soap_server.value() +
-                    ':' + LC.zimbra_admin_service_port.intValue() + AdminConstants.ADMIN_SERVICE_URI;
-                provisioning.soapSetURI(soapUri);
+                provisioning.soapSetURI(provisioning.lookupAdminServiceURI());
                 Entry info = provisioning.getDomainInfo(Key.DomainBy.virtualHostname, serverName);
                 if (info == null) {
                     info = provisioning.getConfig();

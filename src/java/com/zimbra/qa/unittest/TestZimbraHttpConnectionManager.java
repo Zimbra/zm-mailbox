@@ -44,18 +44,14 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.zimbra.common.account.Key;
-import com.zimbra.common.account.ZAttrProvisioning;
 import com.zimbra.common.httpclient.HttpClientUtil;
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.ZimbraHttpConnectionManager;
 import com.zimbra.cs.account.soap.SoapProvisioning;
-import com.zimbra.cs.util.ProvisioningUtil;
 
 public class TestZimbraHttpConnectionManager {
 
@@ -727,12 +723,8 @@ public class TestZimbraHttpConnectionManager {
     private static void runSoapProv(String msg) {
         System.out.println(msg);
         SoapProvisioning sp = new SoapProvisioning();
-        String uri = ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraAdminServiceScheme, "https://") +
-                     LC.zimbra_zmprov_default_soap_server.value() + ":" +
-                     LC.zimbra_admin_service_port.intValue() +
-                     AdminConstants.ADMIN_SERVICE_URI;
-        sp.soapSetURI(uri);
         try {
+            sp.soapSetURI(sp.lookupAdminServiceURI());
             sp.getDomainInfo(Key.DomainBy.name, "phoebe.mac");
         } catch (ServiceException e) {
             e.printStackTrace();

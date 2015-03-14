@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -26,19 +26,21 @@ import org.apache.commons.cli.GnuParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
+import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.SoapHttpTransport;
 import com.zimbra.common.soap.Element.XMLElement;
+import com.zimbra.common.soap.SoapHttpTransport;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.cs.consul.ConsulServiceLocator;
+import com.zimbra.cs.consul.ZimbraServiceNames;
 import com.zimbra.cs.httpclient.URLUtil;
 
 public class GalSyncAccountUtil {
@@ -97,9 +99,8 @@ public class GalSyncAccountUtil {
 	private ZAuthToken mAuth;
 	private SoapHttpTransport mTransport;
 
-	private GalSyncAccountUtil() {
-        String server = LC.zimbra_zmprov_default_soap_server.value();
-        mAdminURL = URLUtil.getAdminURL(server);
+	private GalSyncAccountUtil() throws IOException, ServiceException {
+        mAdminURL = URLUtil.getAdminURL(new ConsulServiceLocator().findOne(ZimbraServiceNames.MAILSTOREADMIN).hostName);
         mUsername = LC.zimbra_ldap_user.value();
         mPassword = LC.zimbra_ldap_password.value();
 	}

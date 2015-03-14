@@ -34,7 +34,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
 import java.util.regex.Matcher;
@@ -1454,13 +1453,8 @@ public class ZimletUtil {
             mUsername = username != null ? username : LC.zimbra_ldap_user.value();
             mPassword = password != null ? password : LC.zimbra_ldap_password.value();
             mAuth = null;
-            String adminURL = mAdminURL;
-            if (adminURL == null) {
-                String server = LC.zimbra_zmprov_default_soap_server.value();
-                adminURL = URLUtil.getAdminURL(server);
-            }
             SoapProvisioning sp = new SoapProvisioning();
-            sp.soapSetURI(adminURL);
+            sp.soapSetURI(mAdminURL != null ? mAdminURL : sp.lookupAdminServiceURI());
             sp.soapAdminAuthenticate(mUsername, mPassword);
         }
 

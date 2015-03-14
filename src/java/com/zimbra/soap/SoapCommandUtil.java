@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -54,15 +54,13 @@ import com.zimbra.common.soap.SoapTransport;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.cs.account.soap.SoapProvisioning;
 
 public class SoapCommandUtil implements SoapTransport.DebugListener {
 
     private static final Map<String, Namespace> sTypeToNamespace =
         new TreeMap<String, Namespace>();
 
-    private static final String DEFAULT_ADMIN_URL = String.format("https://%s:%d/service/admin/soap",
-        LC.zimbra_zmprov_default_soap_server.value(),
-        LC.zimbra_admin_service_port.intValue());
     private static final String DEFAULT_URL = "http://" + LC.zimbra_zmprov_default_soap_server.value()
                     + (LC.zimbra_mail_service_port.intValue() == 80 ? "" : ":" + LC.zimbra_mail_service_port.intValue())
                     + "/service/soap";
@@ -220,8 +218,7 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
     }
 
 
-    private void parseCommandLine(String[] args)
-    throws ParseException {
+    private void parseCommandLine(String[] args) throws ParseException, IOException, ServiceException {
         // Parse command line
         GnuParser parser = new GnuParser();
         CommandLine cl = parser.parse(mOptions, args);
@@ -285,7 +282,7 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
         mUrl = CliUtil.getOptionValue(cl, LO_URL);
         if (StringUtil.isNullOrEmpty(mUrl)) {
             if (!StringUtil.isNullOrEmpty(mAdminAccountName)) {
-                mUrl = DEFAULT_ADMIN_URL;
+                mUrl = new SoapProvisioning().lookupAdminServiceURI();
             } else {
                 mUrl = DEFAULT_URL;
             }
@@ -633,7 +630,7 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
         SoapCommandUtil app = new SoapCommandUtil();
         try {
             app.parseCommandLine(args);
-        } catch (ParseException e) {
+        } catch (Exception e) {
             app.usage(e.getMessage());
         }
 

@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.google.common.base.Objects;
 import com.zimbra.common.service.ServiceException;
 
 
@@ -38,7 +39,12 @@ public interface ServiceLocator {
      *
      * @return the Host Name, Host Address, and Service Port of all the instances of a service.
      */
-    public List<Entry> find(String serviceID, boolean healthyOnly) throws IOException, ServiceException;
+    public List<Entry> find(String serviceName, boolean healthyOnly) throws IOException, ServiceException;
+
+    /**
+     * Find a healthy service instance.
+     */
+    public Entry findOne(String serviceName) throws IOException, ServiceException;
 
     /**
      * Determines whether a given service instance is healthy.
@@ -71,6 +77,15 @@ public interface ServiceLocator {
 
         public Entry(String hostName, String hostAddress, Integer servicePort) {
             this(hostName, hostAddress, servicePort, new ArrayList<>());
+        }
+
+        public String toString() {
+            return Objects.toStringHelper(this)
+                    .add("hostName", hostName)
+                    .add("hostAddress", hostAddress)
+                    .add("servicePort", servicePort)
+                    .add("tags", tags)
+                    .toString();
         }
     }
 }

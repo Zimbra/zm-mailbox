@@ -34,13 +34,11 @@ import org.dom4j.DocumentException;
 import com.zimbra.common.localconfig.ConfigException;
 import com.zimbra.common.localconfig.ConfigWriter;
 import com.zimbra.common.localconfig.KnownKey;
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.localconfig.LC.Reloadable;
 import com.zimbra.common.localconfig.LC.Supported;
 import com.zimbra.common.localconfig.LocalConfig;
 import com.zimbra.common.localconfig.Logging;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.SoapHttpTransport;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.RandomPassword;
@@ -327,16 +325,12 @@ public final class LocalConfigCLI {
     }
 
     private void reload() throws ServiceException {
-        String host = LC.zimbra_zmprov_default_soap_server.value();
-        int port = LC.zimbra_admin_service_port.intValue();
-        SoapHttpTransport transport = new SoapHttpTransport(
-                "https://" + host + ":" + port + AdminConstants.ADMIN_SERVICE_URI);
-
         SoapProvisioning prov = new SoapProvisioning();
-        prov.soapSetURI(transport.getURI());
+        prov.soapSetURI(prov.lookupAdminServiceURI());
         prov.soapZimbraAdminAuthenticate();
-        transport.setAuthToken(prov.getAuthToken());
 
+        SoapHttpTransport transport = new SoapHttpTransport(prov.soapGetURI());
+        transport.setAuthToken(prov.getAuthToken());
         try {
             transport.invoke(JaxbUtil.jaxbToElement(new ReloadLocalConfigRequest()));
         } catch (IOException e) {
