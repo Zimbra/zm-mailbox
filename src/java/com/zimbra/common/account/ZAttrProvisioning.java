@@ -7254,7 +7254,7 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1909)
     public static final String A_zimbraImapDisplayMailFoldersOnly = "zimbraImapDisplayMailFoldersOnly";
-    
+
     /**
      * whether IMAP is enabled for an account
      */
@@ -9929,8 +9929,8 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMtaPostscreenDnsblReplyMap = "zimbraMtaPostscreenDnsblReplyMap";
 
     /**
-     * Value for postconf postscreen_dnsbl_sites. Single valued, comma
-     * separated list.
+     * Value for postconf postscreen_dnsbl_sites. Multi valued, one DNSBL
+     * value pair per attribute value.
      *
      * @since ZCS 8.7.0,9.0.0
      */
