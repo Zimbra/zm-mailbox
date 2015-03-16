@@ -64,6 +64,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.Provisioning;
@@ -93,6 +94,7 @@ public class MailSender {
     private Collection<Upload> mUploads;
     private ItemId mOriginalMessageId;
     private String mReplyType;
+    private boolean mIsDataSourceSender;
     private Identity mIdentity;
     private Boolean mSendPartial;
     private boolean mReplyToSender = false;
@@ -255,6 +257,15 @@ public class MailSender {
     }
 
     /**
+     * Sets JavaMail <tt>Session</tt> using the SMTP settings associated with the data source.
+     * @throws ServiceException
+     */
+    public MailSender setSession(DataSource ds) throws ServiceException {
+        mSession = JMSession.getSession(ds);
+        return this;
+    }
+
+    /**
      * Specifies the recipients for the outgoing message.  The default
      * behavior is to use the recipients specified in the headers of
      * the <tt>MimeMessage</tt>.
@@ -409,6 +420,13 @@ public class MailSender {
         return sendMimeMessage(octxt, mbox, null, mm, uploads, origMsgId, replyType, identity, replyToSender);
     }
 
+    public ItemId sendDataSourceMimeMessage(OperationContext octxt, Mailbox mbox, MimeMessage mm, List<Upload> uploads,
+            ItemId origMsgId, String replyType) throws ServiceException {
+        mIsDataSourceSender = true;
+        ((Mime.FixedMimeMessage) mm).setSession(mSession);
+        return sendMimeMessage(octxt, mbox, false, mm, uploads, origMsgId, replyType, null, false);
+    }
+
     protected static class RollbackData {
         Mailbox mbox;
         ZMailbox zmbox;
@@ -496,7 +514,7 @@ public class MailSender {
 
             // Determine envelope sender.
             if (mEnvelopeFrom == null) {
-                if (acct.isSmtpRestrictEnvelopeFrom()) {
+                if (acct.isSmtpRestrictEnvelopeFrom() && !isDataSourceSender()) {
                     mEnvelopeFrom = mbox.getAccount().getName();
                 } else {
                     // Set envelope sender to Sender or From, in that order.
@@ -542,7 +560,7 @@ public class MailSender {
             // if requested, save a copy of the message to the Sent Mail folder
             ParsedMessage pm = null;
             ItemId returnItemId = null;
-            if (mSaveToSent && (!isDelegatedRequest ||
+            if (mSaveToSent && !isDataSourceSender() && (!isDelegatedRequest ||
                     (isDelegatedRequest &&
                     (PrefDelegatedSendSaveTarget.sender == acct.getPrefDelegatedSendSaveTarget() ||
                     PrefDelegatedSendSaveTarget.both == acct.getPrefDelegatedSendSaveTarget())))) {
@@ -595,7 +613,7 @@ public class MailSender {
             // for delegated sends automatically save a copy to the "From" user's mailbox, unless we've been
             // specifically requested not to do the save (for instance BES does its own save to Sent, so does'nt
             // want it done here).
-            if (allowSaveToSent && hasRecipients && isDelegatedRequest &&
+            if (allowSaveToSent && hasRecipients && !isDataSourceSender() && isDelegatedRequest &&
                     (PrefDelegatedSendSaveTarget.owner == acct.getPrefDelegatedSendSaveTarget() ||
                     PrefDelegatedSendSaveTarget.both == acct.getPrefDelegatedSendSaveTarget())) {
                 int flags = Flag.BITMASK_UNREAD | Flag.BITMASK_FROM_ME;
@@ -721,6 +739,10 @@ public class MailSender {
                 throw ServiceException.FAILURE("Unable to send message", me);
             }
         }
+    }
+
+    private boolean isDataSourceSender() {
+        return mIsDataSourceSender;
     }
 
     private Object getAuthenticatedMailbox(OperationContext octxt, Account authuser, boolean isAdminRequest) {
@@ -888,7 +910,7 @@ public class MailSender {
             if (!matcher.matches(sender.getAddress())) {
                 sender = AccountUtil.getFriendlyEmailAddress(authuser);
             }
-        } else {
+        } else if (!isDataSourceSender()) {
             // Downgrade disallowed send-as to send-obo.
             sender = AccountUtil.getFriendlyEmailAddress(authuser);
         }

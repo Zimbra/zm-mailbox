@@ -32,12 +32,14 @@ import javax.mail.Session;
 import com.zimbra.common.account.ZAttrProvisioning;
 import com.zimbra.common.account.ZAttrProvisioning.ShareNotificationMtaConnectionType;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.net.SocketFactories;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.TimeoutMap;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
@@ -119,6 +121,85 @@ public final class JMSession {
         return session;
     }
 
+    public static Session getSession(DataSource ds) throws ServiceException {
+        String smtpHost = ds.getSmtpHost();
+        int smtpPort = ds.getSmtpPort();
+        boolean isAuthRequired = ds.isSmtpAuthRequired();
+        String smtpUser = ds.getSmtpUsername();
+        String smtpPass = ds.getDecryptedSmtpPassword();
+        boolean useSSL = ds.isSmtpConnectionSecure();
+
+        if (smtpHost == null || smtpHost.length() == 0) {
+            throw ServiceException.FAILURE("null smtp host", null);
+        }
+        if (smtpPort <= 0) {
+            throw ServiceException.FAILURE("invalid smtp port", null);
+        }
+        if (isAuthRequired && (smtpUser == null || smtpUser.length() == 0 || smtpPass == null || smtpPass.length() == 0)) {
+            throw ServiceException.FAILURE("missing smtp username or password", null);
+        }
+
+        long timeout = ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraSmtpTimeout, 60) *
+                Constants.MILLIS_PER_SECOND;
+        String localhost = LC.zimbra_server_hostname.value();
+
+        Properties props = new Properties();
+        Session session;
+
+        props.put("mail.smtp.socketFactory", SocketFactories.defaultSocketFactory());
+        props.setProperty("mail.smtp.socketFactory.fallback", "false");
+        props.put("mail.smtp.ssl.socketFactory", SocketFactories.defaultSSLSocketFactory());
+        props.setProperty("mail.smtp.ssl.socketFactory.fallback", "false");
+        props.put("mail.smtps.ssl.socketFactory", SocketFactories.defaultSSLSocketFactory());
+        props.setProperty("mail.smtps.ssl.socketFactory.fallback", "false");
+
+        if (useSSL) {
+            props.setProperty("mail.transport.protocol", "smtps");
+            props.setProperty("mail.smtps.connectiontimeout", Long.toString(timeout));
+            props.setProperty("mail.smtps.timeout", Long.toString(timeout));
+            props.setProperty("mail.smtps.localhost", localhost);
+            props.setProperty("mail.smtps.sendpartial", "true");
+            props.setProperty("mail.smtps.host", smtpHost);
+            props.setProperty("mail.smtps.port",  smtpPort + "");
+            if (isAuthRequired) {
+                props.setProperty("mail.smtps.auth", "true");
+                props.setProperty("mail.smtps.user", smtpUser);
+                props.setProperty("mail.smtps.password", smtpPass);
+                session = Session.getInstance(props, new SmtpAuthenticator(smtpUser, smtpPass));
+            } else {
+                session = Session.getInstance(props);
+            }
+            session.setProtocolForAddress("rfc822", "smtps");
+        } else {
+            props.setProperty("mail.transport.protocol", "smtp");
+            props.setProperty("mail.smtp.connectiontimeout", Long.toString(timeout));
+            props.setProperty("mail.smtp.timeout", Long.toString(timeout));
+            props.setProperty("mail.smtp.localhost", localhost);
+            props.setProperty("mail.smtp.sendpartial", "true");
+            props.setProperty("mail.smtp.host", smtpHost);
+            props.setProperty("mail.smtp.port",  smtpPort + "");
+            if (ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraSmtpEnableStartTls, true)) {
+                props.setProperty("mail.smtp.starttls.enable", "true");
+                // props.put("mail.smtp.socketFactory.class", TlsSocketFactory.getInstance());
+            }
+            if (isAuthRequired) {
+                props.setProperty("mail.smtp.auth", "true");
+                props.setProperty("mail.smtp.user", smtpUser);
+                props.setProperty("mail.smtp.password", smtpPass);
+                session = Session.getInstance(props, new SmtpAuthenticator(smtpUser, smtpPass));
+            } else {
+                session = Session.getInstance(props);
+            }
+            session.setProtocolForAddress("rfc822", "smtp");
+        }
+
+        if (ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraSmtpEnableDebug, false)) {
+            session.setDebug(true);
+        }
+        JMSession.setProviders(session);
+        return session;
+    }
+
     /**
      * Returns a new JavaMail {@link Session} that has the latest SMTP settings
      * from LDAP. Settings are retrieved from the local server and overridden by
@@ -151,7 +232,7 @@ public final class JMSession {
     public static Session getRelaySession() throws MessagingException {
         Provisioning prov = Provisioning.getInstance();
         Server server;
-        String relayHost = null;
+        String relayHost;
         int relayPort;
         boolean useSmtpAuth;
         boolean useTls;
@@ -211,7 +292,7 @@ public final class JMSession {
     }
 
     private static Properties getJavaMailSessionProperties(Server server, Domain domain) throws MessagingException {
-        String smtpHost = null;
+        String smtpHost;
 
         try {
             smtpHost = getRandomSmtpHost(domain);
@@ -279,7 +360,6 @@ public final class JMSession {
      * Returns a random value specified for <tt>zimbraSmtpHostname</tt> on the
      * server or domain, or <tt>null</tt> if the host name cannot be determined.
      *
-     * @param server the server
      * @param domain the domain, or <tt>null</tt> to use server settings
      */
     private static String getRandomSmtpHost(Domain domain) throws ServiceException {

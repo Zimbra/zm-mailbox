@@ -119,6 +119,7 @@ public final class SendMsg extends MailDocumentHandler {
         ItemId iidOrigId = origId == null ? null : new ItemId(origId, zsc);
         String replyType = msgElem.getAttribute(MailConstants.A_REPLY_TYPE, MailSender.MSGTYPE_REPLY);
         String identityId = msgElem.getAttribute(MailConstants.A_IDENTITY_ID, null);
+        String dataSourceId = msgElem.getAttribute(MailConstants.A_DATASOURCE_ID, null);
         String draftId = msgElem.getAttribute(MailConstants.A_DRAFT_ID, null);
         ItemId iidDraft = draftId == null ? null : new ItemId(draftId, zsc);
         boolean sendFromDraft = msgElem.getAttributeBool(MailConstants.A_SEND_FROM_DRAFT, false);
@@ -166,7 +167,7 @@ public final class SendMsg extends MailDocumentHandler {
                 }
 
                 savedMsgId = doSendMessage(octxt, mbox, mm, mimeData.uploads, iidOrigId, replyType, identityId,
-                        noSaveToSent, needCalendarSentByFixup, isCalendarForward);
+                        dataSourceId, noSaveToSent, needCalendarSentByFixup, isCalendarForward);
 
                 // (need to make sure that *something* gets recorded, because caching
                 //   a null ItemId makes the send appear to still be PENDING)
@@ -205,7 +206,7 @@ public final class SendMsg extends MailDocumentHandler {
     }
 
     public static ItemId doSendMessage(OperationContext oc, Mailbox mbox, MimeMessage mm, List<Upload> uploads,
-            ItemId origMsgId, String replyType, String identityId, boolean noSaveToSent,
+            ItemId origMsgId, String replyType, String identityId, String dataSourceId, boolean noSaveToSent,
             boolean needCalendarSentByFixup, boolean isCalendarForward)
     throws ServiceException {
 
@@ -225,15 +226,23 @@ public final class SendMsg extends MailDocumentHandler {
         }
 
         MailSender sender;
-        if (isCalendarMessage) {
-            sender = CalendarMailSender.getCalendarMailSender(mbox);
+        if (dataSourceId == null) {
+            sender = isCalendarMessage ? CalendarMailSender.getCalendarMailSender(mbox) : mbox.getMailSender();
+            if (noSaveToSent) {
+                id = sender.sendMimeMessage(oc, mbox, false, mm, uploads, origMsgId, replyType, null, false);
+            } else {
+                id = sender.sendMimeMessage(oc, mbox, mm, uploads, origMsgId, replyType, identityId, false);
+            }
         } else {
-            sender = mbox.getMailSender();
-        }
-        if (noSaveToSent) {
-            id = sender.sendMimeMessage(oc, mbox, false, mm, uploads, origMsgId, replyType, null, false);
-        } else {
-            id = sender.sendMimeMessage(oc, mbox, mm, uploads, origMsgId, replyType, identityId, false);
+            com.zimbra.cs.account.DataSource dataSource = mbox.getAccount().getDataSourceById(dataSourceId);
+            if (dataSource == null) {
+                throw ServiceException.INVALID_REQUEST("No data source with id " + dataSourceId, null);
+            }
+            if (!dataSource.isSmtpEnabled()) {
+                throw ServiceException.INVALID_REQUEST("Data source SMTP is not enabled", null);
+            }
+            sender = mbox.getDataSourceMailSender(dataSource, isCalendarMessage);
+            id = sender.sendDataSourceMimeMessage(oc, mbox, mm, uploads, origMsgId, replyType);
         }
         // Send Calendar Forward Invitation notification if applicable
         try {

@@ -487,6 +487,38 @@ public class DataSource extends AccountProperty {
         return DataSourceManager.getInstance().getMailbox(this);
     }
 
+    public boolean isSmtpEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraDataSourceSmtpEnabled, false);
+    }
+
+    public String getSmtpHost() {
+        return getAttr(Provisioning.A_zimbraDataSourceSmtpHost);
+    }
+
+    public Integer getSmtpPort() {
+        return getIntAttr(Provisioning.A_zimbraDataSourceSmtpPort, -1);
+    }
+
+    public boolean isSmtpConnectionSecure() {
+        // TODO - Fix hard coded string
+        return !"cleartext".equals(getAttr(Provisioning.A_zimbraDataSourceSmtpConnectionType));
+    }
+
+    public boolean isSmtpAuthRequired() {
+        return getBooleanAttr(Provisioning.A_zimbraDataSourceSmtpAuthRequired, false);
+    }
+
+    public String getSmtpUsername() {
+        String smtpUsername = getAttr(Provisioning.A_zimbraDataSourceUsername);
+        return smtpUsername == null ? isSmtpEnabled() && isSmtpAuthRequired() ? getUsername() : null : smtpUsername;
+    }
+
+    public String getDecryptedSmtpPassword() throws ServiceException {
+        String smtpPass = getAttr(Provisioning.A_zimbraDataSourcePassword);
+        return smtpPass == null ? isSmtpEnabled() && isSmtpAuthRequired() ? getDecryptedPassword() : null :
+                decryptData(getId(), smtpPass);
+    }
+
     @Override
     public String toString() {
         return Objects.toStringHelper(this)

@@ -85,7 +85,7 @@ public class CreateDataSource extends MailDocumentHandler {
         dsAttrs.put(Provisioning.A_zimbraDataSourceEnabled,
             LdapUtil.getLdapBooleanString(eDataSource.getAttributeBool(MailConstants.A_DS_IS_ENABLED)));
         dsAttrs.put(Provisioning.A_zimbraDataSourceImportOnly,
-                LdapUtil.getLdapBooleanString(eDataSource.getAttributeBool(MailConstants.A_DS_IS_IMPORTONLY,false)));
+                LdapUtil.getLdapBooleanString(eDataSource.getAttributeBool(MailConstants.A_DS_IS_IMPORTONLY, false)));
         dsAttrs.put(Provisioning.A_zimbraDataSourceHost, eDataSource.getAttribute(MailConstants.A_DS_HOST));
         dsAttrs.put(Provisioning.A_zimbraDataSourcePort, eDataSource.getAttribute(MailConstants.A_DS_PORT));
         dsAttrs.put(Provisioning.A_zimbraDataSourceConnectionType, eDataSource.getAttribute(MailConstants.A_DS_CONNECTION_TYPE));
@@ -94,17 +94,7 @@ public class CreateDataSource extends MailDocumentHandler {
         if (value != null) {
             dsAttrs.put(Provisioning.A_zimbraDataSourcePassword, value);
         }
-        
-        String defaultSignature = eDataSource.getAttribute(MailConstants.A_DS_DEFAULT_SIGNATURE, null);
-        if (defaultSignature != null) {
-            dsAttrs.put(Provisioning.A_zimbraPrefDefaultSignatureId, defaultSignature);
-        }
-        
-        String forwardReplySignature = eDataSource.getAttribute(MailConstants.A_DS_FORWARD_REPLY_SIGNATURE, null);
-        if (forwardReplySignature != null) {
-            dsAttrs.put(Provisioning.A_zimbraPrefForwardReplySignatureId, forwardReplySignature);
-        }
-        
+
         // type
         dsAttrs.put(Provisioning.A_zimbraDataSourceType, type.toString());
         
@@ -113,10 +103,13 @@ public class CreateDataSource extends MailDocumentHandler {
         if (importClass != null) {
         	dsAttrs.put(Provisioning.A_zimbraDataSourceImportClassName, importClass);
         }
-        
+
+        // SMTP attributes
+        processSmtpAttrs(dsAttrs, eDataSource, false, null);
+
         // Common optional attributes
         ModifyDataSource.processCommonOptionalAttrs(dsAttrs, eDataSource);
-        
+
         // POP3-specific attributes
         if (type == DataSourceType.pop3) {
             dsAttrs.put(Provisioning.A_zimbraDataSourceLeaveOnServer,
@@ -215,8 +208,40 @@ public class CreateDataSource extends MailDocumentHandler {
                             throw ServiceException.INVALID_REQUEST("Folder location conflict: " + fldr.getPath(), null);
                         }
                 }
-            } catch (NoSuchItemException e) {
+            } catch (NoSuchItemException ignored) {
             }
+        }
+    }
+
+    static void processSmtpAttrs(Map<String, Object> dsAttrs, Element eDataSource, boolean encryptPasswordHere,
+            String dsId)
+            throws ServiceException {
+        boolean smtpEnabled = false;
+        String value = eDataSource.getAttribute(MailConstants.A_DS_SMTP_ENABLED, null);
+        if (value != null) {
+            smtpEnabled = eDataSource.getAttributeBool(MailConstants.A_DS_SMTP_ENABLED);
+            dsAttrs.put(Provisioning.A_zimbraDataSourceSmtpEnabled, LdapUtil.getLdapBooleanString(smtpEnabled));
+        }
+        if (smtpEnabled) {
+            dsAttrs.put(Provisioning.A_zimbraDataSourceSmtpHost,
+                    eDataSource.getAttribute(MailConstants.A_DS_SMTP_HOST));
+            dsAttrs.put(Provisioning.A_zimbraDataSourceSmtpPort,
+                    eDataSource.getAttribute(MailConstants.A_DS_SMTP_PORT));
+            dsAttrs.put(Provisioning.A_zimbraDataSourceSmtpConnectionType,
+                    eDataSource.getAttribute(MailConstants.A_DS_SMTP_CONNECTION_TYPE));
+            dsAttrs.put(Provisioning.A_zimbraDataSourceSmtpAuthRequired,
+                    LdapUtil.getLdapBooleanString(eDataSource.getAttributeBool(MailConstants.A_DS_SMTP_AUTH_REQUIRED)));
+            dsAttrs.put(Provisioning.A_zimbraDataSourceEmailAddress,
+                    eDataSource.getAttribute(MailConstants.A_DS_EMAIL_ADDRESS));
+        }
+        value = eDataSource.getAttribute(MailConstants.A_DS_SMTP_USERNAME, null);
+        if (value != null) {
+            dsAttrs.put(Provisioning.A_zimbraDataSourceSmtpAuthUsername, value);
+        }
+        value = eDataSource.getAttribute(MailConstants.A_DS_SMTP_PASSWORD, null);
+        if (value != null) {
+            dsAttrs.put(Provisioning.A_zimbraDataSourceSmtpAuthPassword,
+                    encryptPasswordHere ? DataSource.encryptData(dsId, value) : value);
         }
     }
 }

@@ -2399,7 +2399,7 @@ u,n attributes present iff count > 0
 +  if "did" is specified, then the draft item will be removed if the SendMsg is successful.
 
 <SendMsgRequest [suid="{send-uid}"] [needCalendarSentByFixup="0|1"] [isCalendarForward="0|1"] [noSave="0|1"]>
-  <m [f="!|?"] [origid="..." rt="r|w"] [idnt="{identity-id}"] [did="{saved-draft-id}"]>
+  <m [f="!|?"] [origid="..." rt="r|w"] [idnt="{identity-id}"] [dsId="{datasource-id}"] [did="{saved-draft-id}"]>
     <e t="{type}" a="{email-address}" p="{personal-name}"/>+
     <su>{subject}</su>*
     [<header name="{header-name}">{header-value}</header>]*
@@ -2460,6 +2460,8 @@ isCalendarForward - Indicates whether this a forward of calendar invitation in w
 
   {header-name}, {header-value} - custom RFC822 header name and value respectively. Only header names specified in
     zimbraCustomMimeHeaderNameAllowed global config are allowed for security reasons.
+
+dsId - Id of the data source in case SMTP settings of that data source must be used for sending the message.
 
 ----------------------------
 
@@ -3367,12 +3369,16 @@ The locale list in the response is sorted by display name (name attribute).
 
 <TestDataSourceRequest>
   <pop3 host="pop.myisp.com" port="110" connectionType="cleartext|ssl"
-    username="mylogin" password="mypassword" leaveOnServer="true|false"/>
+    username="mylogin" password="mypassword" leaveOnServer="true|false"
+    [smtpEnabled="0|1" smtpHost="smtp.myisp.com" smtpPort="465" smtpConnectionType="cleartext|ssl"
+    smtpAuthRequired="0|1" smtpUsername="mylogin" smtpPassword="mypassword"]/>
 
   or
 
   <imap host="imap.myisp.com" port="143" connectionType="cleartext|ssl"
-    username="mylogin" password="mypassword"/>
+    username="mylogin" [password="mypassword"] [oauthToken="myOAuthToken"]
+    [smtpEnabled="0|1" smtpHost="smtp.myisp.com" smtpPort="465" smtpConnectionType="cleartext|ssl"
+    smtpAuthRequired="0|1" smtpUsername="mylogin" smtpPassword="mypassword"]/>
 </TestDataSourceRequest>
 
 or
@@ -3384,19 +3390,7 @@ or
   or
 
   <imap id="{id}" [host="imap.myisp.com"] [port="143"] [connectionType="cleartext|ssl"]
-    [username="mylogin"] [password="mypassword"]/>
-</TestDataSourceRequest>
-
-or
-
-<TestDataSourceRequest>
-  <imap host="imap.myisp.com" port="993" connectionType="ssl"
-    username="mylogin" oauthToken="myOAuthToken"/>
-    
-    or
-    
-  <imap id="{id}" [host="imap.myisp.com"] [port="993"] [connectionType="ssl"]
-    [username="mylogin"] [oauthToken="myOAuthToken"]/>    
+    [username="mylogin"] [password="mypassword"] [oauthToken="myOAuthToken"]/>
 </TestDataSourceRequest>
 
 <TestDataSourceResponse>
@@ -3425,6 +3419,8 @@ emailAddress="changed-phoebe@google.com"
 <CreateDataSourceRequest/>
   <pop3 name="My POP3 Account" isEnabled="0|1" host="pop.myisp.com" port="110"
     connectionType="cleartext|ssl" username="mylogin" password="mypassword" l="{folder-id}"
+    [smtpEnabled="0|1" smtpHost="smtp.myisp.com" smtpPort="465" smtpConnectionType="cleartext|ssl"
+    smtpAuthRequired="0|1" smtpUsername="mylogin" smtpPassword="mypassword"]
     leaveOnServer="0|1" [pollingInterval="10m"]
     [emailAddress="{email-address}"]
     [useAddressForForwardReply="0|1"]
@@ -3436,8 +3432,10 @@ emailAddress="changed-phoebe@google.com"
 
   or
 
-  <imap name="My IMAP Account" isEnabled="0|1" host="imap.myisp.com" port="143"
-    connectionType="cleartext|ssl" username="mylogin" password="mypassword" l="{folder-id}"
+  <imap name="My IMAP Account" isEnabled="0|1" host="imap.myisp.com" port="143" connectionType="cleartext|ssl"
+    username="mylogin" [password="mypassword"] [oauthToken="myOAuthToken"] l="{folder-id}"
+    [smtpEnabled="0|1" smtpHost="smtp.myisp.com" smtpPort="465" smtpConnectionType="cleartext|ssl"
+    smtpAuthRequired="0|1" smtpUsername="mylogin" smtpPassword="mypassword"]
     [pollingInterval="10m"]
     [emailAddress="{email-address}"]
     [useAddressForForwardReply="0|1"]
@@ -3448,29 +3446,15 @@ emailAddress="changed-phoebe@google.com"
     [test="0|1"]/>
 </CreateDataSourceRequest>
 
-or
-
-<CreateDataSourceRequest/>
-	   <imap name="My IMAP Account" isEnabled="0|1"
-        host="imap.myisp.com" port="993" 
-	    connectionType="ssl" username="mylogin" l="{folder-id}"
-	    oauthToken="myOAuthToken"
-	    [pollingInterval="10m"]
-	    [emailAddress="{email-address}"]
-	    [useAddressForForwardReply="0|1"]
-	    [defaultSignature="{default-signature-id}"]
-	    [fromDisplay="{from-display}"]
-	    [replyToAddress="{replyto-address}"]
-	    [replyToDisplay="{replyto-display}"]
-	    [test="0|1"]/>
-</CreateDataSourceRequest>
-
 <CreateDataSourceResponse>
   <pop3 id="{id}"/>
 </CreateDataSourceResponse>
 
 Creates a data source that imports mail items into the specified folder via
 the POP3 or IMAP protocol.  Only one data source is allowed per request.
+
+If SMTP is being enabled for the mail data source (IMAP/POP3) and SMTP settings are being specified, the
+emailAddress attr must also be specified.
 
 ---------------------------
 
@@ -3479,6 +3463,8 @@ the POP3 or IMAP protocol.  Only one data source is allowed per request.
 <GetDataSourcesResponse>
   *[<pop3 id="{id}" name="My POP3 Account" isEnabled="0|1" host="pop3.myisp.com" port="110"
     username="mylogin" l="{folder-id}" leaveOnServer="0|1" [pollingInterval="10m"]
+    [smtpEnabled="0|1" smtpHost="smtp.myisp.com" smtpPort="465" smtpConnectionType="cleartext|ssl"
+    smtpAuthRequired="0|1" smtpUsername="mylogin" smtpPassword="mypassword"]
     [emailAddress="{email-address}"]
     [useAddressForForwardReply="0|1"]
     [defaultSignature="{default-signature-id}"]
@@ -3491,6 +3477,8 @@ the POP3 or IMAP protocol.  Only one data source is allowed per request.
    </pop3>]
   *[<imap name="My IMAP Account" isEnabled="0|1" host="imap.myisp.com" port="143"
     connectionType="cleartext|ssl" username="mylogin" l="{folder-id}" [pollingInterval="10m"]
+    [smtpEnabled="0|1" smtpHost="smtp.myisp.com" smtpPort="465" smtpConnectionType="cleartext|ssl"
+    smtpAuthRequired="0|1" smtpUsername="mylogin" smtpPassword="mypassword"]
     [emailAddress="{email-address}"]
     [useAddressForForwardReply="0|1"]
     [defaultSignature="{default-signature-id}"]
@@ -3514,7 +3502,7 @@ failingSince: if the most recent sync(s) failed, this attribute specifies
   if the last sync was successful.
   
 --------------------------
-Note: OAuthToken is temporaray and it expires after a certain time interval
+Note: OAuthToken is temporary and it expires after a certain time interval
 Client can refresh the OAuthToken in two ways
 1. Refresh and update OAuthToken periodically
 2. Refresh and update OAuthToken if the client gets the response as - error=" Invalid credentials (Failure)"
@@ -3525,6 +3513,8 @@ Client can refresh the OAuthToken in two ways
 <ModifyDataSourceRequest>
   *[<pop3 id="{id}" [name="My POP3 Account"] [isEnabled="0|1"] [host="pop3.myisp.com"]
     [port="110"] [connectionType="cleartext|ssl"] [username="mylogin"]
+    [smtpEnabled="0|1" smtpHost="smtp.myisp.com" smtpPort="465" smtpConnectionType="cleartext|ssl"
+    smtpAuthRequired="0|1" smtpUsername="mylogin" smtpPassword="mypassword"]
     [password="mypassword"] [l="{folder-id}"] [leaveOnServer="0|1"]
     [pollingInterval="10m"]
     [emailAddress="{email-address}"]
@@ -3534,25 +3524,10 @@ Client can refresh the OAuthToken in two ways
     [fromDisplay="{from-display}"]
     [replyToAddress="{replyto-address}"]
     [replyToDisplay="{replyto-display}"]/>
-  *[<imap name="My IMAP Account" isEnabled="0|1" host="imap.myisp.com" port="143"
-    connectionType="cleartext|ssl" username="mylogin" password="mypassword" l="{folder-id}"
-    [pollingInterval="10m"]
-    [emailAddress="{email-address}"]
-    [useAddressForForwardReply="0|1"]
-    [defaultSignature="{default-signature-id}"]
-    [forwardReplySignature="{forward-reply-signature-id}"]
-    [fromDisplay="{from-display}"]
-    [replyToAddress="{replyto-address}"]
-    [replyToDisplay="{replyto-display}"]
-    [test="0|1"]/>
-</ModifyDataSourceRequest>
-
-or
-
-<ModifyDataSourceRequest>
-  *[<imap name="My IMAP Account" isEnabled="0|1" host="imap.myisp.com" port="143"
-    connectionType="cleartext|ssl" username="mylogin" password="mypassword" l="{folder-id}"
-    oauthToken="myOAuthToken"
+  *[<imap name="My IMAP Account" isEnabled="0|1" host="imap.myisp.com" port="143" connectionType="cleartext|ssl"
+    username="mylogin" [password="mypassword"] [oauthToken="myOAuthToken"] l="{folder-id}"
+    [smtpEnabled="0|1" smtpHost="smtp.myisp.com" smtpPort="465" smtpConnectionType="cleartext|ssl"
+    smtpAuthRequired="0|1" smtpUsername="mylogin" smtpPassword="mypassword"]
     [pollingInterval="10m"]
     [emailAddress="{email-address}"]
     [useAddressForForwardReply="0|1"]

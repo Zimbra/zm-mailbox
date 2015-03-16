@@ -16,6 +16,9 @@
  */
 package com.zimbra.cs.datasource;
 
+import com.sun.mail.smtp.SMTPTransport;
+import com.zimbra.cs.mailclient.smtp.SmtpTransport;
+import com.zimbra.cs.util.JMSession;
 import com.zimbra.soap.admin.type.DataSourceType;
 import com.zimbra.common.account.ZAttrProvisioning.AccountStatus;
 import com.zimbra.common.localconfig.LC;
@@ -41,6 +44,9 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.ScheduledTaskManager;
 import com.zimbra.cs.util.Zimbra;
 
+import javax.mail.MessagingException;
+import javax.mail.Session;
+import javax.mail.Transport;
 import java.io.File;
 import java.lang.reflect.Constructor;
 import java.util.*;
@@ -176,7 +182,7 @@ public class DataSourceManager {
             try {
                 String className = LC.data_source_xsync_class.value();
                 if (className != null && className.length() > 0) {
-                    Class<?> cmdClass = null;
+                    Class<?> cmdClass;
                     try {
                         cmdClass = Class.forName(className);
                     } catch (ClassNotFoundException x) {
@@ -213,11 +219,39 @@ public class DataSourceManager {
         try {
             DataImport di = getInstance().getDataImport(ds);
             di.test();
+
+            if (ds.isSmtpEnabled()) {
+                Session session = JMSession.getSession(ds);
+                Transport smtp = session.getTransport();
+                String emailAddress = ds.getEmailAddress();
+                if (smtp instanceof SmtpTransport) {
+                    test((SmtpTransport) smtp, emailAddress);
+                } else {
+                    test((SMTPTransport) smtp, emailAddress);
+                }
+            }
             ZimbraLog.datasource.info("Test succeeded: %s", ds);
         } catch (ServiceException x) {
-            ZimbraLog.datasource.warn("Test failed: %s", ds, x);
+            ZimbraLog.datasource.info("Test failed: %s", ds, x);
             throw x;
+        } catch (Exception e) {
+            ZimbraLog.datasource.info("Test failed: %s", ds, e);
+            throw ServiceException.INVALID_REQUEST("Datasource test failed", e);
         }
+    }
+
+    private static void test(SMTPTransport smtp, String mailfrom) throws MessagingException {
+        smtp.connect();
+        smtp.issueCommand("MAIL FROM:<" + mailfrom + ">", 250);
+        smtp.issueCommand("RSET", 250);
+        smtp.close();
+    }
+
+    private static void test(SmtpTransport smtp, String mailfrom) throws MessagingException {
+        smtp.connect();
+        smtp.mail(mailfrom);
+        smtp.rset();
+        smtp.close();
     }
 
     public static List<ImportStatus> getImportStatus(Account account)
