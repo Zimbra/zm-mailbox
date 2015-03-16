@@ -43,6 +43,14 @@ extends Msg {
     @XmlAttribute(name=MailConstants.A_SEND_FROM_DRAFT /* sfd */, required=false)
     private ZmBoolean sendFromDraft;
 
+    /**
+     * @zm-api-field-tag datasource-id
+     * @zm-api-field-description Id of the data source in case SMTP settings of that data source must be used for
+     * sending the message.
+     */
+    @XmlAttribute(name=MailConstants.A_DATASOURCE_ID /* dsId */, required=false)
+    private String dataSourceId;
+
     public MsgToSend() {
     }
 
@@ -54,11 +62,15 @@ extends Msg {
     }
     public Boolean getSendFromDraft() { return ZmBoolean.toBool(sendFromDraft); }
 
+    public void setDataSourceId(String dsId) { this.dataSourceId = dsId; }
+    public String getDataSourceId() { return dataSourceId; }
+
     public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         helper = super.addToStringInfo(helper);
         return helper
             .add("draftId", draftId)
-            .add("sendFromDraft", sendFromDraft);
+            .add("sendFromDraft", sendFromDraft)
+            .add("dataSourceId", dataSourceId);
     }
 
     @Override

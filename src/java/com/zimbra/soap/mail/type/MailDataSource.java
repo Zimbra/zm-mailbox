@@ -138,6 +138,57 @@ implements DataSource {
     private String emailAddress;
 
     /**
+     * @zm-api-field-description Whether sending outbound mail using external SMTP server is enabled in this
+     * data source.
+     */
+    @XmlAttribute(name=MailConstants.A_DS_SMTP_ENABLED /* smtpEnabled */, required=false)
+    private ZmBoolean smtpEnabled;
+
+    /**
+     * @zm-api-field-tag smtp-server
+     * @zm-api-field-description Name of SMTP server
+     * <br />
+     * e.g. "smtp.myisp.com"
+     */
+    @XmlAttribute(name=MailConstants.A_DS_SMTP_HOST /* smtpHost */, required=false)
+    private String smtpHost;
+
+    /**
+     * @zm-api-field-tag smtp-port
+     * @zm-api-field-description Port number of SMTP server
+     * <br />
+     * e.g. "465"
+     */
+    @XmlAttribute(name=MailConstants.A_DS_SMTP_PORT /* smtpPort */, required=false)
+    private Integer smtpPort;
+
+    /**
+     * @zm-api-field-description Which security layer to use for connecting to SMTP host associated with this
+     * data source.
+     */
+    @XmlAttribute(name=MailConstants.A_DS_SMTP_CONNECTION_TYPE /* smtpConnectionType */, required=false)
+    private MdsConnectionType smtpConnectionType;
+
+    /**
+     * @zm-api-field-description Whether SMTP server associated with this data source requires authentication.
+     */
+    @XmlAttribute(name=MailConstants.A_DS_SMTP_AUTH_REQUIRED /* smtpAuthRequired */, required=false)
+    private ZmBoolean smtpAuthRequired;
+
+    /**
+     * @zm-api-field-description Login username for SMTP server
+     */
+    @XmlAttribute(name=MailConstants.A_DS_SMTP_USERNAME /* smtpUsername */, required=false)
+    private String smtpUsername;
+
+    /**
+     * @zm-api-field-tag smtp-password
+     * @zm-api-field-description Login password for SMTP server
+     */
+    @XmlAttribute(name=MailConstants.A_DS_SMTP_PASSWORD /* smtpPassword */, required=false)
+    private String smtpPassword;
+
+    /**
      * @zm-api-field-description When forwarding or replying to messages sent to this data source, this flags whether
      * or not to use the email address of the data source for the from address and the designated signature/replyTo
      * of the data source for the outgoing message.
@@ -266,6 +317,17 @@ implements DataSource {
     public void setPollingInterval(String pollingInterval) { this.pollingInterval = pollingInterval; }
     @Override
     public void setEmailAddress(String emailAddress) { this.emailAddress = emailAddress; }
+    public void setSmtpEnabled(Boolean smtpEnabled) { this.smtpEnabled = ZmBoolean.fromBool(smtpEnabled); }
+    public void setSmtpHost(String smtpHost) { this.smtpHost = smtpHost; }
+    public void setSmtpPort(Integer smtpPort) { this.smtpPort = smtpPort; }
+    public void setSmtpConnectionType(MdsConnectionType smtpConnectionType) {
+        this.smtpConnectionType = smtpConnectionType;
+    }
+    public void setSmtpAuthRequired(Boolean smtpAuthRequired) {
+        this.smtpAuthRequired = ZmBoolean.fromBool(smtpAuthRequired);
+    }
+    public void setSmtpUsername(String smtpUsername) { this.smtpUsername = smtpUsername; }
+    public void setSmtpPassword(String smtpPassword) { this.smtpPassword = smtpPassword; }
     @Override
     public void setUseAddressForForwardReply(Boolean useAddressForForwardReply) {
         this.useAddressForForwardReply = ZmBoolean.fromBool(useAddressForForwardReply);
@@ -322,6 +384,13 @@ implements DataSource {
     public String getPollingInterval() { return pollingInterval; }
     @Override
     public String getEmailAddress() { return emailAddress; }
+    public Boolean isSmtpEnabled() { return ZmBoolean.toBool(smtpEnabled); }
+    public String getSmtpHost() { return smtpHost; }
+    public Integer getSmtpPort() { return smtpPort; }
+    public MdsConnectionType getSmtpConnectionType() { return smtpConnectionType; }
+    public Boolean isSmtpAuthRequired() { return ZmBoolean.toBool(smtpAuthRequired); }
+    public String getSmtpUsername() { return smtpUsername; }
+    public String getSmtpPassword() { return smtpPassword; }
     @Override
     public Boolean isUseAddressForForwardReply() { return ZmBoolean.toBool(useAddressForForwardReply); }
     @Override
@@ -369,6 +438,13 @@ implements DataSource {
             .add("password", password)
             .add("pollingInterval", pollingInterval)
             .add("emailAddress", emailAddress)
+            .add("smtpEnabled", smtpEnabled)
+            .add("smtpHost", smtpHost)
+            .add("smtpPort", smtpPort)
+            .add("smtpConnectionType", smtpConnectionType)
+            .add("smtpAuthRequired", smtpAuthRequired)
+            .add("smtpUsername", smtpUsername)
+            .add("smtpPassword", smtpPassword)
             .add("useAddressForForwardReply", useAddressForForwardReply)
             .add("defaultSignature", defaultSignature)
             .add("forwardReplySignature", forwardReplySignature)
