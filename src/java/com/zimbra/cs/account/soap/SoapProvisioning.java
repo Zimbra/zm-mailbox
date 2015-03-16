@@ -310,12 +310,23 @@ public class SoapProvisioning extends Provisioning {
             mTransport.setDebugListener(mDebugListener);
     }
 
-    /** Perform a service locator lookup of an admin service */
+    /** Perform a service locator lookup of an admin soap service */
     public String lookupAdminServiceURI() throws ServiceException {
         try {
             ServiceLocator.Entry entry = serviceLocator.findOne(ZimbraServiceNames.MAILSTOREADMIN);
             String scheme = entry.tags.contains("ssl") ? "https" : "http";
             return scheme + "://" + entry.hostName + ":" + entry.servicePort + AdminConstants.ADMIN_SERVICE_URI;
+        } catch (IOException e) {
+            throw ServiceException.FAILURE("Failed contacting service locator", e);
+        }
+    }
+
+    /** Perform a service locator lookup of a mailstore soap service */
+    public String lookupMailServiceURI() throws ServiceException {
+        try {
+            ServiceLocator.Entry entry = serviceLocator.findOne(ZimbraServiceNames.MAILSTORE);
+            String scheme = entry.tags.contains("ssl") ? "https" : "http";
+            return scheme + "://" + entry.hostName + ":" + entry.servicePort + "/service/soap/";
         } catch (IOException e) {
             throw ServiceException.FAILURE("Failed contacting service locator", e);
         }

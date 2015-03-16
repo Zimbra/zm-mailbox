@@ -61,10 +61,6 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
     private static final Map<String, Namespace> sTypeToNamespace =
         new TreeMap<String, Namespace>();
 
-    private static final String DEFAULT_URL = "http://" + LC.zimbra_zmprov_default_soap_server.value()
-                    + (LC.zimbra_mail_service_port.intValue() == 80 ? "" : ":" + LC.zimbra_mail_service_port.intValue())
-                    + "/service/soap";
-
     private static final String LO_HELP = "help";
     private static final String LO_MAILBOX = "mailbox";
     private static final String LO_AUTH = "auth";
@@ -284,7 +280,7 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
             if (!StringUtil.isNullOrEmpty(mAdminAccountName)) {
                 mUrl = new SoapProvisioning().lookupAdminServiceURI();
             } else {
-                mUrl = DEFAULT_URL;
+                mUrl = new SoapProvisioning().lookupMailServiceURI();
             }
         }
 

@@ -153,10 +153,7 @@ public class ZMailboxUtil implements DebugListener {
     private String mPassword = null;
     private ZAuthToken mAdminAuthToken = null;
 
-    private static final String DEFAULT_URL = "http://" + LC.zimbra_zmprov_default_soap_server.value()
-                    + (LC.zimbra_mail_service_port.intValue() == 80 ? "" : ":" + LC.zimbra_mail_service_port.intValue()) + "/";
-
-    private String mUrl = DEFAULT_URL;
+    private String mUrl;
 
     private Map<String,Command> mCommandIndex;
     private ZMailbox mMbox;
