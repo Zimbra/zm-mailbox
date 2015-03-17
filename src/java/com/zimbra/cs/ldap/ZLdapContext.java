@@ -105,6 +105,12 @@ public abstract class ZLdapContext extends ZLdapElement implements ILdapContext 
             String baseDN, ZLdapFilter filter, ZSearchControls searchControls)
     throws LdapException;
 
+    /** TODO: Make abstract for Kiss and later versions */
+    public boolean compare(final String dn, final String attributeName, final String assertionValue)
+    throws ServiceException {
+        throw new UnsupportedOperationException("compare operation has not been implemented");
+    }
+
     public abstract long countEntries(
             String baseDN, ZLdapFilter filter, ZSearchControls searchControls)
     throws LdapException;
