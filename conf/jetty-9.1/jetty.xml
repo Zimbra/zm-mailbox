@@ -238,6 +238,38 @@
 			</New>
 		</Arg>
 	</Call>
+
+	<Call id="mtaAdminHttpsConnector" name="addConnector">
+		<Arg>
+			<New id="mtaAdmin" class="org.eclipse.jetty.server.ServerConnector">
+				<Arg name="server">
+					<Ref refid="Server" />
+				</Arg>
+				<Arg name="factories">
+					<Array type="org.eclipse.jetty.server.ConnectionFactory">
+						<Item>
+							<New class="org.eclipse.jetty.server.SslConnectionFactory">
+								<Arg name="next">http/1.1</Arg>
+								<Arg name="sslContextFactory">
+									<Ref refid="zimbraSslContextFactory" />
+								</Arg>
+							</New>
+						</Item>
+						<Item>
+							<New class="org.eclipse.jetty.server.HttpConnectionFactory">
+								<Arg name="config">
+									<Ref refid="sslHttpConfig" />
+								</Arg>
+							</New>
+						</Item>
+					</Array>
+				</Arg>
+				<Set name="Host">127.0.0.1</Set>
+				<Set name="port">7073</Set>
+				<Set name="idleTimeout">60000</Set>
+			</New>
+		</Arg>
+	</Call>
 	
 	<Call id="extConnector" name="addConnector">
 		<Arg>
@@ -472,15 +504,6 @@
 					</New>
 				</Arg>
 			</Call>
-			 <Call name="addRule">
-                                <Arg>
-                                        <New class="org.eclipse.jetty.rewrite.handler.RewritePatternRule">
-                                                <Set name="pattern">/solr/*</Set>
-                                                <Set name="replacement">/solr</Set>
-                                                <Set name="terminating">true</Set>
-                                        </New>
-                                </Arg>
-                        </Call>
 			<!-- assume all other requests handled by zimbra webapp -->
 			<Call name="addRule">
 				<Arg>
@@ -635,51 +658,6 @@
 		</Call>
 	</New>
 
-       <!-- SOLRCONFIGBEGIN -->
-        <Call id="solrConnector" name="addConnector">
-                <Arg>
-                        <New id="solr" class="org.eclipse.jetty.server.ServerConnector">
-                                <Arg name="server">
-                                        <Ref refid="Server" />
-                                </Arg>
-                                <Arg name="factories">
-                                        <Array type="org.eclipse.jetty.server.ConnectionFactory">
-                                                <Item>
-                                                        <New class="org.eclipse.jetty.server.HttpConnectionFactory">
-                                                                <Arg name="config">
-                                                                        <Ref refid="httpConfig" />
-                                                                </Arg>
-                                                        </New>
-                                                </Item>
-                                        </Array>
-                                </Arg>
-                            <Set name="host"><SystemProperty name="jetty.host" default="localhost" /></Set>
-                                <Set name="port">7983</Set>
-                <Set name="idleTimeout">60000</Set>
-                <Set name="name">SolrConnector</Set>
-                        </New>
-                </Arg>
-        </Call>
-
-        <New id="solr" class="org.eclipse.jetty.webapp.WebAppContext">
-                <Arg>
-                        <Ref id="Contexts" />
-                </Arg>
-                <Arg><SystemProperty name="jetty.home" default="." />/webapps/solr</Arg>
-                <Arg>/solr</Arg>
-                <Set name="configurationClasses">
-                        <Ref id="plusConfig" />
-                </Set>
-                <Set name="defaultsDescriptor"><SystemProperty name="jetty.home"/>/etc/webdefault.xml</Set>
-                <Set name="tempDirectory"><Property name="jetty.home" default="."/>/work/solr</Set>
-                <Set name="virtualHosts">
-                    <Array type="java.lang.String">
-                      <Item>@SolrConnector</Item>
-                    </Array>
-                  </Set>
-        </New>
-        <!-- SOLRCONFIGEND -->
-        
 	<!-- Configure System and Server classes -->
 	<!-- By default, Jetty7 does not expose all the libraries to WebApps, so 
 		customize server/system classes -->
@@ -837,55 +815,4 @@
 		<Call name="open"/>
 	</Ref>
 
-  <Call class="com.zimbra.common.handlers.PrivilegedHandler" name="openPorts">
-    <Arg>
-      <Map>
-        <Entry>
-          <Item>zimbraLmtpBindAddress</Item>
-          <Item><New class="java.lang.String"><Arg><Property name="zimbraLmtpBindAddress" default=""/></Arg></New></Item>
-        </Entry>
-        <Entry>
-          <Item>zimbraImapServerEnabled</Item>
-          <Item><New class="java.lang.Boolean"><Arg><Property name="zimbraImapServerEnabled" default="true"/></Arg></New></Item>
-        </Entry>
-        <Entry>
-          <Item>zimbraLmtpServerEnabled</Item>
-          <Item><New class="java.lang.Boolean"><Arg><Property name="zimbraLmtpServerEnabled" default="true"/></Arg></New></Item>
-        </Entry>
-        <Entry>
-          <Item>zimbraImapBindAddress</Item>
-          <Item><New class="java.lang.String"><Arg><Property name="zimbraImapBindAddress" default=""/></Arg></New></Item>
-        </Entry>
-        <Entry>
-          <Item>zimbraImapBindPort</Item>
-          <Item><New class="java.lang.Integer"><Arg><Property name="zimbraImapBindPort" default="7143"/></Arg></New></Item>
-        </Entry>
-        <Entry>
-          <Item>nio_imap_enabled</Item>
-          <Item><New class="java.lang.Boolean"><Arg><Property name="nio_imap_enabled" default="true"/></Arg></New></Item>
-        </Entry>
-        <Entry>
-          <Item>zimbraPop3NioEnabled</Item>
-          <Item><New class="java.lang.Boolean"><Arg><Property name="zimbraPop3NioEnabled" default="true"/></Arg></New></Item>
-        </Entry>
-        <Entry>
-          <Item>zimbra_ssl_enabled</Item>
-          <Item><New class="java.lang.Boolean"><Arg><Property name="zimbra_ssl_enabled" default="true"/></Arg></New></Item>
-        </Entry>
-        <Entry>
-          <Item>mailboxd_keystore</Item>
-          <Item><New class="java.lang.String"><Arg><Property name="mailboxd_keystore" default="/opt/zimbra/jetty/etc/keystore"/></Arg></New></Item>
-        </Entry>
-        <Entry>
-          <Item>mailboxd_keystore_password</Item>
-          <Item><New class="java.lang.String"><Arg><Property name="mailboxd_keystore_password" default="zimbra"/></Arg></New></Item>
-        </Entry>
-        <Entry>
-          <Item>mailboxd_truststore_password</Item>
-          <Item><New class="java.lang.String"><Arg><Property name="mailboxd_truststore_password" default="zimbra"/></Arg></New></Item>
-        </Entry>
-      </Map>
-    </Arg>
-  </Call>
-  
 </Configure>
