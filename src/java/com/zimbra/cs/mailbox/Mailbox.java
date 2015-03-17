@@ -67,7 +67,6 @@ import com.zimbra.common.calendar.ZCalendar.ZComponent;
 import com.zimbra.common.calendar.ZCalendar.ZProperty;
 import com.zimbra.common.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.common.localconfig.DebugConfig;
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mailbox.Color;
 import com.zimbra.common.mime.InternetAddress;
 import com.zimbra.common.mime.Rfc822ValidationInputStream;
@@ -474,11 +473,12 @@ public class Mailbox {
         }
 
         /**
-         * Add an item to the list of things to be indexed at the end of the current transaction
+         * Add an item to the list of things to be queued for indexing at the end of the current transaction.
+         * This is used when immediate (in-transaction) indexing fails
          */
-       /* void addIndexItem(MailItem item) {
+        void addIndexItem(MailItem item) {
             indexItems.add(item);
-        }*/
+        }
 
         void addPendingDelete(PendingDelete info) {
             if (deletes == null) {
@@ -5076,7 +5076,7 @@ public class Mailbox {
             if (replies != null) {
                 calItem.setReplies(replies);
             }
-            index.add(calItem);
+            indexItem(calItem);
 
             success = true;
             return calItem;
@@ -5378,7 +5378,7 @@ public class Mailbox {
             }
 
             if (Invite.isOrganizerMethod(inv.getMethod())) { // Don't update the index for replies. (bug 55317)
-                index.add(calItem);
+                indexItem(calItem);
             }
 
             redoRecorder.setCalendarItemAttrs(calItem.getId(), calItem.getFolderId());
@@ -5781,6 +5781,11 @@ public class Mailbox {
         }
     }
 
+    private void indexItem(MailItem item) throws ServiceException {
+        if(!index.add(item)) {
+            currentChange().addIndexItem(item);
+        }
+    }
     private Message addMessageInternal(OperationContext octxt, ParsedMessage pm, int folderId, boolean noICal,
             int flags, String[] tags, int conversationId, String rcptEmail, Message.DraftInfo dinfo,
             CustomMetadata customData, DeliveryContext dctxt, StagedBlob staged)
@@ -6071,7 +6076,7 @@ public class Mailbox {
             }
 
             // step 7: queue new message for indexing
-            index.add(msg);
+            indexItem(msg);
             success = true;
 
             // step 9: send lawful intercept message
@@ -6246,7 +6251,7 @@ public class Mailbox {
             // update the content and increment the revision number
             msg.setContent(staged, pm);
 
-            index.add(msg);
+            indexItem(msg);
 
             success = true;
 
@@ -7329,7 +7334,7 @@ public class Mailbox {
             Note note = Note.create(noteId, getFolderById(folderId), content, location, color, null);
             redoRecorder.setNoteId(noteId);
 
-            index.add(note);
+            indexItem(note);
             success = true;
             return note;
         } finally {
@@ -7352,8 +7357,7 @@ public class Mailbox {
             checkItemChangeID(note);
 
             note.setContent(content);
-            index.add(note);
-
+            indexItem(note);
             success = true;
         } finally {
             endTransaction(success);
@@ -7439,7 +7443,7 @@ public class Mailbox {
             Contact con = Contact.create(contactId, getFolderById(folderId), mblob, pc, flags, ntags, null);
             redoRecorder.setContactId(contactId);
 
-            index.add(con);
+            indexItem(con);
 
             success = true;
             return con;
@@ -7480,7 +7484,7 @@ public class Mailbox {
                 throw ServiceException.FAILURE("could not save contact blob", ioe);
             }
 
-            index.add(con);
+            indexItem(con);
             success = true;
         } finally {
             endTransaction(success);
@@ -8706,7 +8710,7 @@ public class Mailbox {
             MailboxBlob mailboxBlob = doc.setContent(staged, pd);
             redoRecorder.setMessageBodyInfo(new MailboxBlobDataSource(mailboxBlob), mailboxBlob.getSize());
 
-            index.add(doc);
+            indexItem(doc);
 
             success = true;
             long elapsed = System.currentTimeMillis() - start;
@@ -8767,7 +8771,7 @@ public class Mailbox {
             MailboxBlob mailboxBlob = doc.setContent(staged, pd);
             redoRecorder.setMessageBodyInfo(new MailboxBlobDataSource(mailboxBlob), mailboxBlob.getSize());
 
-            index.add(doc);
+            indexItem(doc);
 
             success = true;
             return doc;
@@ -8841,7 +8845,7 @@ public class Mailbox {
             //   make sure that data actually matches the final blob in the store
             chat.updateBlobData(mblob);
 
-            index.add(chat);
+            indexItem(chat);
             success = true;
             return chat;
         } finally {
@@ -8894,7 +8898,7 @@ public class Mailbox {
             chat.setContent(staged, pm);
 
             // NOTE: msg is now uncached (will this cause problems during commit/reindex?)
-            index.add(chat);
+            indexItem(chat);
 
             success = true;
             return chat;
@@ -9066,9 +9070,16 @@ public class Mailbox {
 
             deletes = currentChange().deletes; // keep a reference for cleanup
                                                // deletes outside the lock
-            // We are finally done with database and redo commits. Cache update
-            // comes last.
+
+            /* retry failed index attempts after DB transaction is commited, because in case of temporary indexing failure, 
+            *  another server may try retrieving this item from the DB
+            */
+            if(!currentChange().indexItems.isEmpty()) {
+                index.add(currentChange().indexItems, false);
+            }
+            // We are finally done with database and redo commits. Cache update comes last.
             commitCache(currentChange());
+            
         } finally {
             lock.release();
 
@@ -9503,7 +9514,7 @@ public class Mailbox {
             String uuid = redoPlayer == null ? UUIDUtil.generateUUID() : redoPlayer.getUuid();
             Comment comment = Comment.create(this, parent, itemId, uuid, text, creatorId, null);
             redoRecorder.setItemIdAndUuid(comment.getId(), comment.getUuid());
-            index.add(comment);
+            indexItem(comment);
             success = true;
             return comment;
         } finally {

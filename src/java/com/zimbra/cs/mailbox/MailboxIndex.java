@@ -225,7 +225,7 @@ public final class MailboxIndex {
 
     public void deleteIndex() throws IOException, ServiceException {
         if (isReIndexInProgress()) {
-            cancelReIndex();
+            abortReIndex();
         }
         indexStore.deleteIndex();
     }
@@ -259,17 +259,33 @@ public final class MailboxIndex {
         }
         queueAdapter.setTotalMailboxTaskCount(mailbox.getAccountId(), items.length);
         queueAdapter.setSucceededMailboxTaskCount(mailbox.getAccountId(), 0);
-        
-        //Step 3: add items to re-indexing queue in batches
-        int ix = 0;
-        int batchSize = Provisioning.getInstance().getLocalServer().getReindexBatchSize();
-        if(batchSize > 0) {
-            while(ix < items.length) {
-                List<MailItem> batch = new ArrayList<MailItem>();
-                for(int i=0; i<batchSize && ix < items.length; i++, ix++) {
-                    batch.add(items[ix]);
+        queueAdapter.setFailedMailboxTaskCount(mailbox.getAccountId(), 0);
+
+        if(items.length == 0) {
+            //nothing to index
+            queueAdapter.setTaskStatus(mailbox.getAccountId(), ReIndexStatus.STATUS_DONE);
+            success = true;
+        } else {
+            queueAdapter.setTaskStatus(mailbox.getAccountId(), ReIndexStatus.STATUS_RUNNING);
+            //Step 3: add items to re-indexing queue in batches
+            int ix = 0;
+            int numAdded = 0;
+            int batchSize = Provisioning.getInstance().getLocalServer().getReindexBatchSize();
+            if(batchSize > 0) {
+                while(ix < items.length) {
+                    List<MailItem> batch = new ArrayList<MailItem>();
+                    for(int i=0; i<batchSize && ix < items.length; i++, ix++) {
+                        batch.add(items[ix]);
+                    }
+                    success = add(batch, true);
+                    if(!success) {
+                        queueAdapter.setTaskStatus(mailbox.getAccountId(), ReIndexStatus.STATUS_QUEUE_FULL);
+                        queueAdapter.incrementFailedMailboxTaskCount(mailbox.getAccountId(), items.length-numAdded);
+                        ZimbraLog.index.warn("Aborting reindexing for account %s,  because indexing queue is full. Added %d items out of %d.",mailbox.getAccount(),numAdded,items.length);
+                        break;
+                    }
+                    numAdded+=batch.size();            
                 }
-                success = add(batch, true);
             }
         }
         mailbox.endTransaction(success);
@@ -282,7 +298,8 @@ public final class MailboxIndex {
         ReindexMailbox reindexOp = new ReindexMailbox(mailbox.getId(), types, null);
         boolean success = false;
         mailbox.beginTransaction("IndexItemList", reindexOp.getOperationContext(),reindexOp,null,true);
-        //Step 1: get items (does not matter whether we get these from cache or DB at this step
+        
+        //Step 1: get items (does not matter whether we get these from cache or DB at this step)
         List<MailItem> items = new ArrayList<MailItem>();
         for(MailItem.Type type : types) {
             List<MailItem> itemsOfType = mailbox.getItemList(reindexOp.getOperationContext(), type);
@@ -290,39 +307,57 @@ public final class MailboxIndex {
                 items.addAll(itemsOfType);
             }
         }
-        
-        //Step 2: set task counters for reporting
         IndexingQueueAdapter queueAdapter = Zimbra.getAppContext().getBean(IndexingQueueAdapter.class);
         if(queueAdapter == null) {
             throw ServiceException.FAILURE("Indexing Queue Adapter is not properly configured", null);
         }
+        
+        //Step 2: set task counters for reporting
         queueAdapter.setTotalMailboxTaskCount(mailbox.getAccountId(), items.size());
         queueAdapter.setSucceededMailboxTaskCount(mailbox.getAccountId(), 0);
-        
-        //Step 3: add items to re-indexing queue in batches
-        int ix = 0;
-        int batchSize = Provisioning.getInstance().getLocalServer().getReindexBatchSize();
-        if(batchSize > 0) {
-            while(ix < items.size()) {
-                List<MailItem> batch = new ArrayList<MailItem>();
-                for(int i=0;i<batchSize && ix < items.size(); i++, ix++) {
-                    batch.add(items.get(ix));
+        queueAdapter.setFailedMailboxTaskCount(mailbox.getAccountId(), 0);
+
+        if(items.isEmpty()) {
+            queueAdapter.setTaskStatus(mailbox.getAccountId(), ReIndexStatus.STATUS_DONE);
+            success = true;
+        } else {
+            queueAdapter.setTaskStatus(mailbox.getAccountId(), ReIndexStatus.STATUS_RUNNING);
+            
+            //Step 3: add items to re-indexing queue in batches
+            int ix = 0;
+            int numAdded = 0;
+            int batchSize = Provisioning.getInstance().getLocalServer().getReindexBatchSize();
+            if(batchSize > 0) {
+                while(ix < items.size()) {
+                    List<MailItem> batch = new ArrayList<MailItem>();
+                    for(int i=0;i<batchSize && ix < items.size(); i++, ix++) {
+                        batch.add(items.get(ix));
+                    }
+                    success = add(batch, true);
+                    if(!success) {
+                        queueAdapter.setTaskStatus(mailbox.getAccountId(), ReIndexStatus.STATUS_QUEUE_FULL);
+                        queueAdapter.incrementFailedMailboxTaskCount(mailbox.getAccountId(), items.size()-numAdded);
+                        ZimbraLog.index.warn("Aborting reindexing for account %s,  because indexing queue is full. Added %d items out of %d.",mailbox.getAccount(),numAdded,items.size());
+                        break;
+                    }
+                    numAdded+=batch.size();
                 }
-                success = add(batch, true);
             }
         }
         mailbox.endTransaction(success);
     }
 
-    public synchronized ReIndexStatus cancelReIndex() throws ServiceException {
+    public synchronized ReIndexStatus abortReIndex() throws ServiceException {
         IndexingQueueAdapter queueAdapter = Zimbra.getAppContext().getBean(IndexingQueueAdapter.class);
         if(queueAdapter == null) {
             throw ServiceException.FAILURE("Indexing Queue Adapter is not properly configured", null);
         }
-        queueAdapter.setTotalMailboxTaskCount(mailbox.getAccountId(), -1);
-        return new ReIndexStatus(-1, 
+        queueAdapter.setTaskStatus(mailbox.getAccountId(), ReIndexStatus.STATUS_ABORTED);
+        
+        return new ReIndexStatus(queueAdapter.getTotalMailboxTaskCount(mailbox.getAccountId()), 
                 queueAdapter.getSucceededMailboxTaskCount(mailbox.getAccountId()),
-                queueAdapter.getFailedMailboxTaskCount(mailbox.getAccountId()));
+                    queueAdapter.getFailedMailboxTaskCount(mailbox.getAccountId()), 
+                        ReIndexStatus.STATUS_ABORTED);
     }
 
     public boolean verify(PrintStream out) throws ServiceException {
@@ -493,10 +528,10 @@ public final class MailboxIndex {
             return false;
         }
         assert(mailbox.lock.isWriteLockedByCurrentThread());
+        ZimbraLog.index.debug("Queuing %d items for indexing", items.size());
         IndexingQueueAdapter queueAdapter = Zimbra.getAppContext().getBean(IndexingQueueAdapter.class);
         AddToIndexTaskLocator itemLocator = new AddToIndexTaskLocator(items, mailbox.getAccountId(), mailbox.getId(), mailbox.getSchemaGroupId(), mailbox.attachmentsIndexingEnabled(), isReindexing);
-        queueAdapter.put(itemLocator);
-        return true;
+        return queueAdapter.add(itemLocator);
     }
     
 
@@ -585,11 +620,12 @@ public final class MailboxIndex {
     public synchronized ReIndexStatus getReIndexStatus() {
         IndexingQueueAdapter queueAdapter = Zimbra.getAppContext().getBean(IndexingQueueAdapter.class);
         if(queueAdapter == null) {
-            return new ReIndexStatus(0,0);
+            return new ReIndexStatus();
         }
         return new ReIndexStatus(queueAdapter.getTotalMailboxTaskCount(mailbox.getAccountId()), 
                 queueAdapter.getSucceededMailboxTaskCount(mailbox.getAccountId()),
-                    queueAdapter.getFailedMailboxTaskCount(mailbox.getAccountId()));
+                    queueAdapter.getFailedMailboxTaskCount(mailbox.getAccountId()),
+                        queueAdapter.getTaskStatus(mailbox.getAccountId()));
     }
 
     public boolean isReIndexInProgress() {
@@ -603,8 +639,8 @@ public final class MailboxIndex {
         }
         int succeeded = queueAdapter.getSucceededMailboxTaskCount(mailbox.getAccountId());
         int failed = queueAdapter.getFailedMailboxTaskCount(mailbox.getAccountId());
-        
-        return (succeeded+failed < total); 
+        int status = queueAdapter.getTaskStatus(mailbox.getAccountId());
+        return (status != ReIndexStatus.STATUS_ABORTED && (succeeded+failed) < total); 
     }
 
     public boolean isCompactIndexInProgress() {
@@ -744,19 +780,15 @@ public final class MailboxIndex {
         return result;
     }
 
-
     /**
      * Adds the item to the index. This has to be called inside a transaction.
      *
      * @param item item to index
      * @throws ServiceException 
      */
-    synchronized void add(MailItem item) throws ServiceException {
+    synchronized boolean add(MailItem item) throws ServiceException {
         if(!Zimbra.started()) {
-            ZimbraLog.index.debug("Application is not started yet. Queueing message for indexing instead of immediate indexing.");
-            IndexingQueueAdapter queueAdapter = Zimbra.getAppContext().getBean(IndexingQueueAdapter.class);
-            AddToIndexTaskLocator itemLocator = new AddToIndexTaskLocator(item, mailbox.getAccountId(), mailbox.getId(), mailbox.getSchemaGroupId(), mailbox.attachmentsIndexingEnabled());
-            queueAdapter.put(itemLocator);
+            return false;
         } else {
             Indexer indexer = null;
             try {
@@ -764,15 +796,13 @@ public final class MailboxIndex {
                 indexer.addDocument(item,  item.generateIndexDataAsync(mailbox.attachmentsIndexingEnabled()));
                 DbMailItem.setIndexId(mailbox.getOperationConnection(), mailbox, item.getId());
                 item.mData.indexId = item.getId();
-            } catch (TemporaryIndexingException e) {
-                ZimbraLog.index.error("Failed to index mail item %d for account %s. This item will need to be reindexed manually", item.getId(), item.getAccountId(), e);
+            }  catch (IndexPendingDeleteException e) {
+                ZimbraLog.index.debug("Adding of entries to index aborted as index is pending delete");
                 lastFailedTime = System.currentTimeMillis();
-            } catch (IndexPendingDeleteException e) {
-                ZimbraLog.index.debug("add of entries to index aborted as index is pending delete");
+            } catch (TemporaryIndexingException | IOException | ServiceException e) {
+                ZimbraLog.index.error("Failed to index mail item %d for account %s. Will queue item for later indexing", item.getId(), item.getAccountId(), e);
                 lastFailedTime = System.currentTimeMillis();
-            } catch (IOException e) {
-                ZimbraLog.index.warn("Failed to open Indexer", e);
-                lastFailedTime = System.currentTimeMillis();
+                return false;
             } finally {
                 try {
                     if(indexer != null) {
@@ -783,6 +813,7 @@ public final class MailboxIndex {
                 }
             }
         }
+        return true;
     }
 
     @VisibleForTesting

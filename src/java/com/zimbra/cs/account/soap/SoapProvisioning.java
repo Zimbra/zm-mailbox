@@ -1097,18 +1097,24 @@ public class SoapProvisioning extends Provisioning {
     }
 
     public static final class ReIndexInfo {
+        private final Integer statusCode;
         private final String status;
         private final Progress progress;
+
+        public Integer getStatusCode() {
+            return statusCode;
+        }
 
         public String getStatus() {
             return status;
         }
-
+        
         public Progress getProgress() {
             return progress;
         }
 
-        ReIndexInfo(String status, Progress progress) {
+        ReIndexInfo(Integer statusCode, String status, Progress progress) {
+            this.statusCode = statusCode;
             this.status = status;
             this.progress = progress;
         }
@@ -1164,7 +1170,7 @@ public class SoapProvisioning extends Provisioning {
                     progInfo.getNumFailed(),
                     progInfo.getNumRemaining());
         }
-        return new ReIndexInfo(resp.getStatus(), progress);
+        return new ReIndexInfo(resp.getStatusCode(), resp.getStatus(), progress);
     }
 
     public String compactIndex(Account acct, String action)

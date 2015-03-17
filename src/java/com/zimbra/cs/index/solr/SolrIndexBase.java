@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.NoSuchElementException;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
@@ -781,12 +782,16 @@ public abstract class SolrIndexBase extends IndexStore {
         }
 
         @Override
-        public void addDocument(MailItem item, List<IndexDocument> docs) throws IOException, ServiceException {
-            if(!indexExists()) {
-                initIndex();
-            }
+        public void addDocument(MailItem item, List<IndexDocument> docs) throws ServiceException {
             if (docs == null || docs.isEmpty()) {
                 return;
+            }
+            try {
+                if(!indexExists()) {
+                    initIndex();
+                }
+            } catch (IOException e) {
+                throw ServiceException.FAILURE(String.format(Locale.US, "Failed to index mail item with ID %d for Account %s ", item.getId(), accountId), e);
             }
 
             int partNum = 1;
@@ -814,11 +819,9 @@ public abstract class SolrIndexBase extends IndexStore {
                         incrementUpdateCounter(solrServer);
                     }
                     processRequest(solrServer, req);
-                } catch (SolrServerException e) {
-                    ZimbraLog.index.error("Problem indexing document with id=%d", item.getId(),e);
-                } catch (RemoteSolrException e) {
-                    ZimbraLog.index.error("Problem indexing document with id=%d", item.getId(),e);
-                }  finally {
+                } catch (SolrServerException | RemoteSolrException | IOException e) {
+                    throw ServiceException.FAILURE(String.format(Locale.US, "Failed to index part %d of Mail Item with ID %d for Account %s ", partNum, item.getId(), accountId), e);
+                } finally {
                     shutdown(solrServer);
                 }
             }

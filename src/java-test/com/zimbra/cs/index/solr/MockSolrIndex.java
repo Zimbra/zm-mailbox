@@ -247,7 +247,7 @@ public class MockSolrIndex extends SolrIndexBase {
         }
 
         @Override
-        public void addDocument(MailItem item, List<IndexDocument> docs) throws IOException, ServiceException {
+        public void addDocument(MailItem item, List<IndexDocument> docs) throws ServiceException {
             return;
         }
 

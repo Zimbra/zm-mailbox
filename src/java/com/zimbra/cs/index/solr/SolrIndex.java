@@ -6,6 +6,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.http.NoHttpResponseException;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.solr.client.solrj.SolrRequest;
 import org.apache.solr.client.solrj.SolrServer;
@@ -25,7 +26,6 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraHttpClientManager;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Server;
 import com.zimbra.cs.index.IndexStore;
 import com.zimbra.cs.index.Indexer;
 import com.zimbra.cs.index.ZimbraIndexSearcher;
@@ -61,8 +61,6 @@ public class SolrIndex extends SolrIndexBase {
         SolrServer solrServer = getSolrServer();
         setupRequest(req, solrServer);
         try {
-            ((HttpSolrServer) solrServer).setSoTimeout(60000);
-            ((HttpSolrServer) solrServer).setConnectionTimeout(15000);
             rsp = solrServer.request(req);
             version = (Long) rsp.get(GENERATION);
         } catch (SolrServerException | IOException e) {
@@ -90,8 +88,6 @@ public class SolrIndex extends SolrIndexBase {
         SolrServer solrServer = getSolrServer();
         setupRequest(req, solrServer);
         try {
-            ((HttpSolrServer) solrServer).setSoTimeout(60000);
-            ((HttpSolrServer) solrServer).setConnectionTimeout(15000);
             @SuppressWarnings("rawtypes")
             NamedList response = solrServer.request(req);
 
@@ -115,20 +111,31 @@ public class SolrIndex extends SolrIndexBase {
     @Override
     public boolean indexExists() {
         if(!solrCoreProvisioned) {
-            HttpSolrServer solrServer = null;
+            int maxTries;
             try {
-                solrServer = (HttpSolrServer)getSolrServer();
-                ((HttpSolrServer)solrServer).setBaseURL(Provisioning.getInstance().getLocalServer().getSolrURLBase());
-                CoreAdminResponse resp = CoreAdminRequest.getStatus(accountId, solrServer);
-                solrCoreProvisioned = resp.getCoreStatus(accountId).size() > 0;
-            } catch (SolrServerException | SolrException e) {
-                ZimbraLog.index.info("Solr Core for account %s does not exist", accountId);
-            }  catch (IOException e) {
-                 ZimbraLog.index.error("failed to check if Solr Core for account %s exists", accountId,e);
-            }  catch (ServiceException e) {
-                ZimbraLog.index.error("failed to check if Solr Core for account %s exists", accountId,e);
-            } finally {
-                shutdown(solrServer);
+                maxTries = Provisioning.getInstance().getLocalServer().getSolrMaxRetries()+1;
+            } catch (ServiceException e1) {
+                maxTries = 1;
+            }
+            while(maxTries-- > 0 && !solrCoreProvisioned) {
+                HttpSolrServer solrServer = null;
+                try {
+                    solrServer = (HttpSolrServer)getSolrServer();
+                    ((HttpSolrServer)solrServer).setBaseURL(Provisioning.getInstance().getLocalServer().getSolrURLBase());
+                    CoreAdminResponse resp = CoreAdminRequest.getStatus(accountId, solrServer);
+                    solrCoreProvisioned = resp.getCoreStatus(accountId).size() > 0;
+                } catch (SolrServerException | SolrException e) {
+                    if(e.getCause() instanceof NoHttpResponseException) {
+                        this.httpClient.getConnectionManager().closeExpiredConnections();
+                    }
+                    ZimbraLog.index.info("Solr Core for account %s does not exist", accountId);
+                }  catch (IOException e) {
+                     ZimbraLog.index.error("failed to check if Solr Core for account %s exists", accountId,e);
+                }  catch (ServiceException e) {
+                    ZimbraLog.index.error("failed to check if Solr Core for account %s exists", accountId,e);
+                } finally {
+                    shutdown(solrServer);
+                }
             }
         }
         return solrCoreProvisioned;
@@ -226,9 +233,7 @@ public class SolrIndex extends SolrIndexBase {
 
     @Override
     public SolrServer getSolrServer() throws ServiceException {
-        Server localServer = Provisioning.getInstance().getLocalServer();
-        HttpSolrServer server = new HttpSolrServer(localServer.getSolrURLBase() + "/" + accountId, httpClient);
-        server.setMaxRetries(localServer.getSolrMaxRetries());
+        HttpSolrServer server = new HttpSolrServer(Provisioning.getInstance().getLocalServer().getSolrURLBase() + "/" + accountId, httpClient);
         return server;
     }
 

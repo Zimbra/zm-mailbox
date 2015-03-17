@@ -19,6 +19,7 @@ package com.zimbra.qa.unittest;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -34,6 +35,8 @@ import com.zimbra.cs.index.IndexingQueueAdapter;
 import com.zimbra.cs.index.IndexingService;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.ReIndexStatus;
+import com.zimbra.cs.service.admin.ReIndex;
 import com.zimbra.cs.util.ProvisioningUtil;
 import com.zimbra.cs.util.Zimbra;
 
@@ -52,91 +55,172 @@ public class TestReIndex {
     private static final String NAME_PREFIX = TestReIndex.class.getSimpleName();
     private static final String RECIPIENT = NAME_PREFIX + "user1";
     private boolean originalLCSetting = false;
+
     @Test
     public void testStartReindex() throws Exception {
-        //shut down the service so it does not finish before we can check its status
+        // shut down the service so it does not finish before we can check its
+        // status
         Zimbra.getAppContext().getBean(IndexingService.class).shutDown();
-        
-        //check that reindexing is not running
-        Account account = TestUtil.getAccount(RECIPIENT);
-        SoapProvisioning prov = TestProvisioningUtil.getSoapProvisioning();
-        ReIndexInfo info = prov.reIndex(account, "status", null, null);
-        Assert.assertEquals("idle", info.getStatus());
-        
-        //kick off re-indexing
-        info = prov.reIndex(account, "start", null, null);
-        Assert.assertEquals("started", info.getStatus());
-    }
-    
-    @Test
-    public void testReindexEmptyMailbox() throws Exception {
-        //shut down the service so it does not finish before we can check its status
-        Zimbra.getAppContext().getBean(IndexingService.class).shutDown();
-        
-        //check that reindexing is not running
-        Account account = TestUtil.getAccount(RECIPIENT);
-        SoapProvisioning prov = TestProvisioningUtil.getSoapProvisioning();
-        ReIndexInfo info = prov.reIndex(account, "status", null, null);
-        Assert.assertEquals("idle", info.getStatus());
-        
-        //kick off re-indexing
-        info = prov.reIndex(account, "start", null, null);
-        Assert.assertEquals("started", info.getStatus());
-        Zimbra.getAppContext().getBean(IndexingService.class).startUp();
-        try {
-            TestUtil.getMailbox(RECIPIENT).index.waitForIndexing(5000);
-        } catch (ServiceException e) {
-            //index store does not exist, so this should throw an exception
-            assertNotNull(e);
-            assertEquals("should throw NOT_FOUND", ServiceException.NOT_FOUND, e.getCode());
-        }
-        
-        //verify that it is not running
-        info = prov.reIndex(account, "status", null, null);
-        Assert.assertEquals("idle", info.getStatus());
-    }
-    
-    
-    @Test
-    public void testReindexMailbox() throws Exception {
-        //shut down the service so it does not finish before we can check its status
-        Zimbra.getAppContext().getBean(IndexingService.class).shutDown();
-        
-        //check that reindexing is not running
-        Account account = TestUtil.getAccount(RECIPIENT);
-        SoapProvisioning prov = TestProvisioningUtil.getSoapProvisioning();
-        ReIndexInfo info = prov.reIndex(account, "status", null, null);
-        Assert.assertEquals("idle", info.getStatus());
-        
-        //add some messages
+
+        // add some messages
         Mailbox recieverMbox = TestUtil.getMailbox(RECIPIENT);
         TestUtil.addMessage(recieverMbox, NAME_PREFIX);
         TestUtil.waitForMessage(TestUtil.getZMailbox(RECIPIENT), String.format("subject:%s", NAME_PREFIX));
-        
-        //delete index
-        recieverMbox.index.deleteIndex();
-        
-        //kick off re-indexing
+
+        // check that reindexing is not running
+        Account account = TestUtil.getAccount(RECIPIENT);
+        SoapProvisioning prov = TestProvisioningUtil.getSoapProvisioning();
+        ReIndexInfo info = prov.reIndex(account, "status", null, null);
+        Assert.assertEquals(ReIndexStatus.STATUS_IDLE, info.getStatusCode().intValue());
+        Assert.assertEquals(ReIndex.STATUS_IDLE, info.getStatus());
+
+        // kick off re-indexing
         info = prov.reIndex(account, "start", null, null);
-        Assert.assertEquals("started", info.getStatus());
+        Assert.assertEquals(ReIndexStatus.STATUS_RUNNING, info.getStatusCode().intValue());
+        Assert.assertEquals(ReIndex.STATUS_STARTED, info.getStatus());
+    }
+
+    @Test
+    public void testAbortReindex() throws Exception {
+        // shut down the service so it does not finish before we can check its
+        // status
+        Zimbra.getAppContext().getBean(IndexingService.class).shutDown();
+
+        // add some messages
+        Mailbox recieverMbox = TestUtil.getMailbox(RECIPIENT);
+        TestUtil.addMessage(recieverMbox, NAME_PREFIX);
+        TestUtil.waitForMessage(TestUtil.getZMailbox(RECIPIENT), String.format("subject:%s", NAME_PREFIX));
+
+        // check that reindexing is not running
+        Account account = TestUtil.getAccount(RECIPIENT);
+        SoapProvisioning prov = TestProvisioningUtil.getSoapProvisioning();
+        ReIndexInfo info = prov.reIndex(account, "status", null, null);
+        Assert.assertEquals(ReIndexStatus.STATUS_IDLE, info.getStatusCode().intValue());
+        Assert.assertEquals(ReIndex.STATUS_IDLE, info.getStatus());
+
+        // kick off re-indexing
+        info = prov.reIndex(account, "start", null, null);
+        Assert.assertEquals(ReIndexStatus.STATUS_RUNNING, info.getStatusCode().intValue());
+        Assert.assertEquals(ReIndex.STATUS_STARTED, info.getStatus());
+
+        info = prov.reIndex(account, "cancel", null, null);
+        Assert.assertEquals(ReIndexStatus.STATUS_ABORTED, info.getStatusCode().intValue());
+        Assert.assertEquals(ReIndex.STATUS_CANCELLED, info.getStatus());
+    }
+
+    @Test
+    public void testAbortRestartReindex() throws Exception {
+        // shut down the service so it does not finish before we can check its
+        // status
+        Zimbra.getAppContext().getBean(IndexingService.class).shutDown();
+
+        // add some messages
+        Mailbox recieverMbox = TestUtil.getMailbox(RECIPIENT);
+        TestUtil.addMessage(recieverMbox, NAME_PREFIX);
+        TestUtil.waitForMessage(TestUtil.getZMailbox(RECIPIENT), String.format("subject:%s", NAME_PREFIX));
+
+        // check that reindexing is not running
+        Account account = TestUtil.getAccount(RECIPIENT);
+        SoapProvisioning prov = TestProvisioningUtil.getSoapProvisioning();
+        ReIndexInfo info = prov.reIndex(account, "status", null, null);
+        Assert.assertEquals(ReIndexStatus.STATUS_IDLE, info.getStatusCode().intValue());
+        Assert.assertEquals(ReIndex.STATUS_IDLE, info.getStatus());
+
+        // kick off re-indexing
+        info = prov.reIndex(account, "start", null, null);
+        Assert.assertEquals(ReIndexStatus.STATUS_RUNNING, info.getStatusCode().intValue());
+        Assert.assertEquals(ReIndex.STATUS_STARTED, info.getStatus());
+
+        // abort
+        info = prov.reIndex(account, "cancel", null, null);
+        Assert.assertEquals(ReIndexStatus.STATUS_ABORTED, info.getStatusCode().intValue());
+        Assert.assertEquals(ReIndex.STATUS_CANCELLED, info.getStatus());
+        // restart re-indexing
+        info = prov.reIndex(account, "start", null, null);
+        Assert.assertEquals(ReIndexStatus.STATUS_RUNNING, info.getStatusCode().intValue());
+        Assert.assertEquals(ReIndex.STATUS_STARTED, info.getStatus());
+    }
+
+    @Test
+    public void testReindexEmptyMailbox() throws Exception {
+        // shut down the service so it does not finish before we can check its
+        // status
+        Zimbra.getAppContext().getBean(IndexingService.class).shutDown();
+
+        // check that reindexing is not running
+        Account account = TestUtil.getAccount(RECIPIENT);
+        SoapProvisioning prov = TestProvisioningUtil.getSoapProvisioning();
+        ReIndexInfo info = prov.reIndex(account, "status", null, null);
+        Assert.assertEquals(ReIndexStatus.STATUS_IDLE, info.getStatusCode().intValue());
+        Assert.assertEquals(ReIndex.STATUS_IDLE, info.getStatus());
+
+        // kick off re-indexing
+        info = prov.reIndex(account, "start", null, null);
+        Assert.assertEquals(ReIndexStatus.STATUS_DONE, info.getStatusCode().intValue());
+        Assert.assertEquals(ReIndex.STATUS_STARTED, info.getStatus());
+
+        Zimbra.getAppContext().getBean(IndexingService.class).startUp();
+        try {
+            TestUtil.getMailbox(RECIPIENT).index.waitForIndexing(5000);
+            fail("should throw an exception on not finding the index");
+        } catch (ServiceException e) {
+            // index store does not exist, so this should throw an exception
+            assertNotNull(e);
+            assertEquals("should throw NOT_FOUND", ServiceException.NOT_FOUND, e.getCode());
+        }
+
+        // verify that it is not running
+        info = prov.reIndex(account, "status", null, null);
+        Assert.assertEquals(ReIndexStatus.STATUS_DONE, info.getStatusCode().intValue());
+        Assert.assertEquals(ReIndex.STATUS_IDLE, info.getStatus());
+    }
+
+    @Test
+    public void testReindexMailbox() throws Exception {
+        // shut down the service so it does not finish before we can check its
+        // status
+        Zimbra.getAppContext().getBean(IndexingService.class).shutDown();
+
+        // check that reindexing is not running
+        Account account = TestUtil.getAccount(RECIPIENT);
+        SoapProvisioning prov = TestProvisioningUtil.getSoapProvisioning();
+        ReIndexInfo info = prov.reIndex(account, "status", null, null);
+        Assert.assertEquals(ReIndexStatus.STATUS_IDLE, info.getStatusCode().intValue());
+        Assert.assertEquals(ReIndex.STATUS_IDLE, info.getStatus());
+
+        // add some messages
+        Mailbox recieverMbox = TestUtil.getMailbox(RECIPIENT);
+        TestUtil.addMessage(recieverMbox, NAME_PREFIX);
+        TestUtil.waitForMessage(TestUtil.getZMailbox(RECIPIENT), String.format("subject:%s", NAME_PREFIX));
+
+        // delete index
+        recieverMbox.index.deleteIndex();
+
+        // kick off re-indexing
+        info = prov.reIndex(account, "start", null, null);
+        Assert.assertEquals(ReIndexStatus.STATUS_RUNNING, info.getStatusCode().intValue());
+        Assert.assertEquals(ReIndex.STATUS_STARTED, info.getStatus());
+
         Zimbra.getAppContext().getBean(IndexingService.class).startUp();
         TestUtil.getMailbox(RECIPIENT).index.waitForIndexing(5000);
-        
-        //verify that it is not running
+
+        // verify that it is not running
         info = prov.reIndex(account, "status", null, null);
-        Assert.assertEquals("idle", info.getStatus());
-        
+        Assert.assertEquals(ReIndexStatus.STATUS_DONE, info.getStatusCode().intValue());
+        Assert.assertEquals(ReIndex.STATUS_IDLE, info.getStatus());
+
         TestUtil.waitForMessage(TestUtil.getZMailbox(RECIPIENT), String.format("subject:%s", NAME_PREFIX));
     }
-    
+
     @Test
     public void statusIdle() throws Exception {
         Account account = TestUtil.getAccount(RECIPIENT);
         SoapProvisioning prov = TestProvisioningUtil.getSoapProvisioning();
         ReIndexInfo info = prov.reIndex(account, "status", null, null);
-        Assert.assertEquals("idle", info.getStatus());
+        Assert.assertEquals(ReIndexStatus.STATUS_IDLE, info.getStatusCode().intValue());
+        Assert.assertEquals(ReIndex.STATUS_IDLE, info.getStatus());
     }
-    
+
     @Before
     public void setUp() throws Exception {
         cleanup();
@@ -144,18 +228,18 @@ public class TestReIndex {
         Provisioning.getInstance().getLocalServer().setIndexManualCommit(true);
         MailboxManager.getInstance().getMailboxByAccount(TestUtil.createAccount(RECIPIENT), true);
     }
-    
+
     @After
     public void tearDown() throws Exception {
         cleanup();
         Provisioning.getInstance().getLocalServer().setIndexManualCommit(originalLCSetting);
     }
-    
+
     private void cleanup() throws Exception {
-        if(TestUtil.accountExists(RECIPIENT)) {
+        if (TestUtil.accountExists(RECIPIENT)) {
             TestUtil.deleteAccount(RECIPIENT);
         }
-        if(Zimbra.getAppContext().getBean(IndexingQueueAdapter.class) != null) {
+        if (Zimbra.getAppContext().getBean(IndexingQueueAdapter.class) != null) {
             Zimbra.getAppContext().getBean(IndexingQueueAdapter.class).drain();
         }
     }

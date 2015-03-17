@@ -958,7 +958,7 @@ Access: domain admin sufficient
   <mbox id="{account-id}" [types={types} | ids={ids}]/>
 </ReIndexRequest>
 
-<ReIndexResponse status="started|running|cancelled|idle">
+<ReIndexResponse status="started|running|cancelled|idle" statusCode="-3,-2,-1,0,1,2">
   [<progress numSucceeded="SUCCEEDED" numFailed="FAILED" numRemaining="REMAINING">]
 </ReIndexResponse>
 
@@ -977,6 +977,22 @@ Access: domain admin sufficient
     status cancelled - success and returns progress information
     status idle - reindexing is not running
 
+ - statusCode values:
+     "-3" - re-indexing failed
+     "-2" - re-indexing was interrupted, because indexing queue is full
+     "-1" - re-indexing was aborted with a "cancel" action
+     "0" - re-indexing is not running/has not been started
+     "1" - re-indexing is actively running
+     "2" - re-indexing task is complete 
+     
+ - status attribute 
+   "status" is supported for older clients that were implemented for ZCS versions prior to 9.0.
+   status attribute values:
+     "running" means that a re-indexing task for the given mailbox is active
+     "started" is returned only in response to ReIndexRequest containing "start" action unless an exception occurs
+     "canceled" is returned only in response to ReIndexRequest containing "cancel" action and only if re-indexing is still running at the time when cancelation request is received  
+     "idle" is returned whenever re-indexing task is not actively running at the time ReIndexRequest is received
+ 
 Access: domain admin sufficient
 
    note: this request is by default proxied to the account's home server

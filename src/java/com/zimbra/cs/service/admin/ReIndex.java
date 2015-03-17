@@ -51,13 +51,14 @@ public final class ReIndex extends AdminDocumentHandler {
 
     private static final String ACTION_START = "start";
     private static final String ACTION_STATUS = "status";
-    private static final String ACTION_CANCEL = "cancel";
+    private static final String ACTION_ABORT = "cancel";
 
-    private static final String STATUS_STARTED = "started";
-    private static final String STATUS_RUNNING = "running";
-    private static final String STATUS_IDLE = "idle";
-    private static final String STATUS_CANCELLED = "cancelled";
 
+    public static final String STATUS_STARTED = "started";
+    public static final String STATUS_RUNNING = "running";
+    public static final String STATUS_IDLE = "idle";
+    public static final String STATUS_CANCELLED = "cancelled";
+    
     private static final String[] TARGET_ACCOUNT_PATH = new String[] {
         AdminConstants.E_MAILBOX, AdminConstants.A_ACCOUNTID
     };
@@ -108,7 +109,7 @@ public final class ReIndex extends AdminDocumentHandler {
 
         if (ACTION_START.equalsIgnoreCase(action)) {
             if (mbox.index.isReIndexInProgress()) {
-                response.addAttribute(AdminConstants.A_STATUS, STATUS_RUNNING);
+                addProgressInfo(response, mbox.index.getReIndexStatus(), STATUS_RUNNING);
             } else {
                 String typesStr = mreq.getAttribute(MailConstants.A_SEARCH_TYPES, null);
                 String idsStr = mreq.getAttribute(MailConstants.A_IDS, null);
@@ -138,14 +139,13 @@ public final class ReIndex extends AdminDocumentHandler {
                 } else {
                     mbox.index.startReIndex();
                 }
-
-                response.addAttribute(AdminConstants.A_STATUS, STATUS_STARTED);
             }
+            addProgressInfo(response, mbox.index.getReIndexStatus(), STATUS_STARTED);
         } else if (ACTION_STATUS.equalsIgnoreCase(action)) {
-            addProgressInfo(response, mbox.index.getReIndexStatus());
-        } else if (ACTION_CANCEL.equalsIgnoreCase(action)) {
-            ReIndexStatus status = mbox.index.cancelReIndex();
-            addProgressInfo(response, status);
+            addProgressInfo(response, mbox.index.getReIndexStatus(), null);
+        } else if (ACTION_ABORT.equalsIgnoreCase(action)) {
+            ReIndexStatus status = mbox.index.abortReIndex();
+            addProgressInfo(response, status, STATUS_CANCELLED);
         } else {
             throw ServiceException.INVALID_REQUEST("Unknown action: " + action, null);
         }
@@ -153,13 +153,16 @@ public final class ReIndex extends AdminDocumentHandler {
         return response;
     }
 
-    private void addProgressInfo(Element response, ReIndexStatus status) {
+    private void addProgressInfo(Element response, ReIndexStatus status, String statusString) {
         Element prog = response.addUniqueElement(AdminConstants.E_PROGRESS);
         prog.addAttribute(AdminConstants.A_NUM_SUCCEEDED, status.getSucceeded());
         prog.addAttribute(AdminConstants.A_NUM_FAILED, status.getFailed());
         prog.addAttribute(AdminConstants.A_NUM_REMAINING, status.getTotal() > 0 ? (status.getTotal() - status.getSucceeded() - status.getFailed()) : 0);
-        response.addAttribute(AdminConstants.A_STATUS, status.isCancelled() ? STATUS_CANCELLED : 
-            (status.isRunning() ? STATUS_RUNNING : STATUS_IDLE));
+        response.addAttribute(AdminConstants.A_STATUS_CODE, status.getStatus());
+        if(statusString == null) {
+            statusString = status.getStatus() == ReIndexStatus.STATUS_RUNNING ? STATUS_RUNNING : STATUS_IDLE;
+        }
+        response.addAttribute(AdminConstants.A_STATUS, statusString);
     }
 
     @Override

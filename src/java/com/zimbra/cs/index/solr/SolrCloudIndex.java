@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import org.apache.solr.client.solrj.SolrQuery;
@@ -346,12 +347,16 @@ public class SolrCloudIndex extends SolrIndexBase {
         }
 
         @Override
-        public void addDocument(MailItem item, List<IndexDocument> docs) throws IOException, ServiceException {
-            if(!indexExists()) {
-                initIndex();
-            }
+        public void addDocument(MailItem item, List<IndexDocument> docs) throws ServiceException {
             if (docs == null || docs.isEmpty()) {
                 return;
+            }
+            try {
+                if(!indexExists()) {
+                    initIndex();
+                }
+            } catch (IOException e) {
+                throw ServiceException.FAILURE(String.format(Locale.US, "Failed to index mail item with ID %d for Account %s ", item.getId(), accountId), e);
             }
 
             int partNum = 1;
@@ -373,15 +378,13 @@ public class SolrCloudIndex extends SolrIndexBase {
                 req.add(solrDoc);
                 try {
                     processRequest(solrServer, req);
-                } catch (SolrServerException e) {
+                } catch (SolrServerException | RemoteSolrException | IOException e) {
                     if(e != null && e.getMessage() != null && e.getMessage().toLowerCase().indexOf("no live solrservers available to handle this request") > -1) {
                         ZimbraLog.index.warn("The Collection %s has likely been lost. Account needs re-indexing." , accountId);
                         solrCollectionProvisioned = false;
                     } 
-                    ZimbraLog.index.error("Problem indexing document with id=%d", item.getId(),e);
-                } catch (RemoteSolrException e) {
-                    ZimbraLog.index.error("Problem indexing document with id=%d", item.getId(),e);
-                }
+                    throw ServiceException.FAILURE(String.format(Locale.US, "Failed to index part %d of Mail Item with ID %d for Account %s ", partNum, item.getId(), accountId), e);
+                } 
             }
         }
         
