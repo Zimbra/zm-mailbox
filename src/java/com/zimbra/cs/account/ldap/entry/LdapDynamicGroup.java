@@ -31,16 +31,17 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.GroupMembership;
 import com.zimbra.cs.account.Provisioning.MemberOf;
 import com.zimbra.cs.account.SearchDirectoryOptions.ObjectType;
+import com.zimbra.cs.account.ldap.BySearchResultEntrySearcher;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
+import com.zimbra.cs.ldap.LdapClient;
 import com.zimbra.cs.ldap.LdapException;
 import com.zimbra.cs.ldap.LdapServerType;
+import com.zimbra.cs.ldap.LdapUsage;
 import com.zimbra.cs.ldap.ZAttributes;
+import com.zimbra.cs.ldap.ZLdapContext;
 import com.zimbra.cs.ldap.ZLdapFilter;
 import com.zimbra.cs.ldap.ZLdapFilterFactory;
-import com.zimbra.cs.ldap.ZSearchControls;
 import com.zimbra.cs.ldap.ZSearchResultEntry;
-import com.zimbra.cs.ldap.ZSearchResultEnumeration;
-import com.zimbra.cs.ldap.ZSearchScope;
 
 /**
  * @author pshao
@@ -179,68 +180,29 @@ public class LdapDynamicGroup extends DynamicGroup implements LdapEntry {
         }
     }
 
-    public static final class Searcher {
-        public interface SearchEntryProcessor {
-            public void processSearchEntry(ZSearchResultEntry sr);
-        }
-
-        private final LdapProvisioning prov;
-        private final Domain domain;
-        private final SearchEntryProcessor visitor;
-        private final String[] returnAttrs;
-        public Searcher(LdapProvisioning prov, Domain domain, SearchEntryProcessor visitor,
-                String [] retAttrs) {
-            this.prov = prov;
-            this.domain = domain;
-            this.visitor = visitor;
-            this.returnAttrs = retAttrs;
-        }
-
-        public void doSearch(ZLdapFilter filter) throws ServiceException {
-            Set<ObjectType> types = Sets.newHashSet();
-            types.add(ObjectType.dynamicgroups);
-            String[] bases = prov.getSearchBases(domain, types);
-            for (String base : bases) {
-                try {
-                    ZSearchControls ctrl = ZSearchControls.createSearchControls(ZSearchScope.SEARCH_SCOPE_SUBTREE,
-                            ZSearchControls.SIZE_UNLIMITED, returnAttrs);
-                    ZSearchResultEnumeration results =
-                            prov.getHelper().searchDir(base, filter, ctrl, null, LdapServerType.REPLICA);
-                    while(results.hasMore()) {
-                        ZSearchResultEntry sr = results.next();
-                        visitor.processSearchEntry(sr);
-                    }
-                    results.close();
-                } catch (ServiceException e) {
-                    ZimbraLog.search.debug("Unexpected exception searching dynamic groups", e);
-                }
-            }
-        }
-    }
-
+    private static final Set<ObjectType> DYNAMIC_GROUPS_TYPE = Sets.newHashSet(ObjectType.dynamicgroups);
     private static final String [] BASIC_ATTRS = { Provisioning.A_zimbraId, Provisioning.A_zimbraIsAdminGroup,
         Provisioning.A_memberURL };
 
     public static GroupMembership updateGroupMembershipForCustomDynamicGroups(LdapProvisioning prov,
             GroupMembership membership, Account acct, Domain domain, boolean adminGroupsOnly)
     throws ServiceException {
-        String acctDN = prov.getDNforAccountById(acct.getId(), null, false);
+        String acctDN = prov.getDNforAccount(acct, null, false);
         if (acctDN == null) {
             return membership;
         }
         ZLdapFilter filter = ZLdapFilterFactory.getInstance().allDynamicGroups();
-        Searcher searcher = new Searcher(prov, domain,
-                new GroupMembershipUpdator(prov, acctDN, membership, adminGroupsOnly, true, false), BASIC_ATTRS);
-        searcher.doSearch(filter);
+        ZLdapContext zlcCompare = null;
+        try {
+            zlcCompare = LdapClient.getContext(LdapServerType.get(false /* useMaster */), LdapUsage.COMPARE);
+            BySearchResultEntrySearcher searcher = new BySearchResultEntrySearcher(
+                    prov, (ZLdapContext) null, domain, BASIC_ATTRS, new GroupMembershipUpdator(prov, zlcCompare,
+                            acctDN, membership, adminGroupsOnly, true, false));
+            searcher.doSearch(filter, DYNAMIC_GROUPS_TYPE);
+        } finally {
+            LdapClient.closeContext(zlcCompare);
+        }
         return membership;
-    }
-
-    public static GroupMembership updateGroupMembershipForCustomDynamicGroups(LdapProvisioning prov,
-            GroupMembership membership, Account acct, Collection<String> ids, boolean adminGroupsOnly)
-    throws ServiceException {
-        return updateGroupMembershipForDynamicGroups(prov,
-            membership, acct, ids,
-            adminGroupsOnly, true /* customGroupsOnly */, false /* nonCustomGroupsOnly */);
     }
 
     public static GroupMembership updateGroupMembershipForDynamicGroups(LdapProvisioning prov,
@@ -250,30 +212,38 @@ public class LdapDynamicGroup extends DynamicGroup implements LdapEntry {
         if (ids.size() == 0) {
             return membership;
         }
-        String acctDN = prov.getDNforAccountById(acct.getId(), null, false);
+        String acctDN = prov.getDNforAccount(acct, null, false);
         if (acctDN == null) {
             return membership;
         }
         ZLdapFilter filter = ZLdapFilterFactory.getInstance().dynamicGroupByIds(ids.toArray(new String[0]));
-        Searcher searcher = new Searcher(prov, (Domain) null,
-                new GroupMembershipUpdator(prov, acctDN, membership, adminGroupsOnly,
-                        customGroupsOnly, nonCustomGroupsOnly),
-                BASIC_ATTRS);
-        searcher.doSearch(filter);
+        ZLdapContext zlcCompare = null;
+        try {
+            zlcCompare = LdapClient.getContext(LdapServerType.get(false /* useMaster */), LdapUsage.COMPARE);
+            BySearchResultEntrySearcher searcher = new BySearchResultEntrySearcher(
+                    prov, (ZLdapContext) null, (Domain) null, BASIC_ATTRS, new GroupMembershipUpdator(prov, zlcCompare,
+                            acctDN, membership, adminGroupsOnly, customGroupsOnly, nonCustomGroupsOnly));
+            searcher.doSearch(filter, DYNAMIC_GROUPS_TYPE);
+        } finally {
+            LdapClient.closeContext(zlcCompare);
+        }
         return membership;
     }
 
-    public static class GroupMembershipUpdator implements Searcher.SearchEntryProcessor {
+    public static class GroupMembershipUpdator implements BySearchResultEntrySearcher.SearchEntryProcessor {
         private final LdapProvisioning prov;
+        private final ZLdapContext zlcCompare;
         private final GroupMembership membership;
         private final boolean adminGroupsOnly;
         private final boolean customGroupsOnly;
         private final boolean nonCustomGroupsOnly;
         private final String acctDN;
 
-        public GroupMembershipUpdator(LdapProvisioning prov, String acctDN, GroupMembership membership,
+        public GroupMembershipUpdator(LdapProvisioning prov, ZLdapContext zlcCompare, String acctDN,
+                GroupMembership membership,
                 boolean adminGroupsOnly, boolean customGroupsOnly, boolean nonCustomGroupsOnly) {
             this.prov = prov;
+            this.zlcCompare = zlcCompare;
             this.acctDN = acctDN;
             this.membership = membership;
             this.adminGroupsOnly = adminGroupsOnly;
@@ -307,8 +277,8 @@ public class LdapDynamicGroup extends DynamicGroup implements LdapEntry {
                 return;
             }
             try {
-                if (prov.getHelper().compare(sr.getDN(), Provisioning.A_member, acctDN, null, false)) {
-                    membership.append(new MemberOf(id, isAdmin, true), id);
+                if (prov.getHelper().compare(sr.getDN(), Provisioning.A_member, acctDN, zlcCompare, false)) {
+                    membership.append(new MemberOf(id, isAdmin, true));
                 }
             } catch (ServiceException e) {
                 ZimbraLog.search.debug("Problem doing compare on group %s for member %s - ignoring",

@@ -826,6 +826,16 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         return a;
     }
 
+    public String getDNforAccount(Account acct, ZLdapContext zlc, boolean loadFromMaster) {
+        if (acct == null) {
+            return null;
+        }
+        if (acct instanceof LdapAccount) {
+            return ((LdapAccount) acct).getDN();
+        }
+        return getDNforAccountById(acct.getId(), zlc, loadFromMaster);
+    }
+
     public String getDNforAccountById(String zimbraId, ZLdapContext zlc, boolean loadFromMaster) {
         if (zimbraId == null) {
             return null;
@@ -1806,7 +1816,6 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
         return searchObjects(bases, filter, returnAttrs, options, visitor);
     }
-
 
     private static String getObjectClassQuery(int flags) {
         boolean accounts = (flags & Provisioning.SD_ACCOUNT_FLAG) != 0;
@@ -4579,24 +4588,6 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         }
     }
 
-    private GroupMembership computeUpwardMembership(Entry entry) throws ServiceException {
-        Map<String, String> via = new HashMap<String, String>();
-        List<DistributionList> lists = getContainingDistributionLists(entry, false, via);
-        return computeUpwardMembership(lists);
-    }
-
-    private GroupMembership computeUpwardMembership(List<DistributionList> lists) {
-        List<MemberOf> groups = new ArrayList<MemberOf>();
-        List<String> groupIds = new ArrayList<String>();
-
-        for (DistributionList dl : lists) {
-            groups.add(new MemberOf(dl.getId(), dl.isIsAdminGroup(), false));
-            groupIds.add(dl.getId());
-        }
-
-        return new GroupMembership(groups, groupIds);
-    }
-
     // filter out non-admin groups from an AclGroups instance
     private GroupMembership getAdminAclGroups(GroupMembership aclGroups) {
         List<MemberOf> groups = new ArrayList<MemberOf>();
@@ -4750,7 +4741,9 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         //
         // static groups
         //
-        GroupMembership groups = computeUpwardMembership(acct);
+        GroupMembership groups = new GroupMembership();
+        DistributionList.updateGroupMembership(this, (ZLdapContext) null, groups, acct, null /* via */,
+                false /* adminGroupsOnly */, false /* directOnly */);
         //
         // append non-custom dynamic groups
         //
@@ -4770,7 +4763,6 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             groups = getAdminAclGroups(groups);
             acct.setCachedData(EntryCacheDataKey.GROUPEDENTRY_MEMBERSHIP_ADMINS_ONLY, groups);
         }
-
         return groups;
     }
 
@@ -4787,7 +4779,9 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             return groups;
         }
 
-        groups = computeUpwardMembership(dl);
+        groups = new GroupMembership();
+        DistributionList.updateGroupMembership(this, (ZLdapContext) null, groups, dl, null /* via */,
+                false /* adminGroupsOnly */, false /* directOnly */);
 
         dl.setCachedData(EntryCacheDataKey.GROUPEDENTRY_MEMBERSHIP, groups);
 
@@ -6200,6 +6194,21 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         return (List<DistributionList>) searchDirectoryInternal(searchOpts);
     }
 
+    /**
+     * -  Get list of ids from EntryCacheDataKey.GROUPEDENTRY_DIRECT_GROUPIDS for "entry"
+     *    -  Entry not cached:
+     *       -  Get all addresses of this entry that can be identified as a member in a static group.
+     *       -  Get direct groups for those addresses using filterFactory.distributionListsByMemberAddrs
+     *          i.e. using an OR filter on Provisioning.A_zimbraMailForwardingAddress
+     *       -  See if prov's Group Cache has this group already.  If so, use that! otherwise add it
+     *       -  Put list of ids to EntryCacheDataKey.GROUPEDENTRY_DIRECT_GROUPIDS for "entry"
+     *    -  Entry is cached:
+     *       -  Get all the direct groups.  If any have been deleted, update the cache to reflect that
+     * @param prov
+     * @param entry
+     * @return
+     * @throws ServiceException
+     */
     private List<DistributionList> getAllDirectDLs(LdapProvisioning prov, Entry entry)
     throws ServiceException {
         if (!(entry instanceof GroupedEntry)) {

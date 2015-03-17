@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.service.ServiceException;
@@ -424,12 +425,15 @@ public class Account extends ZAttrAccount implements GroupedEntry, AliasedEntry 
             return new String[]{getExternalUserMailAddress()};
         } else {
             String aliases[] = getMailAlias();
-            String addrs[] = new String[aliases.length+1];
-            addrs[0] = getName();
-            for (int i=0; i < aliases.length; i++) {
-                addrs[i+1] = aliases[i];
+            List<String> addrs = Lists.newArrayListWithExpectedSize(aliases.length + 1);
+            String myName = getName();
+            addrs.add(myName);
+            for (String alias : aliases) {
+                if (!alias.equals(myName)) {
+                    addrs.add(alias);
+                }
             }
-            return addrs;
+            return addrs.toArray(new String[0]);
         }
 
     }
