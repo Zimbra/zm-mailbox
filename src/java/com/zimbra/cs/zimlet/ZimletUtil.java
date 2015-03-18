@@ -1454,7 +1454,7 @@ public class ZimletUtil {
             mPassword = password != null ? password : LC.zimbra_ldap_password.value();
             mAuth = null;
             SoapProvisioning sp = new SoapProvisioning();
-            sp.soapSetURI(mAdminURL != null ? mAdminURL : sp.lookupAdminServiceURI());
+            sp.soapSetURI(mAdminURL != null ? mAdminURL : URLUtil.getAdminURL());
             sp.soapAdminAuthenticate(mUsername, mPassword);
         }
 

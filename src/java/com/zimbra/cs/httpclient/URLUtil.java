@@ -23,6 +23,8 @@
  */
 package com.zimbra.cs.httpclient;
 
+import java.io.IOException;
+
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
@@ -32,6 +34,13 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.MailMode;
 import com.zimbra.cs.account.Server;
+import com.zimbra.cs.consul.ChainedServiceLocator;
+import com.zimbra.cs.consul.ConsulClient;
+import com.zimbra.cs.consul.ConsulServiceLocator;
+import com.zimbra.cs.consul.ProvisioningServiceLocator;
+import com.zimbra.cs.consul.ServiceLocator;
+import com.zimbra.cs.consul.ZimbraServiceNames;
+import com.zimbra.cs.util.Zimbra;
 
 /**
  * @author jhahm
@@ -54,6 +63,39 @@ public class URLUtil {
      */
     public static String getSoapURL(Server server, boolean preferSSL) throws ServiceException {
         return URLUtil.getServiceURL(server, AccountConstants.USER_SERVICE_URI, preferSSL);
+    }
+
+    /** Perform a service locator lookup of a mailstore soap service */
+    public static String getSoapURL(ServiceLocator serviceLocator) throws ServiceException {
+        try {
+            ServiceLocator.Entry entry = serviceLocator.findOne(ZimbraServiceNames.MAILSTORE);
+            String scheme = entry.tags.contains("ssl") ? "https" : "http";
+            return scheme + "://" + entry.hostName + ":" + entry.servicePort + "/service/soap/";
+        } catch (IOException e) {
+            throw ServiceException.FAILURE("Failed contacting service locator", e);
+        }
+    }
+
+    /** Perform a service locator lookup of a mailstore soap service */
+    public static String getSoapURL() throws ServiceException {
+        ServiceLocator serviceLocator = null;
+        try {
+            serviceLocator = Zimbra.getAppContext().getBean(ServiceLocator.class);
+        } catch (Exception e) {}
+
+        if (serviceLocator == null) {
+            ServiceLocator sl1 = new ConsulServiceLocator(new ConsulClient());
+            ServiceLocator sl2 = new ProvisioningServiceLocator(Provisioning.getInstance());
+            serviceLocator = new ChainedServiceLocator(sl1, sl2);
+        }
+
+        try {
+            ServiceLocator.Entry entry = serviceLocator.findOne(ZimbraServiceNames.MAILSTORE);
+            String scheme = entry.tags.contains("ssl") ? "https" : "http";
+            return scheme + "://" + entry.hostName + ":" + entry.servicePort + "/service/soap/";
+        } catch (IOException e) {
+            throw ServiceException.FAILURE("Failed contacting service locator", e);
+        }
     }
 
     public static String getSoapPublicURL(Server server, Domain domain, boolean preferSSL) throws ServiceException {
@@ -137,6 +179,43 @@ public class URLUtil {
      */
     public static String getAdminURL(Server server) {
         return getAdminURL(server, AdminConstants.ADMIN_SERVICE_URI);
+    }
+
+    /**
+     * Returns absolute URL with scheme, host, and port for admin app, using ServiceLocator.
+     */
+    public static String getAdminURL(ServiceLocator serviceLocator) throws ServiceException {
+        try {
+            ServiceLocator.Entry entry = serviceLocator.findOne(ZimbraServiceNames.MAILSTOREADMIN);
+            String scheme = entry.tags.contains("ssl") ? "https" : "http";
+            return scheme + "://" + entry.hostName + ":" + entry.servicePort + AdminConstants.ADMIN_SERVICE_URI;
+        } catch (IOException e) {
+            throw ServiceException.FAILURE("Failed contacting service locator", e);
+        }
+    }
+
+    /**
+     * Returns absolute URL with scheme, host, and port for admin app, using ServiceLocator.
+     */
+    public static String getAdminURL() throws ServiceException {
+        ServiceLocator serviceLocator = null;
+        try {
+            serviceLocator = Zimbra.getAppContext().getBean(ServiceLocator.class);
+        } catch (Exception e) {}
+
+        if (serviceLocator == null) {
+            ServiceLocator sl1 = new ConsulServiceLocator(new ConsulClient());
+            ServiceLocator sl2 = new ProvisioningServiceLocator(Provisioning.getInstance());
+            serviceLocator = new ChainedServiceLocator(sl1, sl2);
+        }
+
+        try {
+            ServiceLocator.Entry entry = serviceLocator.findOne(ZimbraServiceNames.MAILSTOREADMIN);
+            String scheme = entry.tags.contains("ssl") ? "https" : "http";
+            return scheme + "://" + entry.hostName + ":" + entry.servicePort + AdminConstants.ADMIN_SERVICE_URI;
+        } catch (IOException e) {
+            throw ServiceException.FAILURE("Failed contacting service locator", e);
+        }
     }
 
     /**

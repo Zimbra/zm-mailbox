@@ -52,6 +52,7 @@ import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.ZimbraHttpConnectionManager;
 import com.zimbra.cs.account.soap.SoapProvisioning;
+import com.zimbra.cs.httpclient.URLUtil;
 
 public class TestZimbraHttpConnectionManager {
 
@@ -724,7 +725,7 @@ public class TestZimbraHttpConnectionManager {
         System.out.println(msg);
         SoapProvisioning sp = new SoapProvisioning();
         try {
-            sp.soapSetURI(sp.lookupAdminServiceURI());
+            sp.soapSetURI(URLUtil.getAdminURL());
             sp.getDomainInfo(Key.DomainBy.name, "phoebe.mac");
         } catch (ServiceException e) {
             e.printStackTrace();

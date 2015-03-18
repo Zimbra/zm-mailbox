@@ -16,6 +16,8 @@
  */
 package com.zimbra.cs.consul;
 
+import com.zimbra.cs.account.Provisioning;
+
 
 
 /**
@@ -29,4 +31,37 @@ public interface ZimbraServiceNames {
     String POP = "zimbra-pop3";
     String WEB = "zimbra-web";
     String WEBADMIN = "zimbra-webadmin";
+
+
+    public static String getNameForProvisioningServiceConst(String serviceConst) {
+        if (Provisioning.SERVICE_ADMINCLIENT.equals(serviceConst)) {
+            return WEBADMIN;
+        } else if (Provisioning.SERVICE_MAILCLIENT.equals(serviceConst)) {
+            return WEB;
+        } else if (Provisioning.SERVICE_MAILBOX.equals(serviceConst)) {
+            return MAILSTORE;
+        } else if (Provisioning.SERVICE_WEBCLIENT.equals(serviceConst)) {
+            return WEB;
+        }
+        return null;
+    }
+
+    public static String toProvisioningServiceConst(String name) {
+        if (IMAP.equals(name)) {
+            return Provisioning.SERVICE_MAILBOX;
+        } else if (LMTP.equals(name)) {
+            return Provisioning.SERVICE_MAILBOX;
+        } else if (MAILSTORE.equals(name)) {
+            return Provisioning.SERVICE_MAILBOX;
+        } else if (MAILSTOREADMIN.equals(name)) {
+            return Provisioning.SERVICE_MAILBOX;
+        } else if (POP.equals(name)) {
+            return Provisioning.SERVICE_MAILBOX;
+        } else if (WEB.equals(name)) {
+            return Provisioning.SERVICE_WEBCLIENT;
+        } else if (WEBADMIN.equals(name)) {
+            return Provisioning.SERVICE_ADMINCLIENT;
+        }
+        return null;
+    }
 }

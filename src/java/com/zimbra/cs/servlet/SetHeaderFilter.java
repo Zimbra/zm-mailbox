@@ -38,6 +38,7 @@ import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.soap.SoapProvisioning;
+import com.zimbra.cs.httpclient.URLUtil;
 
 /** Sets headers for request. */
 public class SetHeaderFilter implements Filter {
@@ -102,7 +103,7 @@ public class SetHeaderFilter implements Filter {
             headers = NO_HEADERS;
             try {
                 SoapProvisioning provisioning = new SoapProvisioning();
-                provisioning.soapSetURI(provisioning.lookupAdminServiceURI());
+                provisioning.soapSetURI(URLUtil.getAdminURL());
                 Entry info = provisioning.getDomainInfo(Key.DomainBy.virtualHostname, serverName);
                 if (info == null) {
                     info = provisioning.getConfig();

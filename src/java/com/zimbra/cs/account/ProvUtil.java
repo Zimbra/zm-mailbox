@@ -810,7 +810,7 @@ public class ProvUtil implements HttpDebugListener {
             if (serverHostname != null) {
                 sp.soapSetURI(URLUtil.getAdminURL(serverHostname));
             } else {
-                sp.soapSetURI(sp.lookupAdminServiceURI());
+                sp.soapSetURI(URLUtil.getAdminURL());
             }
             if (debugLevel != SoapDebugLevel.none) {
                 sp.soapSetHttpTransportDebugListener(this);

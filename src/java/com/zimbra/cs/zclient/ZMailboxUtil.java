@@ -131,10 +131,7 @@ import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.account.soap.SoapProvisioning.DelegateAuthResponse;
 import com.zimbra.cs.analytics.BehaviorManager;
 import com.zimbra.cs.analytics.MessageBehavior;
-import com.zimbra.cs.consul.ConsulClient;
-import com.zimbra.cs.consul.ConsulServiceLocator;
-import com.zimbra.cs.consul.ServiceLocator;
-import com.zimbra.cs.consul.ZimbraServiceNames;
+import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.util.SoapCLI;
 import com.zimbra.soap.type.SearchSortBy;
@@ -3197,9 +3194,7 @@ public class ZMailboxUtil implements DebugListener {
             if (cl.hasOption('u')) {
                 pu.setUrl(cl.getOptionValue('u'), isAdmin);
             } else {
-                ServiceLocator.Entry entry = new ConsulServiceLocator(new ConsulClient()).findOne(ZimbraServiceNames.MAILSTOREADMIN);
-                String scheme = entry.tags.contains("ssl") ? "https" : "http";
-                pu.setUrl(scheme + "://" + entry.hostName + ":" + entry.servicePort + "/", isAdmin);
+                pu.setUrl(URLUtil.getAdminURL(), isAdmin);
             }
             if (cl.hasOption('p')) pu.setPassword(cl.getOptionValue('p'));
             if (cl.hasOption('P')) {

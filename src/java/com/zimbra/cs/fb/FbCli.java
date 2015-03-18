@@ -30,7 +30,6 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.Element.XMLElement;
 import com.zimbra.common.soap.SoapHttpTransport;
-import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.httpclient.URLUtil;
 
 public class FbCli {
@@ -69,7 +68,7 @@ public class FbCli {
     }
     public FbCli() throws ServiceException {
         try {
-            setServer(new URI(new SoapProvisioning().lookupAdminServiceURI()).getHost());
+            setServer(new URI(URLUtil.getAdminURL()).getHost());
         } catch (URISyntaxException e) {
             throw ServiceException.FAILURE("Failed looking up admin service", e);
         }

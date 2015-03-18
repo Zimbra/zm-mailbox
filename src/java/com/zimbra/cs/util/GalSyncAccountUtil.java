@@ -39,8 +39,6 @@ import com.zimbra.common.util.CliUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.consul.ConsulServiceLocator;
-import com.zimbra.cs.consul.ZimbraServiceNames;
 import com.zimbra.cs.httpclient.URLUtil;
 
 public class GalSyncAccountUtil {
@@ -100,7 +98,7 @@ public class GalSyncAccountUtil {
 	private SoapHttpTransport mTransport;
 
 	private GalSyncAccountUtil() throws IOException, ServiceException {
-        mAdminURL = URLUtil.getAdminURL(new ConsulServiceLocator().findOne(ZimbraServiceNames.MAILSTOREADMIN).hostName);
+        mAdminURL = URLUtil.getAdminURL();
         mUsername = LC.zimbra_ldap_user.value();
         mPassword = LC.zimbra_ldap_password.value();
 	}

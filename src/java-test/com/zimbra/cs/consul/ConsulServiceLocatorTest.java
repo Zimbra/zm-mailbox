@@ -64,7 +64,7 @@ public final class ConsulServiceLocatorTest {
             Assert.fail("Expected a ServiceException with code=NOT_FOUND");
         } catch (ServiceException e) {
             Assert.assertEquals(ServiceException.NOT_FOUND, e.getCode());
-        }
+        } catch (IOException e) {}
 
         // Deregister
         serviceLocator.deregister(service.id);

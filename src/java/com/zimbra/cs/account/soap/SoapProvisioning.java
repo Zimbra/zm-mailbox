@@ -94,10 +94,11 @@ import com.zimbra.cs.account.accesscontrol.RightCommand;
 import com.zimbra.cs.account.accesscontrol.RightModifier;
 import com.zimbra.cs.account.accesscontrol.ViaGrantImpl;
 import com.zimbra.cs.account.auth.AuthContext;
+import com.zimbra.cs.consul.ChainedServiceLocator;
 import com.zimbra.cs.consul.ConsulClient;
 import com.zimbra.cs.consul.ConsulServiceLocator;
+import com.zimbra.cs.consul.ProvisioningServiceLocator;
 import com.zimbra.cs.consul.ServiceLocator;
-import com.zimbra.cs.consul.ZimbraServiceNames;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.mime.MimeTypeInfo;
 import com.zimbra.soap.JaxbUtil;
@@ -235,10 +236,14 @@ public class SoapProvisioning extends Provisioning {
     private DebugListener mDebugListener;
     private HttpDebugListener mHttpDebugListener;
     private final boolean mNeedSession;
-    private ServiceLocator serviceLocator = new ConsulServiceLocator(new ConsulClient());
+    private ServiceLocator serviceLocator;
 
     public SoapProvisioning(boolean needSession) {
         mNeedSession = needSession;
+
+        ServiceLocator sl1 = new ConsulServiceLocator(new ConsulClient());
+        ServiceLocator sl2 = new ProvisioningServiceLocator(Provisioning.getInstance());
+        serviceLocator = new ChainedServiceLocator(sl1, sl2);
     }
 
     public SoapProvisioning() {
@@ -251,7 +256,7 @@ public class SoapProvisioning extends Provisioning {
         mRetryCount = options.getRetryCount();
         mDebugListener = options.getDebugListener();
         mAuthToken = options.getAuthToken();
-        if (options.getUri() == null) options.setUri(lookupAdminServiceURI());
+        if (options.getUri() == null) options.setUri(URLUtil.getAdminURL(serviceLocator));
         soapSetURI(options.getUri());
 
         if (options.getLocalConfigAuth()) {
@@ -308,28 +313,6 @@ public class SoapProvisioning extends Provisioning {
             mTransport.setAuthToken(mAuthToken);
         if (mDebugListener != null)
             mTransport.setDebugListener(mDebugListener);
-    }
-
-    /** Perform a service locator lookup of an admin soap service */
-    public String lookupAdminServiceURI() throws ServiceException {
-        try {
-            ServiceLocator.Entry entry = serviceLocator.findOne(ZimbraServiceNames.MAILSTOREADMIN);
-            String scheme = entry.tags.contains("ssl") ? "https" : "http";
-            return scheme + "://" + entry.hostName + ":" + entry.servicePort + AdminConstants.ADMIN_SERVICE_URI;
-        } catch (IOException e) {
-            throw ServiceException.FAILURE("Failed contacting service locator", e);
-        }
-    }
-
-    /** Perform a service locator lookup of a mailstore soap service */
-    public String lookupMailServiceURI() throws ServiceException {
-        try {
-            ServiceLocator.Entry entry = serviceLocator.findOne(ZimbraServiceNames.MAILSTORE);
-            String scheme = entry.tags.contains("ssl") ? "https" : "http";
-            return scheme + "://" + entry.hostName + ":" + entry.servicePort + "/service/soap/";
-        } catch (IOException e) {
-            throw ServiceException.FAILURE("Failed contacting service locator", e);
-        }
     }
 
     /**
@@ -1108,7 +1091,7 @@ public class SoapProvisioning extends Provisioning {
         public String getStatus() {
             return status;
         }
-        
+
         public Progress getProgress() {
             return progress;
         }

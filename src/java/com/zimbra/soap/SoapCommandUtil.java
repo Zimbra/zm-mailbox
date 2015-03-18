@@ -54,7 +54,7 @@ import com.zimbra.common.soap.SoapTransport;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.StringUtil;
-import com.zimbra.cs.account.soap.SoapProvisioning;
+import com.zimbra.cs.httpclient.URLUtil;
 
 public class SoapCommandUtil implements SoapTransport.DebugListener {
 
@@ -278,9 +278,9 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
         mUrl = CliUtil.getOptionValue(cl, LO_URL);
         if (StringUtil.isNullOrEmpty(mUrl)) {
             if (!StringUtil.isNullOrEmpty(mAdminAccountName)) {
-                mUrl = new SoapProvisioning().lookupAdminServiceURI();
+                mUrl = URLUtil.getAdminURL();
             } else {
-                mUrl = new SoapProvisioning().lookupMailServiceURI();
+                mUrl = URLUtil.getSoapURL();
             }
         }
 

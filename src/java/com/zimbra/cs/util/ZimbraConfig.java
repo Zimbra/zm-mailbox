@@ -40,8 +40,10 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.util.memcached.ZimbraMemcachedClient;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
+import com.zimbra.cs.consul.ChainedServiceLocator;
 import com.zimbra.cs.consul.ConsulClient;
 import com.zimbra.cs.consul.ConsulServiceLocator;
+import com.zimbra.cs.consul.ProvisioningServiceLocator;
 import com.zimbra.cs.consul.ServiceLocator;
 import com.zimbra.cs.extension.ExtensionUtil;
 import com.zimbra.cs.index.DefaultIndexingQueueAdapter;
@@ -280,7 +282,8 @@ public class ZimbraConfig {
 
 	@Bean
 	public ServiceLocator serviceLocator() throws Exception {
-	    return new ConsulServiceLocator();
+	    // First try Consul, then fall back on provisioned service lists (which may be up or down)
+	    return new ChainedServiceLocator(new ConsulServiceLocator(), new ProvisioningServiceLocator(Provisioning.getInstance()));
 	}
 
     @Bean(name="sharedDeliveryCoordinator")
@@ -385,7 +388,7 @@ public class ZimbraConfig {
         }
         return instance;
 	}
-	
+
 	@Bean(name="httpClientManager")
     public ZimbraHttpClientManager httpClientManagerBean() throws Exception {
         return new ZimbraHttpClientManager();

@@ -46,6 +46,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.zclient.ZClientException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.soap.SoapProvisioning;
+import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.admin.message.ReloadLocalConfigRequest;
 /**
@@ -326,7 +327,7 @@ public final class LocalConfigCLI {
 
     private void reload() throws ServiceException {
         SoapProvisioning prov = new SoapProvisioning();
-        prov.soapSetURI(prov.lookupAdminServiceURI());
+        prov.soapSetURI(URLUtil.getAdminURL());
         prov.soapZimbraAdminAuthenticate();
 
         SoapHttpTransport transport = new SoapHttpTransport(prov.soapGetURI());
