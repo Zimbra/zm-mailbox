@@ -22,9 +22,8 @@ score DSPAM_HAM -0.5
 %%uncomment VAR:zimbraMtaMyNetworks%%trusted_networks %%zimbraMtaMyNetworks%%
 %%uncomment VAR:zimbraMtaAntiSpamLockMethod%%lock_method %%zimbraMtaAntiSpamLockMethod%%
 
-# accept email from zimbra support and forumns
-def_whitelist_from_rcvd noreply@zimbra.com zimbra.com
-def_whitelist_from_rcvd support@zimbra.com zimbra.com
+# accept email from zimbra support and forums
+whitelist_auth *@zimbra.com
 
 rewrite_header Subject *SPAM* _STARS(*)_
 bayes_auto_learn 1
