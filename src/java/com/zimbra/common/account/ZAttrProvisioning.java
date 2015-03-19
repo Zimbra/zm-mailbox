@@ -13254,10 +13254,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraReverseProxyImapSaslGssapiEnabled = "zimbraReverseProxyImapSaslGssapiEnabled";
 
     /**
-     * Deprecated since: 8.7.0. deprecated as IMAP SASL PLAIN is enabled by
-     * default and only way to disable it is to use GSSAPI instead by setting
-     * zimbraReverseProxyImapSaslGssapiEnabled to TRUE. Orig desc: whether
-     * IMAP SASL PLAIN is enabled for reverse proxy
+     * whether IMAP SASL PLAIN is enabled for reverse proxy
      *
      * @since ZCS 5.0.10
      */
@@ -13461,10 +13458,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraReverseProxyPop3SaslGssapiEnabled = "zimbraReverseProxyPop3SaslGssapiEnabled";
 
     /**
-     * Deprecated since: 8.7.0. deprecated as POP3 SASL PLAIN is enabled by
-     * default and only way to disable it is to use GSSAPI instead by setting
-     * zimbraReverseProxyPop3SaslGssapiEnabled to TRUE. Orig desc: whether
-     * POP3 SASL PLAIN is enabled for reverse proxy
+     * whether POP3 SASL PLAIN is enabled for reverse proxy
      *
      * @since ZCS 5.0.10
      */
