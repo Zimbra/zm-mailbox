@@ -2,16 +2,16 @@ Setup Development Environment for Mac OSX
 ================================================================================
 
 1. Download Perforce - P4 Command-Line Client
-  http://www.perforce.com/downloads/Perforce/Customer
-  Perforce Clients -> P4: Command-line client
-  Macintosh > Mac OS X 10.5 for x86_64
+  * http://www.perforce.com/downloads/Perforce/Customer
+  * Perforce Clients -> P4: Command-line client
+  * Macintosh > Mac OS X 10.5 for x86_64
+
 2. $ sudo mv p4 /usr/local/bin    (may need to create local/bin)
 3. $ chmod +x /usr/local/bin/p4
 
-You may also want to download and install P4V, a visual Perforce client.
-
-More information is available at:
-http://www.perforce.com/perforce/doc.current/manuals/p4guide/01_install.html#1070774
+  * You may also want to download and install P4V, a visual Perforce client.
+  * More information is available at:
+  * http://www.perforce.com/perforce/doc.current/manuals/p4guide/01_install.html#1070774
 
 4. $ vi ~/.bash_profile
 
@@ -51,10 +51,10 @@ http://www.perforce.com/perforce/doc.current/manuals/p4guide/01_install.html#107
 11. $ p4 sync
 
 12. Download MySQL - MySQL Community Server & install it.
-  http://dev.mysql.com/downloads/mysql/
-  GA > Mac OSX ver 10.7 (x86, 64-bit)
+  * http://dev.mysql.com/downloads/mysql/
+  * GA > Mac OSX ver 10.7 (x86, 64-bit)
 
-  Grab the DMG version and install the two packages (MySQL and the startup item).
+  * Grab the DMG version and install the two packages (MySQL and the startup item).
 
 13. $ sudo ln -s /usr/local/mysql /opt/zimbra/mysql  (RHEL command, sudo ln -s /usr/local/mysql /usr)
 
@@ -81,9 +81,16 @@ http://www.perforce.com/perforce/doc.current/manuals/p4guide/01_install.html#107
 
   * {username} is your local username and be sure to insert a [TAB] between {username} and "ALL".
 
-19. $ cd ~/p4/main/ZimbraServer
-20. Install the JDK 1.7 from Oracle if not already present on your system.
-21. $ mkdir ~/p4/main/ZimbraWebClient/WebRoot/help
+19. Install the JDK 1.7 from Oracle if not already present on your system.
+  * Be sure to export the JAVA_HOME variable like so:
+
+  export JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk1.7.0_25.jdk/Contents/Home
+
+  * Note that if you work on multiple branches, this value may need to change.
+
+20. $ mkdir ~/p4/main/ZimbraWebClient/WebRoot/help
+
+21. $ cd ~/p4/main/ZimbraServer
 22. $ ant reset-all
 
   * $ ant -p
@@ -120,17 +127,6 @@ http://www.perforce.com/perforce/doc.current/manuals/p4guide/01_install.html#107
 NETWORK EDITION DEPLOYMENT
 ================================================================================
 
-1. $ cd ~/p4/main/ZimbraServer
-2. $ ant reset-all
- 
-3. $ cd ~/p4/main/ZimbraLicenseExtension
-4. $ ant deploy-dev
- 
-5. $ cd ~/p4/main/ZimbraNetwork
-6. $ ant dev-deploy
+For information on how to install network edition deployments including the touch client, see the follow-up document in:
 
-Many of the admin functions require that you deploy admin extensions.  These may require additional paths in your P4 workspace and additional services be deployed for those extensions to function correctly. ymmv.
-
-Example for deploying an individual admin extension (ex. delegated admin extension)
-1. $ cd ~p4/main/ZimbraNetwork/ZimbraAdminExt
-2. $ ant -Dext.name=com_zimbra_delegatedadmin -Dext.dir=DelegatedAdmin deploy-zimlet
+//depot/zimbra/main/ZimbraNetwork/ZimbraServer/docs/INSTALL-NE-OSX.txt
