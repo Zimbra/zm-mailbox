@@ -81,7 +81,7 @@ public class URLUtil {
         ServiceLocator serviceLocator = null;
         try {
             serviceLocator = Zimbra.getAppContext().getBean(ServiceLocator.class);
-        } catch (Exception e) {}
+        } catch (Exception | NoClassDefFoundError e) {}
 
         if (serviceLocator == null) {
             ServiceLocator sl1 = new ConsulServiceLocator(new ConsulClient());
@@ -201,7 +201,7 @@ public class URLUtil {
         ServiceLocator serviceLocator = null;
         try {
             serviceLocator = Zimbra.getAppContext().getBean(ServiceLocator.class);
-        } catch (Exception e) {}
+        } catch (Exception | NoClassDefFoundError e) {}
 
         if (serviceLocator == null) {
             ServiceLocator sl1 = new ConsulServiceLocator(new ConsulClient());
