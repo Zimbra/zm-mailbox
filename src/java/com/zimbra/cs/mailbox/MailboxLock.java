@@ -16,6 +16,8 @@
  */
 package com.zimbra.cs.mailbox;
 
+import com.zimbra.cs.mailbox.LocalMailboxLock.LockFailedException;
+
 
 /**
  * {@link MailboxLock} is a replacement of the implicit monitor lock using {@code synchronized} methods or statements on
@@ -38,10 +40,10 @@ public interface MailboxLock {
     public boolean isWriteLockedByCurrentThread();
 
     /** Acquire the lock in read-write mode, or increments the hold count if the lock is already acquired */
-    public void lock();
+    public void lock() throws LockFailedException;
 
     /** Acquire the lock in read or read-write mode, or increments the hold count if the lock is already acquired */
-    public void lock(boolean write);
+    public void lock(boolean write) throws LockFailedException;
 
     /** Release the lock */
     public void release();

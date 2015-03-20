@@ -20,13 +20,16 @@ import java.util.EmptyStackException;
 import java.util.Stack;
 import java.util.concurrent.TimeUnit;
 
+import javax.annotation.PostConstruct;
+
 import com.google.common.annotations.VisibleForTesting;
-import com.zimbra.common.account.ZAttrProvisioning;
 import com.zimbra.common.localconfig.DebugConfig;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.mailbox.lock.DebugZLock;
 import com.zimbra.cs.mailbox.lock.ZLock;
-import com.zimbra.cs.util.ProvisioningUtil;
 
 /**
  * {@link LocalMailboxLock} is a replacement of the implicit monitor lock using {@code synchronized} methods or statements on
@@ -38,12 +41,18 @@ import com.zimbra.cs.util.ProvisioningUtil;
  *
  */
 public class LocalMailboxLock implements MailboxLock {
-    private final ZLock zLock = DebugConfig.debugMailboxLock ? new DebugZLock() : new ZLock();
-    private final Stack<Boolean> lockStack = new Stack<Boolean>();
-    private Mailbox mbox;
+    protected final ZLock zLock = DebugConfig.debugMailboxLock ? new DebugZLock() : new ZLock();
+    protected final Stack<Boolean> lockStack = new Stack<Boolean>();
+    protected Mailbox mbox;
+    protected Server localServer;
 
     public LocalMailboxLock(String id, Mailbox mbox) {
         this.mbox = mbox;
+    }
+
+    @PostConstruct
+    public void init() throws ServiceException {
+        localServer = Provisioning.getInstance().getLocalServer();
     }
 
     @Override
@@ -71,9 +80,9 @@ public class LocalMailboxLock implements MailboxLock {
 
     private boolean tryLockWithTimeout(boolean write) throws InterruptedException {
         if (write) {
-            return zLock.writeLock().tryLock(ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraMailBoxLockTimeout, 60), TimeUnit.SECONDS);
+            return zLock.writeLock().tryLock(localServer.getMailBoxLockTimeout(), TimeUnit.SECONDS);
         } else {
-            return zLock.readLock().tryLock(ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraMailBoxLockTimeout, 60), TimeUnit.SECONDS);
+            return zLock.readLock().tryLock(localServer.getMailBoxLockTimeout(), TimeUnit.SECONDS);
         }
     }
 
@@ -117,13 +126,13 @@ public class LocalMailboxLock implements MailboxLock {
         return zLock.hasQueuedThreads();
     }
 
-    @Override
-    public void lock() {
+	@Override
+    public void lock() throws LockFailedException {
         lock(true);
     }
 
-    @Override
-    public void lock(boolean write) {
+	@Override
+    public void lock(boolean write) throws LockFailedException {
         write = write || mbox.requiresWriteLock();
         ZimbraLog.mailbox.trace("LOCK %s", (write ? "WRITE" : "READ"));
         assert(neverReadBeforeWrite(write));
@@ -138,7 +147,7 @@ public class LocalMailboxLock implements MailboxLock {
                 return;
             }
             int queueLength = zLock.getQueueLength();
-            if (queueLength >= ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraMailboxLockMaxWaitingThreads, 15)) {
+            if (queueLength >= localServer.getMailboxLockMaxWaitingThreads()) {
                 // Too many threads are already waiting for the lock, can't let you queued. We don't want to log stack trace
                 // here because once requests back up, each new incoming request falls into here, which creates too much
                 // noise in the logs. Unless debug switch is enabled
@@ -223,5 +232,4 @@ public class LocalMailboxLock implements MailboxLock {
             ZimbraLog.mailbox.error(out, this);
         }
     }
-
 }

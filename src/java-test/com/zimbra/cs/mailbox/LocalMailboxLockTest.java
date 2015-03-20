@@ -16,18 +16,15 @@
  */
 package com.zimbra.cs.mailbox;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.junit.After;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.springframework.context.annotation.Configuration;
 
 import com.zimbra.common.account.ZAttrProvisioning;
 import com.zimbra.common.service.ServiceException;
@@ -35,175 +32,23 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.LocalMailboxLock.LockFailedException;
-import com.zimbra.cs.mailbox.Mailbox.FolderNode;
-import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.cs.store.MockStoreManager;
 import com.zimbra.cs.util.ProvisioningUtil;
+import com.zimbra.cs.util.ZimbraConfig;
 
-public class LocalMailboxLockTest {
+public class LocalMailboxLockTest extends AbstractMailboxLockTest {
+
+    protected void resetStoreBetweenTests() throws Exception {}
+
+    protected boolean isLockServiceAvailableForTest() throws Exception {
+        return true;
+    }
+
     @BeforeClass
     public static void init() throws Exception {
-        MailboxTestUtil.initServer();
+        MailboxTestUtil.initServer(MockStoreManager.class, "", LocalZimbraConfig.class);
         Provisioning prov = Provisioning.getInstance();
         prov.createAccount("test@zimbra.com", "secret", new HashMap<String, Object>());
-    }
-
-    @Before
-    public void setup() throws Exception {
-        MailboxTestUtil.clearData();
-        MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-    }
-
-    @After
-    public void tearDown() throws Exception {
-        MailboxTestUtil.clearData();
-    }
-
-    @Test
-    public void badWriteWhileHoldingRead() throws ServiceException {
-        boolean check = false;
-        assert (check = true);
-        if (check) {
-            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-            mbox.lock.lock(false);
-            Assert.assertFalse(mbox.lock.isUnlocked());
-            Assert.assertFalse(mbox.lock.isWriteLockedByCurrentThread());
-            boolean good = true;
-            try {
-                mbox.lock.lock(true);
-                good = false;
-            } catch (AssertionError e) {
-                //expected
-            }
-            Assert.assertTrue(good);
-        } else {
-            ZimbraLog.test.debug("skipped testWriteWhileHoldingRead since asserts are not enabled");
-            //without this the test times out eventually, but we want tests to be fast so skip this one
-        }
-    }
-
-    @Test
-    public void nestedWrite() throws ServiceException {
-        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-        int holdCount = 0;
-        Assert.assertEquals(holdCount, mbox.lock.getHoldCount());
-        mbox.lock.lock(true);
-        holdCount++;
-        Assert.assertEquals(holdCount, mbox.lock.getHoldCount());
-        Assert.assertFalse(mbox.lock.isUnlocked());
-        Assert.assertTrue(mbox.lock.isWriteLockedByCurrentThread());
-        mbox.lock.lock(false);
-        holdCount++;
-        Assert.assertEquals(holdCount, mbox.lock.getHoldCount());
-        mbox.lock.lock(true);
-        holdCount++;
-        Assert.assertEquals(holdCount, mbox.lock.getHoldCount());
-        mbox.lock.lock(false);
-        holdCount++;
-        Assert.assertEquals(holdCount, mbox.lock.getHoldCount());
-        mbox.lock.lock(true);
-        holdCount++;
-        Assert.assertEquals(holdCount, mbox.lock.getHoldCount());
-        mbox.lock.lock(true);
-        holdCount++;
-        Assert.assertEquals(holdCount, mbox.lock.getHoldCount());
-        mbox.lock.lock(true);
-        holdCount++;
-        Assert.assertEquals(holdCount, mbox.lock.getHoldCount());
-
-        mbox.lock.release();
-        holdCount--;
-        Assert.assertEquals(holdCount, mbox.lock.getHoldCount());
-        mbox.lock.release();
-        holdCount--;
-        Assert.assertEquals(holdCount, mbox.lock.getHoldCount());
-        mbox.lock.release();
-        holdCount--;
-        Assert.assertEquals(holdCount, mbox.lock.getHoldCount());
-        mbox.lock.release();
-        holdCount--;
-        Assert.assertEquals(holdCount, mbox.lock.getHoldCount());
-        mbox.lock.release();
-        holdCount--;
-        Assert.assertEquals(holdCount, mbox.lock.getHoldCount());
-        mbox.lock.release();
-        holdCount--;
-        Assert.assertEquals(holdCount, mbox.lock.getHoldCount());
-        mbox.lock.release();
-        holdCount--;
-        Assert.assertEquals(holdCount, mbox.lock.getHoldCount());
-        Assert.assertEquals(0, holdCount);
-    }
-
-    @Test
-    public void multiAccess() throws ServiceException {
-        final Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-
-        //just do some read/write in different threads to see if we trigger any deadlocks or other badness
-        int numThreads = 5;
-        final int loopCount = 10;
-        final long sleepTime = 10;
-        int joinTimeout = 10000;
-
-        List<Thread> threads = new ArrayList<Thread>(numThreads * 2);
-        for (int i = 0; i < numThreads; i++) {
-            String threadName = "MailboxLockTest-MultiReader-" + i;
-            Thread reader = new Thread(threadName) {
-                @Override
-                public void run() {
-                    for (int i = 0; i < loopCount; i++) {
-                        mbox.lock.lock(false);
-                        try {
-                            ItemId iid = new ItemId(mbox, Mailbox.ID_FOLDER_USER_ROOT);
-                            FolderNode node = mbox.getFolderTree(null, iid, true);
-                        } catch (ServiceException e) {
-                            e.printStackTrace();
-                            Assert.fail("ServiceException");
-                        }
-                        try {
-                            Thread.sleep(sleepTime);
-                        } catch (InterruptedException e) {
-                        }
-                        mbox.lock.release();
-                    }
-                }
-            };
-            threads.add(reader);
-
-            threadName = "MailboxLockTest-MultiWriter-" + i;
-            Thread writer = new Thread(threadName) {
-                @Override
-                public void run() {
-                    for (int i = 0; i < loopCount; i++) {
-                        mbox.lock.lock(true);
-                        try {
-                            mbox.createFolder(null, "foo-" + Thread.currentThread().getName() + "-" + i, new Folder.FolderOptions().setDefaultView(MailItem.Type.MESSAGE));
-                        } catch (ServiceException e) {
-                            e.printStackTrace();
-                            Assert.fail("ServiceException");
-                        }
-                        mbox.lock.release();
-                        try {
-                            Thread.sleep(sleepTime);
-                        } catch (InterruptedException e) {
-                        }
-                    }
-                }
-            };
-            threads.add(writer);
-//            writer.start();
-//            reader.start();
-        }
-
-        for (Thread t : threads){
-            t.start();
-        }
-        for (Thread t : threads) {
-            try {
-                t.join(joinTimeout);
-                Assert.assertFalse(t.isAlive());
-            } catch (InterruptedException e) {
-            }
-        }
     }
 
     @Test
@@ -237,7 +82,7 @@ public class LocalMailboxLockTest {
                         mbox.lock.release();
                     }
                 } catch (ServiceException e) {
-                    e.printStackTrace();
+                    ZimbraLog.test.error(e.getLocalizedMessage(), e);
                     Assert.fail();
                 }
             }
@@ -261,7 +106,7 @@ public class LocalMailboxLockTest {
                     mbox.purge(MailItem.Type.FOLDER);
                     mbox.lock.release();
                 } catch (ServiceException | InterruptedException e) {
-                    e.printStackTrace();
+                    ZimbraLog.test.error(e.getLocalizedMessage(), e);
                     Assert.fail();
                 }
             }
@@ -275,26 +120,26 @@ public class LocalMailboxLockTest {
         try {
             writeThread.join(joinTimeout);
             if (writeThread.isAlive()) {
-                System.out.println("Write Thread");
+                ZimbraLog.test.debug("Write Thread");
                 for (StackTraceElement ste : writeThread.getStackTrace()) {
-                    System.out.println(ste);
+                    ZimbraLog.test.debug(ste);
                 }
                 if (readThread.isAlive()) {
-                    System.out.println("Read Thread");
+                    ZimbraLog.test.debug("Read Thread");
                     for (StackTraceElement ste : readThread.getStackTrace()) {
-                        System.out.println(ste);
+                        ZimbraLog.test.debug(ste);
                     }
                 }
             }
             Assert.assertFalse(writeThread.isAlive());
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            ZimbraLog.test.error(e.getLocalizedMessage(), e);
         }
         try {
             readThread.join(joinTimeout);
             Assert.assertFalse(readThread.isAlive());
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            ZimbraLog.test.error(e.getLocalizedMessage(), e);
         }
     }
 
@@ -613,4 +458,13 @@ public class LocalMailboxLockTest {
         mbox.lock.release();
     }
 
+
+    @Configuration
+    public static class LocalZimbraConfig extends ZimbraConfig {
+
+        @Override
+        public boolean isRedisAvailable() throws ServiceException {
+            return false;
+        }
+    }
 }
