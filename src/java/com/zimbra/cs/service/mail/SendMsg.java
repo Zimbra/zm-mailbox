@@ -205,7 +205,7 @@ public final class SendMsg extends MailDocumentHandler {
             if (fetchSavedMsg) {
                 Message msg = GetMsg.getMsg(octxt, mbox, savedMsgId, false);
                 ToXML.encodeMessageAsMP(response, ifmt, octxt, msg, null, 0, true, true, null, false, false,
-                        LC.mime_encode_missing_blob.booleanValue(), MsgContent.both);
+                        Provisioning.getInstance().getLocalServer().isMimeEncodeMissingBlob(), MsgContent.both);
             } else {
                 Element respElement = response.addElement(MailConstants.E_MSG);
                 respElement.addAttribute(MailConstants.A_ID, ifmt.formatItemId(savedMsgId));
