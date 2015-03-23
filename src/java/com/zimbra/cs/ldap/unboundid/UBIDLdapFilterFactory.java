@@ -84,9 +84,11 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
     private static boolean initialized = false;
 
     public static synchronized void initialize() throws LdapException {
-        assert(!initialized);
+        if (initialized) {
+            ZimbraLog.ldap.debug("Already initialized. Skipping");
+            return;
+        }
         initialized = true;
-
         try {
             _initialize();
         } catch (LDAPException e) {

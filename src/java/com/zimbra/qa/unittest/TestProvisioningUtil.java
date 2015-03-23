@@ -24,7 +24,8 @@ import java.util.List;
 import java.util.Set;
 
 import junit.framework.AssertionFailedError;
-import junit.framework.TestCase;
+
+import org.junit.Assert;
 
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.service.ServiceException;
@@ -38,7 +39,7 @@ import com.zimbra.cs.account.ldap.LdapProv;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 
 
-public class TestProvisioningUtil extends TestCase {
+public class TestProvisioningUtil {
 
     private static String NAME_ROOT_DOMAIN     = "ldaptest";
 
@@ -60,15 +61,15 @@ public class TestProvisioningUtil extends TestCase {
     }
 
     public static void verifySameId(NamedEntry entry1, NamedEntry entry2) throws Exception {
-        assertNotNull(entry1);
-        assertNotNull(entry2);
-        assertEquals(entry1.getId(), entry2.getId());
+        Assert.assertNotNull(entry1);
+        Assert.assertNotNull(entry2);
+        Assert.assertEquals(entry1.getId(), entry2.getId());
     }
 
 
     public static void verifySameEntry(NamedEntry entry1, NamedEntry entry2) throws Exception {
         verifySameId(entry1, entry2);
-        assertEquals(entry1.getName(), entry2.getName());
+        Assert.assertEquals(entry1.getName(), entry2.getName());
     }
 
     // verify list contains all the entries
@@ -76,20 +77,20 @@ public class TestProvisioningUtil extends TestCase {
     public static void verifyEntries(List<NamedEntry> list, NamedEntry[] entries, boolean checkCount) throws Exception {
         try {
             if (checkCount)
-                assertEquals(list.size(), entries.length);
+                Assert.assertEquals(list.size(), entries.length);
 
             Set<String> ids = new HashSet<String>();
             for (NamedEntry entry : list)
                 ids.add(entry.getId());
 
             for (NamedEntry entry : entries) {
-                assertTrue(ids.contains(entry.getId()));
+                Assert.assertTrue(ids.contains(entry.getId()));
                 ids.remove(entry.getId());
             }
 
             // make sure all ids in list is present is entries
             if (checkCount)
-                assertEquals(ids.size(), 0);
+                Assert.assertEquals(ids.size(), 0);
 
         } catch (AssertionFailedError e) {
             System.out.println("\n===== verifyEntries failed =====");
@@ -132,10 +133,10 @@ public class TestProvisioningUtil extends TestCase {
     public static void verifyEntries(Set<String> list, String[] names, boolean checkCount) throws Exception {
         try {
             if (checkCount)
-                assertEquals(names.length, list.size());
+                Assert.assertEquals(names.length, list.size());
 
             for (String name : names)
-                assertTrue(list.contains(name));
+                Assert.assertTrue(list.contains(name));
 
         } catch (AssertionFailedError e) {
             System.out.println("\n===== verifyEntries failed =====");
@@ -155,13 +156,13 @@ public class TestProvisioningUtil extends TestCase {
 
     public static void verifyEquals(Set<String> expected, Set<String> actual) throws Exception {
 
-        assertEquals(expected.size(), actual.size());
+        Assert.assertEquals(expected.size(), actual.size());
 
         for (String e : expected)
-            assertTrue(actual.contains(e));
+            Assert.assertTrue(actual.contains(e));
 
         for (String a : actual)
-            assertTrue(expected.contains(a));
+            Assert.assertTrue(expected.contains(a));
     }
 
 

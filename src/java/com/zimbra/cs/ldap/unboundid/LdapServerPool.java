@@ -128,7 +128,7 @@ public class LdapServerPool {
         return serverSet;
     }
 
-    private ServerSet createServerSet(SocketFactory socketFactory) throws UnknownHostException {
+    private ServerSet createServerSet(SocketFactory socketFactory) throws UnknownHostException, LdapException {
         if (urls.size() == 1) {
             LDAPURL url = urls.get(0);
             if (LdapConnType.isLDAPI(url.getScheme())) {
@@ -162,11 +162,13 @@ public class LdapServerPool {
                         ports[i] = url.getPort();
                         i++;
                     }
-                    if (socketFactory == null) {
-                        return new FailoverServerSet(hosts, ports, connOpts);
-                    } else {
-                        return new FailoverServerSet(hosts, ports, socketFactory, connOpts);
-                    }
+                    ServerSetConfig serverSetConfig = new ServerSetConfig.ServerSetConfigBuider().
+                            setHosts(hosts).
+                            setPorts(ports).
+                            setSocketFactory(socketFactory).
+                            setLDAPConnectionOptions(connOpts).
+                            build();
+                    return LdapServerSetFactory.getServerSet(serverSetConfig);
                 }
             }
         } else {
@@ -189,15 +191,17 @@ public class LdapServerPool {
                 portsStrs[i] = pair.getSecond();
                 i++;
             }
-            if (socketFactory == null) {
-                FailoverServerSet serverSet = new FailoverServerSet(hostsStrs, portsStrs, connOpts);
-                serverSet.setReOrderOnFailover(true);
-                return serverSet;
-            } else {
-                FailoverServerSet serverSet = new FailoverServerSet(hostsStrs, portsStrs, socketFactory, connOpts);
-                serverSet.setReOrderOnFailover(true);
-                return serverSet;
+            ServerSetConfig serverSetConfig = new ServerSetConfig.ServerSetConfigBuider().
+                    setHosts(hostsStrs).
+                    setPorts(portsStrs).
+                    setSocketFactory(socketFactory).
+                    setLDAPConnectionOptions(connOpts).
+                    build();
+            ServerSet serverSet = LdapServerSetFactory.getServerSet(serverSetConfig);
+            if(serverSet instanceof FailoverServerSet){
+                ((FailoverServerSet) serverSet).setReOrderOnFailover(true);
             }
+            return serverSet;
         }
     }
 }

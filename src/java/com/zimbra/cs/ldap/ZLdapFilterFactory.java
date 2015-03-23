@@ -22,6 +22,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.zimbra.common.util.CsvWriter;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.ldap.unboundid.UBIDLdapFilterFactory;
 
@@ -33,7 +34,10 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
     private static ZLdapFilterFactory SINGLETON;
 
     static synchronized void setInstance(ZLdapFilterFactory factory) {
-        assert(SINGLETON == null);
+        if (null != SINGLETON) {
+            ZimbraLog.ldap.debug("Instance is already set. Skipping");
+            return;
+        }
         SINGLETON = factory;
     }
 

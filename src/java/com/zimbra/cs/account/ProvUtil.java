@@ -671,8 +671,8 @@ public class ProvUtil implements HttpDebugListener {
                                                 SOAP(".soap", ".s"),
                                                 SYNC_GAL("syncGal", "syg", "{domain} [{token}]", Category.MISC, 1, 2),
                                                 UPDATE_PRESENCE_SESSION_ID("updatePresenceSessionId", "upsid", "{UC service name or id} {app-username} {app-password}", Category.MISC, 3, 3, Via.soap),
-                                                RESET_ALL_LOGGERS("resetAllLoggers", "rlog", "[-s/--server hostname]", Category.LOG, 0, 2);
-
+                                                RESET_ALL_LOGGERS("resetAllLoggers", "rlog", "[-s/--server hostname]", Category.LOG, 0, 2),
+                                                RESET_LDAP_CLIENT("resetLdapClient", "rlc", "[-a]", Category.MISC, 0, 1),;
         private String mName;
         private String mAlias;
         private String mHelp;
@@ -1375,6 +1375,9 @@ public class ProvUtil implements HttpDebugListener {
             case RESET_ALL_LOGGERS:
                 doResetAllLoggers(args);
                 break;
+            case RESET_LDAP_CLIENT:
+                doResetLdapClient(args);
+                break;
             default:
                 return false;
         }
@@ -1626,6 +1629,19 @@ public class ProvUtil implements HttpDebugListener {
             server = args.length > 0 ? args[2] : null;
         }
         sprov.resetAllLoggers(server);
+    }
+
+    private void doResetLdapClient(String[] args) throws ServiceException {
+        if (!(prov instanceof SoapProvisioning)) {
+            throwSoapOnly();
+        }
+        SoapProvisioning  sprov = (SoapProvisioning)prov;
+        int argIdx = 1;
+        boolean allServers = false;
+        if (args.length >= 2 && args[argIdx].equals("-a")) {
+            allServers = true;
+        }
+        sprov.resetLdapClient(allServers);
     }
 
     private void doCreateAccountsBulk(String[] args) throws ServiceException {

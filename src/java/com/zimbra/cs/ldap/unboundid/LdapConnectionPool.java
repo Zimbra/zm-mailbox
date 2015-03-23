@@ -85,11 +85,8 @@ public class LdapConnectionPool {
                 backgroundHealthCheckEnabled,                         // invokeForBackgroundChecks
                 false                                                 // invokeOnException
                 );
-
         connPool.setHealthCheck(healthChecker);
-
         addToPoolMap(connPool);
-
         return connPool;
     }
 
@@ -133,9 +130,6 @@ public class LdapConnectionPool {
 
     private static synchronized void addToPoolMap(LDAPConnectionPool connPool) {
         String poolName = connPool.getConnectionPoolName();
-        LDAPConnectionPool pool = connPools.get(poolName);
-        assert(pool == null);
-
         connPools.put(poolName, connPool);
     }
 

@@ -2515,6 +2515,10 @@ public class SoapProvisioning extends Provisioning {
         invokeJaxb(new FlushCacheRequest(sel));
     }
 
+    public void resetLdapClient(boolean allServers) throws ServiceException {
+        invokeJaxb(new ResetLdapClientRequest(allServers));
+    }
+
     @Override
     public CountAccountResult countAccount(Domain domain) throws ServiceException {
         CountAccountResponse resp = invokeJaxb(new CountAccountRequest(

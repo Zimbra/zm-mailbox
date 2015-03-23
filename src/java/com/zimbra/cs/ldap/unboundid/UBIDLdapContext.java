@@ -87,9 +87,8 @@ public class UBIDLdapContext extends ZLdapContext {
     private DereferencePolicy derefAliasPolicy;
 
     public static synchronized void init(boolean alwaysUseMaster) throws LdapException {
-        assert(!initialized);
-
         if (initialized) {
+            ZimbraLog.ldap.debug("Already initialized. Skipping");
             return;
         }
 

@@ -294,6 +294,7 @@ public class AdminService implements DocumentService {
 
         // Skins
         dispatcher.registerHandler(AdminConstants.GET_ALL_SKINS_REQUEST, new GetAllSkins());
+        dispatcher.registerHandler(AdminConstants.RESET_LDAP_CLIENT_REQUEST, new ResetLdapClient());
     }
 
     /**

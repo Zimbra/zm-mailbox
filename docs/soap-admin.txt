@@ -2905,3 +2905,15 @@ deleteTime - time (ms) for the delete operation
 </DedupeBlobsResponse>
 
 -----------------------------
+
+-----------------------------
+<ResetLdapClientRequest allServers="1|0"/>
+
+allServers:
+      0 (default) = reset ldap client only on the local server
+      1           = reset ldap client all servers (this can take on systems with lots of servers)
+
+
+<ResetLdapClientResponse/>
+-----------------------------
+

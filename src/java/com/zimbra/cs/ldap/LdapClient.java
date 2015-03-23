@@ -233,14 +233,20 @@ public abstract class LdapClient {
     throws ServiceException;
     
     protected abstract ZMutableEntry createMutableEntryImpl();
-    
+
     protected abstract ZSearchControls createSearchControlsImpl(
             ZSearchScope searchScope, int sizeLimit, String[] returnAttrs);
-    
-    protected abstract void externalLdapAuthenticateImpl(String urls[], 
-            boolean wantStartTLS, String bindDN, String password, String note) 
+
+    protected abstract void externalLdapAuthenticateImpl(String urls[],
+            boolean wantStartTLS, String bindDN, String password, String note)
     throws ServiceException;
-    
-    protected abstract void zimbraLdapAuthenticateImpl(String bindDN, String password) 
+
+    protected abstract void zimbraLdapAuthenticateImpl(String bindDN, String password)
     throws ServiceException;
+
+    public static synchronized void restart(){
+        shutdown();
+        initialize();
+        waitForLdapServer();
+    }
 }
