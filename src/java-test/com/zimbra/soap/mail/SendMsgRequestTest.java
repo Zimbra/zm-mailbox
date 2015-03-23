@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -52,9 +52,9 @@ public final class SendMsgRequestTest {
         LOG.setLevel(Level.INFO);
     }
 
-    private void logInfo(String format, Object ... objects) {
-        if (LOG.isInfoEnabled()) {
-            LOG.info(testName.getMethodName() + ":" + String.format(format, objects));
+    private void logDebug(String format, Object ... objects) {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug(testName.getMethodName() + ":" + String.format(format, objects));
         }
     }
 
@@ -69,7 +69,7 @@ public final class SendMsgRequestTest {
         msg.setHeaders(ImmutableList.of(new Msg.Header("name1", "value1"), new Msg.Header("name2", "value2")));
         req.setMsg(msg);
         Element jaxbElem = JaxbUtil.jaxbToElement(req);
-        logInfo("XML Element from JAXB:" + jaxbElem.toString());
+        logDebug("XML Element from JAXB:" + jaxbElem.toString());
         Assert.assertEquals("SendMsgRequest elem name", MailConstants.E_SEND_MSG_REQUEST, jaxbElem.getName());
         Assert.assertEquals("SendMsgRequest elem ns",
                 MailConstants.NAMESPACE_STR, jaxbElem.getQName().getNamespaceURI());

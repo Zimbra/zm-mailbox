@@ -27,39 +27,68 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.admin.type.ReindexProgressInfo;
 
 @XmlAccessorType(XmlAccessType.NONE)
-@XmlRootElement(name=AdminConstants.E_REINDEX_RESPONSE)
+@XmlRootElement(name = AdminConstants.E_REINDEX_RESPONSE)
 public class ReIndexResponse {
 
     /**
-     * @zm-api-field-tag status
-     * @zm-api-field-description Status - one of <b>started|running|cancelled|idle</b>
+     * @zm-api-field-tag statusCode
+     * @zm-api-field-description Status code - one of:
+      <ul> 
+      <li>-3 - re-indexing failed</li>
+      <li>-2 - re-indexing was interrupted, because indexing queue is full</li>
+      <li>-1 - re-indexing was aborted with a "cancel" action </li>
+      <li>0 - re-indexing is not running/has not been started</li>
+      <li>1 - re-indexing is actively running</li>
+      <li>2 - re-indexing task is complete</li> 
      */
-    @XmlAttribute(name=AdminConstants.A_STATUS, required=true)
+    @XmlAttribute(name = AdminConstants.A_STATUS_CODE, required = true)
+    private final Integer statusCode;
+
+    /**
+     * @zm-api-field-tag status
+     * @zm-api-field-description Status - one of
+     *                           <b>started|running|cancelled|idle</b>
+     */
+    @XmlAttribute(name = AdminConstants.A_STATUS, required = true)
     private final String status;
 
     /**
      * @zm-api-field-description Information about reindexing progress
      */
-    @XmlElement(name=AdminConstants.E_PROGRESS, required=false)
+    @XmlElement(name = AdminConstants.E_PROGRESS, required = false)
     private final ReindexProgressInfo progress;
 
     /**
      * no-argument constructor wanted by JAXB
      */
-     @SuppressWarnings("unused")
+    @SuppressWarnings("unused")
     private ReIndexResponse() {
-        this((String) null, (ReindexProgressInfo)null);
+        this((Integer) null, (String) null, (ReindexProgressInfo) null);
     }
 
-    public ReIndexResponse(String status) {
-        this(status, (ReindexProgressInfo)null);
+    public ReIndexResponse(Integer statusCode) {
+        this(statusCode, (String) null, (ReindexProgressInfo) null);
     }
 
-    public ReIndexResponse(String status, ReindexProgressInfo progress) {
+    public ReIndexResponse(Integer statusCode, String status) {
+        this(statusCode, status, (ReindexProgressInfo) null);
+    }
+
+    public ReIndexResponse(Integer statusCode, String status, ReindexProgressInfo progress) {
+        this.statusCode = statusCode;
         this.status = status;
         this.progress = progress;
     }
 
-    public String getStatus() { return status; }
-    public ReindexProgressInfo getProgress() { return progress; }
+    public Integer getStatusCode() {
+        return statusCode;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public ReindexProgressInfo getProgress() {
+        return progress;
+    }
 }

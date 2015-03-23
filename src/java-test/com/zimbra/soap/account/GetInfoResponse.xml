@@ -564,6 +564,7 @@
   </signatures>
   <dataSources/>
   <childAccounts/>
+  <rights/>
   <soapURL>http://tarka.local:7070/service/soap/</soapURL>
   <publicURL>http://tarka.local:7070</publicURL>
   <license status="OK">

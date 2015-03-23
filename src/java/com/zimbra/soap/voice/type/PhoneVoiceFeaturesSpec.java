@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -17,10 +17,6 @@
 
 package com.zimbra.soap.voice.type;
 
-import com.google.common.base.Objects;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-
 import java.util.List;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -28,6 +24,11 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElements;
+import javax.xml.bind.annotation.XmlType;
+
+import com.google.common.base.Objects;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.VoiceConstants;
 
@@ -38,54 +39,63 @@ public class PhoneVoiceFeaturesSpec {
     }
 
     @XmlAccessorType(XmlAccessType.NONE)
+    @XmlType(namespace="urn:zimbraVoice")
     public static class AnonCallRejectionReq
     implements CallFeatureReq {
         public AnonCallRejectionReq() {}
     }
 
     @XmlAccessorType(XmlAccessType.NONE)
+    @XmlType(namespace="urn:zimbraVoice")
     public static class CallerIdBlockingReq
     implements CallFeatureReq {
         public CallerIdBlockingReq() {}
     }
 
     @XmlAccessorType(XmlAccessType.NONE)
+    @XmlType(namespace="urn:zimbraVoice")
     public static class CallForwardReq
     implements CallFeatureReq {
         public CallForwardReq() {}
     }
 
     @XmlAccessorType(XmlAccessType.NONE)
+    @XmlType(namespace="urn:zimbraVoice")
     public static class CallForwardBusyLineReq
     implements CallFeatureReq {
         public CallForwardBusyLineReq() {}
     }
 
     @XmlAccessorType(XmlAccessType.NONE)
+    @XmlType(namespace="urn:zimbraVoice")
     public static class CallForwardNoAnswerReq
     implements CallFeatureReq {
         public CallForwardNoAnswerReq() {}
     }
 
     @XmlAccessorType(XmlAccessType.NONE)
+    @XmlType(namespace="urn:zimbraVoice")
     public static class CallWaitingReq
     implements CallFeatureReq {
         public CallWaitingReq() {}
     }
 
     @XmlAccessorType(XmlAccessType.NONE)
+    @XmlType(namespace="urn:zimbraVoice")
     public static class SelectiveCallForwardReq
     implements CallFeatureReq {
         public SelectiveCallForwardReq() {}
     }
 
     @XmlAccessorType(XmlAccessType.NONE)
+    @XmlType(namespace="urn:zimbraVoice")
     public static class SelectiveCallAcceptanceReq
     implements CallFeatureReq {
         public SelectiveCallAcceptanceReq() {}
     }
 
     @XmlAccessorType(XmlAccessType.NONE)
+    @XmlType(namespace="urn:zimbraVoice")
     public static class SelectiveCallRejectionReq
     implements CallFeatureReq {
         public SelectiveCallRejectionReq() {}
@@ -113,7 +123,7 @@ public class PhoneVoiceFeaturesSpec {
         @XmlElement(name=VoiceConstants.E_SELECTIVE_CALL_ACCEPTANCE /* selectivecallacceptance */, type=SelectiveCallAcceptanceReq.class),
         @XmlElement(name=VoiceConstants.E_SELECTIVE_CALL_REJECTION /* selectivecallrejection */, type=SelectiveCallRejectionReq.class)
     })
-    private List<CallFeatureReq> callFeatures = Lists.newArrayList();
+    private final List<CallFeatureReq> callFeatures = Lists.newArrayList();
 
     public PhoneVoiceFeaturesSpec() {
     }
