@@ -42,6 +42,7 @@ import com.zimbra.common.calendar.ZCalendar.ZComponent;
 import com.zimbra.common.calendar.ZCalendar.ZParameter;
 import com.zimbra.common.calendar.ZCalendar.ZProperty;
 import com.zimbra.common.calendar.ZCalendar.ZVCalendar;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.ContentType;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
@@ -80,6 +81,7 @@ import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.soap.ZimbraSoapContext;
+import com.zimbra.soap.type.MsgContent;
 
 /**
  * Process the {@code <SendMsg>} request from the client and send an email message.
@@ -114,6 +116,7 @@ public final class SendMsg extends MailDocumentHandler {
         boolean needCalendarSentByFixup = request.getAttributeBool(MailConstants.A_NEED_CALENDAR_SENTBY_FIXUP, false);
         boolean isCalendarForward = request.getAttributeBool(MailConstants.A_IS_CALENDAR_FORWARD, false);
         boolean noSaveToSent = request.getAttributeBool(MailConstants.A_NO_SAVE_TO_SENT, false);
+        boolean fetchSavedMsg = request.getAttributeBool(MailConstants.A_FETCH_SAVED_MSG, false);
 
         String origId = msgElem.getAttribute(MailConstants.A_ORIG_ID, null);
         ItemId iidOrigId = origId == null ? null : new ItemId(origId, zsc);
@@ -198,9 +201,17 @@ public final class SendMsg extends MailDocumentHandler {
         }
 
         Element response = zsc.createElement(MailConstants.SEND_MSG_RESPONSE);
-        Element respElement = response.addElement(MailConstants.E_MSG);
         if (savedMsgId != null && savedMsgId != NO_MESSAGE_SAVED_TO_SENT && savedMsgId.getId() > 0) {
-            respElement.addAttribute(MailConstants.A_ID, ifmt.formatItemId(savedMsgId));
+            if (fetchSavedMsg) {
+                Message msg = GetMsg.getMsg(octxt, mbox, savedMsgId, false);
+                ToXML.encodeMessageAsMP(response, ifmt, octxt, msg, null, 0, true, true, null, false, false,
+                        LC.mime_encode_missing_blob.booleanValue(), MsgContent.both);
+            } else {
+                Element respElement = response.addElement(MailConstants.E_MSG);
+                respElement.addAttribute(MailConstants.A_ID, ifmt.formatItemId(savedMsgId));
+            }
+        } else {
+            response.addElement(MailConstants.E_MSG);
         }
         return response;
     }
