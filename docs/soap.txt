@@ -2484,10 +2484,11 @@ u,n attributes present iff count > 0
 +  on reply/forward, set origid on <m> element and set rt to "r" or "w", respectively
 +  can optionally set identity-id to specify the identity being used to compose the message
 +  if noSave="1", a copy will *not* be saved to sent regardless of account/identity settings
++  if fetchSavedMsg="1", return the copy of the sent message, if it was saved, in the response
 +  can set priority high (!) or low (?) on sent message by specifying "f" attr on <m>
 +  if "did" is specified, then the draft item will be removed if the SendMsg is successful.
 
-<SendMsgRequest [suid="{send-uid}"] [needCalendarSentByFixup="0|1"] [isCalendarForward="0|1"] [noSave="0|1"]>
+<SendMsgRequest [suid="{send-uid}"] [needCalendarSentByFixup="0|1"] [isCalendarForward="0|1"] [noSave="0|1"] [fetchSavedMsg="0|1"]>
   <m [f="!|?"] [origid="..." rt="r|w"] [idnt="{identity-id}"] [dsId="{datasource-id}"] [did="{saved-draft-id}"]>
     <e t="{type}" a="{email-address}" p="{personal-name}"/>+
     <su>{subject}</su>*
@@ -2508,7 +2509,7 @@ u,n attributes present iff count > 0
    or, if you want to compose the message remotely, upload it via
    FileUploadServlet, and submit it through our server:
 
-<SendMsgRequest [suid="{send-uid}"] [needCalendarSentByFixup="0|1"] [isCalendarForward="0|1"]>
+<SendMsgRequest [suid="{send-uid}"] [needCalendarSentByFixup="0|1"] [isCalendarForward="0|1"] [fetchSavedMsg="0|1"]>
   <m aid="{uploaded-MIME-body-ID}" [origid="..." rt="r|w"]/>
 </SendMsgRequest>
 
@@ -2516,10 +2517,10 @@ Composing the message based on existing draft:
 
 If you want to compose the message based on existing draft use the following. The parameter sfd="1" (sendFromDraft) instructs
 the server to construct message based on the "did" (id of the draft). The draft item will be removed if the SendMsg is successful.
-    
-<SendMsgRequest [suid="{send-uid}"] [needCalendarSentByFixup="0|1"]  [isCalendarForward="0|1"] [noSave="0|1"]>
+
+<SendMsgRequest [suid="{send-uid}"] [needCalendarSentByFixup="0|1"]  [isCalendarForward="0|1"] [noSave="0|1"] [fetchSavedMsg="0|1"]>
   <m [f="!|?"] [origid="..." rt="r|w"] [idnt="{identity-id}"] did="{saved-draft-id}" sfd="1"/>
-</SendMsgRequest>   
+</SendMsgRequest>
 
 Or if you want to compose the message based on existing draft, but want to make some changes such
 as subject/recipient follow the below steps.
@@ -2533,6 +2534,22 @@ as subject/recipient follow the below steps.
 # Otherwise, no id is returned -- just a <m></m> is returned.
 <SendMsgResponse>
   <m id="..." />
+</SendMsgResponse>
+
+# If fetchSavedMsg="1", copy of the sent message, if it was saved, is returned in the response
+<SendMsgResponse>
+  <m id="..." ...>
+    <e .../>
+    ...
+    <su>Speaking of animals</su>
+    <fr>...</fr>
+    <mp part="" ct="multipart/mixed"/>
+      <mp part="1" ct="text/plain" body="1"/>
+        <content>This is another frag that is part of a bigger message. blah blah blah</content>
+      </mp>
+      ...
+    </mp>
+  </m>
 </SendMsgResponse>
 
 needCalendarSentByFixup - Add SENT-BY parameter to ORGANIZER and/or ATTENDEE
