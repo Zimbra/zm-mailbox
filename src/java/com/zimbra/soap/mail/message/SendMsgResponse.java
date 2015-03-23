@@ -24,32 +24,33 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.soap.type.Id;
+import com.zimbra.soap.mail.type.MsgWithGroupInfo;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=MailConstants.E_SEND_MSG_RESPONSE)
 public class SendMsgResponse {
 
     /**
-     * @zm-api-field-description Message information.  Note, "id" attribute will be absent if the message was not saved
-     * to a folder.
+     * @zm-api-field-description Message Information about the saved copy of the sent message.
+     * Note, "m" element will have no content if the message was not saved.
+     * Note, Full information will be provided if fetchSavedMsg was specified in the request, otherwise
+     * only the message id will be returned.
      */
-    @XmlElement(name=MailConstants.E_MSG /* m */, required=true)
-    private final Id msg;
+    @XmlElement(name=MailConstants.E_MSG /* m */, required=false)
+    private MsgWithGroupInfo msg;
 
     /**
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
     private SendMsgResponse() {
-        this((Id) null);
     }
 
-    public SendMsgResponse(Id msg) {
-        this.msg = msg;
-    }
+    public MsgWithGroupInfo getMsg() { return msg; }
 
-    public Id getMsg() { return msg; }
+    public void setSavedMessage(MsgWithGroupInfo msg) { this.msg = msg; }
+
+    public MsgWithGroupInfo getSavedMsg() { return msg; }
 
     public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper

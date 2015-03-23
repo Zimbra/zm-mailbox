@@ -86,6 +86,13 @@ public class SendMsgRequest {
     private ZmBoolean noSaveToSent;
 
     /**
+     * @zm-api-field-tag fetch-saved-msg
+     * @zm-api-field-description If set, return the copy of the sent message, if it was saved, in the response.
+     */
+    @XmlAttribute(name=MailConstants.A_FETCH_SAVED_MSG /* fetchSavedMsg */, required=false)
+    private ZmBoolean fetchSavedMsg;
+
+    /**
      * @zm-api-field-tag send-uid
      * @zm-api-field-description Send UID
      */
@@ -113,11 +120,18 @@ public class SendMsgRequest {
     public void setNoSaveToSent(Boolean noSaveToSent) {
         this.noSaveToSent = ZmBoolean.fromBool(noSaveToSent);
     }
+
+    public void setFetchSavedMsg(Boolean fetchSavedMsg) {
+        this.fetchSavedMsg = ZmBoolean.fromBool(fetchSavedMsg);
+    }
+
     public void setSendUid(String sendUid) { this.sendUid = sendUid; }
     public void setMsg(MsgToSend msg) { this.msg = msg; }
+
     public Boolean getNeedCalendarSentbyFixup() { return ZmBoolean.toBool(needCalendarSentbyFixup); }
     public Boolean getIsCalendarForward() { return ZmBoolean.toBool(isCalendarForward); }
     public Boolean getNoSaveToSent() { return ZmBoolean.toBool(noSaveToSent); }
+    public Boolean getFetchSavedMsg() { return ZmBoolean.toBool(fetchSavedMsg); }
     public String getSendUid() { return sendUid; }
     public MsgToSend getMsg() { return msg; }
 
@@ -126,6 +140,7 @@ public class SendMsgRequest {
             .add("needCalendarSentbyFixup", needCalendarSentbyFixup)
             .add("isCalendarForward", isCalendarForward)
             .add("noSaveToSent", noSaveToSent)
+            .add("fetchSavedMsg", fetchSavedMsg)
             .add("sendUid", sendUid)
             .add("msg", msg);
     }
