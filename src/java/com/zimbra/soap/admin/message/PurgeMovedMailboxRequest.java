@@ -17,15 +17,17 @@
 
 package com.zimbra.soap.admin.message;
 
-import com.google.common.base.Objects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.google.common.base.Objects;
 import com.zimbra.common.soap.BackupConstants;
 import com.zimbra.soap.admin.type.Name;
 import com.zimbra.soap.json.jackson.annotate.ZimbraUniqueElement;
+import com.zimbra.soap.type.ZmBoolean;
 
 /**
  * @zm-api-command-network-edition
@@ -47,6 +49,13 @@ public class PurgeMovedMailboxRequest {
     private final Name mailbox;
 
     /**
+     * @zm-api-field-tag force delete blobs from store.
+     * @zm-api-field-description force delete blobs from store.
+     */
+    @XmlAttribute(name=BackupConstants.A_FORCE_DELETE_BLOBS /* forceDeleteBlobs */, required=false)
+    private ZmBoolean forceDeleteBlobs;
+
+    /**
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
@@ -58,12 +67,18 @@ public class PurgeMovedMailboxRequest {
         this.mailbox = mailbox;
     }
 
+    public void setForceDeleteBlobs(Boolean forceDeleteBlobs) {
+        this.forceDeleteBlobs = ZmBoolean.fromBool(forceDeleteBlobs);
+    }
+
     public Name getMailbox() { return mailbox; }
+    public Boolean getForceDeleteBlobs() { return ZmBoolean.toBool(forceDeleteBlobs); }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
         return helper
-            .add("mailbox", mailbox);
+            .add("mailbox", mailbox)
+            .add("forceDeleteBlobs", forceDeleteBlobs);
     }
 
     @Override
