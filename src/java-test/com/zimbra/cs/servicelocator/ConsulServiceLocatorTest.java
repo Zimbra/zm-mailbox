@@ -11,7 +11,7 @@
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.cs.consul;
+package com.zimbra.cs.servicelocator;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -24,6 +24,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.consul.CatalogRegistration;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
 import com.zimbra.cs.store.MockStoreManager;
 import com.zimbra.cs.util.Zimbra;

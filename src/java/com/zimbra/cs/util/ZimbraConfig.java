@@ -40,11 +40,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.util.memcached.ZimbraMemcachedClient;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
-import com.zimbra.cs.consul.ChainedServiceLocator;
 import com.zimbra.cs.consul.ConsulClient;
-import com.zimbra.cs.consul.ConsulServiceLocator;
-import com.zimbra.cs.consul.ProvisioningServiceLocator;
-import com.zimbra.cs.consul.ServiceLocator;
 import com.zimbra.cs.extension.ExtensionUtil;
 import com.zimbra.cs.index.DefaultIndexingQueueAdapter;
 import com.zimbra.cs.index.IndexingQueueAdapter;
@@ -66,6 +62,12 @@ import com.zimbra.cs.mailbox.calendar.cache.CalendarCacheManager;
 import com.zimbra.cs.memcached.ZimbraMemcachedClientConfigurer;
 import com.zimbra.cs.redolog.DefaultRedoLogProvider;
 import com.zimbra.cs.redolog.RedoLogProvider;
+import com.zimbra.cs.servicelocator.ChainedServiceLocator;
+import com.zimbra.cs.servicelocator.ConsulServiceLocator;
+import com.zimbra.cs.servicelocator.ProvisioningServiceLocator;
+import com.zimbra.cs.servicelocator.RandomSelector;
+import com.zimbra.cs.servicelocator.Selector;
+import com.zimbra.cs.servicelocator.ServiceLocator;
 import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.store.file.FileBlobStore;
 import com.zimbra.qless.QlessClient;
@@ -290,8 +292,8 @@ public class ZimbraConfig {
 
     /** Centralized algorithm for selection of a server from a list, for load balancing and/or account reassignment, or picking a SOAP target in a cluster */
     @Bean(name="serviceLocatorHostSelector")
-    public ServiceLocator.Selector serviceLocatorHostSelectorBean() throws ServiceException {
-        return new ServiceLocator.SelectRandom();
+    public Selector serviceLocatorHostSelectorBean() throws ServiceException {
+        return new RandomSelector();
     }
 
     @Bean(name="sharedDeliveryCoordinator")

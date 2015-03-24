@@ -34,12 +34,13 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.MailMode;
 import com.zimbra.cs.account.Server;
-import com.zimbra.cs.consul.ChainedServiceLocator;
 import com.zimbra.cs.consul.ConsulClient;
-import com.zimbra.cs.consul.ConsulServiceLocator;
-import com.zimbra.cs.consul.ProvisioningServiceLocator;
-import com.zimbra.cs.consul.ServiceLocator;
-import com.zimbra.cs.consul.ZimbraServiceNames;
+import com.zimbra.cs.servicelocator.ChainedServiceLocator;
+import com.zimbra.cs.servicelocator.ConsulServiceLocator;
+import com.zimbra.cs.servicelocator.ProvisioningServiceLocator;
+import com.zimbra.cs.servicelocator.Selector;
+import com.zimbra.cs.servicelocator.ServiceLocator;
+import com.zimbra.cs.servicelocator.ZimbraServiceNames;
 import com.zimbra.cs.util.Zimbra;
 
 /**
@@ -66,7 +67,7 @@ public class URLUtil {
     }
 
     /** Perform a service locator lookup of a mailstore soap service */
-    public static String getSoapURL(ServiceLocator serviceLocator, ServiceLocator.Selector selector, boolean healthyOnly) throws ServiceException {
+    public static String getSoapURL(ServiceLocator serviceLocator, Selector selector, boolean healthyOnly) throws ServiceException {
         try {
             ServiceLocator.Entry entry = serviceLocator.findOne(ZimbraServiceNames.MAILSTORE, selector, healthyOnly);
             String scheme = entry.tags.contains("ssl") ? "https" : "http";
@@ -79,10 +80,10 @@ public class URLUtil {
     /** Perform a service locator lookup of a mailstore soap service */
     public static String getSoapURL() throws ServiceException {
         ServiceLocator serviceLocator = null;
-        ServiceLocator.Selector selector = null;
+        Selector selector = null;
         try {
             serviceLocator = Zimbra.getAppContext().getBean(ServiceLocator.class);
-            selector = Zimbra.getAppContext().getBean(ServiceLocator.Selector.class);
+            selector = Zimbra.getAppContext().getBean(Selector.class);
         } catch (Exception | NoClassDefFoundError e) {}
 
         if (serviceLocator == null) {
@@ -188,9 +189,9 @@ public class URLUtil {
      * Returns absolute URL with scheme, host, and port for admin app, using ServiceLocator.
      */
     public static String getAdminURL(ServiceLocator serviceLocator, boolean healthyOnly) throws ServiceException {
-        ServiceLocator.Selector selector = null;
+        Selector selector = null;
         try {
-            selector = Zimbra.getAppContext().getBean(ServiceLocator.Selector.class);
+            selector = Zimbra.getAppContext().getBean(Selector.class);
         } catch (NoClassDefFoundError e) {
             selector = ServiceLocator.SELECT_RANDOM;
         }
@@ -200,7 +201,7 @@ public class URLUtil {
     /**
      * Returns absolute URL with scheme, host, and port for admin app, using ServiceLocator.
      */
-    public static String getAdminURL(ServiceLocator serviceLocator, ServiceLocator.Selector selector, boolean healthyOnly) throws ServiceException {
+    public static String getAdminURL(ServiceLocator serviceLocator, Selector selector, boolean healthyOnly) throws ServiceException {
         try {
             ServiceLocator.Entry entry = serviceLocator.findOne(ZimbraServiceNames.MAILSTOREADMIN, selector, healthyOnly);
             String scheme = entry.tags.contains("ssl") ? "https" : "http";
@@ -215,10 +216,10 @@ public class URLUtil {
      */
     public static String getAdminURL() throws ServiceException {
         ServiceLocator serviceLocator = null;
-        ServiceLocator.Selector selector = null;
+        Selector selector = null;
         try {
             serviceLocator = Zimbra.getAppContext().getBean(ServiceLocator.class);
-            selector = Zimbra.getAppContext().getBean(ServiceLocator.Selector.class);
+            selector = Zimbra.getAppContext().getBean(Selector.class);
         } catch (Exception | NoClassDefFoundError e) {}
 
         if (serviceLocator == null) {
