@@ -119,6 +119,41 @@ public class AutoComplete extends MailDocumentHandler {
             if (entry.isContactGroup()) {
                 cn.addAttribute(MailConstants.A_DISPLAYNAME, entry.getDisplayName());
             }
+
+            String firstName = entry.getFirstName();
+            if (firstName != null) {
+                cn.addAttribute(MailConstants.A_FIRSTNAME, firstName);
+            }
+
+            String middleName = entry.getMiddleName();
+            if (middleName != null) {
+                cn.addAttribute(MailConstants.A_MIDDLENAME, middleName);
+            }
+
+            String lastName = entry.getLastName();
+            if (lastName != null) {
+                cn.addAttribute(MailConstants.A_LASTNAME, lastName);
+            }
+
+            String fullName = entry.getFullName();
+            if (fullName != null) {
+                cn.addAttribute(MailConstants.A_FULLNAME, fullName);
+            }
+
+            String nickname = entry.getNickname();
+            if (nickname != null) {
+                cn.addAttribute(MailConstants.A_NICKNAME, nickname);
+            }
+
+            String company = entry.getCompany();
+            if (company != null) {
+                cn.addAttribute(MailConstants.A_COMPANY, company);
+            }
+
+            String fileAs = entry.getFileAs();
+            if (fileAs != null) {
+                cn.addAttribute(MailConstants.A_FILEAS, fileAs);
+            }
         }
     }
 

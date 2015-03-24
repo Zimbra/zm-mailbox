@@ -115,7 +115,13 @@ public class ContactAutoComplete {
     public static final class ContactEntry implements Comparable<ContactEntry> {
         String mEmail;
         String mDisplayName;
+        String mFirstName;
+        String mMiddleName;
         String mLastName;
+        String mFullName;
+        String mNickname;
+        String mCompany;
+        String mFileAs;
         boolean mIsContactGroup;  // is contact group
         boolean mIsGroup;        // is GAL group or contact group
         boolean mCanExpandGroupMembers;
@@ -174,6 +180,34 @@ public class ContactAutoComplete {
 
         public String getDisplayName() {
             return mDisplayName;
+        }
+
+        public String getFirstName() {
+            return mFirstName;
+        }
+
+        public String getMiddleName() {
+            return mMiddleName;
+        }
+
+        public String getLastName() {
+            return mLastName;
+        }
+
+        public String getFullName() {
+            return mFullName;
+        }
+
+        public String getNickname() {
+            return mNickname;
+        }
+
+        public String getCompany() {
+            return mCompany;
+        }
+
+        public String getFileAs() {
+            return mFileAs;
         }
 
         void setIsGalGroup(String email, Map<String,? extends Object> attrs, Account authedAcct, boolean needCanExpand) {
@@ -634,11 +668,15 @@ public class ContactAutoComplete {
             // just one email address.
 
             String fullName = getFieldAsString(attrs, ContactConstants.A_fullName);
-            if (Strings.isNullOrEmpty(fullName)) {
-                String first = getFieldAsString(attrs, ContactConstants.A_firstName);
-                String middle = getFieldAsString(attrs, ContactConstants.A_middleName);
-                String last = getFieldAsString(attrs, ContactConstants.A_lastName);
-                fullName = Joiner.on(' ').skipNulls().join(first, middle, last);
+            String first = getFieldAsString(attrs, ContactConstants.A_firstName);
+            String middle = getFieldAsString(attrs, ContactConstants.A_middleName);
+            String last = getFieldAsString(attrs, ContactConstants.A_lastName);
+            String nick = getFieldAsString(attrs, ContactConstants.A_nickname);
+            String company = getFieldAsString(attrs, ContactConstants.A_company);
+            String fileas  = getFieldAsString(attrs, ContactConstants.A_fileAs);
+            String displayName = fullName;
+            if (Strings.isNullOrEmpty(displayName)) {
+                displayName = Joiner.on(' ').skipNulls().join(first, middle, last);
             }
 
             for (String emailKey : mEmailKeys) {
@@ -646,9 +684,16 @@ public class ContactAutoComplete {
                 if (email != null && (nameMatches || matchesEmail(tokens, email))) {
                     ContactEntry entry = new ContactEntry();
                     entry.mEmail = email;
-                    entry.setName(fullName);
+                    entry.setName(displayName);
                     entry.mId = id;
                     entry.mFolderId = folderId;
+                    entry.mFirstName  = first;
+                    entry.mMiddleName = middle;
+                    entry.mLastName = last;
+                    entry.mFullName = fullName;
+                    entry.mNickname = nick;
+                    entry.mCompany  = company;
+                    entry.mFileAs   = fileas;
                     if (Contact.isGroup(attrs)) {
                         entry.setIsGalGroup(email, attrs, mAuthedAcct, mNeedCanExpand);
                     } else if (entry.mFolderId != FOLDER_ID_GAL) {
