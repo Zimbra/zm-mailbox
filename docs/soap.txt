@@ -927,7 +927,7 @@ import and export of addressbook.
 </AutoCompleteRequest>
 
 <AutoCompleteResponse canBeCached="0|1">
-  <match ranking="..." email="..." type="gal|contact|rankingTable" isGroup="1|0" [exp="1|0"] [display="..."] [id="..."] [l="..."] />*
+  <match ranking="..." email="..." type="gal|contact|rankingTable" isGroup="1|0" [exp="1|0"] [display="..."] [id="..."] [l="..."] [first="..."] [middle="..."] [last="..."] [nick="..."] [full="..."] [company="..."] [fileas="..."] />*
 </AutoCompleteResponse>
 
   {folders} - comma separates list of folder IDs.
