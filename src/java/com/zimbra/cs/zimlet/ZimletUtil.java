@@ -1230,11 +1230,14 @@ public class ZimletUtil {
             soapUtil.deployZimletOnServer(zf.getName(), ByteUtil.getContent(zf), true);
         } else {
             //deploy to all servers except local
-            ZimletSoapUtil soapUtil = new ZimletSoapUtil();
-            soapUtil.mSynchronous = synchronous;
+            ZimletSoapUtil soapUtil = null;
             List<Server> allServers = Provisioning.getInstance().getAllServers();
             for (Server server : allServers) {
-                if (!server.isLocalServer()) {
+                if (!server.isLocalServer() && canDeployZimlet(server)) {
+                    if (soapUtil == null) {
+                        soapUtil = new ZimletSoapUtil();
+                        soapUtil.mSynchronous = synchronous;
+                    }
                     soapUtil.deployZimletRemotely(server, zf.getName(), ByteUtil.getContent(zf), null, true);
                 }
             }
@@ -1242,13 +1245,22 @@ public class ZimletUtil {
 	}
 
     private static void undeployZimletRemotely(String zimlet) throws ServiceException {
-        ZimletSoapUtil soapUtil = new ZimletSoapUtil();
+        ZimletSoapUtil soapUtil = null;
         List<Server> allServers = Provisioning.getInstance().getAllServers();
         for (Server server : allServers) {
-            if (!server.isLocalServer()) {
+            if (!server.isLocalServer() && canDeployZimlet(server)) {
+                if (soapUtil == null) {
+                    soapUtil = new ZimletSoapUtil();
+                }
                 soapUtil.undeployZimletRemotely(server, zimlet);
             }
         }
+    }
+
+    private static boolean canDeployZimlet(Server server) {
+        return server.hasMailboxService() || server.hasMailClientService() ||
+            server.hasZimletService() || server.hasAdminClientService() ||
+            server.hasWebClientService();
     }
 
 	public static void showInfo(String zimlet) throws ServiceException, ZimletException, IOException {
