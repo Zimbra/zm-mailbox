@@ -14,7 +14,7 @@
  * If not, see <http://www.gnu.org/licenses/>.
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.cs.consul;
+package com.zimbra.cs.servicelocator;
 
 import com.zimbra.cs.account.Provisioning;
 

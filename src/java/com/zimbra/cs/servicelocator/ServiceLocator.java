@@ -14,23 +14,23 @@
  * If not, see <http://www.gnu.org/licenses/>.
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.cs.consul;
+package com.zimbra.cs.servicelocator;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 import com.google.common.base.Objects;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.consul.CatalogRegistration;
 
 
 /**
  * A convenient facade for service locator related operations.
  */
 public interface ServiceLocator {
-    public static final Selector SELECT_FIRST = new SelectFirst();
-    public static final Selector SELECT_RANDOM = new SelectRandom();
+    public static final Selector SELECT_FIRST = new FirstSelector();
+    public static final Selector SELECT_RANDOM = new RandomSelector();
 
     /** De-register a service. */
     public void deregister(String serviceID) throws IOException, ServiceException;
@@ -89,33 +89,6 @@ public interface ServiceLocator {
                     .add("servicePort", servicePort)
                     .add("tags", tags)
                     .toString();
-        }
-    }
-
-
-    public interface Selector {
-        public Entry selectOne(List<Entry> list) throws IOException, ServiceException;
-    }
-
-    public static class SelectFirst implements Selector {
-        public Entry selectOne(List<Entry> list) throws IOException, ServiceException {
-            if (list.isEmpty()) {
-                return null;
-            }
-            return list.get(0);
-        }
-    }
-
-    public static class SelectRandom implements Selector {
-        public Entry selectOne(List<Entry> list) throws IOException, ServiceException {
-            if (list.isEmpty()) {
-                return null;
-            } else if (list.size() == 1) {
-                return list.get(0);
-            } else {
-                int index = new Random().nextInt(list.size() - 1);
-                return list.get(index);
-            }
         }
     }
 }
