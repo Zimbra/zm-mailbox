@@ -85,6 +85,55 @@ public class AutoCompleteMatch {
     @XmlAttribute(name=MailConstants.A_DISPLAYNAME /* display */, required=false)
     private String displayName;
 
+    /**
+     * @zm-api-field-tag display-string
+     * @zm-api-field-description First Name
+     */
+    @XmlAttribute(name=MailConstants.A_FIRSTNAME /* first */, required=false)
+    private String firstName;
+
+    /**
+     * @zm-api-field-tag display-string
+     * @zm-api-field-description Middle Name
+     */
+    @XmlAttribute(name=MailConstants.A_MIDDLENAME /* middle */, required=false)
+    private String middleName;
+
+    /**
+     * @zm-api-field-tag display-string
+     * @zm-api-field-description Last Name
+     */
+    @XmlAttribute(name=MailConstants.A_LASTNAME /* last */, required=false)
+    private String lastName;
+
+    /**
+     * @zm-api-field-tag display-string
+     * @zm-api-field-description Full Name
+     */
+    @XmlAttribute(name=MailConstants.A_FULLNAME /* full */, required=false)
+    private String fullName;
+
+    /**
+     * @zm-api-field-tag display-string
+     * @zm-api-field-description Nick Name
+     */
+    @XmlAttribute(name=MailConstants.A_NICKNAME /* nick */, required=false)
+    private String nickname;
+
+    /**
+     * @zm-api-field-tag display-string
+     * @zm-api-field-description Company Name
+     */
+    @XmlAttribute(name=MailConstants.A_COMPANY /* company */, required=false)
+    private String company;
+
+    /**
+     * @zm-api-field-tag display-string
+     * @zm-api-field-description FileAs
+     */
+    @XmlAttribute(name=MailConstants.A_FILEAS /* fileas */, required=false)
+    private String fileAs;
+
     public AutoCompleteMatch() {
     }
 
@@ -100,6 +149,13 @@ public class AutoCompleteMatch {
     public void setDisplayName(String displayName) {
         this.displayName = displayName;
     }
+    public void setFirstName(String firstName) { this.firstName = firstName; }
+    public void setMiddleName(String middleName) { this.middleName = middleName; }
+    public void setLastName(String lastName) { this.lastName = lastName; }
+    public void setFullName(String fullName) { this.fullName = fullName; }
+    public void setNickname(String nickname) { this.nickname = nickname; }
+    public void setCompany(String company) { this.company = company; }
+    public void setFileAs(String fileAs) { this.fileAs = fileAs; }
     public String getEmail() { return email; }
     public String getMatchType() { return matchType; }
     public Integer getRanking() { return ranking; }
@@ -108,6 +164,13 @@ public class AutoCompleteMatch {
     public String getId() { return id; }
     public String getFolder() { return folder; }
     public String getDisplayName() { return displayName; }
+    public String getFirstName() { return firstName; }
+    public String getMiddleName() { return middleName; }
+    public String getLastName() { return lastName; }
+    public String getFullName() { return fullName; }
+    public String getNickname() { return nickname; }
+    public String getCompany() { return company; }
+    public String getFileAs() { return fileAs; }
 
     public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
@@ -118,7 +181,14 @@ public class AutoCompleteMatch {
             .add("canExpandGroupMembers", canExpandGroupMembers)
             .add("id", id)
             .add("folder", folder)
-            .add("displayName", displayName);
+            .add("displayName", displayName)
+            .add("first", firstName)
+            .add("middle", middleName)
+            .add("last", lastName)
+            .add("full", fullName)
+            .add("nick", nickname)
+            .add("company", company)
+            .add("fileas", fileAs);
     }
 
     @Override
