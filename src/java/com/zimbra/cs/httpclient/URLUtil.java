@@ -66,9 +66,9 @@ public class URLUtil {
     }
 
     /** Perform a service locator lookup of a mailstore soap service */
-    public static String getSoapURL(ServiceLocator serviceLocator) throws ServiceException {
+    public static String getSoapURL(ServiceLocator serviceLocator, ServiceLocator.Selector selector, boolean healthyOnly) throws ServiceException {
         try {
-            ServiceLocator.Entry entry = serviceLocator.findOne(ZimbraServiceNames.MAILSTORE);
+            ServiceLocator.Entry entry = serviceLocator.findOne(ZimbraServiceNames.MAILSTORE, selector, healthyOnly);
             String scheme = entry.tags.contains("ssl") ? "https" : "http";
             return scheme + "://" + entry.hostName + ":" + entry.servicePort + "/service/soap/";
         } catch (IOException e) {
@@ -79,18 +79,21 @@ public class URLUtil {
     /** Perform a service locator lookup of a mailstore soap service */
     public static String getSoapURL() throws ServiceException {
         ServiceLocator serviceLocator = null;
+        ServiceLocator.Selector selector = null;
         try {
             serviceLocator = Zimbra.getAppContext().getBean(ServiceLocator.class);
+            selector = Zimbra.getAppContext().getBean(ServiceLocator.Selector.class);
         } catch (Exception | NoClassDefFoundError e) {}
 
         if (serviceLocator == null) {
             ServiceLocator sl1 = new ConsulServiceLocator(new ConsulClient());
             ServiceLocator sl2 = new ProvisioningServiceLocator(Provisioning.getInstance());
             serviceLocator = new ChainedServiceLocator(sl1, sl2);
+            selector = ServiceLocator.SELECT_RANDOM;
         }
 
         try {
-            ServiceLocator.Entry entry = serviceLocator.findOne(ZimbraServiceNames.MAILSTORE);
+            ServiceLocator.Entry entry = serviceLocator.findOne(ZimbraServiceNames.MAILSTORE, selector, false);
             String scheme = entry.tags.contains("ssl") ? "https" : "http";
             return scheme + "://" + entry.hostName + ":" + entry.servicePort + "/service/soap/";
         } catch (IOException e) {
@@ -184,9 +187,22 @@ public class URLUtil {
     /**
      * Returns absolute URL with scheme, host, and port for admin app, using ServiceLocator.
      */
-    public static String getAdminURL(ServiceLocator serviceLocator) throws ServiceException {
+    public static String getAdminURL(ServiceLocator serviceLocator, boolean healthyOnly) throws ServiceException {
+        ServiceLocator.Selector selector = null;
         try {
-            ServiceLocator.Entry entry = serviceLocator.findOne(ZimbraServiceNames.MAILSTOREADMIN);
+            selector = Zimbra.getAppContext().getBean(ServiceLocator.Selector.class);
+        } catch (NoClassDefFoundError e) {
+            selector = ServiceLocator.SELECT_RANDOM;
+        }
+        return getAdminURL(serviceLocator, selector, healthyOnly);
+    }
+
+    /**
+     * Returns absolute URL with scheme, host, and port for admin app, using ServiceLocator.
+     */
+    public static String getAdminURL(ServiceLocator serviceLocator, ServiceLocator.Selector selector, boolean healthyOnly) throws ServiceException {
+        try {
+            ServiceLocator.Entry entry = serviceLocator.findOne(ZimbraServiceNames.MAILSTOREADMIN, selector, healthyOnly);
             String scheme = entry.tags.contains("ssl") ? "https" : "http";
             return scheme + "://" + entry.hostName + ":" + entry.servicePort + AdminConstants.ADMIN_SERVICE_URI;
         } catch (IOException e) {
@@ -199,18 +215,21 @@ public class URLUtil {
      */
     public static String getAdminURL() throws ServiceException {
         ServiceLocator serviceLocator = null;
+        ServiceLocator.Selector selector = null;
         try {
             serviceLocator = Zimbra.getAppContext().getBean(ServiceLocator.class);
+            selector = Zimbra.getAppContext().getBean(ServiceLocator.Selector.class);
         } catch (Exception | NoClassDefFoundError e) {}
 
         if (serviceLocator == null) {
             ServiceLocator sl1 = new ConsulServiceLocator(new ConsulClient());
             ServiceLocator sl2 = new ProvisioningServiceLocator(Provisioning.getInstance());
             serviceLocator = new ChainedServiceLocator(sl1, sl2);
+            selector = ServiceLocator.SELECT_RANDOM;
         }
 
         try {
-            ServiceLocator.Entry entry = serviceLocator.findOne(ZimbraServiceNames.MAILSTOREADMIN);
+            ServiceLocator.Entry entry = serviceLocator.findOne(ZimbraServiceNames.MAILSTOREADMIN, selector, false);
             String scheme = entry.tags.contains("ssl") ? "https" : "http";
             return scheme + "://" + entry.hostName + ":" + entry.servicePort + AdminConstants.ADMIN_SERVICE_URI;
         } catch (IOException e) {

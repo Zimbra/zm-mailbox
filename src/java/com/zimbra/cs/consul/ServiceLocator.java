@@ -19,6 +19,7 @@ package com.zimbra.cs.consul;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import com.google.common.base.Objects;
 import com.zimbra.common.service.ServiceException;
@@ -28,6 +29,8 @@ import com.zimbra.common.service.ServiceException;
  * A convenient facade for service locator related operations.
  */
 public interface ServiceLocator {
+    public static final Selector SELECT_FIRST = new SelectFirst();
+    public static final Selector SELECT_RANDOM = new SelectRandom();
 
     /** De-register a service. */
     public void deregister(String serviceID) throws IOException, ServiceException;
@@ -44,7 +47,7 @@ public interface ServiceLocator {
     /**
      * Find a healthy service instance.
      */
-    public Entry findOne(String serviceName) throws IOException, ServiceException;
+    public Entry findOne(String serviceName, Selector selector, boolean healthyOnly) throws IOException, ServiceException;
 
     /**
      * Determines whether a given service instance is healthy.
@@ -86,6 +89,33 @@ public interface ServiceLocator {
                     .add("servicePort", servicePort)
                     .add("tags", tags)
                     .toString();
+        }
+    }
+
+
+    public interface Selector {
+        public Entry selectOne(List<Entry> list) throws IOException, ServiceException;
+    }
+
+    public static class SelectFirst implements Selector {
+        public Entry selectOne(List<Entry> list) throws IOException, ServiceException {
+            if (list.isEmpty()) {
+                return null;
+            }
+            return list.get(0);
+        }
+    }
+
+    public static class SelectRandom implements Selector {
+        public Entry selectOne(List<Entry> list) throws IOException, ServiceException {
+            if (list.isEmpty()) {
+                return null;
+            } else if (list.size() == 1) {
+                return list.get(0);
+            } else {
+                int index = new Random().nextInt(list.size() - 1);
+                return list.get(index);
+            }
         }
     }
 }

@@ -70,15 +70,16 @@ public class ConsulServiceLocator implements ServiceLocator {
 
     /** Finds a service instance. */
     @Override
-    public Entry findOne(String serviceName) throws IOException, ServiceException {
+    public Entry findOne(String serviceName, Selector selector, boolean healthyOnly) throws IOException, ServiceException {
         List<Entry> list = find(serviceName, true);
-        if (list.isEmpty()) {
+        if (list.isEmpty() && !healthyOnly) {
             list = find(serviceName, false);
         }
         if (list.isEmpty()) {
             throw ServiceException.NOT_FOUND("Failed locating an instance of " + serviceName);
         }
-        return list.get(0);
+
+        return selector.selectOne(list);
     }
 
     /** Determines whether a given service instance is healthy. */

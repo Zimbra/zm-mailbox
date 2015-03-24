@@ -63,25 +63,24 @@ public class ProvisioningServiceLocator implements ServiceLocator {
                     result.add(entry);
                 }
             } catch (ServiceException e) {
-                // detect transport error
-                Exception e2 = e;
+                // TODO detect transport error & rethrow as IOException
             }
         }
         return result;
     }
 
     /**
-     * Find a healthy service instance.
+     * Find a service instance.
      */
-    public ServiceLocator.Entry findOne(String serviceName) throws IOException, ServiceException {
-        List<ServiceLocator.Entry> list = find(serviceName, true);
+    public ServiceLocator.Entry findOne(String serviceName, Selector selector, boolean healthyOnly) throws IOException, ServiceException {
+        List<ServiceLocator.Entry> list = find(serviceName, healthyOnly);
         if (list.isEmpty()) {
             list = find(serviceName, false);
         }
         if (list.isEmpty()) {
             throw ServiceException.NOT_FOUND("Failed locating an instance of " + serviceName);
         }
-        return list.get(0);
+        return selector.selectOne(list);
     }
 
     /**

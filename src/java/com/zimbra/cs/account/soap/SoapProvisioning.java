@@ -256,7 +256,7 @@ public class SoapProvisioning extends Provisioning {
         mRetryCount = options.getRetryCount();
         mDebugListener = options.getDebugListener();
         mAuthToken = options.getAuthToken();
-        if (options.getUri() == null) options.setUri(URLUtil.getAdminURL(serviceLocator));
+        if (options.getUri() == null) options.setUri(URLUtil.getAdminURL(serviceLocator, false));
         soapSetURI(options.getUri());
 
         if (options.getLocalConfigAuth()) {

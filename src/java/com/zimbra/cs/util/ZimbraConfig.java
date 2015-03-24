@@ -283,8 +283,16 @@ public class ZimbraConfig {
 	@Bean
 	public ServiceLocator serviceLocator() throws Exception {
 	    // First try Consul, then fall back on provisioned service lists (which may be up or down)
-	    return new ChainedServiceLocator(new ConsulServiceLocator(), new ProvisioningServiceLocator(Provisioning.getInstance()));
+	    ServiceLocator sl1 = new ConsulServiceLocator();
+	    ServiceLocator sl2 = new ProvisioningServiceLocator(Provisioning.getInstance());
+	    return new ChainedServiceLocator(sl1, sl2);
 	}
+
+    /** Centralized algorithm for selection of a server from a list, for load balancing and/or account reassignment, or picking a SOAP target in a cluster */
+    @Bean(name="serviceLocatorHostSelector")
+    public ServiceLocator.Selector serviceLocatorHostSelectorBean() throws ServiceException {
+        return new ServiceLocator.SelectRandom();
+    }
 
     @Bean(name="sharedDeliveryCoordinator")
     public SharedDeliveryCoordinator sharedDeliveryCoordinatorBean() throws Exception {
