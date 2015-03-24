@@ -91,14 +91,14 @@ public class ChainedServiceLocator implements ServiceLocator {
     }
 
     /**
-     * Find a healthy service instance.
+     * Find a service instance.
      */
-    public ServiceLocator.Entry findOne(String serviceName) throws IOException, ServiceException {
+    public ServiceLocator.Entry findOne(String serviceName, Selector selector, boolean healthyOnly) throws IOException, ServiceException {
         IOException ioe = null;
         ServiceException se = null;
         for (ServiceLocator delegate: delegates) {
             try {
-                ServiceLocator.Entry entry = delegate.findOne(serviceName);
+                ServiceLocator.Entry entry = delegate.findOne(serviceName, selector, healthyOnly);
                 if (entry != null) {
                     return entry;
                 }
