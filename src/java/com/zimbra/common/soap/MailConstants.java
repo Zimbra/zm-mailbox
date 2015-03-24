@@ -1171,6 +1171,13 @@ public final class MailConstants {
     public static final String A_CANBECACHED = "canBeCached";
     public static final String A_DISPLAYNAME = "display";
     public static final String A_MATCH_TYPE = "type";
+    public static final String A_FIRSTNAME = "first";
+    public static final String A_MIDDLENAME = "middle";
+    public static final String A_LASTNAME = "last";
+    public static final String A_FULLNAME = "full";
+    public static final String A_NICKNAME = "nick";
+    public static final String A_COMPANY = "company";
+    public static final String A_FILEAS = "fileas";
 
     // device verification for reminders
     public static final String A_VERIFICATION_CODE = "code";
