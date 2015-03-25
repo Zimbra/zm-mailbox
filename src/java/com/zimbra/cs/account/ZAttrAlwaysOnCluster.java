@@ -10743,6 +10743,252 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
     }
 
     /**
+     * A flag to indicate whether the mailstore is using a shared database.
+     * Starting in 9.x the database can be a Galera cluster. Setting this
+     * flag to true indicates that we can retry a transaction when
+     * transaction commit fails.
+     *
+     * @return zimbraMailboxSharedDbEnabled, or false if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1944)
+    public boolean isMailboxSharedDbEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraMailboxSharedDbEnabled, false);
+    }
+
+    /**
+     * A flag to indicate whether the mailstore is using a shared database.
+     * Starting in 9.x the database can be a Galera cluster. Setting this
+     * flag to true indicates that we can retry a transaction when
+     * transaction commit fails.
+     *
+     * @param zimbraMailboxSharedDbEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1944)
+    public void setMailboxSharedDbEnabled(boolean zimbraMailboxSharedDbEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxSharedDbEnabled, zimbraMailboxSharedDbEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * A flag to indicate whether the mailstore is using a shared database.
+     * Starting in 9.x the database can be a Galera cluster. Setting this
+     * flag to true indicates that we can retry a transaction when
+     * transaction commit fails.
+     *
+     * @param zimbraMailboxSharedDbEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1944)
+    public Map<String,Object> setMailboxSharedDbEnabled(boolean zimbraMailboxSharedDbEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxSharedDbEnabled, zimbraMailboxSharedDbEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * A flag to indicate whether the mailstore is using a shared database.
+     * Starting in 9.x the database can be a Galera cluster. Setting this
+     * flag to true indicates that we can retry a transaction when
+     * transaction commit fails.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1944)
+    public void unsetMailboxSharedDbEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxSharedDbEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * A flag to indicate whether the mailstore is using a shared database.
+     * Starting in 9.x the database can be a Galera cluster. Setting this
+     * flag to true indicates that we can retry a transaction when
+     * transaction commit fails.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1944)
+    public Map<String,Object> unsetMailboxSharedDbEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxSharedDbEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * Indicates the retry count for commiting a failed database transaction.
+     * This is only applicable when using a shared database.
+     *
+     * @return zimbraMailboxSharedDbTransRetryCount, or -1 if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1945)
+    public int getMailboxSharedDbTransRetryCount() {
+        return getIntAttr(Provisioning.A_zimbraMailboxSharedDbTransRetryCount, -1);
+    }
+
+    /**
+     * Indicates the retry count for commiting a failed database transaction.
+     * This is only applicable when using a shared database.
+     *
+     * @param zimbraMailboxSharedDbTransRetryCount new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1945)
+    public void setMailboxSharedDbTransRetryCount(int zimbraMailboxSharedDbTransRetryCount) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxSharedDbTransRetryCount, Integer.toString(zimbraMailboxSharedDbTransRetryCount));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Indicates the retry count for commiting a failed database transaction.
+     * This is only applicable when using a shared database.
+     *
+     * @param zimbraMailboxSharedDbTransRetryCount new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1945)
+    public Map<String,Object> setMailboxSharedDbTransRetryCount(int zimbraMailboxSharedDbTransRetryCount, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxSharedDbTransRetryCount, Integer.toString(zimbraMailboxSharedDbTransRetryCount));
+        return attrs;
+    }
+
+    /**
+     * Indicates the retry count for commiting a failed database transaction.
+     * This is only applicable when using a shared database.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1945)
+    public void unsetMailboxSharedDbTransRetryCount() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxSharedDbTransRetryCount, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Indicates the retry count for commiting a failed database transaction.
+     * This is only applicable when using a shared database.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1945)
+    public Map<String,Object> unsetMailboxSharedDbTransRetryCount(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxSharedDbTransRetryCount, "");
+        return attrs;
+    }
+
+    /**
+     * Indicates the pause in seconds between retries for commiting a failed
+     * database transaction. This is only applicable when using shared
+     * database.
+     *
+     * @return zimbraMailboxSharedDbTransRetryDelay, or -1 if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1946)
+    public long getMailboxSharedDbTransRetryDelay() {
+        return getLongAttr(Provisioning.A_zimbraMailboxSharedDbTransRetryDelay, -1L);
+    }
+
+    /**
+     * Indicates the pause in seconds between retries for commiting a failed
+     * database transaction. This is only applicable when using shared
+     * database.
+     *
+     * @param zimbraMailboxSharedDbTransRetryDelay new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1946)
+    public void setMailboxSharedDbTransRetryDelay(long zimbraMailboxSharedDbTransRetryDelay) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxSharedDbTransRetryDelay, Long.toString(zimbraMailboxSharedDbTransRetryDelay));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Indicates the pause in seconds between retries for commiting a failed
+     * database transaction. This is only applicable when using shared
+     * database.
+     *
+     * @param zimbraMailboxSharedDbTransRetryDelay new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1946)
+    public Map<String,Object> setMailboxSharedDbTransRetryDelay(long zimbraMailboxSharedDbTransRetryDelay, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxSharedDbTransRetryDelay, Long.toString(zimbraMailboxSharedDbTransRetryDelay));
+        return attrs;
+    }
+
+    /**
+     * Indicates the pause in seconds between retries for commiting a failed
+     * database transaction. This is only applicable when using shared
+     * database.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1946)
+    public void unsetMailboxSharedDbTransRetryDelay() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxSharedDbTransRetryDelay, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Indicates the pause in seconds between retries for commiting a failed
+     * database transaction. This is only applicable when using shared
+     * database.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1946)
+    public Map<String,Object> unsetMailboxSharedDbTransRetryDelay(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxSharedDbTransRetryDelay, "");
+        return attrs;
+    }
+
+    /**
      * Number of milliseconds to wait before retrying after a failed
      * connection to an SMTP host. Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -

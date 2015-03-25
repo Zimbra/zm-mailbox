@@ -9779,4 +9779,19 @@ TODO: delete them permanently from here
   Account rebalancing scripts do not set this attribute to true.</desc>
 </attr>
 
+<attr id="1944" name="zimbraMailboxSharedDbEnabled" type="boolean" cardinality="single" optionalIn="alwaysOnCluster,server" flags="serverPreferAlwaysOn" since="9.0.0">
+  <desc>A flag to indicate whether the mailstore is using a shared database. Starting in 9.x the database can be a Galera cluster. Setting this flag to true
+   indicates that we can retry a transaction when transaction commit fails.</desc>
+</attr>
+
+<attr id="1945" name="zimbraMailboxSharedDbTransRetryCount" type="integer" min="1" max="5" cardinality="single" optionalIn="alwaysOnCluster,server,globalConfig" flags="serverPreferAlwaysOn" since="9.0.0">
+  <globalConfigValue>3</globalConfigValue>
+  <desc>Indicates the retry count for commiting a failed database transaction. This is only applicable when using a shared database.</desc>
+</attr>
+
+<attr id="1946" name="zimbraMailboxSharedDbTransRetryDelay" type="long" cardinality="single" optionalIn="alwaysOnCluster,server,globalConfig" flags="serverPreferAlwaysOn" since="9.0.0">
+ <globalConfigValue>2</globalConfigValue>
+  <desc>Indicates the pause in seconds between retries for commiting a failed database transaction. This is only applicable when using shared database.</desc>
+</attr>
+
 </attrs>

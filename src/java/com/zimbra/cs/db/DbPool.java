@@ -38,6 +38,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.stats.ZimbraPerf;
+import com.zimbra.cs.util.ProvisioningUtil;
 
 /**
  * @since Apr 7, 2004
@@ -128,10 +129,56 @@ public class DbPool {
         }
 
         public void commit() throws ServiceException {
-            try {
-                connection.commit();
-            } catch (SQLException e) {
-                throw ServiceException.FAILURE("committing database transaction", e);
+            boolean isSharedDb = ProvisioningUtil.getServerAttribute(Provisioning.A_zimbraMailboxSharedDbEnabled, false);
+
+            if (!isSharedDb) {
+                try {
+                    connection.commit();
+                    return;
+                } catch (SQLException e) {
+                    throw ServiceException.FAILURE("committing database transaction", e);
+                }
+            }
+
+            int retryCount = ProvisioningUtil.getServerAttribute(
+                Provisioning.A_zimbraMailboxSharedDbTransRetryCount, 0);
+            long delay = ProvisioningUtil.getServerAttribute(
+                Provisioning.A_zimbraMailboxSharedDbTransRetryDelay, 0);
+            boolean hasException = false;
+            Exception excptn = null;
+            do {
+                try {
+                    retryCount--;
+                    hasException = false;
+                    excptn = null;
+                    connection.commit();
+                    break;
+                } catch (SQLException e) {
+                    ZimbraLog.dbconn.info(e.getMessage() + ", " + e.getSQLState() + ","
+                        + e.getErrorCode(), e);
+                    if (Db.errorMatches(e, Db.Error.DEADLOCK_DETECTED)) {
+                        hasException = true;
+                        excptn = e;
+                        ZimbraLog.dbconn.debug("Deadlock detected retrying transaction, retry count: %d", retryCount);
+                        if (delay > 0) {
+                            try {
+                                Thread.sleep(delay * 1000);
+                            } catch (InterruptedException ie) {
+                                ZimbraLog.dbconn.info("Retry delay while committing database transaction "
+                                    + "caused error.", ie);
+                            }
+                        }
+                    } else {
+                        ZimbraLog.dbconn.info("This is not a deadlock related SQL Exception, so no retries.");
+                        throw ServiceException.FAILURE("committing database transaction", e);
+                    }
+                }
+            } while (retryCount > 0);
+
+            if (hasException && excptn != null) {
+                ZimbraLog.dbconn.warn("Retries failed throwing exception.", excptn);
+                throw ServiceException.FAILURE("Retries for commiting transaction failed, Unrecoverable error.",
+                    excptn);
             }
         }
 
