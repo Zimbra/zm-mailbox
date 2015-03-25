@@ -78,7 +78,7 @@ SECTION 1: BSD-STYLE, MIT-STYLE, OR SIMILAR STYLE LICENSES
    >>> nviennot-nginx-tcp-keepalive-4d7186d
    >>> opendkim-2.9.3
    >>> openldap-2.4.41
-   >>> openssl-1.0.1l
+   >>> openssl-1.0.1m
    >>> perl-data-uuid-1.219
    >>> perl-geography-countries-2009041301
    >>> perl-locale-maketext-simple-0.21
@@ -87,14 +87,14 @@ SECTION 1: BSD-STYLE, MIT-STYLE, OR SIMILAR STYLE LICENSES
    >>> perl-socket6-0.25
    >>> perl-termreadkey-2.32
    >>> perl-try-tiny-0.19
-   >>> php-5.6.5
+   >>> php-5.6.7
    >>> postfix-logwatch-1.40.01
    >>> sendmail-8.14.8
    >>> slf4j-1.6.4
    >>> spymemcached-2.6
    >>> sqlitejdbc-3.7.5-1
    >>> tnef-1.8.0
-   >>> unbound-1.4.22
+   >>> unbound-1.5.3
    >>> xpp3-1.1.4c
    >>> yui-2.4.2
    >>> zeroclipboard-1.0.7
@@ -104,8 +104,8 @@ SECTION 1: BSD-STYLE, MIT-STYLE, OR SIMILAR STYLE LICENSES
 SECTION 2: Apache License, V2.0
 
    >>> apache-ant-1.7.0
-   >>> apache-apr-1.5.0
-   >>> apache-apr-util-1.5.3
+   >>> apache-apr-1.5.1
+   >>> apache-apr-util-1.5.4
    >>> apache-cxf-2.7.5
    >>> apache-commons-beanutils-1.7.0
    >>> apache-commons-cli-1.2
@@ -122,7 +122,7 @@ SECTION 2: Apache License, V2.0
    >>> apache-helix-0.6.1
    >>> apache-httpasyncclient-4.0-beta3
    >>> apache-httpcomponents-core-4.2.2
-   >>> apache-httpd-2.4.10
+   >>> apache-httpd-2.4.12
    >>> apache-jcs-1.3
    >>> apache-log4j-1.2.16
    >>> apache-log4j-extras-1.0
@@ -245,7 +245,7 @@ SECTION 8: GNU General Public License, V2.0
    >>> javax.ws.rs-api-2.0-m10
    >>> libtool-2.2.6b
    >>> libwww-perl-6.05
-   >>> mariadb-10.0.16
+   >>> mariadb-10.0.17
    >>> perl-archive-tar-1.96
    >>> perl-archive-zip-1.37
    >>> perl-array-compare-2.02
@@ -19820,7 +19820,7 @@ California, USA.  All Rights Reserved.  Permission to copy and
 distribute verbatim copies of this document is granted.
 
 
->>> openssl-1.0.1l
+>>> openssl-1.0.1m
 
 LICENSE ISSUES
   ==============
@@ -20148,7 +20148,7 @@ This program is free software; you can redistribute
 it and/or modify it under the terms of the MIT license.
 
 
->>> php-5.6.5
+>>> php-5.6.7
 
 The PHP License, version 3.01
 
@@ -20177,7 +20177,7 @@ ADDITIONAL LICENSE INFORMATION:
 
 > BSD style
 
-php-5.6.5.tar.bz2\php-5.6.5.tar\php-5.6.5\Zend\LICENSE
+php-5.6.7.tar.bz2\php-5.6.7.tar\php-5.6.7\Zend\LICENSE
 
 The Zend Engine License, Version 2.00
 Copyright (c) 1999-2006 Zend Technologies Ltd. All rights reserved.
@@ -20201,7 +20201,7 @@ THIS SOFTWARE IS PROVIDED BY ZEND TECHNOLOGIES LTD. ``AS IS'' AND  ANY EXPRESSED
 
 > GPL 2.0
 
-php-5.6.5.tar.bz2\php-5.6.5.tar\php-5.6.5\build\shtool
+php-5.6.7.tar.bz2\php-5.6.7.tar\php-5.6.7\build\shtool
 
 GNU shtool -- The GNU Portable Shell Tool
 Copyright (c) 1994-2008 Ralf S. Engelschall <rse@engelschall.com>
@@ -20222,14 +20222,14 @@ NOTICE: Given that you include this file verbatim into your own source tree, you
 
 > LGPL 2.1
 
-php-5.6.5.tar.bz2\php-5.6.5.tar\php-5.6.5\ext\bcmath\libbcmath\COPYING.LIB
+php-5.6.7.tar.bz2\php-5.6.7.tar\php-5.6.7\ext\bcmath\libbcmath\COPYING.LIB
 
 License: LGPL 2.1
 
 
 > LGPL 2.0
 
-php-5.6.5.tar.bz2\php-5.6.5.tar\php-5.6.5\ext\bcmath\libbcmath\src\add.c
+php-5.6.7.tar.bz2\php-5.6.7.tar\php-5.6.7\ext\bcmath\libbcmath\src\add.c
 
 Copyright (C) 1991, 1992, 1993, 1994, 1997 Free Software Foundation, Inc.
 Copyright (C) 2000 Philip A. Nelson
@@ -20250,7 +20250,7 @@ Bellingham, WA 98226-9062
 
 > MIT
 
-php-5.6.5.tar.bz2\php-5.6.5.tar\php-5.6.5\ext\gd\libgd\ COPYING
+php-5.6.7.tar.bz2\php-5.6.7.tar\php-5.6.7\ext\gd\libgd\ COPYING
 
 Portions copyright 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002 by Cold Spring Harbor Laboratory. Funded under Grant P41-RR02188 by the National Institutes of Health.
  
@@ -20276,7 +20276,7 @@ Although their code does not appear in gd, the authors wish to thank David Kobla
 
 > Public Domain
 
-php-5.6.5.tar.bz2\php-5.6.5.tar\php-5.6.5\ext\sqlite3\libsqlite\sqlite3.h
+php-5.6.7.tar.bz2\php-5.6.7.tar\php-5.6.7\ext\sqlite3\libsqlite\sqlite3.h
 
 2001 September 15
 
@@ -20518,7 +20518,7 @@ in courts and fora located in the State of New York, and you consent to such
 jurisdiction and venue.
 
 
->>> unbound-1.4.22
+>>> unbound-1.5.3
 
 Copyright (c) 2007, NLnet Labs. All rights reserved.
 
@@ -20816,7 +20816,7 @@ information on the Apache Software Foundation, please see
 <http://www.apache.org/>.
 
 
->>> apache-apr-1.5.0
+>>> apache-apr-1.5.1
 
 Licensed to the Apache Software Foundation (ASF) under one or more
 contributor license agreements.  See the NOTICE file distributed with
@@ -20973,7 +20973,7 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 
 
->>> apache-apr-util-1.5.3
+>>> apache-apr-util-1.5.4
 
 Apache Portable Runtime Utility Library
 Copyright (c) 2011 The Apache Software Foundation.
@@ -21460,7 +21460,7 @@ This project contains annotations derived from JCIP-ANNOTATIONS
 Copyright (c) 2005 Brian Goetz and Tim Peierls. See http://www.jcip.net
 
 
->>> apache-httpd-2.4.10
+>>> apache-httpd-2.4.12
 
 copyright 2013 The Apache Software Foundation.
 
@@ -31079,7 +31079,7 @@ COPYRIGHT
 This library is free software; you can redistribute it and/or modify it under the same terms as Perl itself.
 
 
->>> mariadb-10.0.16
+>>> mariadb-10.0.17
 
 
 This is a release of MariaDB.
