@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -16,10 +16,15 @@
  */
 package com.zimbra.soap.admin.message;
 
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.google.common.collect.Lists;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.admin.type.CountObjectsType;
 import com.zimbra.soap.admin.type.DomainSelector;
@@ -33,10 +38,10 @@ import com.zimbra.soap.admin.type.UCServiceSelector;
  * Returns number of objects of requested type.
  * <br />
  * <br />
- * Note: For account/alias/dl, if a domain is specified, only entries on the specified 
+ * Note: For account/alias/dl, if a domain is specified, only entries on the specified
  * domain are counted.  If no domain is specified, entries on all domains are counted.
- * 
- * For accountOnUCService/cosOnUCService/domainOnUCService, UCService is required, 
+ *
+ * For accountOnUCService/cosOnUCService/domainOnUCService, UCService is required,
  * and domain cannot be specified.
  *
  */
@@ -53,13 +58,13 @@ public class CountObjectsRequest {
      * @zm-api-field-description Domain
      */
     @XmlElement(name=AdminConstants.E_DOMAIN /* domain */, required=false)
-    private DomainSelector domain;
-    
+    private final List <DomainSelector> domains = Lists.newArrayList();
+
     /**
      * @zm-api-field-description UCService
      */
     @XmlElement(name=AdminConstants.E_UC_SERVICE /* ucservice */, required=false)
-    private UCServiceSelector usService;
+    private UCServiceSelector ucService;
 
     /**
      * no-argument constructor wanted by JAXB
@@ -73,37 +78,48 @@ public class CountObjectsRequest {
         this(type, (DomainSelector) null, (UCServiceSelector) null);
     }
 
+    public CountObjectsRequest(CountObjectsType type, DomainSelector domain) {
+        this(type, domain, (UCServiceSelector) null);
+    }
+
     public CountObjectsRequest(CountObjectsType type, DomainSelector domain, UCServiceSelector ucService) {
         setType(type);
-        setDomain(domain);
-        setUCService(ucService);
+        addDomain(domain);
+        setUcService(ucService);
     }
 
     public void setType(CountObjectsType type) {
         this.type = type;
     }
 
-    public void setDomain(DomainSelector domain) {
-        this.domain = domain;
-    }
-    
-    public void setUCService(UCServiceSelector usService) {
-        this.usService = usService;
-    }
-
     public CountObjectsType getType() {
         return type;
     }
 
-    public DomainSelector getDomain() {
-        return domain;
+    public CountObjectsRequest setDomains(Collection<DomainSelector> domains) {
+        this.domains.clear();
+        if (domains != null) {
+            this.domains.addAll(domains);
+        }
+        return this;
     }
 
-    public UCServiceSelector getUsService() {
-        return usService;
+    public CountObjectsRequest addDomain(DomainSelector domain) {
+        if (domain != null) {
+            domains.add(domain);
+        }
+        return this;
     }
 
-    public void setUsService(UCServiceSelector usService) {
-        this.usService = usService;
+    public List<DomainSelector> getDomains() {
+        return Collections.unmodifiableList(domains);
+    }
+
+    public UCServiceSelector getUcService() {
+        return ucService;
+    }
+
+    public void setUcService(UCServiceSelector ucService) {
+        this.ucService = ucService;
     }
 }
