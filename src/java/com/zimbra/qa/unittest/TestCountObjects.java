@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -47,17 +47,17 @@ import com.zimbra.soap.admin.type.GranteeSelector.GranteeBy;
 import com.zimbra.soap.type.TargetBy;
 
 public class TestCountObjects extends TestCase {
-    private Provisioning mProv = Provisioning.getInstance();
+    private final Provisioning mProv = Provisioning.getInstance();
     private static String PASSWORD = "test123";
     private static String DOMAIN_ADMIN_USER = "domaintestadmin";
     private static String ROGUE_ADMIN_USER = "roguetestadmin";
-    private String DOMAIN_NAME = "testcountobjects.com";
+    private final String DOMAIN_NAME = "testcountobjects.com";
     private String DOMAIN_ADMIN_USER_EMAIL;
     private String ROGUE_ADMIN_USER_EMAIL;
-    private ArrayList<String> testAccountIDs = new ArrayList<String>();
-    private ArrayList<String> testDLIDs = new ArrayList<String>();
-    private ArrayList<String> testDomainIDs = new ArrayList<String>();
-    private ArrayList<String> testCOSIDs = new ArrayList<String>();
+    private final ArrayList<String> testAccountIDs = new ArrayList<String>();
+    private final ArrayList<String> testDLIDs = new ArrayList<String>();
+    private final ArrayList<String> testDomainIDs = new ArrayList<String>();
+    private final ArrayList<String> testCOSIDs = new ArrayList<String>();
 
     @Override
     @Before
@@ -200,30 +200,27 @@ public class TestCountObjects extends TestCase {
 
             // count user accounts with domain filter
             req = new CountObjectsRequest(CountObjectsType.userAccount);
-            req.setDomain(new DomainSelector(DomainBy.name, DOMAIN_NAME));
+            req.addDomain(new DomainSelector(DomainBy.name, DOMAIN_NAME));
             resp = SoapTest.invokeJaxb(transport, req);
             assertTrue("should have at least one userAccount",
                     resp.getNum() > 0);
             assertEquals("object type in response should be 'userAccount'", "userAccount",resp.getType());
 
             // count accounts with domain filter
-            req = new CountObjectsRequest(CountObjectsType.account);
-            req.setDomain(new DomainSelector(DomainBy.name, DOMAIN_NAME));
+            req = new CountObjectsRequest(CountObjectsType.account, new DomainSelector(DomainBy.name, DOMAIN_NAME));
             resp = SoapTest.invokeJaxb(transport, req);
             assertTrue("should have at least one account", resp.getNum() > 0);
             assertEquals("object type in response should be 'account'", "account",resp.getType());
 
             // count DLs with domain filter
-            req = new CountObjectsRequest(CountObjectsType.dl);
-            req.setDomain(new DomainSelector(DomainBy.name, DOMAIN_NAME));
+            req = new CountObjectsRequest(CountObjectsType.dl, new DomainSelector(DomainBy.name, DOMAIN_NAME));
             resp = SoapTest.invokeJaxb(transport, req);
             assertTrue("should have at least one distribution list",
                     resp.getNum() > 0);
             assertEquals("object type in response should be 'dl'", "dl",resp.getType());
 
             // count aliases with domain filter
-            req = new CountObjectsRequest(CountObjectsType.alias);
-            req.setDomain(new DomainSelector(DomainBy.name, DOMAIN_NAME));
+            req = new CountObjectsRequest(CountObjectsType.alias, new DomainSelector(DomainBy.name, DOMAIN_NAME));
             resp = SoapTest.invokeJaxb(transport, req);
             assertTrue("should have at least one alias", resp.getNum() > 0);
             assertEquals("object type in response should be 'alias'", "alias",resp.getType());
@@ -240,8 +237,7 @@ public class TestCountObjects extends TestCase {
                     PASSWORD);
             // count domains
             try {
-                CountObjectsRequest req = new CountObjectsRequest(
-                        CountObjectsType.domain);
+                CountObjectsRequest req = new CountObjectsRequest(CountObjectsType.domain);
                 CountObjectsResponse resp = SoapTest.invokeJaxb(transport, req);
                 fail("should not be able to count domains");
             } catch (SoapFaultException e) {
@@ -251,8 +247,7 @@ public class TestCountObjects extends TestCase {
             // count user accounts
             try {
                 CountObjectsRequest req = new CountObjectsRequest(
-                        CountObjectsType.userAccount);
-                req.setDomain(new DomainSelector(DomainBy.name, DOMAIN_NAME));
+                        CountObjectsType.userAccount, new DomainSelector(DomainBy.name, DOMAIN_NAME));
                 CountObjectsResponse resp = SoapTest.invokeJaxb(transport, req);
                 fail("should not be able to count accounts");
             } catch (SoapFaultException e) {
@@ -262,8 +257,7 @@ public class TestCountObjects extends TestCase {
             // count accounts
             try {
                 CountObjectsRequest req = new CountObjectsRequest(
-                        CountObjectsType.account);
-                req.setDomain(new DomainSelector(DomainBy.name, DOMAIN_NAME));
+                        CountObjectsType.account, new DomainSelector(DomainBy.name, DOMAIN_NAME));
                 CountObjectsResponse resp = SoapTest.invokeJaxb(transport, req);
                 fail("should not be able to count accounts");
             } catch (SoapFaultException e) {
@@ -274,7 +268,7 @@ public class TestCountObjects extends TestCase {
             try {
                 CountObjectsRequest req = new CountObjectsRequest(
                         CountObjectsType.dl);
-                req.setDomain(new DomainSelector(DomainBy.name, DOMAIN_NAME));
+                req.addDomain(new DomainSelector(DomainBy.name, DOMAIN_NAME));
                 CountObjectsResponse resp = SoapTest.invokeJaxb(transport, req);
                 assertTrue("should have at least one distribution list",
                         resp.getNum() > 0);
@@ -286,8 +280,7 @@ public class TestCountObjects extends TestCase {
             // count aliases
             try {
                 CountObjectsRequest req = new CountObjectsRequest(
-                        CountObjectsType.alias);
-                req.setDomain(new DomainSelector(DomainBy.name, DOMAIN_NAME));
+                        CountObjectsType.alias, new DomainSelector(DomainBy.name, DOMAIN_NAME));
                 CountObjectsResponse resp = SoapTest.invokeJaxb(transport, req);
                 fail("should not be able to count aliases");
             } catch (SoapFaultException e) {
