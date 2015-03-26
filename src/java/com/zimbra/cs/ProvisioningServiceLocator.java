@@ -14,16 +14,20 @@
  * If not, see <http://www.gnu.org/licenses/>.
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.cs.servicelocator;
+package com.zimbra.cs;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.zimbra.common.consul.CatalogRegistration;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.servicelocator.Selector;
+import com.zimbra.common.servicelocator.ServiceLocator;
+import com.zimbra.common.servicelocator.ZimbraServiceNames;
+import com.zimbra.common.servicelocator.ServiceLocator.Entry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
-import com.zimbra.cs.consul.CatalogRegistration;
 import com.zimbra.cs.util.IPUtil;
 
 

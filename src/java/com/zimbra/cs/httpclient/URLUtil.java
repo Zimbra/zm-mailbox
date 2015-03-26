@@ -25,22 +25,22 @@ package com.zimbra.cs.httpclient;
 
 import java.io.IOException;
 
+import com.zimbra.common.consul.ConsulClient;
+import com.zimbra.common.consul.ConsulServiceLocator;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.servicelocator.ChainedServiceLocator;
+import com.zimbra.common.servicelocator.Selector;
+import com.zimbra.common.servicelocator.ServiceLocator;
+import com.zimbra.common.servicelocator.ZimbraServiceNames;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.ProvisioningServiceLocator;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.MailMode;
 import com.zimbra.cs.account.Server;
-import com.zimbra.cs.consul.ConsulClient;
-import com.zimbra.cs.servicelocator.ChainedServiceLocator;
-import com.zimbra.cs.servicelocator.ConsulServiceLocator;
-import com.zimbra.cs.servicelocator.ProvisioningServiceLocator;
-import com.zimbra.cs.servicelocator.Selector;
-import com.zimbra.cs.servicelocator.ServiceLocator;
-import com.zimbra.cs.servicelocator.ZimbraServiceNames;
 import com.zimbra.cs.util.Zimbra;
 
 /**

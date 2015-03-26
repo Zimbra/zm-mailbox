@@ -33,14 +33,20 @@ import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisCluster;
 import redis.clients.jedis.JedisPool;
 
+import com.zimbra.common.consul.ConsulClient;
+import com.zimbra.common.consul.ConsulServiceLocator;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.servicelocator.ChainedServiceLocator;
+import com.zimbra.common.servicelocator.RandomSelector;
+import com.zimbra.common.servicelocator.Selector;
+import com.zimbra.common.servicelocator.ServiceLocator;
 import com.zimbra.common.util.ZimbraHttpClientManager;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.util.memcached.ZimbraMemcachedClient;
+import com.zimbra.cs.ProvisioningServiceLocator;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
-import com.zimbra.cs.consul.ConsulClient;
 import com.zimbra.cs.extension.ExtensionUtil;
 import com.zimbra.cs.index.DefaultIndexingQueueAdapter;
 import com.zimbra.cs.index.IndexingQueueAdapter;
@@ -62,12 +68,6 @@ import com.zimbra.cs.mailbox.calendar.cache.CalendarCacheManager;
 import com.zimbra.cs.memcached.ZimbraMemcachedClientConfigurer;
 import com.zimbra.cs.redolog.DefaultRedoLogProvider;
 import com.zimbra.cs.redolog.RedoLogProvider;
-import com.zimbra.cs.servicelocator.ChainedServiceLocator;
-import com.zimbra.cs.servicelocator.ConsulServiceLocator;
-import com.zimbra.cs.servicelocator.ProvisioningServiceLocator;
-import com.zimbra.cs.servicelocator.RandomSelector;
-import com.zimbra.cs.servicelocator.Selector;
-import com.zimbra.cs.servicelocator.ServiceLocator;
 import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.store.file.FileBlobStore;
 import com.zimbra.qless.QlessClient;
@@ -285,7 +285,7 @@ public class ZimbraConfig {
 	@Bean
 	public ServiceLocator serviceLocator() throws Exception {
 	    // First try Consul, then fall back on provisioned service lists (which may be up or down)
-	    ServiceLocator sl1 = new ConsulServiceLocator();
+	    ServiceLocator sl1 = new ConsulServiceLocator(consulClient());
 	    ServiceLocator sl2 = new ProvisioningServiceLocator(Provisioning.getInstance());
 	    return new ChainedServiceLocator(sl1, sl2);
 	}
