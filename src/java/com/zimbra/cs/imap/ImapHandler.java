@@ -2257,7 +2257,13 @@ abstract class ImapHandler {
 
                 if (owner == null) {
                     Mailbox mbox = credentials.getMailbox();
+                    boolean isMailFolders =  Provisioning.getInstance().getLocalServer().isImapDisplayMailFoldersOnly();
                     for (Folder folder : mbox.getFolderById(getContext(), Mailbox.ID_FOLDER_USER_ROOT).getSubfolderHierarchy()) {
+     if(isMailFolders) {MailItem.Type view = folder.getDefaultView(); //  chat has item type of message.hence ignoring the chat folder by name.
+     if((view == MailItem.Type.CHAT) || (folder.getName().equals ("Chats"))) {
+     continue;
+     }
+     }
                         if (folder.isTagged(Flag.FlagInfo.SUBSCRIBED)) {
                             checkSubscription(new SubscribedImapPath(
                                     new ImapPath(null, folder, credentials)), pattern, childPattern, hits);
