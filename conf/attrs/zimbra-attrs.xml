@@ -9794,4 +9794,17 @@ TODO: delete them permanently from here
   <desc>Indicates the pause in seconds between retries for commiting a failed database transaction. This is only applicable when using shared database.</desc>
 </attr>
 
+<attr id="1947" name="zimbraTrustedAuthTokenLifetime" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" callback="PositiveTimeInterval" since="8.7.0,9.0.0">
+  <defaultCOSValue>2d</defaultCOSValue>
+  <desc>Lifetime of a trusted auth token</desc>
+</attr>
+
+<attr id="1948" name="zimbraTrustedAuthTokenTrustLifetime" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" callback="PositiveTimeInterval" since="8.7.0,9.0.0">
+  <defaultCOSValue>30d</defaultCOSValue>
+  <desc>Value representing how long past expiry a trusted auth token can be used to bypass two-factor authentication</desc>
+</attr>
+
+<attr id="1949" name="zimbraTrustedDevices" type="string" cardinality="multi" optionalIn="account" since="8.7.0,9.0.0">
+  <desc>Trusted devices currently registered on the account</desc>
+</attr>
 </attrs>
