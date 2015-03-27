@@ -149,7 +149,7 @@ SECTION 2: Apache License, V2.0
    >>> selenium-2.43.0
    >>> smack-3.2.1
    >>> solr-4.9.0
-   >>> spamassassin-3.4.1-r1658380
+   >>> spamassassin-3.4.1-r1669629
    >>> spring-framework-3.2.10
    >>> stax2-api-3.1.1
    >>> testng-5.12.1
