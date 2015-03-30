@@ -438,6 +438,7 @@ public final class QueryParser {
                         conj = toConjunction(child);
                         break;
                     case JJTTEXTTERM:
+                    case JJTSUBJTERM:
                     case JJTITEMTERM:
                     case JJTDATETERM:
                         if (!sub.isEmpty()) {

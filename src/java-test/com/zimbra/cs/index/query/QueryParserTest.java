@@ -337,6 +337,40 @@ public final class QueryParserTest {
     }
 
     @Test
+    public void content() throws Exception {
+        String src = "content:foo";
+        Assert.assertEquals("Q(l.content:foo)", Query.toString(parser.parse(src)));
+
+        src = "content:foo bar is baz gub";
+        Assert.assertEquals("Q(l.content:foo) && Q(l.content:bar) && Q(l.content:is) && Q(l.content:baz) && Q(l.content:gub)", Query.toString(parser.parse(src)));
+
+        src = "subject:this_is_my_subject subject:\"this is_my_subject\"";
+        Assert.assertEquals("Q(subject:this_is_my_subject) && Q(subject:this is_my_subject)", Query.toString(parser.parse(src)));
+    }
+    
+    @Test
+    public void parenthesis() throws Exception {
+        String src = "subject:(foo)";
+        Assert.assertEquals("(Q(subject:foo))", Query.toString(parser.parse(src)));
+
+        src = "content:(foo)";
+        Assert.assertEquals("(Q(l.content:foo))", Query.toString(parser.parse(src)));
+        
+        src = "subject:(foo bar) and content:(baz gub)";
+        Assert.assertEquals("(Q(subject:foo) && Q(subject:bar)) && (Q(l.content:baz) && Q(l.content:gub))", Query.toString(parser.parse(src)));
+        
+        src = "subject:(foo bar) and content:\"baz gub\"";
+        Assert.assertEquals("(Q(subject:foo) && Q(subject:bar)) && Q(l.content:baz gub)", Query.toString(parser.parse(src)));
+        
+        src = "content:(foo bar) and subject:\"baz gub\"";
+        Assert.assertEquals("(Q(l.content:foo) && Q(l.content:bar)) && Q(subject:baz gub)", Query.toString(parser.parse(src)));
+        
+        src = "content:(foo bar) and content:(baz gub)";
+        Assert.assertEquals("(Q(l.content:foo) && Q(l.content:bar)) && (Q(l.content:baz) && Q(l.content:gub))", Query.toString(parser.parse(src)));
+
+    }
+
+    @Test
     public void has() throws Exception {
         String src = "has:attachment has:phone has:url";
         Assert.assertEquals("Q(attachment:any) && Q(has:phone) && Q(has:url)", Query.toString(parser.parse(src)));
