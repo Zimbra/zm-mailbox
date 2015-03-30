@@ -149,18 +149,20 @@ public class IndexingService {
         @Override
         public void run() {
             ZimbraLog.index.info("Started DeleteFromIndexTask " + Thread.currentThread().getName());
+            int maxRetries = 0;
             try {
+                maxRetries = Provisioning.getInstance().getLocalServer().getMaxIndexingRetries();
                 IndexStore indexStore = IndexStore.getFactory().getIndexStore(queuedTask.getAccountID());
                 indexStore.openIndexer().deleteDocument(queuedTask.getItemIds());
                 ZimbraLog.index.info("Finished delete-from-index task " + Thread.currentThread().getName());
             } catch (Exception e) {
-                ZimbraLog.index.error(e.getMessage(), e);
-                /*
-                 * If we caught an exception put the item back in the queue.
-                 * sending an item to Solr index twice does not skew or corrupt
-                 * the index even if the item was previously indexed
-                 */
-                queueAdapter.put(queuedTask);
+                if(queuedTask.getRetries() < maxRetries) {
+                    ZimbraLog.index.warn("An attempt to delete %d items from index of account %s has failed. Will retry.", queuedTask.getItemIds().size(), queuedTask.getAccountID(), e);
+                    queuedTask.addRetry();
+                    queueAdapter.put(queuedTask);
+                } else {
+                    ZimbraLog.index.error("Permanently failed to delete %d items from index of account %s after %d attempts", queuedTask.getItemIds().size(), queuedTask.getAccountID(), queuedTask.getRetries(), e);
+                }
             } finally {
                 ZimbraLog.clearContext();
             }
@@ -179,7 +181,9 @@ public class IndexingService {
             // list of items that were sent to Indexer
             List<MailItem> indexedItems = new ArrayList<MailItem>();
             ZimbraLog.index.info("Started indexing task " + Thread.currentThread().getName());
+            int maxRetries = 0;
             try {
+                maxRetries = Provisioning.getInstance().getLocalServer().getMaxIndexingRetries();
                 IndexStore indexStore = IndexStore.getFactory().getIndexStore(queueItem.getAccountID());
                 MailItem.UnderlyingData ud = null;
                 List<AddToIndexTaskLocator.MailItemIdentifier> itemsToIndex = queueItem.getMailItems();
@@ -190,28 +194,19 @@ public class IndexingService {
                         try {
                             ud = DbMailItem.getById(queueItem.getMailboxID(), queueItem.getMailboxSchemaGroupID(),
                                     itemID.getId(), itemID.getType(), itemID.isInDumpster(), conn);
-                        } catch (NoSuchItemException ex) {// item may have been
-                                                          // moved to/from
-                                                          // Dumpster after
-                                                          // being queued for
-                                                          // indexing
+                        } catch (NoSuchItemException ex) {// item may have been moved to/from Dumpster after being queued for indexing
                             try {
                                 ud = DbMailItem.getById(queueItem.getMailboxID(), queueItem.getMailboxSchemaGroupID(),
                                         itemID.getId(), itemID.getType(), !itemID.isInDumpster(), conn);
-                            } catch (NoSuchItemException nex) {// could not find
-                                                               // this item in
-                                                               // Dumpster
-                                                               // either.
+                            } catch (NoSuchItemException nex) {// could not find this item in Dumpster either.
                                 // Log an error.
                                 ZimbraLog.index.error("Could not find item %d in mailbox %d account %s",
                                         itemID.getId(), queueItem.getMailboxID(), queueItem.getAccountID(), nex);
-                                // Log a failed item for re-index batch status
-                                // reporting
+                                // Log a failed item for re-index batch status reporting
                                 if (queueItem.isReindex()) {
                                     queueAdapter.incrementFailedMailboxTaskCount(queueItem.getAccountID(), 1);
                                 }
-                                // Do not add this item to indexedItems. Move
-                                // on.
+                                // Do not add this item to indexedItems and do not out it back into the queue. Move on.
                                 continue;
                             }
                         }
@@ -277,17 +272,22 @@ public class IndexingService {
                 }
                 ZimbraLog.index.info("Finished indexing task " + Thread.currentThread().getName());
             } catch (Exception e) {
-                ZimbraLog.index.error(e.getMessage(), e);
                 /*
-                 * If we caught an exception put the item back in the queue.
+                 * If we caught an exception and we still have retries put the item back in the queue.
                  * sending an item to Solr index twice does not skew or corrupt
-                 * the index even if the item was previously indexed
+                 * the index even if the item was previously indexed.
+                 * If we are out of retries - report a permanent failure.
                  */
-                queueAdapter.put(queueItem);
-
-                // status reporting
-                if (queueItem.isReindex()) {
-                    queueAdapter.incrementFailedMailboxTaskCount(queueItem.getAccountID(), indexedItems.size());
+                if(queueItem.getRetries() < maxRetries) {
+                    ZimbraLog.index.warn("An attempt to index %d mail items for account %s failed. Will retry.", queueItem.getMailItems().size(), queueItem.getAccountID(), e);
+                    queueItem.addRetry();
+                    queueAdapter.put(queueItem);
+                } else {
+                    ZimbraLog.index.error("Permanently failed to index %d mail items for account %s after %d attempts.", queueItem.getMailItems().size(),queueItem.getAccountID(), queueItem.getRetries(), e);
+                    // status reporting
+                    if (queueItem.isReindex()) {
+                        queueAdapter.incrementFailedMailboxTaskCount(queueItem.getAccountID(), indexedItems.size());
+                    }
                 }
             } finally {
                 ZimbraLog.clearContext();

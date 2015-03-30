@@ -69,7 +69,6 @@ import com.zimbra.cs.util.Zimbra;
  * @author ysasaki
  */
 public final class MailboxIndex {
-    private volatile long lastFailedTime = -1;
     // Only one thread may run index at a time.
     final Semaphore indexLock = new Semaphore(1);
     final Mailbox mailbox;
@@ -107,7 +106,6 @@ public final class MailboxIndex {
         assert(octx != null);
 
         ZimbraQuery query = new ZimbraQuery(octx, proto, mailbox, params);
-        Set<MailItem.Type> types = toIndexTypes(params.getTypes());
         return search(query);
     }
 
@@ -192,8 +190,6 @@ public final class MailboxIndex {
      * Returns true if any of the specified email addresses exists in contacts, otherwise false.
      */
     public boolean existsInContacts(Collection<InternetAddress> addrs) throws IOException, ServiceException {
-        Set<MailItem.Type> types = EnumSet.of(MailItem.Type.CONTACT);
-
         ZimbraIndexSearcher searcher = indexStore.openSearcher();
         try {
             for (InternetAddress addr : addrs) {
@@ -277,7 +273,7 @@ public final class MailboxIndex {
                     for(int i=0; i<batchSize && ix < items.length; i++, ix++) {
                         batch.add(items[ix]);
                     }
-                    success = add(batch, true);
+                    success = queue(batch, true);
                     if(!success) {
                         queueAdapter.setTaskStatus(mailbox.getAccountId(), ReIndexStatus.STATUS_QUEUE_FULL);
                         queueAdapter.incrementFailedMailboxTaskCount(mailbox.getAccountId(), items.length-numAdded);
@@ -333,7 +329,7 @@ public final class MailboxIndex {
                     for(int i=0;i<batchSize && ix < items.size(); i++, ix++) {
                         batch.add(items.get(ix));
                     }
-                    success = add(batch, true);
+                    success = queue(batch, true);
                     if(!success) {
                         queueAdapter.setTaskStatus(mailbox.getAccountId(), ReIndexStatus.STATUS_QUEUE_FULL);
                         queueAdapter.incrementFailedMailboxTaskCount(mailbox.getAccountId(), items.size()-numAdded);
@@ -495,11 +491,11 @@ public final class MailboxIndex {
                 indexer = indexStore.openIndexer();
             } catch (IndexPendingDeleteException e) {
                 ZimbraLog.index.debug("delete of ids from index aborted as it is pending delete");
-                lastFailedTime = System.currentTimeMillis();
+                System.currentTimeMillis();
                 return;
             } catch (IOException | ServiceException e) {
                 ZimbraLog.index.warn("Failed to open Indexer", e);
-                lastFailedTime = System.currentTimeMillis();
+                System.currentTimeMillis();
                 return;
             }
     
@@ -519,21 +515,32 @@ public final class MailboxIndex {
     }
 
     /**
-     * Adds index documents. MailItems should already be in the database. Caller has to hold mailbox lock.
-     * @throws TemporaryIndexingException 
+     * Adds mail items to indexing queue. MailItems should already be in the database. 
+     * @throws ServiceException 
      */
     @VisibleForTesting
-    public synchronized boolean add(List<MailItem> items, boolean isReindexing) throws ServiceException {
+    public synchronized boolean queue(List<MailItem> items, boolean isReindexing) throws ServiceException {
         if (items.isEmpty()) {
             return false;
         }
-        assert(mailbox.lock.isWriteLockedByCurrentThread());
         ZimbraLog.index.debug("Queuing %d items for indexing", items.size());
         IndexingQueueAdapter queueAdapter = Zimbra.getAppContext().getBean(IndexingQueueAdapter.class);
         AddToIndexTaskLocator itemLocator = new AddToIndexTaskLocator(items, mailbox.getAccountId(), mailbox.getId(), mailbox.getSchemaGroupId(), mailbox.attachmentsIndexingEnabled(), isReindexing);
         return queueAdapter.add(itemLocator);
     }
     
+    /**
+     * Adds mail items to indexing queue and increases attempts counter.
+     * MailItems should already be in the database. 
+     * @throws ServiceException 
+     */
+    public synchronized boolean retry(List<MailItem> items) throws ServiceException {
+        ZimbraLog.index.debug("Retrying indexing of %d items", items.size());
+        IndexingQueueAdapter queueAdapter = Zimbra.getAppContext().getBean(IndexingQueueAdapter.class);
+        AddToIndexTaskLocator itemLocator = new AddToIndexTaskLocator(items, mailbox.getAccountId(), mailbox.getId(), mailbox.getSchemaGroupId(), mailbox.attachmentsIndexingEnabled(), false);
+        itemLocator.addRetry();
+        return queueAdapter.add(itemLocator);
+    }
 
     /**
      * Primes the index for the fastest available search if useful to the underlying IndexStore.
@@ -779,7 +786,7 @@ public final class MailboxIndex {
         }
         return result;
     }
-
+    
     /**
      * Adds the item to the index. This has to be called inside a transaction.
      *
@@ -798,10 +805,7 @@ public final class MailboxIndex {
                 item.mData.indexId = item.getId();
             }  catch (IndexPendingDeleteException e) {
                 ZimbraLog.index.debug("Adding of entries to index aborted as index is pending delete");
-                lastFailedTime = System.currentTimeMillis();
             } catch (TemporaryIndexingException | IOException | ServiceException e) {
-                ZimbraLog.index.error("Failed to index mail item %d for account %s. Will queue item for later indexing", item.getId(), item.getAccountId(), e);
-                lastFailedTime = System.currentTimeMillis();
                 return false;
             } finally {
                 try {
@@ -897,19 +901,6 @@ public final class MailboxIndex {
         return indexStore.waitForIndexCommit(maxWaitTimeMillis - timeWaited);
     }
     
-    /**
-     * Converts conversation type to message type if the type set contains it. We need to index message items when
-     * a conversation search is requested.
-     */
-    private Set<MailItem.Type> toIndexTypes(Set<MailItem.Type> types) {
-        if (types.contains(MailItem.Type.CONVERSATION)) {
-            types = EnumSet.copyOf(types); // copy
-            types.remove(MailItem.Type.CONVERSATION);
-            types.add(MailItem.Type.MESSAGE);
-        }
-        return types;
-    }
-
     private static final class ItemSearchResult extends DbSearch.Result {
         private final MailItem item;
 

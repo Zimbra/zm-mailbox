@@ -9807,4 +9807,10 @@ TODO: delete them permanently from here
 <attr id="1949" name="zimbraTrustedDevices" type="string" cardinality="multi" optionalIn="account" since="8.7.0,9.0.0">
   <desc>Trusted devices currently registered on the account</desc>
 </attr>
+
+<attr id="1950" name="zimbraMaxIndexingRetries" type="integer" min="0" cardinality="single" optionalIn="alwaysOnCluster,server,globalConfig" flags="serverInherited" since="9.0.0">
+ <globalConfigValue>2</globalConfigValue>
+ <desc>Maximum number of times a server will re-attempt to send a document to an indexing service. When value is higher than 0 and an attempt to index a document fails, server will put the document into the indexing queue for additional indexing attempts.</desc>
+</attr>
+
 </attrs>

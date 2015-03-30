@@ -12,6 +12,7 @@ public abstract class AbstractIndexingTasksLocator {
     protected final int mailboxSchemaGroupID;
     protected final String accountID;
     protected final boolean indexAttachments;
+    private int retries = 0;
     
     protected AbstractIndexingTasksLocator (int mailboxID, int mailboxSchemaGroupID, String accountID) {
         this.mailboxID = mailboxID;
@@ -41,5 +42,13 @@ public abstract class AbstractIndexingTasksLocator {
 
     public boolean attachmentIndexingEnabled() {
         return indexAttachments;
+    }
+    
+    public void addRetry() {
+        retries++;
+    }
+    
+    public int getRetries() {
+        return retries;
     }
 }

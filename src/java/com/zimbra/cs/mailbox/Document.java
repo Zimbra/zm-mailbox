@@ -22,7 +22,6 @@ import java.util.List;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Strings;
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mailbox.Color;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -355,7 +354,7 @@ public class Document extends MailItem {
         String oldName = getName();
         super.rename(name, target);
         if (!oldName.equalsIgnoreCase(name))
-            getMailbox().index.add(this);
+            getMailbox().indexItem(this);
     }
 
     @Override

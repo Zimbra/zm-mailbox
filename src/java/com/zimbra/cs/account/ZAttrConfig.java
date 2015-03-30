@@ -38781,6 +38781,93 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * Maximum number of times a server will re-attempt to send a document to
+     * an indexing service. When value is higher than 0 and an attempt to
+     * index a document fails, server will put the document into the indexing
+     * queue for additional indexing attempts.
+     *
+     * @return zimbraMaxIndexingRetries, or 2 if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1950)
+    public int getMaxIndexingRetries() {
+        return getIntAttr(Provisioning.A_zimbraMaxIndexingRetries, 2);
+    }
+
+    /**
+     * Maximum number of times a server will re-attempt to send a document to
+     * an indexing service. When value is higher than 0 and an attempt to
+     * index a document fails, server will put the document into the indexing
+     * queue for additional indexing attempts.
+     *
+     * @param zimbraMaxIndexingRetries new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1950)
+    public void setMaxIndexingRetries(int zimbraMaxIndexingRetries) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMaxIndexingRetries, Integer.toString(zimbraMaxIndexingRetries));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of times a server will re-attempt to send a document to
+     * an indexing service. When value is higher than 0 and an attempt to
+     * index a document fails, server will put the document into the indexing
+     * queue for additional indexing attempts.
+     *
+     * @param zimbraMaxIndexingRetries new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1950)
+    public Map<String,Object> setMaxIndexingRetries(int zimbraMaxIndexingRetries, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMaxIndexingRetries, Integer.toString(zimbraMaxIndexingRetries));
+        return attrs;
+    }
+
+    /**
+     * Maximum number of times a server will re-attempt to send a document to
+     * an indexing service. When value is higher than 0 and an attempt to
+     * index a document fails, server will put the document into the indexing
+     * queue for additional indexing attempts.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1950)
+    public void unsetMaxIndexingRetries() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMaxIndexingRetries, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of times a server will re-attempt to send a document to
+     * an indexing service. When value is higher than 0 and an attempt to
+     * index a document fails, server will put the document into the indexing
+     * queue for additional indexing attempts.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1950)
+    public Map<String,Object> unsetMaxIndexingRetries(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMaxIndexingRetries, "");
+        return attrs;
+    }
+
+    /**
      * port number on which memcached server should listen
      *
      * <p>Use getMemcachedBindPortAsString to access value as a string.

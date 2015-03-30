@@ -5781,8 +5781,8 @@ public class Mailbox {
         }
     }
 
-    private void indexItem(MailItem item) throws ServiceException {
-        if(!index.add(item)) {
+    void indexItem(MailItem item) throws ServiceException {
+        if(!index.add(item) && Provisioning.getInstance().getLocalServer().getMaxIndexingRetries() > 0) {
             currentChange().addIndexItem(item);
         }
     }
@@ -6075,7 +6075,7 @@ public class Mailbox {
                 dctxt.setMailboxBlob(mblob);
             }
 
-            // step 7: queue new message for indexing
+            // step 7: send to indexing service
             indexItem(msg);
             success = true;
 
@@ -8925,12 +8925,6 @@ public class Mailbox {
         }
     }
 
-    /*void addIndexItemToCurrentChange(MailItem item) {
-        assert (lock.isWriteLockedByCurrentThread());
-        assert (currentChange().isActive());
-        currentChange().addIndexItem(item);
-    }*/
-
     /**
      * for folder view migration.
      */
@@ -9075,7 +9069,7 @@ public class Mailbox {
             *  another server may try retrieving this item from the DB
             */
             if(!currentChange().indexItems.isEmpty()) {
-                index.add(currentChange().indexItems, false);
+                index.retry(currentChange().indexItems);
             }
             // We are finally done with database and redo commits. Cache update comes last.
             commitCache(currentChange());

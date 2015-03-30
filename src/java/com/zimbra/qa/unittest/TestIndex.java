@@ -19,6 +19,7 @@ package com.zimbra.qa.unittest;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -40,6 +41,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.index.IndexStore;
 import com.zimbra.cs.index.IndexStore.Factory;
+import com.zimbra.cs.index.IndexingQueueAdapter;
 import com.zimbra.cs.index.IndexingService;
 import com.zimbra.cs.index.solr.SolrCloudIndex;
 import com.zimbra.cs.mailbox.MailItem;
@@ -55,6 +57,7 @@ public class TestIndex  {
     private boolean originalLCSetting = false;
     private int mOriginalTextLimit;
     private String mOriginalSolrURLBase;
+    private int mOriginalMaxRetries;
     protected static final String BASE_DOMAIN_NAME = TestLdap.baseDomainName(TestSolrCloud.class);
     protected static final String USER_NAME = "TestSolrCloud-user1@" + BASE_DOMAIN_NAME;
     private Account acct = null;
@@ -65,6 +68,8 @@ public class TestIndex  {
         Provisioning.getInstance().getLocalServer().setIndexManualCommit(true);
         mOriginalTextLimit = Integer.parseInt(TestUtil.getServerAttr(Provisioning.A_zimbraAttachmentsIndexedTextLimit));
         mOriginalSolrURLBase = ProvisioningUtil.getServerAttribute(Provisioning.A_zimbraSolrURLBase, "http://localhost:7983/solr");
+        mOriginalMaxRetries = Provisioning.getInstance().getLocalServer().getMaxIndexingRetries(); 
+        Provisioning.getInstance().getLocalServer().setMaxIndexingRetries(2);
         cleanUp();
         TestUtil.createDomain(BASE_DOMAIN_NAME);
         acct = TestUtil.createAccount(USER_NAME);
@@ -77,6 +82,7 @@ public class TestIndex  {
         cleanUp();
         Provisioning.getInstance().getLocalServer().setIndexManualCommit(originalLCSetting);
         Provisioning.getInstance().getLocalServer().setSolrURLBase(mOriginalSolrURLBase);
+        Provisioning.getInstance().getLocalServer().setMaxIndexingRetries(mOriginalMaxRetries);
     }
 
     private void cleanUp() throws Exception {
@@ -280,6 +286,7 @@ public class TestIndex  {
             //this should throw an exception
             assertNotNull(e);
         }
+        assertNotNull("should have one task queued for indexing", Zimbra.getAppContext().getBean(IndexingQueueAdapter.class).peek());
         Provisioning.getInstance().getLocalServer().setSolrURLBase(mOriginalSolrURLBase);
         Zimbra.getAppContext().getBean(IndexingService.class).startUp();
         try {
@@ -289,8 +296,42 @@ public class TestIndex  {
             ZimbraLog.test.error("Caught an exception while waiting for indexing to complete", e);
             fail("should not throw an exception");
         }
+        assertNull("should have no tasks queued for indexing", Zimbra.getAppContext().getBean(IndexingQueueAdapter.class).peek());
         assertEquals("failed to find injected message", 1,TestUtil.search(TestUtil.getMailbox(acct.getName()), "chorus", MailItem.Type.MESSAGE).size());
     }
+    
+    @Test
+    public void testFailIndexing() throws Exception {
+        //create an account
+        assertTrue("failed to create an account", TestUtil.accountExists(acct.getName()));
+        //set wrong Solr URL so that indexing fails
+        Provisioning.getInstance().getLocalServer().setSolrURLBase("http://localhost:7983/blah-blah");
+        Mailbox mbox = TestUtil.getMailbox(acct.getName());
+        if(!Zimbra.getAppContext().getBean(IndexingService.class).isRunning()) {
+            Zimbra.getAppContext().getBean(IndexingService.class).startUp();
+        }
+        TestUtil.addMessage(mbox, "chorus at end by pupils from the Fourth Form Music Class Islington Green School, London");
+        try {
+            mbox.index.waitForIndexing(3000);
+            fail("should throw an exception");
+        } catch (ServiceException e) {
+            //this should throw an exception
+            assertNotNull(e);
+        }
+        Provisioning.getInstance().getLocalServer().setSolrURLBase(mOriginalSolrURLBase);
+        try {
+            mbox.index.waitForIndexing(5000);
+            fail("should throw an exception");
+        } catch (ServiceException e) {
+            //this should throw an exception
+            assertNotNull(e);
+        }
+        assertEquals("should not be able to find injected message",0,TestUtil.search(TestUtil.getMailbox(acct.getName()), "chorus", MailItem.Type.MESSAGE).size());
+        
+        //indexing queue should be empty
+        assertNull("should have no tasks queued for indexing", Zimbra.getAppContext().getBean(IndexingQueueAdapter.class).peek());
+    }
+    
     /**
      * Sends a message with the specified attachment, waits for the message to
      * arrives, and runs a query.
@@ -298,8 +339,7 @@ public class TestIndex  {
      * @param attData attachment data
      * @param attName attachment name
      * @param attContentType attachment content type
-     * @param query query to run after message arrives
-     * @return <tt>true</tt> if the query returns the message
+     * @return <tt>ZMessage</tt> 
      */
     private ZMessage sendMessage(String subject, byte[] attData, String attName, String attContentType)
     throws Exception {

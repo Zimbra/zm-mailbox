@@ -1270,7 +1270,7 @@ public class Message extends MailItem {
             calendarItemInfos.add(info);
             status.updatedMetadata = true;
             if (status.calItem != null && (calItemIsNew || modifiedCalItem)) {
-                getMailbox().index.add(status.calItem);
+                getMailbox().indexItem(status.calItem);
             }
             success = true;
         } finally {
