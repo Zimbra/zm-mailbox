@@ -59422,6 +59422,78 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * Maximum size of the Redis connection pool
+     *
+     * @return zimbraRedisMaxConnectionCount, or 1000 if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1951)
+    public int getRedisMaxConnectionCount() {
+        return getIntAttr(Provisioning.A_zimbraRedisMaxConnectionCount, 1000);
+    }
+
+    /**
+     * Maximum size of the Redis connection pool
+     *
+     * @param zimbraRedisMaxConnectionCount new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1951)
+    public void setRedisMaxConnectionCount(int zimbraRedisMaxConnectionCount) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRedisMaxConnectionCount, Integer.toString(zimbraRedisMaxConnectionCount));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum size of the Redis connection pool
+     *
+     * @param zimbraRedisMaxConnectionCount new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1951)
+    public Map<String,Object> setRedisMaxConnectionCount(int zimbraRedisMaxConnectionCount, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRedisMaxConnectionCount, Integer.toString(zimbraRedisMaxConnectionCount));
+        return attrs;
+    }
+
+    /**
+     * Maximum size of the Redis connection pool
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1951)
+    public void unsetRedisMaxConnectionCount() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRedisMaxConnectionCount, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum size of the Redis connection pool
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1951)
+    public Map<String,Object> unsetRedisMaxConnectionCount(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRedisMaxConnectionCount, "");
+        return attrs;
+    }
+
+    /**
      * Redis url
      *
      * @return zimbraRedisUrl, or empty array if unset

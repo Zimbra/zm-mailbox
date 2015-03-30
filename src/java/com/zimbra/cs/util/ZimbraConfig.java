@@ -23,6 +23,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
@@ -183,7 +184,12 @@ public class ZimbraConfig {
             return null;
         }
         HostAndPort hostAndPort = uris.iterator().next();
-        return new JedisPool(hostAndPort.getHost(), hostAndPort.getPort() == -1 ? 6379 : hostAndPort.getPort());
+
+        GenericObjectPoolConfig config = new GenericObjectPoolConfig();
+        Server server = Provisioning.getInstance().getLocalServer();
+        config.setMaxTotal(server.getRedisMaxConnectionCount());
+
+        return new JedisPool(config, hostAndPort.getHost(), hostAndPort.getPort() == -1 ? 6379 : hostAndPort.getPort());
     }
 
     @Bean(name="mailboxLockFactory")
@@ -292,8 +298,8 @@ public class ZimbraConfig {
 
     /** Centralized algorithm for selection of a server from a list, for load balancing and/or account reassignment, or picking a SOAP target in a cluster */
     @Bean(name="serviceLocatorHostSelector")
-    public Selector serviceLocatorHostSelectorBean() throws ServiceException {
-        return new RandomSelector();
+    public Selector<ServiceLocator.Entry> serviceLocatorHostSelectorBean() throws ServiceException {
+        return new RandomSelector<ServiceLocator.Entry>();
     }
 
     @Bean(name="sharedDeliveryCoordinator")

@@ -9813,4 +9813,9 @@ TODO: delete them permanently from here
  <desc>Maximum number of times a server will re-attempt to send a document to an indexing service. When value is higher than 0 and an attempt to index a document fails, server will put the document into the indexing queue for additional indexing attempts.</desc>
 </attr>
 
+<attr id="1951" name="zimbraRedisMaxConnectionCount" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service" since="9.0.0">
+  <globalConfigValue>1000</globalConfigValue>
+  <desc>Maximum size of the Redis connection pool</desc>
+</attr>
+
 </attrs>
