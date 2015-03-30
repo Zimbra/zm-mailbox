@@ -53,6 +53,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.util.ZimbraServletOutputStream;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
+import com.zimbra.cs.extension.ExtensionUtil;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.util.Zimbra;
@@ -405,27 +406,33 @@ public class SoapServlet extends ZimbraServlet {
             int httpsPort      = localServer.getMailSSLPort();
             int adminPort      = localServer.getAdminPort();
 
+            // Prepare mailstore tags
+            List<String> mailstoreTags = new ArrayList<>();
+            for (String extension: ExtensionUtil.getExtensionNames()) {
+                mailstoreTags.add("extension:" + extension);
+            }
+
             // Register http endpoint
             if (MailMode.http.equals(mailMode) || MailMode.both.equals(mailMode)) {
-                httpServiceID = registerWithServiceLocator(ZimbraServiceNames.MAILSTORE, httpPort, "http", "zmhealthcheck-mailstore");
+                httpServiceID = registerWithServiceLocator(ZimbraServiceNames.MAILSTORE, mailstoreTags, httpPort, "http", "zmhealthcheck-mailstore");
             }
 
             // Register https endpoint
             if (MailMode.https.equals(mailMode) || MailMode.both.equals(mailMode)) {
-                httpsServiceID = registerWithServiceLocator(ZimbraServiceNames.MAILSTORE, httpsPort, "https", "zmhealthcheck-mailstore");
+                httpsServiceID = registerWithServiceLocator(ZimbraServiceNames.MAILSTORE, mailstoreTags, httpsPort, "https", "zmhealthcheck-mailstore");
             }
 
             // Register admin endpoint
-            adminServiceID = registerWithServiceLocator(ZimbraServiceNames.MAILSTOREADMIN, adminPort, "https", "zmhealthcheck-mailstoreadmin");
+            adminServiceID = registerWithServiceLocator(ZimbraServiceNames.MAILSTOREADMIN, null, adminPort, "https", "zmhealthcheck-mailstoreadmin");
 
         } catch (ServiceException e) {
             throw new ServletException("Failed reading provisioning before registering mailstore with service locator", e);
         }
     }
 
-    protected String registerWithServiceLocator(String serviceName, int port, String checkScheme, String checkScript) {
+    protected String registerWithServiceLocator(String serviceName, List<String> tags, int port, String checkScheme, String checkScript) {
         String serviceID = serviceName + ":" + port;
-        CatalogRegistration.Service service = new CatalogRegistration.Service(serviceID, serviceName, port);
+        CatalogRegistration.Service service = new CatalogRegistration.Service(serviceID, serviceName, port, tags);
         if ("https".equals(checkScheme)) {
             service.tags.add("ssl");
         }

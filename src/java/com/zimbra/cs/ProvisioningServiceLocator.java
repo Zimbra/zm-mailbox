@@ -25,7 +25,6 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.servicelocator.Selector;
 import com.zimbra.common.servicelocator.ServiceLocator;
 import com.zimbra.common.servicelocator.ZimbraServiceNames;
-import com.zimbra.common.servicelocator.ServiceLocator.Entry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.util.IPUtil;
@@ -52,7 +51,7 @@ public class ProvisioningServiceLocator implements ServiceLocator {
      *
      * @return the Host Name, Host Address, and Service Port of all the instances of a service.
      */
-    public List<ServiceLocator.Entry> find(String serviceName, boolean healthyOnly) throws IOException, ServiceException {
+    public List<ServiceLocator.Entry> find(String serviceName, String tag, boolean healthyOnly) throws IOException, ServiceException {
         List<ServiceLocator.Entry> result = new ArrayList<>();
         if (ZimbraServiceNames.MAILSTOREADMIN.equals(serviceName)) {
             try {
@@ -77,10 +76,10 @@ public class ProvisioningServiceLocator implements ServiceLocator {
     /**
      * Find a service instance.
      */
-    public ServiceLocator.Entry findOne(String serviceName, Selector selector, boolean healthyOnly) throws IOException, ServiceException {
-        List<ServiceLocator.Entry> list = find(serviceName, healthyOnly);
+    public ServiceLocator.Entry findOne(String serviceName, Selector<ServiceLocator.Entry> selector, String tag, boolean healthyOnly) throws IOException, ServiceException {
+        List<ServiceLocator.Entry> list = find(serviceName, tag, healthyOnly);
         if (list.isEmpty()) {
-            list = find(serviceName, false);
+            list = find(serviceName, tag, false);
         }
         if (list.isEmpty()) {
             throw ServiceException.NOT_FOUND("Failed locating an instance of " + serviceName);

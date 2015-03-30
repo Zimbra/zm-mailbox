@@ -69,7 +69,7 @@ public class URLUtil {
     /** Perform a service locator lookup of a mailstore soap service */
     public static String getSoapURL(ServiceLocator serviceLocator, Selector selector, boolean healthyOnly) throws ServiceException {
         try {
-            ServiceLocator.Entry entry = serviceLocator.findOne(ZimbraServiceNames.MAILSTORE, selector, healthyOnly);
+            ServiceLocator.Entry entry = serviceLocator.findOne(ZimbraServiceNames.MAILSTORE, selector, null, healthyOnly);
             String scheme = entry.tags.contains("ssl") ? "https" : "http";
             return scheme + "://" + entry.hostName + ":" + entry.servicePort + "/service/soap/";
         } catch (IOException e) {
@@ -94,7 +94,7 @@ public class URLUtil {
         }
 
         try {
-            ServiceLocator.Entry entry = serviceLocator.findOne(ZimbraServiceNames.MAILSTORE, selector, false);
+            ServiceLocator.Entry entry = serviceLocator.findOne(ZimbraServiceNames.MAILSTORE, selector, null, false);
             String scheme = entry.tags.contains("ssl") ? "https" : "http";
             return scheme + "://" + entry.hostName + ":" + entry.servicePort + "/service/soap/";
         } catch (IOException e) {
@@ -203,7 +203,7 @@ public class URLUtil {
      */
     public static String getAdminURL(ServiceLocator serviceLocator, Selector selector, boolean healthyOnly) throws ServiceException {
         try {
-            ServiceLocator.Entry entry = serviceLocator.findOne(ZimbraServiceNames.MAILSTOREADMIN, selector, healthyOnly);
+            ServiceLocator.Entry entry = serviceLocator.findOne(ZimbraServiceNames.MAILSTOREADMIN, selector, null, healthyOnly);
             String scheme = entry.tags.contains("ssl") ? "https" : "http";
             return scheme + "://" + entry.hostName + ":" + entry.servicePort + AdminConstants.ADMIN_SERVICE_URI;
         } catch (IOException e) {
@@ -230,7 +230,7 @@ public class URLUtil {
         }
 
         try {
-            ServiceLocator.Entry entry = serviceLocator.findOne(ZimbraServiceNames.MAILSTOREADMIN, selector, false);
+            ServiceLocator.Entry entry = serviceLocator.findOne(ZimbraServiceNames.MAILSTOREADMIN, selector, null, false);
             String scheme = entry.tags.contains("ssl") ? "https" : "http";
             return scheme + "://" + entry.hostName + ":" + entry.servicePort + AdminConstants.ADMIN_SERVICE_URI;
         } catch (IOException e) {
