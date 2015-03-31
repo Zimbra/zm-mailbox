@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -25,26 +25,26 @@ import com.zimbra.cs.ldap.IAttributes;
 import com.zimbra.cs.ldap.ILdapContext;
 import com.zimbra.cs.ldap.LdapClient;
 import com.zimbra.cs.ldap.LdapException;
+import com.zimbra.cs.ldap.LdapException.LdapEntryNotFoundException;
+import com.zimbra.cs.ldap.LdapException.LdapMultipleEntriesMatchedException;
 import com.zimbra.cs.ldap.LdapServerType;
 import com.zimbra.cs.ldap.LdapUsage;
 import com.zimbra.cs.ldap.SearchLdapOptions;
+import com.zimbra.cs.ldap.SearchLdapOptions.SearchLdapVisitor;
 import com.zimbra.cs.ldap.ZAttributes;
 import com.zimbra.cs.ldap.ZLdapContext;
 import com.zimbra.cs.ldap.ZLdapFilter;
 import com.zimbra.cs.ldap.ZLdapFilterFactory;
+import com.zimbra.cs.ldap.ZLdapFilterFactory.FilterId;
 import com.zimbra.cs.ldap.ZSearchControls;
 import com.zimbra.cs.ldap.ZSearchResultEntry;
 import com.zimbra.cs.ldap.ZSearchResultEnumeration;
 import com.zimbra.cs.ldap.ZSearchScope;
-import com.zimbra.cs.ldap.LdapException.LdapEntryNotFoundException;
-import com.zimbra.cs.ldap.LdapException.LdapMultipleEntriesMatchedException;
-import com.zimbra.cs.ldap.SearchLdapOptions.SearchLdapVisitor;
-import com.zimbra.cs.ldap.ZLdapFilterFactory.FilterId;
 import com.zimbra.cs.ldap.unboundid.InMemoryLdapServer;
 
 public abstract class LdapHelper {
 
-    private LdapProv ldapProv;
+    private final LdapProv ldapProv;
 
     protected LdapHelper(LdapProv ldapProv) {
         this.ldapProv = ldapProv;
@@ -289,6 +289,10 @@ public abstract class LdapHelper {
         }
     }
 
-
-
+    /** TODO: make abstract for Kiss and later versions? */
+    public boolean compare(final String dn, final String attributeName, final String assertionValue,
+            ZLdapContext initZlc, boolean useMaster)
+    throws ServiceException {
+        throw new UnsupportedOperationException("compare operation has not been implemented");
+    }
 }

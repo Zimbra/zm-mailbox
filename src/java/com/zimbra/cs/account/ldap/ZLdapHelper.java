@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -29,7 +29,7 @@ import com.zimbra.cs.ldap.LdapException;
 import com.zimbra.cs.ldap.LdapException.LdapEntryNotFoundException;
 import com.zimbra.cs.ldap.LdapException.LdapMultipleEntriesMatchedException;
 import com.zimbra.cs.ldap.LdapServerType;
-import com.zimbra.cs.ldap.LdapTODO.*;
+import com.zimbra.cs.ldap.LdapTODO.TODOEXCEPTIONMAPPING;
 import com.zimbra.cs.ldap.LdapUsage;
 import com.zimbra.cs.ldap.LdapUtil;
 import com.zimbra.cs.ldap.SearchLdapOptions;
@@ -158,6 +158,7 @@ public class ZLdapHelper extends LdapHelper {
      *     in which case a multi-valued attr is updated</li>
      * </ul>
      */
+    @Override
     public void modifyAttrs(ZLdapContext zlc, String dn, Map<String, ? extends Object> attrs, Entry entry)
     throws ServiceException {
         ZModificationList modList = getModList(zlc, dn, attrs, entry);
@@ -229,6 +230,33 @@ public class ZLdapHelper extends LdapHelper {
                 LdapClient.closeContext(zlc);
         }
         return null;
+    }
+
+    /**
+     * Perform an LDAPv3 compare operation, which may be used to determine whether a specified entry contains a given
+     * attribute value.  Compare requests include the DN of the target entry, the name of the target attribute,
+     * and the value for which to make the determination.
+     *
+     * @param  dn The DN of the entry in which the comparison is to be performed.  It must not be {@code null}.
+     * @param  attributeName   The name of the target attribute for which the comparison is to be performed.
+     *         It must not be {@code null}.
+     * @param  assertionValue  The assertion value to verify within the entry.  It must not be {@code null}.
+     */
+    @Override
+    public boolean compare(final String dn, final String attributeName, final String assertionValue,
+            ZLdapContext initZlc, boolean useMaster)
+    throws ServiceException {
+        ZLdapContext zlc = initZlc;
+        try {
+            if (zlc == null) {
+                zlc = LdapClient.getContext(LdapServerType.get(useMaster), LdapUsage.COMPARE);
+            }
+
+            return zlc.compare(dn, attributeName, assertionValue);
+        } finally {
+            if (initZlc == null)
+                LdapClient.closeContext(zlc);
+        }
     }
 
     @Override
