@@ -69,6 +69,9 @@ import com.zimbra.cs.mailbox.calendar.cache.CalendarCacheManager;
 import com.zimbra.cs.memcached.ZimbraMemcachedClientConfigurer;
 import com.zimbra.cs.redolog.DefaultRedoLogProvider;
 import com.zimbra.cs.redolog.RedoLogProvider;
+import com.zimbra.cs.redolog.txn.LocalTxnIdGenerator;
+import com.zimbra.cs.redolog.txn.RedisTxnIdGenerator;
+import com.zimbra.cs.redolog.txn.TxnIdGenerator;
 import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.store.file.FileBlobStore;
 import com.zimbra.qless.QlessClient;
@@ -140,15 +143,19 @@ public class ZimbraConfig {
         if (uris.isEmpty()) {
             return false;
         }
-        JedisPool jedisPool = jedisPoolBean();
-        Jedis jedis = jedisPool.getResource();
+        JedisPool jedisPool = null;
+        Jedis jedis = null;
         try {
+            jedisPool = jedisPoolBean();
+            jedis = jedisPool.getResource();
             jedis.get("");
             return true;
         } catch (Exception e) {
             return false;
         } finally {
-            jedisPool.returnResource(jedis);
+            if (jedisPool != null && jedis != null) {
+                jedisPool.returnResource(jedis);
+            }
         }
     }
 
@@ -408,5 +415,22 @@ public class ZimbraConfig {
 	@Bean(name="httpClientManager")
     public ZimbraHttpClientManager httpClientManagerBean() throws Exception {
         return new ZimbraHttpClientManager();
+    }
+
+    @Bean(name="redologTxnIdGenerator")
+    public TxnIdGenerator getTxnIdGenerator() throws Exception
+    {
+        TxnIdGenerator idGenerator = null;
+        if (isRedisAvailable()) {
+            idGenerator = new RedisTxnIdGenerator(jedisPoolBean());
+        }
+
+        if (idGenerator == null) {
+          if (Zimbra.isAlwaysOn()) {
+              throw new Exception("Redis is required in always on environment");
+          }
+          idGenerator = new LocalTxnIdGenerator();
+        }
+        return idGenerator;
     }
 }

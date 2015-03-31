@@ -47,7 +47,7 @@ public class DefaultRedoLogProvider extends RedoLogProvider {
     }
 
     @Override
-    public void initRedoLogManager() {
+    public void initRedoLogManager() throws ServiceException {
         // RedoLogManager instance is needed even when redo logging
         // is disabled.
         File redoLog = new File(RedoConfig.redoLogPath());

@@ -94,8 +94,9 @@ public interface RedoLogManager {
     /**
      * Create a new log writer with specified sync/flush interval
      * @param fsyncIntervalMS
+     * @throws ServiceException
      */
-    public abstract LogWriter createLogWriter(long fsyncIntervalMS);
+    public abstract LogWriter createLogWriter(long fsyncIntervalMS) throws ServiceException;
     //TODO: fsyncinterval smells like file to me; rename or move out of interface..
 
     /**

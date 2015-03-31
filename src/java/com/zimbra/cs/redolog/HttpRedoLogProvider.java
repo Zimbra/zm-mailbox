@@ -55,7 +55,7 @@ public class HttpRedoLogProvider extends RedoLogProvider {
     }
 
     @Override
-    public void initRedoLogManager() {
+    public void initRedoLogManager() throws ServiceException {
         super.mRedoLogManager = new HttpRedoLogManager();
     }
 }

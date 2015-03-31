@@ -122,7 +122,7 @@ public final class MailboxTestUtil {
         initServer(storeManagerClass, zimbraServerDir, ZimbraConfig.class);
     }
 
-    public static void initServer(Class<? extends StoreManager> storeManagerClass, String zimbraServerDir, Class configClass) throws Exception {
+    public static void initServer(Class<? extends StoreManager> storeManagerClass, String zimbraServerDir, Class... configClasses) throws Exception {
         initProvisioning(zimbraServerDir);
         LC.zimbra_mailbox_groups.setDefault(1);
         DebugConfig.setNumMailboxGroup(1);
@@ -130,7 +130,7 @@ public final class MailboxTestUtil {
         LC.zimbra_class_database.setDefault(HSQLDB.class.getName());
         DbPool.startup();
         HSQLDB.createDatabase(zimbraServerDir, false);
-        
+
         //use EmbeddedSolrIndex for indexing, because Solr webapp is nor running
         LC.zimbra_class_index_store_factory.setDefault(EmbeddedSolrIndex.Factory.class.getName());
         IndexStore.setFactory(LC.zimbra_class_index_store_factory.value());
@@ -138,20 +138,20 @@ public final class MailboxTestUtil {
         LC.zimbra_class_soapsessionfactory.setDefault(DefaultSoapSessionFactory.class.getName());
         deleteAllIndexFolders();
         setupEmbeddedSolrDirs(true);
-        
-        Zimbra.startupMinimal(configClass);
+
+        Zimbra.startupMinimal(configClasses);
         MailboxManager.setInstance(Zimbra.getAppContext().getBean(MailboxManager.class));
         StoreManager.getInstance().startup();
-        
+
         //set server into synchronous indexing mode
         Provisioning.getInstance().getLocalServer().setIndexManualCommit(true);
-        
+
         //disable indexing queue
         Provisioning.getInstance().getLocalServer().setIndexingQueueProvider("");
-        
+
         //stop indexing service, it does not do anything without an indexing queue
         Zimbra.getAppContext().getBean(IndexingService.class).shutDown();
-        
+
     }
 
     private static void setupEmbeddedSolrDirs(boolean recreateIfExists) throws Exception {
@@ -260,7 +260,7 @@ public final class MailboxTestUtil {
         if(Zimbra.getAppContext().getBean(IndexingQueueAdapter.class) != null) {
             Zimbra.getAppContext().getBean(IndexingQueueAdapter.class).drain();
         }
-        
+
         StoreManager sm = StoreManager.getInstance();
         if (sm instanceof MockStoreManager) {
             ((MockStoreManager) sm).purge();

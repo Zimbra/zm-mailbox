@@ -325,6 +325,10 @@ public class FileLogWriter extends AbstractLogWriter implements LogWriter {
     	mNoStat = b;
     }
 
+    protected boolean deleteOnRollover() {
+        return RedoConfig.redoLogDeleteOnRollover();
+    }
+
     @SuppressWarnings("unchecked")
     @Override
     public synchronized void rollover(LinkedHashMap /*<TxnId, RedoableOp>*/ activeOps)
@@ -360,7 +364,7 @@ public class FileLogWriter extends AbstractLogWriter implements LogWriter {
 
         // Rename the current log to rolled-over name.
         File rolloverFile = romgr.getRolloverFile(lastSeq);
-        if (RedoConfig.redoLogDeleteOnRollover()) {
+        if (deleteOnRollover()) {
             // Delete the current log.  We don't need to hold on to the
             // indexing-only log files after rollover.
             if (!file.delete())

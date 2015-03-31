@@ -27,6 +27,7 @@ import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.http.HttpStatus;
 
 import com.zimbra.common.util.ZimbraHttpConnectionManager;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.redolog.HttpRedoLogManager;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogManager;
@@ -54,25 +55,45 @@ public class HttpLogWriter extends AbstractLogWriter implements LogWriter {
         return txnId;
     }
 
+    protected String getUrl() throws IOException {
+        return HttpRedoLogManager.getUrl(true);
+    }
+
     @Override
     public void log(final RedoableOp op, final InputStream data, boolean synchronous) throws IOException {
-        HttpClient client = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
-        PostMethod post = new PostMethod(HttpRedoLogManager.getUrl());
-        try {
-            post.setRequestEntity(new InputStreamRequestEntity(data));
-            int code = client.executeMethod(post);
-            if (code != HttpStatus.SC_OK) {
-                throw new IOException("unexpected response from redolog servlet [" + code + "] message:[" + post.getResponseBodyAsString() + "]");
+        final int maxRetries = 10;
+        int retries = 0;
+        int sleepTime = 250;
+        while (retries < maxRetries) {
+            HttpClient client = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
+            PostMethod post = new PostMethod(getUrl());
+            try {
+                post.setRequestEntity(new InputStreamRequestEntity(data));
+                int code = client.executeMethod(post);
+                if (code == HttpStatus.SC_OK) {
+                    if (!op.getTransactionId().isInitialized()) {
+                        op.setTransactionId(deserializeTxnId(post));
+                    } else {
+                        assert(op.getTransactionId().equals(deserializeTxnId(post)));
+                    }
+                    notifyCallback(op);
+                    return;
+                } else if (code != HttpStatus.SC_SERVICE_UNAVAILABLE) {
+                    throw new IOException("unexpected response from redolog servlet [" + code + "] message:[" + post.getResponseBodyAsString() + "]");
+                } else {
+                    ZimbraLog.redolog.debug("service temporarily unavailable; waiting for retry");
+                    retries++;
+                    try {
+                        Thread.sleep(sleepTime);
+                    } catch (InterruptedException e) {
+                    }
+                    sleepTime*=2;
+                }
+            } finally {
+                post.releaseConnection();
             }
-            if (!op.getTransactionId().isInitialized()) {
-                op.setTransactionId(deserializeTxnId(post));
-            } else {
-                assert(op.getTransactionId().equals(deserializeTxnId(post)));
-            }
-        } finally {
-            post.releaseConnection();
         }
-        notifyCallback(op);
+        throw new IOException("redolog write gave up after " + retries + " backoff attempts");
     }
 
     @Override

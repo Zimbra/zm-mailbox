@@ -42,32 +42,10 @@ import com.zimbra.cs.redolog.op.AbortTxn;
 import com.zimbra.cs.redolog.op.Checkpoint;
 import com.zimbra.cs.redolog.op.CommitTxn;
 import com.zimbra.cs.redolog.op.RedoableOp;
+import com.zimbra.cs.redolog.txn.TxnIdGenerator;
 import com.zimbra.cs.util.Zimbra;
 
 public abstract class AbstractRedoLogManager implements RedoLogManager {
-
-    protected static class TxnIdGenerator {
-            private int mTime;
-            private int mCounter;
-
-            public TxnIdGenerator() {
-                init();
-            }
-
-            private void init() {
-                mTime = (int) (System.currentTimeMillis() / 1000);
-                mCounter = 1;
-            }
-
-            public synchronized TransactionId getNext() {
-                TransactionId tid = new TransactionId(mTime, mCounter);
-                if (mCounter < 0x7fffffffL)
-                    mCounter++;
-                else
-                    init();
-                return tid;
-            }
-        }
 
     protected boolean mEnabled;
     private boolean mInCrashRecovery;
@@ -90,9 +68,8 @@ public abstract class AbstractRedoLogManager implements RedoLogManager {
     protected long mElapsed;
     protected int mCounter;
 
-    public AbstractRedoLogManager() {
+    public AbstractRedoLogManager() throws ServiceException {
         super();
-        mTxnIdGenerator = new TxnIdGenerator();
 
         mEnabled = false;
         mShuttingDown = false;
@@ -100,7 +77,7 @@ public abstract class AbstractRedoLogManager implements RedoLogManager {
 
         mRWLock = new ReentrantReadWriteLock();
         mActiveOps = new LinkedHashMap<TransactionId, RedoableOp>(100);
-        mTxnIdGenerator = new TxnIdGenerator();
+        mTxnIdGenerator = createTxnIdGenerator();
 
         mElapsed = 0;
         mCounter = 0;
@@ -108,6 +85,14 @@ public abstract class AbstractRedoLogManager implements RedoLogManager {
         mElapsed = 0;
         mCounter = 0;
 
+    }
+
+    protected TxnIdGenerator createTxnIdGenerator() throws ServiceException {
+        try {
+            return (TxnIdGenerator) Zimbra.getAppContext().getBean("redologTxnIdGenerator");
+        } catch (Exception e) {
+            throw ServiceException.FAILURE("unable to configure txnid generator", e);
+        }
     }
 
     @Override
@@ -577,6 +562,8 @@ public abstract class AbstractRedoLogManager implements RedoLogManager {
         // Die before any further damage is done.
         if (DebugConfig.redologHaltOnFatal) {
             Zimbra.halt("Aborting process", e);
+        } else {
+            throw ServiceException.FAILURE("redolog exception", e);
         }
     }
 

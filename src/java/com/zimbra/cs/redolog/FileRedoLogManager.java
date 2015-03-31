@@ -22,6 +22,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.FileUtil;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
@@ -40,7 +41,7 @@ public class FileRedoLogManager extends AbstractRedoLogManager implements
     File mArchiveDir; // where log files are archived as they get rolled over
     File mLogFile; // full path to the "redo.log" file
 
-    FileRedoLogManager(File redolog, File archdir, boolean supportsCrashRecovery) {
+    FileRedoLogManager(File redolog, File archdir, boolean supportsCrashRecovery) throws ServiceException {
         super();
         mSupportsCrashRecovery = supportsCrashRecovery;
 
@@ -84,7 +85,7 @@ public class FileRedoLogManager extends AbstractRedoLogManager implements
     }
 
     @Override
-    public LogWriter createLogWriter(long fsyncIntervalMS) {
+    public LogWriter createLogWriter(long fsyncIntervalMS) throws ServiceException {
         return new FileLogWriter(this, mLogFile, fsyncIntervalMS);
     }
 

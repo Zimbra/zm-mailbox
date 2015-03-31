@@ -45,6 +45,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.redolog.logger.HttpLogWriter;
 import com.zimbra.cs.redolog.logger.LogWriter;
+import com.zimbra.cs.redolog.txn.TxnIdGenerator;
 import com.zimbra.cs.util.Zimbra;
 
 /**
@@ -53,7 +54,7 @@ import com.zimbra.cs.util.Zimbra;
  */
 public class HttpRedoLogManager extends AbstractRedoLogManager {
 
-    public HttpRedoLogManager() {
+    public HttpRedoLogManager() throws ServiceException {
         super();
         mRolloverMgr = new HttpRolloverManager();
         mTxnIdGenerator = new TxnIdGenerator() {
@@ -82,7 +83,7 @@ public class HttpRedoLogManager extends AbstractRedoLogManager {
     }
 
     private HttpRedoLogFile[] getLogRefs(String query) throws IOException {
-        GetMethod get = new GetMethod(getUrl());
+        GetMethod get = new GetMethod(getUrl(false));
         try {
             get.setQueryString(query);
             HttpClient client = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
@@ -142,7 +143,7 @@ public class HttpRedoLogManager extends AbstractRedoLogManager {
         return false;
     }
 
-    public static String getUrl() throws IOException {
+    public static String getUrl(boolean fallbackIfNoLeader) throws IOException {
         String url = null;
         int attempts = 0;
         int maxAttempts = 3;
@@ -152,14 +153,25 @@ public class HttpRedoLogManager extends AbstractRedoLogManager {
                 ConsulClient consulClient = Zimbra.getAppContext().getBean(ConsulClient.class);
                 LeaderResponse leader = consulClient.findLeader(service);
                 if (leader == null || leader.sessionId == null) {
-                    ZimbraLog.redolog.warn("no redolog leader currently, try again later");
-                    //TODO: graceful handling; leader can come and go at times
-                    throw new IOException("no redolog leader");
+                    ZimbraLog.redolog.warn("no redolog leader currently");
+                    if (fallbackIfNoLeader) {
+                        List<ServiceHealthResponse> healthyServices = consulClient.health(service.name, true);
+                        if (healthyServices == null || healthyServices.size() == 0) {
+                            throw new IOException("no healthy redolog service");
+                        } else {
+                            ServiceHealthResponse healthyService = healthyServices.get(0);
+                            String scheme = healthyService.service.tags.contains("ssl") ? "https" : "http";
+                            url = scheme + "://" + healthyService.node.address + ":" + healthyService.service.port + "/redolog";
+                            ZimbraLog.redolog.debug("falling back to healthy service %s", url);
+                            return url;
+                        }
+                    } else {
+                        throw new IOException("no redolog leader");
+                    }
                 } else {
                     SessionResponse session = consulClient.getSessionInfo(leader.sessionId);
                     if (session == null || session.nodeName == null) {
                         ZimbraLog.redolog.warn("unable to find node info for session %s", leader.sessionId);
-                        //TODO: graceful handling
                         throw new IOException("no redolog leader session info");
                     } else {
                         //TODO: currently sticking the serviceId in session name for convenience; bit awkward
@@ -188,6 +200,7 @@ public class HttpRedoLogManager extends AbstractRedoLogManager {
         if (url == null) {
             throw new IOException("unable to find redolog leader, giving up");
         }
+        ZimbraLog.redolog.debug("using redolog url %s", url);
         return url;
     }
 
@@ -204,7 +217,7 @@ public class HttpRedoLogManager extends AbstractRedoLogManager {
         //TODO: validate assumptions further
         if (seqNum < 0 || (System.currentTimeMillis() - lastSeqUpdateTime > SEQ_UPDATE_INTERVAL)) {
             HttpClient client = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
-            GetMethod get = new GetMethod(getUrl());
+            GetMethod get = new GetMethod(getUrl(false));
             get.setQueryString("fmt=seq");
             int code = client.executeMethod(get);
             if (code != HttpStatus.SC_OK) {
@@ -218,7 +231,7 @@ public class HttpRedoLogManager extends AbstractRedoLogManager {
     @Override
     public void deleteArchivedLogFiles(long oldestTimestamp) throws IOException {
         HttpClient client = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
-        PostMethod post = new PostMethod(getUrl());
+        PostMethod post = new PostMethod(getUrl(false));
         try {
             post.setParameter("cmd", "delete");
             post.setParameter("cutoff", System.currentTimeMillis()+"");
