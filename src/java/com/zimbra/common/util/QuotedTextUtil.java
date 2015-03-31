@@ -230,7 +230,7 @@ public class QuotedTextUtil {
      */
     private String getTextFromBlock(ArrayList<String> block) {
         if (block == null || block.isEmpty()) {
-            return null;
+            return "";
         }
         String originalText = StringUtils.join(block, "\n") + "\n";
         originalText.replaceAll("/\\s+$/", "\n");
