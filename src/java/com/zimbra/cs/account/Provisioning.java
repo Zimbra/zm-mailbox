@@ -750,6 +750,11 @@ public abstract class Provisioning extends ZAttrProvisioning {
             mGroupIds.add(groupId);
         }
 
+        public void append(MemberOf memberOf) {
+            mMemberOf.add(memberOf);
+            mGroupIds.add(memberOf.getId());
+        }
+
         public GroupMembership mergeFrom(GroupMembership other) {
             for (int i = 0; i < other.mMemberOf.size(); i++) {
                 if (!mGroupIds.contains(other.mGroupIds.get(i))) {
