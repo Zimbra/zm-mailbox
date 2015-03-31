@@ -27407,13 +27407,13 @@ public abstract class ZAttrServer extends NamedEntry {
      * Indicates the retry count for commiting a failed database transaction.
      * This is only applicable when using a shared database.
      *
-     * @return zimbraMailboxSharedDbTransRetryCount, or -1 if unset
+     * @return zimbraMailboxSharedDbTransRetryCount, or 3 if unset
      *
      * @since ZCS 9.0.0
      */
     @ZAttr(id=1945)
     public int getMailboxSharedDbTransRetryCount() {
-        return getIntAttr(Provisioning.A_zimbraMailboxSharedDbTransRetryCount, -1);
+        return getIntAttr(Provisioning.A_zimbraMailboxSharedDbTransRetryCount, 3);
     }
 
     /**
@@ -27485,13 +27485,13 @@ public abstract class ZAttrServer extends NamedEntry {
      * database transaction. This is only applicable when using shared
      * database.
      *
-     * @return zimbraMailboxSharedDbTransRetryDelay, or -1 if unset
+     * @return zimbraMailboxSharedDbTransRetryDelay, or 2 if unset
      *
      * @since ZCS 9.0.0
      */
     @ZAttr(id=1946)
     public long getMailboxSharedDbTransRetryDelay() {
-        return getLongAttr(Provisioning.A_zimbraMailboxSharedDbTransRetryDelay, -1L);
+        return getLongAttr(Provisioning.A_zimbraMailboxSharedDbTransRetryDelay, 2L);
     }
 
     /**
