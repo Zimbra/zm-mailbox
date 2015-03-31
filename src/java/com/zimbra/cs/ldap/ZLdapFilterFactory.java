@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -18,6 +18,7 @@ package com.zimbra.cs.ldap;
 
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -101,6 +102,7 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
 
         DOMAIN_ALIASES(SINGLETON.domainAliases("{DOMAIN-ID}")),
         DOMAIN_BY_ID(SINGLETON.domainById("{DOMAIN-ID}")),
+        DOMAINS_BY_IDS(SINGLETON.dynamicGroupByIds(new String[]{"{DOMAIN-ID-1}", "DOMAIN-ID-2", "..."})),
         DOMAIN_BY_NAME(SINGLETON.domainByName("{DOMAIN-NAME}")),
         DOMAIN_BY_KRB5_REALM(SINGLETON.domainByKrb5Realm("{DOMAIN-KRB5-REALM}")),
         DOMAIN_BY_VIRTUAL_HOSTNAME(SINGLETON.domainByVirtualHostame("{DOMAIN-VIRTUAL-HOSTNAME}")),
@@ -406,6 +408,7 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
     public abstract ZLdapFilter allDomains();
     public abstract ZLdapFilter domainAliases(String id);
     public abstract ZLdapFilter domainById(String id);
+    public abstract ZLdapFilter domainsByIds(Collection<String> ids);
     public abstract ZLdapFilter domainByName(String name);
     public abstract ZLdapFilter domainByKrb5Realm(String krb5Realm);
     public abstract ZLdapFilter domainByVirtualHostame(String virtualHostname);

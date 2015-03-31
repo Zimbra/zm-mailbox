@@ -2686,21 +2686,38 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         return getDomainByIdInternal(zimbraId, zlc, GetFromDomainCacheOption.POSITIVE);
     }
 
-    private Domain getDomainByIdInternal(String zimbraId, ZLdapContext zlc,
-            GetFromDomainCacheOption option)
+    private Domain getDomainByIdInternal(String zimbraId, ZLdapContext zlc, GetFromDomainCacheOption option)
     throws ServiceException {
-        if (zimbraId == null)
+        if (zimbraId == null) {
             return null;
+        }
 
         Domain d = domainCache.getById(zimbraId, option);
-        if (d instanceof DomainCache.NonExistingDomain)
+        if (d instanceof DomainCache.NonExistingDomain) {
             return null;
+        }
 
         LdapDomain domain = (LdapDomain)d;
         if (domain == null) {
             domain = getDomainByQuery(filterFactory.domainById(zimbraId), zlc);
             domainCache.put(Key.DomainBy.id, zimbraId, domain);
         }
+        return domain;
+    }
+
+    /**
+     * @return The Domain from the cache, if present.
+     * @throws ServiceException
+     */
+    private Domain getDomainByIdFromCache(String zimbraId, ZLdapContext zlc, GetFromDomainCacheOption option) {
+        if (zimbraId == null) {
+            return null;
+        }
+        Domain d = domainCache.getById(zimbraId, option);
+        if (d instanceof DomainCache.NonExistingDomain) {
+            return null;
+        }
+        LdapDomain domain = (LdapDomain)d;
         return domain;
     }
 
@@ -2775,20 +2792,74 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         return domain;
     }
 
+    private static final String [] ZIMBRA_ID_ATTR = { Provisioning.A_zimbraId };
+    private static final Set<ObjectType> DOMAINS_OBJECT_TYPE = Sets.newHashSet(ObjectType.domains);
+
     @Override
     public List<Domain> getAllDomains() throws ServiceException {
         final List<Domain> result = new ArrayList<Domain>();
-
-        NamedEntry.Visitor visitor = new NamedEntry.Visitor() {
-            @Override
-            public void visit(NamedEntry entry) {
-                result.add((LdapDomain)entry);
+        AllDomainIdsCollector collector = new AllDomainIdsCollector();
+        BySearchResultEntrySearcher searcher = new BySearchResultEntrySearcher(this, null, (Domain) null,
+                ZIMBRA_ID_ATTR, collector);
+        searcher.doSearch(filterFactory.allDomains(), DOMAINS_OBJECT_TYPE);
+        List<String> cacheMisses = Lists.newArrayList();
+        for (String zimbraId : collector.domains) {
+            Domain cachedDom = getDomainByIdFromCache(zimbraId, null, GetFromDomainCacheOption.POSITIVE);
+            if (cachedDom == null) {
+                cacheMisses.add(zimbraId);
+            } else {
+                result.add(cachedDom);
             }
-        };
-
-        getAllDomains(visitor, null);
-        Collections.sort(result);
+        }
+        if (!cacheMisses.isEmpty()) {
+            boolean cacheDomains = LC.ldap_cache_domain_maxsize.intValue() < collector.domains.size();
+            if (!cacheDomains) {
+                ZimbraLog.search.info(
+                        "localconfig ldap_cache_domain_maxsize=%d < number of domains=%d.  Consider increasing it.",
+                        LC.ldap_cache_domain_maxsize.intValue(), collector.domains.size());
+            }
+            getDomainsByIds(new DomainsByIdsVisitor(result, cacheDomains), cacheMisses, null);
+        }
         return result;
+    }
+
+    private static class AllDomainIdsCollector implements BySearchResultEntrySearcher.SearchEntryProcessor {
+        public final List<String> domains = Lists.newArrayList();
+
+        @Override
+        public void processSearchEntry(ZSearchResultEntry sr) {
+            ZAttributes attrs = sr.getAttributes();
+            try {
+                domains.add(attrs.getAttrString(Provisioning.A_zimbraId));
+            } catch (ServiceException e) {
+                ZimbraLog.search.debug("Problem processing search result entry - ignoring", e);
+                return;
+            }
+        }
+    }
+
+    private class DomainsByIdsVisitor implements NamedEntry.Visitor {
+        private final List<Domain> result;
+        private final boolean cacheResults;
+        private DomainsByIdsVisitor(List<Domain> result, boolean cacheResults) {
+            this.result = result;
+            this.cacheResults = cacheResults;
+        }
+        @Override
+        public void visit(NamedEntry entry) {
+            result.add((LdapDomain)entry);
+            if (cacheResults) {
+                domainCache.put(Key.DomainBy.id, entry.getId(), (Domain)entry);
+            }
+        }
+    };
+
+    public void getDomainsByIds(NamedEntry.Visitor visitor, Collection<String> domains, String[] retAttrs)
+    throws ServiceException {
+        SearchDirectoryOptions opts = new SearchDirectoryOptions(retAttrs);
+        opts.setFilter(filterFactory.domainsByIds(domains));
+        opts.setTypes(ObjectType.domains);
+        searchDirectoryInternal(opts, visitor);
     }
 
     @Override
