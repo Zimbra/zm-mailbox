@@ -21,8 +21,10 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.regex.Pattern;
 
 import org.apache.xerces.xni.Augmentations;
@@ -103,13 +105,15 @@ public class DefangFilter extends DefaultFilter {
     private static final Pattern AV_JS_ENTITY = Pattern.compile(DebugConfig.defangAvJsEntity);
     private static final Pattern AV_SCRIPT_TAG = Pattern.compile(DebugConfig.defangAvScriptTag, Pattern.CASE_INSENSITIVE);
     private static final Pattern AV_JAVASCRIPT = Pattern.compile(DebugConfig.defangAvJavascript, Pattern.CASE_INSENSITIVE);
-
+    private static final Pattern AV_VBSCRIPT = Pattern.compile(DebugConfig.defangAvVbscript, Pattern.CASE_INSENSITIVE);
+    private static final Pattern AV_TAB = Pattern.compile(DebugConfig.defangAvTab, Pattern.CASE_INSENSITIVE);
 
  // regex for URLs href. TODO: beef this up
     private static final Pattern VALID_EXT_URL = Pattern.compile(DebugConfig.defangValidExtUrl, Pattern.CASE_INSENSITIVE);
     private static final Pattern VALID_IMG_FILE = Pattern.compile(DebugConfig.defangValidImgFile);
     private static final Pattern VALID_INT_IMG = Pattern.compile(DebugConfig.defangValidIntImg,
             Pattern.CASE_INSENSITIVE);
+    private static List<String> ATTRIBUTES_CAN_ALLOW_SCRIPTS= Arrays.asList(DebugConfig.defangACanAllowScripts.split(","));
 
     // matches the file format that convertd uses so it doesn't get 'pnsrc'ed
     private static final Pattern VALID_CONVERTD_FILE = Pattern
@@ -727,13 +731,18 @@ public class DefangFilter extends DefaultFilter {
         String result = AV_JS_ENTITY.matcher(value).replaceAll("JS-ENTITY-BLOCKED");
         result = AV_SCRIPT_TAG.matcher(result).replaceAll("SCRIPT-TAG-BLOCKED");
 
-        if (aName.equalsIgnoreCase("href")) {
+        if (ATTRIBUTES_CAN_ALLOW_SCRIPTS.contains(aName.toLowerCase())) {
+            if (AV_TAB.matcher(result).find()) {
+                result = AV_TAB.matcher(result).replaceAll("");
+            }
             if (AV_JAVASCRIPT.matcher(result).find())
                 result = AV_JAVASCRIPT.matcher(result).replaceAll("JAVASCRIPT-BLOCKED");
             else if (!VALID_INT_IMG.matcher(result).find()) {
                 result = result.replaceAll("(?i)data:", "DATAURI-BLOCKED");
             }
-
+            if (AV_VBSCRIPT.matcher(result).find()) {
+                result = AV_VBSCRIPT.matcher(result).replaceAll("VBSCRIPT-BLOCKED:");
+            }
         }
         if (aName.equalsIgnoreCase("style")) {
             result = sanitizeStyleValue(value);
