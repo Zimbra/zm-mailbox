@@ -317,7 +317,7 @@ public abstract class DistributionList extends ZAttrDistributionList implements 
         }
         int lastIndex = addrs.size() - 1;
         int start = 0;
-        int end = (lastIndex < chunkSize) ? lastIndex : chunkSize;
+        int end = (lastIndex < chunkSize) ? lastIndex : chunkSize - 1;
         List<BasicInfo> containingDLs = Lists.newArrayList();
         while (end <= lastIndex) {
             String[] chunk = addrs.subList(start, end + 1).toArray(new String[0]);
