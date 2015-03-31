@@ -1013,6 +1013,56 @@ public class DefangFilterTest {
     }
 
     @Test
+    public void testSvg() throws Exception {
+        String svgXml = "<?xml version='1.0' encoding='UTF-8'?>"
+            + "<svg id=\"xss\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\">"
+            + "<use "
+            + "xlink:href=\"data:image/svg+xml;base64,PHN2ZyBpZD0icmVjdGFuZ2xlIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5z"
+            + "OnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiAgICB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCI+PHNjcmlwdD5hbGVydCgxKTwvc2NyaXB0"
+            + "Pg0KIDxmb3JlaWduT2JqZWN0IHdpZHRoPSIxMDAiIGhlaWdodD0iNTAiDQogICAgICAgICAgICAgICAgICAgcmVxdWlyZWRFeHRlbnNpb25zPSJodHRwOi8vd"
+            + "3d3LnczLm9yZy8xOTk5L3hodG1sIj4NCgk8ZW1iZWQgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGh0bWwiIHNyYz0iamF2YXNjcmlwdDphbGVydC"
+            + "hsb2NhdGlvbikiIC8+DQogICAgPC9mb3JlaWduT2JqZWN0Pg0KPC9zdmc+#rectangle\"/>"
+            + "</svg>";
+        InputStream svgStream = new ByteArrayInputStream(svgXml.getBytes());
+        String result = DefangFactory.getDefanger(MimeConstants.CT_IMAGE_SVG).defang(svgStream,true);
+        Assert.assertTrue(!result.contains("<use"));
+
+        InputStream xmlStream = new ByteArrayInputStream(svgXml.getBytes());
+        result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_XML_LEGACY).defang(xmlStream,true);
+        Assert.assertTrue(!result.contains("<use"));
+
+        svgXml = "<svg id=\"xss\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\">"
+            + "<foreignObject requiredExtensions=\"http://www.w3.org/1999/xhtml\">"
+            + "<embed xmlns=\"http://www.w3.org/1999/xhtml\" src=\"javascript:alert(location)\" />"
+            + "</foreignObject>"
+            + "</svg>";
+        svgStream = new ByteArrayInputStream(svgXml.getBytes());
+        result = DefangFactory.getDefanger(MimeConstants.CT_IMAGE_SVG).defang(svgStream,true);
+        Assert.assertTrue(!result.contains("<foreignObject"));
+        Assert.assertTrue(!result.contains("<embed"));
+
+        xmlStream = new ByteArrayInputStream(svgXml.getBytes());
+        result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_XML_LEGACY).defang(xmlStream,true);
+        Assert.assertTrue(!result.contains("<foreignObject"));
+        Assert.assertTrue(!result.contains("<embed"));
+
+        svgXml = "<svg xmlns=\"http://www.w3.org/2000/svg\">"
+            + "<a xmlns:xlink=\"http://www.w3.org/1999/xlink\" xlink:href=\"?\">"
+            + "<circle r=\"400\"></circle>"
+            + "<animate attributeName=\"xlink:href\" begin=\"0\" from=\"javascript:alert(opener.csrfToken)\" to=\"&amp;amp;\"/>"
+            + "</a></svg>";
+        svgStream = new ByteArrayInputStream(svgXml.getBytes());
+        result = DefangFactory.getDefanger(MimeConstants.CT_IMAGE_SVG).defang(svgStream,true);
+        Assert.assertTrue(!result.contains("<animate"));
+        Assert.assertTrue(!result.contains("javascript"));
+
+        xmlStream = new ByteArrayInputStream(svgXml.getBytes());
+        result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_XML_LEGACY).defang(xmlStream,true);
+        Assert.assertTrue(!result.contains("<animate"));
+        Assert.assertTrue(!result.contains("javascript"));
+    }
+
+    @Test
     public void testBug88360() throws Exception {
         String fileName = "bug_88360.txt";
         InputStream inputStream = new FileInputStream(EMAIL_BASE_DIR + fileName);
