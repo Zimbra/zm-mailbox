@@ -54,7 +54,11 @@ public class XHtmlDocumentHandler extends DefaultHandler {
         removeTags.add("object");
         removeTags.add("script");
         removeTags.add("style");
-        
+        removeTags.add("animate");
+        removeTags.add("foreignobject");
+        removeTags.add("embed");
+        removeTags.add("use");
+
         removeAttributes.add("onclick");
         removeAttributes.add("ondblclick");
         removeAttributes.add("onmousedown");
@@ -65,11 +69,12 @@ public class XHtmlDocumentHandler extends DefaultHandler {
         removeAttributes.add("onkeypress");
         removeAttributes.add("onkeydown");
         removeAttributes.add("onkeyup");
+
     }
 
-    
+
     /*
-     * The writer that we'll write the sanitzed output to  
+     * The writer that we'll write the sanitzed output to
      */
     private Writer out;
 
@@ -79,12 +84,12 @@ public class XHtmlDocumentHandler extends DefaultHandler {
      * need their end tag removed.
      */
     private Stack<String> removedElements = new Stack<String>();
-    
+
     /**
      * This buffer keeps track of the text between tags
      */
     private StringBuffer textBuffer = new StringBuffer();
-    
+
     /***
      * Creates a new handler that writes
      * @param out
@@ -92,7 +97,7 @@ public class XHtmlDocumentHandler extends DefaultHandler {
     public XHtmlDocumentHandler(Writer out){
         this.out = out;
     }
-    
+
     @Override
     public void characters(char[] buf, int start, int len) throws SAXException {
         // if we're removing tags, remove all of the text between them as well.
@@ -100,9 +105,8 @@ public class XHtmlDocumentHandler extends DefaultHandler {
             // TODO check to see if we can't allow some text, but in reality it probably isn't needed
             return;
         }
-        textBuffer.append(new String(buf, start, len));        
+        textBuffer.append(new String(buf, start, len));
     }
-    
 
     @Override
     public void processingInstruction(String target, String data)
@@ -114,8 +118,6 @@ public class XHtmlDocumentHandler extends DefaultHandler {
         }
     }
 
-    
-
     @Override
     public void startDocument() throws SAXException {
          try {
@@ -124,7 +126,7 @@ public class XHtmlDocumentHandler extends DefaultHandler {
             throw new SAXException(e);
         }
     }
-    
+
     @Override
     public void endDocument() throws SAXException {
         try {
@@ -132,7 +134,6 @@ public class XHtmlDocumentHandler extends DefaultHandler {
         } catch (IOException e) {
             throw new SAXException(e);
         }
-        
     }
 
     @Override
@@ -140,16 +141,15 @@ public class XHtmlDocumentHandler extends DefaultHandler {
             String sName, // simple name
             String qName, // qualified name
             Attributes attrs) throws SAXException {
-        
-        String eName = "".equals(sName)? qName: sName; // element name
 
+        String eName = "".equals(sName)? qName: sName; // element name
 
         // check to see if we're removing this tag
         if(removeTags.contains(eName.toLowerCase())) {
             removedElements.push(eName.toLowerCase());
             return;
         }
-        try{ 
+        try {
             // output any text that might need outputing
             if(textBuffer.length() > 0)
             {
@@ -188,7 +188,7 @@ public class XHtmlDocumentHandler extends DefaultHandler {
             removedElements.pop();
             return;
         }
-        
+
         try {
             // output any text that might need outputting
             if(textBuffer.length() > 0)
