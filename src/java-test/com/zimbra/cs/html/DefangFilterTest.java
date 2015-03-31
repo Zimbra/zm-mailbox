@@ -1071,4 +1071,58 @@ public class DefangFilterTest {
         Assert.assertTrue(result.contains("p { color : #f00; }"));
         Assert.assertTrue(!result.contains("import3.css"));
     }
+
+    @Test
+    public void testBug98215() throws Exception {
+        String html = "<a href=\"vbscript:alert(parent.csrfToken)\">CLICK</a>";
+        InputStream htmlStream = new ByteArrayInputStream(html.getBytes());
+        String result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream,
+            true);
+        Assert.assertTrue(result.contains("VBSCRIPT-BLOCKED"));
+
+        html = "<a href=\"Vbscr&amp;#0009;ip&#009;t:alert(parent.csrfToken)\">CLICK</a>";
+        htmlStream = new ByteArrayInputStream(html.getBytes());
+        result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream,
+            true);
+        Assert.assertTrue(result.contains("VBSCRIPT-BLOCKED"));
+
+        html = "<a href=\"java&amp;Tab;script:alert(parent.csrfToken)\">CLICK</a>";
+        htmlStream = new ByteArrayInputStream(html.getBytes());
+        result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream,
+            true);
+        Assert.assertTrue(result.contains("JAVASCRIPT-BLOCKED"));
+
+        html = "<a href=\"&amp;Tab;javascript:alert(parent.csrfToken)\">CLICK</a>";
+        htmlStream = new ByteArrayInputStream(html.getBytes());
+        result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream,
+            true);
+        Assert.assertTrue(result.contains("JAVASCRIPT-BLOCKED"));
+
+        html = "<a href=\"javascr&amp;#09;ipt:alert(parent.csrfToken)\">CLICK</a>";
+        htmlStream = new ByteArrayInputStream(html.getBytes());
+        result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream,
+            true);
+        Assert.assertTrue(result.contains("JAVASCRIPT-BLOCKED"));
+
+        html = "<form id=\"test\" action=\"javascript:alert(1)\"><p>test</p>"
+            + "<button form=\"test\">Test</button></form>";
+        htmlStream = new ByteArrayInputStream(html.getBytes());
+        result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream,
+            true);
+        Assert.assertTrue(result.contains("JAVASCRIPT-BLOCKED"));
+
+        html = "<form id=\"test\" action=\"ja&amp;Tab;vascript:alert(1)\"><p>test</p>"
+            + "<button form=\"test\">Test</button></form>";
+        htmlStream = new ByteArrayInputStream(html.getBytes());
+        result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream,
+            true);
+        Assert.assertTrue(result.contains("JAVASCRIPT-BLOCKED"));
+
+        html = "<a href=\"&amp;#009;java&#00009;scr&amp;#09;i\t\tpt:alert(parent.csrfToken)\">CLICK</a>";
+        htmlStream = new ByteArrayInputStream(html.getBytes());
+        result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream,
+            true);
+        Assert.assertTrue(result.contains("JAVASCRIPT-BLOCKED"));
+    }
+
 }
