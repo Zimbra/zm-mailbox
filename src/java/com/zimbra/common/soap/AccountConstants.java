@@ -146,6 +146,10 @@ public class AccountConstants {
     public static final String E_BOOTSTRAP_MOBILE_GATEWAY_APP_RESPONSE = "BootstrapMobileGatewayAppResponse";
     public static final String E_RENEW_MOBILE_GATEWAY_APP_TOKEN_REQUEST = "RenewMobileGatewayAppTokenRequest";
     public static final String E_RENEW_MOBILE_GATEWAY_APP_TOKEN_RESPONSE = "RenewMobileGatewayAppTokenResponse";
+    public static final String E_ADD_ZMG_DEVICE_REQUEST = "AddZmgDeviceRequest";
+    public static final String E_ADD_ZMG_DEVICE_RESPONSE = "AddZmgDeviceResponse";
+    public static final String E_GET_GCM_SENDER_ID_REQUEST = "GetGcmSenderIdRequest";
+    public static final String E_GET_GCM_SENDER_ID_RESPONSE = "GetGcmSenderIdResponse";
 
     // auth
     public static final QName AUTH_REQUEST = QName.get(E_AUTH_REQUEST, NAMESPACE);
@@ -268,6 +272,10 @@ public class AccountConstants {
     public static final QName BOOTSTRAP_MOBILE_GATEWAY_APP_RESPONSE = QName.get(E_BOOTSTRAP_MOBILE_GATEWAY_APP_RESPONSE, NAMESPACE);
     public static final QName RENEW_MOBILE_GATEWAY_APP_TOKEN_REQUEST = QName.get(E_RENEW_MOBILE_GATEWAY_APP_TOKEN_REQUEST, NAMESPACE);
     public static final QName RENEW_MOBILE_GATEWAY_APP_TOKEN_RESPONSE = QName.get(E_RENEW_MOBILE_GATEWAY_APP_TOKEN_RESPONSE, NAMESPACE);
+    public static final QName ADD_ZMG_DEVICE_REQUEST = QName.get(E_ADD_ZMG_DEVICE_REQUEST, NAMESPACE);
+    public static final QName ADD_ZMG_DEVICE_RESPONSE = QName.get(E_ADD_ZMG_DEVICE_RESPONSE, NAMESPACE);
+    public static final QName GET_GCM_SENDER_ID_REQUEST = QName.get(E_GET_GCM_SENDER_ID_REQUEST, NAMESPACE);
+    public static final QName GET_GCM_SENDER_ID_RESPONSE = QName.get(E_GET_GCM_SENDER_ID_RESPONSE, NAMESPACE);
 
     public static final String E_ACTION = "action";
     public static final String E_ALIAS = "alias";
@@ -475,6 +483,12 @@ public class AccountConstants {
     // Zimbra Mobile Gateway
     public static final String E_APP_ID = "appId";
     public static final String E_APP_KEY = "appKey";
+    public static final String E_ZMG_DEVICE = "zmgDevice";
+    public static final String A_DEVICE_ID = "deviceId";
+    public static final String A_REGISTRATION_ID = "registrationId";
+    public static final String A_PUSH_PROVIDER = "pushProvider";
+    public static final String E_SUCCESS = "success";
+    public static final String E_GCM_SENDER_ID = "gcmSenderId";
 
     //two-factor auth attributes
     public static final String E_TWO_FACTOR_CODE = "twoFactorCode";

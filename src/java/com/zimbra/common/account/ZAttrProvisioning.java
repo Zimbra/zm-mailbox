@@ -6960,6 +6960,30 @@ public class ZAttrProvisioning {
     public static final String A_zimbraGalType = "zimbraGalType";
 
     /**
+     * Google Server API key used by sever to push notifications to GCM
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1955)
+    public static final String A_zimbraGCMAuthorizationKey = "zimbraGCMAuthorizationKey";
+
+    /**
+     * Sender Id used by android client to register for GCM
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1954)
+    public static final String A_zimbraGCMSenderId = "zimbraGCMSenderId";
+
+    /**
+     * Google Cloud Messaging URL
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1953)
+    public static final String A_zimbraGCMUrl = "zimbraGCMUrl";
+
+    /**
      * Object classes added on the global config entry. Unlike other
      * zimbra***ExtraObjectClass attributes, object classes specified in this
      * attributes will not be automatically added to the global config entry.
@@ -8766,6 +8790,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1759)
     public static final String A_zimbraMobileGatewayDefaultAppAccountDomainId = "zimbraMobileGatewayDefaultAppAccountDomainId";
+
+    /**
+     * Notifications Queue Thread Pool Size
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1956)
+    public static final String A_zimbraMobileGatewayPushNotificationsQueueThreadPoolSize = "zimbraMobileGatewayPushNotificationsQueueThreadPoolSize";
 
     /**
      * Max size of items in a folder that server tracks, categorized by
@@ -12764,6 +12796,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=638)
     public static final String A_zimbraPrefZimletTreeOpen = "zimbraPrefZimletTreeOpen";
+
+    /**
+     * Option to turn on/off zimbra mobile gateway push notifications
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1952)
+    public static final String A_zimbraPrefZmgPushNotificationEnabled = "zimbraPrefZmgPushNotificationEnabled";
 
     /**
      * Max number of previous residing folders server tracks for a mail item
