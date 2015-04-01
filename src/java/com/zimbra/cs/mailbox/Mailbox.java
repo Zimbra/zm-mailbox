@@ -1496,7 +1496,7 @@ public class Mailbox {
      * @param reason  The bitmask describing the modified item properties.
      * @see com.zimbra.cs.session.PendingModifications.Change */
     void markItemModified(MailItem item, int reason) throws ServiceException {
-        if (item.inDumpster()) {
+        if (item.inDumpster() && (reason != Change.METADATA)) {
             throw MailServiceException.IMMUTABLE_OBJECT(item.getId());
         }
         currentChange().dirty.recordModified(item, reason);
