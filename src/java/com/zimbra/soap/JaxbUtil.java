@@ -1015,7 +1015,13 @@ public final class JaxbUtil {
             com.zimbra.soap.voice.message.UploadVoiceMailRequest.class,
             com.zimbra.soap.voice.message.UploadVoiceMailResponse.class,
             com.zimbra.soap.voice.message.VoiceMsgActionRequest.class,
-            com.zimbra.soap.voice.message.VoiceMsgActionResponse.class
+            com.zimbra.soap.voice.message.VoiceMsgActionResponse.class,
+
+            //zimbra mobile gateway
+            com.zimbra.soap.account.message.AddZmgDeviceRequest.class,
+            com.zimbra.soap.account.message.AddZmgDeviceResponse.class,
+            com.zimbra.soap.account.message.GetGcmSenderIdRequest.class,
+            com.zimbra.soap.account.message.GetGcmSenderIdResponse.class
         };
 
         try {
