@@ -509,12 +509,12 @@ public class DataSource extends AccountProperty {
     }
 
     public String getSmtpUsername() {
-        String smtpUsername = getAttr(Provisioning.A_zimbraDataSourceUsername);
+        String smtpUsername = getAttr(Provisioning.A_zimbraDataSourceSmtpAuthUsername);
         return smtpUsername == null ? isSmtpEnabled() && isSmtpAuthRequired() ? getUsername() : null : smtpUsername;
     }
 
     public String getDecryptedSmtpPassword() throws ServiceException {
-        String smtpPass = getAttr(Provisioning.A_zimbraDataSourcePassword);
+        String smtpPass = getAttr(Provisioning.A_zimbraDataSourceSmtpAuthPassword);
         return smtpPass == null ? isSmtpEnabled() && isSmtpAuthRequired() ? getDecryptedPassword() : null :
                 decryptData(getId(), smtpPass);
     }
