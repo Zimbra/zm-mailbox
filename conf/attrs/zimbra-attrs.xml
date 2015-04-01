@@ -8750,4 +8750,27 @@ TODO: delete them permanently from here
   <desc>Value for postconf postscreen_dnsbl_reply_map. Single valued, comma separated list.</desc>
 </attr>
 
+<attr id="1952" name="zimbraPrefZmgPushNotificationEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.7.0,9.0.0">
+  <defaultCOSValue>FALSE</defaultCOSValue>
+  <desc>Option to turn on/off zimbra mobile gateway push notifications</desc>
+</attr>
+
+<attr id="1953" name="zimbraGCMUrl" type="string" cardinality="single" optionalIn="globalConfig" since="8.7.0,9.0.0">
+  <globalConfigValue>https://android.googleapis.com/gcm/send</globalConfigValue>
+  <desc>Google Cloud Messaging URL</desc>
+</attr>
+
+<attr id="1954" name="zimbraGCMSenderId" type="string" cardinality="single" optionalIn="globalConfig" since="8.7.0,9.0.0">
+  <desc>Sender Id used by android client to register for GCM</desc>
+</attr>
+
+<attr id="1955" name="zimbraGCMAuthorizationKey" type="string" cardinality="single" optionalIn="globalConfig" since="8.7.0,9.0.0">
+  <desc>Google Server API key used by sever to push notifications to GCM</desc>
+</attr>
+
+<attr id="1956" name="zimbraMobileGatewayPushNotificationsQueueThreadPoolSize" type="integer" min="1" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.7.0,9.0.0">
+  <globalConfigValue>10</globalConfigValue>
+  <desc>Notifications Queue Thread Pool Size</desc>
+</attr>
+
 </attrs>
