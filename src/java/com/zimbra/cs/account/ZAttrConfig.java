@@ -20083,6 +20083,222 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * Google Server API key used by sever to push notifications to GCM
+     *
+     * @return zimbraGCMAuthorizationKey, or null if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1955)
+    public String getGCMAuthorizationKey() {
+        return getAttr(Provisioning.A_zimbraGCMAuthorizationKey, null);
+    }
+
+    /**
+     * Google Server API key used by sever to push notifications to GCM
+     *
+     * @param zimbraGCMAuthorizationKey new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1955)
+    public void setGCMAuthorizationKey(String zimbraGCMAuthorizationKey) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraGCMAuthorizationKey, zimbraGCMAuthorizationKey);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Google Server API key used by sever to push notifications to GCM
+     *
+     * @param zimbraGCMAuthorizationKey new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1955)
+    public Map<String,Object> setGCMAuthorizationKey(String zimbraGCMAuthorizationKey, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraGCMAuthorizationKey, zimbraGCMAuthorizationKey);
+        return attrs;
+    }
+
+    /**
+     * Google Server API key used by sever to push notifications to GCM
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1955)
+    public void unsetGCMAuthorizationKey() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraGCMAuthorizationKey, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Google Server API key used by sever to push notifications to GCM
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1955)
+    public Map<String,Object> unsetGCMAuthorizationKey(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraGCMAuthorizationKey, "");
+        return attrs;
+    }
+
+    /**
+     * Sender Id used by android client to register for GCM
+     *
+     * @return zimbraGCMSenderId, or null if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1954)
+    public String getGCMSenderId() {
+        return getAttr(Provisioning.A_zimbraGCMSenderId, null);
+    }
+
+    /**
+     * Sender Id used by android client to register for GCM
+     *
+     * @param zimbraGCMSenderId new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1954)
+    public void setGCMSenderId(String zimbraGCMSenderId) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraGCMSenderId, zimbraGCMSenderId);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Sender Id used by android client to register for GCM
+     *
+     * @param zimbraGCMSenderId new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1954)
+    public Map<String,Object> setGCMSenderId(String zimbraGCMSenderId, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraGCMSenderId, zimbraGCMSenderId);
+        return attrs;
+    }
+
+    /**
+     * Sender Id used by android client to register for GCM
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1954)
+    public void unsetGCMSenderId() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraGCMSenderId, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Sender Id used by android client to register for GCM
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1954)
+    public Map<String,Object> unsetGCMSenderId(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraGCMSenderId, "");
+        return attrs;
+    }
+
+    /**
+     * Google Cloud Messaging URL
+     *
+     * @return zimbraGCMUrl, or "https://android.googleapis.com/gcm/send" if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1953)
+    public String getGCMUrl() {
+        return getAttr(Provisioning.A_zimbraGCMUrl, "https://android.googleapis.com/gcm/send");
+    }
+
+    /**
+     * Google Cloud Messaging URL
+     *
+     * @param zimbraGCMUrl new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1953)
+    public void setGCMUrl(String zimbraGCMUrl) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraGCMUrl, zimbraGCMUrl);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Google Cloud Messaging URL
+     *
+     * @param zimbraGCMUrl new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1953)
+    public Map<String,Object> setGCMUrl(String zimbraGCMUrl, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraGCMUrl, zimbraGCMUrl);
+        return attrs;
+    }
+
+    /**
+     * Google Cloud Messaging URL
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1953)
+    public void unsetGCMUrl() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraGCMUrl, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Google Cloud Messaging URL
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1953)
+    public Map<String,Object> unsetGCMUrl(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraGCMUrl, "");
+        return attrs;
+    }
+
+    /**
      * When set to TRUE, GAL search will always include local calendar
      * resources regardless of zimbraGalMode.
      *
@@ -41304,6 +41520,78 @@ public abstract class ZAttrConfig extends Entry {
     public Map<String,Object> unsetMobileGatewayDefaultAppAccountDomainId(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMobileGatewayDefaultAppAccountDomainId, "");
+        return attrs;
+    }
+
+    /**
+     * Notifications Queue Thread Pool Size
+     *
+     * @return zimbraMobileGatewayPushNotificationsQueueThreadPoolSize, or 10 if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1956)
+    public int getMobileGatewayPushNotificationsQueueThreadPoolSize() {
+        return getIntAttr(Provisioning.A_zimbraMobileGatewayPushNotificationsQueueThreadPoolSize, 10);
+    }
+
+    /**
+     * Notifications Queue Thread Pool Size
+     *
+     * @param zimbraMobileGatewayPushNotificationsQueueThreadPoolSize new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1956)
+    public void setMobileGatewayPushNotificationsQueueThreadPoolSize(int zimbraMobileGatewayPushNotificationsQueueThreadPoolSize) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileGatewayPushNotificationsQueueThreadPoolSize, Integer.toString(zimbraMobileGatewayPushNotificationsQueueThreadPoolSize));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Notifications Queue Thread Pool Size
+     *
+     * @param zimbraMobileGatewayPushNotificationsQueueThreadPoolSize new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1956)
+    public Map<String,Object> setMobileGatewayPushNotificationsQueueThreadPoolSize(int zimbraMobileGatewayPushNotificationsQueueThreadPoolSize, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileGatewayPushNotificationsQueueThreadPoolSize, Integer.toString(zimbraMobileGatewayPushNotificationsQueueThreadPoolSize));
+        return attrs;
+    }
+
+    /**
+     * Notifications Queue Thread Pool Size
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1956)
+    public void unsetMobileGatewayPushNotificationsQueueThreadPoolSize() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileGatewayPushNotificationsQueueThreadPoolSize, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Notifications Queue Thread Pool Size
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1956)
+    public Map<String,Object> unsetMobileGatewayPushNotificationsQueueThreadPoolSize(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileGatewayPushNotificationsQueueThreadPoolSize, "");
         return attrs;
     }
 

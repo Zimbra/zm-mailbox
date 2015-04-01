@@ -51809,6 +51809,78 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Option to turn on/off zimbra mobile gateway push notifications
+     *
+     * @return zimbraPrefZmgPushNotificationEnabled, or false if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1952)
+    public boolean isPrefZmgPushNotificationEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraPrefZmgPushNotificationEnabled, false);
+    }
+
+    /**
+     * Option to turn on/off zimbra mobile gateway push notifications
+     *
+     * @param zimbraPrefZmgPushNotificationEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1952)
+    public void setPrefZmgPushNotificationEnabled(boolean zimbraPrefZmgPushNotificationEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefZmgPushNotificationEnabled, zimbraPrefZmgPushNotificationEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Option to turn on/off zimbra mobile gateway push notifications
+     *
+     * @param zimbraPrefZmgPushNotificationEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1952)
+    public Map<String,Object> setPrefZmgPushNotificationEnabled(boolean zimbraPrefZmgPushNotificationEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefZmgPushNotificationEnabled, zimbraPrefZmgPushNotificationEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Option to turn on/off zimbra mobile gateway push notifications
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1952)
+    public void unsetPrefZmgPushNotificationEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefZmgPushNotificationEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Option to turn on/off zimbra mobile gateway push notifications
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1952)
+    public Map<String,Object> unsetPrefZmgPushNotificationEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefZmgPushNotificationEnabled, "");
+        return attrs;
+    }
+
+    /**
      * Allowed domains for Proxy servlet
      *
      * @return zimbraProxyAllowedDomains, or empty array if unset

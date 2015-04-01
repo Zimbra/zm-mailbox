@@ -31792,6 +31792,78 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Notifications Queue Thread Pool Size
+     *
+     * @return zimbraMobileGatewayPushNotificationsQueueThreadPoolSize, or 10 if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1956)
+    public int getMobileGatewayPushNotificationsQueueThreadPoolSize() {
+        return getIntAttr(Provisioning.A_zimbraMobileGatewayPushNotificationsQueueThreadPoolSize, 10);
+    }
+
+    /**
+     * Notifications Queue Thread Pool Size
+     *
+     * @param zimbraMobileGatewayPushNotificationsQueueThreadPoolSize new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1956)
+    public void setMobileGatewayPushNotificationsQueueThreadPoolSize(int zimbraMobileGatewayPushNotificationsQueueThreadPoolSize) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileGatewayPushNotificationsQueueThreadPoolSize, Integer.toString(zimbraMobileGatewayPushNotificationsQueueThreadPoolSize));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Notifications Queue Thread Pool Size
+     *
+     * @param zimbraMobileGatewayPushNotificationsQueueThreadPoolSize new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1956)
+    public Map<String,Object> setMobileGatewayPushNotificationsQueueThreadPoolSize(int zimbraMobileGatewayPushNotificationsQueueThreadPoolSize, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileGatewayPushNotificationsQueueThreadPoolSize, Integer.toString(zimbraMobileGatewayPushNotificationsQueueThreadPoolSize));
+        return attrs;
+    }
+
+    /**
+     * Notifications Queue Thread Pool Size
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1956)
+    public void unsetMobileGatewayPushNotificationsQueueThreadPoolSize() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileGatewayPushNotificationsQueueThreadPoolSize, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Notifications Queue Thread Pool Size
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1956)
+    public Map<String,Object> unsetMobileGatewayPushNotificationsQueueThreadPoolSize(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileGatewayPushNotificationsQueueThreadPoolSize, "");
+        return attrs;
+    }
+
+    /**
      * Maximum total size of a mail message that can be synced to device
      * without truncation. It cannot be larger than zimbraMTAMaxMessageSize.
      * 0 means zimbraMTAMaxMessageSize or INTEGER_MAX, whichever is smaller
