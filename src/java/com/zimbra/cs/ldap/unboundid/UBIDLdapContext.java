@@ -197,6 +197,7 @@ public class UBIDLdapContext extends ZLdapContext {
             }
 
             LdapConnectionPool.debugCheckOut(pool, connection);
+            ZimbraLog.ldap.debug("Got connection : %s from the connection pool : %s" , connection.toString(), pool.toString());
             return connection;
         } catch (LDAPException e) {
             throw mapToLdapException("unable to get connection", e);
