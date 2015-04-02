@@ -153,6 +153,7 @@ SECTION 2: Apache License, V2.0
    >>> spamassassin-3.4.1-r1669629
    >>> spring-amqp-1.4.3
    >>> spring-framework-3.2.10
+   >>> spring-rabbit-1.4.3
    >>> stax2-api-3.1.1
    >>> testng-5.12.1
    >>> unoil-4.0.2
@@ -27636,6 +27637,11 @@ License: Apache 2.0
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+
+>>> spring-rabbit-1.4.3
+
+License: Apache 2.0
 
 
 >>> stax2-api-3.1.1
