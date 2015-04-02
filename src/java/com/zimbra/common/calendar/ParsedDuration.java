@@ -160,6 +160,9 @@ public final class ParsedDuration
         if (mSecs!= 0) {
             toRet.append(mSecs+"S");
         }
+        if (mSecs == 0 && mMins == 0 && mHours == 0 && mDays == 0) {
+            toRet.append("0S"); //alarm at the time of event.
+        }
         return toRet.toString();
     }
     
@@ -206,16 +209,20 @@ public final class ParsedDuration
         if (mWeeks > 0) {
             elt.addAttribute(MailConstants.A_CAL_DURATION_WEEKS, mWeeks);
         } else {
+            boolean isUnSet = true;
             if (mDays > 0) {
                 elt.addAttribute(MailConstants.A_CAL_DURATION_DAYS, mDays);
+                isUnSet = false;
             }
-            if (mHours> 0) {
+            if (mHours > 0) {
                 elt.addAttribute(MailConstants.A_CAL_DURATION_HOURS, mHours);
+                isUnSet = false;
             }
-            if (mMins> 0) {
+            if (mMins > 0) {
                 elt.addAttribute(MailConstants.A_CAL_DURATION_MINUTES, mMins);
+                isUnSet = false;
             }
-            if (mSecs> 0) {
+            if (mSecs > 0 || (isUnSet && mSecs == 0)) {
                 elt.addAttribute(MailConstants.A_CAL_DURATION_SECONDS, mSecs);
             }
         }
