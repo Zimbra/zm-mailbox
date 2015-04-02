@@ -151,6 +151,7 @@ SECTION 2: Apache License, V2.0
    >>> smack-3.2.1
    >>> solr-4.9.0
    >>> spamassassin-3.4.1-r1669629
+   >>> spring-amqp-1.4.3
    >>> spring-framework-3.2.10
    >>> stax2-api-3.1.1
    >>> testng-5.12.1
@@ -27609,6 +27610,11 @@ License: Apache 2.0
 
 
 >>> spamassassin-3.4.1-r1658380
+
+License: Apache 2.0
+
+
+>>> spring-amqp-1.4.3
 
 License: Apache 2.0
 
