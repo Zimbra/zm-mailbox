@@ -587,7 +587,7 @@ public class Mailbox {
         public void remove(Folder folder) {
             remove(folder.getId());
         }
-        
+
         public void remove(int id) {
             Folder removed = mapById.remove(id);
             if (removed != null) {
@@ -651,7 +651,7 @@ public class Mailbox {
     private boolean galSyncMailbox = false;
     private volatile boolean requiresWriteLock = true;
 
-    protected Mailbox(MailboxManager mailboxManager, MailboxData data) {
+    protected Mailbox(MailboxManager mailboxManager, MailboxData data) throws ServiceException {
     	this.mailboxManager = mailboxManager;
         mId = data.id;
         mData = data;
@@ -833,7 +833,7 @@ public class Mailbox {
                 MailboxUpgrade.upgradeTo2_7(this);
                 updateVersion(new MailboxVersion((short) 2, (short) 7));
             }
-            
+
             /*
              * 9.0 introduced a new external index store that is not backwards compatible with old index stores
              * queue all items for re-indexing into the new index store
@@ -1880,7 +1880,7 @@ public class Mailbox {
             endTransaction(success);
         }
     }
-    
+
     public void uncache(MailItem item) throws ServiceException {
         if (item == null) {
             return;
@@ -9065,7 +9065,7 @@ public class Mailbox {
             deletes = currentChange().deletes; // keep a reference for cleanup
                                                // deletes outside the lock
 
-            /* retry failed index attempts after DB transaction is commited, because in case of temporary indexing failure, 
+            /* retry failed index attempts after DB transaction is commited, because in case of temporary indexing failure,
             *  another server may try retrieving this item from the DB
             */
             if(!currentChange().indexItems.isEmpty()) {
@@ -9073,7 +9073,7 @@ public class Mailbox {
             }
             // We are finally done with database and redo commits. Cache update comes last.
             commitCache(currentChange());
-            
+
         } finally {
             lock.release();
 

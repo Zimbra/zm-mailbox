@@ -32,7 +32,7 @@ public abstract class AbstractCtagResponseCacheTest extends AbstractCacheTest {
 
     protected abstract CtagResponseCache constructCache() throws ServiceException;
 
-    @Test
+    @Test(timeout=3000)
     public void test() throws Exception {
         cache = constructCache();
         Assert.assertNotNull(cache);

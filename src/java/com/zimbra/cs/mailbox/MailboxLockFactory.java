@@ -16,30 +16,39 @@
  */
 package com.zimbra.cs.mailbox;
 
+import redis.clients.jedis.JedisPool;
+
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.util.Zimbra;
+import com.zimbra.cs.util.ZimbraConfig;
 
 
 
 
 public class MailboxLockFactory {
 
-    public MailboxLock create(String accountId, Mailbox mbox) {
+    public MailboxLock create(String accountId, Mailbox mbox) throws ServiceException {
         MailboxLock mailboxLock = null;
 
-// TODO Enable this code before completing bug 85257 -- missing RedisMailboxLock adapter blocked on RedissonLockTest not passing yet
-//        try {
-//            if (Zimbra.getAppContext().getBean(ZimbraConfig.class).isRedisAvailable()) {
-//                mailboxLock = new RedisMailboxLock(mbox);
-//            }
-//        } catch (ServiceException e) {
-//            ZimbraLog.mailbox.error("Failed determining whether Redis is available; falling back on local mailbox locks", e);
-//        }
+        try {
+            ZimbraConfig config = Zimbra.getAppContext().getBean(ZimbraConfig.class);
+            if (config.isRedisAvailable()) {
+                if (config.isRedisClusterAvailable()) {
+                    // TODO
+                } else {
+                    JedisPool jedisPool = Zimbra.getAppContext().getBean(JedisPool.class);
+                    mailboxLock = new RedisCoordinatedLocalMailboxLock(jedisPool, mbox);
+                }
+            }
+        } catch (ServiceException e) {
+            ZimbraLog.mailbox.error("Failed determining whether Redis is available; falling back on local mailbox locks", e);
+        }
 
         if (mailboxLock == null) {
             mailboxLock = new LocalMailboxLock(accountId, mbox);
         }
         Zimbra.getAppContext().getAutowireCapableBeanFactory().autowireBean(mailboxLock);
-        Zimbra.getAppContext().getAutowireCapableBeanFactory().initializeBean(mailboxLock, "mailboxLock");
         return mailboxLock;
     }
 }

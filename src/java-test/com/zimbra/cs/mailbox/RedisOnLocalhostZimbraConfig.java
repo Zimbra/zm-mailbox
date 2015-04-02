@@ -44,7 +44,7 @@ public class RedisOnLocalhostZimbraConfig extends ZimbraConfig {
             jedisPool.returnResource(jedis);
             return true;
         } catch (Exception e) {
-            ZimbraLog.test.warn("Failed connecting to Redis", e);
+            ZimbraLog.misc.warn("Failed connecting to Redis", e);
             return false;
         } finally {
             jedisPool.destroy();
@@ -58,7 +58,7 @@ public class RedisOnLocalhostZimbraConfig extends ZimbraConfig {
             jedisCluster.get("");
             return true;
         } catch (Exception e) {
-            ZimbraLog.test.warn("Failed connecting to Redis", e);
+            ZimbraLog.misc.warn("Failed connecting to a Redis Cluster; defaulting to non-cluster mode Redis access (%s)", e.getLocalizedMessage());
             return false;
         }
     }

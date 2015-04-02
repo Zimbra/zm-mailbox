@@ -53,7 +53,7 @@ public abstract class AbstractMailboxLockTest {
 
     protected abstract boolean isLockServiceAvailableForTest() throws Exception;
 
-    @Test
+    @Test(timeout=10000)
     public void expectAssertIfWriteRequestedWhileHoldingRead() throws ServiceException {
         boolean assertsEnabled = false;
         assert (assertsEnabled = true);
@@ -74,8 +74,8 @@ public abstract class AbstractMailboxLockTest {
         }
     }
 
-    @Test
-    public void nestedWrite() throws ServiceException {
+    @Test(timeout=10000)
+    public void singleProcessNestedWrite() throws ServiceException {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
         int holdCount = 0;
         Assert.assertEquals(holdCount, mbox.lock.getHoldCount());
@@ -127,8 +127,8 @@ public abstract class AbstractMailboxLockTest {
         Assert.assertEquals(0, holdCount);
     }
 
-    @Test
-    public void multiAccess() throws ServiceException {
+    @Test(timeout=11000)
+    public void singleProcessMultiThreadedAccess() throws ServiceException {
         final Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
 
         //just do some read/write in different threads to see if we trigger any deadlocks or other badness

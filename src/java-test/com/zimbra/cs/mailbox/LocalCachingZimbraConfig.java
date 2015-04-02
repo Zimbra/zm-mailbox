@@ -56,6 +56,11 @@ public class LocalCachingZimbraConfig extends ZimbraConfig {
     }
 
     @Override
+    public MailboxPubSubAdapter mailboxPubSubAdapter() throws Exception {
+        return null;
+    }
+
+    @Override
     @Bean(name="sharedDeliveryCoordinator")
     public SharedDeliveryCoordinator sharedDeliveryCoordinatorBean() throws Exception {
         return new LocalSharedDeliveryCoordinator();

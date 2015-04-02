@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -40,6 +40,7 @@ import com.zimbra.common.calendar.ParsedDateTime;
 import com.zimbra.common.calendar.ZCalendar.ZComponent;
 import com.zimbra.common.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.account.Account;
@@ -69,7 +70,7 @@ public class GetMsgTest {
         LC.zimbra_class_index_store_factory.setDefault(MockSolrIndex.Factory.class.getName());
         IndexStore.setFactory(LC.zimbra_class_index_store_factory.value());
     }
-    
+
     /**
      * @throws java.lang.Exception
      */
@@ -94,7 +95,7 @@ public class GetMsgTest {
         // this MailboxManager does everything except actually send mail
         MailboxManager.setInstance(new MailboxManager() {
             @Override
-            protected Mailbox instantiateMailbox(MailboxData data) {
+            protected Mailbox instantiateMailbox(MailboxData data) throws ServiceException {
                 return new Mailbox(this, data) {
                     @Override
                     public MailSender getMailSender() {

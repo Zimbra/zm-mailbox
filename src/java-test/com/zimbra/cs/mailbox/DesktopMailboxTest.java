@@ -47,7 +47,7 @@ public class DesktopMailboxTest {
         MailboxTestUtil.initServer(); //TODO: allow paths to be specified so we can run tests outside of ZimbraServer
         MailboxManager.setInstance(new MailboxManager() {
             @Override
-            protected Mailbox instantiateMailbox(MailboxData data) {
+            protected Mailbox instantiateMailbox(MailboxData data) throws ServiceException {
                 //mock the behaviors we need to test in DesktopMailbox
                 return new Mailbox(this, data) {
                     @Override

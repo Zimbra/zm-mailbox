@@ -95,7 +95,7 @@ public class SendMsgTest {
         }
 
         @Override
-        protected Mailbox instantiateMailbox(MailboxData data) {
+        protected Mailbox instantiateMailbox(MailboxData data) throws ServiceException {
             return new Mailbox(this, data) {
                 @Override
                 public MailSender getMailSender() {
@@ -125,7 +125,7 @@ public class SendMsgTest {
         }
 
         @Override
-        protected Mailbox instantiateMailbox(MailboxData data) {
+        protected Mailbox instantiateMailbox(MailboxData data) throws ServiceException {
             return new Mailbox(this, data) {
                 @Override
                 public MailSender getMailSender() {
@@ -176,7 +176,7 @@ public class SendMsgTest {
     public void tearDown() throws Exception {
         MailboxTestUtil.clearData();
     }
-    
+
     @Test
     public void deleteDraft() throws Exception {
         Account acct = Provisioning.getInstance().getAccountByName("test@zimbra.com");

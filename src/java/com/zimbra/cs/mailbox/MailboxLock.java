@@ -16,7 +16,7 @@
  */
 package com.zimbra.cs.mailbox;
 
-import com.zimbra.cs.mailbox.LocalMailboxLock.LockFailedException;
+
 
 
 /**
@@ -40,10 +40,10 @@ public interface MailboxLock {
     public boolean isWriteLockedByCurrentThread();
 
     /** Acquire the lock in read-write mode, or increments the hold count if the lock is already acquired */
-    public void lock() throws LockFailedException;
+    public void lock();
 
     /** Acquire the lock in read or read-write mode, or increments the hold count if the lock is already acquired */
-    public void lock(boolean write) throws LockFailedException;
+    public void lock(boolean write);
 
     /** Release the lock */
     public void release();

@@ -108,7 +108,7 @@ public class SendShareNotificationTest extends SendShareNotification {
         // this MailboxManager does everything except actually send mail
         MailboxManager.setInstance(new MailboxManager() {
             @Override
-            protected Mailbox instantiateMailbox(MailboxData data) {
+            protected Mailbox instantiateMailbox(MailboxData data) throws ServiceException {
                 return new Mailbox(this, data) {
                     @Override
                     public MailSender getMailSender() {
