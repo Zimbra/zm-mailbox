@@ -15,8 +15,6 @@
 
 package com.zimbra.qa.unittest;
 
-import java.util.List;
-
 import junit.framework.TestCase;
 
 import org.junit.Test;
@@ -49,11 +47,8 @@ public class TestAddZmgDevice extends TestCase {
         zmgDevice.setPushProvider("gcm");
         AddZmgDeviceRequest request = new AddZmgDeviceRequest(zmgDevice);
         AddZmgDeviceResponse response = mbox.invokeJaxb(request);
-        List<String> notificationEnabled = mbox.getAccountInfo(true).getAttrs()
-            .get("zimbraPrefZmgPushNotificationEnabled");
         String result = response.getMessage();
         assertEquals("1", result);
-        assertEquals("TRUE", notificationEnabled.get(0));
     }
 
     /*
