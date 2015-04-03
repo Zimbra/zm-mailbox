@@ -1707,6 +1707,36 @@ class SSLStaplingEnablerVar extends ProxyConfVar {
     }
 }
 
+class WebXmppBoshEnablerVar extends ProxyConfVar {
+
+    public WebXmppBoshEnablerVar() {
+        super("web.xmpp.bosh.upstream.disable",
+              "",
+              false,
+              ProxyConfValueType.ENABLER,
+              ProxyConfOverride.CUSTOM,
+              "whether to populate the location block for XMPP over BOSH requests to /http-bind path");
+    }
+
+    @Override
+    public void update() throws ServiceException {
+        String XmppBoshLocalBindURL = serverSource.getAttr("zimbraReverseProxyXmppBoshLocalHttpBindURL", true);
+        String XmppBoshRemoteBindURL = serverSource.getAttr("zimbraReverseProxyXmppBoshRemoteHttpBindURL", true);
+        String XmppBoshHostname = serverSource.getAttr("zimbraReverseProxyXmppBoshHostname", true);
+        int XmppBoshPort = serverSource.getIntAttr("zimbraReverseProxyXmppBoshPort", 0);
+
+        if (XmppBoshLocalBindURL == null || ProxyConfUtil.isEmptyString(XmppBoshLocalBindURL) ||
+            XmppBoshRemoteBindURL == null || ProxyConfUtil.isEmptyString(XmppBoshRemoteBindURL) ||
+            XmppBoshHostname == null || ProxyConfUtil.isEmptyString(XmppBoshHostname) ||
+            XmppBoshPort == 0) {
+            mLog.debug("web.xmpp.bosh.upstream.disable is false because one of the required attrs is unset");
+            mValue = false;
+        } else {
+            mValue = true;
+        }
+    }
+}
+
 /**
  * A simple class of Triple<VirtualHostName, VirtualIPAddress, DomainName>. Uses
  * this only for convenient and HashMap can't guarantee order
@@ -2802,7 +2832,12 @@ public class ProxyConfGen
                 "zimbraMailSSLProxyPort", ipmode, "Listen directive for default web https proxy"));
 	    mConfVars.put("web.listen.sso.default", new ListenVipsVar("web.listen.sso.default", ips,
                 "zimbraMailSSLProxyClientCertPort", ipmode, "Listen directive for default web sso proxy"));
-        }
+	    mConfVars.put("web.xmpp.bosh.upstream.disable", new WebXmppBoshEnablerVar());
+	    mConfVars.put("web.xmpp.local.bind.url", new ProxyConfVar("web.xmpp.local.bind.url", "zimbraReverseProxyXmppBoshLocalHttpBindURL", "/http-bind", ProxyConfValueType.STRING, ProxyConfOverride.SERVER, "Local HTTP-BIND URL prefix where ZWC sends XMPP over BOSH requests"));
+	    mConfVars.put("web.xmpp.remote.bind.url", new ProxyConfVar("web.xmpp.remote.bind.url", "zimbraReverseProxyXmppBoshRemoteHttpBindURL", "/http-bind", ProxyConfValueType.STRING, ProxyConfOverride.SERVER, "Remote HTTP-BIND URL prefix for an external XMPP server where XMPP over BOSH requests need to be proxied"));
+	    mConfVars.put("web.xmpp.bosh.hostname", new ProxyConfVar("web.xmpp.bosh.hostname", "zimbraReverseProxyXmppBoshHostname", "", ProxyConfValueType.STRING, ProxyConfOverride.SERVER, "Hostname of the external XMPP server where XMPP over BOSH requests need to be proxied"));
+	    mConfVars.put("web.xmpp.bosh.port", new ProxyConfVar("web.xmpp.bosh.port", "zimbraReverseProxyXmppBoshPort", new Integer(0), ProxyConfValueType.INTEGER, ProxyConfOverride.SERVER, "Port number of the external XMPP server where XMPP over BOSH requests need to be proxied"));
+    }
 
     /* update the default variable map from the active configuration */
     public static void updateDefaultVars ()
