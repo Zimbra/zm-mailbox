@@ -76,4 +76,23 @@ public abstract class AbstractTxnIdGeneratorTest {
             throw errors.iterator().next();
         }
     }
+
+    @Test
+    public void testRolloverIds() {
+        TxnIdGenerator generator = getGenerator();
+        //we basically require concrete implementations to implement this interface for testing
+        //but don't want to require or rely on it in real code
+        //so separate interface and testing fails if not implemented
+
+        int startTime = (int) (System.currentTimeMillis() / 1000) - 1;
+        int startCounter = Integer.MAX_VALUE;
+        TransactionId startTxn = new TransactionId(startTime, startCounter);
+        generator.setPreviousTransactionId(startTxn);
+
+        TransactionId nextTxn = generator.getNext();
+        Assert.assertTrue(nextTxn.getCounter() > 0);
+        Assert.assertTrue(startTime < nextTxn.getTime());
+        Assert.assertEquals(1, nextTxn.getCounter());
+    }
+
 }

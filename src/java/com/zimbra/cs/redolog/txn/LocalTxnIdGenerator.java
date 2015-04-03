@@ -1,5 +1,6 @@
 package com.zimbra.cs.redolog.txn;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.zimbra.cs.redolog.TransactionId;
 
 /**
@@ -31,5 +32,13 @@ public class LocalTxnIdGenerator implements TxnIdGenerator {
         else
             init();
         return tid;
+    }
+
+    @Override
+    @VisibleForTesting
+    public void setPreviousTransactionId(TransactionId txnId) {
+        mTime = txnId.getTime();
+        mCounter = txnId.getCounter();
+        getNext();
     }
 }

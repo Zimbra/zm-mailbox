@@ -6,6 +6,7 @@ import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.Transaction;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.redolog.TransactionId;
@@ -17,18 +18,18 @@ import com.zimbra.cs.redolog.TransactionId;
  */
 public class RedisTxnIdGenerator implements TxnIdGenerator {
 
-    public RedisTxnIdGenerator(JedisPool jedisPool) {
-        super();
-        this.jedisPool = jedisPool;
-    }
-
     private static final String KEY = "zmRedoLogTxnId";
     private static final int MAX_TRIES = 100;
 
     protected JedisPool jedisPool;
 
+    public RedisTxnIdGenerator(JedisPool jedisPool) {
+        super();
+        this.jedisPool = jedisPool;
+    }
+
     private TransactionId newTransactionId() {
-        return new TransactionId((int) System.currentTimeMillis() / 1000, 1);
+        return new TransactionId((int) (System.currentTimeMillis() / 1000), 1);
     }
 
     @Override
@@ -56,7 +57,7 @@ public class RedisTxnIdGenerator implements TxnIdGenerator {
                     if (txnId.getCounter() < 0x7fffffffL) {
                         txnId = new TransactionId(txnId.getTime(), txnId.getCounter() + 1);
                     } else {
-                        txnId = new TransactionId(Math.max((int) System.currentTimeMillis() / 1000, txnId.getTime() + 1), 1);
+                        txnId = new TransactionId(Math.max(((int) System.currentTimeMillis() / 1000), txnId.getTime() + 1), 1);
                     }
                 }
                 transaction.set(KEY, txnId.encodeToString());
@@ -72,6 +73,34 @@ public class RedisTxnIdGenerator implements TxnIdGenerator {
             } else {
                 throw new RuntimeException("unable to generate new transactionId");
             }
+        } finally {
+            jedisPool.returnResource(jedis);
+        }
+    }
+
+    @Override
+    @VisibleForTesting
+    public void setPreviousTransactionId(TransactionId txnId) {
+        Jedis jedis = jedisPool.getResource();
+        try {
+            jedis.watch(KEY);
+            jedis.get(KEY);
+            Transaction transaction = jedis.multi();
+            transaction.set(KEY, txnId.encodeToString());
+            List<Object> result = transaction.exec();
+            if (result == null || result.size() <= 0) {
+                throw new RuntimeException("failed to initialize txnId?");
+            }
+        } finally {
+            jedisPool.returnResource(jedis);
+        }
+    }
+
+    @VisibleForTesting
+    void clear() {
+        Jedis jedis = jedisPool.getResource();
+        try {
+            jedis.del(KEY);
         } finally {
             jedisPool.returnResource(jedis);
         }

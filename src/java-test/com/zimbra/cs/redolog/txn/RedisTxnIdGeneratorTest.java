@@ -17,13 +17,14 @@ public class RedisTxnIdGeneratorTest extends AbstractTxnIdGeneratorTest {
         MailboxTestUtil.initServer(MockStoreManager.class, "", RedisOnLocalhostZimbraConfig.class);
     }
 
-
     @Override
     public TxnIdGenerator getGenerator() {
         try {
             JedisPool pool = (JedisPool) Zimbra.getAppContext().getBean("jedisPool");
             pool.getResource().ping();
-            return new RedisTxnIdGenerator(pool);
+            RedisTxnIdGenerator generator = new RedisTxnIdGenerator(pool);
+            generator.clear();
+            return generator;
         } catch (Exception e) {
             Assume.assumeNoException(e);
             return null;
