@@ -13792,6 +13792,41 @@ public class ZAttrProvisioning {
     public static final String A_zimbraReverseProxyWorkerProcesses = "zimbraReverseProxyWorkerProcesses";
 
     /**
+     * Hostname of the external XMPP server where XMPP over BOSH requests
+     * need to be proxied
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1959)
+    public static final String A_zimbraReverseProxyXmppBoshHostname = "zimbraReverseProxyXmppBoshHostname";
+
+    /**
+     * Local HTTP-BIND URL prefix where ZWC sends XMPP over BOSH requests
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1957)
+    public static final String A_zimbraReverseProxyXmppBoshLocalHttpBindURL = "zimbraReverseProxyXmppBoshLocalHttpBindURL";
+
+    /**
+     * Port number of the external XMPP server where XMPP over BOSH requests
+     * need to be proxied
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1960)
+    public static final String A_zimbraReverseProxyXmppBoshPort = "zimbraReverseProxyXmppBoshPort";
+
+    /**
+     * Remote HTTP-BIND URL prefix for an external XMPP server where XMPP
+     * over BOSH requests need to be proxied
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1958)
+    public static final String A_zimbraReverseProxyXmppBoshRemoteHttpBindURL = "zimbraReverseProxyXmppBoshRemoteHttpBindURL";
+
+    /**
      * whether nginx should cache upstream routes in memcache
      *
      * @since ZCS 8.7.0
