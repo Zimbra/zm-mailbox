@@ -47,12 +47,8 @@ public final class RedisClusterSharedDeliveryCoordinatorTest extends RedisShared
     protected void flushCacheBetweenTests() throws Exception {
         Map<String,JedisPool> clusterNodes = Zimbra.getAppContext().getBean(JedisCluster.class).getClusterNodes();
         for (JedisPool jedisPool: clusterNodes.values()) {
-            Jedis jedis = jedisPool.getResource();
-            try {
+            try (Jedis jedis = jedisPool.getResource()) {
                 jedis.flushDB();
-            } catch (Exception e) {
-            } finally {
-                jedisPool.returnResource(jedis);
             }
         }
     }

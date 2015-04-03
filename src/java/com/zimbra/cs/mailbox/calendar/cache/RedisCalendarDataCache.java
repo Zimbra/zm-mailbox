@@ -58,8 +58,7 @@ public class RedisCalendarDataCache implements CalendarDataCache {
 
     @Override
     public CalendarData get(Key key) throws ServiceException {
-        Jedis jedis = jedisPool.getResource();
-        try {
+        try (Jedis jedis = jedisPool.getResource()) {
             String value = jedis.get(key(key));
             if (value == null) {
                 return null;
@@ -68,15 +67,12 @@ public class RedisCalendarDataCache implements CalendarDataCache {
             return new CalendarData(meta);
         } catch (Exception e) {
             throw ServiceException.PARSE_ERROR("failed deserializing CalendarData from cache", e);
-        } finally {
-            jedisPool.returnResource(jedis);
         }
     }
 
     @Override
     public void put(Key key, CalendarData value) throws ServiceException {
-        Jedis jedis = jedisPool.getResource();
-        try {
+        try (Jedis jedis = jedisPool.getResource()) {
             Transaction transaction = jedis.multi();
 
             String idsPerMailboxKey = idsPerMailboxKey(key.getAccountId());
@@ -92,15 +88,12 @@ public class RedisCalendarDataCache implements CalendarDataCache {
             }
 
             transaction.exec();
-        } finally {
-            jedisPool.returnResource(jedis);
         }
     }
 
     @Override
     public void remove(Key key) throws ServiceException {
-        Jedis jedis = jedisPool.getResource();
-        try {
+        try (Jedis jedis = jedisPool.getResource()) {
             Transaction transaction = jedis.multi();
 
             String idsPerMailboxKey = idsPerMailboxKey(key.getAccountId());
@@ -110,15 +103,12 @@ public class RedisCalendarDataCache implements CalendarDataCache {
             transaction.del(idKey);
 
             transaction.exec();
-        } finally {
-            jedisPool.returnResource(jedis);
         }
     }
 
     @Override
     public void remove(Set<Key> keys) throws ServiceException {
-        Jedis jedis = jedisPool.getResource();
-        try {
+        try (Jedis jedis = jedisPool.getResource()) {
             Transaction transaction = jedis.multi();
 
             for (Key key: keys) {
@@ -130,22 +120,17 @@ public class RedisCalendarDataCache implements CalendarDataCache {
             }
 
             transaction.exec();
-        } finally {
-            jedisPool.returnResource(jedis);
         }
     }
 
     @Override
     public void remove(Mailbox mbox) throws ServiceException {
         Set<Key> keysToRemove = new HashSet<>();
-        Jedis jedis = jedisPool.getResource();
-        try {
+        try (Jedis jedis = jedisPool.getResource()) {
             Set<String> ids = jedis.smembers(idsPerMailboxKey(mbox.getAccountId()));
             for (String id: ids) {
                 keysToRemove.add(new Key(mbox.getAccountId(), new Integer(id)));
             }
-        } finally {
-            jedisPool.returnResource(jedis);
         }
         remove(keysToRemove);
     }

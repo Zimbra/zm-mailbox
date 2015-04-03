@@ -53,8 +53,7 @@ public class RedisSharedDeliveryCoordinator implements SharedDeliveryCoordinator
             return false;
         }
 
-        Jedis jedis = jedisPool.getResource();
-        try {
+        try (Jedis jedis = jedisPool.getResource()) {
             String key = getCountKeyName(mbox);
             Transaction transaction = jedis.multi();
             transaction.incr(key);
@@ -64,15 +63,12 @@ public class RedisSharedDeliveryCoordinator implements SharedDeliveryCoordinator
             ZimbraLog.mailbox.debug("# of shared deliv incr to " + newCount +
                     " for mailbox " + mbox.getId());
             return true;
-        } finally {
-            jedisPool.returnResource(jedis);
         }
     }
 
     @Override
     public void endSharedDelivery(Mailbox mbox) throws ServiceException {
-        Jedis jedis = jedisPool.getResource();
-        try {
+        try (Jedis jedis = jedisPool.getResource()) {
             String key = getCountKeyName(mbox);
             Transaction transaction = jedis.multi();
             transaction.decr(key);
@@ -81,20 +77,15 @@ public class RedisSharedDeliveryCoordinator implements SharedDeliveryCoordinator
             int newCount = Integer.parseInt(result.get(0).toString());
             ZimbraLog.mailbox.debug("# of shared deliv decr to " + newCount +
                     " for mailbox " + mbox.getId());
-        } finally {
-            jedisPool.returnResource(jedis);
         }
     }
 
     @Override
     public boolean isSharedDeliveryAllowed(Mailbox mbox) throws ServiceException {
-        Jedis jedis = jedisPool.getResource();
-        try {
+        try (Jedis jedis = jedisPool.getResource()) {
             String key = getAllowedKeyName(mbox);
             String value = jedis.get(key);
             return value == null || Boolean.TRUE.toString().equals(value);
-        } finally {
-            jedisPool.returnResource(jedis);
         }
     }
 
@@ -107,15 +98,12 @@ public class RedisSharedDeliveryCoordinator implements SharedDeliveryCoordinator
             waitUntilSharedDeliveryCompletes(mbox);
         }
 
-        Jedis jedis = jedisPool.getResource();
-        try {
+        try (Jedis jedis = jedisPool.getResource()) {
             String key = getAllowedKeyName(mbox);
             Transaction transaction = jedis.multi();
             transaction.set(key, Boolean.toString(allow));
             transaction.expire(key, EXPIRY_SECS);
             transaction.exec();
-        } finally {
-            jedisPool.returnResource(jedis);
         }
     }
 
@@ -124,15 +112,12 @@ public class RedisSharedDeliveryCoordinator implements SharedDeliveryCoordinator
         String key = getCountKeyName(mbox);
         while (true) {
             int count;
-            Jedis jedis = jedisPool.getResource();
-            try {
+            try (Jedis jedis = jedisPool.getResource()) {
                 String countStr = jedis.get(key);
                 count = countStr == null ? 0 : Integer.parseInt(countStr);
                 if (count < 1) {
                     break;
                 }
-            } finally {
-                jedisPool.returnResource(jedis);
             }
 
             try {
@@ -147,14 +132,11 @@ public class RedisSharedDeliveryCoordinator implements SharedDeliveryCoordinator
 
     @Override
     public boolean isSharedDeliveryComplete(Mailbox mbox) throws ServiceException {
-        Jedis jedis = jedisPool.getResource();
         String key = getCountKeyName(mbox);
-        try {
+        try (Jedis jedis = jedisPool.getResource()) {
             String countStr = jedis.get(key);
             int count = countStr == null ? 0 : Integer.parseInt(countStr);
             return count < 1;
-        } finally {
-            jedisPool.returnResource(jedis);
         }
     }
 }

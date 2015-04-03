@@ -55,8 +55,9 @@ public final class RedisMailItemCacheTest extends AbstractMailItemCacheTest {
     protected boolean isExternalCacheAvailableForTest() throws Exception {
         JedisPool jedisPool = Zimbra.getAppContext().getBean(JedisPool.class);
         try {
-            Jedis jedis = jedisPool.getResource();
-            jedisPool.returnResource(jedis);
+            try (Jedis jedis = jedisPool.getResource()) {
+                jedis.get("");
+            }
             return true;
         } catch (Exception e) {
             return false;
@@ -66,11 +67,8 @@ public final class RedisMailItemCacheTest extends AbstractMailItemCacheTest {
     @Override
     protected void flushCacheBetweenTests() throws Exception {
         JedisPool jedisPool = Zimbra.getAppContext().getBean(JedisPool.class);
-        Jedis jedis = jedisPool.getResource();
-        try {
+        try (Jedis jedis = jedisPool.getResource()) {
             jedis.flushDB();
-        } finally {
-            jedisPool.returnResource(jedis);
         }
     }
 
@@ -89,12 +87,9 @@ public final class RedisMailItemCacheTest extends AbstractMailItemCacheTest {
 
         // Ensure key are gone
         JedisPool jedisPool = Zimbra.getAppContext().getBean(JedisPool.class);
-        Jedis jedis = jedisPool.getResource();
-        try {
+        try (Jedis jedis = jedisPool.getResource()) {
             Assert.assertNull(jedis.get(RedisMailItemCache.idsPerMailboxKey(mbox)));
             Assert.assertNull(jedis.get(RedisMailItemCache.uuidsPerMailboxKey(mbox)));
-        } finally {
-            jedisPool.returnResource(jedis);
         }
 
     }

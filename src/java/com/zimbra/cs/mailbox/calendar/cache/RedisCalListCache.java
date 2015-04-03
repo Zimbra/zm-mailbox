@@ -42,8 +42,7 @@ public class RedisCalListCache implements CalListCache {
 
     @Override
     public CalList get(String accountId) throws ServiceException{
-        Jedis jedis = jedisPool.getResource();
-        try {
+        try (Jedis jedis = jedisPool.getResource()) {
             String value = jedis.get(key(accountId));
             if (value == null) {
                 return null;
@@ -52,15 +51,12 @@ public class RedisCalListCache implements CalListCache {
             return new CalList(meta);
         } catch (Exception e) {
             throw ServiceException.PARSE_ERROR("failed deserializing CalList from cache", e);
-        } finally {
-            jedisPool.returnResource(jedis);
         }
     }
 
     @Override
     public void put(String accountId, CalList calList) throws ServiceException {
-        Jedis jedis = jedisPool.getResource();
-        try {
+        try (Jedis jedis = jedisPool.getResource()) {
             String key = key(accountId);
             Transaction transaction = jedis.multi();
             transaction.set(key, calList.encodeMetadata().toString());
@@ -70,18 +66,13 @@ public class RedisCalListCache implements CalListCache {
             transaction.exec();
         } catch (Exception e) {
             throw ServiceException.PARSE_ERROR("failed serializing CalList for cache", e);
-        } finally {
-            jedisPool.returnResource(jedis);
         }
     }
 
     @Override
     public void remove(Mailbox mbox) throws ServiceException {
-        Jedis jedis = jedisPool.getResource();
-        try {
+        try (Jedis jedis = jedisPool.getResource()) {
             jedis.del(key(mbox.getAccountId()));
-        } finally {
-            jedisPool.returnResource(jedis);
         }
     }
 }

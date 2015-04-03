@@ -64,23 +64,19 @@ public class RedisCtagInfoCache implements CtagInfoCache {
 
     @Override
     public CtagInfo get(String accountId, int folderId) throws ServiceException {
-        Jedis jedis = jedisPool.getResource();
-        try {
+        try (Jedis jedis = jedisPool.getResource()) {
             String value = jedis.get(key(accountId, folderId));
             if (value == null) {
                 return null;
             }
             Metadata meta = new Metadata(value);
             return new CtagInfo(meta);
-        } finally {
-            jedisPool.returnResource(jedis);
         }
     }
 
     @Override
     public Map<Pair<String,Integer>, CtagInfo> get(List<Pair<String,Integer>> keys) throws ServiceException {
-        Jedis jedis = jedisPool.getResource();
-        try {
+        try (Jedis jedis = jedisPool.getResource()) {
             // Fetch data
             Pipeline pipeline = jedis.pipelined();
             Map<Pair<String,Integer>,Response<String>> fetchPipelineRequestResponseMap = new HashMap<>();
@@ -103,9 +99,6 @@ public class RedisCtagInfoCache implements CtagInfoCache {
                 }
             }
             return result;
-
-        } finally {
-            jedisPool.returnResource(jedis);
         }
     }
 
@@ -118,8 +111,7 @@ public class RedisCtagInfoCache implements CtagInfoCache {
 
     @Override
     public void put(Map<Pair<String,Integer>, CtagInfo> pairs) throws ServiceException {
-        Jedis jedis = jedisPool.getResource();
-        try {
+        try (Jedis jedis = jedisPool.getResource()) {
             Transaction transaction = jedis.multi();
             for (Pair<String,Integer> key: pairs.keySet()) {
                 String accountId = key.getFirst();
@@ -139,8 +131,6 @@ public class RedisCtagInfoCache implements CtagInfoCache {
                 }
             }
             transaction.exec();
-        } finally {
-            jedisPool.returnResource(jedis);
         }
     }
 
@@ -153,8 +143,7 @@ public class RedisCtagInfoCache implements CtagInfoCache {
 
     @Override
     public void remove(List<Pair<String,Integer>> keys) throws ServiceException {
-        Jedis jedis = jedisPool.getResource();
-        try {
+        try (Jedis jedis = jedisPool.getResource()) {
             Transaction transaction = jedis.multi();
             for (Pair<String,Integer> key: keys) {
                 String accountId = key.getFirst();
@@ -165,15 +154,12 @@ public class RedisCtagInfoCache implements CtagInfoCache {
                 transaction.srem(idsPerMailboxKey(accountId), Integer.toString(folderId));
             }
             transaction.exec();
-        } finally {
-            jedisPool.returnResource(jedis);
         }
     }
 
     @Override
     public void remove(Mailbox mbox) throws ServiceException {
-        Jedis jedis = jedisPool.getResource();
-        try {
+        try (Jedis jedis = jedisPool.getResource()) {
             Set<String> ids = jedis.smembers(idsPerMailboxKey(mbox.getAccountId()));
 
             Transaction transaction = jedis.multi();
@@ -182,8 +168,6 @@ public class RedisCtagInfoCache implements CtagInfoCache {
                 transaction.del(key(mbox.getAccountId(), Integer.parseInt(id)));
             }
             transaction.exec();
-        } finally {
-            jedisPool.returnResource(jedis);
         }
     }
 }

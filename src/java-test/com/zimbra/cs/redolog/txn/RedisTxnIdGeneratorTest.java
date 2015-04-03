@@ -3,6 +3,7 @@ package com.zimbra.cs.redolog.txn;
 import org.junit.Assume;
 import org.junit.BeforeClass;
 
+import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 
 import com.zimbra.cs.mailbox.MailboxTestUtil;
@@ -21,7 +22,9 @@ public class RedisTxnIdGeneratorTest extends AbstractTxnIdGeneratorTest {
     public TxnIdGenerator getGenerator() {
         try {
             JedisPool pool = (JedisPool) Zimbra.getAppContext().getBean("jedisPool");
-            pool.getResource().ping();
+            try (Jedis jedis = pool.getResource()) {
+                jedis.ping();
+            }
             RedisTxnIdGenerator generator = new RedisTxnIdGenerator(pool);
             generator.clear();
             return generator;

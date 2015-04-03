@@ -55,11 +55,8 @@ public final class RedisCtagInfoCacheTest extends AbstractCtagInfoCacheTest {
     @Override
     protected void flushCacheBetweenTests() throws Exception {
         JedisPool jedisPool = Zimbra.getAppContext().getBean(JedisPool.class);
-        Jedis jedis = jedisPool.getResource();
-        try {
+        try (Jedis jedis = jedisPool.getResource()) {
             jedis.flushDB();
-        } finally {
-            jedisPool.returnResource(jedis);
         }
     }
 }

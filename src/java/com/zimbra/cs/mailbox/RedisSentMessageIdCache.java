@@ -38,22 +38,18 @@ public class RedisSentMessageIdCache implements SentMessageIdCache {
 
     @Override
     public Integer get(Mailbox mbox, String msgidHeader) throws ServiceException {
-        Jedis jedis = jedisPool.getResource();
-        try {
+        try (Jedis jedis = jedisPool.getResource()) {
             String value = jedis.get(key(mbox, msgidHeader));
             if (value == null) {
                 return null;
             }
             return new Integer(value);
-        } finally {
-            jedisPool.returnResource(jedis);
         }
     }
 
     @Override
     public void put(Mailbox mbox, String msgidHeader, int messageId) throws ServiceException {
-        Jedis jedis = jedisPool.getResource();
-        try {
+        try (Jedis jedis = jedisPool.getResource()) {
             Transaction transaction = jedis.multi();
             String key = key(mbox, msgidHeader);
             transaction.set(key, Integer.toString(messageId));
@@ -61,8 +57,6 @@ public class RedisSentMessageIdCache implements SentMessageIdCache {
                 transaction.expire(key, expirySecs);
             }
             transaction.exec();
-        } finally {
-            jedisPool.returnResource(jedis);
         }
     }
 }

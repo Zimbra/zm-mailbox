@@ -39,9 +39,8 @@ public class RedisOnLocalhostZimbraConfig extends ZimbraConfig {
     public boolean isRedisAvailable() throws ServiceException {
         HostAndPort hostAndPort = redisUris().iterator().next();
         JedisPool jedisPool = new JedisPool(hostAndPort.getHost(), hostAndPort.getPort());
-        try {
-            Jedis jedis = jedisPool.getResource();
-            jedisPool.returnResource(jedis);
+        try (Jedis jedis = jedisPool.getResource()) {
+            jedis.get("");
             return true;
         } catch (Exception e) {
             ZimbraLog.misc.warn("Failed connecting to Redis", e);

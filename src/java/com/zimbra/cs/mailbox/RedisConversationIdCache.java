@@ -38,22 +38,18 @@ public class RedisConversationIdCache implements ConversationIdCache {
 
     @Override
     public Integer get(Mailbox mbox, String subjectHash) throws ServiceException {
-        Jedis jedis = jedisPool.getResource();
-        try {
+        try (Jedis jedis = jedisPool.getResource()) {
             String value = jedis.get(key(mbox, subjectHash));
             if (value == null) {
                 return null;
             }
             return new Integer(value);
-        } finally {
-            jedisPool.returnResource(jedis);
         }
     }
 
     @Override
     public void put(Mailbox mbox, String subjectHash, int conversationId) throws ServiceException {
-        Jedis jedis = jedisPool.getResource();
-        try {
+        try (Jedis jedis = jedisPool.getResource()) {
             String key = key(mbox, subjectHash);
             Transaction transaction = jedis.multi();
             transaction.set(key, Integer.toString(conversationId));
@@ -61,18 +57,13 @@ public class RedisConversationIdCache implements ConversationIdCache {
                 transaction.expire(key, expirySecs);
             }
             transaction.exec();
-        } finally {
-            jedisPool.returnResource(jedis);
         }
     }
 
     @Override
     public void remove(Mailbox mbox, String subjectHash) throws ServiceException {
-        Jedis jedis = jedisPool.getResource();
-        try {
+        try (Jedis jedis = jedisPool.getResource()) {
             jedis.del(key(mbox, subjectHash));
-        } finally {
-            jedisPool.returnResource(jedis);
         }
     }
 }

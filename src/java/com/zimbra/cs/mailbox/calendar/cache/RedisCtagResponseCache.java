@@ -42,8 +42,7 @@ public class RedisCtagResponseCache implements CtagResponseCache {
 
     @Override
     public Value get(Key key) throws ServiceException {
-        Jedis jedis = jedisPool.getResource();
-        try {
+        try (Jedis jedis = jedisPool.getResource()) {
             String value = jedis.get(key(key));
             if (value == null) {
                 return null;
@@ -52,15 +51,12 @@ public class RedisCtagResponseCache implements CtagResponseCache {
             return new Value(meta);
         } catch (Exception e) {
             throw ServiceException.PARSE_ERROR("failed deserializing CtagResponseCache$Value from cache", e);
-        } finally {
-            jedisPool.returnResource(jedis);
         }
     }
 
     @Override
     public void put(Key key, Value value) throws ServiceException {
-        Jedis jedis = jedisPool.getResource();
-        try {
+        try (Jedis jedis = jedisPool.getResource()) {
             String keyStr = key(key);
             Transaction transaction = jedis.multi();
             transaction.set(keyStr, value.encodeMetadata().toString());
@@ -70,8 +66,6 @@ public class RedisCtagResponseCache implements CtagResponseCache {
             transaction.exec();
         } catch (Exception e) {
             throw ServiceException.PARSE_ERROR("failed serializing CtagResponseCache$Value for cache", e);
-        } finally {
-            jedisPool.returnResource(jedis);
         }
     }
 }

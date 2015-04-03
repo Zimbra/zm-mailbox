@@ -34,8 +34,7 @@ public class RedisTxnIdGenerator implements TxnIdGenerator {
 
     @Override
     public TransactionId getNext() {
-        Jedis jedis = jedisPool.getResource();
-        try {
+        try (Jedis jedis = jedisPool.getResource()) {
             boolean good = false;
             int tries = 0;
             TransactionId txnId = null;
@@ -73,16 +72,13 @@ public class RedisTxnIdGenerator implements TxnIdGenerator {
             } else {
                 throw new RuntimeException("unable to generate new transactionId");
             }
-        } finally {
-            jedisPool.returnResource(jedis);
         }
     }
 
     @Override
     @VisibleForTesting
     public void setPreviousTransactionId(TransactionId txnId) {
-        Jedis jedis = jedisPool.getResource();
-        try {
+        try (Jedis jedis = jedisPool.getResource()) {
             jedis.watch(KEY);
             jedis.get(KEY);
             Transaction transaction = jedis.multi();
@@ -91,18 +87,13 @@ public class RedisTxnIdGenerator implements TxnIdGenerator {
             if (result == null || result.size() <= 0) {
                 throw new RuntimeException("failed to initialize txnId?");
             }
-        } finally {
-            jedisPool.returnResource(jedis);
         }
     }
 
     @VisibleForTesting
     void clear() {
-        Jedis jedis = jedisPool.getResource();
-        try {
+        try (Jedis jedis = jedisPool.getResource()) {
             jedis.del(KEY);
-        } finally {
-            jedisPool.returnResource(jedis);
         }
     }
 

@@ -49,8 +49,7 @@ public class RedisEffectiveACLCache implements EffectiveACLCache {
 
     @Override
     public ACL get(Key key) throws ServiceException {
-        Jedis jedis = jedisPool.getResource();
-        try {
+        try (Jedis jedis = jedisPool.getResource()) {
             String value = jedis.get(key(key));
             if (value == null) {
                 return null;
@@ -66,15 +65,12 @@ public class RedisEffectiveACLCache implements EffectiveACLCache {
             }
         } catch (Exception e) {
             throw ServiceException.PARSE_ERROR("failed deserializing ACL from cache", e);
-        } finally {
-            jedisPool.returnResource(jedis);
         }
     }
 
     @Override
     public void put(Key key, ACL acl) throws ServiceException {
-        Jedis jedis = jedisPool.getResource();
-        try {
+        try (Jedis jedis = jedisPool.getResource()) {
             String keyStr = key(key);
             Transaction transaction = jedis.multi();
             transaction.set(keyStr, acl.encode().toString());
@@ -85,30 +81,24 @@ public class RedisEffectiveACLCache implements EffectiveACLCache {
             transaction.exec();
         } catch (Exception e) {
             throw ServiceException.PARSE_ERROR("failed serializing ACL for cache", e);
-        } finally {
-            jedisPool.returnResource(jedis);
         }
     }
 
     @Override
     public void remove(Mailbox mbox) throws ServiceException {
         Set<Key> keys = new HashSet<>();
-        Jedis jedis = jedisPool.getResource();
-        try {
+        try (Jedis jedis = jedisPool.getResource()) {
             Set<String> folderIds = jedis.smembers(key(mbox.getAccountId()));
             for (String folderId: folderIds) {
                 keys.add(new Key(mbox.getAccountId(), new Integer(folderId)));
             }
-        } finally {
-            jedisPool.returnResource(jedis);
         }
         remove(keys);
     }
 
     @Override
     public void remove(Set<Key> keys) throws ServiceException {
-        Jedis jedis = jedisPool.getResource();
-        try {
+        try (Jedis jedis = jedisPool.getResource()) {
             Transaction transaction = jedis.multi();
             for (Key key: keys) {
                 String keyStr = key(key);
@@ -116,8 +106,6 @@ public class RedisEffectiveACLCache implements EffectiveACLCache {
                 transaction.srem(key(key.getAccountId()), key.getFolderId().toString());
             }
             transaction.exec();
-        } finally {
-            jedisPool.returnResource(jedis);
         }
     }
 }

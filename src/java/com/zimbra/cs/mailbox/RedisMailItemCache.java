@@ -68,8 +68,7 @@ public class RedisMailItemCache implements MailItemCache {
 
     @Override
     public MailItem get(Mailbox mbox, int itemId) throws ServiceException {
-        Jedis jedis = jedisPool.getResource();
-        try {
+        try (Jedis jedis = jedisPool.getResource()) {
             String value = jedis.get(idKey(mbox, itemId));
             if (value == null) {
                 return null;
@@ -78,19 +77,14 @@ public class RedisMailItemCache implements MailItemCache {
             MailItem.UnderlyingData ud = new MailItem.UnderlyingData();
             ud.deserialize(meta);
             return MailItem.constructItem(mbox, ud, true);
-        } finally {
-            jedisPool.returnResource(jedis);
         }
     }
 
     @Override
     public MailItem get(Mailbox mbox, String uuid) throws ServiceException {
-        Jedis jedis = jedisPool.getResource();
         String itemId = null;
-        try {
+        try (Jedis jedis = jedisPool.getResource()) {
             itemId = jedis.get(uuidKey(mbox, uuid));
-        } finally {
-            jedisPool.returnResource(jedis);
         }
         if (itemId == null) {
             return null;
@@ -100,8 +94,7 @@ public class RedisMailItemCache implements MailItemCache {
 
     @Override
     public void put(Mailbox mbox, MailItem item) throws ServiceException {
-        Jedis jedis = jedisPool.getResource();
-        try {
+        try (Jedis jedis = jedisPool.getResource()) {
             Transaction transaction = jedis.multi();
 
             String idsPerMailboxKey = idsPerMailboxKey(mbox);
@@ -130,16 +123,13 @@ public class RedisMailItemCache implements MailItemCache {
                 }
             }
             transaction.exec();
-        } finally {
-            jedisPool.returnResource(jedis);
         }
     }
 
     @Override
     public MailItem remove(Mailbox mbox, int itemId) throws ServiceException {
         MailItem item = get(mbox, itemId);
-        Jedis jedis = jedisPool.getResource();
-        try {
+        try (Jedis jedis = jedisPool.getResource()) {
             Transaction transaction = jedis.multi();
             transaction.srem(idsPerMailboxKey(mbox), Integer.toString(item.getId()));
             transaction.del(idKey(mbox, itemId));
@@ -149,15 +139,12 @@ public class RedisMailItemCache implements MailItemCache {
             }
             transaction.exec();
             return item;
-        } finally {
-            jedisPool.returnResource(jedis);
         }
     }
 
     @Override
     public void remove(Mailbox mbox) throws ServiceException {
-        Jedis jedis = jedisPool.getResource();
-        try {
+        try (Jedis jedis = jedisPool.getResource()) {
             Pipeline pipeline = jedis.pipelined();
             Response<Set<String>> idsResponse = pipeline.smembers(idsPerMailboxKey(mbox));
             Response<Set<String>> uuidsResponse = pipeline.smembers(uuidsPerMailboxKey(mbox));
@@ -175,8 +162,6 @@ public class RedisMailItemCache implements MailItemCache {
                 transaction.del(uuidKey(mbox, uuid));
             }
             transaction.exec();
-        } finally {
-            jedisPool.returnResource(jedis);
         }
     }
 }

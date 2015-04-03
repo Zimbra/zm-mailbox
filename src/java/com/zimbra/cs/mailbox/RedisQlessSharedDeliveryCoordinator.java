@@ -84,8 +84,7 @@ public class RedisQlessSharedDeliveryCoordinator extends RedisSharedDeliveryCoor
             }
 
             // Increment nesting count (or initialize to 1)
-            Jedis jedis = jedisPool.getResource();
-            try {
+            try (Jedis jedis = jedisPool.getResource()) {
                 String key = getCountKeyName(mbox);
                 Transaction transaction = jedis.multi();
                 transaction.incr(key);
@@ -93,8 +92,6 @@ public class RedisQlessSharedDeliveryCoordinator extends RedisSharedDeliveryCoor
                 List<Object> result = transaction.exec();
                 int newCount = Integer.parseInt(result.get(0).toString());
                 ZimbraLog.mailbox.debug("# of shared deliv incr to " + newCount + " for mailbox " + mbox.getId());
-            } finally {
-                jedisPool.returnResource(jedis);
             }
 
             return true;
@@ -109,9 +106,8 @@ public class RedisQlessSharedDeliveryCoordinator extends RedisSharedDeliveryCoor
     public void endSharedDelivery(Mailbox mbox) throws ServiceException {
 
         // Decrement nesting count
-        Jedis jedis = jedisPool.getResource();
         int newCount;
-        try {
+        try (Jedis jedis = jedisPool.getResource()) {
             String key = getCountKeyName(mbox);
             Transaction transaction = jedis.multi();
             transaction.decr(key);
@@ -120,8 +116,6 @@ public class RedisQlessSharedDeliveryCoordinator extends RedisSharedDeliveryCoor
             newCount = Integer.parseInt(result.get(0).toString());
             ZimbraLog.mailbox.debug("# of shared deliv decr to " + newCount +
                     " for mailbox " + mbox.getId());
-        } finally {
-            jedisPool.returnResource(jedis);
         }
 
         // If nesting count has returned to 1, mark qless job as completed

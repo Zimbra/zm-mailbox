@@ -39,8 +39,7 @@ public class RedisFoldersAndTagsCache implements FoldersAndTagsCache {
 
     @Override
     public FoldersAndTags get(Mailbox mbox) throws ServiceException {
-        Jedis jedis = jedisPool.getResource();
-        try {
+        try (Jedis jedis = jedisPool.getResource()) {
             String value = jedis.get(key(mbox));
             if (value == null) {
                 return null;
@@ -48,15 +47,12 @@ public class RedisFoldersAndTagsCache implements FoldersAndTagsCache {
 
             Metadata meta = new Metadata(value);
             return FoldersAndTags.decode(meta);
-        } finally {
-            jedisPool.returnResource(jedis);
         }
     }
 
     @Override
     public void put(Mailbox mbox, FoldersAndTags foldersAndTags) throws ServiceException {
-        Jedis jedis = jedisPool.getResource();
-        try {
+        try (Jedis jedis = jedisPool.getResource()) {
             String key = key(mbox);
             Transaction transaction = jedis.multi();
             transaction.set(key, foldersAndTags.encode().toString());
@@ -64,18 +60,13 @@ public class RedisFoldersAndTagsCache implements FoldersAndTagsCache {
                 transaction.expire(key, expirySecs);
             }
             transaction.exec();
-        } finally {
-            jedisPool.returnResource(jedis);
         }
     }
 
     @Override
     public void remove(Mailbox mbox) throws ServiceException {
-        Jedis jedis = jedisPool.getResource();
-        try {
+        try (Jedis jedis = jedisPool.getResource()) {
             jedis.del(key(mbox));
-        } finally {
-            jedisPool.returnResource(jedis);
         }
     }
 }

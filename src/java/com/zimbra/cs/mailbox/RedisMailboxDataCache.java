@@ -41,8 +41,7 @@ public class RedisMailboxDataCache implements MailboxDataCache {
 
     @Override
     public MailboxData get(Mailbox mbox) throws ServiceException {
-        Jedis jedis = jedisPool.getResource();
-        try {
+        try (Jedis jedis = jedisPool.getResource()) {
             String value = jedis.get(key(mbox));
             if (value == null) {
                 return null;
@@ -50,15 +49,12 @@ public class RedisMailboxDataCache implements MailboxDataCache {
             return mapper.readValue(value, MailboxData.class);
         } catch (Exception e) {
             throw ServiceException.PARSE_ERROR("failed deserializing MailboxData from cache", e);
-        } finally {
-            jedisPool.returnResource(jedis);
         }
     }
 
     @Override
     public void put(Mailbox mbox, MailboxData mailboxData) throws ServiceException {
-        Jedis jedis = jedisPool.getResource();
-        try {
+        try (Jedis jedis = jedisPool.getResource()) {
             String key = key(mbox);
             Transaction transaction = jedis.multi();
             transaction.set(key, mapper.writer().writeValueAsString(mailboxData));
@@ -68,18 +64,13 @@ public class RedisMailboxDataCache implements MailboxDataCache {
             transaction.exec();
         } catch (Exception e) {
             throw ServiceException.PARSE_ERROR("failed serializing MailboxData for cache", e);
-        } finally {
-            jedisPool.returnResource(jedis);
         }
     }
 
     @Override
     public void remove(Mailbox mbox) throws ServiceException {
-        Jedis jedis = jedisPool.getResource();
-        try {
+        try (Jedis jedis = jedisPool.getResource()) {
             jedis.del(key(mbox));
-        } finally {
-            jedisPool.returnResource(jedis);
         }
     }
 }

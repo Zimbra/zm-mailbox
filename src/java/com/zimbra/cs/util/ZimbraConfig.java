@@ -143,19 +143,11 @@ public class ZimbraConfig {
         if (uris.isEmpty()) {
             return false;
         }
-        JedisPool jedisPool = null;
-        Jedis jedis = null;
-        try {
-            jedisPool = jedisPoolBean();
-            jedis = jedisPool.getResource();
+        try (Jedis jedis = jedisPoolBean().getResource()) {
             jedis.get("");
             return true;
         } catch (Exception e) {
             return false;
-        } finally {
-            if (jedisPool != null && jedis != null) {
-                jedisPool.returnResource(jedis);
-            }
         }
     }
 

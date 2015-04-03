@@ -86,12 +86,9 @@ public class RedisMailboxPubSubAdapter implements MailboxPubSubAdapter {
             String message = new Holder(notification).toJSON();
 
             // Send
-            Jedis jedis = jedisPool.getResource();
-            try {
+            try (Jedis jedis = jedisPool.getResource()) {
                 String channel = channel(notification.mailboxAccount);
                 jedis.publish(channel, message);
-            } finally {
-                jedisPool.returnResource(jedis);
             }
 
         } catch (Exception e) {

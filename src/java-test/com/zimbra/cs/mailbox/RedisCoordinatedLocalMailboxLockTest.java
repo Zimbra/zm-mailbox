@@ -52,11 +52,8 @@ public class RedisCoordinatedLocalMailboxLockTest extends AbstractMailboxLockTes
     @Before
     public void resetStoreBetweenTests() throws Exception {
         JedisPool jedisPool = Zimbra.getAppContext().getBean(JedisPool.class);
-        Jedis jedis = jedisPool.getResource();
-        try {
+        try (Jedis jedis = jedisPool.getResource()) {
             jedis.flushDB();
-        } finally {
-            jedisPool.returnResource(jedis);
         }
     }
 
