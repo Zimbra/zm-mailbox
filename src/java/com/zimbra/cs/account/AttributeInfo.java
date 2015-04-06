@@ -57,7 +57,8 @@ public class AttributeInfo {
         zimbra,
         zimbraAdmin,
         service,
-        solr;
+        solr,
+        redolog;
     };
 
     //  8        4  4     4      12

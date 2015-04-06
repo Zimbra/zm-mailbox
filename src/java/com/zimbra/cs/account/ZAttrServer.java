@@ -49452,6 +49452,202 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * interface address on which redolog service should listen; if empty,
+     * binds to all localhost
+     *
+     * @return zimbraRedologBindAddress, or null if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1961)
+    public String getRedologBindAddress() {
+        return getAttr(Provisioning.A_zimbraRedologBindAddress, null);
+    }
+
+    /**
+     * interface address on which redolog service should listen; if empty,
+     * binds to all localhost
+     *
+     * @param zimbraRedologBindAddress new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1961)
+    public void setRedologBindAddress(String zimbraRedologBindAddress) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRedologBindAddress, zimbraRedologBindAddress);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * interface address on which redolog service should listen; if empty,
+     * binds to all localhost
+     *
+     * @param zimbraRedologBindAddress new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1961)
+    public Map<String,Object> setRedologBindAddress(String zimbraRedologBindAddress, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRedologBindAddress, zimbraRedologBindAddress);
+        return attrs;
+    }
+
+    /**
+     * interface address on which redolog service should listen; if empty,
+     * binds to all localhost
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1961)
+    public void unsetRedologBindAddress() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRedologBindAddress, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * interface address on which redolog service should listen; if empty,
+     * binds to all localhost
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1961)
+    public Map<String,Object> unsetRedologBindAddress(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRedologBindAddress, "");
+        return attrs;
+    }
+
+    /**
+     * HTTPs port for redolog service
+     *
+     * <p>Use getRedologBindPortAsString to access value as a string.
+     *
+     * @see #getRedologBindPortAsString()
+     *
+     * @return zimbraRedologBindPort, or 7994 if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1962)
+    public int getRedologBindPort() {
+        return getIntAttr(Provisioning.A_zimbraRedologBindPort, 7994);
+    }
+
+    /**
+     * HTTPs port for redolog service
+     *
+     * @return zimbraRedologBindPort, or "7994" if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1962)
+    public String getRedologBindPortAsString() {
+        return getAttr(Provisioning.A_zimbraRedologBindPort, "7994");
+    }
+
+    /**
+     * HTTPs port for redolog service
+     *
+     * @param zimbraRedologBindPort new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1962)
+    public void setRedologBindPort(int zimbraRedologBindPort) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRedologBindPort, Integer.toString(zimbraRedologBindPort));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * HTTPs port for redolog service
+     *
+     * @param zimbraRedologBindPort new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1962)
+    public Map<String,Object> setRedologBindPort(int zimbraRedologBindPort, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRedologBindPort, Integer.toString(zimbraRedologBindPort));
+        return attrs;
+    }
+
+    /**
+     * HTTPs port for redolog service
+     *
+     * @param zimbraRedologBindPort new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1962)
+    public void setRedologBindPortAsString(String zimbraRedologBindPort) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRedologBindPort, zimbraRedologBindPort);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * HTTPs port for redolog service
+     *
+     * @param zimbraRedologBindPort new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1962)
+    public Map<String,Object> setRedologBindPortAsString(String zimbraRedologBindPort, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRedologBindPort, zimbraRedologBindPort);
+        return attrs;
+    }
+
+    /**
+     * HTTPs port for redolog service
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1962)
+    public void unsetRedologBindPort() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRedologBindPort, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * HTTPs port for redolog service
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1962)
+    public Map<String,Object> unsetRedologBindPort(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRedologBindPort, "");
+        return attrs;
+    }
+
+    /**
      * Maximum number of items to put into a single reindexing task.
      *
      * @return zimbraReindexBatchSize, or 20 if unset

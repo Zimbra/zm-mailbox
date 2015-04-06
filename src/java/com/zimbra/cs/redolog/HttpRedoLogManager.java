@@ -161,7 +161,7 @@ public class HttpRedoLogManager extends AbstractRedoLogManager {
                         } else {
                             ServiceHealthResponse healthyService = healthyServices.get(0);
                             String scheme = healthyService.service.tags.contains("ssl") ? "https" : "http";
-                            url = scheme + "://" + healthyService.node.address + ":" + healthyService.service.port + "/redolog";
+                            url = scheme + "://" + healthyService.node.address + ":" + healthyService.service.port + "/redolog/data";
                             ZimbraLog.redolog.debug("falling back to healthy service %s", url);
                             return url;
                         }
@@ -183,7 +183,7 @@ public class HttpRedoLogManager extends AbstractRedoLogManager {
                             for (ServiceHealthResponse healthyService : healthyServices) {
                                 if (StringUtil.equalIgnoreCase(serviceId, healthyService.service.id)) {
                                     String scheme = healthyService.service.tags.contains("ssl") ? "https" : "http";
-                                    url = scheme + "://" + healthyService.node.address + ":" + healthyService.service.port + "/redolog";
+                                    url = scheme + "://" + healthyService.node.address + ":" + healthyService.service.port + "/redolog/data";
                                     break;
                                 }
                             }

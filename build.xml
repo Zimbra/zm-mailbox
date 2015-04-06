@@ -54,6 +54,7 @@
     </condition>
 
     <property name="build.zmprov" location="${build.dir}/data/zmprov.txt"/>
+    <property name="build.zmprov.alwayson" location="${build.dir}/data/zmprov-alwayson.txt"/>
     <property name="dist.db.dir" location="build/dist/db"/>
     <property name="dist.jetty.dir" location="${dist.dir}/jetty"/>
     <property name="generated.java.dir" location="${build.dir}/generated/src/java"/>
@@ -122,6 +123,18 @@
     <condition property="jetty-use-service">
         <isset property="env.ZIMBRA_JETTY_USE_SERVICE"/>
     </condition>
+
+    <condition property="consul.available">
+        <socket server="localhost" port="8500"/>
+    </condition>
+
+    <condition property="redis.available">
+        <socket server="localhost" port="6379"/>
+    </condition>
+
+    <condition property="redolog.available">
+        <available file="../ZimbraFOSS/ZimbraRedologService"/>
+	</condition>
 
     <condition property="deploy.dir" value="${env.DEPLOY_DIR}">
         <isset property="env.DEPLOY_DIR"/>
@@ -792,7 +805,7 @@
   <target name="service-deploy" depends="refresh-opt-zimbra,deploy-war"
             description="Not just war file deployment, but a /opt/zimbra refresh as well!"/>
 
-    <target name="deploy-war" depends="stop-jetty,war,copy-war,compile-solr-plugins,deploy-solr-plugins,copy-solr,start-jetty"/>
+    <target name="deploy-war" depends="stop-jetty,war,copy-war,compile-solr-plugins,deploy-solr-plugins,copy-solr,copy-redolog-war,start-jetty"/>
 
     <target name="copy-war">
         <delete dir="${jetty.home.dir}/webapps/service"/>
@@ -801,10 +814,10 @@
         <mkdir dir='${jetty.home.dir}/webapps/service'/>
         <unzip dest="${jetty.home.dir}/webapps/service" src="${jetty.home.dir}/webapps/${warfilename}"/>
     </target>
-	
+
     <target name="copy-solr">
         <delete dir="${jetty.home.dir}/webapps/solr"/>
-        <delete file="${jetty.hofme.dir}/webapps/solr.war"/>
+        <delete file="${jetty.home.dir}/webapps/solr.war"/>
         <copy file="${solr.war}" todir="${jetty.home.dir}/webapps"/>
         <mkdir dir='${jetty.home.dir}/webapps/solr'/>
         <unzip dest="${jetty.home.dir}/webapps/solr" src="${jetty.home.dir}/webapps/solr.war"/>
@@ -814,7 +827,17 @@
            <fileset dir="${common.jars.dir}" includes="log4j*.jar"/>
         </copy>
     </target>
-	
+
+    <target name="copy-redolog-war" if="${redolog.available}">
+        <property name="redolog.basename" value="zimbraredologservice"/>
+        <property name="redolog.war" location="../ZimbraFOSS/ZimbraRedologService/target/${redolog.basename}-${project.maven.version}.war"/>
+        <delete dir="${jetty.home.dir}/webapps/${redolog.basename}"/>
+        <delete file="${jetty.home.dir}/webapps/${redolog.basename}.war"/>
+        <copy file="${redolog.war}" tofile="${jetty.home.dir}/webapps/${redolog.basename}.war"/>
+        <mkdir dir='${jetty.home.dir}/webapps/${redolog.basename}'/>
+        <unzip dest="${jetty.home.dir}/webapps/${redolog.basename}" src="${jetty.home.dir}/webapps/${redolog.basename}.war"/>
+    </target>
+
     <target name="init-opt-zimbra" depends="dev-dist,localhost-ssl-cert" description="Copies build/dist to /opt/zimbra">
       <echo file="${zimbra.home.dir}/.platform">development</echo>
       <copy todir="${zimbra.home.dir}">
@@ -1570,6 +1593,36 @@
             <arg line="-l ms ${zimbra.server.hostname} zimbraMailboxSmtpToLmtpEnabled TRUE"/>
           </java>
         </then>
+    </if>
+    <antcall target="setup-alwayson-cluster"/>
+  </target>
+
+  <target name="setup-alwayson-cluster">
+    <if>
+      <and>
+        <isset property="redis.available"/>
+        <isset property="consul.available"/>
+        <isset property="redolog.available"/>
+      </and>
+      <then>
+            <java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true" outputproperty="build.alwaysoncluster.id">
+                <arg line="-l caoc devcluster1"/>
+            </java>
+            <echo message="created always on cluster ${build.alwaysoncluster.id}"/>
+            <echo file="${build.zmprov.alwayson}">
+                maoc ${build.alwaysoncluster.id} zimbraRedisUrl redis://localhost:6379
+                maoc ${build.alwaysoncluster.id} zimbraRedologBindPort 7994
+                maoc ${build.alwaysoncluster.id} zimbraRedoLogProvider com.zimbra.cs.redolog.HttpRedoLogProvider
+                ms ${zimbra.server.hostname} zimbraAlwaysOnClusterId ${build.alwaysoncluster.id}
+                ms ${zimbra.server.hostname} +zimbraServiceEnabled redolog
+            </echo>
+            <java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
+                <arg line="-l -f ${build.zmprov.alwayson} -v"/>
+            </java>
+        </then>
+        <else>
+          <echo message="One or more of Redis (http://localhost:6379), Consul (http://localhost:8500), ../ZimbraFOSS/ZimbraRedologService is not available. Skipping Always On setup"/>
+        </else>
     </if>
   </target>
 

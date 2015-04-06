@@ -9852,4 +9852,13 @@ TODO: delete them permanently from here
   <desc>Port number of the external XMPP server where XMPP over BOSH requests need to be proxied</desc>
 </attr>
 
+<attr id="1961" name="zimbraRedologBindAddress" type="string" max="128" cardinality="single" optionalIn="server,alwaysOnCluster" requiresRestart="mailbox" since="9.0.0" flags="serverPreferAlwaysOn" affectsServices="redolog">
+    <desc>interface address on which redolog service should listen; if empty, binds to all localhost</desc>
+</attr>
+
+<attr id="1962" name="zimbraRedologBindPort" type="port" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" callback="CheckPortConflict" since="9.0.0" affectsServices="redolog">
+    <globalConfigValue>7994</globalConfigValue>
+    <desc>HTTPs port for redolog service</desc>
+</attr>
+
 </attrs>
