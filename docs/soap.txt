@@ -2255,7 +2255,7 @@ If needExp is "1" in the request, two additional flags will be included in <e> e
 <ConvActionRequest>
   <!-- action can be preceeded by a "!" to negate it" -->
   <action id="{list}" op="delete|read|flag|priority|tag|move|spam|trash|mute"
-      [tag="{id}"] [l="{folder}"] [tcon="{constraint}"] [tcon="[-]{constraint}"]/>
+      [tag="{id}"] [l="{folder}"] [tcon="{constraint}"] [tcon="[-]{constraint}"] [acctRelPath="{relative-folder-path}"]/>
 </ConvActionRequest>
 
 <ConvActionResponse>
@@ -2274,7 +2274,13 @@ If needExp is "1" in the request, two additional flags will be included in <e> e
     a leading '-' means to negate the constraint (e.g. "-t" means all messages not in Trash)
 
   for op="!spam", can optionally specify a destination folder
+
   for op="mute" or "!mute", any {constraint} is ignored
+
+  For op="move", "acctRelPath" attr can also be used to specify the target folder, in terms of the relative path
+    from the account / data source's root folder. The target account / data source is identified based on where the
+    messages in this conversation already reside. If a conversation contains messages belonging of multiple accounts /
+    data sources then it would not be affected by this operation.
 
   See <ItemActionRequest> for more details.
 

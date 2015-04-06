@@ -165,8 +165,32 @@ public class ItemAction extends MailDocumentHandler {
                 ItemId iidTrash = new ItemId(mbox, Mailbox.ID_FOLDER_TRASH);
                 localResults = ItemActionHelper.MOVE(octxt, mbox, responseProto, local, type, tcon, iidTrash).getResult();
             } else if (opStr.equals(OP_MOVE)) {
-                ItemId iidFolder = new ItemId(action.getAttribute(MailConstants.A_FOLDER), zsc);
-                localResults = ItemActionHelper.MOVE(octxt, mbox, responseProto, local, type, tcon, iidFolder).getResult();
+                String acctRelativePath = action.getAttribute(MailConstants.A_ACCT_RELATIVE_PATH, null);
+                if (acctRelativePath == null) {
+                    ItemId iidFolder = new ItemId(action.getAttribute(MailConstants.A_FOLDER), zsc);
+                    localResults = ItemActionHelper.MOVE(octxt, mbox, responseProto, local, type, tcon, iidFolder).getResult();
+                } else if (type == MailItem.Type.CONVERSATION) {
+                    if ("/".equals(acctRelativePath.trim())) {
+                        throw ServiceException.INVALID_REQUEST("Invalid account relative path", null);
+                    }
+                    List<ItemActionHelper> actionHelpers =
+                            ItemActionHelper.MOVE(octxt, mbox, responseProto, local, tcon, acctRelativePath);
+                    if (actionHelpers.isEmpty()) {
+                        localResults = "";
+                    } else {
+                        StringBuilder resultsBuilder = new StringBuilder(actionHelpers.get(0).getResult());
+                        for (int i = 1; i < actionHelpers.size(); i++) {
+                            String result = actionHelpers.get(i).getResult();
+                            if (!result.isEmpty()) {
+                                resultsBuilder.append(',').append(result);
+                            }
+                        }
+                        localResults = resultsBuilder.toString();
+                    }
+                } else {
+                    throw ServiceException.INVALID_REQUEST(MailConstants.A_ACCT_RELATIVE_PATH +
+                            " is supported only for " + MailConstants.E_CONV_ACTION_REQUEST, null);
+                }
             } else if (opStr.equals(OP_COPY)) {
                 ItemId iidFolder = new ItemId(action.getAttribute(MailConstants.A_FOLDER), zsc);
                 localResults = ItemActionHelper.COPY(octxt, mbox, responseProto, local, type, tcon, iidFolder).getResult();
