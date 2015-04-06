@@ -1896,7 +1896,7 @@ public class DbMailItem {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
-            stmt = conn.prepareStatement("SELECT type, ids FROM " + getTombstoneTableName(mbox) +
+            stmt = conn.prepareStatement("SELECT type, ids, sequence FROM " + getTombstoneTableName(mbox) +
                         " WHERE " + IN_THIS_MAILBOX_AND + "sequence > ? AND ids IS NOT NULL" +
                         " ORDER BY sequence");
             Db.getInstance().enableStreaming(stmt);
@@ -1908,6 +1908,7 @@ public class DbMailItem {
             while (rs.next()) {
                 MailItem.Type type = MailItem.Type.of(rs.getByte(1));
                 String row = rs.getString(2);
+                int modSeq = rs.getInt(3);
                 if (row == null || row.equals("")) {
                     continue;
                 }
@@ -1918,9 +1919,9 @@ public class DbMailItem {
                         // a tombstone may either be ID or ID:UUID, so parse accordingly
                         int delimiter = stone.indexOf(':');
                         if (delimiter == -1) {
-                            tombstones.add(type, Integer.parseInt(stone), null);
+                            tombstones.add(type, Integer.parseInt(stone), null, modSeq);
                         } else {
-                            tombstones.add(type, Integer.parseInt(stone.substring(0, delimiter)), Strings.emptyToNull(stone.substring(delimiter + 1)));
+                            tombstones.add(type, Integer.parseInt(stone.substring(0, delimiter)), Strings.emptyToNull(stone.substring(delimiter + 1)), modSeq);
                         }
                     } catch (NumberFormatException nfe) {
                         ZimbraLog.sync.warn("unparseable TOMBSTONE entry: " + stone);
@@ -2667,7 +2668,11 @@ public class DbMailItem {
     }
 
     public static Pair<List<Integer>,TypedIdList> getModifiedItems(Mailbox mbox, MailItem.Type type, long lastSync,
-            int sinceDate, Set<Integer> visible)
+        int sinceDate, Set<Integer> visible) throws ServiceException {
+        return getModifiedItems(mbox, type, lastSync, sinceDate, visible, -1);
+    }
+    public static Pair<List<Integer>,TypedIdList> getModifiedItems(Mailbox mbox, MailItem.Type type, long lastSync,
+            int sinceDate, Set<Integer> visible, int lastDeleteSync)
     throws ServiceException {
         if (Mailbox.isCachedType(type)) {
             throw ServiceException.INVALID_REQUEST("folders and tags must be retrieved from cache", null);
@@ -2677,7 +2682,7 @@ public class DbMailItem {
         try {
             String typeConstraint = type == MailItem.Type.UNKNOWN ? "type NOT IN " + NON_SYNCABLE_TYPES : typeIn(type);
             String dateConstraint = sinceDate > 0 ? "date > ? AND " : "";
-            stmt = conn.prepareStatement("SELECT id, type, folder_id, uuid" +
+            stmt = conn.prepareStatement("SELECT id, type, folder_id, uuid, mod_metadata" +
                         " FROM " + getMailItemTableName(mbox) +
                         " WHERE " + IN_THIS_MAILBOX_AND + "mod_metadata > ? AND " + dateConstraint + typeConstraint +
                         " ORDER BY mod_metadata, id");
@@ -2691,7 +2696,7 @@ public class DbMailItem {
                 stmt.setInt(pos++, sinceDate);
             }
 
-            return  populateWithResultSetData(visible, stmt);
+            return populateWithResultSetData(visible, stmt, lastDeleteSync);
         } catch (SQLException e) {
             throw ServiceException.FAILURE("getting items modified since " + lastSync, e);
         } finally {
@@ -2725,7 +2730,7 @@ public class DbMailItem {
             if (changeDate > 0) {
                 stmt.setInt(pos++, changeDate);
             }
-            return populateWithResultSetData(visible, stmt);
+            return populateWithResultSetData(visible, stmt, -1);
         } catch (SQLException e) {
             throw ServiceException.FAILURE("Getting items modified since " + changeDate, e);
         } finally {
@@ -2743,7 +2748,7 @@ public class DbMailItem {
      * @throws ServiceException
      */
     private static Pair<List<Integer>, TypedIdList> populateWithResultSetData(Set<Integer> visible,
-        PreparedStatement stmt) throws SQLException, ServiceException {
+        PreparedStatement stmt, int lastDeleteSync) throws SQLException, ServiceException {
         List<Integer> modified = new ArrayList<Integer>();
         TypedIdList missed = new TypedIdList();
         ResultSet rs = null;
@@ -2753,7 +2758,10 @@ public class DbMailItem {
                 if (visible == null || visible.contains(rs.getInt(3))) {
                     modified.add(rs.getInt(1));
                 } else {
-                    missed.add(MailItem.Type.of(rs.getByte(2)), rs.getInt(1), rs.getString(4));
+                    int modSeq = rs.getInt(5);
+                    if (modSeq > lastDeleteSync) {
+                        missed.add(MailItem.Type.of(rs.getByte(2)), rs.getInt(1), rs.getString(4), modSeq);
+                    }
                 }
             }
         }

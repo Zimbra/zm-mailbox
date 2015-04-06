@@ -1,10 +1,12 @@
 <-- initial sync request -->
 
-<SyncRequest [l="{root-folder-id}"] [calCutoff="{earliest-calendar-date}"]/>
+<SyncRequest [l="{root-folder-id}"] [calCutoff="{earliest-calendar-date}"] [deleteLimit="max number of deleted items"]/>
 
    <-- no token = initial sync -->
    <--  if {root-folder-id} present, we start sync there rather than at folder 11 -->
    <--  if {earliest-calendar-date} present, omit all appointments and tasks that don't have a recurrence ending after that time (specified in ms) -->
+   <--  if {max number of deleted items} present and it is greater than 0, then response will limit to the number of deleted items to the value and
+        if there are more delete queued, and another SyncRequest (using the new returned token) is necessary. -->
 
 <SyncResponse token="403" md="1077924283" s="78624627">
   <folder id="11">
@@ -110,3 +112,24 @@
 
 <-- if more="1" is specified on the sync response, the response does *not* bring the client completely up to date.
     more changes are still queued, and another SyncRequest (using the new returned token) is necessary. -->
+
+<SyncRequest token="500" typed="1" deleteLimit="5"/>
+
+<SyncResponse token="540:d524-900" md="1078054298" more="1">
+  <-- handle deletes first -->
+  <deleted ids="903,904,905,902,899">
+    <folder ids="903,902,899"/>
+    <m ids="904"/>
+    <c ids="905"/>
+  </deleted>
+</SyncResponse>    
+
+<SyncRequest token="500" typed="1" deleteLimit="5"/>
+
+<SyncResponse token="540" md="1078054298" more="1">
+  <-- handle deletes first -->
+  <deleted ids="900,1000>
+    <m ids="900"/>
+    <c ids="1000"/>
+  </deleted>
+</SyncResponse>

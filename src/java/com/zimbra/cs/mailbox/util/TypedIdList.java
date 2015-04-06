@@ -24,21 +24,34 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.zimbra.common.util.Pair;
 import com.zimbra.cs.mailbox.MailItem;
 
 public final class TypedIdList implements Iterable<Map.Entry<MailItem.Type, List<TypedIdList.ItemInfo>>> {
-    public static class ItemInfo extends Pair<Integer, String> {
-        public ItemInfo(Integer id, String uuid) {
-            super(id, uuid);
+    public static class ItemInfo {
+        int id;
+        String uuid;
+        int modSequence;
+
+        public ItemInfo(int id, String uuid) {
+            this.id = id;
+            this.uuid = uuid;
         }
 
-        public Integer getId() {
-            return getFirst();
+        public ItemInfo(int id, String uuid, int modSequence) {
+            this(id, uuid);
+            this.modSequence = modSequence;
+        }
+
+        public int getId() {
+            return this.id;
         }
 
         public String getUuid() {
-            return getSecond();
+            return this.uuid;
+        }
+
+        public int getModSequence() {
+            return this.modSequence;
         }
     }
 
@@ -62,6 +75,17 @@ public final class TypedIdList implements Iterable<Map.Entry<MailItem.Type, List
             type2ids.put(type, items = new ArrayList<ItemInfo>(1));
         }
         items.add(new ItemInfo(id, uuid));
+    }
+
+    public void add(MailItem.Type type, Integer id, String uuid, int modSequence) {
+        if (id == null)
+            return;
+
+        List<ItemInfo> items = type2ids.get(type);
+        if (items == null) {
+            type2ids.put(type, items = new ArrayList<ItemInfo>(1));
+        }
+        items.add(new ItemInfo(id, uuid, modSequence));
     }
 
     /** Adds all contents of another TypedIdList to this TypedIdList. */
