@@ -16,6 +16,7 @@
  */
 package com.zimbra.cs.service.mail;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashSet;
@@ -23,6 +24,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.collect.Multimap;
+import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
@@ -37,16 +40,123 @@ import com.zimbra.cs.mailbox.Mailbox.FolderNode;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.OperationContextData;
 import com.zimbra.cs.mailbox.Tag;
+import com.zimbra.cs.mailbox.util.PagedDelete;
 import com.zimbra.cs.mailbox.util.TypedIdList;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.session.PendingModifications.Change;
+import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
+import com.zimbra.soap.mail.message.SyncRequest;
 
 /**
  * @since Aug 31, 2004
  */
 public class Sync extends MailDocumentHandler {
+    static class SyncToken {
+        private final String MODSEQ_ITEMID_SEPARATOR = "-";
+        private final String CHANGE_DEL_SEPARATOR = ":d";
+        int changeModSeq;
+        int changeItemId;
+        int deleteModSeq;
+        int deleteItemId;
+
+        public SyncToken(String token) throws ServiceException {
+            this.parse(token);
+        }
+
+        public SyncToken(int modCutoffSeq) {
+            this.changeModSeq = modCutoffSeq;
+            this.changeItemId = -1;
+            this.deleteModSeq = -1;
+            this.deleteItemId = -1;
+        }
+
+        private void parse(String token) throws ServiceException {
+            int del2modDelimiter = token.indexOf(CHANGE_DEL_SEPARATOR);
+            String modToken = token;
+            String delToken = "";
+            if (del2modDelimiter > 0) {
+                modToken = token.substring(0, del2modDelimiter);
+                delToken = token.substring(del2modDelimiter+2);
+            }
+            try {
+                int delimiter = modToken.indexOf(MODSEQ_ITEMID_SEPARATOR);
+                if (delimiter < 1) {
+                    changeModSeq = Integer.parseInt(modToken);
+                    changeItemId = -1;
+                } else {
+                    changeModSeq = Integer.parseInt(modToken.substring(0, delimiter));
+                    changeItemId = Integer.parseInt(modToken.substring(delimiter + 1));
+                }
+                if (!StringUtil.isNullOrEmpty(delToken)) {
+                    delimiter = delToken.indexOf(MODSEQ_ITEMID_SEPARATOR);
+                    if (delimiter < 1) {
+                        deleteModSeq = Integer.parseInt(delToken);
+                        deleteItemId = -1;
+                    } else {
+                        deleteModSeq = Integer.parseInt(delToken.substring(0, delimiter));
+                        deleteItemId = Integer.parseInt(delToken.substring(delimiter + 1));
+                    }
+                } else {
+                    deleteModSeq = -1;
+                    deleteItemId = -1;
+                }
+            } catch (NumberFormatException nfe) {
+                throw ServiceException.INVALID_REQUEST("malformed sync token: " + token, nfe);
+            }
+        }
+
+        public int getChangeModSeq() {
+            return this.changeModSeq;
+        }
+
+        public int getDeleteModSeq() {
+            return this.deleteModSeq;
+        }
+
+        public int getChangeItemId() {
+            return this.changeItemId;
+        }
+
+        public int getDeleteItemId() {
+            return this.deleteItemId;
+        }
+
+        public void setChangeModSeq(int changeModSeq) {
+            this.changeModSeq = changeModSeq;
+        }
+
+        public void setChangeItemId(int changeItemId) {
+            this.changeItemId = changeItemId;
+        }
+
+        public void setDeleteModSeq(int deleteModSeq) {
+            this.deleteModSeq = deleteModSeq;
+        }
+
+        public void setDeleteItemId(int deleteItemId) {
+            this.deleteItemId = deleteItemId;
+        }
+
+        public String toString() {
+            StringBuffer token = new StringBuffer();
+            if (this.changeModSeq > 0) {
+                token.append("" + this.changeModSeq);
+            }
+            if (this.changeItemId > 0) {
+                token.append(MODSEQ_ITEMID_SEPARATOR + this.changeItemId);
+            }
+            if (this.deleteModSeq > 0) {
+                token.append(CHANGE_DEL_SEPARATOR + this.deleteModSeq);
+                if (this.deleteItemId > 0) {
+                    token.append(MODSEQ_ITEMID_SEPARATOR + this.deleteItemId);
+                }
+            }
+            return token.toString();
+        }
+
+    }
 
     protected static final String[] TARGET_FOLDER_PATH = new String[] { MailConstants.A_FOLDER };
     @Override protected String[] getProxiedIdPath(Element request)  { return TARGET_FOLDER_PATH; }
@@ -58,26 +168,31 @@ public class Sync extends MailDocumentHandler {
         OperationContext octxt = getOperationContext(zsc, context);
         ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
 
-        String token = request.getAttribute(MailConstants.A_TOKEN, "0");
+        SyncRequest syncRequest = JaxbUtil.elementToJaxb(request);
+        String token = syncRequest.getToken();
 
         Element response = zsc.createElement(MailConstants.SYNC_RESPONSE);
         response.addAttribute(MailConstants.A_CHANGE_DATE, System.currentTimeMillis() / 1000);
 
         // the sync token is of the form "last fully synced change id" (e.g. "32425") or
-        //   "last fully synced change id-last item synced in next change id" (e.g. "32425-99213")
-        int tokenInt, itemCutoff;
-        try {
-            int delimiter = token.indexOf('-');
-            if (delimiter < 1) {
-                tokenInt = Integer.parseInt(token);
-                itemCutoff = -1;
-            } else {
-                tokenInt = Integer.parseInt(token.substring(0, delimiter));
-                itemCutoff = Integer.parseInt(token.substring(delimiter + 1));
+        // last fully synced change id-last item synced in next change id" (e.g. "32425-99213") or
+        // last fully synced change id-last item synced in next change id and last fully synced delete change id" (e.g. "32425-99213:d1231232") or
+        // last fully synced change id-last item synced in next change id and 
+        // last fully synced delete id-last item synced in next delete id (e.g. "32425-99213:d12312-82134")
+        SyncToken syncToken = null;
+        int tokenInt = 0;
+        if (!StringUtil.isNullOrEmpty(token)) {
+            try {
+                syncToken = new SyncToken(token);
+                tokenInt = syncToken.getChangeModSeq();
+            } catch (NumberFormatException nfe) {
+                throw ServiceException.INVALID_REQUEST("malformed sync token: " + token, nfe);
             }
-        } catch (NumberFormatException nfe) {
-            throw ServiceException.INVALID_REQUEST("malformed sync token: " + token, nfe);
         }
+        if (syncToken == null) {
+            syncToken = new SyncToken(0);
+        }
+        int deleleLimit = syncRequest.getDeleteLimit();
         boolean initialSync = tokenInt <= 0;
 
         // permit the caller to restrict initial sync only to calendar items with a recurrence after a given date
@@ -121,7 +236,7 @@ public class Sync extends MailDocumentHandler {
                 }
             } else {
                 boolean typedDeletes = request.getAttributeBool(MailConstants.A_TYPED_DELETES, false);
-                String newToken = deltaSync(response, octxt, ifmt, mbox, tokenInt, itemCutoff, typedDeletes, root, visible, messageSyncStart);
+                String newToken = deltaSync(response, octxt, ifmt, mbox, syncToken, deleleLimit,typedDeletes, root, visible, messageSyncStart);
                 response.addAttribute(MailConstants.A_TOKEN, newToken);
             }
         } finally {
@@ -227,7 +342,7 @@ public class Sync extends MailDocumentHandler {
     }
 
     private static final int FETCH_BATCH_SIZE = 200;
-    private static final int MAXIMUM_CHANGE_COUNT = 3990;
+    private static int MAXIMUM_CHANGE_COUNT = DebugConfig.syncMaximumChangeCount;
 
     private static final int MUTABLE_FIELDS = Change.FLAGS  | Change.TAGS | Change.FOLDER | Change.PARENT |
             Change.NAME | Change.CONFLICT | Change.COLOR  | Change.POSITION | Change.DATE;
@@ -235,14 +350,26 @@ public class Sync extends MailDocumentHandler {
     private static final Set<MailItem.Type> FOLDER_TYPES = EnumSet.of(MailItem.Type.FOLDER,
             MailItem.Type.SEARCHFOLDER, MailItem.Type.MOUNTPOINT);
 
-    private static String deltaSync(Element response, OperationContext octxt, ItemIdFormatter ifmt, Mailbox mbox, int begin, int itemCutoff, boolean typedDeletes, Folder root, Set<Folder> visible, long messageSyncStart)
+    // For Test purpose.
+    static void setMaximumChangeCount(int maximumChangeCount) {
+        MAXIMUM_CHANGE_COUNT = maximumChangeCount;
+    }
+
+    private static String deltaSync(Element response, OperationContext octxt, ItemIdFormatter ifmt, Mailbox mbox, SyncToken syncToken, int deleteLimit, boolean typedDeletes, Folder root, Set<Folder> visible, long messageSyncStart)
     throws ServiceException {
-        String newToken = mbox.getLastChangeID() + "";
-        if (begin >= mbox.getLastChangeID())
-            return newToken;
+        int begin = syncToken.getChangeModSeq();
+        int deleteModSeqCutoff = syncToken.getDeleteModSeq();
+        deleteModSeqCutoff = deleteModSeqCutoff <= 0 ? begin : deleteModSeqCutoff;
+        int mboxLastChangeId = mbox.getLastChangeID();
+        SyncToken newSyncToken = new SyncToken(mboxLastChangeId);
+        if (begin >= mboxLastChangeId && deleteModSeqCutoff >= mboxLastChangeId) {
+            return newSyncToken.toString();
+        }
+        int changeItemIdCutoff = syncToken.getChangeItemId();
+        int deleteItemIdCutoff = syncToken.getDeleteItemId();
 
         // first, fetch deleted items
-        TypedIdList tombstones = mbox.getTombstones(begin);
+        TypedIdList tombstones = mbox.getTombstones(deleteModSeqCutoff);
         Element eDeleted = response.addElement(MailConstants.E_DELETED);
 
         // then, put together the requested folder hierarchy in 2 different flavors
@@ -272,7 +399,7 @@ public class Sync extends MailDocumentHandler {
                 if (targetIds == null || targetIds.contains(folder.getId())) {
                     ToXML.encodeFolder(response, ifmt, octxt, folder, Change.ALL_FIELDS);
                 } else {
-                    tombstones.add(folder.getType(), folder.getId(), folder.getUuid());
+                    tombstones.add(folder.getType(), folder.getId(), folder.getUuid(), folder.getModifiedSequence());
                 }
             }
         }
@@ -284,19 +411,29 @@ public class Sync extends MailDocumentHandler {
 
         // finally, handle created/modified "other items"
         int itemCount = 0;
-        Pair<List<Integer>,TypedIdList> changed = mbox.getModifiedItems(octxt, begin, MailItem.Type.UNKNOWN, targetIds);
+        Pair<List<Integer>,TypedIdList> changed = mbox.getModifiedItems(octxt, Math.min(begin, deleteModSeqCutoff), MailItem.Type.UNKNOWN, targetIds, deleteModSeqCutoff);
         List<Integer> modified = changed.getFirst();
+
+        // items that have been altered in non-visible folders will be returned as "deleted" in order to handle moves
+        if (changed.getSecond() != null) {
+            tombstones.addAll(changed.getSecond());
+        }
+
         delta: while (!modified.isEmpty()) {
             List<Integer> batch = modified.subList(0, Math.min(modified.size(), FETCH_BATCH_SIZE));
             for (MailItem item : mbox.getItemById(octxt, batch, MailItem.Type.UNKNOWN)) {
                 // detect interrupted sync and resume from the appropriate place
-                if (item.getModifiedSequence() == begin + 1 && item.getId() < itemCutoff)
+                if ((item.getModifiedSequence() == begin + 1 && item.getId() < changeItemIdCutoff) ||
+                    item.getModifiedSequence() <= begin) { //if interrupted delete and un-interrupted modifications.
                     continue;
+                }
 
                 // if we've overflowed this sync response, set things up so that a subsequent sync starts from where we're cutting off
                 if (itemCount >= MAXIMUM_CHANGE_COUNT) {
                     response.addAttribute(MailConstants.A_QUERY_MORE, true);
-                    newToken = (item.getModifiedSequence() - 1) + "-" + item.getId();
+                    newSyncToken.setChangeModSeq((item.getModifiedSequence() - 1));
+                    newSyncToken.setChangeItemId(item.getId());
+                    newSyncToken.setDeleteModSeq(mboxLastChangeId);
                     break delta;
                 }
 
@@ -312,12 +449,25 @@ public class Sync extends MailDocumentHandler {
             batch.clear();
         }
 
-        // items that have been altered in non-visible folders will be returned as "deleted" in order to handle moves
-        if (changed.getSecond() != null) {
-            tombstones.addAll(changed.getSecond());
-        }
-
         // cleanup: only return a <deleted> element if we're sending back deleted item ids
+        if ((deleteLimit > 0 && tombstones.size() > deleteLimit) ||  deleteItemIdCutoff > 0) {
+            PagedDelete pgDel = new PagedDelete(tombstones, typedDeletes);
+            pgDel.removeBeforeCutoff(deleteItemIdCutoff, deleteModSeqCutoff);
+            if (deleteLimit > 0) {
+                pgDel.trimDeletesTillPageLimit(deleteLimit);
+            }
+            encodePagedDelete(eDeleted, pgDel, newSyncToken, tombstones, typedDeletes);
+            if (pgDel.isDeleteOverFlow()) {
+                response.addAttribute(MailConstants.A_QUERY_MORE, true);
+                response.addAttribute(MailConstants.A_QUERY_MORE, true);
+            }
+        } else {
+            encodeUnpagedDelete(eDeleted, tombstones, typedDeletes);
+        }
+        return newSyncToken.toString();
+    }
+
+    private static void encodeUnpagedDelete(Element eDeleted, TypedIdList tombstones, boolean typedDeletes) {
         if (tombstones.isEmpty()) {
             eDeleted.detach();
         } else {
@@ -340,8 +490,35 @@ public class Sync extends MailDocumentHandler {
             }
             eDeleted.addAttribute(MailConstants.A_IDS, deleted.toString());
         }
+    }
 
-        return newToken;
+    private static void encodePagedDelete(Element eDeleted, PagedDelete pgDelete, SyncToken newSyncToken, TypedIdList tombstones, boolean typedDeletes) {
+        Collection<Integer> itemIds = pgDelete.getAllIds();
+        if(itemIds.isEmpty()) {
+            eDeleted.detach();
+        } else {
+            if (typedDeletes) {
+                Multimap<MailItem.Type, Integer> type2Id = pgDelete.getTypedItemIds();
+                StringBuilder typed = new StringBuilder();
+                for (MailItem.Type type : type2Id.keySet()) {
+                    String eltName = elementNameForType(type);
+                    typed.setLength(0);
+                    for (Integer id :type2Id.get(type)) {
+                        typed.append(typed.length() == 0 ? "" : ",").append(id);
+                    }
+                    eDeleted.addElement(eltName).addAttribute(MailConstants.A_IDS, typed.toString());
+                }
+            }
+            StringBuilder deleted = new StringBuilder();
+            for (Integer itemId : itemIds) {
+                deleted.append(deleted.length() == 0 ? "" : ",").append(itemId);
+            }
+            eDeleted.addAttribute(MailConstants.A_IDS, deleted.toString());
+        }
+        if (pgDelete.isDeleteOverFlow()) {
+            newSyncToken.setDeleteItemId(pgDelete.getLastItemId());
+            newSyncToken.setDeleteModSeq(pgDelete.getCutOffModsequnce()-1);
+        }
     }
 
     public static String elementNameForType(MailItem.Type type) {

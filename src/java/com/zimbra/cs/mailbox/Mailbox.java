@@ -3704,7 +3704,17 @@ public class Mailbox {
 
     public Pair<List<Integer>, TypedIdList> getModifiedItems(OperationContext octxt, int lastSync, MailItem.Type type,
                     Set<Integer> folderIds) throws ServiceException {
-        return getModifiedItems(octxt, lastSync, 0, type, folderIds);
+        return getModifiedItems(octxt, lastSync, 0, type, folderIds, -1);
+    }
+
+    public Pair<List<Integer>, TypedIdList> getModifiedItems(OperationContext octxt, int lastSync, MailItem.Type type,
+        Set<Integer> folderIds, int lastDeleteSync) throws ServiceException {
+        return getModifiedItems(octxt, lastSync, 0, type, folderIds, lastDeleteSync);
+    }
+
+    public Pair<List<Integer>, TypedIdList> getModifiedItems(OperationContext octxt, int lastSync, int sinceDate,
+        MailItem.Type type, Set<Integer> folderIds) throws ServiceException {
+        return getModifiedItems(octxt, lastSync, sinceDate, type, folderIds, -1);
     }
 
     /**
@@ -3721,7 +3731,7 @@ public class Mailbox {
      * @throws ServiceException
      */
     public Pair<List<Integer>, TypedIdList> getModifiedItems(OperationContext octxt, int lastSync, long sinceDate,
-            MailItem.Type type, Set<Integer> folderIds) throws ServiceException {
+            MailItem.Type type, Set<Integer> folderIds, int lastDeleteSync) throws ServiceException {
         lock.lock(false);
         try {
             if (lastSync >= getLastChangeID()) {
@@ -3738,7 +3748,7 @@ public class Mailbox {
                     folderIds = SetUtil.intersect(folderIds, visible);
                 }
                 Pair<List<Integer>, TypedIdList> dataList = DbMailItem
-                                .getModifiedItems(this, type, lastSync, sinceDate, folderIds);
+                                .getModifiedItems(this, type, lastSync, sinceDate, folderIds, lastDeleteSync);
                 if (dataList == null) {
                     return null;
                 }
