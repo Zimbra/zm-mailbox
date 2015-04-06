@@ -24,8 +24,8 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.soap.mail.type.ActionSelector;
 import com.zimbra.soap.json.jackson.annotate.ZimbraUniqueElement;
+import com.zimbra.soap.mail.type.ConvActionSelector;
 
 /**
  * @zm-api-command-auth-required true
@@ -37,26 +37,25 @@ import com.zimbra.soap.json.jackson.annotate.ZimbraUniqueElement;
 public class ConvActionRequest {
 
     /**
-     * @zm-api-field-description Action selector
+     * @zm-api-field-description Conversation action selector
      */
     @ZimbraUniqueElement
     @XmlElement(name=MailConstants.E_ACTION /* action */, required=true)
-    protected ActionSelector action;
+    protected ConvActionSelector action;
 
     /**
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
     private ConvActionRequest() {
-        this((ActionSelector) null);
+        this((ConvActionSelector) null);
     }
 
-    public ConvActionRequest(ActionSelector action) {
+    public ConvActionRequest(ConvActionSelector action) {
         this.action = action;
     }
 
-    public ActionSelector getAction() { return action; }
-    public void setAction(ActionSelector value) { this.action = value; }
+    public ConvActionSelector getAction() { return action; }
 
     @Override
     public String toString() {
