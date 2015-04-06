@@ -1122,6 +1122,8 @@ public final class MailConstants {
     public static final String A_DS_OAUTH_TOKEN = "oauthToken";
     public static final String A_DS_TEST = "test";
 
+    public static final String A_ACCT_RELATIVE_PATH = "acctRelPath";
+
     public static final String A_CREATOR = "cr";
     public static final String A_TYPE = "t";
     public static final String E_WIKIWORD = "w";
