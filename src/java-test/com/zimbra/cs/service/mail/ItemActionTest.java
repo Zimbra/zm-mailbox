@@ -92,6 +92,24 @@ public class ItemActionTest {
     }
 
     @Test
+    public void moveConversationToAcctRelativePath() throws Exception {
+        Account acct = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
+
+        acct.setMailThreadingAlgorithm(MailThreadingAlgorithm.subject);
+
+        ParsedMessage pm = MailboxTestUtil.generateMessage("test subject");
+        DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX);
+        int msgId = mbox.addMessage(null, pm, dopt, null).getId();
+
+        String targetFolderName = "folder1";
+        ItemActionHelper.MOVE(null, mbox, SoapProtocol.Soap12, Arrays.asList(msgId * -1), null, targetFolderName);
+        Folder newFolder = mbox.getFolderByName(null, Mailbox.ID_FOLDER_USER_ROOT, targetFolderName);
+        Message msg = mbox.getMessageById(null, msgId);
+        Assert.assertEquals(msg.getFolderId(), newFolder.getId());
+    }
+
+    @Test
     public void deleteIncompleteConversation() throws Exception {
         Account acct = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);

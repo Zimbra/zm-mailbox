@@ -22,13 +22,16 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
+import com.zimbra.cs.account.DataSource;
 import org.dom4j.QName;
 
 import com.zimbra.client.ZContact;
@@ -151,6 +154,72 @@ public class ItemActionHelper {
         ia.setIidFolder(iidFolder);
         ia.schedule();
         return ia;
+    }
+
+    /**
+     * Account relative path conversation move.
+     */
+    public static List<ItemActionHelper> MOVE(OperationContext octxt, Mailbox mbox, SoapProtocol responseProto,
+            List<Integer> ids, TargetConstraint tcon, String acctRelativePath) throws ServiceException {
+        List<ItemActionHelper> returnList = new ArrayList<>();
+
+        // First build all external account / data source root folder ids
+        Set<Integer> dsRootFolderIds = new HashSet<>();
+        if (!ids.isEmpty()) {
+            List<DataSource> dataSources = mbox.getAccount().getAllDataSources();
+            if (dataSources != null) {
+                for (DataSource ds : dataSources) {
+                    int dsFolderId = ds.getFolderId();
+                    if (dsFolderId != -1) {
+                        dsRootFolderIds.add(dsFolderId);
+                    }
+                }
+            }
+        }
+
+        for (int convId : ids) {
+            Integer rootFolderIdForConv = null;
+            for (Message msg : mbox.getMessagesByConversation(octxt, convId, SortBy.NONE, -1)) {
+                int rootFolderIdForThisMsg = getRootFolderIdForItem(msg, mbox, dsRootFolderIds);
+                if (rootFolderIdForConv == null) {
+                    rootFolderIdForConv = rootFolderIdForThisMsg;
+                } else if (rootFolderIdForConv != rootFolderIdForThisMsg) {
+                    // this is conv spanning multiple accounts / data sources
+                    rootFolderIdForConv = null;
+                    break;
+                }
+            }
+            if (rootFolderIdForConv == null) {
+                continue;
+            }
+            Folder rootFolder = mbox.getFolderById(octxt, rootFolderIdForConv);
+            String rootFolderPath = rootFolder.getPath();
+            rootFolderPath = "/".equals(rootFolderPath) ? "" : rootFolderPath;
+            String targetFolderPath = rootFolderPath.concat(acctRelativePath.startsWith("/") ? acctRelativePath :
+                    "/" + acctRelativePath);
+            Folder targetFolder;
+            try {
+                targetFolder = mbox.getFolderByPath(octxt, targetFolderPath);
+            } catch (MailServiceException.NoSuchItemException e) {
+                targetFolder = mbox.createFolder(octxt, targetFolderPath,
+                        new Folder.FolderOptions().setDefaultView(MailItem.Type.MESSAGE));
+            }
+
+            returnList.add(MOVE(octxt, mbox, responseProto, Arrays.asList(convId), MailItem.Type.CONVERSATION, tcon,
+                    new ItemId(targetFolder)));
+        }
+
+        return returnList;
+    }
+
+    private static int getRootFolderIdForItem(MailItem item, Mailbox mbox, Set<Integer> dsRootFolderIds)
+            throws ServiceException {
+        int folderId = item.getFolderId();
+        if (folderId == Mailbox.ID_FOLDER_USER_ROOT || folderId == Mailbox.ID_FOLDER_ROOT ||
+                dsRootFolderIds.contains(folderId)) {
+            return folderId;
+        }
+        return getRootFolderIdForItem(mbox.getFolderById(null, folderId), mbox, dsRootFolderIds);
     }
 
     public static ItemActionHelper COPY(OperationContext octxt, Mailbox mbox, SoapProtocol responseProto,

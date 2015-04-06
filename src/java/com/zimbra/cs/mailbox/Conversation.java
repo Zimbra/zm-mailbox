@@ -211,7 +211,7 @@ public class Conversation extends MailItem {
      * @param sort the sort order for the messages
      * @param limit max number of messages to retrieve, or unlimited if -1
      */
-    public List<Message> getMessages(SortBy sort, int limit) throws ServiceException {
+    List<Message> getMessages(SortBy sort, int limit) throws ServiceException {
         List<Message> msgs = new ArrayList<Message>(getMessageCount());
         List<UnderlyingData> listData = DbMailItem.getByParent(this, sort, limit, false);
         for (UnderlyingData data : listData) {
