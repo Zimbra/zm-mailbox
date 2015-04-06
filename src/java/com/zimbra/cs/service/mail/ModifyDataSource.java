@@ -181,12 +181,6 @@ public class ModifyDataSource extends MailDocumentHandler {
     public static void processCommonOptionalAttrs(Map<String, Object> dsAttrs, Element eDataSource) throws ServiceException {
         String value;
 
-        value = eDataSource.getAttribute(MailConstants.A_DS_OAUTH_TOKEN, null);
-        if (value != null) {
-            dsAttrs.put(Provisioning.A_zimbraDataSourceOAuthToken, value);
-            dsAttrs.put(Provisioning.A_zimbraDataSourceAuthMechanism, ZAttrProvisioning.DataSourceAuthMechanism.XOAUTH2.name());
-        }
-
         value = eDataSource.getAttribute(MailConstants.A_DS_EMAIL_ADDRESS, null);
         if (value != null) {
             dsAttrs.put(Provisioning.A_zimbraDataSourceEmailAddress, value);
