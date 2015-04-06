@@ -281,6 +281,7 @@ public final class DebugConfig {
     public static final int numberOfThreadsToUseForDomainAdminCountObjects =
             value ("debug_number_of_threads_to_use_for_domain_admin_count_objects", 3);
 
+    public static final int syncMaximumChangeCount = value ("sync_maximum_change_count", 3990 );
     private static boolean value(String key, boolean defaultValue) {
         String value = LC.get(key);
         return value.isEmpty() ? defaultValue : Boolean.parseBoolean(value);
