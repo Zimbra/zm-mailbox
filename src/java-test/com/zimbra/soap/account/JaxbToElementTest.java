@@ -34,6 +34,7 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.transform.stream.StreamSource;
 
+import com.zimbra.soap.mail.type.ConvActionSelector;
 import junit.framework.Assert;
 
 import org.apache.log4j.BasicConfigurator;
@@ -721,26 +722,22 @@ Caused by: javax.xml.bind.UnmarshalException: Namespace URIs and local names to 
      */
     // @Test
     public void ConvActionRequestJaxbSubclassHandlingTestDisabled() throws Exception {
-        FolderActionSelector fas = new FolderActionSelector("ids", "op");
-        fas.setFolder("folder");
-        fas.setRecursive(true);
-        fas.setUrl("http://url");
-        ConvActionRequest car = new ConvActionRequest(fas);
+        ConvActionSelector actionSelector = new ConvActionSelector("ids", "op");
+        actionSelector.setAcctRelativePath("folder");
+        ConvActionRequest car = new ConvActionRequest(actionSelector);
         Element carE = JaxbUtil.jaxbToElement(car);
         String eXml = carE.toString();
         LOG.info("ConvActionRequestJaxbSubclassHandling: marshalled XML=" +
                 eXml);
-        Assert.assertTrue("Xml should contain recursive attribute",
-                eXml.contains("recursive=\"true\""));
+        Assert.assertTrue("Xml should contain acctRelPath attribute",
+                eXml.contains("acctRelPath=\"folder\""));
 
         carE = Element.XMLElement.mFactory.createElement(
                 MailConstants.CONV_ACTION_REQUEST);
         Element actionE = carE.addElement(MailConstants.E_ACTION);
         actionE.addAttribute(MailConstants.A_OPERATION, "op");
         actionE.addAttribute(MailConstants.A_ID, "ids");
-        actionE.addAttribute(MailConstants.A_FOLDER, "folder");
-        actionE.addAttribute(MailConstants.A_RECURSIVE, true);
-        actionE.addAttribute(MailConstants.A_URL, "http://url");
+        actionE.addAttribute(MailConstants.A_ACCT_RELATIVE_PATH, "folder");
         LOG.info("ConvActionRequestJaxbSubclassHandling: half baked XML=" +
                 carE.toString());
         car = JaxbUtil.elementToJaxb(carE);
@@ -748,20 +745,9 @@ Caused by: javax.xml.bind.UnmarshalException: Namespace URIs and local names to 
         eXml = carE.toString();
         LOG.info("ConvActionRequestJaxbSubclassHandling: round tripped XML=" +
                 eXml);
-        ActionSelector as = car.getAction();
-        Assert.assertEquals("Folder attribute value",
-                    "folder", as.getFolder());
-        if (as instanceof FolderActionSelector) {
-            fas = (FolderActionSelector)as;
-            Assert.assertEquals("url attribute value",
-                    "http://url", fas.getUrl());
-        } else if (as instanceof NoteActionSelector) {
-            Assert.fail("got a NoteActionSelector");
-        } else if (as instanceof ContactActionSelector) {
-            Assert.fail("got a ContactActionSelector");
-        } else {
-            Assert.fail("Failed to get back a FolderActionSelector");
-        }
+        ConvActionSelector as = car.getAction();
+        Assert.assertEquals("acctRelPath attr value",
+                    "folder", as.getAcctRelativePath());
     }
 
     /**
