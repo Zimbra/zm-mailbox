@@ -79,6 +79,10 @@ public class URLUtil {
 
     /** Perform a service locator lookup of a mailstore soap service */
     public static String getSoapURL() throws ServiceException {
+        if (!Zimbra.isAlwaysOn()) {
+            return getSoapURL(Provisioning.getInstance().getLocalServer(), true);
+        }
+
         ServiceLocator serviceLocator = null;
         Selector selector = null;
         try {
@@ -215,8 +219,12 @@ public class URLUtil {
      * Returns absolute URL with scheme, host, and port for admin app, using ServiceLocator.
      */
     public static String getAdminURL() throws ServiceException {
+        if (!Zimbra.isAlwaysOn()) {
+            return getAdminURL(Provisioning.getInstance().getLocalServer());
+        }
+
         ServiceLocator serviceLocator = null;
-        Selector selector = null;
+        Selector<ServiceLocator.Entry> selector = null;
         try {
             serviceLocator = Zimbra.getAppContext().getBean(ServiceLocator.class);
             selector = Zimbra.getAppContext().getBean(Selector.class);
