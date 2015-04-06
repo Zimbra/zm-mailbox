@@ -75,6 +75,13 @@ public class SyncRequest {
     @XmlAttribute(name=MailConstants.A_TYPED_DELETES /* typed */, required=false)
     private ZmBoolean typedDeletes;
 
+    /**
+     * @zm-api-field-tag delete-page-size
+     * @zm-api-field-description maximum number of deleted item ids returned in a response.
+     */
+    @XmlAttribute(name=MailConstants.A_DELETE_LIMIT /* deleteLimit */, required=false)
+    private int deleteLimit;
+
     public SyncRequest() {
     }
 
@@ -86,17 +93,22 @@ public class SyncRequest {
     public void setTypedDeletes(Boolean typedDeletes) {
         this.typedDeletes = ZmBoolean.fromBool(typedDeletes);
     }
+    public void setDeleteLimit(int deleteLimit) {
+        this.deleteLimit = deleteLimit;
+    }
     public String getToken() { return token; }
     public Long getCalendarCutoff() { return calendarCutoff; }
     public String getFolderId() { return folderId; }
     public Boolean getTypedDeletes() { return ZmBoolean.toBool(typedDeletes); }
+    public int getDeleteLimit() { return deleteLimit; }
 
     public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("token", token)
             .add("calendarCutoff", calendarCutoff)
             .add("folderId", folderId)
-            .add("typedDeletes", typedDeletes);
+            .add("typedDeletes", typedDeletes)
+            .add("deleteLimit", deleteLimit);
     }
 
     @Override
