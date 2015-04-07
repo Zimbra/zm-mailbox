@@ -33,6 +33,7 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.Sets;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.DomainBy;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
@@ -1002,21 +1003,17 @@ public class RightCommand {
     static {
         long allEffectiveRightsCacheSize= 0;
         long allEffectiveRightsCacheExpireAfterMillis = 0;
-        try {
-            Server server = Provisioning.getInstance().getLocalServer();
-            allEffectiveRightsCacheSize = server.getShortTermAllEffectiveRightsCacheSize();
-            if (allEffectiveRightsCacheSize > 0) {
-                allEffectiveRightsCacheExpireAfterMillis = server.getShortTermAllEffectiveRightsCacheExpiration();
-                if (allEffectiveRightsCacheExpireAfterMillis < 0) {
-                    allEffectiveRightsCacheExpireAfterMillis = 0;
-                    allEffectiveRightsCacheSize = 0;
-                } else if (allEffectiveRightsCacheExpireAfterMillis > MAX_CACHE_EXPIRY) {
-                    allEffectiveRightsCacheExpireAfterMillis = MAX_CACHE_EXPIRY;
-                }
+        allEffectiveRightsCacheSize = LC.short_term_all_effective_rights_cache_size.longValue();
+        if (allEffectiveRightsCacheSize > 0) {
+            allEffectiveRightsCacheExpireAfterMillis = LC.short_term_all_effective_rights_cache_expiration.longValue();
+            if (allEffectiveRightsCacheExpireAfterMillis < 0) {
+                allEffectiveRightsCacheExpireAfterMillis = 0;
+                allEffectiveRightsCacheSize = 0;
+            } else if (allEffectiveRightsCacheExpireAfterMillis > MAX_CACHE_EXPIRY) {
+                allEffectiveRightsCacheExpireAfterMillis = MAX_CACHE_EXPIRY;
             }
-        } catch (ServiceException e) {
-            allEffectiveRightsCacheSize = 0;
         }
+
         if (allEffectiveRightsCacheSize > 0) {
             ALL_EFFECTIVE_RIGHTS_CACHE =
                     CacheBuilder.newBuilder()
