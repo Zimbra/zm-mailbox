@@ -68,8 +68,8 @@ public abstract class MailboxListener {
      * or other long latency operation within notify method.
      *
      * @param notification
-     * @throws ServiceException 
-     * @throws BeansException 
+     * @throws ServiceException
+     * @throws BeansException
      */
     public abstract void notify(ChangeNotification notification) throws BeansException, ServiceException;
 
@@ -109,13 +109,13 @@ public abstract class MailboxListener {
         if (application.supports(ShareExpirationListener.class) && !DebugConfig.isDisableShareExpirationListener()) {
             register(new ShareExpirationListener());
         }
-        final MailboxPubSubAdapter mailboxPubSubAdapter = Zimbra.getAppContext().getBean(MailboxPubSubAdapter.class);
-        if (mailboxPubSubAdapter != null) {
+        final MailboxListenerManager mailboxListenerManager = Zimbra.getAppContext().getBean(MailboxListenerManager.class);
+        if (mailboxListenerManager != null) {
             MailboxListener listener = new MailboxListener() {
                 @Override
                 public void notify(ChangeNotification notification) {
                     try {
-                        mailboxPubSubAdapter.publish(notification);
+                        mailboxListenerManager.publish(notification);
                     } catch (ServiceException e) {
                         ZimbraLog.session.warn("failed publishing ChangeNotification", e);
                     }

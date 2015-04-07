@@ -19,18 +19,22 @@ package com.zimbra.cs.mailbox;
 
 import javax.annotation.PostConstruct;
 
-import org.springframework.beans.factory.annotation.Autowired;
-
 import redis.clients.jedis.JedisCluster;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.MailboxListener.ChangeNotification;
 
 /**
- * Redis Cluster based pub-sub for mailbox-related notifies.
+ * Redis Cluster based external mailbox listener.
  */
-public class RedisClusterMailboxPubSubAdapter extends RedisMailboxPubSubAdapter {
-    @Autowired protected JedisCluster jedisCluster;
+public class RedisClusterMailboxListenerManager extends RedisMailboxListenerManager {
+    protected JedisCluster jedisCluster;
+
+
+    public RedisClusterMailboxListenerManager(JedisCluster jedisCluster) {
+        super(null);
+        this.jedisCluster = jedisCluster;
+    }
 
     @PostConstruct
     public void init() throws Exception {

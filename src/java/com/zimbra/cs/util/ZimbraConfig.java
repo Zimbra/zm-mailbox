@@ -24,6 +24,11 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
+import org.springframework.amqp.core.AmqpAdmin;
+import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
+import org.springframework.amqp.rabbit.connection.ConnectionFactory;
+import org.springframework.amqp.rabbit.core.RabbitAdmin;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
@@ -48,19 +53,20 @@ import com.zimbra.common.util.memcached.ZimbraMemcachedClient;
 import com.zimbra.cs.ProvisioningServiceLocator;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
+import com.zimbra.cs.amqp.AmqpConstants;
 import com.zimbra.cs.extension.ExtensionUtil;
 import com.zimbra.cs.index.DefaultIndexingQueueAdapter;
 import com.zimbra.cs.index.IndexingQueueAdapter;
 import com.zimbra.cs.index.IndexingService;
 import com.zimbra.cs.mailbox.FoldersAndTagsCache;
 import com.zimbra.cs.mailbox.LocalSharedDeliveryCoordinator;
+import com.zimbra.cs.mailbox.MailboxListenerManager;
 import com.zimbra.cs.mailbox.MailboxLockFactory;
 import com.zimbra.cs.mailbox.MailboxManager;
-import com.zimbra.cs.mailbox.MailboxPubSubAdapter;
 import com.zimbra.cs.mailbox.MemcachedFoldersAndTagsCache;
-import com.zimbra.cs.mailbox.RedisClusterMailboxPubSubAdapter;
+import com.zimbra.cs.mailbox.RedisClusterMailboxListenerManager;
 import com.zimbra.cs.mailbox.RedisClusterSharedDeliveryCoordinator;
-import com.zimbra.cs.mailbox.RedisMailboxPubSubAdapter;
+import com.zimbra.cs.mailbox.RedisMailboxListenerManager;
 import com.zimbra.cs.mailbox.RedisSharedDeliveryCoordinator;
 import com.zimbra.cs.mailbox.SharedDeliveryCoordinator;
 import com.zimbra.cs.mailbox.acl.EffectiveACLCache;
@@ -99,6 +105,36 @@ import com.zimbra.soap.SoapSessionFactory;
 @Lazy
 public class ZimbraConfig {
 
+    protected AmqpAdmin amqpAdmin(ConnectionFactory amqpConnectionFactory) throws Exception {
+        AmqpAdmin amqpAdmin = new RabbitAdmin(amqpConnectionFactory);
+        amqpAdminInit(amqpAdmin);
+        return amqpAdmin;
+    }
+
+    /** One-time setup of AMQP exchanges and queues required at runtime, in case they don't yet exist */
+    protected void amqpAdminInit(AmqpAdmin amqpAdmin) throws Exception {
+        amqpAdmin.declareExchange(AmqpConstants.EXCHANGE_MBOX);
+    }
+
+    protected ConnectionFactory amqpConnectionFactory(URI uri) throws Exception {
+        CachingConnectionFactory factory = new CachingConnectionFactory(uri.getHost());
+        if (uri.getPort() != -1) {
+            factory.setPort(uri.getPort());
+        }
+        if (uri.getAuthority() != null) {
+            int atPos = uri.getAuthority().indexOf('@');
+            String auth = uri.getAuthority().substring(0, atPos);
+            factory.setUsername(auth.split(":")[0]);
+            factory.setPassword(auth.split(":")[1]);
+        }
+        factory.setVirtualHost(uri.getPath());
+        return factory;
+    }
+
+    protected RabbitTemplate amqpTemplate(ConnectionFactory amqpConnectionFactory) throws Exception {
+        return new RabbitTemplate(amqpConnectionFactory);
+    }
+
     @Bean(name="calendarCacheManager")
     public CalendarCacheManager calendarCacheManagerBean() throws ServiceException {
         return new CalendarCacheManager();
@@ -135,6 +171,10 @@ public class ZimbraConfig {
             ZimbraLog.system.error("Error reading memcached configuration; proceeding as unavailable", e);
             return false;
         }
+    }
+
+    protected boolean isAmqpAvailable() {
+        return false; // TODO BZ98750
     }
 
     /** Returns whether Redis services are available, whether cluster or master/slave/stand-alone */
@@ -222,12 +262,14 @@ public class ZimbraConfig {
      * Redis or AMQP pub/sub adapter, which is used to coordinate cache invalidations and other
      * important mailbox data changes across multiple mailstores.
      */
-    @Bean(name="mailboxPubSubAdapter")
-    public MailboxPubSubAdapter mailboxPubSubAdapter() throws Exception {
+    @Bean
+    public MailboxListenerManager mailboxListenerManager() throws Exception {
         if (isRedisClusterAvailable()) {
-            return new RedisClusterMailboxPubSubAdapter();
+            return new RedisClusterMailboxListenerManager(jedisClusterBean());
         } else if (isRedisAvailable()) {
-            return new RedisMailboxPubSubAdapter();
+            return new RedisMailboxListenerManager(jedisPoolBean());
+        } else if (isAmqpAvailable()) {
+            return null; // TODO BZ98750
         } else {
             return null;
         }

@@ -31,7 +31,7 @@ import com.zimbra.cs.util.IPUtil;
 
 
 /**
- * Service locator operations that are implememted with Provisioning calls. This is useful as a fallback,
+ * Service locator operations that are implemented with Provisioning calls. This is useful as a fallback,
  * if a realtime service locator is off-line.
  */
 public class ProvisioningServiceLocator implements ServiceLocator {

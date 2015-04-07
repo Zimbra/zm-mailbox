@@ -18,7 +18,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.MailboxListener.ChangeNotification;
 import com.zimbra.cs.session.Session;
 
-public interface MailboxPubSubAdapter {
+public interface MailboxListenerManager {
 
     /** After a local mailbox change completes, publish it to any remote subscribers */
     public void publish(ChangeNotification notification) throws ServiceException;

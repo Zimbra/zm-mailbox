@@ -30,7 +30,6 @@ import javax.annotation.PostConstruct;
 import org.apache.commons.lang.ObjectUtils;
 import org.apache.xerces.impl.dv.util.Base64;
 import org.codehaus.jackson.map.ObjectMapper;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
@@ -47,24 +46,31 @@ import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.Session;
 
 /**
- * Redis based pub-sub for mailbox-related notifies.
+ * Redis-based MailboxListener management.
  */
-public class RedisMailboxPubSubAdapter implements MailboxPubSubAdapter {
-    static final String KEY_PREFIX = MemcachedKeyPrefix.MBOX_NOTIFY;
-    @Autowired protected JedisPool jedisPool;
+public class RedisMailboxListenerManager implements MailboxListenerManager {
+    static final String KEY_PREFIX = MemcachedKeyPrefix.MBOX_PENDING_MODS;
+    protected JedisPool jedisPool;
     protected ObjectMapper objectMapper = new ObjectMapper();
     protected Map<String, Set<Session>> subscribedSessionsByAccountId = new ConcurrentHashMap<>();
+
+    public RedisMailboxListenerManager(JedisPool jedisPool) {
+        this.jedisPool = jedisPool;
+    }
 
     @PostConstruct
     public void init() throws Exception {
         final Jedis jedis = jedisPool.getResource();
         Thread thread = new Thread() {
             public void run() {
-                String channelPattern = KEY_PREFIX + "*";
-                ZimbraLog.mailbox.info("Subscribing to Redis channel pattern %s for mailbox notifies", channelPattern);
-                jedis.psubscribe(new MyListener(), channelPattern);
-                ZimbraLog.mailbox.info("Unsubscribed from Redis channel pattern %s for mailbox notifies", channelPattern);
-                jedisPool.returnResource(jedis);
+                try {
+                    String channelPattern = KEY_PREFIX + "*";
+                    ZimbraLog.mailbox.info("Subscribing to Redis channel pattern %s for mailbox notifies", channelPattern);
+                    jedis.psubscribe(new MyListener(), channelPattern);
+                    ZimbraLog.mailbox.info("Unsubscribed from Redis channel pattern %s for mailbox notifies", channelPattern);
+                } finally {
+                    jedisPool.returnResource(jedis);
+                }
             }
         };
         thread.start();
@@ -143,6 +149,7 @@ public class RedisMailboxPubSubAdapter implements MailboxPubSubAdapter {
             mailboxOp = notification.op == null ? null : notification.op.name();
             senderServerId = Provisioning.getInstance().getLocalServer().getId();
             timestamp = DateUtil.toISO8601(new Date(notification.timestamp));
+            // TODO BZ98708: send JSON, not serialized Java, so that other languages can work with these messages
             contentType = "application/x-java-serialized-object; class=" + PendingModifications.class.getName();
             contentEncoding = "base64";
             content = Base64.encode(PendingModifications.JavaObjectSerializer.serialize(notification.mods));

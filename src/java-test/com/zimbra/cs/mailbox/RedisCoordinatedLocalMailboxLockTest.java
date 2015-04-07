@@ -120,7 +120,7 @@ public class RedisCoordinatedLocalMailboxLockTest extends AbstractMailboxLockTes
     static class MyConfig extends RedisOnLocalhostZimbraConfig {
         @Bean
         @Override
-        public MailboxPubSubAdapter mailboxPubSubAdapter() throws Exception {
+        public MailboxListenerManager mailboxListenerManager() throws Exception {
             return null;
         }
 

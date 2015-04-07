@@ -26,8 +26,8 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxListenerManager;
 import com.zimbra.cs.mailbox.MailboxManager;
-import com.zimbra.cs.mailbox.MailboxPubSubAdapter;
 import com.zimbra.cs.util.ProvisioningUtil;
 import com.zimbra.cs.util.Zimbra;
 
@@ -53,7 +53,7 @@ public abstract class Session {
     private   boolean   mIsRegistered;
     private   boolean   mAddedToCache;
 
-    protected volatile MailboxPubSubAdapter multiServerMailboxNotifyAdapter;
+    protected volatile MailboxListenerManager multiServerMailboxNotifyAdapter;
 
 
     /**
@@ -147,7 +147,7 @@ public abstract class Session {
                 mailbox.addListener(this);
             }
 
-            multiServerMailboxNotifyAdapter = Zimbra.getAppContext().getBean(MailboxPubSubAdapter.class);
+            multiServerMailboxNotifyAdapter = Zimbra.getAppContext().getBean(MailboxListenerManager.class);
             if (multiServerMailboxNotifyAdapter != null) {
                 multiServerMailboxNotifyAdapter.subscribe(this);
             }

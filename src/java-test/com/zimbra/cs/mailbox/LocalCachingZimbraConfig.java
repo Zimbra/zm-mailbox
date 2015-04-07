@@ -56,7 +56,7 @@ public class LocalCachingZimbraConfig extends ZimbraConfig {
     }
 
     @Override
-    public MailboxPubSubAdapter mailboxPubSubAdapter() throws Exception {
+    public MailboxListenerManager mailboxListenerManager() throws Exception {
         return null;
     }
 

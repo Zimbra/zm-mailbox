@@ -27,15 +27,15 @@ import redis.clients.jedis.JedisPool;
 
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.mailbox.RedisMailboxPubSubAdapter.Holder;
+import com.zimbra.cs.mailbox.RedisMailboxListenerManager.Holder;
 import com.zimbra.cs.store.MockStoreManager;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.util.ZimbraConfig;
 
 /**
- * Unit test for {@link RedisMailboxPubSubAdapter}.
+ * Unit test for {@link RedisMailboxListenerManager}.
  */
-public final class RedisMailboxPubSubAdapterTest {
+public final class RedisMailboxListenerManagerTest {
 
     @BeforeClass
     public static void init() throws Exception {
