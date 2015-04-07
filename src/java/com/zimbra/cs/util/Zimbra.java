@@ -27,7 +27,6 @@ import org.apache.mina.core.buffer.IoBuffer;
 import org.dom4j.DocumentException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
-import org.springframework.context.support.AbstractApplicationContext;
 
 import com.zimbra.common.calendar.WellKnownTimeZones;
 import com.zimbra.common.lmtp.SmtpToLmtp;
@@ -75,7 +74,9 @@ public final class Zimbra {
     private static boolean inited = false;
     private static boolean isMailboxd = false;
     private static boolean minimal = false;
-    private static AbstractApplicationContext appContext = null;
+
+    /** ApplicationContext, cast as an Object so that this class can be used by webapps that don't classload Spring yet */
+    private static Object appContext = null;
 
     /** Sets system properties before the server fully starts up.  Note that
      *  there's a potential race condition if {@link FirstServlet} or another
@@ -145,7 +146,7 @@ public final class Zimbra {
     }
 
     public static ApplicationContext getAppContext() {
-        return appContext;
+        return (ApplicationContext)appContext;
     }
 
     private static void logVersionAndSysInfo() {
@@ -307,7 +308,7 @@ public final class Zimbra {
         // ZimletUtil.loadZimlets();
 
         //start indexing service before server manager
-       appContext.getBean(IndexingService.class).startUp();
+       ((ApplicationContext)appContext).getBean(IndexingService.class).startUp();
 
         RedoLogProvider redoLog = RedoLogProvider.getInstance();
         if (isMailboxd) {
