@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -18,9 +18,12 @@ package com.zimbra.common.zmime;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Iterator;
+import java.util.Map.Entry;
 
 import javax.activation.DataSource;
 import javax.mail.MessagingException;
+import javax.mail.internet.ContentType;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMultipart;
 
@@ -39,6 +42,18 @@ public class ZMimeMultipart extends MimeMultipart {
 
     public ZMimeMultipart(String subtype) {
         super(subtype);
+    }
+
+    public ZMimeMultipart(com.zimbra.common.mime.ContentType contentType) {
+        super();
+        ContentType cType = new ContentType("multipart", contentType.getSubType(), null);
+        cType.setParameter("boundary", com.zimbra.common.mime.MimeMultipart.generateBoundary());
+        Iterator<Entry<String, String>> paramIt = contentType.parameterIterator();
+        while (paramIt != null && paramIt.hasNext()) {
+            Entry<String, String> entry = paramIt.next();
+            cType.setParameter(entry.getKey(), entry.getValue());
+        }
+        super.contentType = cType.toString();
     }
 
     public ZMimeMultipart(DataSource ds) throws MessagingException {

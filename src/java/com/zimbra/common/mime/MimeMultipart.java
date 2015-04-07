@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2009, 2010, 2011, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -205,7 +205,7 @@ public class MimeMultipart extends MimePart implements Iterable<MimePart> {
         return boundary;
     }
 
-    private static String generateBoundary() {
+    public static String generateBoundary() {
         // RFC 1521 5.1: "A good strategy is to choose a boundary that includes a character
         //                sequence such as "=_" which can never appear in a quoted-printable body."
         return "=_" + UUID.randomUUID().toString();
