@@ -13255,6 +13255,69 @@ public class ZAttrProvisioning {
     public static final String A_zimbraSharingUpdatePublishInterval = "zimbraSharingUpdatePublishInterval";
 
     /**
+     * Maximum time an entry in the short term All Effective Rights cache
+     * will be regarded as valid. If value is 0, the cache is disabled. The
+     * cache is particularly useful when significant use is made of delegated
+     * administration. This cache can improve performance by avoiding
+     * recomputing All Effective Rights of named entries like accounts
+     * frequently in a short period of time. All Effective Rights are
+     * computations of the rights that named entries like accounts have -
+     * although when used, they are checked separately. The longer the value
+     * of this setting is, the more stale the view of the details is likely
+     * to be. For this reason, the maximum accepted value is 30m. Larger
+     * values will be treated as being 30m . Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
+     *
+     * @since ZCS 8.7
+     */
+    @ZAttr(id=1903)
+    public static final String A_zimbraShortTermAllEffectiveRightsCacheExpiration = "zimbraShortTermAllEffectiveRightsCacheExpiration";
+
+    /**
+     * Maximum number of entries in the short term All Effective Rights
+     * cache. This cache can improve performance by avoiding recomputing All
+     * Effective Rights of named entries like accounts frequently in a short
+     * period of time. Can disable the cache be specifying a value of 0
+     *
+     * @since ZCS 8.7
+     */
+    @ZAttr(id=1902)
+    public static final String A_zimbraShortTermAllEffectiveRightsCacheSize = "zimbraShortTermAllEffectiveRightsCacheSize";
+
+    /**
+     * Maximum time an entry in the Grantee cache will be regarded as valid.
+     * If value is 0, the cache is disabled. This cache can improve
+     * performance by avoiding recomputing details frequently in a short
+     * period of time, for instance for each entry in search results. The
+     * cache is particularly useful when significant use is made of delegated
+     * administration. Grantees objects provide a view of what rights a
+     * grantee has - although those are checked separately. The longer the
+     * value of this setting is, the more stale the view of the details is
+     * likely to be. For this reason, the maximum accepted value is 30m.
+     * Larger values will be treated as being 30m . Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
+     *
+     * @since ZCS 8.7
+     */
+    @ZAttr(id=1901)
+    public static final String A_zimbraShortTermGranteeCacheExpiration = "zimbraShortTermGranteeCacheExpiration";
+
+    /**
+     * Maximum number of entries in the short term Grantee cache. This cache
+     * can improve performance by avoiding recomputing details frequently in
+     * a short period of time, for instance for each entry in search results.
+     * Can disable the cache be specifying a value of 0
+     *
+     * @since ZCS 8.7
+     */
+    @ZAttr(id=1900)
+    public static final String A_zimbraShortTermGranteeCacheSize = "zimbraShortTermGranteeCacheSize";
+
+    /**
      * Unique ID for an signature
      */
     @ZAttr(id=490)
