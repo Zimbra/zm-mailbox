@@ -1252,7 +1252,13 @@ public final class LC {
 
     public static final KnownKey conversation_ignore_maillist_prefix = KnownKey.newKey(true);
 
+    public static final KnownKey short_term_all_effective_rights_cache_expiration = KnownKey.newKey(50000);
 
+    public static final KnownKey short_term_all_effective_rights_cache_size = KnownKey.newKey(128);
+
+    public static final KnownKey short_term_grantee_cache_expiration = KnownKey.newKey(50000);
+
+    public static final KnownKey short_term_grantee_cache_size = KnownKey.newKey(128);
 
     //EWS web service
     public static final KnownKey ews_service_wsdl_location =
