@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -502,4 +502,67 @@ public class MimeTest {
         String actual = IOUtils.toString(mm.getInputStream());
         Assert.assertEquals("Content altered.", expected, actual);
     }
+
+    @Test
+    public void testFullContentType() throws Exception {
+        String content =
+                        "From: user1@example.com\r\n"
+                        + "To: user2@example.com\r\n"
+                        + "Subject: test\r\n"
+                        + "Content-Type: text/plain;param=foo\r\n"
+                        + "Content-Transfer-Encoding: base64\r\n\r\n"
+                        + "R0a1231312ad124svsdsal=="; //obviously not a real file
+        MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSession(), new SharedByteArrayInputStream(
+                        content.getBytes()));
+
+        MimePart part = Mime.getMimePart(mm, "1");
+        Assert.assertEquals("text/plain;param=foo", part.getContentType());
+        List<MPartInfo> parts = Mime.getParts(mm);
+        Assert.assertNotNull(parts);
+        Assert.assertEquals(1, parts.size());
+        MPartInfo info = parts.get(0);
+        Assert.assertEquals("text/plain", info.getContentType());
+        Assert.assertEquals("text/plain;param=foo", info.getFullContentType());
+    }
+
+    @Test
+    public void testMultipartPGP() throws Exception {
+        String content =
+                        "From: user1@example.com\r\n"
+                        + "To: user2@example.com\r\n"
+                        + "Subject: test\r\n"
+                        + "Content-Type: multipart/encyrpted;\r\n"
+                        + " protocol=\"application/pgp-encrypted\";\r\n"
+                        + " boundary="+boundary+"\r\n"
+                        + "Content-Transfer-Encoding: base64\r\n\r\n"
+                        + "------------1111971890AC3BB91\r\n"
+                        + "Content-Type: application/pgp-encrypted\r\n"
+                        + "Content-Description: PGP/MIME version identification\r\n\r\n"
+                        + "Version: 1\r\n\r\n"
+                        + "------------1111971890AC3BB91\r\n"
+                        + "Content-Type: application/octet-stream; name=\"encrypted.asc\"\r\n"
+                        + "Content-Description: OpenPGP encrypted message\r\n"
+                        + "Content-Disposition: inline; filename=\"encrypted.asc\"\r\n\r\n"
+                        + "-----BEGIN PGP MESSAGE-----\r\n"
+                        + "Version: GnuPG v2.0.22 (GNU/Linux)\r\n\r\n"
+                        + "o82ejqwkjeh12398123bjkbas731321\r\n" //not a real message, just some placeholder data
+                        + "-----END PGP MESSAGE-----\r\n\r\n";
+        MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSession(), new SharedByteArrayInputStream(
+                        content.getBytes()));
+
+        List<MPartInfo> parts = Mime.getParts(mm);
+        Assert.assertNotNull(parts);
+        Assert.assertEquals(3, parts.size());
+        MPartInfo multiPart = parts.get(0);
+        Assert.assertEquals("multipart/encyrpted", multiPart.getContentType());
+        Assert.assertEquals("multipart/encyrpted;\r\n protocol=\"application/pgp-encrypted\";\r\n boundary="+boundary, multiPart.getFullContentType());
+
+        MPartInfo pgpVersion = parts.get(1);
+        Assert.assertEquals("application/pgp-encrypted", pgpVersion.getContentType());
+
+        MPartInfo pgpMsg = parts.get(2);
+        Assert.assertEquals("application/octet-stream", pgpMsg.getContentType());
+        Assert.assertEquals("application/octet-stream; name=\"encrypted.asc\"", pgpMsg.getFullContentType());
+    }
+
 }
