@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -25,6 +25,7 @@ import java.util.List;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimePart;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.zimbra.common.mime.ContentType;
 import com.zimbra.common.mime.MimeConstants;
 
@@ -60,7 +61,7 @@ public class MPartInfo {
      * Returns true if we consider this to be an attachment for the sake of "filtering" by attachments.
      * i.e., if someone searches for messages with attachment types of "text/plain", we probably wouldn't want
      * every multipart/mixed message showing up, since 99% of them will have a first body part of text/plain.
-     * 
+     *
      * @param part
      * @return
      */
@@ -102,6 +103,15 @@ public class MPartInfo {
 
     public String getContentType() {
         return mContentType;
+    }
+
+    @VisibleForTesting
+    String getFullContentType() {
+        try {
+            return mPart.getContentType();
+        } catch (MessagingException e) {
+            return mContentType;
+        }
     }
 
     public boolean isMultipart() {

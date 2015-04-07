@@ -41,7 +41,6 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import com.zimbra.common.calendar.ZCalendar;
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.ContentDisposition;
 import com.zimbra.common.mime.ContentType;
 import com.zimbra.common.mime.MimeConstants;
@@ -515,7 +514,7 @@ public final class ParseMimeMessage {
         // is the client passing us a multipart?
         if (ctype.getPrimaryType().equals("multipart")) {
             // handle multipart content separately...
-            setMultipartContent(ctype.getSubType(), mm, mmp, elem, alternatives, ctxt);
+            setMultipartContent(ctype, mm, mmp, elem, alternatives, ctxt);
             return;
         }
 
@@ -571,14 +570,14 @@ public final class ParseMimeMessage {
         }
     }
 
-    private static void setMultipartContent(String subType, MimeMessage mm, MimeMultipart mmp, Element elem, MimeBodyPart[] alternatives, ParseMessageContext ctxt)
+    private static void setMultipartContent(ContentType contentType, MimeMessage mm, MimeMultipart mmp, Element elem, MimeBodyPart[] alternatives, ParseMessageContext ctxt)
     throws MessagingException, ServiceException, IOException {
         // do we need to add a multipart/alternative for the alternatives?
-        if (alternatives == null || subType.equals("alternative")) {
+        if (alternatives == null || contentType.getSubType().equals("alternative")) {
             // no need to add an extra multipart/alternative!
 
             // create the MimeMultipart and attach it to the existing structure:
-            MimeMultipart mmpNew = new ZMimeMultipart(subType);
+            MimeMultipart mmpNew = new ZMimeMultipart(contentType);
             if (mmp == null) {
                 // there were no multiparts at all, we need to create one
                 mm.setContent(mmpNew);
