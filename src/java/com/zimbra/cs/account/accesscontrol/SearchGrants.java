@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -261,8 +261,15 @@ public final class SearchGrants {
        Map<String, Set<String>> basesAndOcs = TargetType.getSearchBasesAndOCs(prov, targetTypes);
        SearchGrantsResults results = new SearchGrantsResults(prov);
        SearchGrantVisitor visitor = new SearchGrantVisitor(results);
+       long start = 0;
+       if (ZimbraLog.acl.isTraceEnabled()) {
+           start = System.currentTimeMillis();
+       }
        for (Map.Entry<String, Set<String>> entry : basesAndOcs.entrySet()) {
            search(entry.getKey(), entry.getValue(), visitor);
+       }
+       if (ZimbraLog.acl.isTraceEnabled()) {
+           ZimbraLog.acl.trace("SearchGrants.doSearch() %s", ZimbraLog.elapsedTime(start, System.currentTimeMillis()));
        }
        return results;
     }
@@ -271,7 +278,7 @@ public final class SearchGrants {
         if (granteeIds != null) {
             return granteeIds;
         } else {
-            Set<String> ids = Sets.newHashSet(new RightBearer.Grantee(acct, rights, false).getIdAndGroupIds());
+            Set<String> ids = Sets.newHashSet(RightBearer.Grantee.getGrantee(acct, rights, false).getIdAndGroupIds());
             ids.add(GuestAccount.GUID_AUTHUSER);
             ids.add(GuestAccount.GUID_PUBLIC);
             String domainId = acct.getDomainId();

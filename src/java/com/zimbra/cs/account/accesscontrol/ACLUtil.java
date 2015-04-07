@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2008, 2009, 2010, 2011, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -53,19 +53,19 @@ public final class ACLUtil {
         return acl != null ? acl.getAllACEs() : null;
     }
 
-    public static Set<ZimbraACE> getAllowedNotDelegableACEs(Entry entry) 
+    public static Set<ZimbraACE> getAllowedNotDelegableACEs(Entry entry)
     throws ServiceException {
         ZimbraACL acl = getACL(entry);
         return acl != null ? acl.getAllowedNotDelegableACEs() : null;
     }
 
-    public static Set<ZimbraACE> getAllowedDelegableACEs(Entry entry) 
+    public static Set<ZimbraACE> getAllowedDelegableACEs(Entry entry)
     throws ServiceException {
         ZimbraACL acl = getACL(entry);
         return acl != null ? acl.getAllowedDelegableACEs() : null;
     }
 
-    public static Set<ZimbraACE> getDeniedACEs(Entry entry) throws 
+    public static Set<ZimbraACE> getDeniedACEs(Entry entry) throws
     ServiceException {
         ZimbraACL acl = getACL(entry);
         return acl != null ? acl.getDeniedACEs() : null;
@@ -78,7 +78,7 @@ public final class ACLUtil {
      * @param rights rights of interest
      * @return a Set of ACEs with the specified rights granted on the entry.
      */
-    public static List<ZimbraACE> getACEs(Entry entry, Set<? extends Right> rights) 
+    public static List<ZimbraACE> getACEs(Entry entry, Set<? extends Right> rights)
     throws ServiceException {
         ZimbraACL acl = getACL(entry);
         return acl != null ? acl.getACEs(rights) : null;
@@ -87,7 +87,7 @@ public final class ACLUtil {
     private static Multimap<Right, Entry> getGrantedRights(Account grantee, Set<String> fetchAttrs)
             throws ServiceException {
         SearchGrants search = new SearchGrants(grantee.getProvisioning(), EnumSet.of(TargetType.account),
-                new RightBearer.Grantee(grantee, false).getIdAndGroupIds());
+                RightBearer.Grantee.getGrantee(grantee, false).getIdAndGroupIds());
         search.addFetchAttribute(fetchAttrs);
         Set<SearchGrants.GrantsOnTarget> results = search.doSearch().getResults();
         Multimap<Right, Entry> map = HashMultimap.create();

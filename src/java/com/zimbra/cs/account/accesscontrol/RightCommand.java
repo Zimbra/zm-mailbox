@@ -26,13 +26,17 @@ import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.concurrent.TimeUnit;
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.Sets;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.L10nUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccessManager;
@@ -43,6 +47,7 @@ import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.MailTarget;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.accesscontrol.Right.RightType;
 import com.zimbra.cs.account.accesscontrol.RightBearer.Grantee;
 import com.zimbra.cs.account.accesscontrol.SearchGrants.GrantsOnTarget;
@@ -987,6 +992,52 @@ public class RightCommand {
         return result;
     }
 
+    /**
+     * Particularly in the case of delegated administration, CollectAllEffectiveRights.collect() Stage1 can
+     * be expensive.  This cache trades accuracy for speed, so provides a short term cache
+     */
+    private static final Cache<String, AllEffectiveRights> ALL_EFFECTIVE_RIGHTS_CACHE;
+    private static final long MAX_CACHE_EXPIRY = 30 * Constants.MILLIS_PER_MINUTE;
+
+    static {
+        long allEffectiveRightsCacheSize= 0;
+        long allEffectiveRightsCacheExpireAfterMillis = 0;
+        try {
+            Server server = Provisioning.getInstance().getLocalServer();
+            allEffectiveRightsCacheSize = server.getShortTermAllEffectiveRightsCacheSize();
+            if (allEffectiveRightsCacheSize > 0) {
+                allEffectiveRightsCacheExpireAfterMillis = server.getShortTermAllEffectiveRightsCacheExpiration();
+                if (allEffectiveRightsCacheExpireAfterMillis < 0) {
+                    allEffectiveRightsCacheExpireAfterMillis = 0;
+                    allEffectiveRightsCacheSize = 0;
+                } else if (allEffectiveRightsCacheExpireAfterMillis > MAX_CACHE_EXPIRY) {
+                    allEffectiveRightsCacheExpireAfterMillis = MAX_CACHE_EXPIRY;
+                }
+            }
+        } catch (ServiceException e) {
+            allEffectiveRightsCacheSize = 0;
+        }
+        if (allEffectiveRightsCacheSize > 0) {
+            ALL_EFFECTIVE_RIGHTS_CACHE =
+                    CacheBuilder.newBuilder()
+                    .maximumSize(allEffectiveRightsCacheSize)
+                    .expireAfterWrite(allEffectiveRightsCacheExpireAfterMillis,
+                            TimeUnit.MILLISECONDS) /* regard data as potentially stale after this time */
+                    .build();
+        } else {
+            ALL_EFFECTIVE_RIGHTS_CACHE = null;
+        }
+    }
+
+    private static AllEffectiveRights getAllEffectiveRights( AdminConsoleCapable acc, GranteeType granteeType,
+            NamedEntry granteeEntry, RightBearer rightBearer, boolean expandSetAttrs, boolean expandGetAttrs)
+    throws ServiceException {
+        AllEffectiveRights aer = new AllEffectiveRights(
+                granteeType.getCode(), granteeEntry.getId(), granteeEntry.getName());
+        acc.getAllEffectiveRights(rightBearer, expandSetAttrs, expandGetAttrs, aer);
+        return aer;
+    }
+
     public static AllEffectiveRights getAllEffectiveRights(Provisioning prov,
             String granteeType, GranteeBy granteeBy, String grantee,
             boolean expandSetAttrs, boolean expandGetAttrs) throws ServiceException {
@@ -997,10 +1048,19 @@ public class RightCommand {
         NamedEntry granteeEntry = GranteeType.lookupGrantee(prov, gt, granteeBy, grantee);
         RightBearer rightBearer = RightBearer.newRightBearer(granteeEntry);
 
-        AllEffectiveRights aer =
-            new AllEffectiveRights(gt.getCode(), granteeEntry.getId(), granteeEntry.getName());
-
-        acc.getAllEffectiveRights(rightBearer, expandSetAttrs, expandGetAttrs, aer);
+        AllEffectiveRights aer;
+        String cacheKey = null;
+        if (ALL_EFFECTIVE_RIGHTS_CACHE != null) {
+            cacheKey = String.format("%s-%s-%s-%b-%b", rightBearer.getId(), gt.getCode(),
+                    granteeEntry.getId(), expandSetAttrs, expandGetAttrs);
+            aer = ALL_EFFECTIVE_RIGHTS_CACHE.getIfPresent(cacheKey);
+            if (aer == null) {
+                aer = getAllEffectiveRights(acc, gt, granteeEntry, rightBearer, expandSetAttrs, expandGetAttrs);
+                ALL_EFFECTIVE_RIGHTS_CACHE.put(cacheKey, aer);
+            }
+        } else {
+            aer = getAllEffectiveRights(acc, gt, granteeEntry, rightBearer, expandSetAttrs, expandGetAttrs);
+        }
         return aer;
     }
 
@@ -1098,7 +1158,7 @@ public class RightCommand {
             isGranteeAnAdmin = RightBearer.isValidGranteeForAdminRights(gt, granteeEntry);
 
             if (granteeIncludeGroupsGranteeBelongs) {
-                Grantee theGrantee = new Grantee(granteeEntry, false);
+                Grantee theGrantee = Grantee.getGrantee(granteeEntry, false);
                 granteeFilter = theGrantee.getIdAndGroupIds();
             } else {
                 granteeFilter = new HashSet<String>();

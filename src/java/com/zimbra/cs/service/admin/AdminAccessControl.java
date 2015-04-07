@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2009, 2010, 2011, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -16,7 +16,6 @@
  */
 package com.zimbra.cs.service.admin;
 
-import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -24,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
@@ -1308,8 +1308,9 @@ public abstract class AdminAccessControl {
         @Override
         public boolean allow(NamedEntry entry) throws ServiceException {
 
-            if (mAllowAll)
+            if (mAllowAll) {
                 return true;
+            }
 
             if (entry instanceof Alias) {
                 return hasRightsToListAlias((Alias)entry);
@@ -1319,23 +1320,37 @@ public abstract class AdminAccessControl {
                     return hasRight(entry, listRightNeeded);
                 } else {
                     return false;
+                }
             }
-        }
         }
 
         /**
-         * returns a new list that contains only allowed entries from
-         * the input list.
+         * @param entries
+         * @param maxEntries - Stop when have this many entries
+         * @return a new list that contains only allowed entries from the input list.
+         * @throws ServiceException
          */
-        public List getAllowed(List entries) throws ServiceException {
-            List allowedEntries = new ArrayList<String>();
+        public List<NamedEntry> getAllowed(List<NamedEntry> entries, int maxEntries) throws ServiceException {
+            List<NamedEntry> allowedEntries = Lists.newArrayListWithExpectedSize(entries.size());
             for (int i = 0; i < entries.size(); i++) {
-                NamedEntry entry = (NamedEntry)entries.get(i);
+                NamedEntry entry = entries.get(i);
                 if (allow(entry)) {
                     allowedEntries.add(entry);
-            }
+                }
+                if (allowedEntries.size() >= maxEntries) {
+                    break;
+                }
             }
             return allowedEntries;
+        }
+
+        /**
+         * returns a new list that contains only allowed entries from the input list.
+         * Deprecated for 8.7 left here in case 3rd party code still uses it.
+         */
+        @Deprecated
+        public List getAllowed(List entries) throws ServiceException {
+            return getAllowed(entries, entries.size());
         }
     }
 
