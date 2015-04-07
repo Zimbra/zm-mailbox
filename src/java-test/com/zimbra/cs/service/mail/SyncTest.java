@@ -73,6 +73,7 @@ public class SyncTest {
     @Before
     public void setUp() throws Exception {
         MailboxTestUtil.clearData();
+        Sync.setMaximumChangeCount(1000);
     }
 
     @Test
