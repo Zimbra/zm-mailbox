@@ -65,7 +65,7 @@ public class LeaderAwareFileLogWriter extends FileLogWriter {
             }
 
             @Override
-            protected String getUrl() throws IOException {
+            protected String getUrl(boolean fallbackIfNoLeader) throws IOException {
                 return HttpRedoLogManager.getUrl(false);
             }
         };

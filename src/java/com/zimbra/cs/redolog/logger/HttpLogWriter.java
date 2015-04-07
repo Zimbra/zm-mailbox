@@ -55,8 +55,8 @@ public class HttpLogWriter extends AbstractLogWriter implements LogWriter {
         return txnId;
     }
 
-    protected String getUrl() throws IOException {
-        return HttpRedoLogManager.getUrl(true);
+    protected String getUrl(boolean fallbackIfNoLeader) throws IOException {
+        return HttpRedoLogManager.getUrl(fallbackIfNoLeader);
     }
 
     @Override
@@ -66,7 +66,7 @@ public class HttpLogWriter extends AbstractLogWriter implements LogWriter {
         int sleepTime = 250;
         while (retries < maxRetries) {
             HttpClient client = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
-            PostMethod post = new PostMethod(getUrl());
+            PostMethod post = new PostMethod(getUrl(true));
             try {
                 post.setRequestEntity(new InputStreamRequestEntity(data));
                 int code = client.executeMethod(post);
@@ -147,8 +147,20 @@ public class HttpLogWriter extends AbstractLogWriter implements LogWriter {
     }
 
     @Override
-    public void rollover(LinkedHashMap activeOps) throws IOException {
-        //could fire a rollover; but does it make sense?...let redo server handle it
+    public void rollover(@SuppressWarnings("rawtypes") LinkedHashMap activeOps) throws IOException {
+        //send a rollover request. the receiver will deal with active ops, we do not have to
+        HttpClient client = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
+        PostMethod post = new PostMethod(getUrl(false));
+        try {
+            post.setParameter("cmd", "rollover");
+            int code = client.executeMethod(post);
+            if (code != HttpStatus.SC_OK) {
+                throw new IOException("unexpected response from redolog servlet [" + code + "] message:[" + post.getResponseBodyAsString() + "]");
+            }
+        } finally {
+            post.releaseConnection();
+        }
+
     }
 
     @Override

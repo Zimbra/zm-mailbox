@@ -140,7 +140,7 @@ public class HttpRedoLogManager extends AbstractRedoLogManager {
     @Override
     protected boolean isRolloverNeeded(boolean immediate) {
         //HTTP log manager does not need to deal with rollover
-        return false;
+        return immediate;
     }
 
     public static String getUrl(boolean fallbackIfNoLeader) throws IOException {
