@@ -1674,11 +1674,11 @@ public class DbMailItem {
         }
     }
 
-    // parent_id = null, change_date = ? (to be set to deletion time)
+     // parent_id = null, change_date = ? (to be set to deletion time)
     private static String MAIL_ITEM_DUMPSTER_COPY_SRC_FIELDS =
         (DebugConfig.disableMailboxGroups ? "" : "mailbox_id, ") +
         "id, type, parent_id, folder_id, prev_folders, index_id, imap_id, date, size, locator, blob_digest, " +
-        "unread, flags, tag_names, sender, recipients, subject, name, metadata, mod_metadata, ?, mod_content, uuid";
+        "unread, flags, tag_names, sender, recipients, subject, name, metadata, ?, ?, mod_content, uuid";
     private static String MAIL_ITEM_DUMPSTER_COPY_DEST_FIELDS =
         (DebugConfig.disableMailboxGroups ? "" : "mailbox_id, ") +
         "id, type, parent_id, folder_id, prev_folders, index_id, imap_id, date, size, locator, blob_digest, " +
@@ -1718,6 +1718,7 @@ public class DbMailItem {
                     " SELECT " + MAIL_ITEM_DUMPSTER_COPY_SRC_FIELDS + " FROM " + miTableName +
                     " WHERE " + IN_THIS_MAILBOX_AND + miWhere);
             int pos = 1;
+            miCopyStmt.setInt(pos++, mbox.getOperationChangeID());
             miCopyStmt.setInt(pos++, mbox.getOperationTimestamp());
             pos = setMailboxId(miCopyStmt, mbox, pos);
             for (int i = offset; i < offset + count; ++i) {
@@ -1979,7 +1980,7 @@ public class DbMailItem {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
-            stmt = conn.prepareStatement("SELECT id, prev_folders FROM " + getMailItemTableName(mbox, true) +
+            stmt = conn.prepareStatement("SELECT id, prev_folders, folder_id, mod_metadata FROM " + getMailItemTableName(mbox, true) +
                         " WHERE " + IN_THIS_MAILBOX_AND + "mod_metadata > ? " +
                         " ORDER BY id");
             Db.getInstance().enableStreaming(stmt);
@@ -1991,6 +1992,12 @@ public class DbMailItem {
             while (rs.next()) {
                 int id = rs.getInt(1);
                 String prevFolders = rs.getString(2);
+                int curFolderId = rs.getInt(3);
+                int modseq = rs.getInt(4);
+                if (lastSync < modseq && curFolderId == folderId) {
+                    result.add(id);
+                    continue;
+                }
                 if (StringUtil.isNullOrEmpty(prevFolders)) {
                     continue;
                 }
