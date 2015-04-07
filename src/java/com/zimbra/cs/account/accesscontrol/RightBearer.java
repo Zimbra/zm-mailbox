@@ -25,7 +25,6 @@ import java.util.concurrent.TimeUnit;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.ZimbraLog;
@@ -198,15 +197,20 @@ public abstract class RightBearer {
         static {
             long granteeCacheSize= 0;
             long granteeCacheExpireAfterMillis = 0;
-            granteeCacheSize = LC.short_term_grantee_cache_size.longValue();
-            if (granteeCacheSize > 0) {
-                granteeCacheExpireAfterMillis = LC.short_term_grantee_cache_expiration.longValue();
-                if (granteeCacheExpireAfterMillis < 0) {
-                    granteeCacheExpireAfterMillis = 0;
-                    granteeCacheSize = 0;
-                } else if (granteeCacheExpireAfterMillis > MAX_CACHE_EXPIRY) {
-                    granteeCacheExpireAfterMillis = MAX_CACHE_EXPIRY;
+            try {
+                Server server = Provisioning.getInstance().getLocalServer();
+                granteeCacheSize = server.getShortTermGranteeCacheSize();
+                if (granteeCacheSize > 0) {
+                    granteeCacheExpireAfterMillis = server.getShortTermGranteeCacheExpiration();
+                    if (granteeCacheExpireAfterMillis < 0) {
+                        granteeCacheExpireAfterMillis = 0;
+                        granteeCacheSize = 0;
+                    } else if (granteeCacheExpireAfterMillis > MAX_CACHE_EXPIRY) {
+                        granteeCacheExpireAfterMillis = MAX_CACHE_EXPIRY;
+                    }
                 }
+            } catch (ServiceException e) {
+                granteeCacheSize = 0;
             }
             if (granteeCacheSize > 0) {
                 GRANTEE_CACHE =
