@@ -3712,7 +3712,7 @@ public class Mailbox {
         return getModifiedItems(octxt, lastSync, 0, type, folderIds, lastDeleteSync);
     }
 
-    public Pair<List<Integer>, TypedIdList> getModifiedItems(OperationContext octxt, int lastSync, int sinceDate,
+    public Pair<List<Integer>, TypedIdList> getModifiedItems(OperationContext octxt, int lastSync, long sinceDate,
         MailItem.Type type, Set<Integer> folderIds) throws ServiceException {
         return getModifiedItems(octxt, lastSync, sinceDate, type, folderIds, -1);
     }
