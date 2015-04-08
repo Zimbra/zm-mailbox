@@ -188,6 +188,112 @@ public class TestImap extends TestCase {
         assertNotNull(listResult);
         assertEquals("List result should have this number of entries", 1, listResult.size());
     }
+@Test
+    public void testMailfoldersOnlyList() throws Exception {
+    	ZMailbox mbox = TestUtil.getZMailbox(USER);
+        String folderName = "newfolder1";
+        ZFolder folder = mbox.createFolder(Mailbox.ID_FOLDER_USER_ROOT+"", folderName, ZFolder.View.unknown, ZFolder.Color.DEFAULTCOLOR, null, null);
+        Provisioning.getInstance().getLocalServer().setImapDisplayMailFoldersOnly(true);
+        List<ListData> listResult = connection.list("", "*");
+        assertNotNull(listResult);
+	assertTrue("List result should have atleast 5  entries", listResult.size() >= 5);
+	boolean hasContacts = false;
+	boolean hasChats = false;
+	boolean hasEmailedContacts = false;
+        boolean hasTrash = false;
+        boolean hasDrafts = false;
+        boolean hasInbox = false;
+        boolean hasJunk = false;
+        boolean hasSent = false;
+        boolean hasUnknown = false;
+        for (ListData ld : listResult) {
+            if((ld.getMailbox().equalsIgnoreCase("Contacts"))){
+		hasContacts = true;
+	    }
+	    else if((ld.getMailbox().equalsIgnoreCase("Chats"))){
+                hasChats = true;
+	    }
+	    else if((ld.getMailbox().equalsIgnoreCase("Emailed Contacts"))){
+	        hasEmailedContacts = true;
+	    }
+	    else if((ld.getMailbox().equalsIgnoreCase("newfolder1"))){
+		hasUnknown = true;
+	    }
+	    else if((ld.getMailbox().equalsIgnoreCase("Trash"))){
+		hasTrash = true;
+	    }
+	    else if((ld.getMailbox().equalsIgnoreCase("Drafts"))){
+		hasDrafts= true;
+	    }
+	    else if((ld.getMailbox().equalsIgnoreCase("Inbox"))){
+		hasInbox= true;
+	    }
+	    else if((ld.getMailbox().equalsIgnoreCase("Sent"))){
+		hasSent= true;
+	    }
+	    else if((ld.getMailbox().equalsIgnoreCase("Junk"))){
+	        hasJunk= true;
+	    }
+        }
+        assertFalse("MailonlyfolderList * contains chats",hasChats);
+	assertFalse("MailonlyfolderList * contains contacts",hasContacts);
+	assertFalse("MailonlyfolderList * contains emailed contacts",hasEmailedContacts);
+	assertTrue("MailonlyfolderList * contains Trash",hasTrash);
+	assertTrue("MailonlyfolderList * contains Drafts ",hasDrafts);
+	assertTrue("MailonlyfolderList * contains Inbox",hasInbox);
+	assertTrue("MailonlyfolderList * contains Sent",hasSent);
+	assertTrue("MailonlyfolderList * contains Junk",hasJunk);
+	assertTrue("MailonlyfolderList * contains unknown sub folders",hasUnknown);
+	}
+    @Test
+    public void testFoldersList() throws Exception {
+        List<ListData> listResult = connection.list("", "*");
+        assertNotNull(listResult);
+        assertTrue("List result should have atleast 5  entries", listResult.size() >= 5);
+        boolean hasContacts = false;
+        boolean hasChats = false;
+        boolean hasEmailedContacts = false;
+        boolean hasTrash = false;
+        boolean hasDrafts = false;
+        boolean hasInbox = false;
+        boolean hasJunk = false;
+        boolean hasSent = false;
+        for (ListData ld : listResult) {
+            if((ld.getMailbox().equalsIgnoreCase("Contacts"))){
+                hasContacts = true;
+	    }
+	    else if((ld.getMailbox().equalsIgnoreCase("Chats"))){
+		hasChats = true;
+	    }
+	    else if((ld.getMailbox().equalsIgnoreCase("Emailed Contacts"))){
+		hasEmailedContacts = true;
+	    }
+	    else if((ld.getMailbox().equalsIgnoreCase("Trash"))){
+		hasTrash = true;
+	    }
+	    else if((ld.getMailbox().equalsIgnoreCase("Drafts"))){
+		hasDrafts= true;
+	    }
+	    else if((ld.getMailbox().equalsIgnoreCase("Inbox"))){
+		hasInbox= true;
+	    }
+	    else if((ld.getMailbox().equalsIgnoreCase("Sent"))){
+		hasSent= true;
+	    }
+	    else if((ld.getMailbox().equalsIgnoreCase("Junk"))){
+		hasJunk= true;
+	    }
+        }
+        assertTrue("folderList * contains chats",hasChats);
+	assertTrue("folderList * contains contacts",hasContacts);
+	assertTrue("folderList * contains emailed contacts",hasEmailedContacts);
+	assertTrue("folderList * contains Trash",hasTrash);
+	assertTrue("folderList * contains Drafts ",hasDrafts);
+	assertTrue("folderList * contains Inbox",hasInbox);
+	assertTrue("folderList * contains Sent",hasSent);
+	assertTrue("folderList * contains Junk",hasJunk);
+    }
+	
     @Test
     public void testListContacts() throws Exception {
     List<ListData> listResult = connection.list("", "*Contacts*");
