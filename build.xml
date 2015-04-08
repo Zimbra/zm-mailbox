@@ -1,7 +1,5 @@
 <project name="ZimbraServer" default="jar">
 
-  <property name="build.dir" location="target" />
-
   <import file="../ant-global.xml"/>
 
   <property file='build-custom.properties'/>
@@ -54,17 +52,16 @@
     </condition>
 
     <property name="build.zmprov" location="${build.dir}/data/zmprov.txt"/>
-    <property name="build.zmprov.alwayson" location="${build.dir}/data/zmprov-alwayson.txt"/>
     <property name="dist.db.dir" location="build/dist/db"/>
     <property name="dist.jetty.dir" location="${dist.dir}/jetty"/>
     <property name="generated.java.dir" location="${build.dir}/generated/src/java"/>
     <property name="warfilename" value="service.war"/>
     <property name="warfile" location="${build.dir}/${warfilename}"/>
-	<property name="warfile.maven" location="${build.dir}/zimbrastore-${project.maven.version}.war"/>
+    <property name="jarfile" location="${build.dir}/zimbrastore.jar"/>
 
     <property name="lib.dir" location="lib"/>
     <property name="config.dir" location="conf"/>
-	<condition property="war.web.xml" value="src/main/webapp/WEB-INF/web.xml">
+	<condition property="war.web.xml" value="${config.dir}/web.xml${production.suffix}">
 	 	<not><isset property="war.web.xml"/></not>
 	</condition>
 	<property name="war.web.xml" location="${war.web.xml}${production.suffix}"/>
@@ -101,11 +98,9 @@
     <property name="jetty.version" value="9.1.5.v20140505"/>
     <available property="jetty.start.jar.exists" file="${jetty.home.dir}/start.jar"/>
 
-    <property name="solr.home.dir"  location="${zimbra.home.dir}/solr"/>
-    <property name="solr.war" location="${dist.dir}/solr/solr.war"/>
-	
     <property name="ical4j.jar" value="ical4j-0.9.16-patched.jar"/>
     <property name="ziputil.jar" value="ant-1.7.0-ziputil-patched.jar"/>
+    <property name="memcached.jar" value="memcached-2.6.jar"/>
 
     <condition property="db-sqlite">
         <isset property="env.ZIMBRA_USE_SQLITE"/>
@@ -123,18 +118,6 @@
     <condition property="jetty-use-service">
         <isset property="env.ZIMBRA_JETTY_USE_SERVICE"/>
     </condition>
-
-    <condition property="consul.available">
-        <socket server="localhost" port="8500"/>
-    </condition>
-
-    <condition property="redis.available">
-        <socket server="localhost" port="6379"/>
-    </condition>
-
-    <condition property="redolog.available">
-        <available file="../ZimbraFOSS/ZimbraRedologService"/>
-	</condition>
 
     <condition property="deploy.dir" value="${env.DEPLOY_DIR}">
         <isset property="env.DEPLOY_DIR"/>
@@ -190,9 +173,14 @@
     <property name="defaultdomain.name" value="${zimbra.server.hostname}"/>
     <property name="samplefamilyaccounts.file" location="data/soap/samplefamilyaccounts.xml"/>
 
+    <taskdef resource="net/sf/antcontrib/antlib.xml">
+        <classpath>
+            <pathelement location="${common.jars.dir}/ant-contrib-1.0b1.jar"/>
+        </classpath>
+    </taskdef>
+
     <path id="class.path">
       <pathelement location="${common.classes.dir}"/>
-      <pathelement location="${jettycommon.classes.dir}"/>
       <pathelement location="${soap.classes.dir}"/>
       <pathelement location="${client.classes.dir}"/>
       <pathelement location="${build.classes.dir}"/>
@@ -233,7 +221,6 @@
         <mkdir dir="${base.dir}/conf/msgs"/>
         <mkdir dir="${base.dir}/db"/>
         <mkdir dir="${base.dir}/lib/ext"/>
-        <mkdir dir="${base.dir}/lib/ext-common"/>
         <mkdir dir="${base.dir}/lib/jars"/>
         <mkdir dir="${base.dir}/libexec"/>
     </target>
@@ -483,33 +470,28 @@
     <target name="db-versions-init" depends="mysql-versions-init,sqlite-versions-init"/>
 
     <target name="compile" depends="build-init">
-        <ant dir="${client.dir}" target="jar" inheritAll="false">
-          <property name="skip.maven" value="${skip.maven}"/>
-        </ant>
-    	<maven dir="." goal="compile"/>
+        <ant dir="${client.dir}" target="jar" inheritAll="false"/>
+        <javac fork="true" memorymaximumsize="512m" destdir="${build.classes.dir}" debug="true"
+               classpathref="class.path" target="${javac.target}">
+            <src refid="all.java.path"/>
+        </javac>
         <antcall target="db-versions-init"/>
     </target>
 
     <target name="jar" depends="generate-buildinfo,compile" description="Creates the jar file">
         <antcall target="zimbra-jar">
-            <param name="jar.file" value="zimbrastore.jar"/> 
+            <param name="jar.file" value="zimbrastore.jar"/> <!-- zimbra-jar expects the filename without the path -->
             <param name="implementation.title" value="Zimbra Server"/>
         </antcall>
     </target>
 
     <target name="clean" description="Deletes classes from build directories">
-      <maven dir=".." goal="clean"/>
+      <ant dir="${common.dir}" target="clean" inheritAll="false"/>
+      <ant dir="${soap.dir}" target="clean" inheritAll="false"/>
+      <ant dir="${client.dir}" target="clean" inheritAll="false"/>
+      <delete dir="${build.dir}"/>
     </target>
 
-    <target name="deploy-solr-plugins">
-        <ant dir="../SolrPlugins" target="deploy" inheritAll="false"/>
-    </target>
-
-    <target name="compile-solr-plugins">
-        <ant dir="../SolrPlugins" target="jar" inheritAll="false"/>
-        <ant dir="../SolrPlugins" target="deploy-libs" inheritAll="false"/>
-    </target>
-    	
     <target name="clean-opt-zimbra" description="Deletes deployed jars, classes, and zimlets">
     <!-- Delete jars, so that we don't leave cruft if a jar is upgraded with a new name. -->
       <delete dir="${zimbra.home.dir}/lib/jars" failonerror="false"/>
@@ -519,14 +501,11 @@
         <fileset dir="${jetty.home.dir}/common/lib">
           <include name="${ical4j.jar}"/>
           <include name="${ziputil.jar}"/>
-          <include name="spymemcached*.jar"/>
+          <include name="${memcached.jar}"/>
           <include name="${db.driver.jar}"/>
-          <include name="apache-log4j-extras-*.jar"/>
-          <include name="aopalliance-*.jar"/>
-	  <include name="aspectjweaver-*.jar"/>
           <include name="mariadb-java-client-*.jar"/>
-          <include name="mail-*.jar"/>
-          <include name="zimbranative*.jar"/>
+          <include name="javamail-1.4.5.jar"/>
+          <include name="zimbra-native.jar"/>
           <include name="bcprov-jdk15-146.jar"/>
           <include name="commons-beanutils*.jar"/>
           <include name="commons-cli*.jar"/>
@@ -536,46 +515,86 @@
           <include name="commons-digester*.jar"/>
           <include name="commons-fileupload*.jar"/>
           <include name="commons-httpclient*.jar"/>
+          <include name="commons-net*.jar"/>
           <include name="commons-io*.jar"/>
           <include name="commons-lang-*.jar"/>
-          <include name="commons-logging*.jar"/>
-          <include name="commons-pool-*.jar"/>
-          <include name="commons-pool2-*.jar"/>
+          <include name="commons-logging.jar"/>
+          <include name="commons-pool*.jar"/>
           <include name="concurrent*.jar"/>
+          <include name="yuicompressor*.jar"/>
           <include name="dom4j*.jar"/>
           <include name="ganymed-ssh2*.jar"/>
-          <include name="icu4j-*.jar"/>
           <include name="jakarta-oro*.jar"/>
-          <include name="javamail-1.4.5.jar"/>
           <include name="jaxen*.jar"/>
           <include name="jcommon*.jar"/>
-          <include name="jdom*.jar"/>
-          <include name="jedis-*.jar"/>
           <include name="jfreechart*.jar"/>
-          <include name="json.jar"/>
           <include name="junit*.jar"/>
-          <include name="jzlib-*.jar"/>
-          <include name="nekohtml-*.jar"/>
-          <include name="junixsocket*.jar"/>  
-          <include name="jython*.jar"/>
-          <include name="log4j-*.jar"/>
-          <include name="qless-*.jar"/>
-          <include name="testng*.jar"/>
+          <include name="jzlib-1.0.7.jar"/>
+          <include name="nekohtml-1.9.13.1z.jar"/>
           <include name="tnef*.jar"/>
-          <include name="unboundid*.jar"/>
           <include name="xercesImpl*.jar"/>
           <include name="xpp3.jar"/>
-          <include name="yuicompressor*.jar"/>
-          <include name="zimbra-native.jar"/>
+          <include name="libidn*.jar"/>
+          <include name="jdom*.jar"/>
+          <include name="json.jar"/>
+          <include name="junixsocket*.jar"/>  
+          <include name="unboundid*.jar"/>
+          <include name="testng*.jar"/>
+          <include name="jython*.jar"/>
+          <include name="log4j-*.jar"/>
+          <include name="apache-log4j-extras-*.jar"/>
+          <include name="icu4j-*.jar"/>
         </fileset>
       </delete>
     </target>
 
     <!-- jetty loads jetty-util*.jar, log4j*.jar and slf4j*.jar -->
 
-    <target name="war">
-      <maven dir="." goal="package"/>
-      <copy file="${warfile.maven}" tofile="${warfile}"/>    
+    <target name="war" depends="jar">
+      <war warfile="${warfile}" webxml="${war.web.xml}">
+        <fileset dir="WebRoot"/>
+        <lib file="${soap.jarfile}"/>
+        <lib file="${client.jarfile}"/>
+        <lib file="${jarfile}"/>
+        <lib dir="${common.jars.dir}">
+          <include name="slf4j*.jar"/>
+          <include name="*jsieve*.jar"/>
+          <include name="lucene*.jar"/>
+          <include name="ant-tar*.jar"/>
+          <include name="mina-*.jar"/>
+          <include name="ews*.jar"/>
+          <include name="cassandra-*.jar"/>
+          <include name="hector-*.jar"/>
+          <include name="zkclient-*.jar"/>
+          <include name="zookeeper-*.jar"/>
+          <include name="curator-*.jar"/>
+          <include name="perf4j-*.jar"/>
+          <include name="libthrift-*.jar"/>
+          <include name="high-scale-lib-*.jar"/>
+          <include name="jackson-*.jar"/>
+          <include name="hadoop-*.jar"/>
+          <include name="hbase-*.jar"/>
+          <include name="ehcache-*.jar"/>
+          <include name="jersey-*.jar"/>
+          <include name="asm-*.jar"/>
+          <include name="jsr*.jar"/>
+          <include name="cxf-*.jar"/>
+          <include name="javax.ws.rs-api-*.jar"/>
+          <include name="httpasyncclient-*.jar"/>
+          <include name="httpclient-*.jar"/>
+          <include name="httpcore-*.jar"/>
+	      <include name="neethi-*.jar"/>
+          <include name="objenesis-*.jar"/>
+	      <include name="spring-*.jar"/>
+          <include name="woodstox-core-asl-*.jar"/>
+	      <include name="wsdl4j-*.jar"/>
+	      <include name="xmlschema-core-*.jar"/>
+          <include name="stax2-api-*.jar"/>
+        </lib>
+      	<lib dir="${aux.jars.dir}" includes="*.jar"/>
+        <classes dir="${config.dir}" includes="sieveConfig.xml"/>
+        <classes dir="${config.dir}" includes="cxf.xml"/>
+      </war>
     </target>
 
     <target name="spnego-service-name">
@@ -805,7 +824,7 @@
   <target name="service-deploy" depends="refresh-opt-zimbra,deploy-war"
             description="Not just war file deployment, but a /opt/zimbra refresh as well!"/>
 
-    <target name="deploy-war" depends="stop-jetty,war,copy-war,compile-solr-plugins,deploy-solr-plugins,copy-solr,copy-redolog-war,start-jetty"/>
+    <target name="deploy-war" depends="stop-jetty,war,copy-war,start-jetty"/>
 
     <target name="copy-war">
         <delete dir="${jetty.home.dir}/webapps/service"/>
@@ -813,29 +832,6 @@
         <copy file="${warfile}" todir="${jetty.home.dir}/webapps"/>
         <mkdir dir='${jetty.home.dir}/webapps/service'/>
         <unzip dest="${jetty.home.dir}/webapps/service" src="${jetty.home.dir}/webapps/${warfilename}"/>
-    </target>
-
-    <target name="copy-solr">
-        <delete dir="${jetty.home.dir}/webapps/solr"/>
-        <delete file="${jetty.home.dir}/webapps/solr.war"/>
-        <copy file="${solr.war}" todir="${jetty.home.dir}/webapps"/>
-        <mkdir dir='${jetty.home.dir}/webapps/solr'/>
-        <unzip dest="${jetty.home.dir}/webapps/solr" src="${jetty.home.dir}/webapps/solr.war"/>
-        <copy todir="${jetty.home.dir}/webapps/solr/WEB-INF/lib">
-           <fileset dir="${common.jars.dir}" includes="slf4j*.jar"/>
-           <fileset dir="${common.jars.dir}" includes="commons-logging*.jar"/>
-           <fileset dir="${common.jars.dir}" includes="log4j*.jar"/>
-        </copy>
-    </target>
-
-    <target name="copy-redolog-war" if="${redolog.available}">
-        <property name="redolog.basename" value="zimbraredologservice"/>
-        <property name="redolog.war" location="../ZimbraFOSS/ZimbraRedologService/target/${redolog.basename}-${project.maven.version}.war"/>
-        <delete dir="${jetty.home.dir}/webapps/${redolog.basename}"/>
-        <delete file="${jetty.home.dir}/webapps/${redolog.basename}.war"/>
-        <copy file="${redolog.war}" tofile="${jetty.home.dir}/webapps/${redolog.basename}.war"/>
-        <mkdir dir='${jetty.home.dir}/webapps/${redolog.basename}'/>
-        <unzip dest="${jetty.home.dir}/webapps/${redolog.basename}" src="${jetty.home.dir}/webapps/${redolog.basename}.war"/>
     </target>
 
     <target name="init-opt-zimbra" depends="dev-dist,localhost-ssl-cert" description="Copies build/dist to /opt/zimbra">
@@ -849,25 +845,10 @@
         </chmod>
     	<delete file="${zimbra.home.dir}/jetty/start.ini"/>
         <delete file="${zimbra.home.dir}/jetty/start.d/http.ini"/>
-    	<antcall target="copy-solr-config" />
+    	
         <!-- ant does not preserve perms on copy -->
     </target>
 
-	<target name="copy-solr-config" description="copies solr config files to /opt/zimbra">
-        <mkdir dir="${zimbra.home.dir}/solr/configsets/zimbra/conf" />
-            
-        <copy todir="${zimbra.home.dir}/solr/configsets/zimbra/conf" overwrite="true">
-            <fileset dir="${config.dir}/solr/configsets/zimbra/conf/" includes="*.xml,*.txt"/>
-        </copy>
-        
-        <copy todir="${zimbra.home.dir}/solr/configsets/zimbra/conf/lang" overwrite="true">
-            <fileset dir="${config.dir}/solr/configsets/zimbra/conf/lang" includes="*.txt" />
-        </copy>
-        
-        <copy todir="${zimbra.home.dir}/solr/solr" overwrite="true">
-            <fileset dir="${config.dir}/solr" includes="solr.xml"/>
-        </copy>
-	</target>
     <target name="refresh-opt-zimbra" depends="dev-dist">
       <copy todir="${zimbra.home.dir}" overwrite="true">
         <fileset dir="${dist.dir}">
@@ -879,7 +860,6 @@
         <fileset dir="${zimbra.home.dir}/bin"/>
         <fileset dir="${zimbra.home.dir}/libexec"/>
       </chmod>
-      <antcall target="copy-solr-config" />
     </target>
 
     <target name="enable-im">
@@ -913,13 +893,8 @@
         <antcall target="start-webserver"/>
     </target>
 
-	<target name="maven-build-parent" depends="maven-seed-local-repo">
-		<maven dir=".." goal="clean install dependency:copy-dependencies"/>
-		<property name="skip.maven" value="true"/>
-	</target>
-	
   <!-- target called by the production build -->
-    <target name="dev-dist" depends="maven-build-parent,war,dev-dist-unix,dev-dist-jetty,choose-db-schema,generate-ldap-config" description="Initializes build/dist">
+    <target name="dev-dist" depends="war,dev-dist-unix,dev-dist-jetty,choose-db-schema,generate-ldap-config" description="Initializes build/dist">
         <echo>Version: ${zimbra.buildinfo.version} Date: ${zimbra.buildinfo.date}</echo>
         <!-- bin, libexec -->
         <copy todir="${dist.dir}/bin" overwrite="true">
@@ -973,6 +948,10 @@
             <!-- Enable SMTP to LMTP bridge for development. -->
             <java classname="com.zimbra.cs.localconfig.LocalConfigCLI" fork="true" classpathref="class.path" failonerror="true">
               <sysproperty key="zimbra.config" value="${dist.dir}/conf/localconfig.xml"/>
+              <arg line="-e smtp_to_lmtp_enabled=true"/>
+            </java>
+            <java classname="com.zimbra.cs.localconfig.LocalConfigCLI" fork="true" classpathref="class.path" failonerror="true">
+              <sysproperty key="zimbra.config" value="${dist.dir}/conf/localconfig.xml"/>
               <arg line="-e ldap_read_timeout=0"/>
             </java>
             <java classname="com.zimbra.cs.localconfig.LocalConfigCLI" fork="true" classpathref="class.path" failonerror="true">
@@ -1001,17 +980,10 @@
         <copy todir="${dist.dir}/lib/jars" overwrite="true">
             <fileset dir="${common.jars.dir}" includes="*.jar"/>
         </copy>
-    	
-    	<!-- CLI script classpath gets messy w/ version numbers, so unversion the jars -->
-    	<delete failonerror="false">
-    		<fileset dir="${dist.dir}/lib/jars" includes="zimbra*.jar"/>
-    	</delete>
-        <copy tofile="${dist.dir}/lib/jars/zimbracommon.jar" file="${common.jarfile}" overwrite="true"/>
-        <copy tofile="${dist.dir}/lib/jars/zimbrasoap.jar" file="${soap.jarfile}" overwrite="true"/>
-        <copy tofile="${dist.dir}/lib/jars/zimbraclient.jar" file="${client.jarfile}" overwrite="true"/>
-        <copy tofile="${dist.dir}/lib/jars/zimbrastore.jar" file="${server.jarfile}" overwrite="true"/>
-        <copy tofile="${dist.dir}/lib/jars/zimbranative.jar" file="${native.jarfile}" overwrite="true"/>
-        <copy tofile="${dist.dir}/lib/jars/zimbracharset.jar" file="${charset.jarfile}" overwrite="true"/>
+        <copy todir="${dist.dir}/lib/jars" file="${common.jarfile}" overwrite="true"/>
+        <copy todir="${dist.dir}/lib/jars" file="${soap.jarfile}" overwrite="true"/>
+        <copy todir="${dist.dir}/lib/jars" file="${client.jarfile}" overwrite="true"/>
+        <copy todir="${dist.dir}/lib/jars" file="${jarfile}" overwrite="true"/>
 
         <!-- jetty windows service wrapper -->
         <if>
@@ -1098,11 +1070,54 @@
     <copy tofile="${dist.jetty.dir}/resources/log4j.properties"
           file="${config.dir}/jetty-9.1/log4j.properties${production.suffix}" overwrite="true"/>
     <copy todir="${dist.jetty.dir}/common/lib" overwrite="true">
-      <fileset file="${jettycommon.jarfile}"/>
+      <fileset dir="${common.jars.dir}">
+        <include name="${ical4j.jar}"/>
+        <include name="${ziputil.jar}"/>
+        <include name="${memcached.jar}"/>
+        <include name="${db.driver.jar}"/>
+        <include name="javamail-1.4.5.jar"/>
+        <include name="zimbra-native.jar"/>
+        <include name="bcprov-jdk15-146.jar"/>
+        <include name="commons-cli*.jar"/>
+        <include name="commons-codec*.jar"/>
+        <include name="commons-dbcp*.jar"/>
+        <include name="commons-fileupload*.jar"/>
+        <include name="commons-httpclient*.jar"/>
+        <include name="commons-net*.jar"/>
+        <include name="commons-io*.jar"/>
+        <include name="commons-lang-*.jar"/>
+        <include name="commons-logging.jar"/>
+        <include name="commons-collections*.jar"/>
+        <include name="icu4j-*.jar"/>
+        <include name="commons-pool*.jar"/>
+        <include name="concurrentlinkedhashmap-lru*.jar"/>
+        <include name="yuicompressor*jar"/>
+        <include name="dom4j*.jar"/>
+        <include name="ganymed-ssh2*.jar"/>
+        <include name="jaxen*.jar"/>
+        <include name="jcommon*.jar"/>
+        <include name="jfreechart*.jar"/>
+        <include name="jzlib-1.0.7.jar"/>
+        <include name="nekohtml-1.9.13.1z.jar"/>
+        <include name="tnef*.jar"/>
+        <include name="xercesImpl*.jar"/>
+        <include name="xpp3.jar"/>
+        <include name="libidn*.jar"/>
+        <include name="jdom*.jar"/>
+        <include name="json.jar"/>
+        <include name="junixsocket*.jar"/>    
+        <include name="unboundid*.jar"/>
+        <include name="testng*.jar"/>
+        <include name="guava*.jar"/>
+        <include name="log4j-*.jar"/>
+        <include name="apache-log4j-extras-*.jar"/>
+        <include name="junit*.jar"/>
+      </fileset>
     </copy>
     <copy todir="${dist.jetty.dir}/common/endorsed" overwrite="true">
-      <fileset file="${charset.jarfile}"/>
+      <fileset dir="${common.jars.dir}" includes="zimbra-charset.jar"/>
     </copy>
+    <copy todir="${dist.jetty.dir}/common/lib" file="${common.jarfile}" overwrite="true"/>
   </target>
 
     <target name="init-jetty" depends="build-init" description="Initializes the jetty directory structure">
@@ -1119,35 +1134,15 @@
 
     <target name="install-thirdparty" depends="install-thirdparty-unix,install-thirdparty-windows" description="Installs third party binaries" />
 
-    <target name="create-java-link">
-        <if>
-          <available file="${zimbra.home.dir}/java"/>
-          <then>
-            <exec executable="${zimbra.home.dir}/java/bin/java" outputproperty="link.java.version">
-              <arg value="-version"/>
-            </exec>
-              
-            <if>
-              <not><contains string="${link.java.version}" substring="1.8"/></not>
-              <then>
-                <echo message="linked java version is not 1.8; replacing"/>
-                <symlink action="delete" link="${zimbra.home.dir}/java"/>
-                <symlink link="${zimbra.home.dir}/java" resource="${java.home}" />
-              </then>
-            </if>
-          </then>
-        </if>
-    	
-    	<if>
-          <not><available file="${zimbra.home.dir}/java"/></not>
-          <then>
-            <echo message="Creating symbolic link from ${zimbra.home.dir}/java to ${java.home}" />
-            <symlink link="${zimbra.home.dir}/java" resource="${java.home}" />
-          </then>
-        </if>
-	</target>
-	
-	<target name="install-thirdparty-unix" depends="create-java-link" description="Installs third party binaries on unix" if="is-unix">
+    <target name="install-thirdparty-unix" description="Installs third party binaries on unix" if="is-unix">
+      <if>
+        <not><available file="${zimbra.home.dir}/java"/></not>
+        <then>
+          <echo message="Creating symbolic link from ${zimbra.home.dir}/java to ${java.home}" />
+          <symlink link="${zimbra.home.dir}/java" resource="${java.home}" />
+        </then>
+      </if>
+
       <if><available file="../ZimbraServer/src/perl/install-thirdparty"/> <!-- Not available for community build. -->
         <then>
           <antcall target="stop-webserver"/>
@@ -1170,24 +1165,12 @@
     </target>
 
     <target name="reset-all" depends="install-thirdparty,init-jetty,reset-the-world" description="Reset the world plus jetty and OpenLDAP">
-        <ant dir="../ZimbraWebClient" target="clean" inheritAll="false">
-        	<property name="skip.maven" value="${skip.maven}"/>
-        </ant>
-        <ant dir="../ZimbraWebClient" target="admin-deploy" inheritAll="false">
-            <property name="skip.maven" value="${skip.maven}"/>
-        </ant>
-        <ant dir="../ZimbraWebClient" target="clean" inheritAll="false">
-            <property name="skip.maven" value="${skip.maven}"/>
-        </ant>
-        <ant dir="../ZimbraWebClient" target="deploy" inheritAll="false">
-            <property name="skip.maven" value="${skip.maven}"/>
-        </ant>
-        <ant dir="../Zimlet" target="clean" inheritAll="false">
-            <property name="skip.maven" value="${skip.maven}"/>
-        </ant>
-        <ant dir="../Zimlet" target="deploy" inheritAll="false">
-            <property name="skip.maven" value="${skip.maven}"/>
-        </ant>
+        <ant dir="../ZimbraWebClient" target="clean" inheritAll="false"/>
+        <ant dir="../ZimbraWebClient" target="admin-deploy" inheritAll="false"/>
+        <ant dir="../ZimbraWebClient" target="clean" inheritAll="false"/>
+        <ant dir="../ZimbraWebClient" target="deploy" inheritAll="false"/>
+        <ant dir="../Zimlet" target="clean" inheritAll="false"/>
+        <ant dir="../Zimlet" target="deploy" inheritAll="false"/>
     </target>
 
     <!-- There are two ways to reset the world:
@@ -1200,8 +1183,7 @@
     <target name="reset-the-world" description="Reset the world">
       <!-- do not add any other ant calls in between reset-the-world-stage1 and stage2.
            instead add them as a dependency of stage1 and stage2 targets. -->
-        <antcallback target="reset-the-world-stage1" return="skip.maven"/>
-    	<echo message="done reset the world stage 1, skip.maven =${skip.maven}"/>
+        <antcall target="reset-the-world-stage1"/>
         <antcall target="reset-the-world-stage2"/>
     </target>
 
@@ -1317,7 +1299,7 @@
         </java>
     </target>
 
-    <target name="localhost-ssl-cert-gen">
+    <target name="localhost-ssl-cert">
         <delete failonerror="no">
             <fileset dir="${jetty.conf.dir}" includes="keystore"/>
         </delete>
@@ -1326,8 +1308,8 @@
                 <param name="CN" value="localhost"/>
                 <param name="OU" value="Engineering"/>
                 <param name="O" value="Zimbra Systems"/>
-                <param name="L" value="Palo Alto"/>
-                <param name="S" value="California"/>
+              <param name="L" value="Palo Alto"/>
+              <param name="S" value="California"/>
                 <param name="C" value="US"/>
             </dname>
         </genkey>
@@ -1341,41 +1323,6 @@
                 <param name="C" value="US"/>
             </dname>
         </genkey>
-    </target>
-    <target name="localhost-ssl-cert-import" depends="localhost-ssl-cert-gen">
-        <exec executable="keytool" failonerror="true">
-            <arg value="-exportcert"/>
-            <arg line="-keystore ${jetty.conf.dir}/keystore"/>
-            <arg line="-alias jetty"/>
-            <arg line="-storepass zimbra"/>
-            <arg line="-file ${jetty.conf.dir}/export"/>
-        </exec>
-
-        <exec executable="sudo" failonerror="true">
-                    <arg line="chmod a+w ${zimbra.home.dir}/java/lib/security/cacerts"/>
-         </exec>
-    	
-        <exec executable="keytool" inputstring="yes">
-        	<arg value="-delete"/>
-            <arg line="-keystore ${zimbra.home.dir}/java/lib/security/cacerts"/>
-            <arg line="-alias jetty"/>
-            <arg line="-storepass changeit"/>
-         </exec>
-    	
-        <exec executable="keytool" failonerror="true" inputstring="yes">
-            <arg value="-importcert"/>
-            <arg line="-keystore ${zimbra.home.dir}/java/lib/security/cacerts"/>
-            <arg line="-alias jetty"/>
-            <arg line="-storepass changeit"/>
-            <arg line="-file ${jetty.conf.dir}/export"/>
-        </exec>
-    	
-         <delete failonerror="no">
-            <fileset dir="${jetty.conf.dir}" includes="export"/>
-        </delete>
-        </target>
-    
-    <target name="localhost-ssl-cert" depends="localhost-ssl-cert-import">
     </target>
 
     <target name="keystore-backup">
@@ -1401,7 +1348,6 @@
         <delete dir="${zimbra.home.dir}/redolog"/>
         <delete dir="${zimbra.home.dir}/backup"/>
         <delete dir="${zimbra.home.dir}/lib/ext"/>
-        <delete dir="${zimbra.home.dir}/lib/ext-common"/>
         <delete dir="${zimbra.home.dir}/conf/attrs"/>
         <delete dir="${zimbra.home.dir}/conf/rights"/>
         <delete dir="${zimbra.home.dir}/conf/msgs"/>
@@ -1409,7 +1355,6 @@
         <delete failonerror="no">
             <fileset dir="${zimbra.home.dir}/log" includes="*.log"/>
         </delete>
-    	<delete failonerror="no" dir="${zimbra.home.dir}/solr/solr"/>
       <antcall target="dir-init-jetty"/>
 
 
@@ -1551,7 +1496,7 @@
         </exec>
     </target>
 
-  <target name="ldap-load" depends="generate-ldap-config-db">
+  <target name="ldap-load">
     <waitfor checkevery="5" checkeveryunit="second" maxwait="60" maxwaitunit="second" timeoutproperty="ldap.timeout">
       <socket server="${ldap.host}" port="${ldap.port}"/>
     </waitfor>
@@ -1585,45 +1530,6 @@
     </java>
     <echo>Running zmprov commands</echo>
     <antcall target="run-zmprov-commands"/>
-    <if>
-        <not><isset property="is-production"/></not>
-        <then>
-          <echo>Enabling smtptolmtp server for dev environment</echo>
-          <java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
-            <arg line="-l ms ${zimbra.server.hostname} zimbraMailboxSmtpToLmtpEnabled TRUE"/>
-          </java>
-        </then>
-    </if>
-    <antcall target="setup-alwayson-cluster"/>
-  </target>
-
-  <target name="setup-alwayson-cluster">
-    <if>
-      <and>
-        <isset property="redis.available"/>
-        <isset property="consul.available"/>
-        <isset property="redolog.available"/>
-      </and>
-      <then>
-            <java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true" outputproperty="build.alwaysoncluster.id">
-                <arg line="-l caoc devcluster1"/>
-            </java>
-            <echo message="created always on cluster ${build.alwaysoncluster.id}"/>
-            <echo file="${build.zmprov.alwayson}">
-                maoc ${build.alwaysoncluster.id} zimbraRedisUrl redis://localhost:6379
-                maoc ${build.alwaysoncluster.id} zimbraRedologBindPort 7994
-                maoc ${build.alwaysoncluster.id} zimbraRedoLogProvider com.zimbra.cs.redolog.HttpRedoLogProvider
-                ms ${zimbra.server.hostname} zimbraAlwaysOnClusterId ${build.alwaysoncluster.id}
-                ms ${zimbra.server.hostname} +zimbraServiceEnabled redolog
-            </echo>
-            <java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
-                <arg line="-l -f ${build.zmprov.alwayson} -v"/>
-            </java>
-        </then>
-        <else>
-          <echo message="One or more of Redis (http://localhost:6379), Consul (http://localhost:8500), ../ZimbraFOSS/ZimbraRedologService is not available. Skipping Always On setup"/>
-        </else>
-    </if>
   </target>
 
   <target name="run-zmprov-commands" depends="zmprov-commands">
@@ -1643,49 +1549,43 @@
 
         <sequential>
             <script language="javascript"><![CDATA[
-                load("nashorn:mozilla_compat.js");
-                importClass(java.nio.charset.StandardCharsets);
-                importClass(java.nio.file.Files);
-                importClass(java.nio.file.Paths);
-                importClass(java.nio.file.StandardOpenOption);
+            importClass(java.nio.charset.StandardCharsets);
+            importClass(java.nio.file.Files);
+            importClass(java.nio.file.Paths);
+            importClass(java.nio.file.StandardOpenOption);
 
+            var jInteger = java.lang.Integer;
+            var jString = java.lang.String;
 
-                var writer =
-                    Files.newBufferedWriter(Paths.get("@{file}", []),
-                                            StandardCharsets.UTF_8,
-                                            [StandardOpenOption.CREATE,
-                                             StandardOpenOption.APPEND]);
+            var writer =
+                Files.newBufferedWriter(Paths.get("@{file}", []),
+                                        StandardCharsets.UTF_8,
+                                        [StandardOpenOption.CREATE,
+                                         StandardOpenOption.APPEND]);
 
-                // create 500 test accounts
-                for (var i = @{from}; i <= @{to}; i++) {
-                    var userNum = i;
-                    if (userNum < 100) {
-                      if (userNum < 10) {
-                        userNum = "00" + userNum;
-                      } else {
-                        userNum = "0" + userNum;
-                      }
-                    }
-                    writer.write("createAccount ");
-                    writer.write(String("test" + userNum + "@@example.com "));
-                    writer.write(String("test123 displayName 'Test User " + userNum + "'"));
+            // create 500 test accounts
+            for (var i = @{from}; i <= @{to}; i++) {
+                i = jInteger(i);
+
+                writer.write("createAccount ");
+                writer.write(jString.format("test%03d@@example.com ", [i]));
+                writer.write("test123 displayName 'Test User " + i + "'");
+                writer.write('\n');
+
+                if (i % 100 === 1) {
+                    writer.write("grantRight ");
+                    writer.write(jString.format("account test%03d@@example.com ", [i]));
+                    writer.write("usr admin@@example.com -renameAccount");
                     writer.write('\n');
-
-                    if (i % 100 === 1) {
-                        writer.write("grantRight ");
-                        writer.write(String("account test" + userNum + "@@example.com "));
-                        writer.write("usr admin@@example.com -renameAccount");
-                        writer.write('\n');
-                    } else if (i % 100 === 2) {
-                        writer.write("grantRight ");
-                        writer.write(String("account test" + userNum + "@@example.com "));
-                        writer.write("usr admin@@example.com -setAccountPassword");
-                        writer.write('\n');
-                    }
+                } else if (i % 100 === 2) {
+                    writer.write("grantRight ");
+                    writer.write(jString.format("account test%03d@@example.com ", [i]));
+                    writer.write("usr admin@@example.com -setAccountPassword");
+                    writer.write('\n');
                 }
+            }
 
-                writer.close();
-
+            writer.close();
             ]]>
             </script>
         </sequential>
@@ -1715,7 +1615,6 @@
             zimbraMailSSLClientCertMode WantClientAuth \
             zimbraImapCleartextLoginEnabled TRUE \
             zimbraPop3CleartextLoginEnabled TRUE \
-            zimbraRedisUrl redis://localhost:6379 \
         	zimbraSoapExposeVersion TRUE
             ModifyServer ${zimbra.server.hostname} \
             +zimbraServiceInstalled ldap \
@@ -2031,16 +1930,6 @@
         </exec>
     </target>
 
-	<target name="generate-ldap-config-db">
-	   <mkdir dir="${zimbra.home.dir}/data/ldap/config"/>
-       <exec executable="${zimbra.home.dir}/openldap/sbin/slaptest">
-           <arg value="-F"/>
-       	   <arg value="${zimbra.home.dir}/data/ldap/config"/>
-       	   <arg value="-f"/>
-           <arg value="${zimbra.home.dir}/conf/slapd.conf"/>
-	   </exec>
-	</target>
-	
     <target name="start-jetty-windows" if="is-windows">
         <if>
             <isset property="jetty-use-service"/>
@@ -2112,7 +2001,7 @@
 
     <target name="start-jetty-java">
         <java dir="${jetty.home.dir}" jar="${jetty.home.dir}/start.jar" fork="true" spawn="true">
-            <arg line="-ea -Dfile.encoding=UTF-8 -server -Djava.awt.headless=true -Dsun.net.inetaddr.ttl=60 -Dorg.apache.jasper.compiler.disablejsr199=true -Dsolr.solr.home=/opt/zimbra/solr/solr -XX:+UseConcMarkSweepGC -XX:SoftRefLRUPolicyMSPerMB=1 -verbose:gc -XX:+PrintGCDetails -XX:+PrintGCDateStamps -XX:+PrintGCApplicationStoppedTime -XX:-OmitStackTraceInFastThrow -DSTART=c:/opt/zimbra/jetty/etc/start.config -DSTOP.PORT=7867 -DSTOP.KEY=stop -Dzimbra.config=c:/opt/zimbra/conf/localconfig.xml -Djava.library.path=c:\opt\zimbra\lib -Djava.endorsed.dirs=c:\opt\zimbra\jetty\common\endorsed -Djetty.home=c:/opt/zimbra/jetty --module=zimbra,server,servlet,servlets,jsp,jmx,resources,websocket,ext,plus,rewrite,monitor,continuation,webapp etc/jetty.xml"/>
+            <arg line="-ea -Dfile.encoding=UTF-8 -server -Djava.awt.headless=true -Dsun.net.inetaddr.ttl=60 -Dorg.apache.jasper.compiler.disablejsr199=true -XX:+UseConcMarkSweepGC -XX:PermSize=128m -XX:MaxPermSize=350m -XX:SoftRefLRUPolicyMSPerMB=1 -verbose:gc -XX:+PrintGCDetails -XX:+PrintGCDateStamps -XX:+PrintGCApplicationStoppedTime -XX:-OmitStackTraceInFastThrow -DSTART=c:/opt/zimbra/jetty/etc/start.config -DSTOP.PORT=7867 -DSTOP.KEY=stop -Dzimbra.config=c:/opt/zimbra/conf/localconfig.xml -Djava.library.path=c:\opt\zimbra\lib -Djava.endorsed.dirs=c:\opt\zimbra\jetty\common\endorsed -Djetty.home=c:/opt/zimbra/jetty --module=zimbra,server,servlet,servlets,jsp,jmx,resources,websocket,ext,plus,rewrite,monitor,continuation,webapp etc/jetty.xml"/>
         </java>
     </target>
 
