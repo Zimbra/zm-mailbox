@@ -16,7 +16,9 @@
  */
 package com.zimbra.cs.mailbox;
 
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -120,8 +122,8 @@ public class RedisCoordinatedLocalMailboxLockTest extends AbstractMailboxLockTes
     static class MyConfig extends RedisOnLocalhostZimbraConfig {
         @Bean
         @Override
-        public MailboxListenerManager mailboxListenerManager() throws Exception {
-            return null;
+        public List<MailboxListenerManager> mailboxListenerManagers() throws Exception {
+            return Collections.emptyList();
         }
 
         @Bean

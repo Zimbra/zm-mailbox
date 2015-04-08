@@ -9861,4 +9861,9 @@ TODO: delete them permanently from here
     <desc>HTTPs port for redolog service</desc>
 </attr>
 
+<attr id="1963" name="zimbraMailboxListenerUrl" type="string" cardinality="multi" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service" since="9.0.0">
+  <globalConfigValue>redis:default</globalConfigValue>
+  <desc>External mailbox listeners. Redis and AMQP URI's are supported. Use "redis:default" to publish events to the default Redis server(s) that are specified by zimbraRedisUrl.</desc>
+</attr>
+
 </attrs>

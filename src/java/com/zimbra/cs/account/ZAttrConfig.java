@@ -35727,6 +35727,158 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * External mailbox listeners. Redis and AMQP URI&#039;s are supported.
+     * Use &quot;redis:default&quot; to publish events to the default Redis
+     * server(s) that are specified by zimbraRedisUrl.
+     *
+     * @return zimbraMailboxListenerUrl, or empty array if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1963)
+    public String[] getMailboxListenerUrl() {
+        String[] value = getMultiAttr(Provisioning.A_zimbraMailboxListenerUrl); return value.length > 0 ? value : new String[] {"redis:default"};
+    }
+
+    /**
+     * External mailbox listeners. Redis and AMQP URI&#039;s are supported.
+     * Use &quot;redis:default&quot; to publish events to the default Redis
+     * server(s) that are specified by zimbraRedisUrl.
+     *
+     * @param zimbraMailboxListenerUrl new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1963)
+    public void setMailboxListenerUrl(String[] zimbraMailboxListenerUrl) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxListenerUrl, zimbraMailboxListenerUrl);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * External mailbox listeners. Redis and AMQP URI&#039;s are supported.
+     * Use &quot;redis:default&quot; to publish events to the default Redis
+     * server(s) that are specified by zimbraRedisUrl.
+     *
+     * @param zimbraMailboxListenerUrl new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1963)
+    public Map<String,Object> setMailboxListenerUrl(String[] zimbraMailboxListenerUrl, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxListenerUrl, zimbraMailboxListenerUrl);
+        return attrs;
+    }
+
+    /**
+     * External mailbox listeners. Redis and AMQP URI&#039;s are supported.
+     * Use &quot;redis:default&quot; to publish events to the default Redis
+     * server(s) that are specified by zimbraRedisUrl.
+     *
+     * @param zimbraMailboxListenerUrl new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1963)
+    public void addMailboxListenerUrl(String zimbraMailboxListenerUrl) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraMailboxListenerUrl, zimbraMailboxListenerUrl);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * External mailbox listeners. Redis and AMQP URI&#039;s are supported.
+     * Use &quot;redis:default&quot; to publish events to the default Redis
+     * server(s) that are specified by zimbraRedisUrl.
+     *
+     * @param zimbraMailboxListenerUrl new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1963)
+    public Map<String,Object> addMailboxListenerUrl(String zimbraMailboxListenerUrl, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraMailboxListenerUrl, zimbraMailboxListenerUrl);
+        return attrs;
+    }
+
+    /**
+     * External mailbox listeners. Redis and AMQP URI&#039;s are supported.
+     * Use &quot;redis:default&quot; to publish events to the default Redis
+     * server(s) that are specified by zimbraRedisUrl.
+     *
+     * @param zimbraMailboxListenerUrl existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1963)
+    public void removeMailboxListenerUrl(String zimbraMailboxListenerUrl) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraMailboxListenerUrl, zimbraMailboxListenerUrl);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * External mailbox listeners. Redis and AMQP URI&#039;s are supported.
+     * Use &quot;redis:default&quot; to publish events to the default Redis
+     * server(s) that are specified by zimbraRedisUrl.
+     *
+     * @param zimbraMailboxListenerUrl existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1963)
+    public Map<String,Object> removeMailboxListenerUrl(String zimbraMailboxListenerUrl, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraMailboxListenerUrl, zimbraMailboxListenerUrl);
+        return attrs;
+    }
+
+    /**
+     * External mailbox listeners. Redis and AMQP URI&#039;s are supported.
+     * Use &quot;redis:default&quot; to publish events to the default Redis
+     * server(s) that are specified by zimbraRedisUrl.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1963)
+    public void unsetMailboxListenerUrl() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxListenerUrl, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * External mailbox listeners. Redis and AMQP URI&#039;s are supported.
+     * Use &quot;redis:default&quot; to publish events to the default Redis
+     * server(s) that are specified by zimbraRedisUrl.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1963)
+    public Map<String,Object> unsetMailboxListenerUrl(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxListenerUrl, "");
+        return attrs;
+    }
+
+    /**
      * Maximum allowed waiting threads on a mailbox lock
      *
      * @return zimbraMailboxLockMaxWaitingThreads, or 15 if unset

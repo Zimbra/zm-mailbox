@@ -19,17 +19,21 @@ package com.zimbra.cs.session;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 
 import com.google.common.base.Objects;
 import com.zimbra.common.account.ZAttrProvisioning;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxListenerManager;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.MailboxListenerManager;
 import com.zimbra.cs.util.ProvisioningUtil;
 import com.zimbra.cs.util.Zimbra;
+import com.zimbra.cs.util.ZimbraConfig;
 
 /**
  *  A {@link Session} is identified by an (accountId, sessionID) pair.  A single
@@ -147,9 +151,19 @@ public abstract class Session {
                 mailbox.addListener(this);
             }
 
-            multiServerMailboxNotifyAdapter = Zimbra.getAppContext().getBean(MailboxListenerManager.class);
-            if (multiServerMailboxNotifyAdapter != null) {
-                multiServerMailboxNotifyAdapter.subscribe(this);
+            // Register external mailbox listeners
+            ZimbraConfig config = Zimbra.getAppContext().getBean(ZimbraConfig.class);
+            if (config != null) {
+                try {
+                    List<MailboxListenerManager> list = config.mailboxListenerManagers();
+                    if (list != null) {
+                        for (MailboxListenerManager manager: list) {
+                            manager.subscribe(this);
+                        }
+                    }
+                } catch (Exception e) {
+                    ZimbraLog.mailbox.error("Failed obtaining list of external mailbox listeners from configuration", e);
+                }
             }
         }
 

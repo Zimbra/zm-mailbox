@@ -19,6 +19,7 @@ package com.zimbra.cs.mailbox;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.springframework.beans.BeansException;
@@ -38,6 +39,7 @@ import com.zimbra.cs.mailbox.alerts.CalItemReminderService;
 import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.util.ZimbraApplication;
+import com.zimbra.cs.util.ZimbraConfig;
 
 
 public abstract class MailboxListener {
@@ -109,19 +111,27 @@ public abstract class MailboxListener {
         if (application.supports(ShareExpirationListener.class) && !DebugConfig.isDisableShareExpirationListener()) {
             register(new ShareExpirationListener());
         }
-        final MailboxListenerManager mailboxListenerManager = Zimbra.getAppContext().getBean(MailboxListenerManager.class);
-        if (mailboxListenerManager != null) {
-            MailboxListener listener = new MailboxListener() {
-                @Override
-                public void notify(ChangeNotification notification) {
-                    try {
-                        mailboxListenerManager.publish(notification);
-                    } catch (ServiceException e) {
-                        ZimbraLog.session.warn("failed publishing ChangeNotification", e);
+
+        // Register external listeners configured by the zimbraMailboxListenerUrl attribute
+        try {
+            ZimbraConfig config = Zimbra.getAppContext().getBean(ZimbraConfig.class);
+            List<MailboxListenerManager> managers = config.mailboxListenerManagers();
+            managers = managers == null ? Collections.emptyList() : managers;
+            for (MailboxListenerManager manager: managers) {
+                MailboxListener listener = new MailboxListener() {
+                    @Override
+                    public void notify(ChangeNotification notification) {
+                        try {
+                            manager.publish(notification);
+                        } catch (ServiceException e) {
+                            ZimbraLog.session.warn("Failed publishing ChangeNotification to external mailbox listener", e);
+                        }
                     }
-                }
-            };
-            register(listener);
+                };
+                register(listener);
+            }
+        } catch (Exception e) {
+            ZimbraLog.session.warn("Failed reading external mailbox listener configuration", e);
         }
     }
 

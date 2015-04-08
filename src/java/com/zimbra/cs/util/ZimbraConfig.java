@@ -19,12 +19,15 @@ package com.zimbra.cs.util;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import org.springframework.amqp.core.AmqpAdmin;
+import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitAdmin;
@@ -58,6 +61,7 @@ import com.zimbra.cs.extension.ExtensionUtil;
 import com.zimbra.cs.index.DefaultIndexingQueueAdapter;
 import com.zimbra.cs.index.IndexingQueueAdapter;
 import com.zimbra.cs.index.IndexingService;
+import com.zimbra.cs.mailbox.AmqpMailboxListenerManager;
 import com.zimbra.cs.mailbox.FoldersAndTagsCache;
 import com.zimbra.cs.mailbox.LocalSharedDeliveryCoordinator;
 import com.zimbra.cs.mailbox.MailboxListenerManager;
@@ -105,7 +109,7 @@ import com.zimbra.soap.SoapSessionFactory;
 @Lazy
 public class ZimbraConfig {
 
-    protected AmqpAdmin amqpAdmin(ConnectionFactory amqpConnectionFactory) throws Exception {
+    public AmqpAdmin amqpAdmin(ConnectionFactory amqpConnectionFactory) throws Exception {
         AmqpAdmin amqpAdmin = new RabbitAdmin(amqpConnectionFactory);
         amqpAdminInit(amqpAdmin);
         return amqpAdmin;
@@ -173,17 +177,13 @@ public class ZimbraConfig {
         }
     }
 
-    protected boolean isAmqpAvailable() {
-        return false; // TODO BZ98750
-    }
-
-    /** Returns whether Redis services are available, whether cluster or master/slave/stand-alone */
+    /** Returns whether Redis service is available (either cluster or sentinel/stand-alone) */
     public boolean isRedisAvailable() throws ServiceException {
         Set<HostAndPort> uris = redisUris();
         if (uris.isEmpty()) {
             return false;
         }
-        try (Jedis jedis = jedisPoolBean().getResource()) {
+        try (Jedis jedis = jedisPool().getResource()) {
             jedis.get("");
             return true;
         } catch (Exception e) {
@@ -195,7 +195,7 @@ public class ZimbraConfig {
         try {
             return jedisClusterBean() != null;
         } catch (Exception e) {
-            ZimbraLog.misc.warn("Failed connecting to a Redis Cluster; defaulting to non-cluster mode Redis access (%s)", e.getLocalizedMessage());
+            ZimbraLog.misc.info("Failed connecting to a Redis Cluster; defaulting to non-cluster mode Redis access (%s)", e.getLocalizedMessage());
             return false;
         }
     }
@@ -210,25 +210,28 @@ public class ZimbraConfig {
         try {
             return new JedisCluster(uris);
         } catch (Exception e) {
-            ZimbraLog.misc.warn("Failed connecting to a Redis Cluster; defaulting to non-cluster mode Redis access (%s)", e.getLocalizedMessage());
+            ZimbraLog.misc.info("Failed connecting to a Redis Cluster; defaulting to non-cluster mode Redis access (%s)", e.getLocalizedMessage());
             return null;
         }
     }
 
     /** Returns a JedisPool client if possible, or null */
-    @Bean(name="jedisPool")
-    public JedisPool jedisPoolBean() throws ServiceException {
+    public JedisPool jedisPool(String host, int port) throws ServiceException {
+        GenericObjectPoolConfig config = new GenericObjectPoolConfig();
+        Server server = Provisioning.getInstance().getLocalServer();
+        config.setMaxTotal(server.getRedisMaxConnectionCount());
+        return new JedisPool(config, host, port == -1 ? 6379 : port);
+    }
+
+    /** Returns a JedisPool client if possible, or null */
+    @Bean
+    public JedisPool jedisPool() throws ServiceException {
         Set<HostAndPort> uris = redisUris();
         if (uris.isEmpty()) {
             return null;
         }
         HostAndPort hostAndPort = uris.iterator().next();
-
-        GenericObjectPoolConfig config = new GenericObjectPoolConfig();
-        Server server = Provisioning.getInstance().getLocalServer();
-        config.setMaxTotal(server.getRedisMaxConnectionCount());
-
-        return new JedisPool(config, hostAndPort.getHost(), hostAndPort.getPort() == -1 ? 6379 : hostAndPort.getPort());
+        return jedisPool(hostAndPort.getHost(), hostAndPort.getPort());
     }
 
     @Bean(name="mailboxLockFactory")
@@ -259,20 +262,55 @@ public class ZimbraConfig {
     }
 
     /**
-     * Redis or AMQP pub/sub adapter, which is used to coordinate cache invalidations and other
-     * important mailbox data changes across multiple mailstores.
+     * External mailbox listener managers, which are used to coordinate cache invalidations and other
+     * mailbox data changes across multiple mailstores.
      */
     @Bean
-    public MailboxListenerManager mailboxListenerManager() throws Exception {
-        if (isRedisClusterAvailable()) {
-            return new RedisClusterMailboxListenerManager(jedisClusterBean());
-        } else if (isRedisAvailable()) {
-            return new RedisMailboxListenerManager(jedisPoolBean());
-        } else if (isAmqpAvailable()) {
-            return null; // TODO BZ98750
-        } else {
-            return null;
+    public List<MailboxListenerManager> mailboxListenerManagers() throws Exception {
+        String[] uris = Provisioning.getInstance().getLocalServer().getMailboxListenerUrl();
+        if (uris.length == 0 && isRedisAvailable()) {
+            ZimbraLog.misc.info("No external mailbox listeners are configured; defaulting to Redis");
+            uris = new String[] {"redis:default"};
         }
+        if (uris.length == 0) {
+            ZimbraLog.misc.info("No external mailbox listeners are configured");
+            return Collections.emptyList();
+        }
+
+        List<MailboxListenerManager> result = new ArrayList<>();
+        for (String uri: uris) {
+            if (uri.startsWith("redis:")) {
+                if ("redis:default".equals(uri)) {
+                    // URI specifies the default pool specified by zimbraRedisUrl attribute
+                    if (isRedisClusterAvailable()) {
+                        result.add(new RedisClusterMailboxListenerManager(jedisClusterBean()));
+                        ZimbraLog.misc.info("Registered external mailbox listener: %s", uri);
+                    } else if (isRedisAvailable()) {
+                        result.add(new RedisMailboxListenerManager(jedisPool()));
+                        ZimbraLog.misc.info("Registered external mailbox listener: %s", uri);
+                    } else {
+                        ZimbraLog.misc.error("Ignoring request to register external mailbox listener: %s because no zimbraRedisUrl URIs are configured", uri);
+                    }
+                } else {
+                    // URI specifies a new Redis endpoint, so it gets its own pool
+                    URI uri_ = new URI(uri);
+                    JedisPool jedisPool = jedisPool(uri_.getHost(), uri_.getPort());
+                    result.add(new RedisMailboxListenerManager(jedisPool));
+                    ZimbraLog.misc.info("Registered external mailbox listener: %s", uri);
+                }
+
+            } else if (uri.startsWith("amqp:")) {
+                ConnectionFactory connectionFactory = amqpConnectionFactory(new URI(uri));
+                AmqpAdmin amqpAdmin = amqpAdmin(connectionFactory);
+                AmqpTemplate amqpTemplate = amqpTemplate(connectionFactory);
+                result.add(new AmqpMailboxListenerManager(amqpAdmin, amqpTemplate));
+                ZimbraLog.misc.info("Registered external mailbox listener: %s", uri);
+
+            } else {
+                ZimbraLog.misc.error("Ignoring unsupported URI scheme for external mailbox listener: %s", uri);
+            }
+        }
+        return result;
     }
 
     @Bean(name="memcachedClient")
@@ -290,7 +328,7 @@ public class ZimbraConfig {
         if (!isRedisAvailable()) {
             return null;
         }
-        JedisPool jedisPool = jedisPoolBean();
+        JedisPool jedisPool = jedisPool();
         QlessClient instance = new QlessClient(jedisPool);
         return instance;
     }
@@ -456,7 +494,7 @@ public class ZimbraConfig {
     {
         TxnIdGenerator idGenerator = null;
         if (isRedisAvailable()) {
-            idGenerator = new RedisTxnIdGenerator(jedisPoolBean());
+            idGenerator = new RedisTxnIdGenerator(jedisPool());
         }
 
         if (idGenerator == null) {

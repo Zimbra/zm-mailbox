@@ -13,6 +13,9 @@
  */
 package com.zimbra.cs.mailbox;
 
+import java.util.Collections;
+import java.util.List;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -56,8 +59,8 @@ public class LocalCachingZimbraConfig extends ZimbraConfig {
     }
 
     @Override
-    public MailboxListenerManager mailboxListenerManager() throws Exception {
-        return null;
+    public List<MailboxListenerManager> mailboxListenerManagers() throws Exception {
+        return Collections.emptyList();
     }
 
     @Override

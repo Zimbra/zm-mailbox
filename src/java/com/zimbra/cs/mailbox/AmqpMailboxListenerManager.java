@@ -46,11 +46,13 @@ import com.zimbra.cs.util.Zimbra;
  * AMQP-based MailboxListener management.
  */
 public class AmqpMailboxListenerManager implements MailboxListenerManager {
+    protected AmqpAdmin amqpAdmin;
     protected AmqpTemplate amqpTemplate;
     protected SimpleMessageListenerContainer messageListenerContainer;
 
 
-    public AmqpMailboxListenerManager(AmqpTemplate amqpTemplate) {
+    public AmqpMailboxListenerManager(AmqpAdmin amqpAdmin, AmqpTemplate amqpTemplate) {
+        this.amqpAdmin = amqpAdmin;
         this.amqpTemplate = amqpTemplate;
     }
 
@@ -85,7 +87,6 @@ public class AmqpMailboxListenerManager implements MailboxListenerManager {
     // the mailbox id routing key (filter)
     @Override
     public void subscribe(Session session) throws ServiceException {
-        AmqpAdmin amqpAdmin = Zimbra.getAppContext().getBean(AmqpAdmin.class);
         Queue queue = amqpAdmin.declareQueue();
         String routingKey = "" + session.getAuthenticatedAccountId();
         Binding binding = BindingBuilder.bind(queue).to(AmqpConstants.EXCHANGE_MBOX).with(routingKey);
