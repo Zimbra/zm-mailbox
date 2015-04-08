@@ -2083,16 +2083,7 @@ abstract class ImapHandler {
 	               if((view == MailItem.Type.CHAT) || (folder.getName().equals ("Chats"))) {
 	                continue;
                }
-               while((view.equals(MailItem.Type.UNKNOWN))) {
-               Folder parent = (Folder)folder.getParent();
-               view = parent.getDefaultView();
-               int ID = parent.getId();
-               folder = parent;
-               if ((ID == Mailbox.ID_FOLDER_ROOT)) {
-               break;
-               }
-               }
-             }
+              }
                ImapPath path = relativeTo == null ? new ImapPath(owner, folder, credentials) :
                     new ImapPath(owner, folder, relativeTo);
                 if (path.isVisible()) {
