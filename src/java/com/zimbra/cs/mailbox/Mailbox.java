@@ -2116,10 +2116,8 @@ public class Mailbox {
     private void loadFoldersAndTags() throws ServiceException {
         // if the persisted mailbox sizes aren't available, we *must* recalculate
         boolean initial = mData.contacts < 0 || mData.size < 0;
-        if (!Zimbra.isAlwaysOn() || lock.getHoldCount() > 1) {
-            if (mFolderCache != null && mTagCache != null && !initial) {
-                return;
-            }
+        if (mFolderCache != null && mTagCache != null && !initial) {
+            return;
         }
         if (ZimbraLog.cache.isDebugEnabled()) {
             ZimbraLog.cache.debug("loading due to initial? %s folders? %s tags? %s writeChange? %s", initial, mFolderCache == null, mTagCache == null, currentChange().writeChange);
@@ -2133,7 +2131,7 @@ public class Mailbox {
             DbMailItem.FolderTagMap tagData = new DbMailItem.FolderTagMap();
             MailboxData stats = null;
 
-            // Load folders and tags from cache if we can.
+            // Load folders and tags from cache if we can
             boolean loadedFromCache = false;
             if (!initial && !DebugConfig.disableFoldersTagsCache) {
                 FoldersAndTagsCache foldersAndTagsCache = Zimbra.getAppContext().getBean(FoldersAndTagsCache.class);
@@ -2175,8 +2173,8 @@ public class Mailbox {
                 DbMailbox.updateMailboxStats(this);
             }
 
-            mFolderCache = new FolderCache();
             // create the folder objects and, as a side-effect, populate the new cache
+            mFolderCache = new FolderCache();
             for (Map.Entry<MailItem.UnderlyingData, DbMailItem.FolderTagCounts> entry : folderData.entrySet()) {
                 Folder folder = (Folder) MailItem.constructItem(this, entry.getKey());
                 DbMailItem.FolderTagCounts fcounts = entry.getValue();
@@ -2184,6 +2182,7 @@ public class Mailbox {
                     folder.setSize(folder.getItemCount(), fcounts.deletedCount, fcounts.totalSize, fcounts.deletedUnreadCount);
                 }
             }
+
             // establish the folder hierarchy
             for (Folder folder : mFolderCache.values()) {
                 Folder parent = mFolderCache.get(folder.getFolderId());
@@ -2203,9 +2202,8 @@ public class Mailbox {
                 }
             }
 
+            // create the tag objects and, as a side-effect, populate the new cache
             mTagCache = new ConcurrentHashMap<Object, Tag>(tagData.size() * 3);
-            // create the tag objects and, as a side-effect, populate the new
-            // cache
             for (Map.Entry<MailItem.UnderlyingData, DbMailItem.FolderTagCounts> entry : tagData.entrySet()) {
                 Tag tag = new Tag(this, entry.getKey());
                 if (persist) {
@@ -2216,10 +2214,11 @@ public class Mailbox {
             if (!loadedFromCache && !DebugConfig.disableFoldersTagsCache) {
                 cacheFoldersAndTags();
             }
+
             if (requiresWriteLock) {
+                //we've reloaded folder/tags so new callers can go back to using read
                 requiresWriteLock = false;
                 ZimbraLog.mailbox.debug("consuming forceWriteMode");
-                //we've reloaded folder/tags so new callers can go back to using read
             }
         } catch (ServiceException e) {
             mTagCache = null;
