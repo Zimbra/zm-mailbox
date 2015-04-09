@@ -44,6 +44,7 @@ import com.zimbra.common.util.EmailUtil;
 import com.zimbra.common.util.L10nUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.zmime.ZInternetHeader;
 import com.zimbra.common.zmime.ZMimeBodyPart;
 import com.zimbra.common.zmime.ZMimeMessage;
 import com.zimbra.common.zmime.ZMimeMultipart;
@@ -480,7 +481,7 @@ public class Notification implements LmtpCallback {
         String recipientDomain = getDomain(rcpt);
 
         Map<String, String> vars = new HashMap<String, String>();
-        vars.put("SENDER_ADDRESS", msg.getSender());
+        vars.put("SENDER_ADDRESS", ZInternetHeader.decode(msg.getSender()));
         vars.put("RECIPIENT_ADDRESS", rcpt);
         vars.put("RECIPIENT_DOMAIN", recipientDomain);
         vars.put("NOTIFICATION_ADDRESS", destination);
