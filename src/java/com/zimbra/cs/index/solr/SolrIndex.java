@@ -9,10 +9,10 @@ import java.util.Map;
 import org.apache.http.NoHttpResponseException;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.solr.client.solrj.SolrRequest;
-import org.apache.solr.client.solrj.SolrServer;
+import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrServerException;
-import org.apache.solr.client.solrj.impl.HttpSolrServer;
-import org.apache.solr.client.solrj.impl.HttpSolrServer.RemoteSolrException;
+import org.apache.solr.client.solrj.impl.HttpSolrClient;
+import org.apache.solr.client.solrj.impl.HttpSolrClient.RemoteSolrException;
 import org.apache.solr.client.solrj.request.CoreAdminRequest;
 import org.apache.solr.client.solrj.request.QueryRequest;
 import org.apache.solr.client.solrj.response.CoreAdminResponse;
@@ -58,7 +58,7 @@ public class SolrIndex extends SolrIndexBase {
         QueryRequest req = new QueryRequest(params);
         @SuppressWarnings("rawtypes")
         NamedList rsp;
-        SolrServer solrServer = getSolrServer();
+        SolrClient solrServer = getSolrServer();
         setupRequest(req, solrServer);
         try {
             rsp = solrServer.request(req);
@@ -85,7 +85,7 @@ public class SolrIndex extends SolrIndexBase {
         params.set(CommonParams.WT, "javabin");
         params.set(CommonParams.QT, "/replication");
         QueryRequest req = new QueryRequest(params);
-        SolrServer solrServer = getSolrServer();
+        SolrClient solrServer = getSolrServer();
         setupRequest(req, solrServer);
         try {
             @SuppressWarnings("rawtypes")
@@ -118,10 +118,10 @@ public class SolrIndex extends SolrIndexBase {
                 maxTries = 1;
             }
             while(maxTries-- > 0 && !solrCoreProvisioned) {
-                HttpSolrServer solrServer = null;
+                HttpSolrClient solrServer = null;
                 try {
-                    solrServer = (HttpSolrServer)getSolrServer();
-                    ((HttpSolrServer)solrServer).setBaseURL(Provisioning.getInstance().getLocalServer().getSolrURLBase());
+                    solrServer = (HttpSolrClient)getSolrServer();
+                    ((HttpSolrClient)solrServer).setBaseURL(Provisioning.getInstance().getLocalServer().getSolrURLBase());
                     CoreAdminResponse resp = CoreAdminRequest.getStatus(accountId, solrServer);
                     solrCoreProvisioned = resp.getCoreStatus(accountId).size() > 0;
                 } catch (SolrServerException | SolrException e) {
@@ -144,9 +144,9 @@ public class SolrIndex extends SolrIndexBase {
     @Override
     public void initIndex() throws IOException, ServiceException {
         solrCoreProvisioned = false;
-        SolrServer solrServer = getSolrServer();
+        SolrClient solrServer = getSolrServer();
         try {
-            ((HttpSolrServer)solrServer).setBaseURL(Provisioning.getInstance().getLocalServer().getSolrURLBase());
+            ((HttpSolrClient)solrServer).setBaseURL(Provisioning.getInstance().getLocalServer().getSolrURLBase());
             ModifiableSolrParams params = new ModifiableSolrParams();
             params.set("action", CollectionAction.CREATE.toString());
             params.set("name", accountId);
@@ -208,9 +208,9 @@ public class SolrIndex extends SolrIndexBase {
     @Override
     public void deleteIndex() throws IOException, ServiceException {
         if(indexExists()) {
-            SolrServer solrServer = getSolrServer();
+            SolrClient solrServer = getSolrServer();
             try {
-                ((HttpSolrServer)solrServer).setBaseURL(Provisioning.getInstance().getLocalServer().getSolrURLBase());
+                ((HttpSolrClient)solrServer).setBaseURL(Provisioning.getInstance().getLocalServer().getSolrURLBase());
                 CoreAdminRequest.unloadCore(accountId, true, true, solrServer);
                 solrCoreProvisioned = false;
                 //TODO check for errors
@@ -227,18 +227,18 @@ public class SolrIndex extends SolrIndexBase {
     }
 
     @Override
-    public void setupRequest(Object obj, SolrServer solrServer) throws ServiceException {
-        ((HttpSolrServer)solrServer).setBaseURL(Provisioning.getInstance().getLocalServer().getSolrURLBase() + "/" + accountId);
+    public void setupRequest(Object obj, SolrClient solrServer) throws ServiceException {
+        ((HttpSolrClient)solrServer).setBaseURL(Provisioning.getInstance().getLocalServer().getSolrURLBase() + "/" + accountId);
     }
 
     @Override
-    public SolrServer getSolrServer() throws ServiceException {
-        HttpSolrServer server = new HttpSolrServer(Provisioning.getInstance().getLocalServer().getSolrURLBase() + "/" + accountId, httpClient);
+    public SolrClient getSolrServer() throws ServiceException {
+        HttpSolrClient server = new HttpSolrClient(Provisioning.getInstance().getLocalServer().getSolrURLBase() + "/" + accountId, httpClient);
         return server;
     }
 
     @Override
-    public void shutdown(SolrServer server) {
+    public void shutdown(SolrClient server) {
         if(server != null) {
             server.shutdown();
         }
@@ -266,10 +266,10 @@ public class SolrIndex extends SolrIndexBase {
     private class SolrIndexer extends SolrIndexBase.SolrIndexer {
         @Override
         public int maxDocs() {
-            SolrServer solrServer = null; 
+            SolrClient solrServer = null; 
             try {
                 solrServer = getSolrServer();
-                ((HttpSolrServer)solrServer).setBaseURL(Provisioning.getInstance().getLocalServer().getSolrURLBase());
+                ((HttpSolrClient)solrServer).setBaseURL(Provisioning.getInstance().getLocalServer().getSolrURLBase());
                 CoreAdminResponse resp = CoreAdminRequest.getStatus(accountId, solrServer);
                 Iterator<Map.Entry<String, NamedList<Object>>> iter = resp.getCoreStatus().iterator();
                 while(iter.hasNext()) {
@@ -297,10 +297,10 @@ public class SolrIndex extends SolrIndexBase {
     public class SolrIndexReader extends SolrIndexBase.SolrIndexReader {
         @Override
         public int numDeletedDocs() {
-            SolrServer solrServer = null;
+            SolrClient solrServer = null;
             try {
                 solrServer = getSolrServer();
-                ((HttpSolrServer)solrServer).setBaseURL(Provisioning.getInstance().getLocalServer().getSolrURLBase());
+                ((HttpSolrClient)solrServer).setBaseURL(Provisioning.getInstance().getLocalServer().getSolrURLBase());
                 CoreAdminResponse resp = CoreAdminRequest.getStatus(accountId, solrServer);
                 Iterator<Map.Entry<String, NamedList<Object>>> iter = resp.getCoreStatus().iterator();
                 while(iter.hasNext()) {

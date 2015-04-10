@@ -210,7 +210,8 @@ public class StandardTokenizerTest extends SolrPluginTestBase {
     }
 
     private void testSTD(String src) throws IOException, SolrServerException, ServiceException {
-        TokenStream std = new ZimbraTokenizer(new StringReader(src));
+        ZimbraTokenizer std = new ZimbraTokenizer();
+        std.setReader(new StringReader(src));
         std.reset();
         CharTermAttribute stdTermAttr = std.addAttribute(CharTermAttribute.class);
         OffsetAttribute stdOffsetAttr = std.addAttribute(OffsetAttribute.class);
@@ -250,7 +251,7 @@ public class StandardTokenizerTest extends SolrPluginTestBase {
     }
 
     private void testCJK(String src) throws IOException, SolrServerException, ServiceException {
-        TokenStream cjk = new CJKAnalyzer(Version.LUCENE_4_9).tokenStream(null, new StringReader(src));
+        TokenStream cjk = new CJKAnalyzer().tokenStream(null, new StringReader(src));
         cjk.reset();
         CharTermAttribute cjkTermAttr = cjk.addAttribute(CharTermAttribute.class);
         OffsetAttribute cjkOffsetAttr = cjk.addAttribute(OffsetAttribute.class);

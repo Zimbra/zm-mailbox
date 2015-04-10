@@ -9,8 +9,7 @@ import org.apache.lucene.index.Term;
 import org.apache.lucene.search.TermQuery;
 import org.apache.solr.client.solrj.SolrRequest;
 import org.apache.solr.client.solrj.SolrServerException;
-import org.apache.solr.client.solrj.impl.CloudSolrServer;
-import org.apache.solr.client.solrj.impl.HttpSolrServer.RemoteSolrException;
+import org.apache.solr.client.solrj.impl.CloudSolrClient;
 import org.apache.solr.client.solrj.request.QueryRequest;
 import org.apache.solr.common.params.CollectionParams.CollectionAction;
 import org.apache.solr.common.params.ModifiableSolrParams;
@@ -38,7 +37,7 @@ import com.zimbra.cs.mime.ParsedContact;
  */
 @Ignore("Disabled as SolrIndex is experimental at this point.")
 public class SolrSearchIndexTest extends AbstractIndexStoreTest {
-    private static final CloudSolrServer solrServer = new CloudSolrServer("localhost:9983");
+    private static final CloudSolrClient solrServer = new CloudSolrClient("localhost:9983");
     @Override
     protected String getIndexStoreFactory() {
         return "com.zimbra.cs.index.solr.SolrIndex$Factory";
@@ -81,8 +80,6 @@ public class SolrSearchIndexTest extends AbstractIndexStoreTest {
             ZimbraLog.index.error("Problem deleting Solr collection" , e);
         } catch (IOException e) {
             ZimbraLog.index.error("Problem deleting Solr collection" , e);
-        } catch (RemoteSolrException e) {
-            //
         }
     }
 

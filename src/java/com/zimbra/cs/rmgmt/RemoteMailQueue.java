@@ -242,9 +242,8 @@ public class RemoteMailQueue {
             if (ZimbraLog.rmgmt.isDebugEnabled()) {
                 ZimbraLog.rmgmt.debug("clearing index (" + mIndexPath + ") for " + this);
             }
-            IndexWriterConfig conf = new IndexWriterConfig(Version.LUCENE_4_9,
-            		new LimitTokenCountAnalyzer(
-            				new StandardAnalyzer(Version.LUCENE_4_9), 10000));
+            IndexWriterConfig conf = new IndexWriterConfig(new LimitTokenCountAnalyzer(
+            				new StandardAnalyzer(), 10000));
             LuceneDirectory dir = LuceneDirectory.open(mIndexPath);
             writer = new IndexWriter(dir, conf);
             mNumMessages.set(0);
@@ -341,9 +340,8 @@ public class RemoteMailQueue {
         if (ZimbraLog.rmgmt.isDebugEnabled()) {
             ZimbraLog.rmgmt.debug("opening indexwriter " + this);
         }
-        IndexWriterConfig conf = new IndexWriterConfig(Version.LUCENE_4_9,
-        		new LimitTokenCountAnalyzer(
-        				new StandardAnalyzer(Version.LUCENE_4_9), 10000));
+        IndexWriterConfig conf = new IndexWriterConfig(new LimitTokenCountAnalyzer(
+        				new StandardAnalyzer(), 10000));
         LuceneDirectory dir = LuceneDirectory.open(mIndexPath);
         mIndexWriter = new IndexWriter(dir, conf);
     }
@@ -360,9 +358,8 @@ public class RemoteMailQueue {
             ZimbraLog.rmgmt.debug("reopening indexwriter " + this);
         }
         mIndexWriter.close();
-        IndexWriterConfig conf = new IndexWriterConfig(Version.LUCENE_4_9,
-        		new LimitTokenCountAnalyzer(
-        				new StandardAnalyzer(Version.LUCENE_4_9), 10000));
+        IndexWriterConfig conf = new IndexWriterConfig(new LimitTokenCountAnalyzer(
+        				new StandardAnalyzer(), 10000));
         LuceneDirectory dir = LuceneDirectory.open(mIndexPath);
         mIndexWriter = new IndexWriter(dir, conf);
     }
@@ -536,7 +533,7 @@ public class RemoteMailQueue {
             if (!mIndexPath.exists()) {
                 return result;
             }
-            indexReader = IndexReader.open(LuceneDirectory.open(mIndexPath));
+            indexReader = DirectoryReader.open(LuceneDirectory.open(mIndexPath));
             summarize(result, indexReader);
             if (query == null) {
                 list0(result, indexReader, offset, limit);

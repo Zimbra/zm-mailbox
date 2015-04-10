@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
+import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.request.FieldAnalysisRequest;
@@ -22,7 +23,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.index.IndexStore;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
 public abstract class SolrPluginTestBase {
-    protected static SolrServer solrServer;
+    protected static SolrClient solrServer;
     protected static EmbeddedSolrIndex index;
 
     private List<TokenInfo> doAnalysisRequest(String fieldType, String value, boolean ignoreLastPhase) throws SolrServerException, IOException, ServiceException {

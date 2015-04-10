@@ -71,7 +71,7 @@ public final class TermInfo {
             Map<String, TermInfo> term2info, int pos)
     throws IOException {
     	FieldType fieldType = field.fieldType();
-        if (!fieldType.indexed()) {
+        if (fieldType.indexOptions() == null) {
             return pos;
         }
         Character prefix = LuceneFields.FIELD2PREFIX.get(field.name());

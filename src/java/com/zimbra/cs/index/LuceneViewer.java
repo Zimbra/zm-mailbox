@@ -38,6 +38,7 @@ import org.apache.lucene.document.DateTools;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.CheckIndex;
 import org.apache.lucene.index.CheckIndex.Status;
+import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.DocsAndPositionsEnum;
 import org.apache.lucene.index.Fields;
 import org.apache.lucene.index.IndexReader;
@@ -97,7 +98,7 @@ public class LuceneViewer {
         mTermFilters = termFilters;
         mConsole = console;
 
-        mIndexReader = IndexReader.open(LuceneDirectory.open(new File(mIndexDir)));
+        mIndexReader = DirectoryReader.open(LuceneDirectory.open(new File(mIndexDir)));
         mWriter = new FileWriter(mOutputFile);
 
         if (hasFilters()) {

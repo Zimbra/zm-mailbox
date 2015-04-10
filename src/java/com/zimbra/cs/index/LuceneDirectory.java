@@ -18,6 +18,7 @@ package com.zimbra.cs.index;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Collection;
 
 import org.apache.lucene.store.Directory;
@@ -89,30 +90,25 @@ public final class LuceneDirectory extends Directory {
     	String impl  = ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraIndexLuceneIoImpl, "nio");
         FSDirectory dir;
         if ("nio".equals(impl)) {
-            dir = new NIOFSDirectory(path, new SingleInstanceLockFactory());
+            dir = new NIOFSDirectory(path.toPath(), new SingleInstanceLockFactory());
         } else if ("mmap".equals(impl)) {
-            dir = new MMapDirectory(path, new SingleInstanceLockFactory());
+            dir = new MMapDirectory(path.toPath(), new SingleInstanceLockFactory());
         } else if ("simple".equals(impl)) {
-            dir = new SimpleFSDirectory(path, new SingleInstanceLockFactory());
+            dir = new SimpleFSDirectory(path.toPath(), new SingleInstanceLockFactory());
         } else {
-            dir = FSDirectory.open(path, new SingleInstanceLockFactory());
+            dir = FSDirectory.open(path.toPath(), new SingleInstanceLockFactory());
         }
         ZimbraLog.index.info("OpenLuceneIndex impl=%s,dir=%s", dir.getClass().getSimpleName(), path);
         return new LuceneDirectory(dir);
     }
 
-    public File getDirectory() {
+    public Path getDirectory() {
         return directory.getDirectory();
     }
 
     @Override
     public String[] listAll() throws IOException {
         return directory.listAll();
-    }
-
-    @Override
-    public boolean fileExists(String name) throws IOException {
-        return directory.fileExists(name);
     }
 
 
@@ -147,30 +143,13 @@ public final class LuceneDirectory extends Directory {
         return directory.makeLock(name);
     }
 
-    @Override
-    public void clearLock(String name) throws IOException {
-        directory.clearLock(name);
-    }
+
 
     @Override
     public void close() throws IOException {
         directory.close();
     }
 
-    @Override
-    public void setLockFactory(LockFactory lockFactory) throws IOException {
-        directory.setLockFactory(lockFactory);
-    }
-
-    @Override
-    public LockFactory getLockFactory() {
-        return directory.getLockFactory();
-    }
-
-    @Override
-    public String getLockID() {
-        return directory.getLockID();
-    }
 
     @Override
     public String toString() {
@@ -249,6 +228,7 @@ public final class LuceneDirectory extends Directory {
         private boolean disableCounters = ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraIndexDisablePerfCounters, false);
 
         LuceneIndexOutput(IndexOutput out) {
+        	super("");
             output = out;
         }
 
@@ -276,10 +256,6 @@ public final class LuceneDirectory extends Directory {
             output.writeBytes(b, offset, len);
         }
 
-        @Override
-        public void flush() throws IOException {
-            output.flush();
-        }
 
         @Override
         public void close() throws IOException {
@@ -291,14 +267,15 @@ public final class LuceneDirectory extends Directory {
             return output.getFilePointer();
         }
 
-        @Override
-        public long length() throws IOException {
-            return output.length();
-        }
-
 		@Override
 		public long getChecksum() throws IOException {
 			return output.getChecksum();
 		}
     }
+
+	@Override
+	public void renameFile(String source, String dest) throws IOException {
+		// TODO Auto-generated method stub
+		
+	}
 }

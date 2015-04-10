@@ -10,11 +10,10 @@ import java.util.Map;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrRequest;
 import org.apache.solr.client.solrj.SolrResponse;
-import org.apache.solr.client.solrj.SolrServer;
+import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrServerException;
-import org.apache.solr.client.solrj.impl.CloudSolrServer;
-import org.apache.solr.client.solrj.impl.HttpSolrServer.RemoteSolrException;
-import org.apache.solr.client.solrj.impl.LBHttpSolrServer;
+import org.apache.solr.client.solrj.impl.CloudSolrClient;
+import org.apache.solr.client.solrj.impl.LBHttpSolrClient;
 import org.apache.solr.client.solrj.request.CoreAdminRequest;
 import org.apache.solr.client.solrj.request.QueryRequest;
 import org.apache.solr.client.solrj.request.UpdateRequest;
@@ -43,8 +42,8 @@ import com.zimbra.cs.util.Zimbra;
 public class SolrCloudIndex extends SolrIndexBase {
 
     private boolean solrCollectionProvisioned = false;
-    private CloudSolrServer solrServer = null;
-    private SolrCloudIndex(String accountId, CloudSolrServer cloudSolrServer) {
+    private CloudSolrClient solrServer = null;
+    private SolrCloudIndex(String accountId, CloudSolrClient cloudSolrServer) {
         this.accountId = accountId;
         this.solrServer = cloudSolrServer;
     }
@@ -160,11 +159,7 @@ public class SolrCloudIndex extends SolrIndexBase {
                 processRequest(solrServer, req);
                 //TODO check for errors
             } catch (SolrServerException e) {
-                String errorMsg = String.format("Problem creating new Solr collection for account %s",accountId);
-                ZimbraLog.index.error(errorMsg, e);
-                throw new IOException(errorMsg,e);
-            } catch (RemoteSolrException e) {
-                if(e != null && e.getMessage() != null && e.getMessage().toLowerCase().indexOf("could not find collection") > -1) {
+            	if(e != null && e.getMessage() != null && e.getMessage().toLowerCase().indexOf("could not find collection") > -1) {
                     solrCollectionProvisioned = false;
                 }
                 String errorMsg = String.format("Problem creating new Solr collection for account %s",accountId);
@@ -231,7 +226,7 @@ public class SolrCloudIndex extends SolrIndexBase {
                 req.setPath("/admin/collections");
                 processRequest(solrServer, req);
                 solrCollectionProvisioned = false;
-            } catch (RemoteSolrException e) {
+            } catch (SolrServerException e) {
                 if(e != null && e.getMessage() != null && e.getMessage().toLowerCase().indexOf("could not find collection") > -1) {
                     //collection has been deleted already
                     solrCollectionProvisioned = false;
@@ -239,8 +234,6 @@ public class SolrCloudIndex extends SolrIndexBase {
                 } else {
                     ZimbraLog.index.error("Problem deleting Solr collection" , e);
                 }
-            } catch (SolrServerException e) {
-                ZimbraLog.index.error("Problem deleting Solr collection" , e);
             } catch (IOException e) {
                 ZimbraLog.index.error("Problem deleting Solr collection" , e);
             }
@@ -248,7 +241,7 @@ public class SolrCloudIndex extends SolrIndexBase {
     }
 
     public static final class Factory implements IndexStore.Factory {
-        CloudSolrServer cloudSolrServer = null;
+        CloudSolrClient cloudSolrServer = null;
         public Factory() {
             ZimbraLog.index.info("Created SolrCloudIndex.Factory\n");
         }
@@ -256,9 +249,9 @@ public class SolrCloudIndex extends SolrIndexBase {
         @Override
         public SolrIndexBase getIndexStore(String accountId) throws ServiceException {
             //TODO set zk timeout from LDAP config
-            cloudSolrServer = new CloudSolrServer(
+            cloudSolrServer = new CloudSolrClient(
                     Provisioning.getInstance().getLocalServer().getAttr(Provisioning.A_zimbraSolrURLBase, true), 
-                        new LBHttpSolrServer(Zimbra.getAppContext().getBean(ZimbraHttpClientManager.class).getInternalHttpClient()));
+                        new LBHttpSolrClient(Zimbra.getAppContext().getBean(ZimbraHttpClientManager.class).getInternalHttpClient()));
             return new SolrCloudIndex(accountId,  cloudSolrServer);
         }
 
@@ -276,7 +269,7 @@ public class SolrCloudIndex extends SolrIndexBase {
 
         @Override
         public int maxDocs() {
-            SolrServer solrServer = null;
+            SolrClient solrServer = null;
             try {
                 CoreAdminResponse resp = CoreAdminRequest.getStatus(null, solrServer);
                 Iterator<Map.Entry<String, NamedList<Object>>> iter = resp.getCoreStatus().iterator();
@@ -292,16 +285,13 @@ public class SolrCloudIndex extends SolrIndexBase {
             } catch (IOException e) {
                 ZimbraLog.index.error("Caught IOException retrieving maxDocs for mailbox %s", accountId,e );
             } catch (SolrServerException e) {
-                if(e != null && e.getMessage() != null && e.getMessage().toLowerCase().indexOf("no live solrservers available to handle this request") > -1) {
+	        	 if(e != null && e.getMessage() != null && e.getMessage().indexOf("Could not find collection") > -1) {
+	                 solrCollectionProvisioned = false;
+	             } else if(e != null && e.getMessage() != null && e.getMessage().toLowerCase().indexOf("no live solrservers available to handle this request") > -1) {
                     ZimbraLog.index.warn("The Collection %s has likely been lost. Account needs re-indexing." , accountId);
                 } else {
                     ZimbraLog.index.error("Caught SolrServerException retrieving maxDocs for mailbox %s", accountId,e);
                 }
-            } catch (RemoteSolrException e) {
-                if(e != null && e.getMessage() != null && e.getMessage().indexOf("Could not find collection") > -1) {
-                    solrCollectionProvisioned = false;
-                }
-                ZimbraLog.index.error("Caught RemoteSolrException retrieving maxDocs for mailbox %s", accountId,e);
             }
             return 0;
         }
@@ -311,7 +301,7 @@ public class SolrCloudIndex extends SolrIndexBase {
             if(!indexExists()) {
                 initIndex();
             }
-            SolrServer solrServer = getSolrServer();
+            SolrClient solrServer = getSolrServer();
             UpdateRequest req = new UpdateRequest();
             setupRequest(req, solrServer);
             for (IndexItemEntry entry : entries) {
@@ -337,7 +327,7 @@ public class SolrCloudIndex extends SolrIndexBase {
             }
             try {
                 processRequest(solrServer, req);
-            } catch (RemoteSolrException | SolrServerException e) {
+            } catch (SolrServerException e) {
                 if(e != null && e.getMessage() != null && e.getMessage().toLowerCase().indexOf("no live solrservers available to handle this request") > -1) {
                     ZimbraLog.index.warn("The Collection %s has likely been lost. Account needs re-indexing." , accountId);
                     solrCollectionProvisioned = false;
@@ -372,13 +362,13 @@ public class SolrCloudIndex extends SolrIndexBase {
                         ZimbraLog.index.trace("Adding solr document %s", solrDoc.toString());
                     }
                 }
-                SolrServer solrServer = getSolrServer();
+                SolrClient solrServer = getSolrServer();
                 UpdateRequest req = new UpdateRequest();
                 setupRequest(req, solrServer);
                 req.add(solrDoc);
                 try {
                     processRequest(solrServer, req);
-                } catch (SolrServerException | RemoteSolrException | IOException e) {
+                } catch (SolrServerException | IOException e) {
                     if(e != null && e.getMessage() != null && e.getMessage().toLowerCase().indexOf("no live solrservers available to handle this request") > -1) {
                         ZimbraLog.index.warn("The Collection %s has likely been lost. Account needs re-indexing." , accountId);
                         solrCollectionProvisioned = false;
@@ -393,7 +383,7 @@ public class SolrCloudIndex extends SolrIndexBase {
             if(!indexExists()) {
                 return;
             }
-            SolrServer solrServer = getSolrServer();
+            SolrClient solrServer = getSolrServer();
             try {
                 for (Integer id : ids) {
                     UpdateRequest req = new UpdateRequest().deleteByQuery(String.format("%s:%d",LuceneFields.L_MAILBOX_BLOB_ID,id));
@@ -407,9 +397,7 @@ public class SolrCloudIndex extends SolrIndexBase {
                             solrCollectionProvisioned = false;
                         } 
                         ZimbraLog.index.error("Problem deleting document with id=%d", id,e);
-                    } catch (RemoteSolrException e) {
-                        ZimbraLog.index.error("Problem deleting document with id=%d", id,e);
-                    }
+                    } 
                 }
             } finally {
                 shutdown(solrServer);
@@ -417,7 +405,7 @@ public class SolrCloudIndex extends SolrIndexBase {
         }
         
         @Override
-        protected void incrementUpdateCounter(SolrServer solrServer)
+        protected void incrementUpdateCounter(SolrClient solrServer)
                 throws ServiceException {
             //Do nothing. This is not supported by SolrCloud
         }
@@ -427,7 +415,7 @@ public class SolrCloudIndex extends SolrIndexBase {
     public class SolrIndexReader extends SolrIndexBase.SolrIndexReader {
         @Override
         public int numDeletedDocs() {
-            SolrServer solrServer = null;
+            SolrClient solrServer = null;
             try {
                 CoreAdminResponse resp = CoreAdminRequest.getStatus(null, solrServer);
                 Iterator<Map.Entry<String, NamedList<Object>>> iter = resp.getCoreStatus().iterator();
@@ -443,22 +431,19 @@ public class SolrCloudIndex extends SolrIndexBase {
                 if(e != null && e.getMessage() != null && e.getMessage().toLowerCase().indexOf("no live solrservers available to handle this request") > -1) {
                     ZimbraLog.index.warn("The Collection %s has likely been lost. Account needs re-indexing." , accountId);
                     solrCollectionProvisioned = false;
+                } else if(e != null && e.getMessage() != null && e.getMessage().indexOf("Could not find collection") > -1) {
+                    solrCollectionProvisioned = false;
                 } else {
                     ZimbraLog.index.error("Caught SolrServerException retrieving number of deleted documents in mailbox %s", accountId,e);
                 }
-            }  catch (RemoteSolrException e) {
-                if(e != null && e.getMessage() != null && e.getMessage().indexOf("Could not find collection") > -1) {
-                    solrCollectionProvisioned = false;
-                }
-                ZimbraLog.index.error("Caught SolrServerException retrieving number of deleted documents in mailbox %s", accountId,e);
-            }
+            }  
             return 0;
         }
     }
 
 
     @Override
-    public void setupRequest(Object obj, SolrServer solrServer) {
+    public void setupRequest(Object obj, SolrClient solrServer) {
         if (obj instanceof UpdateRequest) {
             ((UpdateRequest) obj).setParam("collection", accountId);
         } else if (obj instanceof SolrQuery) {
@@ -467,12 +452,12 @@ public class SolrCloudIndex extends SolrIndexBase {
     }
 
     @Override
-    public SolrServer getSolrServer() throws ServiceException {
+    public SolrClient getSolrServer() throws ServiceException {
         return solrServer;
     }
 
     @Override
-    public void shutdown(SolrServer server) {
+    public void shutdown(SolrClient server) {
         //do nothing. CloudSolrServer is thread safe and should not be shut down after each request
     }
     

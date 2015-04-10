@@ -9,7 +9,7 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.Sort;
-import org.apache.solr.client.solrj.SolrServer;
+import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.request.UpdateRequest;
 
 import com.zimbra.common.service.ServiceException;
@@ -82,20 +82,20 @@ public class MockSolrIndex extends SolrIndexBase {
     }
 
     @Override
-    public void setupRequest(Object obj, SolrServer solrServer)
+    public void setupRequest(Object obj, SolrClient solrServer)
             throws ServiceException {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public SolrServer getSolrServer() throws ServiceException {
+    public SolrClient getSolrServer() throws ServiceException {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public void shutdown(SolrServer server) {
+    public void shutdown(SolrClient server) {
         // TODO Auto-generated method stub
 
     }
@@ -257,7 +257,7 @@ public class MockSolrIndex extends SolrIndexBase {
         }
         
         @Override
-        protected synchronized void incrementUpdateCounter(SolrServer solrServer)
+        protected synchronized void incrementUpdateCounter(SolrClient solrServer)
                 throws ServiceException {
             // TODO Auto-generated method stub
         }

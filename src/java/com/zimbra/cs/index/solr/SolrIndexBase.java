@@ -29,9 +29,8 @@ import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrRequest;
 import org.apache.solr.client.solrj.SolrRequest.METHOD;
 import org.apache.solr.client.solrj.SolrResponse;
-import org.apache.solr.client.solrj.SolrServer;
+import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrServerException;
-import org.apache.solr.client.solrj.impl.HttpSolrServer.RemoteSolrException;
 import org.apache.solr.client.solrj.request.AbstractUpdateRequest.ACTION;
 import org.apache.solr.client.solrj.request.QueryRequest;
 import org.apache.solr.client.solrj.request.UpdateRequest;
@@ -93,7 +92,7 @@ public abstract class SolrIndexBase extends IndexStore {
      * @throws ServiceException
      *
      */
-    public abstract void setupRequest(Object obj, SolrServer solrServer) throws ServiceException;
+    public abstract void setupRequest(Object obj, SolrClient solrServer) throws ServiceException;
 
     protected static final Cache<Integer, SolrIndexSearcher> SEARCHER_CACHE =
             CacheBuilder.newBuilder()
@@ -421,7 +420,7 @@ public abstract class SolrIndexBase extends IndexStore {
             if (docID == null || !indexExists()) {
                 return null;
             }
-            SolrServer solrServer = getSolrServer();
+            SolrClient solrServer = getSolrServer();
             try {
                 if(ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraIndexManualCommit, false)) {
                     waitForIndexCommit(LC.zimbra_index_commit_wait.intValue());
@@ -444,9 +443,7 @@ public abstract class SolrIndexBase extends IndexStore {
                         return document;
                     } catch (SolrServerException e) {
                         ZimbraLog.index.error("Solr problem geting document %s, from mailbox %s",docID.toString(), accountId,e);
-                    }  catch (RemoteSolrException e) {
-                        ZimbraLog.index.error("Solr problem geting document %s, from mailbox %s",docID.toString(), accountId,e);
-                    }
+                    } 
                     return null;
                 }
             } finally {
@@ -460,7 +457,7 @@ public abstract class SolrIndexBase extends IndexStore {
             if(!indexExists()) {
                 return 0;
             }
-            SolrServer solrServer = getSolrServer();
+            SolrClient solrServer = getSolrServer();
             try {
                 if(ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraIndexManualCommit, false)) {
                     waitForIndexCommit(LC.zimbra_index_commit_wait.intValue());
@@ -471,8 +468,6 @@ public abstract class SolrIndexBase extends IndexStore {
                 QueryResponse resp = (QueryResponse) processRequest(solrServer, req);
                 return (int) resp.getResults().getNumFound();
             } catch (SolrServerException e) {
-                ZimbraLog.index.error("Solr search problem getting docFreq for mailbox %s", accountId,e);
-            } catch (RemoteSolrException e) {
                 ZimbraLog.index.error("Solr search problem getting docFreq for mailbox %s", accountId,e);
             }  finally {
                 shutdown(solrServer);
@@ -510,7 +505,7 @@ public abstract class SolrIndexBase extends IndexStore {
                 return ZimbraTopDocs.create(totalHits, scoreDocs, maxScore, indexDocs);
             }
 
-            SolrServer solrServer = getSolrServer();
+            SolrClient solrServer = getSolrServer();
             if(ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraIndexManualCommit, false)) {
                 waitForIndexCommit(LC.zimbra_index_commit_wait.intValue());
             }
@@ -550,9 +545,6 @@ public abstract class SolrIndexBase extends IndexStore {
                     scoreDocs.add(ZimbraScoreDoc.create(new ZimbraSolrDocumentID(solrDoc.getFieldValue(LuceneFields.L_MAILBOX_BLOB_ID).toString()),((Float)solrDoc.getFieldValue("score")).longValue()));
                 }
             } catch (SolrServerException e) {
-                ZimbraLog.index.error("Solr search problem mailbox %s, query %s", accountId,query.toString(),e);
-                return ZimbraTopDocs.create(totalHits, scoreDocs, maxScore, indexDocs);
-            } catch (RemoteSolrException e) {
                 ZimbraLog.index.error("Solr search problem mailbox %s, query %s", accountId,query.toString(),e);
                 return ZimbraTopDocs.create(totalHits, scoreDocs, maxScore, indexDocs);
             } finally {
@@ -604,7 +596,7 @@ public abstract class SolrIndexBase extends IndexStore {
             if(!indexExists()) {
                 return 0;
             }
-            SolrServer solrServer = getSolrServer();
+            SolrClient solrServer = getSolrServer();
             try {
                 SolrQuery q = new SolrQuery().setQuery("*:*").setRows(0);
                 setupRequest(q, solrServer);
@@ -614,9 +606,7 @@ public abstract class SolrIndexBase extends IndexStore {
                 return (int)solrDocList.getNumFound();
             } catch (SolrServerException e) {
                 ZimbraLog.index.error("Caught SolrServerException retrieving number of documents in mailbox %s", accountId,e);
-            } catch (RemoteSolrException e) {
-                ZimbraLog.index.error("Caught SolrServerException retrieving number of documents in mailbox %s", accountId,e);
-            } catch (IOException e) {
+            }  catch (IOException e) {
                 ZimbraLog.index.error("Caught SolrServerException retrieving number of documents in mailbox %s", accountId,e);
             } finally {
                 shutdown(solrServer);
@@ -643,7 +633,7 @@ public abstract class SolrIndexBase extends IndexStore {
                 if(!indexExists()) {
                     return;
                 }
-                SolrServer solrServer = getSolrServer();
+                SolrClient solrServer = getSolrServer();
                 if(ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraIndexManualCommit, false)) {
                     waitForIndexCommit(LC.zimbra_index_commit_wait.intValue());
                 }
@@ -742,7 +732,7 @@ public abstract class SolrIndexBase extends IndexStore {
             if(!indexExists()) {
                 initIndex();
             }
-            SolrServer solrServer = getSolrServer();
+            SolrClient solrServer = getSolrServer();
             UpdateRequest req = new UpdateRequest();
             setupRequest(req, solrServer);
             if(ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraIndexManualCommit, false)) {
@@ -774,7 +764,7 @@ public abstract class SolrIndexBase extends IndexStore {
                     incrementUpdateCounter(solrServer);
                 }
                 processRequest(solrServer, req);
-            } catch (RemoteSolrException | SolrServerException e) {
+            } catch (SolrServerException e) {
                 ZimbraLog.index.error("Problem indexing documents", e);
             }  finally {
                 shutdown(solrServer);
@@ -807,7 +797,7 @@ public abstract class SolrIndexBase extends IndexStore {
                         ZimbraLog.index.trace("Adding solr document %s", solrDoc.toString());
                     }
                 }
-                SolrServer solrServer = getSolrServer();
+                SolrClient solrServer = getSolrServer();
                 UpdateRequest req = new UpdateRequest();
                 setupRequest(req, solrServer);
                 req.add(solrDoc);
@@ -819,7 +809,7 @@ public abstract class SolrIndexBase extends IndexStore {
                         incrementUpdateCounter(solrServer);
                     }
                     processRequest(solrServer, req);
-                } catch (SolrServerException | RemoteSolrException | IOException e) {
+                } catch (SolrServerException | IOException e) {
                     throw ServiceException.FAILURE(String.format(Locale.US, "Failed to index part %d of Mail Item with ID %d for Account %s ", partNum, item.getId(), accountId), e);
                 } finally {
                     shutdown(solrServer);
@@ -827,7 +817,7 @@ public abstract class SolrIndexBase extends IndexStore {
             }
         }
 
-        protected void incrementUpdateCounter(SolrServer solrServer) throws ServiceException {
+        protected void incrementUpdateCounter(SolrClient solrServer) throws ServiceException {
             try {
                 if(!indexExists()) {
                     return;
@@ -846,7 +836,7 @@ public abstract class SolrIndexBase extends IndexStore {
             if(!indexExists()) {
                 return;
             }
-            SolrServer solrServer = getSolrServer();
+            SolrClient solrServer = getSolrServer();
             try {
                 for (Integer id : ids) {
                     UpdateRequest req = new UpdateRequest().deleteByQuery(String.format("%s:%d",LuceneFields.L_MAILBOX_BLOB_ID,id));
@@ -862,9 +852,7 @@ public abstract class SolrIndexBase extends IndexStore {
                         ZimbraLog.index.debug("Deleted document id=%d", id);
                     } catch (SolrServerException e) {
                         ZimbraLog.index.error("Problem deleting document with id=%d", id,e);
-                    } catch (RemoteSolrException e) {
-                        ZimbraLog.index.error("Problem deleting document with id=%d", id,e);
-                    }
+                    } 
                 }
             } finally {
                 shutdown(solrServer);
@@ -878,18 +866,18 @@ public abstract class SolrIndexBase extends IndexStore {
         }
     }
 
-    public abstract SolrServer getSolrServer() throws ServiceException;
+    public abstract SolrClient getSolrServer() throws ServiceException;
 
-    public abstract void shutdown(SolrServer server);
+    public abstract void shutdown(SolrClient server);
 
-    protected SolrResponse processRequest(SolrServer server, SolrRequest request)
+    protected SolrResponse processRequest(SolrClient server, SolrRequest request)
             throws SolrServerException, IOException {
         return request.process(server);
     }
 
     @Override
     public int waitForIndexCommit(int maxWaitTimeMillis) throws ServiceException  {
-        SolrServer solrServer = getSolrServer();
+        SolrClient solrServer = getSolrServer();
         int waitIncrement = Math.max(maxWaitTimeMillis/3, 500);
         long startWait = System.currentTimeMillis();
         while (maxWaitTimeMillis > 0) {

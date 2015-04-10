@@ -67,8 +67,11 @@
 	<condition property="war.web.xml" value="src/main/webapp/WEB-INF/web.xml">
 	 	<not><isset property="war.web.xml"/></not>
 	</condition>
+	<condition property="nosolr.suffix" value=".nosolr" else="">
+        <isset property="solr-standalone"/>
+    </condition>
 	<property name="war.web.xml" location="${war.web.xml}${production.suffix}"/>
-    <property name="jetty.xml.file" location='${config.dir}/jetty-9.1/jetty.xml' />
+    <property name="jetty.xml.file" location='${config.dir}/jetty-9.1/jetty.xml${nosolr.suffix}' />
     <property name="jetty.policy.file" location="${config.dir}/jetty-9.1/zimbra.policy.example"/>
 	
     <property name="spnego.dir" location="${config.dir}/jetty-9.1/spnego"/>
@@ -100,9 +103,11 @@
     <property name="jetty.src.dir" location="../ThirdParty/jetty"/>
     <property name="jetty.version" value="9.1.5.v20140505"/>
     <available property="jetty.start.jar.exists" file="${jetty.home.dir}/start.jar"/>
+    <available property="solr.binary.exists" file="${solr.install.dir}/bin/solr"/>
 
-    <property name="solr.home.dir"  location="${zimbra.home.dir}/solr"/>
-    <property name="solr.war" location="${dist.dir}/solr/solr.war"/>
+    <property name="solr.install.dir"  location="${zimbra.home.dir}/solr" />
+	<property name="solr.home.dir"  location="${zimbra.home.dir}/solr/solr" />
+    <property name="solr.war" location="../ThirdParty/solr/binary/solr.war" />
 	
     <property name="ical4j.jar" value="ical4j-0.9.16-patched.jar"/>
     <property name="ziputil.jar" value="ant-1.7.0-ziputil-patched.jar"/>
@@ -805,7 +810,7 @@
   <target name="service-deploy" depends="refresh-opt-zimbra,deploy-war"
             description="Not just war file deployment, but a /opt/zimbra refresh as well!"/>
 
-    <target name="deploy-war" depends="stop-jetty,war,copy-war,compile-solr-plugins,deploy-solr-plugins,copy-solr,copy-redolog-war,start-jetty"/>
+    <target name="deploy-war" depends="stop-jetty,stop-solr,war,copy-war,compile-solr-plugins,deploy-solr-plugins,copy-redolog-war,copy-solr,start-solr,start-jetty"/>
 
     <target name="copy-war">
         <delete dir="${jetty.home.dir}/webapps/service"/>
@@ -816,18 +821,23 @@
     </target>
 
     <target name="copy-solr">
-        <delete dir="${jetty.home.dir}/webapps/solr"/>
-        <delete file="${jetty.home.dir}/webapps/solr.war"/>
-        <copy file="${solr.war}" todir="${jetty.home.dir}/webapps"/>
-        <mkdir dir='${jetty.home.dir}/webapps/solr'/>
-        <unzip dest="${jetty.home.dir}/webapps/solr" src="${jetty.home.dir}/webapps/solr.war"/>
-        <copy todir="${jetty.home.dir}/webapps/solr/WEB-INF/lib">
-           <fileset dir="${common.jars.dir}" includes="slf4j*.jar"/>
-           <fileset dir="${common.jars.dir}" includes="commons-logging*.jar"/>
-           <fileset dir="${common.jars.dir}" includes="log4j*.jar"/>
-        </copy>
+        <if>
+        	<not><isset property="solr-standalone"/></not>
+            <then>
+		        <delete dir="${jetty.home.dir}/webapps/solr"/>
+		        <delete file="${jetty.hofme.dir}/webapps/solr.war"/>
+		        <copy file="${solr.war}" todir="${jetty.home.dir}/webapps"/>
+		        <mkdir dir='${jetty.home.dir}/webapps/solr'/>
+		        <unzip dest="${jetty.home.dir}/webapps/solr" src="${jetty.home.dir}/webapps/solr.war"/>
+		        <copy todir="${jetty.home.dir}/webapps/solr/WEB-INF/lib">
+		           <fileset dir="${common.jars.dir}" includes="slf4j*.jar"/>
+		           <fileset dir="${common.jars.dir}" includes="commons-logging*.jar"/>
+		           <fileset dir="${common.jars.dir}" includes="log4j*.jar"/>
+		        </copy>
+             </then>
+        </if>
     </target>
-
+           	
     <target name="copy-redolog-war" if="${redolog.available}">
         <property name="redolog.basename" value="zimbraredologservice"/>
         <property name="redolog.war" location="../ZimbraFOSS/ZimbraRedologService/target/${redolog.basename}-${project.maven.version}.war"/>
@@ -850,6 +860,8 @@
     	<delete file="${zimbra.home.dir}/jetty/start.ini"/>
         <delete file="${zimbra.home.dir}/jetty/start.d/http.ini"/>
     	<antcall target="copy-solr-config" />
+    	<delete dir="${jetty.home.dir}/webapps/solr"  failonerror="no" />
+    	<delete file="${jetty.home.dir}/webapps/solr.war" failonerror="no" />
         <!-- ant does not preserve perms on copy -->
     </target>
 
@@ -864,11 +876,14 @@
             <fileset dir="${config.dir}/solr/configsets/zimbra/conf/lang" includes="*.txt" />
         </copy>
         
-        <copy todir="${zimbra.home.dir}/solr/solr" overwrite="true">
+        <copy todir="${solr.home.dir}" overwrite="true">
             <fileset dir="${config.dir}/solr" includes="solr.xml"/>
         </copy>
+		
+		<mkdir dir="${zimbra.home.dir}/conf/solr" />
+		<copy todir="${zimbra.home.dir}/conf/solr" file="${config.dir}/solr/log4j.properties"/>
 	</target>
-    <target name="refresh-opt-zimbra" depends="dev-dist">
+    <target name="refresh-opt-zimbra" depends="stop-solr,dev-dist">
       <copy todir="${zimbra.home.dir}" overwrite="true">
         <fileset dir="${dist.dir}">
           <exclude name="conf/localconfig.xml"/><!-- don't trash zimbra_server_hostname -->
@@ -880,6 +895,7 @@
         <fileset dir="${zimbra.home.dir}/libexec"/>
       </chmod>
       <antcall target="copy-solr-config" />
+      <antcall target="start-solr" />
     </target>
 
     <target name="enable-im">
@@ -1071,6 +1087,9 @@
             </java>
           </then>
         </if>
+    	<!-- TODO: remove this once build is updated to use standalone solr5 package -->
+    	<!-- put solr.war where build will find it.  -->
+    	<copy tofile="${dist.dir}/solr/solr.war" file="${solr.war}" overwrite="true"/>
     </target>
 
     <target name="dev-dist-unix" if="is-unix">
@@ -1082,7 +1101,7 @@
   <target name="dev-dist-jetty">
     <copy todir="${dist.jetty.dir}/webapps" file="${warfile}" overwrite="true"/>
     <copy tofile="${dist.jetty.dir}/etc/jettyrc" file="${config.dir}/jetty-9.1/jettyrc" overwrite="true"/>
-    <copy tofile="${dist.jetty.dir}/etc/jetty.xml" file="${jetty.xml.file}" overwrite="true"/>
+	<copy tofile="${dist.jetty.dir}/etc/jetty.xml" file="${jetty.xml.file}" overwrite="true"/>
     <copy tofile="${dist.jetty.dir}/etc/zimbra.policy.example" file="${jetty.policy.file}" overwrite="true"/>
     <copy tofile="${dist.jetty.dir}/etc/webdefault.xml"
           file="${config.dir}/jetty-9.1/webdefault.xml${production.suffix}" overwrite="true"/>
@@ -1151,6 +1170,7 @@
       <if><available file="../ZimbraServer/src/perl/install-thirdparty"/> <!-- Not available for community build. -->
         <then>
           <antcall target="stop-webserver"/>
+          <antcall target="stop-solr" />
           <antcall target="stop-ldap"/>
           <exec failonerror="true" executable="../ZimbraServer/src/perl/install-thirdparty">
       <arg line="main"/>
@@ -1481,9 +1501,11 @@
     <target name="refresh-ldap">
         <antcall target="stop-webserver"/>
         <antcall target="stop-ldap"/>
+    	<antcall target="stop-solr" />
         <sleep seconds="2"/>
         <!-- sometimes start occurs too fast... -->
         <antcall target="start-ldap"/>
+    	<antcall target="start-solr"/>
         <antcall target="start-webserver"/>
         <antcall target="ldap-modify">
             <param name="ldif.file" value="${dist.dir}/${slapd.etc.dir}/zimbra_globalconfig.ldif"/>
@@ -2041,6 +2063,34 @@
 	   </exec>
 	</target>
 	
+	<target name="start-solr" depends="start-solr-unix"/>
+	
+	<target name="start-solr-unix" if="is-unix">
+        <if>
+        	<isset property="solr-standalone"/>
+            <then>
+		        <exec executable="${solr.install.dir}/bin/solr">
+		            <arg value="start"/>
+		        	<env key="SOLR_INCLUDE" file="${zimbra.home.dir}/libexec/solr.in.sh" />
+		        </exec>
+            </then>
+        </if>
+    </target>
+	
+	<target name="stop-solr" depends="stop-solr-unix"/>
+		
+    <target name="stop-solr-unix" if="is-unix">
+        <if>
+	    <isset property="solr.binary.exists"/>
+            <then>
+                <exec executable="${solr.install.dir}/bin/solr">
+                    <arg value="stop"/>
+        	    <env key="SOLR_INCLUDE" file="${zimbra.home.dir}/libexec/solr.in.sh" />
+                </exec>
+            </then>
+         </if>
+    </target>
+	
     <target name="start-jetty-windows" if="is-windows">
         <if>
             <isset property="jetty-use-service"/>
@@ -2112,7 +2162,7 @@
 
     <target name="start-jetty-java">
         <java dir="${jetty.home.dir}" jar="${jetty.home.dir}/start.jar" fork="true" spawn="true">
-            <arg line="-ea -Dfile.encoding=UTF-8 -server -Djava.awt.headless=true -Dsun.net.inetaddr.ttl=60 -Dorg.apache.jasper.compiler.disablejsr199=true -Dsolr.solr.home=/opt/zimbra/solr/solr -XX:+UseConcMarkSweepGC -XX:SoftRefLRUPolicyMSPerMB=1 -verbose:gc -XX:+PrintGCDetails -XX:+PrintGCDateStamps -XX:+PrintGCApplicationStoppedTime -XX:-OmitStackTraceInFastThrow -DSTART=c:/opt/zimbra/jetty/etc/start.config -DSTOP.PORT=7867 -DSTOP.KEY=stop -Dzimbra.config=c:/opt/zimbra/conf/localconfig.xml -Djava.library.path=c:\opt\zimbra\lib -Djava.endorsed.dirs=c:\opt\zimbra\jetty\common\endorsed -Djetty.home=c:/opt/zimbra/jetty --module=zimbra,server,servlet,servlets,jsp,jmx,resources,websocket,ext,plus,rewrite,monitor,continuation,webapp etc/jetty.xml"/>
+            <arg line="-ea -Dfile.encoding=UTF-8 -server -Djava.awt.headless=true -Dsun.net.inetaddr.ttl=60 -Dorg.apache.jasper.compiler.disablejsr199=true -XX:+UseConcMarkSweepGC -XX:SoftRefLRUPolicyMSPerMB=1 -verbose:gc -XX:+PrintGCDetails -XX:+PrintGCDateStamps -XX:+PrintGCApplicationStoppedTime -XX:-OmitStackTraceInFastThrow -DSTART=c:/opt/zimbra/jetty/etc/start.config -DSTOP.PORT=7867 -DSTOP.KEY=stop -Dzimbra.config=c:/opt/zimbra/conf/localconfig.xml -Djava.library.path=c:\opt\zimbra\lib -Dsolr.solr.home=/opt/zimbra/solr/solr -Djava.endorsed.dirs=c:\opt\zimbra\jetty\common\endorsed -Djetty.home=c:/opt/zimbra/jetty --module=zimbra,server,servlet,servlets,jsp,jmx,resources,websocket,ext,plus,rewrite,monitor,continuation,webapp etc/jetty.xml"/>
         </java>
     </target>
 
@@ -2686,6 +2736,15 @@
       
       <!-- run tests -->
       <antcall target="prov-test"/>
-  </target>  
-
+  </target> 
+    <target name="test-loop">
+    	<property name="skip.maven" value="false"/>
+    	   <!--for list="1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35" param="idx" -->
+    	   <for list="1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25" param="idx">
+    	    <sequential>
+    	    	<echo>Test @{idx}</echo>
+    	    	<maven goal="test" dir="." />
+    	    </sequential>
+    	    </for>
+	</target>
 </project>
