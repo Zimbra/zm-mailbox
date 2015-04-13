@@ -9840,8 +9840,7 @@ TODO: delete them permanently from here
 </attr>
 
 <attr id="1958" name="zimbraReverseProxyXmppBoshRemoteHttpBindURL" type="string" max="1024" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" affectsServices="nginxproxy" since="8.7.0,9.0.0">
-  <globalConfigValue>/http-bind</globalConfigValue>
-  <desc>Remote HTTP-BIND URL prefix for an external XMPP server where XMPP over BOSH requests need to be proxied</desc>
+  <desc>Remote HTTP-BIND URL prefix for an external XMPP server where XMPP over BOSH requests need to be proxied. This needs to be configured only if its different from zimbraReverseProxyXmppBoshLocalHttpBindURL</desc>
 </attr>
 
 <attr id="1959" name="zimbraReverseProxyXmppBoshHostname" type="string" max="1024" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" affectsServices="nginxproxy" since="8.7.0,9.0.0">
