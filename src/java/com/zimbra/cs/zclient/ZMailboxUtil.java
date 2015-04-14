@@ -2852,6 +2852,9 @@ public class ZMailboxUtil implements DebugListener {
 
             String authAccount, targetAccount;
             if (cl.hasOption('m')) {
+                if (!cl.hasOption('p') && !cl.hasOption('P') && !cl.hasOption('y') && !cl.hasOption('Y') && !cl.hasOption('z')) {
+                    throw ZClientException.CLIENT_ERROR("-m requires one of the -p/-P/-y/-Y/-z options", null);
+                }
                 targetAccount = cl.getOptionValue('m');
             } else {
                 targetAccount = null;
