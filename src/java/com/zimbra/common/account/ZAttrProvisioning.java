@@ -13819,7 +13819,8 @@ public class ZAttrProvisioning {
 
     /**
      * Remote HTTP-BIND URL prefix for an external XMPP server where XMPP
-     * over BOSH requests need to be proxied
+     * over BOSH requests need to be proxied. This needs to be configured
+     * only if its different from zimbraReverseProxyXmppBoshLocalHttpBindURL
      *
      * @since ZCS 8.7.0,9.0.0
      */
