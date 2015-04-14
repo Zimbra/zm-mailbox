@@ -54362,20 +54362,22 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * Remote HTTP-BIND URL prefix for an external XMPP server where XMPP
-     * over BOSH requests need to be proxied
+     * over BOSH requests need to be proxied. This needs to be configured
+     * only if its different from zimbraReverseProxyXmppBoshLocalHttpBindURL
      *
-     * @return zimbraReverseProxyXmppBoshRemoteHttpBindURL, or "/http-bind" if unset
+     * @return zimbraReverseProxyXmppBoshRemoteHttpBindURL, or null if unset
      *
      * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=1958)
     public String getReverseProxyXmppBoshRemoteHttpBindURL() {
-        return getAttr(Provisioning.A_zimbraReverseProxyXmppBoshRemoteHttpBindURL, "/http-bind");
+        return getAttr(Provisioning.A_zimbraReverseProxyXmppBoshRemoteHttpBindURL, null);
     }
 
     /**
      * Remote HTTP-BIND URL prefix for an external XMPP server where XMPP
-     * over BOSH requests need to be proxied
+     * over BOSH requests need to be proxied. This needs to be configured
+     * only if its different from zimbraReverseProxyXmppBoshLocalHttpBindURL
      *
      * @param zimbraReverseProxyXmppBoshRemoteHttpBindURL new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -54391,7 +54393,8 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * Remote HTTP-BIND URL prefix for an external XMPP server where XMPP
-     * over BOSH requests need to be proxied
+     * over BOSH requests need to be proxied. This needs to be configured
+     * only if its different from zimbraReverseProxyXmppBoshLocalHttpBindURL
      *
      * @param zimbraReverseProxyXmppBoshRemoteHttpBindURL new value
      * @param attrs existing map to populate, or null to create a new map
@@ -54408,7 +54411,8 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * Remote HTTP-BIND URL prefix for an external XMPP server where XMPP
-     * over BOSH requests need to be proxied
+     * over BOSH requests need to be proxied. This needs to be configured
+     * only if its different from zimbraReverseProxyXmppBoshLocalHttpBindURL
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -54423,7 +54427,8 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * Remote HTTP-BIND URL prefix for an external XMPP server where XMPP
-     * over BOSH requests need to be proxied
+     * over BOSH requests need to be proxied. This needs to be configured
+     * only if its different from zimbraReverseProxyXmppBoshLocalHttpBindURL
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
