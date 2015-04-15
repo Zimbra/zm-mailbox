@@ -156,10 +156,18 @@ public class DbPool {
                 } catch (SQLException e) {
                     ZimbraLog.dbconn.info(e.getMessage() + ", " + e.getSQLState() + ","
                         + e.getErrorCode(), e);
-                    if (Db.errorMatches(e, Db.Error.DEADLOCK_DETECTED)) {
+                    if (Db.errorMatches(e, Db.Error.DEADLOCK_DETECTED) ||
+                         Db.stateMatches(e, Db.SqlState.COMMUNICATION_FAILURE_DURING_TRANS)) {
                         hasException = true;
                         excptn = e;
-                        ZimbraLog.dbconn.debug("Deadlock detected retrying transaction, retry count: %d", retryCount);
+                        if (ZimbraLog.dbconn.isDebugEnabled()) {
+                            if (Db.errorMatches(e, Db.Error.DEADLOCK_DETECTED)) {
+                                ZimbraLog.dbconn.debug("Deadlock detected retrying transaction, retry count: %d", retryCount);
+                            } else  {
+                                ZimbraLog.dbconn.debug(e.getMessage() + ", "
+                                    + "retry count: %d", retryCount);
+                            }
+                        }
                         if (delay > 0) {
                             try {
                                 Thread.sleep(delay * 1000);
@@ -169,7 +177,8 @@ public class DbPool {
                             }
                         }
                     } else {
-                        ZimbraLog.dbconn.info("This is not a deadlock related SQL Exception, so no retries.");
+                        ZimbraLog.dbconn.info("This SQL Exception does not fall under the retry category,"
+                            + " so no retries.");
                         throw ServiceException.FAILURE("committing database transaction", e);
                     }
                 }

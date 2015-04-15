@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -29,8 +29,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Map.Entry;
+import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
@@ -46,10 +46,8 @@ import com.google.common.base.Strings;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.db.DbPool.PoolConfig;
-import com.zimbra.cs.util.ProvisioningUtil;
 
 public final class SQLite extends Db {
 
@@ -107,6 +105,14 @@ public final class SQLite extends Db {
         // XXX: the SQLite JDBC driver doesn't yet expose SQLite error codes, which sucks
         String code = mErrorCodes.get(error);
         return code != null && e.getMessage() != null && e.getMessage().contains(code);
+    }
+
+    /* (non-Javadoc)
+     * @see com.zimbra.cs.db.Db#compareState(java.sql.SQLException, com.zimbra.cs.db.Db.SqlState)
+     */
+    @Override
+    boolean compareState(SQLException e, SqlState state) {
+        return false;
     }
 
     @Override
@@ -318,7 +324,7 @@ public final class SQLite extends Db {
             (stmt = conn.prepareStatement("DETACH DATABASE " + dbname)).execute();
             return true;
         } catch (SQLException e) {
-            if (!deleted.containsKey(dbname)) { 
+            if (!deleted.containsKey(dbname)) {
                 ZimbraLog.dbconn.warn("database overflow autoclose failed for DB " + dbname, e);
                 return false;
             } else {

@@ -45,6 +45,7 @@ import com.zimbra.cs.util.ProvisioningUtil;
 public class MySQL extends Db {
 
     private Map<Db.Error, Integer> mErrorCodes;
+    private Map<Db.SqlState, String> mSqlStates;
 
     MySQL() {
         mErrorCodes = new HashMap<Db.Error, Integer>(6);
@@ -56,6 +57,8 @@ public class MySQL extends Db {
         mErrorCodes.put(Db.Error.NO_SUCH_DATABASE,         1146); //MysqlErrorNumbers.ER_NO_SUCH_TABLE
         mErrorCodes.put(Db.Error.NO_SUCH_TABLE,            1146); //MysqlErrorNumbers.ER_NO_SUCH_TABLE
         mErrorCodes.put(Db.Error.TABLE_FULL,               1114); //MysqlErrorNumbers.ER_RECORD_FILE_FULL
+        mSqlStates = new HashMap<Db.SqlState, String>(1);
+        mSqlStates.put(Db.SqlState.COMMUNICATION_FAILURE_DURING_TRANS, "08007");
     }
 
     @Override
@@ -89,6 +92,15 @@ public class MySQL extends Db {
     boolean compareError(SQLException e, Db.Error error) {
         Integer code = mErrorCodes.get(error);
         return (code != null && e.getErrorCode() == code);
+    }
+
+    /* (non-Javadoc)
+     * @see com.zimbra.cs.db.Db#compareState(java.sql.SQLException, com.zimbra.cs.db.Db.SqlState)
+     */
+    @Override
+    boolean compareState(SQLException e, Db.SqlState state) {
+        String stateCode = mSqlStates.get(state);
+        return (stateCode != null && (e.getSQLState().equals(stateCode) || e.getSQLState().startsWith(stateCode)));
     }
 
     @Override
@@ -196,6 +208,11 @@ public class MySQL extends Db {
             props.put("useUnicode", "true");
             props.put("characterEncoding", "UTF-8");
             props.put("dumpQueriesOnException", "true");
+            ZimbraLog.sqltrace.info("Adding failover logic using JConnector : JCON:.");
+//            props.put("loadBalanceEnableJMX", "true");
+            props.put("loadBalanceExceptionChecker", "com.zimbra.cs.db.RetryTransactionCheckerException");
+//            props.put("loadBalanceSQLStateFailover", "08");
+//            props.put("loadBalanceSQLExceptionSubclassFailover", "com.mysql.jdbc.exceptions.jdbc4.MySQLNonTransientConnectionException");;
 
             // props.put("connectTimeout", "0");    // connect timeout in msecs
             // props.put("initialTimeout", "2");    // time to wait between re-connects

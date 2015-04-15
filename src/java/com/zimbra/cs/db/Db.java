@@ -71,6 +71,11 @@ public abstract class Db {
         DUMPSTER_TABLES;
     }
 
+    public static enum SqlState {
+
+        COMMUNICATION_FAILURE_DURING_TRANS;
+    }
+
     private static Db sDatabase;
 
     private static String ESCAPE_SEQUENCE = "\\";
@@ -107,6 +112,14 @@ public abstract class Db {
     }
 
     abstract boolean compareError(SQLException e, Db.Error error);
+
+    /** Returns whether the given {@link SQLException} is an instance of the
+     *  specified {@link Db.SqlState}. */
+    public static boolean stateMatches(SQLException e, Db.SqlState error) {
+        return getInstance().compareState(e, error);
+    }
+
+    abstract boolean compareState(SQLException e, Db.SqlState state);
 
     /** Returns the set of configuration settings necessary to initialize the
      *  appropriate database connection pool.
