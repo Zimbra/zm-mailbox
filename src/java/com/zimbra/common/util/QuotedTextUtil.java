@@ -316,6 +316,13 @@ public class QuotedTextUtil {
                 secondFragment = results.get(1);
             }
         }
+
+        //empty content followed by HEADER
+        if ((firstFragment != null && (firstFragment.getType() == LineType.HEADER || firstFragment
+            .getType() == LineType.WROTE_STRONG))) {
+            return "";
+        }
+
         // Check for UNKNOWN followed by HEADER
         if ((firstFragment != null && firstFragment.getType() == LineType.UNKNOWN)
             && (secondFragment != null && (secondFragment.getType() == LineType.HEADER || secondFragment
@@ -380,7 +387,7 @@ public class QuotedTextUtil {
         boolean isMerged = false;
 
         boolean isBugzilla = false;
-        text.replace("\r\n", "\n");
+        text = text.replace("\r\n", "\n");
         String[] lines = text.split("\n");
 
         for (int i = 0; i < lines.length; i++) {

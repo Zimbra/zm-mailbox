@@ -80,5 +80,13 @@ public class QuotedTextUtilTest {
         originalContent = quotedTextUtil.getOriginalContent(content, false);
         expected = "";
         Assert.assertEquals(expected, originalContent);
+
+        content = ""
+            + "\n From: \"Demo User One\" <user1@host.local>\n"
+            + "To: \"Three, Demo\" <user3@host.local>\n"
+            + "Sent: Monday, March 30, 2015 6:27:17 PM\n" + "Subject: Fwd: test mail" + "new mail";
+        originalContent = quotedTextUtil.getOriginalContent(content, false);
+        expected = "";
+        Assert.assertEquals(expected, originalContent);
     }
 }
