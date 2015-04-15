@@ -8,7 +8,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Locale;
 import java.util.NoSuchElementException;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
@@ -25,15 +24,13 @@ import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.SortField;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.TermRangeQuery;
+import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrRequest;
 import org.apache.solr.client.solrj.SolrRequest.METHOD;
 import org.apache.solr.client.solrj.SolrResponse;
-import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrServerException;
-import org.apache.solr.client.solrj.request.AbstractUpdateRequest.ACTION;
 import org.apache.solr.client.solrj.request.QueryRequest;
-import org.apache.solr.client.solrj.request.UpdateRequest;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrDocumentList;
@@ -65,9 +62,6 @@ import com.zimbra.cs.index.ZimbraScoreDoc;
 import com.zimbra.cs.index.ZimbraTermsFilter;
 import com.zimbra.cs.index.ZimbraTopDocs;
 import com.zimbra.cs.index.solr.SolrUtils.WildcardEscape;
-import com.zimbra.cs.mailbox.MailItem;
-import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.Mailbox.IndexItemEntry;
 import com.zimbra.cs.util.ProvisioningUtil;
 
 /**
@@ -715,106 +709,10 @@ public abstract class SolrIndexBase extends IndexStore {
     }
 
     protected abstract class SolrIndexer implements Indexer {
-
-
         @Override
         public void close() throws IOException {
             // TODO Auto-generated method stub
 
-        }
-
-        protected void setAction(UpdateRequest req) {
-            req.setAction(ACTION.COMMIT, true, true, false);
-        }
-
-        @Override
-        public void add(List<Mailbox.IndexItemEntry> entries) throws IOException, ServiceException {
-            if(!indexExists()) {
-                initIndex();
-            }
-            SolrClient solrServer = getSolrServer();
-            UpdateRequest req = new UpdateRequest();
-            setupRequest(req, solrServer);
-            if(ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraIndexManualCommit, false)) {
-                setAction(req);
-            }
-            for (IndexItemEntry entry : entries) {
-                if (entry.documents == null) {
-                    ZimbraLog.index.warn("NULL index data item=%s", entry);
-                    continue;
-                }
-                int partNum = 1;
-                for (IndexDocument doc : entry.documents) {
-                    SolrInputDocument solrDoc;
-                    // doc can be shared by multiple threads if multiple mailboxes are referenced in a single email
-                    synchronized (doc) {
-                        setFields(entry.item, doc);
-                        solrDoc = doc.toInputDocument();
-                        solrDoc.addField(SOLR_ID_FIELD, String.format("%d_%d",entry.item.getId(),partNum));
-                        partNum++;
-                        if (ZimbraLog.index.isTraceEnabled()) {
-                            ZimbraLog.index.trace("Adding solr document %s", solrDoc.toString());
-                        }
-                    }
-                    req.add(solrDoc);
-                }
-            }
-            try {
-                if(ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraIndexManualCommit, false)) {
-                    incrementUpdateCounter(solrServer);
-                }
-                processRequest(solrServer, req);
-            } catch (SolrServerException e) {
-                ZimbraLog.index.error("Problem indexing documents", e);
-            }  finally {
-                shutdown(solrServer);
-            }
-        }
-
-        @Override
-        public void addDocument(MailItem item, List<IndexDocument> docs) throws ServiceException {
-            if (docs == null || docs.isEmpty()) {
-                return;
-            }
-            try {
-                if(!indexExists()) {
-                    initIndex();
-                }
-            } catch (IOException e) {
-                throw ServiceException.FAILURE(String.format(Locale.US, "Failed to index mail item with ID %d for Account %s ", item.getId(), accountId), e);
-            }
-
-            int partNum = 1;
-            for (IndexDocument doc : docs) {
-                SolrInputDocument solrDoc;
-                // doc can be shared by multiple threads if multiple mailboxes are referenced in a single email
-                synchronized (doc) {
-                    setFields(item, doc);
-                    solrDoc = doc.toInputDocument();
-                    solrDoc.addField(SOLR_ID_FIELD, String.format("%d_%d",item.getId(),partNum));
-                    partNum++;
-                    if (ZimbraLog.index.isTraceEnabled()) {
-                        ZimbraLog.index.trace("Adding solr document %s", solrDoc.toString());
-                    }
-                }
-                SolrClient solrServer = getSolrServer();
-                UpdateRequest req = new UpdateRequest();
-                setupRequest(req, solrServer);
-                req.add(solrDoc);
-                if(ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraIndexManualCommit, false)) {
-                    setAction(req);
-                }
-                try {
-                    if(ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraIndexManualCommit, false)) {
-                        incrementUpdateCounter(solrServer);
-                    }
-                    processRequest(solrServer, req);
-                } catch (SolrServerException | IOException e) {
-                    throw ServiceException.FAILURE(String.format(Locale.US, "Failed to index part %d of Mail Item with ID %d for Account %s ", partNum, item.getId(), accountId), e);
-                } finally {
-                    shutdown(solrServer);
-                }
-            }
         }
 
         protected void incrementUpdateCounter(SolrClient solrServer) throws ServiceException {
@@ -831,34 +729,7 @@ public abstract class SolrIndexBase extends IndexStore {
                 ZimbraLog.index.error("Problem increasing commit counter for Core %s", accountId,e);
             }
         }
-        @Override
-        public void deleteDocument(List<Integer> ids) throws IOException,ServiceException {
-            if(!indexExists()) {
-                return;
-            }
-            SolrClient solrServer = getSolrServer();
-            try {
-                for (Integer id : ids) {
-                    UpdateRequest req = new UpdateRequest().deleteByQuery(String.format("%s:%d",LuceneFields.L_MAILBOX_BLOB_ID,id));
-                    setupRequest(req, solrServer);
-                    if(ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraIndexManualCommit, false)) {
-                        setAction(req);
-                    }
-                    try {
-                        if(ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraIndexManualCommit, false)) {
-                            incrementUpdateCounter(solrServer);
-                        }
-                        processRequest(solrServer, req);
-                        ZimbraLog.index.debug("Deleted document id=%d", id);
-                    } catch (SolrServerException e) {
-                        ZimbraLog.index.error("Problem deleting document with id=%d", id,e);
-                    } 
-                }
-            } finally {
-                shutdown(solrServer);
-            }
-        }
-
+        
         @Override
         public void compact() {
             // TODO Auto-generated method stub

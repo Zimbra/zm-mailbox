@@ -10,7 +10,6 @@ import org.apache.lucene.index.Term;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.Sort;
 import org.apache.solr.client.solrj.SolrClient;
-import org.apache.solr.client.solrj.request.UpdateRequest;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -230,10 +229,6 @@ public class MockSolrIndex extends SolrIndexBase {
 
         @Override
         public synchronized void close() throws IOException {
-        }
-
-        @Override
-        protected void setAction(UpdateRequest req) {
         }
 
         @Override

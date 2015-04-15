@@ -2150,7 +2150,6 @@
             <then>
                 <exec executable="${solr.install.dir}/bin/solr">
                     <arg line="stop -all"/>
-                    <env key="SOLR_INCLUDE" file="${zimbra.home.dir}/libexec/solr.in.sh" />
                 </exec>
             </then>
             <else>

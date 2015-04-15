@@ -15,10 +15,10 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.Sort;
+import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrRequest;
 import org.apache.solr.client.solrj.SolrResponse;
-import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.embedded.EmbeddedSolrServer;
 import org.apache.solr.client.solrj.request.AbstractUpdateRequest.ACTION;
@@ -214,7 +214,6 @@ public class EmbeddedSolrIndex extends SolrIndexBase {
         public synchronized void close() throws IOException {
         }
 
-        @Override
         protected void setAction(UpdateRequest req) {
             req.setAction(ACTION.COMMIT, true, true, true);
         }

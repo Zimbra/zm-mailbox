@@ -271,6 +271,7 @@ public class TestIndex  {
 
     @Test
     public void testRetry() throws Exception {
+        Assume.assumeTrue("com.zimbra.cs.index.solr.SolrCloudIndex$Factory".equals(LC.zimbra_class_index_store_factory.value()));
         //create an account
         assertTrue("failed to create an account", TestUtil.accountExists(acct.getName()));
         //set wrong Solr URL so that indexing fails
@@ -302,6 +303,7 @@ public class TestIndex  {
     
     @Test
     public void testFailIndexing() throws Exception {
+        Assume.assumeTrue("com.zimbra.cs.index.solr.SolrCloudIndex$Factory".equals(LC.zimbra_class_index_store_factory.value()));
         //create an account
         assertTrue("failed to create an account", TestUtil.accountExists(acct.getName()));
         //set wrong Solr URL so that indexing fails

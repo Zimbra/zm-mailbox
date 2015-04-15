@@ -7,13 +7,14 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrRequest;
 import org.apache.solr.client.solrj.SolrResponse;
-import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.CloudSolrClient;
 import org.apache.solr.client.solrj.impl.LBHttpSolrClient;
+import org.apache.solr.client.solrj.request.AbstractUpdateRequest.ACTION;
 import org.apache.solr.client.solrj.request.CoreAdminRequest;
 import org.apache.solr.client.solrj.request.QueryRequest;
 import org.apache.solr.client.solrj.request.UpdateRequest;
@@ -24,7 +25,9 @@ import org.apache.solr.common.params.CollectionParams.CollectionAction;
 import org.apache.solr.common.params.CommonParams;
 import org.apache.solr.common.params.ModifiableSolrParams;
 import org.apache.solr.common.util.NamedList;
+import org.springframework.beans.BeansException;
 
+import com.zimbra.common.account.ZAttrProvisioning;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraHttpClientManager;
 import com.zimbra.common.util.ZimbraLog;
@@ -37,6 +40,7 @@ import com.zimbra.cs.index.ZimbraIndexSearcher;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.IndexItemEntry;
+import com.zimbra.cs.util.ProvisioningUtil;
 import com.zimbra.cs.util.Zimbra;
 
 public class SolrCloudIndex extends SolrIndexBase {
@@ -242,16 +246,15 @@ public class SolrCloudIndex extends SolrIndexBase {
 
     public static final class Factory implements IndexStore.Factory {
         CloudSolrClient cloudSolrServer = null;
-        public Factory() {
+        public Factory() throws BeansException, ServiceException {
             ZimbraLog.index.info("Created SolrCloudIndex.Factory\n");
+            cloudSolrServer = new CloudSolrClient(
+                    Provisioning.getInstance().getLocalServer().getAttr(Provisioning.A_zimbraSolrURLBase, true), 
+                        new LBHttpSolrClient(Zimbra.getAppContext().getBean(ZimbraHttpClientManager.class).getInternalHttpClient()));
         }
 
         @Override
         public SolrIndexBase getIndexStore(String accountId) throws ServiceException {
-            //TODO set zk timeout from LDAP config
-            cloudSolrServer = new CloudSolrClient(
-                    Provisioning.getInstance().getLocalServer().getAttr(Provisioning.A_zimbraSolrURLBase, true), 
-                        new LBHttpSolrClient(Zimbra.getAppContext().getBean(ZimbraHttpClientManager.class).getInternalHttpClient()));
             return new SolrCloudIndex(accountId,  cloudSolrServer);
         }
 
@@ -384,23 +387,19 @@ public class SolrCloudIndex extends SolrIndexBase {
                 return;
             }
             SolrClient solrServer = getSolrServer();
-            try {
-                for (Integer id : ids) {
-                    UpdateRequest req = new UpdateRequest().deleteByQuery(String.format("%s:%d",LuceneFields.L_MAILBOX_BLOB_ID,id));
-                    setupRequest(req, solrServer);
-                    try {
-                        processRequest(solrServer, req);
-                        ZimbraLog.index.debug("Deleted document id=%d", id);
-                    } catch (SolrServerException e) {
-                        if(e != null && e.getMessage() != null && e.getMessage().toLowerCase().indexOf("no live solrservers available to handle this request") > -1) {
-                            ZimbraLog.index.warn("The Collection %s has likely been lost. Account needs re-indexing." , accountId);
-                            solrCollectionProvisioned = false;
-                        } 
-                        ZimbraLog.index.error("Problem deleting document with id=%d", id,e);
+            for (Integer id : ids) {
+                UpdateRequest req = new UpdateRequest().deleteByQuery(String.format("%s:%d",LuceneFields.L_MAILBOX_BLOB_ID,id));
+                setupRequest(req, solrServer);
+                try {
+                    processRequest(solrServer, req);
+                    ZimbraLog.index.debug("Deleted document id=%d", id);
+                } catch (SolrServerException e) {
+                    if(e != null && e.getMessage() != null && e.getMessage().toLowerCase().indexOf("no live solrservers available to handle this request") > -1) {
+                        ZimbraLog.index.warn("The Collection %s has likely been lost. Account needs re-indexing." , accountId);
+                        solrCollectionProvisioned = false;
                     } 
-                }
-            } finally {
-                shutdown(solrServer);
+                    ZimbraLog.index.error("Problem deleting document with id=%d", id,e);
+                } 
             }
         }
         
@@ -446,6 +445,9 @@ public class SolrCloudIndex extends SolrIndexBase {
     public void setupRequest(Object obj, SolrClient solrServer) {
         if (obj instanceof UpdateRequest) {
             ((UpdateRequest) obj).setParam("collection", accountId);
+            if(ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraIndexManualCommit, false)) {
+                ((UpdateRequest) obj).setAction(ACTION.COMMIT, true, true, true);
+            }
         } else if (obj instanceof SolrQuery) {
             ((SolrQuery) obj).setParam("collection", accountId);
         }
