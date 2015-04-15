@@ -14927,6 +14927,33 @@ public class ZAttrProvisioning {
     public static final String A_zimbraTwoFactorAuthSecretLength = "zimbraTwoFactorAuthSecretLength";
 
     /**
+     * Trusted devices currently registered on the account
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1949)
+    public static final String A_zimbraTwoFactorAuthTrustedDevices = "zimbraTwoFactorAuthTrustedDevices";
+
+    /**
+     * trusted device token secret key
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1964)
+    public static final String A_zimbraTwoFactorAuthTrustedDeviceTokenKey = "zimbraTwoFactorAuthTrustedDeviceTokenKey";
+
+    /**
+     * Lifetime of a trusted device token. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1947)
+    public static final String A_zimbraTwoFactorAuthTrustedDeviceTokenLifetime = "zimbraTwoFactorAuthTrustedDeviceTokenLifetime";
+
+    /**
      * Length of TOTP code required for two-factor authentication. Keep at 6
      * for compatability with common TOTP clients.
      *

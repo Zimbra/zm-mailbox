@@ -46,6 +46,12 @@ public class AccountConstants {
     public static final String E_GET_APP_SPECIFIC_PASSWORDS_RESPONSE = "GetAppSpecificPasswordsResponse";
     public static final String E_GENERATE_SCRATCH_CODES_REQUEST = "GenerateScratchCodesRequest";
     public static final String E_GENERATE_SCRATCH_CODES_RESPONSE = "GenerateScratchCodesResponse";
+    public static final String E_GET_TRUSTED_DEVICES_REQUEST = "GetTrustedDevicesRequest";
+    public static final String E_GET_TRUSTED_DEVICES_RESPONSE = "GetTrustedDevicesResponse";
+    public static final String E_REVOKE_TRUSTED_DEVICE_REQUEST = "RevokeTrustedDeviceRequest";
+    public static final String E_REVOKE_TRUSTED_DEVICE_RESPONSE = "RevokeTrustedDeviceResponse";
+    public static final String E_REVOKE_OTHER_TRUSTED_DEVICES_REQUEST = "RevokeOtherTrustedDevicesRequest";
+    public static final String E_REVOKE_OTHER_TRUSTED_DEVICES_RESPONSE = "RevokeOtherTrustedDevicesResponse";
     public static final String E_GET_PREFS_REQUEST = "GetPrefsRequest";
     public static final String E_GET_PREFS_RESPONSE = "GetPrefsResponse";
     public static final String E_GET_INFO_REQUEST = "GetInfoRequest";
@@ -170,6 +176,12 @@ public class AccountConstants {
     public static final QName GET_APP_SPECIFIC_PASSWORDS_RESPONSE = QName.get(E_GET_APP_SPECIFIC_PASSWORDS_RESPONSE, NAMESPACE);
     public static final QName GENERATE_SCRATCH_CODES_REQUEST = QName.get(E_GENERATE_SCRATCH_CODES_REQUEST, NAMESPACE);
     public static final QName GENERATE_SCRATCH_CODES_RESPONSE = QName.get(E_GENERATE_SCRATCH_CODES_RESPONSE, NAMESPACE);
+    public static final QName GET_TRUSTED_DEVICES_REQUEST = QName.get(E_GET_TRUSTED_DEVICES_REQUEST, NAMESPACE);
+    public static final QName GET_TRUSTED_DEVICES_RESPONSE = QName.get(E_GET_TRUSTED_DEVICES_RESPONSE, NAMESPACE);
+    public static final QName REVOKE_TRUSTED_DEVICE_REQUEST = QName.get(E_REVOKE_TRUSTED_DEVICE_REQUEST, NAMESPACE);
+    public static final QName REVOKE_TRUSTED_DEVICE_RESPONSE = QName.get(E_REVOKE_TRUSTED_DEVICE_RESPONSE, NAMESPACE);
+    public static final QName REVOKE_OTHER_TRUSTED_DEVICES_REQUEST = QName.get(E_REVOKE_OTHER_TRUSTED_DEVICES_REQUEST, NAMESPACE);
+    public static final QName REVOKE_OTHER_TRUSTED_DEVICES_RESPONSE = QName.get(E_REVOKE_OTHER_TRUSTED_DEVICES_RESPONSE, NAMESPACE);
 
     // prefs
     public static final QName GET_PREFS_REQUEST = QName.get(E_GET_PREFS_REQUEST, NAMESPACE);
@@ -281,9 +293,11 @@ public class AccountConstants {
     public static final String E_ALIAS = "alias";
     public static final String E_ADMIN_DELEGATED = "adminDelegated";
     public static final String E_AUTH_TOKEN = "authToken";
+    public static final String E_TRUSTED_TOKEN = "trustedToken";
     public static final String E_CRUMB = "crumb";
     public static final String E_REFERRAL = "refer";
     public static final String E_LIFETIME = "lifetime";
+    public static final String E_TRUST_LIFETIME = "trustLifetime";
     public static final String E_ACCOUNT = "account";
     public static final String E_CALENDAR_RESOURCE = "calresource";
     public static final String E_CERT = "cert";
@@ -494,6 +508,7 @@ public class AccountConstants {
     public static final String E_TWO_FACTOR_CODE = "twoFactorCode";
     public static final String E_TWO_FACTOR_SCRATCH_CODE = "scratchCode";
     public static final String E_TWO_FACTOR_SCRATCH_CODES = "scratchCodes";
+    public static final String A_TRUSTED_DEVICE = "deviceTrusted";
     public static final String E_TWO_FACTOR_CREDENTIALS = "credentials";
     public static final String E_TWO_FACTOR_SECRET = "secret";
     public static final String E_APP_SPECIFIC_PASSWORD_DATA = "passwordData";
@@ -502,4 +517,8 @@ public class AccountConstants {
     public static final String A_APP_NAME = "appName";
     public static final String A_DATE_CREATED = "created";
     public static final String A_DATE_LAST_USED = "lastUsed";
+    public static final String A_THIS_DEVICE_TRUSTED = "thisDeviceTrusted";
+    public static final String A_NUM_OTHER_TRUSTED_DEVICES = "nOtherDevices";
+    public static final String E_DEVICE_ID = "deviceId";
+    public static final String A_GENERATE_DEVICE_ID = "generateDeviceId";
 }

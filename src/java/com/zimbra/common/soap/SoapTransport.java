@@ -45,6 +45,7 @@ public abstract class SoapTransport {
     private String mUserAgentVersion;
     private DebugListener mDebugListener;
     private String csrfToken;
+    private String trustedToken;
 
     public static final String DEFAULT_USER_AGENT_NAME = "ZCS";
     private static String sDefaultUserAgentName = DEFAULT_USER_AGENT_NAME;
@@ -201,6 +202,14 @@ public abstract class SoapTransport {
      */
     public void setCsrfToken(String csrfToken) {
         this.csrfToken = csrfToken;
+    }
+
+    public String getTrustedToken() {
+        return trustedToken;
+    }
+
+    public void setTrustedToken(String trustedToken) {
+        this.trustedToken = trustedToken;
     }
 
     /**
