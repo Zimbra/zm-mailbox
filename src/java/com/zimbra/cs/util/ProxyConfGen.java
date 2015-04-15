@@ -2049,7 +2049,7 @@ class WebPageSpeedDisallowedURLsVar extends ProxyConfVar {
         for (String c : DisallowedURLs) {
             DisallowedURLStr.append("pagespeed Disallow \"");
             DisallowedURLStr.append(c);
-            DisallowedURLStr.append("\"\n\t");
+            DisallowedURLStr.append("\";\n\t");
         }
 
         return DisallowedURLStr.toString();
