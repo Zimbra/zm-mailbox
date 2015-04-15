@@ -36,6 +36,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.HeaderConstants;
+import com.zimbra.common.util.UUIDUtil;
 import com.zimbra.common.util.ZimbraCookie;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -48,6 +49,8 @@ import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
+import com.zimbra.cs.account.TrustedDevice;
+import com.zimbra.cs.account.TrustedDeviceToken;
 import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.account.auth.twofactor.TwoFactorManager;
 import com.zimbra.cs.account.krb5.Krb5Principal;
@@ -95,6 +98,19 @@ public class Auth extends AccountDocumentHandler {
             acct = prov.get(acctBy, acctValue);
         }
 
+        TrustedDeviceToken trustedToken = TrustedDeviceToken.fromRequest(acct, request, context);
+        if (trustedToken != null && trustedToken.isExpired()) {
+            TrustedDevice device = TrustedDevice.byTrustedToken(acct, trustedToken);
+            if (device != null) {
+                device.revoke();
+            }
+        }
+
+        String password = request.getAttribute(AccountConstants.E_PASSWORD, null);
+
+        boolean generateDeviceId = request.getAttributeBool(AccountConstants.A_GENERATE_DEVICE_ID, false);
+        String newDeviceId = generateDeviceId? UUIDUtil.generateUUID(): null;
+
         Element authTokenEl = request.getOptionalElement(AccountConstants.E_AUTH_TOKEN);
         if (authTokenEl != null) {
             boolean verifyAccount = authTokenEl.getAttributeBool(AccountConstants.A_VERIFY_ACCOUNT, false);
@@ -129,8 +145,7 @@ public class Auth extends AccountDocumentHandler {
                     // in that case do not disable CSRF check for this authToken.
                     at.setCsrfTokenEnabled(csrfSupport);
                 }
-
-                return doResponse(request, at, zsc, context, authTokenAcct, csrfSupport);
+                return doResponse(request, at, zsc, context, authTokenAcct, csrfSupport, trustedToken, newDeviceId);
             } catch (AuthTokenException e) {
                 throw ServiceException.AUTH_REQUIRED();
             }
@@ -140,9 +155,13 @@ public class Auth extends AccountDocumentHandler {
             }
 
             Element preAuthEl = request.getOptionalElement(AccountConstants.E_PREAUTH);
-            String password = request.getAttribute(AccountConstants.E_PASSWORD, null);
             String totp = request.getAttribute(AccountConstants.E_TWO_FACTOR_CODE, null);
             String scratchCode = request.getAttribute(AccountConstants.E_TWO_FACTOR_SCRATCH_CODE, null);
+            Boolean registerTrustedDevice = false;
+            if (TwoFactorManager.twoFactorAuthEnabled(acct)) {
+                registerTrustedDevice = trustedToken != null? false: request.getAttributeBool(AccountConstants.A_TRUSTED_DEVICE, false);
+            }
+            String deviceId = request.getAttribute(AccountConstants.E_DEVICE_ID, null);
             long expires = 0;
 
             Map<String, Object> authCtxt = new HashMap<String, Object>();
@@ -152,7 +171,22 @@ public class Auth extends AccountDocumentHandler {
             authCtxt.put(AuthContext.AC_USER_AGENT, zsc.getUserAgent());
 
             boolean acctAutoProvisioned = false;
-            boolean usingTwoFactorAuth = acct != null? TwoFactorManager.twoFactorAuthRequired(acct): false;
+            boolean trustedDeviceOverride = false;
+            if (trustedToken != null) {
+                if (trustedToken.isExpired()) {
+                    ZimbraLog.account.debug("trusted token is expired");
+                    registerTrustedDevice = false;
+                } else {
+                    Map<String, Object> attrs = getTrustedDeviceAttrs(zsc, deviceId);
+                    try {
+                        verifyTrustedDevice(acct, trustedToken, attrs);
+                        trustedDeviceOverride = true;
+                    } catch (AuthFailedServiceException e) {
+                        ZimbraLog.account.info("trusted device not verified");
+                    }
+                }
+            }
+            boolean usingTwoFactorAuth = acct != null? TwoFactorManager.twoFactorAuthRequired(acct) && !trustedDeviceOverride: false;
 
             if (acct == null) {
                 //
@@ -236,8 +270,13 @@ public class Auth extends AccountDocumentHandler {
                     throw ServiceException.INVALID_REQUEST("must specify "+AccountConstants.E_PASSWORD, null);
                 }
             }
-
             AuthToken at = expires ==  0 ? AuthProvider.getAuthToken(acct) : AuthProvider.getAuthToken(acct, expires);
+            if (registerTrustedDevice && (trustedToken == null || trustedToken.isExpired())) {
+                //generate a new trusted device token if there is no existing one or if the current one is no longer valid
+                Map<String, Object> attrs = getTrustedDeviceAttrs(zsc, newDeviceId == null? deviceId: newDeviceId);
+                TwoFactorManager manager = new TwoFactorManager(acct);
+                trustedToken = manager.registerTrustedDevice(attrs);
+            }
             ServletRequest httpReq = (ServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
             // For CSRF filter so that token generation can happen
             if (csrfSupport && !at.isCsrfTokenEnabled()) {
@@ -247,8 +286,19 @@ public class Auth extends AccountDocumentHandler {
                 at.setCsrfTokenEnabled(csrfSupport);
             }
             httpReq.setAttribute(CsrfFilter.AUTH_TOKEN, at);
-            return doResponse(request, at, zsc, context, acct, csrfSupport);
+            return doResponse(request, at, zsc, context, acct, csrfSupport, trustedToken, newDeviceId);
         }
+    }
+
+    private Map<String, Object> getTrustedDeviceAttrs(ZimbraSoapContext zsc, String deviceId) {
+        Map<String, Object> deviceAttrs = new HashMap<String, Object>();
+        deviceAttrs.put(AuthContext.AC_DEVICE_ID, deviceId);
+        deviceAttrs.put(AuthContext.AC_USER_AGENT, zsc.getUserAgent());
+        return deviceAttrs;
+    }
+
+    private void verifyTrustedDevice(Account account, TrustedDeviceToken td, Map<String, Object> attrs) throws ServiceException {
+        new TwoFactorManager(account).verifyTrustedDevice(td, attrs);
     }
 
     private void needTwoFactorAuth(Account account) throws ServiceException {
@@ -264,7 +314,7 @@ public class Auth extends AccountDocumentHandler {
     }
 
     private Element doResponse(Element request, AuthToken at, ZimbraSoapContext zsc,
-            Map<String, Object> context, Account acct, boolean csrfSupport)
+            Map<String, Object> context, Account acct, boolean csrfSupport, TrustedDeviceToken td, String deviceId)
     throws ServiceException {
         Element response = zsc.createElement(AccountConstants.AUTH_RESPONSE);
         at.encodeAuthResp(response, false);
@@ -339,7 +389,12 @@ public class Auth extends AccountDocumentHandler {
             csrfResponse.addText(token);
             httpResp.setHeader(CsrfFilter.CSRF_TOKEN, token);
         }
-
+        if (td != null) {
+            td.encode(httpResp, response, ZimbraCookie.secureCookie(httpReq));
+        }
+        if (deviceId != null) {
+            response.addUniqueElement(AccountConstants.E_DEVICE_ID).setText(deviceId);
+        }
         return response;
     }
 

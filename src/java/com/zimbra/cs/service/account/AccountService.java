@@ -58,6 +58,9 @@ public class AccountService implements DocumentService {
         dispatcher.registerHandler(AccountConstants.REVOKE_APP_SPECIFIC_PASSWORD_REQUEST, new RevokeAppSpecificPassword());
         dispatcher.registerHandler(AccountConstants.GET_APP_SPECIFIC_PASSWORDS_REQUEST, new GetAppSpecificPasswords());
         dispatcher.registerHandler(AccountConstants.GENERATE_SCRATCH_CODES_REQUEST, new GenerateScratchCodes());
+        dispatcher.registerHandler(AccountConstants.GET_TRUSTED_DEVICES_REQUEST, new GetTrustedDevices());
+        dispatcher.registerHandler(AccountConstants.REVOKE_TRUSTED_DEVICE_REQUEST, new RevokeTrustedDevice());
+        dispatcher.registerHandler(AccountConstants.REVOKE_OTHER_TRUSTED_DEVICES_REQUEST, new RevokeOtherTrustedDevices());
 
         // prefs
         dispatcher.registerHandler(AccountConstants.GET_PREFS_REQUEST, new GetPrefs());

@@ -640,7 +640,7 @@ public class ShareInfo {
             }
             String data = new String(Hex.encodeHex(encodedBuff.toString().getBytes()));
             ExtAuthTokenKey key = ExtAuthTokenKey.getCurrentKey();
-            String hmac = ZimbraAuthToken.getHmac(data, key.getKey());
+            String hmac = TokenUtil.getHmac(data, key.getKey());
             String encoded = key.getVersion() + "_" + hmac + "_" + data;
             String path = "/service/extuserprov/?p=" + encoded;
             return ZimbraServlet.getServiceUrl(

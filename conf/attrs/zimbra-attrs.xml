@@ -8750,6 +8750,15 @@ TODO: delete them permanently from here
   <desc>Value for postconf postscreen_dnsbl_reply_map. Single valued, comma separated list.</desc>
 </attr>
 
+<attr id="1947" name="zimbraTwoFactorAuthTrustedDeviceTokenLifetime" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" callback="PositiveTimeInterval" since="8.7.0,9.0.0">
+  <defaultCOSValue>30d</defaultCOSValue>
+  <desc>Lifetime of a trusted device token</desc>
+</attr>
+
+<attr id="1949" name="zimbraTwoFactorAuthTrustedDevices" type="string" cardinality="multi" optionalIn="account" since="8.7.0,9.0.0">
+  <desc>Trusted devices currently registered on the account</desc>
+</attr>
+
 <attr id="1952" name="zimbraPrefZmgPushNotificationEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.7.0,9.0.0">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>Option to turn on/off zimbra mobile gateway push notifications</desc>
@@ -8788,6 +8797,10 @@ TODO: delete them permanently from here
 
 <attr id="1960" name="zimbraReverseProxyXmppBoshPort" type="integer" min="0" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.7.0,9.0.0">
   <desc>Port number of the external XMPP server where XMPP over BOSH requests need to be proxied</desc>
+</attr>
+
+<attr id="1964" name="zimbraTwoFactorAuthTrustedDeviceTokenKey" type="ostring" max="128" immutable="1" cardinality="multi" optionalIn="globalConfig" requiresRestart="mailbox" since="8.7.0,9.0.0">
+  <desc>trusted device token secret key</desc>
 </attr>
 
 </attrs>

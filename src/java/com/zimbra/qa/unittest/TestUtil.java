@@ -69,6 +69,7 @@ import com.zimbra.client.ZMailbox.ContactSortBy;
 import com.zimbra.client.ZMailbox.Options;
 import com.zimbra.client.ZMailbox.OwnerBy;
 import com.zimbra.client.ZMailbox.SharedItemBy;
+import com.zimbra.client.ZMailbox.TrustedStatus;
 import com.zimbra.client.ZMailbox.ZAppointmentResult;
 import com.zimbra.client.ZMailbox.ZImportStatus;
 import com.zimbra.client.ZMailbox.ZOutgoingMessage;
@@ -678,7 +679,7 @@ extends Assert {
         return getZMailbox(username, null);
     }
 
-    public static ZMailbox getZMailbox(String username, String scratchCode)
+    public static ZMailbox getZMailbox(String username, String scratchCode, TrustedStatus trusted)
     throws ServiceException {
         ZMailbox.Options options = new ZMailbox.Options();
         options.setAccount(getAddress(username));
@@ -688,7 +689,15 @@ extends Assert {
         if (scratchCode != null) {
             options.setTwoFactorScratchCode(scratchCode);
         }
+        if (trusted == TrustedStatus.trusted) {
+            options.setTrustedDevice(true);
+        }
         return ZMailbox.getMailbox(options);
+    }
+
+    public static ZMailbox getZMailbox(String username, String scratchCode)
+    throws ServiceException {
+        return getZMailbox(username, scratchCode, TrustedStatus.not_trusted);
     }
 
     public static ZMailbox getZMailboxAsAdmin(String username)

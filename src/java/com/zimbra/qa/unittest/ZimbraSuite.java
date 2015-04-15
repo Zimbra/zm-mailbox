@@ -131,6 +131,7 @@ public class ZimbraSuite extends TestSuite
         sClasses.add(TestAppSpecificPasswords.class);
         sClasses.add(TestAddZmgDevice.class);
         sClasses.add(TestGetGcmSenderId.class);
+        sClasses.add(TestTrustedToken.class);
     }
 
     /**
