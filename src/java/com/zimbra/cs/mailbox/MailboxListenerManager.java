@@ -40,15 +40,23 @@ import com.zimbra.cs.util.ZimbraConfig;
 
 
 public class MailboxListenerManager {
-    private static final HashSet<MailboxListener> sListeners;
+    protected HashSet<MailboxListener> listeners = new HashSet<>();
+    protected static MailboxListenerManager singleton;
 
-    static {
-        sListeners = new HashSet<>();
+    public static MailboxListenerManager getInstance() {
+        if (singleton == null) {
+            singleton = Zimbra.getAppContext().getBean(MailboxListenerManager.class);
+        }
+        return singleton;
+    }
+
+    public MailboxListenerManager() {
         reset();
     }
 
-    static void reset() {
-        sListeners.clear();
+    @VisibleForTesting
+    public void reset() {
+        listeners.clear();
         ZimbraApplication application = ZimbraApplication.getInstance();
         if (application.supports(CalItemReminderService.class) && !DebugConfig.disableCalendarReminderEmail) {
             register(new CalItemReminderService());
@@ -93,21 +101,21 @@ public class MailboxListenerManager {
         }
     }
 
-    public static void register(MailboxListener listener) {
-        synchronized (sListeners) {
-            sListeners.add(listener);
+    public void register(MailboxListener listener) {
+        synchronized (listeners) {
+            listeners.add(listener);
         }
     }
 
     @VisibleForTesting
-    static void unregister(MailboxListener listener) {
-        synchronized (sListeners) {
-            sListeners.remove(listener);
+    public void unregister(MailboxListener listener) {
+        synchronized (listeners) {
+            listeners.remove(listener);
         }
     }
 
-    public static void notifyListeners(ChangeNotification notification) throws BeansException, ServiceException {
-        for (MailboxListener listener: sListeners) {
+    public void notifyListeners(ChangeNotification notification) throws BeansException, ServiceException {
+        for (MailboxListener listener: listeners) {
             if (!Collections.disjoint(notification.mods.changedTypes, listener.notifyForItemTypes())) {
                 listener.notify(notification);
             }

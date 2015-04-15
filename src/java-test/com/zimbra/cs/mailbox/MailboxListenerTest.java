@@ -58,14 +58,14 @@ public final class MailboxListenerTest {
         Account acct = Provisioning.getInstance().getAccountById(MockProvisioning.DEFAULT_ACCOUNT_ID);
         OperationContext octxt = new OperationContext(acct);
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
-        MailboxListenerManager.register(new TestListener());
+        MailboxListenerManager.getInstance().register(new TestListener());
         mbox.createDocument(octxt, Mailbox.ID_FOLDER_BRIEFCASE, "test", "text/plain", "test@zimbra.com",
                 "hello", new ByteArrayInputStream("hello world".getBytes("UTF-8")));
         Assert.assertTrue(listenerWasCalled);
     }
 
     private void cleanup() throws Exception {
-        MailboxListenerManager.reset();
+        MailboxListenerManager.getInstance().reset();
         MailboxTestUtil.clearData();
         listenerWasCalled = false;
     }

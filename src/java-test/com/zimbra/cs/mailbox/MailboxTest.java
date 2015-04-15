@@ -256,7 +256,7 @@ public final class MailboxTest {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
 
         MockListener ml = new MockListener();
-        MailboxListenerManager.register(ml);
+        MailboxListenerManager.getInstance().register(ml);
 
         try {
             Folder f = mbox.createFolder(null, "foo",
@@ -342,7 +342,7 @@ public final class MailboxTest {
                     fParent.getId(),
                     ((Folder) pModification.preModifyObj).getId());
         } finally {
-            MailboxListenerManager.unregister(ml);
+            MailboxListenerManager.getInstance().unregister(ml);
         }
     }
 

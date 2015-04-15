@@ -64,6 +64,7 @@ import com.zimbra.cs.index.IndexingService;
 import com.zimbra.cs.mailbox.AmqpMailboxListenerTransport;
 import com.zimbra.cs.mailbox.FoldersAndTagsCache;
 import com.zimbra.cs.mailbox.LocalSharedDeliveryCoordinator;
+import com.zimbra.cs.mailbox.MailboxListenerManager;
 import com.zimbra.cs.mailbox.MailboxListenerTransport;
 import com.zimbra.cs.mailbox.MailboxLockFactory;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -287,6 +288,11 @@ public class ZimbraConfig {
         }
         HostAndPort hostAndPort = uris.iterator().next();
         return jedisPool(hostAndPort.getHost(), hostAndPort.getPort());
+    }
+
+    @Bean
+    public MailboxListenerManager mailboxListenerManager() {
+        return new MailboxListenerManager();
     }
 
     @Bean(name="mailboxLockFactory")
