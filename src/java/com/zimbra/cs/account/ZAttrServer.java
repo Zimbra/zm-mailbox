@@ -53385,6 +53385,427 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * URL patterns that need to be excluded from the rewriting processs of
+     * proxy&#039;s Pagespeed module
+     *
+     * @return zimbraReverseProxyPageSpeedDisallowedURLs, or empty array if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1967)
+    public String[] getReverseProxyPageSpeedDisallowedURLs() {
+        return getMultiAttr(Provisioning.A_zimbraReverseProxyPageSpeedDisallowedURLs);
+    }
+
+    /**
+     * URL patterns that need to be excluded from the rewriting processs of
+     * proxy&#039;s Pagespeed module
+     *
+     * @param zimbraReverseProxyPageSpeedDisallowedURLs new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1967)
+    public void setReverseProxyPageSpeedDisallowedURLs(String[] zimbraReverseProxyPageSpeedDisallowedURLs) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyPageSpeedDisallowedURLs, zimbraReverseProxyPageSpeedDisallowedURLs);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * URL patterns that need to be excluded from the rewriting processs of
+     * proxy&#039;s Pagespeed module
+     *
+     * @param zimbraReverseProxyPageSpeedDisallowedURLs new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1967)
+    public Map<String,Object> setReverseProxyPageSpeedDisallowedURLs(String[] zimbraReverseProxyPageSpeedDisallowedURLs, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyPageSpeedDisallowedURLs, zimbraReverseProxyPageSpeedDisallowedURLs);
+        return attrs;
+    }
+
+    /**
+     * URL patterns that need to be excluded from the rewriting processs of
+     * proxy&#039;s Pagespeed module
+     *
+     * @param zimbraReverseProxyPageSpeedDisallowedURLs new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1967)
+    public void addReverseProxyPageSpeedDisallowedURLs(String zimbraReverseProxyPageSpeedDisallowedURLs) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraReverseProxyPageSpeedDisallowedURLs, zimbraReverseProxyPageSpeedDisallowedURLs);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * URL patterns that need to be excluded from the rewriting processs of
+     * proxy&#039;s Pagespeed module
+     *
+     * @param zimbraReverseProxyPageSpeedDisallowedURLs new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1967)
+    public Map<String,Object> addReverseProxyPageSpeedDisallowedURLs(String zimbraReverseProxyPageSpeedDisallowedURLs, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraReverseProxyPageSpeedDisallowedURLs, zimbraReverseProxyPageSpeedDisallowedURLs);
+        return attrs;
+    }
+
+    /**
+     * URL patterns that need to be excluded from the rewriting processs of
+     * proxy&#039;s Pagespeed module
+     *
+     * @param zimbraReverseProxyPageSpeedDisallowedURLs existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1967)
+    public void removeReverseProxyPageSpeedDisallowedURLs(String zimbraReverseProxyPageSpeedDisallowedURLs) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraReverseProxyPageSpeedDisallowedURLs, zimbraReverseProxyPageSpeedDisallowedURLs);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * URL patterns that need to be excluded from the rewriting processs of
+     * proxy&#039;s Pagespeed module
+     *
+     * @param zimbraReverseProxyPageSpeedDisallowedURLs existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1967)
+    public Map<String,Object> removeReverseProxyPageSpeedDisallowedURLs(String zimbraReverseProxyPageSpeedDisallowedURLs, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraReverseProxyPageSpeedDisallowedURLs, zimbraReverseProxyPageSpeedDisallowedURLs);
+        return attrs;
+    }
+
+    /**
+     * URL patterns that need to be excluded from the rewriting processs of
+     * proxy&#039;s Pagespeed module
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1967)
+    public void unsetReverseProxyPageSpeedDisallowedURLs() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyPageSpeedDisallowedURLs, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * URL patterns that need to be excluded from the rewriting processs of
+     * proxy&#039;s Pagespeed module
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1967)
+    public Map<String,Object> unsetReverseProxyPageSpeedDisallowedURLs(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyPageSpeedDisallowedURLs, "");
+        return attrs;
+    }
+
+    /**
+     * Enables or disables pagespeed module for nginx
+     *
+     * <p>Valid values: [off, on]
+     *
+     * @return zimbraReverseProxyPageSpeedEnabled, or ZAttrProvisioning.ReverseProxyPageSpeedEnabled.on if unset and/or has invalid value
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1965)
+    public ZAttrProvisioning.ReverseProxyPageSpeedEnabled getReverseProxyPageSpeedEnabled() {
+        try { String v = getAttr(Provisioning.A_zimbraReverseProxyPageSpeedEnabled); return v == null ? ZAttrProvisioning.ReverseProxyPageSpeedEnabled.on : ZAttrProvisioning.ReverseProxyPageSpeedEnabled.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.ReverseProxyPageSpeedEnabled.on; }
+    }
+
+    /**
+     * Enables or disables pagespeed module for nginx
+     *
+     * <p>Valid values: [off, on]
+     *
+     * @return zimbraReverseProxyPageSpeedEnabled, or "on" if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1965)
+    public String getReverseProxyPageSpeedEnabledAsString() {
+        return getAttr(Provisioning.A_zimbraReverseProxyPageSpeedEnabled, "on");
+    }
+
+    /**
+     * Enables or disables pagespeed module for nginx
+     *
+     * <p>Valid values: [off, on]
+     *
+     * @param zimbraReverseProxyPageSpeedEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1965)
+    public void setReverseProxyPageSpeedEnabled(ZAttrProvisioning.ReverseProxyPageSpeedEnabled zimbraReverseProxyPageSpeedEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyPageSpeedEnabled, zimbraReverseProxyPageSpeedEnabled.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Enables or disables pagespeed module for nginx
+     *
+     * <p>Valid values: [off, on]
+     *
+     * @param zimbraReverseProxyPageSpeedEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1965)
+    public Map<String,Object> setReverseProxyPageSpeedEnabled(ZAttrProvisioning.ReverseProxyPageSpeedEnabled zimbraReverseProxyPageSpeedEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyPageSpeedEnabled, zimbraReverseProxyPageSpeedEnabled.toString());
+        return attrs;
+    }
+
+    /**
+     * Enables or disables pagespeed module for nginx
+     *
+     * <p>Valid values: [off, on]
+     *
+     * @param zimbraReverseProxyPageSpeedEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1965)
+    public void setReverseProxyPageSpeedEnabledAsString(String zimbraReverseProxyPageSpeedEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyPageSpeedEnabled, zimbraReverseProxyPageSpeedEnabled);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Enables or disables pagespeed module for nginx
+     *
+     * <p>Valid values: [off, on]
+     *
+     * @param zimbraReverseProxyPageSpeedEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1965)
+    public Map<String,Object> setReverseProxyPageSpeedEnabledAsString(String zimbraReverseProxyPageSpeedEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyPageSpeedEnabled, zimbraReverseProxyPageSpeedEnabled);
+        return attrs;
+    }
+
+    /**
+     * Enables or disables pagespeed module for nginx
+     *
+     * <p>Valid values: [off, on]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1965)
+    public void unsetReverseProxyPageSpeedEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyPageSpeedEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Enables or disables pagespeed module for nginx
+     *
+     * <p>Valid values: [off, on]
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1965)
+    public Map<String,Object> unsetReverseProxyPageSpeedEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyPageSpeedEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * Enables or disables respecting of the Vary headers on resource files,
+     * such as JavaScript and css files by proxy&#039;s Pagespeed module.
+     * Disabled (i.e off) by default.
+     *
+     * <p>Valid values: [off, on]
+     *
+     * @return zimbraReverseProxyPageSpeedRespectVary, or ZAttrProvisioning.ReverseProxyPageSpeedRespectVary.off if unset and/or has invalid value
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1966)
+    public ZAttrProvisioning.ReverseProxyPageSpeedRespectVary getReverseProxyPageSpeedRespectVary() {
+        try { String v = getAttr(Provisioning.A_zimbraReverseProxyPageSpeedRespectVary); return v == null ? ZAttrProvisioning.ReverseProxyPageSpeedRespectVary.off : ZAttrProvisioning.ReverseProxyPageSpeedRespectVary.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.ReverseProxyPageSpeedRespectVary.off; }
+    }
+
+    /**
+     * Enables or disables respecting of the Vary headers on resource files,
+     * such as JavaScript and css files by proxy&#039;s Pagespeed module.
+     * Disabled (i.e off) by default.
+     *
+     * <p>Valid values: [off, on]
+     *
+     * @return zimbraReverseProxyPageSpeedRespectVary, or "off" if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1966)
+    public String getReverseProxyPageSpeedRespectVaryAsString() {
+        return getAttr(Provisioning.A_zimbraReverseProxyPageSpeedRespectVary, "off");
+    }
+
+    /**
+     * Enables or disables respecting of the Vary headers on resource files,
+     * such as JavaScript and css files by proxy&#039;s Pagespeed module.
+     * Disabled (i.e off) by default.
+     *
+     * <p>Valid values: [off, on]
+     *
+     * @param zimbraReverseProxyPageSpeedRespectVary new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1966)
+    public void setReverseProxyPageSpeedRespectVary(ZAttrProvisioning.ReverseProxyPageSpeedRespectVary zimbraReverseProxyPageSpeedRespectVary) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyPageSpeedRespectVary, zimbraReverseProxyPageSpeedRespectVary.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Enables or disables respecting of the Vary headers on resource files,
+     * such as JavaScript and css files by proxy&#039;s Pagespeed module.
+     * Disabled (i.e off) by default.
+     *
+     * <p>Valid values: [off, on]
+     *
+     * @param zimbraReverseProxyPageSpeedRespectVary new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1966)
+    public Map<String,Object> setReverseProxyPageSpeedRespectVary(ZAttrProvisioning.ReverseProxyPageSpeedRespectVary zimbraReverseProxyPageSpeedRespectVary, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyPageSpeedRespectVary, zimbraReverseProxyPageSpeedRespectVary.toString());
+        return attrs;
+    }
+
+    /**
+     * Enables or disables respecting of the Vary headers on resource files,
+     * such as JavaScript and css files by proxy&#039;s Pagespeed module.
+     * Disabled (i.e off) by default.
+     *
+     * <p>Valid values: [off, on]
+     *
+     * @param zimbraReverseProxyPageSpeedRespectVary new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1966)
+    public void setReverseProxyPageSpeedRespectVaryAsString(String zimbraReverseProxyPageSpeedRespectVary) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyPageSpeedRespectVary, zimbraReverseProxyPageSpeedRespectVary);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Enables or disables respecting of the Vary headers on resource files,
+     * such as JavaScript and css files by proxy&#039;s Pagespeed module.
+     * Disabled (i.e off) by default.
+     *
+     * <p>Valid values: [off, on]
+     *
+     * @param zimbraReverseProxyPageSpeedRespectVary new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1966)
+    public Map<String,Object> setReverseProxyPageSpeedRespectVaryAsString(String zimbraReverseProxyPageSpeedRespectVary, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyPageSpeedRespectVary, zimbraReverseProxyPageSpeedRespectVary);
+        return attrs;
+    }
+
+    /**
+     * Enables or disables respecting of the Vary headers on resource files,
+     * such as JavaScript and css files by proxy&#039;s Pagespeed module.
+     * Disabled (i.e off) by default.
+     *
+     * <p>Valid values: [off, on]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1966)
+    public void unsetReverseProxyPageSpeedRespectVary() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyPageSpeedRespectVary, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Enables or disables respecting of the Vary headers on resource files,
+     * such as JavaScript and css files by proxy&#039;s Pagespeed module.
+     * Disabled (i.e off) by default.
+     *
+     * <p>Valid values: [off, on]
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1966)
+    public Map<String,Object> unsetReverseProxyPageSpeedRespectVary(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyPageSpeedRespectVary, "");
+        return attrs;
+    }
+
+    /**
      * whether NGINX mail proxy will pass upstream server errors back to the
      * downstream email clients
      *

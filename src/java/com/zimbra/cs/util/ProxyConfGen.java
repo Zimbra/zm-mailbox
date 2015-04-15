@@ -2015,6 +2015,46 @@ class WebZSSUpstreamEnablerVar extends WebEnablerVar {
     }
 }
 
+class WebPageSpeedDisallowedURLsVar extends ProxyConfVar {
+
+    public WebPageSpeedDisallowedURLsVar() {
+        super("web.pagespeed.disallowed.urls", "zimbraReverseProxyPageSpeedDisallowedURLs", new ArrayList<String> (),
+                ProxyConfValueType.CUSTOM, ProxyConfOverride.CUSTOM,
+                "URL patterns that need to be excluded from the rewriting processs of proxy's Pagespeed module");
+    }
+
+    @Override
+    public void update() {
+
+        ArrayList<String> DisallowedURLsArr = new ArrayList<String>();
+        String[] DisallowedURLs =
+            serverSource.getMultiAttr("zimbraReverseProxyPageSpeedDisallowedURLs");
+        for (String c:DisallowedURLs)
+        {
+            DisallowedURLsArr.add(c);
+        }
+        if (DisallowedURLsArr.size() > 0) {
+            mValue = DisallowedURLsArr;
+        } else {
+            mValue = mDefault;
+        }
+    }
+
+    @Override
+    public String format(Object o) {
+
+        @SuppressWarnings("unchecked")
+        ArrayList<String> DisallowedURLs = (ArrayList<String>) o;
+        StringBuilder DisallowedURLStr = new StringBuilder();
+        for (String c : DisallowedURLs) {
+            DisallowedURLStr.append("pagespeed Disallow \"");
+            DisallowedURLStr.append(c);
+            DisallowedURLStr.append("\"\n\t");
+        }
+
+        return DisallowedURLStr.toString();
+    }
+}
 
 public class ProxyConfGen
 {
@@ -2835,6 +2875,9 @@ public class ProxyConfGen
 	    mConfVars.put("web.xmpp.remote.bind.url", new ProxyConfVar("web.xmpp.remote.bind.url", "zimbraReverseProxyXmppBoshRemoteHttpBindURL", "", ProxyConfValueType.STRING, ProxyConfOverride.SERVER, "Remote HTTP-BIND URL prefix for an external XMPP server where XMPP over BOSH requests need to be proxied"));
 	    mConfVars.put("web.xmpp.bosh.hostname", new ProxyConfVar("web.xmpp.bosh.hostname", "zimbraReverseProxyXmppBoshHostname", "", ProxyConfValueType.STRING, ProxyConfOverride.SERVER, "Hostname of the external XMPP server where XMPP over BOSH requests need to be proxied"));
 	    mConfVars.put("web.xmpp.bosh.port", new ProxyConfVar("web.xmpp.bosh.port", "zimbraReverseProxyXmppBoshPort", new Integer(0), ProxyConfValueType.INTEGER, ProxyConfOverride.SERVER, "Port number of the external XMPP server where XMPP over BOSH requests need to be proxied"));
+	    mConfVars.put("web.pagespeed.enabled", new ProxyConfVar("web.pagespeed.enabled", "zimbraReverseProxyPageSpeedEnabled", "on", ProxyConfValueType.STRING, ProxyConfOverride.SERVER, "Enables or disables pagespeed module for nginx - can be on|off - on enables, off disables"));
+	    mConfVars.put("web.pagespeed.respect.vary", new ProxyConfVar("web.pagespeed.respect.vary", "zimbraReverseProxyPageSpeedRespectVary", "off", ProxyConfValueType.STRING, ProxyConfOverride.SERVER, "Enables or disables respecting of the Vary headers on resource files, such as JavaScript and css files by proxy's Pagespeed module. off by default"));
+	    mConfVars.put("web.pagespeed.disallowed.urls", new WebPageSpeedDisallowedURLsVar());
     }
 
     /* update the default variable map from the active configuration */
