@@ -115,9 +115,9 @@ public abstract class MailboxListener {
         // Register external listeners configured by the zimbraMailboxListenerUrl attribute
         try {
             ZimbraConfig config = Zimbra.getAppContext().getBean(ZimbraConfig.class);
-            List<MailboxListenerManager> managers = config.mailboxListenerManagers();
+            List<MailboxListenerTransport> managers = config.externalMailboxListeners();
             managers = managers == null ? Collections.emptyList() : managers;
-            for (MailboxListenerManager manager: managers) {
+            for (MailboxListenerTransport manager: managers) {
                 MailboxListener listener = new MailboxListener() {
                     @Override
                     public void notify(ChangeNotification notification) {

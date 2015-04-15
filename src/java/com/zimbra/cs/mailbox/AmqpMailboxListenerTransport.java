@@ -43,15 +43,15 @@ import com.zimbra.cs.session.Session;
 import com.zimbra.cs.util.Zimbra;
 
 /**
- * AMQP-based MailboxListener management.
+ * AMQP-based MailboxListenerTransport.
  */
-public class AmqpMailboxListenerManager implements MailboxListenerManager {
+public class AmqpMailboxListenerTransport implements MailboxListenerTransport {
     protected AmqpAdmin amqpAdmin;
     protected AmqpTemplate amqpTemplate;
     protected SimpleMessageListenerContainer messageListenerContainer;
 
 
-    public AmqpMailboxListenerManager(AmqpAdmin amqpAdmin, AmqpTemplate amqpTemplate) {
+    public AmqpMailboxListenerTransport(AmqpAdmin amqpAdmin, AmqpTemplate amqpTemplate) {
         this.amqpAdmin = amqpAdmin;
         this.amqpTemplate = amqpTemplate;
     }

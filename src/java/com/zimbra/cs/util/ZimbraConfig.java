@@ -61,16 +61,16 @@ import com.zimbra.cs.extension.ExtensionUtil;
 import com.zimbra.cs.index.DefaultIndexingQueueAdapter;
 import com.zimbra.cs.index.IndexingQueueAdapter;
 import com.zimbra.cs.index.IndexingService;
-import com.zimbra.cs.mailbox.AmqpMailboxListenerManager;
+import com.zimbra.cs.mailbox.AmqpMailboxListenerTransport;
 import com.zimbra.cs.mailbox.FoldersAndTagsCache;
 import com.zimbra.cs.mailbox.LocalSharedDeliveryCoordinator;
-import com.zimbra.cs.mailbox.MailboxListenerManager;
+import com.zimbra.cs.mailbox.MailboxListenerTransport;
 import com.zimbra.cs.mailbox.MailboxLockFactory;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MemcachedFoldersAndTagsCache;
 import com.zimbra.cs.mailbox.RedisClusterMailboxListenerManager;
 import com.zimbra.cs.mailbox.RedisClusterSharedDeliveryCoordinator;
-import com.zimbra.cs.mailbox.RedisMailboxListenerManager;
+import com.zimbra.cs.mailbox.RedisMailboxListenerTransport;
 import com.zimbra.cs.mailbox.RedisSharedDeliveryCoordinator;
 import com.zimbra.cs.mailbox.SharedDeliveryCoordinator;
 import com.zimbra.cs.mailbox.acl.EffectiveACLCache;
@@ -159,6 +159,58 @@ public class ZimbraConfig {
     @Bean(name="effectiveACLCache")
     public EffectiveACLCache effectiveACLCacheBean() throws ServiceException {
         return new MemcachedEffectiveACLCache();
+    }
+
+    /**
+     * External mailbox listener managers, which are used to coordinate cache invalidations and other
+     * mailbox data changes across multiple mailstores.
+     */
+    @Bean
+    public List<MailboxListenerTransport> externalMailboxListeners() throws Exception {
+        String[] uris = Provisioning.getInstance().getLocalServer().getMailboxListenerUrl();
+        if (uris.length == 0 && isRedisAvailable()) {
+            ZimbraLog.misc.info("No external mailbox listeners are configured; defaulting to Redis");
+            uris = new String[] {"redis:default"};
+        }
+        if (uris.length == 0) {
+            ZimbraLog.misc.info("No external mailbox listeners are configured");
+            return Collections.emptyList();
+        }
+
+        List<MailboxListenerTransport> result = new ArrayList<>();
+        for (String uri: uris) {
+            if (uri.startsWith("redis:")) {
+                if ("redis:default".equals(uri)) {
+                    // URI specifies the default pool specified by zimbraRedisUrl attribute
+                    if (isRedisClusterAvailable()) {
+                        result.add(new RedisClusterMailboxListenerManager(jedisClusterBean()));
+                        ZimbraLog.misc.info("Registered external mailbox listener: %s", uri);
+                    } else if (isRedisAvailable()) {
+                        result.add(new RedisMailboxListenerTransport(jedisPool()));
+                        ZimbraLog.misc.info("Registered external mailbox listener: %s", uri);
+                    } else {
+                        ZimbraLog.misc.error("Ignoring request to register external mailbox listener: %s because no zimbraRedisUrl URIs are configured", uri);
+                    }
+                } else {
+                    // URI specifies a new Redis endpoint, so it gets its own pool
+                    URI uri_ = new URI(uri);
+                    JedisPool jedisPool = jedisPool(uri_.getHost(), uri_.getPort());
+                    result.add(new RedisMailboxListenerTransport(jedisPool));
+                    ZimbraLog.misc.info("Registered external mailbox listener: %s", uri);
+                }
+
+            } else if (uri.startsWith("amqp:")) {
+                ConnectionFactory connectionFactory = amqpConnectionFactory(new URI(uri));
+                AmqpAdmin amqpAdmin = amqpAdmin(connectionFactory);
+                AmqpTemplate amqpTemplate = amqpTemplate(connectionFactory);
+                result.add(new AmqpMailboxListenerTransport(amqpAdmin, amqpTemplate));
+                ZimbraLog.misc.info("Registered external mailbox listener: %s", uri);
+
+            } else {
+                ZimbraLog.misc.error("Ignoring unsupported URI scheme for external mailbox listener: %s", uri);
+            }
+        }
+        return result;
     }
 
     @Bean(name="foldersAndTagsCache")
@@ -259,58 +311,6 @@ public class ZimbraConfig {
             instance = new MailboxManager();
         }
         return instance;
-    }
-
-    /**
-     * External mailbox listener managers, which are used to coordinate cache invalidations and other
-     * mailbox data changes across multiple mailstores.
-     */
-    @Bean
-    public List<MailboxListenerManager> mailboxListenerManagers() throws Exception {
-        String[] uris = Provisioning.getInstance().getLocalServer().getMailboxListenerUrl();
-        if (uris.length == 0 && isRedisAvailable()) {
-            ZimbraLog.misc.info("No external mailbox listeners are configured; defaulting to Redis");
-            uris = new String[] {"redis:default"};
-        }
-        if (uris.length == 0) {
-            ZimbraLog.misc.info("No external mailbox listeners are configured");
-            return Collections.emptyList();
-        }
-
-        List<MailboxListenerManager> result = new ArrayList<>();
-        for (String uri: uris) {
-            if (uri.startsWith("redis:")) {
-                if ("redis:default".equals(uri)) {
-                    // URI specifies the default pool specified by zimbraRedisUrl attribute
-                    if (isRedisClusterAvailable()) {
-                        result.add(new RedisClusterMailboxListenerManager(jedisClusterBean()));
-                        ZimbraLog.misc.info("Registered external mailbox listener: %s", uri);
-                    } else if (isRedisAvailable()) {
-                        result.add(new RedisMailboxListenerManager(jedisPool()));
-                        ZimbraLog.misc.info("Registered external mailbox listener: %s", uri);
-                    } else {
-                        ZimbraLog.misc.error("Ignoring request to register external mailbox listener: %s because no zimbraRedisUrl URIs are configured", uri);
-                    }
-                } else {
-                    // URI specifies a new Redis endpoint, so it gets its own pool
-                    URI uri_ = new URI(uri);
-                    JedisPool jedisPool = jedisPool(uri_.getHost(), uri_.getPort());
-                    result.add(new RedisMailboxListenerManager(jedisPool));
-                    ZimbraLog.misc.info("Registered external mailbox listener: %s", uri);
-                }
-
-            } else if (uri.startsWith("amqp:")) {
-                ConnectionFactory connectionFactory = amqpConnectionFactory(new URI(uri));
-                AmqpAdmin amqpAdmin = amqpAdmin(connectionFactory);
-                AmqpTemplate amqpTemplate = amqpTemplate(connectionFactory);
-                result.add(new AmqpMailboxListenerManager(amqpAdmin, amqpTemplate));
-                ZimbraLog.misc.info("Registered external mailbox listener: %s", uri);
-
-            } else {
-                ZimbraLog.misc.error("Ignoring unsupported URI scheme for external mailbox listener: %s", uri);
-            }
-        }
-        return result;
     }
 
     @Bean(name="memcachedClient")

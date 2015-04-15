@@ -59,7 +59,7 @@ public class LocalCachingZimbraConfig extends ZimbraConfig {
     }
 
     @Override
-    public List<MailboxListenerManager> mailboxListenerManagers() throws Exception {
+    public List<MailboxListenerTransport> externalMailboxListeners() throws Exception {
         return Collections.emptyList();
     }
 

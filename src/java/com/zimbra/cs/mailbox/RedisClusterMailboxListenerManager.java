@@ -25,9 +25,9 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.MailboxListener.ChangeNotification;
 
 /**
- * Redis Cluster based external mailbox listener.
+ * Redis Cluster based MailboxListenerTransport.
  */
-public class RedisClusterMailboxListenerManager extends RedisMailboxListenerManager {
+public class RedisClusterMailboxListenerManager extends RedisMailboxListenerTransport {
     protected JedisCluster jedisCluster;
 
 

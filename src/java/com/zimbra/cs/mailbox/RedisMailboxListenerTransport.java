@@ -46,15 +46,15 @@ import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.Session;
 
 /**
- * Redis-based MailboxListener management.
+ * Redis-based MailboxListenerTransport.
  */
-public class RedisMailboxListenerManager implements MailboxListenerManager {
+public class RedisMailboxListenerTransport implements MailboxListenerTransport {
     static final String KEY_PREFIX = MemcachedKeyPrefix.MBOX_PENDING_MODS;
     protected JedisPool jedisPool;
     protected ObjectMapper objectMapper = new ObjectMapper();
     protected Map<String, Set<Session>> subscribedSessionsByAccountId = new ConcurrentHashMap<>();
 
-    public RedisMailboxListenerManager(JedisPool jedisPool) {
+    public RedisMailboxListenerTransport(JedisPool jedisPool) {
         this.jedisPool = jedisPool;
     }
 
