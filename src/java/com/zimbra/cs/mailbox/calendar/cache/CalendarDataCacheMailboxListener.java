@@ -25,21 +25,27 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
-import com.zimbra.cs.session.PendingModifications;
+import com.zimbra.cs.mailbox.MailboxListener;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.session.PendingModifications.ModificationKey;
 
-public class CalendarDataCacheMailboxListener {
+public class CalendarDataCacheMailboxListener implements MailboxListener {
     protected CalendarDataCache cache;
 
     public CalendarDataCacheMailboxListener(CalendarDataCache cache) {
         this.cache = cache;
     }
 
-    void notifyCommittedChanges(PendingModifications mods, int changeId) {
+    @Override
+    public Set<MailItem.Type> notifyForItemTypes() {
+        return MailboxListener.ALL_ITEM_TYPES;
+    }
+
+    @Override
+    public void notify(ChangeNotification notification) {
         Set<CalendarDataCache.Key> keysToInvalidate = new HashSet<>();
-        if (mods.modified != null) {
-            for (Map.Entry<ModificationKey, Change> entry : mods.modified.entrySet()) {
+        if (notification.mods.modified != null) {
+            for (Map.Entry<ModificationKey, Change> entry : notification.mods.modified.entrySet()) {
                 Change change = entry.getValue();
                 Object whatChanged = change.what;
                 if (whatChanged instanceof Folder) {
@@ -51,8 +57,8 @@ public class CalendarDataCacheMailboxListener {
                 }
             }
         }
-        if (mods.deleted != null) {
-            for (Map.Entry<ModificationKey, Change> entry : mods.deleted.entrySet()) {
+        if (notification.mods.deleted != null) {
+            for (Map.Entry<ModificationKey, Change> entry : notification.mods.deleted.entrySet()) {
                 MailItem.Type type = (MailItem.Type) entry.getValue().what;
                 if (type == MailItem.Type.FOLDER) {
                     // We only have item id.  Assume it's a folder id and issue a delete.

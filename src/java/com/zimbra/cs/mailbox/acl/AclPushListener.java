@@ -30,11 +30,11 @@ import java.util.Set;
  */
 public class AclPushListener implements MailboxListener {
 
-    private static final Set<MailItem.Type> registeredTypes = Collections.singleton(MailItem.Type.FOLDER);
+    private static final Set<MailItem.Type> notifyTypes = Collections.singleton(MailItem.Type.FOLDER);
 
     @Override
     public Set<MailItem.Type> notifyForItemTypes() {
-        return registeredTypes;
+        return notifyTypes;
     }
 
     @Override

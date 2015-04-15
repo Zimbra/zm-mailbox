@@ -27,6 +27,8 @@ import java.util.Set;
 
 import javax.annotation.PostConstruct;
 
+import org.springframework.beans.BeansException;
+
 import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.common.account.Key;
@@ -39,15 +41,16 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.mailbox.Folder;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxListener;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.util.ItemId;
-import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.Zimbra;
 
-public class CalendarCacheManager {
+public class CalendarCacheManager implements MailboxListener {
 
     // for appointment summary caching (primarily for ZWC)
     protected boolean mSummaryCacheEnabled;
@@ -95,12 +98,18 @@ public class CalendarCacheManager {
         Zimbra.getAppContext().getAutowireCapableBeanFactory().initializeBean(mSummaryCache, "calSummaryCache");
     }
 
-    public void notifyCommittedChanges(PendingModifications mods, int changeId) throws ServiceException {
+    @Override
+    public Set<MailItem.Type> notifyForItemTypes() {
+        return MailboxListener.ALL_ITEM_TYPES;
+    }
+
+    @Override
+    public void notify(ChangeNotification notification) throws BeansException, ServiceException {
         if (mSummaryCacheEnabled) {
-            mSummaryCache.notifyCommittedChanges(mods, changeId);
+            mSummaryCache.notify(notification);
         }
-        new CalListCacheMailboxListener(mCalListCache).notifyCommittedChanges(mods, changeId);
-        new CtagInfoCacheMailboxListener(mCtagCache).notifyCommittedChanges(mods, changeId);
+        new CalListCacheMailboxListener(mCalListCache).notify(notification);
+        new CtagInfoCacheMailboxListener(mCtagCache).notify(notification);
     }
 
     public void purgeMailbox(Mailbox mbox) throws ServiceException {

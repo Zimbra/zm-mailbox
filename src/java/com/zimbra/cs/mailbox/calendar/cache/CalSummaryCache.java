@@ -41,6 +41,7 @@ import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxListener.ChangeNotification;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxManager.FetchMode;
 import com.zimbra.cs.mailbox.OperationContext;
@@ -49,7 +50,6 @@ import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.InviteInfo;
 import com.zimbra.cs.mailbox.util.TagUtil;
 import com.zimbra.cs.service.mail.CalendarUtils;
-import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.session.PendingModifications.ModificationKey;
 import com.zimbra.cs.stats.ZimbraPerf;
@@ -667,9 +667,9 @@ public class CalSummaryCache {
         }
     }
 
-    void notifyCommittedChanges(PendingModifications mods, int changeId) throws ServiceException {
-        if (mods.created != null) {
-            for (Map.Entry<ModificationKey, MailItem> entry : mods.created.entrySet()) {
+    public void notify(ChangeNotification notification) throws ServiceException {
+        if (notification.mods.created != null) {
+            for (Map.Entry<ModificationKey, MailItem> entry : notification.mods.created.entrySet()) {
                 MailItem item = entry.getValue();
                 if (item instanceof CalendarItem) {
                     int folderId = item.getFolderId();
@@ -681,8 +681,8 @@ public class CalSummaryCache {
                 }
             }
         }
-        if (mods.modified != null) {
-            for (Map.Entry<ModificationKey, Change> entry : mods.modified.entrySet()) {
+        if (notification.mods.modified != null) {
+            for (Map.Entry<ModificationKey, Change> entry : notification.mods.modified.entrySet()) {
                 Change change = entry.getValue();
                 Object whatChanged = change.what;
                 if (whatChanged instanceof CalendarItem) {
@@ -714,10 +714,10 @@ public class CalSummaryCache {
                 }
             }
         }
-        if (mods.deleted != null) {
+        if (notification.mods.deleted != null) {
             String lastAcctId = null;
             Mailbox lastMbox = null;
-            for (Map.Entry<ModificationKey, Change> entry : mods.deleted.entrySet()) {
+            for (Map.Entry<ModificationKey, Change> entry : notification.mods.deleted.entrySet()) {
                 MailItem.Type type = (MailItem.Type) entry.getValue().what;
                 if (type == MailItem.Type.APPOINTMENT || type == MailItem.Type.TASK) {
                     // We only have item id.  Look up the folder id of the item in the cache.
@@ -758,7 +758,7 @@ public class CalSummaryCache {
         }
 
         if (Zimbra.getAppContext().getBean(ZimbraMemcachedClient.class).isConnected()) {
-            new CalendarDataCacheMailboxListener(mMemcachedCalendarDataCache).notifyCommittedChanges(mods, changeId);
+            new CalendarDataCacheMailboxListener(mMemcachedCalendarDataCache).notify(notification);
         }
     }
 

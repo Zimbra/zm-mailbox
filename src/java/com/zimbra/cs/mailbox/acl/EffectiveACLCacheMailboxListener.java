@@ -26,19 +26,25 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
-import com.zimbra.cs.mailbox.MailboxListener.ChangeNotification;
+import com.zimbra.cs.mailbox.MailboxListener;
 import com.zimbra.cs.mailbox.acl.EffectiveACLCache.Key;
 import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.session.PendingModifications.ModificationKey;
 
-public class EffectiveACLCacheMailboxListener {
+public class EffectiveACLCacheMailboxListener implements MailboxListener {
     protected EffectiveACLCache cache;
 
     public EffectiveACLCacheMailboxListener(EffectiveACLCache cache) {
         this.cache = cache;
     }
 
+    @Override
+    public Set<MailItem.Type> notifyForItemTypes() {
+        return MailboxListener.ALL_ITEM_TYPES;
+    }
+
+    @Override
     public void notify(ChangeNotification notification) {
         Set<Key> keysToInvalidate = new HashSet<>();
 
@@ -78,5 +84,4 @@ public class EffectiveACLCacheMailboxListener {
             ZimbraLog.calendar.warn("Unable to notify EffectiveACLCache. Some cached data may become stale.", e);
         }
     }
-
 }

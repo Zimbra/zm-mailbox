@@ -26,22 +26,28 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxListener;
 import com.zimbra.cs.mailbox.Message;
-import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.session.PendingModifications.ModificationKey;
 
-public class CalListCacheMailboxListener {
+public class CalListCacheMailboxListener implements MailboxListener {
     protected CalListCache cache;
 
     public CalListCacheMailboxListener(CalListCache cache) {
         this.cache = cache;
     }
 
-    public void notifyCommittedChanges(PendingModifications mods, int changeId) {
+    @Override
+    public Set<MailItem.Type> notifyForItemTypes() {
+        return MailboxListener.ALL_ITEM_TYPES;
+    }
+
+    @Override
+    public void notify(ChangeNotification notification) {
         ChangeMap changeMap = new ChangeMap(1);
-        if (mods.created != null) {
-            for (Map.Entry<ModificationKey, MailItem> entry : mods.created.entrySet()) {
+        if (notification.mods.created != null) {
+            for (Map.Entry<ModificationKey, MailItem> entry : notification.mods.created.entrySet()) {
                 MailItem item = entry.getValue();
                 if (item instanceof Folder) {
                     Folder folder = (Folder) item;
@@ -53,8 +59,8 @@ public class CalListCacheMailboxListener {
                 }
             }
         }
-        if (mods.modified != null) {
-            for (Map.Entry<ModificationKey, Change> entry : mods.modified.entrySet()) {
+        if (notification.mods.modified != null) {
+            for (Map.Entry<ModificationKey, Change> entry : notification.mods.modified.entrySet()) {
                 Change change = entry.getValue();
                 Object whatChanged = change.what;
                 if (whatChanged instanceof Folder) {
@@ -92,8 +98,8 @@ public class CalListCacheMailboxListener {
                 }
             }
         }
-        if (mods.deleted != null) {
-            for (Map.Entry<ModificationKey, Change> entry : mods.deleted.entrySet()) {
+        if (notification.mods.deleted != null) {
+            for (Map.Entry<ModificationKey, Change> entry : notification.mods.deleted.entrySet()) {
                 MailItem.Type type = (MailItem.Type) entry.getValue().what;
                 if (type == MailItem.Type.FOLDER) {
                     // We only have item id.  Let's just assume it's a calendar folder id and check

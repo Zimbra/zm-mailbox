@@ -25,7 +25,6 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.acl.EffectiveACLCache;
 import com.zimbra.cs.mailbox.acl.EffectiveACLCacheMailboxListener;
 import com.zimbra.cs.mailbox.calendar.cache.CalendarCacheManager;
-import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.util.Zimbra;
 
 public class CacheManager implements MailboxListener {
@@ -43,11 +42,9 @@ public class CacheManager implements MailboxListener {
 
     @Override
     public void notify(ChangeNotification notification) throws BeansException, ServiceException {
-        PendingModifications mods = notification.mods;
-        int changeId = notification.lastChangeId;
 
         // Invalidate caches managed by CalendarCacheManager
-        Zimbra.getAppContext().getBean(CalendarCacheManager.class).notifyCommittedChanges(mods, changeId);
+        Zimbra.getAppContext().getBean(CalendarCacheManager.class).notify(notification);
 
         // Invalidate EffectiveACLCache
         new EffectiveACLCacheMailboxListener(Zimbra.getAppContext().getBean(EffectiveACLCache.class)).notify(notification);
