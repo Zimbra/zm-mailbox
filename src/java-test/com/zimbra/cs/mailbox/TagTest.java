@@ -596,7 +596,7 @@ public class TagTest {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
 
         MockListener ml = new MockListener();
-        MailboxListener.register(ml);
+        MailboxListenerManager.register(ml);
 
         try {
             // new implicit tags should not be included in notifications
@@ -629,7 +629,7 @@ public class TagTest {
             }
             Assert.assertTrue("explicit tag apply must be notified", found);
         } finally {
-            MailboxListener.unregister(ml);
+            MailboxListenerManager.unregister(ml);
         }
     }
 

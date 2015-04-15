@@ -18,6 +18,7 @@ package com.zimbra.cs.mailbox;
 
 import java.io.ByteArrayInputStream;
 import java.util.HashMap;
+import java.util.Set;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -51,25 +52,30 @@ public final class MailboxListenerTest {
     public void tearDown() throws Exception {
         cleanup();
     }
-    
+
     @Test
     public void listenerTest() throws Exception {
         Account acct = Provisioning.getInstance().getAccountById(MockProvisioning.DEFAULT_ACCOUNT_ID);
         OperationContext octxt = new OperationContext(acct);
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
-        MailboxListener.register(new TestListener());
+        MailboxListenerManager.register(new TestListener());
         mbox.createDocument(octxt, Mailbox.ID_FOLDER_BRIEFCASE, "test", "text/plain", "test@zimbra.com",
                 "hello", new ByteArrayInputStream("hello world".getBytes("UTF-8")));
         Assert.assertTrue(listenerWasCalled);
     }
 
     private void cleanup() throws Exception {
-        MailboxListener.reset();
+        MailboxListenerManager.reset();
         MailboxTestUtil.clearData();
         listenerWasCalled = false;
     }
 
-    public static class TestListener extends MailboxListener {
+    public static class TestListener implements MailboxListener {
+
+        @Override
+        public Set<MailItem.Type> notifyForItemTypes() {
+            return MailboxListener.ALL_ITEM_TYPES;
+        }
 
         @Override
         public void notify(ChangeNotification notification) {

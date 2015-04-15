@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -28,12 +28,12 @@ import java.util.Set;
 /**
  * Listens to folder changes and schedules immediate run of {@link AclPushTask} in a separate thread if required.
  */
-public class AclPushListener extends MailboxListener {
+public class AclPushListener implements MailboxListener {
 
     private static final Set<MailItem.Type> registeredTypes = Collections.singleton(MailItem.Type.FOLDER);
 
     @Override
-    public Set<MailItem.Type> registerForItemTypes() {
+    public Set<MailItem.Type> notifyForItemTypes() {
         return registeredTypes;
     }
 

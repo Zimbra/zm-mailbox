@@ -198,12 +198,17 @@ public final class MailboxTest {
                 .getTombstones(changeId3).isEmpty());
     }
 
-    static class MockListener extends MailboxListener {
+    static class MockListener implements MailboxListener {
         /**
          * Information on creations/modifications and deletions seen since
          * {@link clear} was last called (or listener was instantiated)
          */
         PendingModifications pms;
+
+        @Override
+        public Set<MailItem.Type> notifyForItemTypes() {
+            return MailboxListener.ALL_ITEM_TYPES;
+        }
 
         @Override
         public void notify(ChangeNotification notification) {
@@ -251,7 +256,7 @@ public final class MailboxTest {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
 
         MockListener ml = new MockListener();
-        MailboxListener.register(ml);
+        MailboxListenerManager.register(ml);
 
         try {
             Folder f = mbox.createFolder(null, "foo",
@@ -337,7 +342,7 @@ public final class MailboxTest {
                     fParent.getId(),
                     ((Folder) pModification.preModifyObj).getId());
         } finally {
-            MailboxListener.unregister(ml);
+            MailboxListenerManager.unregister(ml);
         }
     }
 

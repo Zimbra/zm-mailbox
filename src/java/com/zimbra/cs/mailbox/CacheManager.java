@@ -17,6 +17,8 @@
 
 package com.zimbra.cs.mailbox;
 
+import java.util.Set;
+
 import org.springframework.beans.BeansException;
 
 import com.zimbra.common.service.ServiceException;
@@ -26,12 +28,17 @@ import com.zimbra.cs.mailbox.calendar.cache.CalendarCacheManager;
 import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.util.Zimbra;
 
-public class CacheManager extends MailboxListener {
+public class CacheManager implements MailboxListener {
 
     public static void purgeMailbox(Mailbox mbox) throws ServiceException {
         Zimbra.getAppContext().getBean(CalendarCacheManager.class).purgeMailbox(mbox);
         Zimbra.getAppContext().getBean(EffectiveACLCache.class).remove(mbox);
         Zimbra.getAppContext().getBean(FoldersAndTagsCache.class).remove(mbox);
+    }
+
+    @Override
+    public Set<MailItem.Type> notifyForItemTypes() {
+        return MailboxListener.ALL_ITEM_TYPES;
     }
 
     @Override

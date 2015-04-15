@@ -9347,7 +9347,7 @@ public class Mailbox {
                 }
             }
             try {
-                MailboxListener.notifyListeners(notification);
+                MailboxListenerManager.notifyListeners(notification);
             } catch (ServiceException e) {
                 ZimbraLog.session.warn("Caught an exception trying to notify Mailbox listeners", e);
             }
