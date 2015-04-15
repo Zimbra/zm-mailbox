@@ -162,12 +162,12 @@ public class ZimbraSuite extends TestSuite
                         testName, ZimbraSuite.class.getName());
                 }
             } else {
-                Class<? extends TestCase> testClass;
+                Class<?> testClass;
                 try {
-                    testClass = Class.forName(testName).asSubclass(TestCase.class);
+                    testClass = Class.forName(testName);
                 } catch (ClassNotFoundException e) {
                     try {
-                        testClass = ExtensionUtil.findClass(testName).asSubclass(TestCase.class);
+                        testClass = ExtensionUtil.findClass(testName);
                     } catch (ClassNotFoundException e2) {
                         throw ServiceException.FAILURE("Error instantiating test " + testName, e2);
                     }
