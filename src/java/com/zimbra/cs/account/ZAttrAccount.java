@@ -54148,358 +54148,6 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Lifetime of a trusted auth token. Must be in valid duration format:
-     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
-     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
-     * specified, the default is s(seconds).
-     *
-     * <p>Use getTrustedAuthTokenLifetimeAsString to access value as a string.
-     *
-     * @see #getTrustedAuthTokenLifetimeAsString()
-     *
-     * @return zimbraTrustedAuthTokenLifetime in millseconds, or 172800000 (2d)  if unset
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1947)
-    public long getTrustedAuthTokenLifetime() {
-        return getTimeInterval(Provisioning.A_zimbraTrustedAuthTokenLifetime, 172800000L);
-    }
-
-    /**
-     * Lifetime of a trusted auth token. Must be in valid duration format:
-     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
-     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
-     * specified, the default is s(seconds).
-     *
-     * @return zimbraTrustedAuthTokenLifetime, or "2d" if unset
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1947)
-    public String getTrustedAuthTokenLifetimeAsString() {
-        return getAttr(Provisioning.A_zimbraTrustedAuthTokenLifetime, "2d");
-    }
-
-    /**
-     * Lifetime of a trusted auth token. Must be in valid duration format:
-     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
-     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
-     * specified, the default is s(seconds).
-     *
-     * @param zimbraTrustedAuthTokenLifetime new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1947)
-    public void setTrustedAuthTokenLifetime(String zimbraTrustedAuthTokenLifetime) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraTrustedAuthTokenLifetime, zimbraTrustedAuthTokenLifetime);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * Lifetime of a trusted auth token. Must be in valid duration format:
-     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
-     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
-     * specified, the default is s(seconds).
-     *
-     * @param zimbraTrustedAuthTokenLifetime new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1947)
-    public Map<String,Object> setTrustedAuthTokenLifetime(String zimbraTrustedAuthTokenLifetime, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraTrustedAuthTokenLifetime, zimbraTrustedAuthTokenLifetime);
-        return attrs;
-    }
-
-    /**
-     * Lifetime of a trusted auth token. Must be in valid duration format:
-     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
-     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
-     * specified, the default is s(seconds).
-     *
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1947)
-    public void unsetTrustedAuthTokenLifetime() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraTrustedAuthTokenLifetime, "");
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * Lifetime of a trusted auth token. Must be in valid duration format:
-     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
-     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
-     * specified, the default is s(seconds).
-     *
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1947)
-    public Map<String,Object> unsetTrustedAuthTokenLifetime(Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraTrustedAuthTokenLifetime, "");
-        return attrs;
-    }
-
-    /**
-     * Value representing how long past expiry a trusted auth token can be
-     * used to bypass two-factor authentication. Must be in valid duration
-     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
-     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
-     * unit is not specified, the default is s(seconds).
-     *
-     * <p>Use getTrustedAuthTokenTrustLifetimeAsString to access value as a string.
-     *
-     * @see #getTrustedAuthTokenTrustLifetimeAsString()
-     *
-     * @return zimbraTrustedAuthTokenTrustLifetime in millseconds, or 2592000000 (30d)  if unset
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1948)
-    public long getTrustedAuthTokenTrustLifetime() {
-        return getTimeInterval(Provisioning.A_zimbraTrustedAuthTokenTrustLifetime, 2592000000L);
-    }
-
-    /**
-     * Value representing how long past expiry a trusted auth token can be
-     * used to bypass two-factor authentication. Must be in valid duration
-     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
-     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
-     * unit is not specified, the default is s(seconds).
-     *
-     * @return zimbraTrustedAuthTokenTrustLifetime, or "30d" if unset
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1948)
-    public String getTrustedAuthTokenTrustLifetimeAsString() {
-        return getAttr(Provisioning.A_zimbraTrustedAuthTokenTrustLifetime, "30d");
-    }
-
-    /**
-     * Value representing how long past expiry a trusted auth token can be
-     * used to bypass two-factor authentication. Must be in valid duration
-     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
-     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
-     * unit is not specified, the default is s(seconds).
-     *
-     * @param zimbraTrustedAuthTokenTrustLifetime new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1948)
-    public void setTrustedAuthTokenTrustLifetime(String zimbraTrustedAuthTokenTrustLifetime) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraTrustedAuthTokenTrustLifetime, zimbraTrustedAuthTokenTrustLifetime);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * Value representing how long past expiry a trusted auth token can be
-     * used to bypass two-factor authentication. Must be in valid duration
-     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
-     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
-     * unit is not specified, the default is s(seconds).
-     *
-     * @param zimbraTrustedAuthTokenTrustLifetime new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1948)
-    public Map<String,Object> setTrustedAuthTokenTrustLifetime(String zimbraTrustedAuthTokenTrustLifetime, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraTrustedAuthTokenTrustLifetime, zimbraTrustedAuthTokenTrustLifetime);
-        return attrs;
-    }
-
-    /**
-     * Value representing how long past expiry a trusted auth token can be
-     * used to bypass two-factor authentication. Must be in valid duration
-     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
-     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
-     * unit is not specified, the default is s(seconds).
-     *
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1948)
-    public void unsetTrustedAuthTokenTrustLifetime() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraTrustedAuthTokenTrustLifetime, "");
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * Value representing how long past expiry a trusted auth token can be
-     * used to bypass two-factor authentication. Must be in valid duration
-     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
-     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
-     * unit is not specified, the default is s(seconds).
-     *
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1948)
-    public Map<String,Object> unsetTrustedAuthTokenTrustLifetime(Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraTrustedAuthTokenTrustLifetime, "");
-        return attrs;
-    }
-
-    /**
-     * Trusted devices currently registered on the account
-     *
-     * @return zimbraTrustedDevices, or empty array if unset
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1949)
-    public String[] getTrustedDevices() {
-        return getMultiAttr(Provisioning.A_zimbraTrustedDevices);
-    }
-
-    /**
-     * Trusted devices currently registered on the account
-     *
-     * @param zimbraTrustedDevices new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1949)
-    public void setTrustedDevices(String[] zimbraTrustedDevices) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraTrustedDevices, zimbraTrustedDevices);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * Trusted devices currently registered on the account
-     *
-     * @param zimbraTrustedDevices new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1949)
-    public Map<String,Object> setTrustedDevices(String[] zimbraTrustedDevices, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraTrustedDevices, zimbraTrustedDevices);
-        return attrs;
-    }
-
-    /**
-     * Trusted devices currently registered on the account
-     *
-     * @param zimbraTrustedDevices new to add to existing values
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1949)
-    public void addTrustedDevices(String zimbraTrustedDevices) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraTrustedDevices, zimbraTrustedDevices);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * Trusted devices currently registered on the account
-     *
-     * @param zimbraTrustedDevices new to add to existing values
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1949)
-    public Map<String,Object> addTrustedDevices(String zimbraTrustedDevices, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraTrustedDevices, zimbraTrustedDevices);
-        return attrs;
-    }
-
-    /**
-     * Trusted devices currently registered on the account
-     *
-     * @param zimbraTrustedDevices existing value to remove
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1949)
-    public void removeTrustedDevices(String zimbraTrustedDevices) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraTrustedDevices, zimbraTrustedDevices);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * Trusted devices currently registered on the account
-     *
-     * @param zimbraTrustedDevices existing value to remove
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1949)
-    public Map<String,Object> removeTrustedDevices(String zimbraTrustedDevices, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraTrustedDevices, zimbraTrustedDevices);
-        return attrs;
-    }
-
-    /**
-     * Trusted devices currently registered on the account
-     *
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1949)
-    public void unsetTrustedDevices() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraTrustedDevices, "");
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * Trusted devices currently registered on the account
-     *
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1949)
-    public Map<String,Object> unsetTrustedDevices(Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraTrustedDevices, "");
-        return attrs;
-    }
-
-    /**
      * number of scratch codes to generate for two-factor auth
      *
      * @return zimbraTwoFactorAuthNumScratchCodes, or 10 if unset
@@ -54712,6 +54360,246 @@ public abstract class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetTwoFactorAuthSecret(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraTwoFactorAuthSecret, "");
+        return attrs;
+    }
+
+    /**
+     * Lifetime of a trusted device token. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * <p>Use getTwoFactorAuthTrustedDeviceTokenLifetimeAsString to access value as a string.
+     *
+     * @see #getTwoFactorAuthTrustedDeviceTokenLifetimeAsString()
+     *
+     * @return zimbraTwoFactorAuthTrustedDeviceTokenLifetime in millseconds, or 2592000000 (30d)  if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1947)
+    public long getTwoFactorAuthTrustedDeviceTokenLifetime() {
+        return getTimeInterval(Provisioning.A_zimbraTwoFactorAuthTrustedDeviceTokenLifetime, 2592000000L);
+    }
+
+    /**
+     * Lifetime of a trusted device token. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @return zimbraTwoFactorAuthTrustedDeviceTokenLifetime, or "30d" if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1947)
+    public String getTwoFactorAuthTrustedDeviceTokenLifetimeAsString() {
+        return getAttr(Provisioning.A_zimbraTwoFactorAuthTrustedDeviceTokenLifetime, "30d");
+    }
+
+    /**
+     * Lifetime of a trusted device token. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @param zimbraTwoFactorAuthTrustedDeviceTokenLifetime new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1947)
+    public void setTwoFactorAuthTrustedDeviceTokenLifetime(String zimbraTwoFactorAuthTrustedDeviceTokenLifetime) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorAuthTrustedDeviceTokenLifetime, zimbraTwoFactorAuthTrustedDeviceTokenLifetime);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Lifetime of a trusted device token. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @param zimbraTwoFactorAuthTrustedDeviceTokenLifetime new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1947)
+    public Map<String,Object> setTwoFactorAuthTrustedDeviceTokenLifetime(String zimbraTwoFactorAuthTrustedDeviceTokenLifetime, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorAuthTrustedDeviceTokenLifetime, zimbraTwoFactorAuthTrustedDeviceTokenLifetime);
+        return attrs;
+    }
+
+    /**
+     * Lifetime of a trusted device token. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1947)
+    public void unsetTwoFactorAuthTrustedDeviceTokenLifetime() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorAuthTrustedDeviceTokenLifetime, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Lifetime of a trusted device token. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1947)
+    public Map<String,Object> unsetTwoFactorAuthTrustedDeviceTokenLifetime(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorAuthTrustedDeviceTokenLifetime, "");
+        return attrs;
+    }
+
+    /**
+     * Trusted devices currently registered on the account
+     *
+     * @return zimbraTwoFactorAuthTrustedDevices, or empty array if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1949)
+    public String[] getTwoFactorAuthTrustedDevices() {
+        return getMultiAttr(Provisioning.A_zimbraTwoFactorAuthTrustedDevices);
+    }
+
+    /**
+     * Trusted devices currently registered on the account
+     *
+     * @param zimbraTwoFactorAuthTrustedDevices new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1949)
+    public void setTwoFactorAuthTrustedDevices(String[] zimbraTwoFactorAuthTrustedDevices) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorAuthTrustedDevices, zimbraTwoFactorAuthTrustedDevices);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Trusted devices currently registered on the account
+     *
+     * @param zimbraTwoFactorAuthTrustedDevices new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1949)
+    public Map<String,Object> setTwoFactorAuthTrustedDevices(String[] zimbraTwoFactorAuthTrustedDevices, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorAuthTrustedDevices, zimbraTwoFactorAuthTrustedDevices);
+        return attrs;
+    }
+
+    /**
+     * Trusted devices currently registered on the account
+     *
+     * @param zimbraTwoFactorAuthTrustedDevices new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1949)
+    public void addTwoFactorAuthTrustedDevices(String zimbraTwoFactorAuthTrustedDevices) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraTwoFactorAuthTrustedDevices, zimbraTwoFactorAuthTrustedDevices);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Trusted devices currently registered on the account
+     *
+     * @param zimbraTwoFactorAuthTrustedDevices new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1949)
+    public Map<String,Object> addTwoFactorAuthTrustedDevices(String zimbraTwoFactorAuthTrustedDevices, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraTwoFactorAuthTrustedDevices, zimbraTwoFactorAuthTrustedDevices);
+        return attrs;
+    }
+
+    /**
+     * Trusted devices currently registered on the account
+     *
+     * @param zimbraTwoFactorAuthTrustedDevices existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1949)
+    public void removeTwoFactorAuthTrustedDevices(String zimbraTwoFactorAuthTrustedDevices) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraTwoFactorAuthTrustedDevices, zimbraTwoFactorAuthTrustedDevices);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Trusted devices currently registered on the account
+     *
+     * @param zimbraTwoFactorAuthTrustedDevices existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1949)
+    public Map<String,Object> removeTwoFactorAuthTrustedDevices(String zimbraTwoFactorAuthTrustedDevices, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraTwoFactorAuthTrustedDevices, zimbraTwoFactorAuthTrustedDevices);
+        return attrs;
+    }
+
+    /**
+     * Trusted devices currently registered on the account
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1949)
+    public void unsetTwoFactorAuthTrustedDevices() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorAuthTrustedDevices, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Trusted devices currently registered on the account
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1949)
+    public Map<String,Object> unsetTwoFactorAuthTrustedDevices(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorAuthTrustedDevices, "");
         return attrs;
     }
 
