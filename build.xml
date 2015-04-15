@@ -1661,21 +1661,26 @@
                     ms ${zimbra.server.hostname} zimbraAlwaysOnClusterId ${build.alwaysoncluster.id}
                     ms ${zimbra.server.hostname} +zimbraServiceEnabled redolog
               </echo>
-              <java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
-                  <arg line="-l -f ${build.zmprov.alwayson} -v"/>
-              </java>
               <if>
-                  <isset property="solr-standalone"/>
-                  <then>
-                      <echo message="configuring mailstore for solrcloud" />
-                      <echo file="${build.zmprov.alwayson}">
-                          mcf zimbraSolrURLBase localhost:8983
-                      </echo>
-                      <java classname="com.zimbra.cs.localconfig.LocalConfigCLI" fork="true" classpathref="class.path" failonerror="true">
-                          <arg line="zimbra_class_index_store_factory=com.zimbra.cs.index.solr.SolrCloudIndex$Factory"/>
-                      </java>
-                  </then>
-              </if>
+                <isset property="solr-standalone"/>
+                <then>
+                    <echo file="${build.zmprov.alwayson}" append="true">
+                        mcf zimbraSolrURLBase localhost:8983
+                    </echo>
+                </then>
+             </if>
+             <java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
+                 <arg line="-l -f ${build.zmprov.alwayson} -v"/>
+             </java>
+             <if>
+                 <isset property="solr-standalone"/>
+                 <then>
+                     <echo message="configuring mailstore for solrcloud" />
+                     <java classname="com.zimbra.cs.localconfig.LocalConfigCLI" fork="true" classpathref="class.path" failonerror="true">
+                         <arg line="-e zimbra_class_index_store_factory=com.zimbra.cs.index.solr.SolrCloudIndex$Factory"/>
+                     </java>
+                 </then>
+             </if>
           </then>
           <else>
               <echo message="One or more of Redis (http://localhost:6379), Consul (http://localhost:8500), ../ZimbraFOSS/ZimbraRedologService is not available. Skipping Always On setup"/>
