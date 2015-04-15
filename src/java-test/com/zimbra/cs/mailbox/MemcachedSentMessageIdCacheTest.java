@@ -64,7 +64,7 @@ public final class MemcachedSentMessageIdCacheTest extends AbstractSentMessageId
     @Configuration
     static class LocalConfig extends LocalCachingZimbraConfig {
         @Override
-        public ZimbraMemcachedClientConfigurer memcachedClientConfigurerBean() throws Exception {
+        public ZimbraMemcachedClientConfigurer memcachedClientConfigurer() throws Exception {
             return new MemcachedOnLocalhostZimbraMemcachedClientConfigurer();
         }
     }

@@ -28,8 +28,8 @@ import com.zimbra.cs.redolog.UnsupportedRedoLogProvider;
 @EnableAspectJAutoProxy
 @Lazy
 class RedoLogVerifyConfig {
-    @Bean(name="redologProvider")
-    public RedoLogProvider redoLogProviderBean() throws Exception {
+    @Bean
+    public RedoLogProvider redologProvider() throws Exception {
         RedoLogProvider instance = new UnsupportedRedoLogProvider();
         return instance;
     }

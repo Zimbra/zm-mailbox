@@ -32,7 +32,7 @@ public class MemcachedOnLocalhostZimbraConfig extends ZimbraConfig {
     }
 
     @Override
-    public ZimbraMemcachedClientConfigurer memcachedClientConfigurerBean() throws Exception {
+    public ZimbraMemcachedClientConfigurer memcachedClientConfigurer() throws Exception {
         return new MemcachedOnLocalhostZimbraMemcachedClientConfigurer();
     }
 }

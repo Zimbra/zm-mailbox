@@ -143,8 +143,8 @@ public class ZimbraConfig {
         return new RabbitTemplate(amqpConnectionFactory);
     }
 
-    @Bean(name="calendarCacheManager")
-    public CalendarCacheManager calendarCacheManagerBean() throws ServiceException {
+    @Bean
+    public CalendarCacheManager calendarCacheManager() throws ServiceException {
         return new CalendarCacheManager();
     }
 
@@ -156,12 +156,36 @@ public class ZimbraConfig {
     }
 
     @Bean
+    public ZimbraHttpClientManager httpClientManager() throws Exception {
+        return new ZimbraHttpClientManager();
+    }
+
+    @Bean
+    public IndexingQueueAdapter indexingQueueAdapter() throws Exception {
+        IndexingQueueAdapter instance = null;
+        Server localServer = Provisioning.getInstance().getLocalServer();
+        String className = localServer.getIndexingQueueProvider();
+        if (className != null && !className.isEmpty()) {
+            try {
+                instance = (IndexingQueueAdapter) Class.forName(className).newInstance();
+            } catch (ClassNotFoundException e) {
+                instance = (IndexingQueueAdapter) ExtensionUtil.findClass(className).newInstance();
+            }
+        }
+        if (instance == null) {
+            //fall back to default (local) queue implementation
+            instance = new DefaultIndexingQueueAdapter();
+        }
+        return instance;
+    }
+
+    @Bean
     public IndexingService indexingService()  {
         return new IndexingService();
     }
 
-    @Bean(name="effectiveACLCache")
-    public EffectiveACLCache effectiveACLCacheBean() throws ServiceException {
+    @Bean
+    public EffectiveACLCache effectiveACLCache() throws ServiceException {
         return new MemcachedEffectiveACLCache();
     }
 
@@ -187,7 +211,7 @@ public class ZimbraConfig {
                 if ("redis:default".equals(uri)) {
                     // URI specifies the default pool specified by zimbraRedisUrl attribute
                     if (isRedisClusterAvailable()) {
-                        result.add(new RedisClusterMailboxListenerManager(jedisClusterBean()));
+                        result.add(new RedisClusterMailboxListenerManager(jedisCluster()));
                         ZimbraLog.misc.info("Registered external mailbox listener: %s", uri);
                     } else if (isRedisAvailable()) {
                         result.add(new RedisMailboxListenerTransport(jedisPool()));
@@ -217,8 +241,8 @@ public class ZimbraConfig {
         return result;
     }
 
-    @Bean(name="foldersAndTagsCache")
-    public FoldersAndTagsCache foldersAndTagsCacheBean() throws ServiceException {
+    @Bean
+    public FoldersAndTagsCache foldersAndTagsCache() throws ServiceException {
         return new MemcachedFoldersAndTagsCache();
     }
 
@@ -249,7 +273,7 @@ public class ZimbraConfig {
 
     public boolean isRedisClusterAvailable() throws ServiceException {
         try {
-            return jedisClusterBean() != null;
+            return jedisCluster() != null;
         } catch (Exception e) {
             ZimbraLog.misc.info("Failed connecting to a Redis Cluster; defaulting to non-cluster mode Redis access (%s)", e.getLocalizedMessage());
             return false;
@@ -257,8 +281,8 @@ public class ZimbraConfig {
     }
 
     /** Returns a JedisCluster client if possible, or null */
-    @Bean(name="jedisCluster")
-    public JedisCluster jedisClusterBean() throws ServiceException {
+    @Bean
+    public JedisCluster jedisCluster() throws ServiceException {
         Set<HostAndPort> uris = redisUris();
         if (uris.isEmpty()) {
             return null;
@@ -295,13 +319,13 @@ public class ZimbraConfig {
         return new MailboxListenerManager();
     }
 
-    @Bean(name="mailboxLockFactory")
-    public MailboxLockFactory mailboxLockFactoryBean() throws ServiceException {
+    @Bean
+    public MailboxLockFactory mailboxLockFactory() throws ServiceException {
         return new MailboxLockFactory();
     }
 
-    @Bean(name="mailboxManager")
-    public MailboxManager mailboxManagerBean() throws ServiceException {
+    @Bean
+    public MailboxManager mailboxManager() throws ServiceException {
         MailboxManager instance = null;
         String className = LC.zimbra_class_mboxmanager.value();
         if (className != null && !className.equals("")) {
@@ -322,17 +346,17 @@ public class ZimbraConfig {
         return instance;
     }
 
-    @Bean(name="memcachedClient")
-    public ZimbraMemcachedClient memcachedClientBean() throws Exception {
+    @Bean
+    public ZimbraMemcachedClient memcachedClient() throws Exception {
         return new ZimbraMemcachedClient();
     }
 
-    @Bean(name="memcachedClientConfigurer")
-    public ZimbraMemcachedClientConfigurer memcachedClientConfigurerBean() throws Exception {
+    @Bean
+    public ZimbraMemcachedClientConfigurer memcachedClientConfigurer() throws Exception {
         return new ZimbraMemcachedClientConfigurer();
     }
 
-    @Bean(name="qlessClient")
+    @Bean
     public QlessClient qlessClient() throws Exception {
         if (!isRedisAvailable()) {
             return null;
@@ -359,8 +383,42 @@ public class ZimbraConfig {
         }
     }
 
-	@Bean(name="redologProvider")
-    public RedoLogProvider redoLogProviderBean() throws Exception {
+    @Bean
+    public SequenceNumberGenerator redologSeqNumGenerator() throws Exception
+    {
+        SequenceNumberGenerator generator = null;
+        if (isRedisAvailable()) {
+            generator = new RedisSequenceNumberGenerator(jedisPool());
+        }
+
+        if (generator == null) {
+          if (Zimbra.isAlwaysOn()) {
+              throw new Exception("Redis is required in always on environment");
+          }
+          generator = new LocalSequenceNumberGenerator();
+        }
+        return generator;
+    }
+
+    @Bean
+    public TxnIdGenerator redologTxnIdGenerator() throws Exception
+    {
+        TxnIdGenerator idGenerator = null;
+        if (isRedisAvailable()) {
+            idGenerator = new RedisTxnIdGenerator(jedisPool());
+        }
+
+        if (idGenerator == null) {
+          if (Zimbra.isAlwaysOn()) {
+              throw new Exception("Redis is required in always on environment");
+          }
+          idGenerator = new LocalTxnIdGenerator();
+        }
+        return idGenerator;
+    }
+
+    @Bean
+    public RedoLogProvider redologProvider() throws Exception {
         RedoLogProvider instance = null;
         Class<?> klass = null;
         Server config = Provisioning.getInstance().getLocalServer();
@@ -385,13 +443,13 @@ public class ZimbraConfig {
 	}
 
     /** Centralized algorithm for selection of a server from a list, for load balancing and/or account reassignment, or picking a SOAP target in a cluster */
-    @Bean(name="serviceLocatorHostSelector")
-    public Selector<ServiceLocator.Entry> serviceLocatorHostSelectorBean() throws ServiceException {
+    @Bean
+    public Selector<ServiceLocator.Entry> serviceLocatorHostSelector() throws ServiceException {
         return new RandomSelector<ServiceLocator.Entry>();
     }
 
-    @Bean(name="sharedDeliveryCoordinator")
-    public SharedDeliveryCoordinator sharedDeliveryCoordinatorBean() throws Exception {
+    @Bean
+    public SharedDeliveryCoordinator sharedDeliveryCoordinator() throws Exception {
         SharedDeliveryCoordinator instance = null;
         String className = LC.zimbra_class_shareddeliverycoordinator.value();
         if (className != null && !className.equals("")) {
@@ -416,8 +474,8 @@ public class ZimbraConfig {
         return instance;
     }
 
-    @Bean(name="soapSessionFactory")
-    public SoapSessionFactory soapSessionFactoryBean() {
+    @Bean
+    public SoapSessionFactory soapSessionFactory() {
         SoapSessionFactory instance = null;
         String className = LC.zimbra_class_soapsessionfactory.value();
         if (className != null && !className.equals("")) {
@@ -438,8 +496,8 @@ public class ZimbraConfig {
         return instance;
     }
 
-	@Bean(name="storeManager")
-    public StoreManager storeManagerBean() throws Exception {
+	@Bean
+    public StoreManager storeManager() throws Exception {
 		StoreManager instance = null;
         String className = LC.zimbra_class_store.value();
         if (className != null && !className.equals("")) {
@@ -455,8 +513,8 @@ public class ZimbraConfig {
         return instance;
     }
 
-	@Bean(name="zimbraApplication")
-	public ZimbraApplication zimbraApplicationBean() throws Exception {
+	@Bean
+	public ZimbraApplication zimbraApplication() throws Exception {
 	    ZimbraApplication instance = null;
         String className = LC.zimbra_class_application.value();
         if (className != null && !className.equals("")) {
@@ -473,62 +531,4 @@ public class ZimbraConfig {
         }
         return instance;
 	}
-
-	@Bean(name="indexingQueueAdapter")
-	public IndexingQueueAdapter indexingQueueAdapterBean() throws Exception {
-	    IndexingQueueAdapter instance = null;
-	    Server localServer = Provisioning.getInstance().getLocalServer();
-	    String className = localServer.getIndexingQueueProvider();
-        if (className != null && !className.isEmpty()) {
-            try {
-                instance = (IndexingQueueAdapter) Class.forName(className).newInstance();
-            } catch (ClassNotFoundException e) {
-                instance = (IndexingQueueAdapter) ExtensionUtil.findClass(className).newInstance();
-            }
-        }
-        if (instance == null) {
-            //fall back to default (local) queue implementation
-            instance = new DefaultIndexingQueueAdapter();
-        }
-        return instance;
-	}
-
-	@Bean(name="httpClientManager")
-    public ZimbraHttpClientManager httpClientManagerBean() throws Exception {
-        return new ZimbraHttpClientManager();
-    }
-
-    @Bean(name="redologTxnIdGenerator")
-    public TxnIdGenerator getTxnIdGenerator() throws Exception
-    {
-        TxnIdGenerator idGenerator = null;
-        if (isRedisAvailable()) {
-            idGenerator = new RedisTxnIdGenerator(jedisPool());
-        }
-
-        if (idGenerator == null) {
-          if (Zimbra.isAlwaysOn()) {
-              throw new Exception("Redis is required in always on environment");
-          }
-          idGenerator = new LocalTxnIdGenerator();
-        }
-        return idGenerator;
-    }
-
-    @Bean(name="redologSeqNumGenerator")
-    public SequenceNumberGenerator getSeqNumGenerator() throws Exception
-    {
-        SequenceNumberGenerator generator = null;
-        if (isRedisAvailable()) {
-            generator = new RedisSequenceNumberGenerator(jedisPool());
-        }
-
-        if (generator == null) {
-          if (Zimbra.isAlwaysOn()) {
-              throw new Exception("Redis is required in always on environment");
-          }
-          generator = new LocalSequenceNumberGenerator();
-        }
-        return generator;
-    }
 }

@@ -78,8 +78,8 @@ public class RedoableOpSubclassChecker {
     }
 
     public static class MyZimbraConfig {
-        @Bean(name="redologProvider")
-        public RedoLogProvider redoLogProviderBean() throws Exception {
+        @Bean
+        public RedoLogProvider redologProvider() throws Exception {
             return new DefaultRedoLogProvider();
         }
 

@@ -132,10 +132,10 @@ public class RedisCoordinatedLocalMailboxLockTest extends AbstractMailboxLockTes
             return null;
         }
 
-        @Bean(name="mailboxLockFactory")
+        @Bean
         @Override
         // Unit tests need Mailbox to use a non-Redis MailboxLock adapter, so that mailbox ops don't get in the way of isolation testing
-        public MailboxLockFactory mailboxLockFactoryBean() throws ServiceException {
+        public MailboxLockFactory mailboxLockFactory() throws ServiceException {
             return new MailboxLockFactory() {
                 public MailboxLock create(String accountId, Mailbox mbox) throws ServiceException {
                     return new LocalMailboxLock(accountId, mbox);

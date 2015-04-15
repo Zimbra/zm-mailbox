@@ -31,20 +31,20 @@ import com.zimbra.cs.util.ZimbraConfig;
 public class LocalCachingZimbraConfig extends ZimbraConfig {
 
     @Override
-    @Bean(name="calendarCacheManager")
-    public CalendarCacheManager calendarCacheManagerBean() throws ServiceException {
-        return super.calendarCacheManagerBean(); // TODO need a Local adapter
+    @Bean
+    public CalendarCacheManager calendarCacheManager() throws ServiceException {
+        return super.calendarCacheManager(); // TODO need a Local adapter
     }
 
     @Override
-    @Bean(name="effectiveACLCache")
-    public EffectiveACLCache effectiveACLCacheBean() throws ServiceException {
-        return super.effectiveACLCacheBean(); // TODO need a Local adapter
+    @Bean
+    public EffectiveACLCache effectiveACLCache() throws ServiceException {
+        return super.effectiveACLCache(); // TODO need a Local adapter
     }
 
     @Override
-    @Bean(name="foldersAndTagsCache")
-    public FoldersAndTagsCache foldersAndTagsCacheBean() throws ServiceException {
+    @Bean
+    public FoldersAndTagsCache foldersAndTagsCache() throws ServiceException {
         return new LocalFoldersAndTagsCache();
     }
 
@@ -64,8 +64,8 @@ public class LocalCachingZimbraConfig extends ZimbraConfig {
     }
 
     @Override
-    @Bean(name="sharedDeliveryCoordinator")
-    public SharedDeliveryCoordinator sharedDeliveryCoordinatorBean() throws Exception {
+    @Bean
+    public SharedDeliveryCoordinator sharedDeliveryCoordinator() throws Exception {
         return new LocalSharedDeliveryCoordinator();
     }
 }
