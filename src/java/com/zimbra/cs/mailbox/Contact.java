@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -32,13 +32,19 @@ import javax.activation.DataSource;
 import javax.mail.internet.MimeMessage;
 import javax.mail.util.ByteArrayDataSource;
 
+import org.codehaus.jackson.JsonNode;
+import org.codehaus.jackson.map.ObjectMapper;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Strings;
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ListMultimap;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.zimbra.common.mailbox.Color;
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.mime.MimeConstants;
@@ -204,7 +210,7 @@ public class Contact extends MailItem {
         ContactConstants.A_workEmail1, ContactConstants.A_workEmail2, ContactConstants.A_workEmail3
     };
 
-    private String[] emailFields;
+    private final String[] emailFields;
 
     /**
      * Returns the email fields in contact for the account.
@@ -252,7 +258,7 @@ public class Contact extends MailItem {
     public Contact(Mailbox mbox, UnderlyingData data) throws ServiceException {
         this(mbox, data, false);
     }
-    
+
     public Contact(Mailbox mbox, UnderlyingData data, boolean skipCache) throws ServiceException {
         super(mbox, data, skipCache);
         if (mData.type != Type.CONTACT.toByte()) {
@@ -492,7 +498,7 @@ public class Contact extends MailItem {
         	    fileAs = last + ", " + first;
             }
         }
-        
+
         //ContactConstants.A_LAST_C_FIRST = 1
         StringBuilder sb = new StringBuilder();
         sb.append(last);
@@ -863,16 +869,12 @@ public class Contact extends MailItem {
         return fields.get(ContactConstants.A_vCardUID);
     }
 
-    public String getXProp(String xprop) {
-        return getXProps().get(xprop);
+    public ListMultimap<String, VCardParamsAndValue> getUnknownVCardProps() {
+        return decodeUnknownVCardProps(fields.get(ContactConstants.A_vCardXProps));
     }
 
-    public Map<String,String> getXProps() {
-        return decodeXProps(fields.get(ContactConstants.A_vCardXProps));
-    }
-
-    public void setXProps(Map<String,String> xprops) {
-        fields.put(ContactConstants.A_vCardXProps, encodeXProps(xprops));
+    public void setUnknownVCardProps(ListMultimap<String, VCardParamsAndValue> xprops) {
+        fields.put(ContactConstants.A_vCardXProps, encodeUnknownVCardProps(xprops));
     }
 
     // could be a GAL group (for GAL sync account) or a contact group
@@ -901,44 +903,130 @@ public class Contact extends MailItem {
         return SMIME_FIELDS.contains(fieldName);
     }
 
-    public static Map<String,String> decodeXProps(String xpropStr) {
-        HashMap<String,String> xprops = new HashMap<String,String>();
-        if (xpropStr == null || xpropStr.length() == 0)
+    private static final String ZMVAL = "ZMVAL";
+    private static final String ZMVALENCODED = "{\"ZMVAL\":";
+    // Use this when VCARD parameters are involved
+    private static final String ZMPROP = "ZMPROP";
+    private static final String ZMPROPENCODED = "{\"ZMPROP\":";
+    private static final String ZMPARAM = "PAR";
+
+    // xprops and other unknown VCARD properties are not automatically added to the Contact object
+    // as a distinct attribute. the xprops are encoded into JSONObject,
+    // then added as ContactConstants.a_vCardXProps attr to the map.
+
+    public static ListMultimap<String, VCardParamsAndValue> decodeUnknownVCardProps(String xpropStr) {
+        ListMultimap<String, VCardParamsAndValue> xprops = ArrayListMultimap.create();
+        if (xpropStr == null || xpropStr.length() == 0) {
             return xprops;
+        }
+        ObjectMapper mapper = new ObjectMapper();
         try {
-            JSONObject xpropObj = new JSONObject(xpropStr);
-            Iterator<?> iter = xpropObj.keys();
-            while (iter.hasNext()) {
-                String key = (String)iter.next();
-                xprops.put(key, xpropObj.get(key).toString());
+            JsonNode node = mapper.readTree(xpropStr);
+            Iterator<String> fieldNames = node.getFieldNames();
+            while (fieldNames.hasNext()) {
+                String fieldName = fieldNames.next();
+                String fieldValue = node.get(fieldName).asText();
+                if (fieldValue.startsWith(ZMVALENCODED)) {
+                    JsonNode zmVal = mapper.readTree(fieldValue);
+                    JsonNode zmValValue = zmVal.get(ZMVAL);
+                    if (null == zmValValue) {
+                        ZimbraLog.mailop.info("Field %s has corrupt value='%s'", fieldName, fieldValue);
+                        continue;
+                    }
+                    Iterator<JsonNode> values = zmValValue.iterator();
+                    while (values.hasNext()) {
+                        JsonNode value = values.next();
+                        xprops.put(fieldName, new VCardParamsAndValue(value.asText()));
+                    }
+                } else if (fieldValue.startsWith(ZMPROPENCODED)) {
+                    JsonNode zmProp = mapper.readTree(fieldValue);
+                    JsonNode props = zmProp.get(ZMPROP);
+                    if (null == props) {
+                        ZimbraLog.mailop.info("Field %s has corrupt value='%s'", fieldName, fieldValue);
+                        continue;
+                    }
+                    Iterator<JsonNode> values = props.iterator();
+                    while (values.hasNext()) {
+                        JsonNode value = values.next();
+                        JsonNode zmValValue = value.get(ZMVAL);
+                        if (null == zmValValue) {
+                            ZimbraLog.mailop.info("Field %s has corrupt value='%s'", fieldName, fieldValue);
+                            continue;
+                        }
+                        String val = zmValValue.asText();  // Can't be an array if using ZMPROP wrapper
+                        Set<String> params = Sets.newHashSet();
+                        JsonNode paramNode = value.get(ZMPARAM);
+                        if (null != paramNode) {
+                            Iterator<JsonNode> paramsIter = paramNode.iterator();
+                            while (paramsIter.hasNext()) {
+                                JsonNode paramValue = paramsIter.next();
+                                params.add(paramValue.asText());
+                            }
+                        }
+                        xprops.put(fieldName, new VCardParamsAndValue(val, params));
+                    }
+                } else {
+                    xprops.put(fieldName, new VCardParamsAndValue(fieldValue));
+                }
             }
-        } catch (JSONException e) {
+        } catch (IOException e) {
             ZimbraLog.mailop.debug("can't get xprop %s", xpropStr, e);
         }
         return xprops;
     }
 
-    // xprops are not automatically added to the Contact object
-    // as a distinct attribute. the xprops are encoded into JSONObject,
-    // then added as ContactConstants.a_vCardXProps attr to the map.
-    public static String encodeXProps(Map<String,String> xprops) {
+    public static String encodeUnknownVCardProps(ListMultimap<String, VCardParamsAndValue> xprops) {
         JSONObject jsonobj = new JSONObject();
         try {
-            for (String s : xprops.keySet())
-                jsonobj.put(s, xprops.get(s));
+            for (String propName : xprops.keySet()) {
+                List<VCardParamsAndValue> paramsAndValueList = xprops.get(propName);
+                if ((paramsAndValueList.size() == 1) && paramsAndValueList.get(0).getParams().isEmpty()) {
+                    VCardParamsAndValue paramsAndValue = paramsAndValueList.get(0);
+                    jsonobj.put(propName, paramsAndValue.getValue());
+                } else {
+                    boolean hasParams = false;
+                    for (VCardParamsAndValue paramsAndValue : paramsAndValueList) {
+                        if (!paramsAndValue.getParams().isEmpty()) {
+                            hasParams = true;
+                            break;
+                        }
+                    }
+                    if (hasParams) {
+                        jsonobj.put(propName, encodeAttrWithParamsAndValue(paramsAndValueList));
+                    } else {
+                        List<String> values = Lists.newArrayListWithCapacity(paramsAndValueList.size());
+                        for (VCardParamsAndValue paramsAndValue : paramsAndValueList) {
+                            values.add(paramsAndValue.getValue());
+                        }
+                        jsonobj.put(propName, Contact.encodeMultiValueAttr(values.toArray(new String[0])));
+                    }
+                }
+            }
         } catch (JSONException e) {
             ZimbraLog.mailop.debug("can't encode xprops to JSONObject", e);
         }
         return jsonobj.toString();
     }
 
-    private static final String ZMVAL = "ZMVAL";
-    private static final String ZMVALENCODED = "{\"ZMVAL\":";
+    public static String encodeAttrWithParamsAndValue(List<VCardParamsAndValue> paramsAndValueList)
+    throws JSONException {
+        JSONObject jsonObj = new JSONObject();
+        for (VCardParamsAndValue paramsAndValue : paramsAndValueList) {
+            JSONObject jsonProp = new JSONObject();
+            jsonProp.put(ZMVAL, paramsAndValue.getValue());
+            for (String param : paramsAndValue.getParams()) {
+                jsonProp.append(ZMPARAM, param);
+            }
+            jsonObj.append(ZMPROP, jsonProp);
+        }
+        return jsonObj.toString();
+    }
 
     public static String encodeMultiValueAttr(String[] attrs) throws JSONException {
         JSONObject jsonobj = new JSONObject();
-        for (String s : attrs)
+        for (String s : attrs) {
             jsonobj.append(ZMVAL, s);
+        }
         return jsonobj.toString();
     }
     public static boolean isMultiValueAttr(String attr) {

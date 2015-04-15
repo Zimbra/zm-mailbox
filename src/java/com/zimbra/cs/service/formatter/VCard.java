@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2006, 2007, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -16,6 +16,8 @@
  */
 package com.zimbra.cs.service.formatter;
 
+import java.io.IOException;
+import java.io.StringWriter;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -31,11 +33,15 @@ import java.util.Set;
 import javax.mail.internet.ContentType;
 import javax.mail.internet.ParseException;
 
+import net.fortuna.ical4j.data.FoldingWriter;
+
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.net.QuotedPrintableCodec;
-import org.json.JSONException;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ListMultimap;
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
@@ -44,6 +50,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.Contact.Attachment;
 import com.zimbra.cs.mailbox.Contact.DerefGroupMembersOption;
+import com.zimbra.cs.mailbox.VCardParamsAndValue;
 import com.zimbra.cs.mime.ParsedContact;
 import com.zimbra.cs.util.Zimbra;
 
@@ -115,7 +122,16 @@ public class VCard {
 
         boolean isEmpty()       { return isEmpty; }
         Encoding getEncoding()  { return encoding; }
-        boolean containsParam(String param)  { return params.contains(param); }
+        boolean containsParam(String param) {
+            String ucaseParam = param.toUpperCase();
+            for (String par : params) {
+                if (par.equalsIgnoreCase(ucaseParam)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
         String getParamValue(String pname) {
             pname = pname.toUpperCase() + '=';
             for (String param : params) {
@@ -167,19 +183,27 @@ public class VCard {
                         start = i + 1;
                     }
                 }
-                String pval = line.substring(start, i).toUpperCase();
+                String pval = line.substring(start, i);
                 if (!pval.equals("")) {
-                    String param = (pname != null ? pname + '=' + pval : PARAM_ABBREVIATIONS.get(pval));
-                    if (param == null)                                   continue;
-                    else if (param.equals("ENCODING=B"))                 encoding = Encoding.B;
-                    else if (param.equals("ENCODING=BASE64"))            encoding = Encoding.B;
-                    else if (param.equals("ENCODING=QUOTED-PRINTABLE"))  encoding = Encoding.Q;
-                    else if (pname != null && pname.equals("CHARSET"))   charset = pval;
-                    else                                                 params.add(param);
+                    String pvalUCase = pval.toUpperCase();
+                    String param = (pname != null ? pname + '=' + pval : PARAM_ABBREVIATIONS.get(pvalUCase));
+                    String paramUCase = param.toUpperCase();
+                    if (paramUCase.equals("ENCODING=B")) {
+                        encoding = Encoding.B;
+                    } else if (paramUCase.equals("ENCODING=BASE64")) {
+                        encoding = Encoding.B;
+                    } else if (paramUCase.equals("ENCODING=QUOTED-PRINTABLE")) {
+                        encoding = Encoding.Q;
+                    } else if (pname != null && pname.equals("CHARSET")) {
+                        charset = pval;
+                    } else {
+                        params.add(param);
+                    }
                 }
 
-                if (c == ';')
+                if (c == ';') {
                     pname = null;
+                }
             }
 
             return name;
@@ -219,7 +243,7 @@ public class VCard {
         List<VCard> cards = new ArrayList<VCard>();
 
         Map<String, String> fields = new HashMap<String, String>();
-        Map<String, Object> xprops = new HashMap<String, Object>();
+        ListMultimap<String, VCardParamsAndValue> xprops = ArrayListMultimap.create();
         List<Attachment> attachments = new ArrayList<Attachment>();
 
         VCardProperty vcprop = new VCardProperty();
@@ -228,7 +252,9 @@ public class VCard {
         String uid = null;
         for (int start, pos = 0, limit = vcard.length(); pos < limit;) {
             // unfold the next line in the vcard
-            String line = "", name = null, value;
+            String line = "";
+            String name = null;
+            String value;
             int linestart = pos;
             boolean folded = true;
             do {
@@ -248,38 +274,37 @@ public class VCard {
                         folded = false;
                 }
             } while (folded);
-            if (vcprop.isEmpty())
+            if (vcprop.isEmpty()) {
                 continue;
+            }
 
-            if (name.equals("")) {
+            if (Strings.isNullOrEmpty(name)) {
                 throw ServiceException.PARSE_ERROR("missing property name in line " + line, null);
-            } else if (name.startsWith("X-") && !name.startsWith("X-ZIMBRA-")) {
-                String decodedValue = vcfDecode(vcprop.getValue());
+            } else if (name.equals("VERSION") || name.equals("REV") || name.equals("PRODID")) {
+                continue;
+            } else if ((name.startsWith("X-") && !name.startsWith("X-ZIMBRA-")) ||
+                        (!PROPERTY_NAMES.contains(name) /* Assume iana-token */)) {
+                VCardParamsAndValue ppav;
+                if (Encoding.B.equals(vcprop.encoding)) {
+                    // Keep value encoded as don't trust binary data stored in metadata
+                    Set<String> params = vcprop.params;
+                    params.add("ENCODING=B");
+                    if ((vcprop.charset != null) && (!MimeConstants.P_CHARSET_UTF8.equals(vcprop.charset))) {
+                        params.add(String.format("CHARSET=%s", vcprop.charset));
+                    }
+                    ppav = new VCardParamsAndValue(vcprop.value, vcprop.params);
+                } else {
+                    ppav = new VCardParamsAndValue(vcfDecode(vcprop.getValue()), vcprop.params);
+                }
                 // handle multiple occurrences of xprops with the same key
                 String group = vcprop.getGroup();
                 String key = (group == null) ? name : group + "." + name;
-                Object val = xprops.get(key);
-                if (val != null) {
-                    if (val instanceof ArrayList) {
-                        @SuppressWarnings("unchecked")
-                        ArrayList<String> valArray = (ArrayList) val;
-                        valArray.add(decodedValue);
-                    } else {
-                        ArrayList<String> valArray = new ArrayList<String>();
-                        valArray.add((String)val);
-                        valArray.add(decodedValue);
-                        xprops.put(key, valArray);
-                    }
-                } else {
-                    xprops.put(key, decodedValue);
-                }
-            } else if (!PROPERTY_NAMES.contains(name)) {
-                continue;
+                xprops.put(key, ppav);
             } else if (name.equals("BEGIN")) {
                 if (++depth == 1) {
                     // starting a top-level vCard; reset state
                     fields = new HashMap<String, String>();
-                    xprops = new HashMap<String,Object>();
+                    xprops = ArrayListMultimap.create();
                     attachments = new ArrayList<Attachment>();
                     cardstart = linestart;
                     uid = null;
@@ -288,32 +313,14 @@ public class VCard {
             } else if (name.equals("END")) {
                 if (depth > 0 && depth-- == 1) {
                     if (!xprops.isEmpty()) {
-                        HashMap<String, String> newMap = new HashMap<String, String>();
-                        // handle multiple occurrences of xprops with the same key
-                        for (Entry<String, Object> xprop : xprops.entrySet()) {
-                            Object v = xprop.getValue();
-                            String val = null;
-                            if (v instanceof ArrayList) {
-                                @SuppressWarnings("unchecked")
-                                ArrayList<String> valArray = (ArrayList) v;
-                                try {
-                                    val = Contact.encodeMultiValueAttr(valArray.toArray(new String[valArray.size()]));
-                                } catch (JSONException ignored) {
-                                }
-                                if (val == null)
-                                    val = v.toString();
-                                newMap.put(xprop.getKey(), val);
-                            } else {
-                                newMap.put(xprop.getKey(), (String)v);
-                            }
-                        }
-                        fields.put(ContactConstants.A_vCardXProps, Contact.encodeXProps(newMap));
+                        fields.put(ContactConstants.A_vCardXProps, Contact.encodeUnknownVCardProps(xprops));
                     }
 
                     // finished a vCard; add to list if non-empty
                     if (!fields.isEmpty()) {
                         Contact.normalizeFileAs(fields);
-                        cards.add(new VCard(fields.get(ContactConstants.A_fullName), vcard.substring(cardstart, pos), fields, attachments, uid));
+                        cards.add(new VCard(fields.get(ContactConstants.A_fullName), vcard.substring(cardstart, pos),
+                                fields, attachments, uid));
                     }
                 }
                 continue;
@@ -328,8 +335,9 @@ public class VCard {
 
             if (vcprop.getEncoding() == Encoding.B && !vcprop.containsParam("VALUE=URI")) {
                 if (name.equals("PHOTO")) {
-                    String suffix = vcprop.getParamValue("TYPE"), ctype = null;
-                    if (suffix != null && !suffix.equals("")) {
+                    String suffix = vcprop.getParamValue("TYPE").toUpperCase();
+                    String ctype = null;
+                    if (!Strings.isNullOrEmpty(suffix)) {
                         ctype = "image/" + suffix.toLowerCase();
                         suffix = '.' + suffix;
                     }
@@ -562,18 +570,25 @@ public class VCard {
     }
 
     private static String vcfDecode(String value) {
-        if (value == null || value.equals(""))
+        if (Strings.isNullOrEmpty(value)) {
             return "";
+        }
         StringBuilder sb = new StringBuilder();
         boolean escaped = false;
         for (int i = 0, len = value.length(); i < len; i++) {
             char c = value.charAt(i);
-            if (c == '\\' && !escaped)  escaped = true;
-            else if (!escaped)          sb.append(c);
-            else {
-                if (c == 'n' || c == 'N')       sb.append('\n');
-                else if (c == 't' || c == 'T')  sb.append('\t');
-                else                            sb.append(c);
+            if (c == '\\' && !escaped) {
+                escaped = true;
+            } else if (!escaped) {
+                sb.append(c);
+            } else {
+                if (c == 'n' || c == 'N') {
+                    sb.append('\n');
+                } else if (c == 't' || c == 'T') {
+                    sb.append('\t');
+                } else {
+                    sb.append(c);
+                }
                 escaped = false;
             }
         }
@@ -589,7 +604,8 @@ public class VCard {
         return formatContact(con, vcattrs, includeXProps, true);
     }
 
-    public static VCard formatContact(Contact con, Collection<String> vcattrs, boolean includeXProps, boolean includeZimbraXProps) {
+    public static VCard formatContact(Contact con, Collection<String> vcattrs, boolean includeXProps,
+            boolean includeZimbraXProps) {
         Map<String, String> fields = con.getFields();
         List<Attachment> attachments = con.getAttachments();
         List<String> emails = con.getEmailAddresses(DerefGroupMembersOption.NONE);
@@ -755,10 +771,13 @@ public class VCard {
         }
 
         String uid = getUid(con);
-        if (vcattrs == null || vcattrs.contains("REV"))
-            sb.append("REV:").append(new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").format(new Date(con.getDate()))).append("\r\n");
-        if (vcattrs == null || vcattrs.contains("UID"))
+        if (vcattrs == null || vcattrs.contains("REV")) {
+            sb.append("REV:").append(
+                    new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").format(new Date(con.getDate()))).append("\r\n");
+        }
+        if (vcattrs == null || vcattrs.contains("UID")) {
             sb.append("UID:").append(uid).append("\r\n");
+        }
         // sb.append("MAILER:Zimbra ").append(BuildInfo.VERSION).append("\r\n");
         if ((vcattrs == null && includeZimbraXProps) || (vcattrs != null && vcattrs.contains("X-ZIMBRA-IMADDRESS"))) {
             encodeField(sb, "X-ZIMBRA-IMADDRESS", "imAddress", true, 1, fields);
@@ -772,15 +791,31 @@ public class VCard {
                 sb.append("X-ZIMBRA-MAIDENNAME:").append(maidenName).append("\r\n");
         }
         if (includeXProps) {
-            for (Entry<String, String> xprop : con.getXProps().entrySet()) {
-
-                String key = xprop.getKey();
-                try {
-                    for (String value : Contact.parseMultiValueAttr(xprop.getValue())) {
-                        sb.append(key).append(":").append(value).append("\r\n");
+            ListMultimap<String, VCardParamsAndValue> unknownVCardProps = con.getUnknownVCardProps();
+            for (String key : unknownVCardProps.keySet()) {
+                for (VCardParamsAndValue paramsAndValue : unknownVCardProps.get(key)) {
+                    StringWriter sw = new StringWriter();
+                    try (FoldingWriter writer = new FoldingWriter(sw)) {
+                        writer.write(key);
+                        String value = paramsAndValue.getValue();
+                        Set<String> params = paramsAndValue.getParams();
+                        if (!params.isEmpty()) {
+                            writer.write(";");
+                            writer.write(Joiner.on(";").join(params));
+                        }
+                        String vcfEncodedValue;
+                        if (params.contains("ENCODING=B")) {
+                            vcfEncodedValue = value;  // should be raw BASE64
+                        } else {
+                            vcfEncodedValue = vcfEncode(value);
+                        }
+                        writer.write(":");
+                        writer.write(vcfEncodedValue);
+                        writer.write("\r\n");
+                        sb.append(sw.toString());
+                    } catch (IOException e) {
+                         ZimbraLog.misc.debug("Problem with adding property '%s' to VCARD - ignoring", key, e);
                     }
-                } catch (JSONException e) {
-                    sb.append(key).append(":").append(xprop.getValue()).append("\r\n");
                 }
             }
         }
@@ -925,9 +960,6 @@ public class VCard {
     }
 
     public static void main(String args[]) throws ServiceException {
-        parseVCard("BEGIN:VCARD\r\n\r\nFN\n :dr. john doe\nADR;HOME;WORK:;;Hambone Ltd.\\N5 Main St.;Charlotte;NC;24243\nEMAIL:foo@bar.con\nEMAIL:bar@goo.com\nN:doe;john;\\;\\\\;dr.;;;;\nEND:VCARD\n");
-        parseVCard("BEGIN:VCARD\r\n\r\nFN\n :john doe\\, jr.\nORG:Zimbra;Marketing;Annoying Marketing\nA.TEL;type=fax,WORK:+1-800-555-1212\nTEL;type=home,work,voice:+1-800-555-1313\nNOTE;QUOTED-PRINTABLE:foo=3Dbar\nc.D.e.NOTE;ENCODING=B;charset=iso-8859-1:SWYgeW91IGNhbiByZWFkIHRoaXMgeW8=\nEND:VCARD\n");
-        parseVCard("BEGIN : VCARD\nFN\n :john doe\\, jr.\nAGENT:\\nBEGIN:VCARD\\nEND:VCARD\nEND:VCARD");
-//        parseVCard("BEGIN:VCARD\r\n\r\nFN\n :john doe\nA.TEL;WORK:+1-800-555-1212\n.:?\n:\nEND:VCARD\n");
+        // Test data moved to VCardTest
     }
 }

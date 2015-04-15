@@ -100,7 +100,11 @@ import com.zimbra.soap.account.message.ModifyPrefsResponse;
 import com.zimbra.soap.account.type.Pref;
 import com.zimbra.soap.mail.message.CreateMountpointRequest;
 import com.zimbra.soap.mail.message.CreateMountpointResponse;
+import com.zimbra.soap.mail.message.SearchRequest;
+import com.zimbra.soap.mail.message.SearchResponse;
+import com.zimbra.soap.mail.type.ContactInfo;
 import com.zimbra.soap.mail.type.NewMountpointSpec;
+import com.zimbra.soap.type.SearchHit;
 
 public class TestCalDav extends TestCase {
 
@@ -1259,6 +1263,226 @@ public class TestCalDav extends TestCase {
         putMethod.addRequestHeader(DavProtocol.HEADER_IF_NONE_MATCH, "*");
         putMethod.setRequestEntity(new ByteArrayRequestEntity(simpleVcard.getBytes(), MimeConstants.CT_TEXT_VCARD));
         HttpMethodExecutor.execute(client, putMethod, HttpStatus.SC_PRECONDITION_FAILED);
+    }
+
+    private static String rachelVcard =
+            "BEGIN:VCARD\n" +
+            "VERSION:3.0\n" +
+            "PRODID:-//BusyMac LLC//BusyContacts 1.0.2//EN\n" +
+            "FN:La Rochelle\n" +
+            "N:Rochelle;La;;;\n" +
+            "EMAIL;TYPE=internet:rachel@fun.org\n" +
+            "CATEGORIES:BlueGroup\n" +
+            "REV:2015-04-04T13:55:56Z\n" +
+            "UID:07139DE2-EA7B-46CB-A970-C4DF7F72D9AE\n" +
+            "X-BUSYMAC-MODIFIED-BY:Gren Elliot\n" +
+            "X-CREATED:2015-04-04T13:55:25Z\n" +
+            "END:VCARD\n";
+
+    private static String blueGroupCreate =
+            "BEGIN:VCARD\n" +
+            "VERSION:3.0\n" +
+            "PRODID:-//BusyMac LLC//BusyContacts 1.0.2//EN\n" +
+            "FN:BlueGroup\n" +
+            "N:BlueGroup\n" +
+            "REV:2015-04-04T13:55:56Z\n" +
+            "UID:F53A6F96-566F-46CC-8D48-A5263FAB5E38\n" +
+            "X-ADDRESSBOOKSERVER-KIND:group\n" +
+            "X-ADDRESSBOOKSERVER-MEMBER:urn:uuid:07139DE2-EA7B-46CB-A970-C4DF7F72D9AE\n" +
+            "END:VCARD\n";
+
+    private static String parisVcard =
+            "BEGIN:VCARD\n" +
+            "VERSION:3.0\n" +
+            "FN:Paris Match\n" +
+            "N:Match;Paris;;;\n" +
+            "EMAIL;TYPE=internet:match@paris.fr\n" +
+            "CATEGORIES:BlueGroup\n" +
+            "REV:2015-04-04T13:56:50Z\n" +
+            "UID:BE43F16D-336E-4C3E-BAE6-22B8F245A986\n" +
+            "END:VCARD\n";
+
+    private static String blueGroupModify =
+            "BEGIN:VCARD\n" +
+            "VERSION:3.0\n" +
+            "PRODID:-//BusyMac LLC//BusyContacts 1.0.2//EN\n" +
+            "FN:BlueGroup\n" +
+            "N:BlueGroup\n" +
+            "REV:2015-04-04T13:56:50Z\n" +
+            "UID:F53A6F96-566F-46CC-8D48-A5263FAB5E38\n" +
+            "X-ADDRESSBOOKSERVER-KIND:group\n" +
+            "X-ADDRESSBOOKSERVER-MEMBER:urn:uuid:BE43F16D-336E-4C3E-BAE6-22B8F245A986\n" +
+            "X-ADDRESSBOOKSERVER-MEMBER:urn:uuid:07139DE2-EA7B-46CB-A970-C4DF7F72D9AE\n" +
+            "END:VCARD\n";
+
+    public void testAppleStyleGroup() throws ServiceException, IOException {
+        Account dav1 = TestUtil.createAccount(DAV1);
+        String contactsFolderUrl = getFolderUrl(dav1, "Contacts");
+        HttpClient client = new HttpClient();
+
+        PostMethod postMethod = new PostMethod(contactsFolderUrl);
+        addBasicAuthHeaderForUser(postMethod, dav1);
+        postMethod.addRequestHeader("Content-Type", "text/vcard");
+        postMethod.setRequestEntity(new ByteArrayRequestEntity(rachelVcard.getBytes(), MimeConstants.CT_TEXT_VCARD));
+        HttpMethodExecutor.execute(client, postMethod, HttpStatus.SC_CREATED);
+
+        postMethod = new PostMethod(contactsFolderUrl);
+        addBasicAuthHeaderForUser(postMethod, dav1);
+        postMethod.addRequestHeader("Content-Type", "text/vcard");
+        postMethod.setRequestEntity(new ByteArrayRequestEntity(blueGroupCreate.getBytes(), MimeConstants.CT_TEXT_VCARD));
+        HttpMethodExecutor exe = HttpMethodExecutor.execute(client, postMethod, HttpStatus.SC_CREATED);
+        String groupLocation = null;
+        for (Header hdr : exe.respHeaders) {
+            if ("Location".equals(hdr.getName())) {
+                groupLocation = hdr.getValue();
+            }
+        }
+        assertNotNull("Location Header returned when creating Group", groupLocation);
+
+        postMethod = new PostMethod(contactsFolderUrl);
+        addBasicAuthHeaderForUser(postMethod, dav1);
+        postMethod.addRequestHeader("Content-Type", "text/vcard");
+        postMethod.setRequestEntity(new ByteArrayRequestEntity(parisVcard.getBytes(), MimeConstants.CT_TEXT_VCARD));
+        HttpMethodExecutor.execute(client, postMethod, HttpStatus.SC_CREATED);
+
+        String url = String.format("%s%s", contactsFolderUrl, "F53A6F96-566F-46CC-8D48-A5263FAB5E38.vcf");
+        PutMethod putMethod = new PutMethod(url);
+        addBasicAuthHeaderForUser(putMethod, dav1);
+        putMethod.addRequestHeader("Content-Type", "text/vcard");
+        putMethod.setRequestEntity(new ByteArrayRequestEntity(blueGroupModify.getBytes(), MimeConstants.CT_TEXT_VCARD));
+        HttpMethodExecutor.execute(client, putMethod, HttpStatus.SC_NO_CONTENT);
+
+        GetMethod getMethod = new GetMethod(url);
+        addBasicAuthHeaderForUser(getMethod, dav1);
+        getMethod.addRequestHeader("Content-Type", "text/vcard");
+        exe = HttpMethodExecutor.execute(client, getMethod, HttpStatus.SC_OK);
+        String respBody = new String(exe.responseBodyBytes, MimeConstants.P_CHARSET_UTF8);
+        String [] expecteds = {
+            "X-ADDRESSBOOKSERVER-KIND:group",
+            "X-ADDRESSBOOKSERVER-MEMBER:urn:uuid:BE43F16D-336E-4C3E-BAE6-22B8F245A986",
+            "X-ADDRESSBOOKSERVER-MEMBER:urn:uuid:07139DE2-EA7B-46CB-A970-C4DF7F72D9AE" };
+        for (String expected : expecteds) {
+            assertTrue(String.format("GET should contain '%s'\nBODY=%s", expected, respBody),
+                    respBody.contains(expected));
+        }
+
+        // members are actually stored in a different way.  Make sure it isn't a fluke
+        // that the GET response contained the correct members by checking that the members
+        // appear where expected in a search hit.
+        SearchRequest searchRequest = new SearchRequest();
+        searchRequest.setSortBy("dateDesc");
+        searchRequest.setLimit(8);
+        searchRequest.setSearchTypes("contact");
+        searchRequest.setQuery("in:Contacts");
+        ZMailbox mbox = TestUtil.getZMailbox(DAV1);
+        SearchResponse searchResp = mbox.invokeJaxb(searchRequest);
+        assertNotNull("JAXB SearchResponse object", searchResp);
+        List<SearchHit> hits = searchResp.getSearchHits();
+        assertNotNull("JAXB SearchResponse hits", hits);
+        assertEquals("JAXB SearchResponse hits", 3, hits.size());
+        boolean seenGroup = false;
+        for (SearchHit hit : hits) {
+            ContactInfo contactInfo = (ContactInfo) hit;
+            if ("BlueGroup".equals(contactInfo.getFileAs())) {
+                seenGroup = true;
+                assertEquals("Number of members of group in search hit", 2, contactInfo.getContactGroupMembers().size());
+            }
+            ZimbraLog.test.info("Hit %s class=%s", hit, hit.getClass().getName());
+        }
+        assertTrue("Seen group", seenGroup);
+    }
+
+    private static String smallBusyMacAttach =
+            "BEGIN:VCARD\r\n" +
+            "VERSION:3.0\r\n" +
+            "PRODID:-//BusyMac LLC//BusyContacts 1.0.2//EN\r\n" +
+            "FN:John Smith\r\n" +
+            "N:Smith;John;;;\r\n" +
+            "REV:2015-04-05T09:51:09Z\r\n" +
+            "UID:99E01E16-03B3-4487-AAEF-AEB496852C06\r\n" +
+            "X-BUSYMAC-ATTACH;ENCODING=b;X-FILENAME=favicon.ico:AAABAAEAEBAAAAEAIABoBAAA\r\n" +
+            " FgAAACgAAAAQAAAAIAAAAAEAIAAAAAAAQAQAABMLAAATCwAAAAAAAAAAAAAAAAAAw4cAY8OHAM\r\n" +
+            " nDhwD8w4cA/8OHAP/DhwD/w4cA/8OHAP/DhwD/w4cA/8OHAP/DhwD8w4cAycOHAGMAAAAAw4cA\r\n" +
+            " Y8OHAP/DhwD/w4cA/8OHAP/DhwD/w4cA/8OHAP/DhwD/w4cA/8OHAP/DhwD/w4cA/8OHAP/Dhw\r\n" +
+            " D/w4cAY8OHAMnDhwD/w4cA/7yYSv/y5Mb/8uXH//Llx//z5sr/8+bK//Pmyv/z58v/8+bK/8qq\r\n" +
+            " Y//DhwD/w4cA/8OHAMnDhwDhw4cA/8OHAP++q4D///////////////7////+//////////////\r\n" +
+            " /////////Yyan/w4cA/8OHAP/DhwDhw4cA4cOHAP/DhwD/t4QR/9/azv//////5t3K/9StVv/b\r\n" +
+            " t2b/27dm/9u3Z//cuGn/wpAh/8OHAP/DhwD/w4cA4cOHAOHDhwD/w4cA/8OHAP+2jzr/+fj2//\r\n" +
+            " n49f/BnU7/w4cA/8OHAP/DhwD/w4cA/8OHAP/DhwD/w4cA/8OHAOHDhwDhw4cA/8OHAP/DhwD/\r\n" +
+            " w4cA/7ihbf//////8u/p/8GRJv/DhwD/w4cA/8OHAP/DhwD/w4cA/8OHAP/DhwDhw4cA4cOHAP\r\n" +
+            " /DhwD/w4cA/8OHAP/BhgP/0siz///////d1L//wYgI/8OHAP/DhwD/w4cA/8OHAP/DhwD/w4cA\r\n" +
+            " 4cOHAOHDhwD/w4cA/8OHAP/DhwD/w4cA/7eIIP/n49v//////8e0iP/DhwD/w4cA/8OHAP/Dhw\r\n" +
+            " D/w4cA/8OHAOHDhwDhw4cA/8OHAP/DhwD/w4cA/8OHAP/DhwD/rItA//39/P/6+vj/w6BQ/8OH\r\n" +
+            " AP/DhwD/w4cA/8OHAP/DhwDhw4cA4cOHAP/DhwD/w4cA/8OHAP/DhwD/w4cA/8OHAP+8p3r//v\r\n" +
+            " 79/+3p4v+8ix3/w4cA/8OHAP/DhwD/w4cA4cOHAOHDhwD/w4cA/8CHB//VsFz/3rxx/926bf/c\r\n" +
+            " uWv/xadh//Ht5///////1suz/7+HCv/DhwD/w4cA/8OHAOHDhwDhw4cA/8OHAP+wjT//+/r5//\r\n" +
+            " /////////////////////+/v7///////7+/v+8n17/w4cA/8OHAP/DhwDhw4cAycOHAP/DhwD/\r\n" +
+            " t4gd/+bYuP/16tP/9OjP//Toz//06M//8+fN//Pozv/t4MH/vZIx/8OHAP/DhwD/w4cAycOHAG\r\n" +
+            " DDhwD/w4cA/8OHAP/DhwD/w4cA/8OHAP/DhwD/w4cA/8OHAP/DhwD/w4cA/8OHAP/DhwD/w4cA\r\n" +
+            " /8OHAGAAAAAAw4cAWsOHAMnDhwD8w4cA/8OHAP/DhwD/w4cA/8OHAP/DhwD/w4cA/8OHAP/Dhw\r\n" +
+            " D8w4cAycOHAFoAAAAAgAEAAAAAAAAAAAAAAABoQAAAAAAAAPC/AAAAAAAAAAAAAAAAAAAiQAAA\r\n" +
+            " AAAAAAAAAAAAAAAAAAAAAAAAgAEAAA==\r\n" +
+            "X-BUSYMAC-MODIFIED-BY:Gren Elliot\r\n" +
+            "X-CUSTOM:one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen\r\n" +
+            "X-CUSTOM:Here are my simple\\nmultiline\\nnotes\r\n" +
+            "X-CUSTOM;TYPE=pref:semi-colon\\;seperated\\;\"stuff\"\\;here\r\n" +
+            "X-CUSTOM:comma\\,\"stuff\"\\,'there'\\,too\r\n" +
+            "X-HOBBY:my backslash\\\\ hobbies\r\n" +
+            "X-CREATED:2015-04-05T09:50:44Z\r\n" +
+            "END:VCARD\r\n";
+
+
+    public void testXBusyMacAttach() throws ServiceException, IOException {
+        Account dav1 = TestUtil.createAccount(DAV1);
+        String contactsFolderUrl = getFolderUrl(dav1, "Contacts");
+        HttpClient client = new HttpClient();
+
+        PostMethod postMethod = new PostMethod(contactsFolderUrl);
+        addBasicAuthHeaderForUser(postMethod, dav1);
+        postMethod.addRequestHeader("Content-Type", "text/vcard");
+        postMethod.setRequestEntity(new ByteArrayRequestEntity(smallBusyMacAttach.getBytes(),
+                MimeConstants.CT_TEXT_VCARD));
+        HttpMethodExecutor exe = HttpMethodExecutor.execute(client, postMethod, HttpStatus.SC_CREATED);
+        String location = null;
+        for (Header hdr : exe.respHeaders) {
+            if ("Location".equals(hdr.getName())) {
+                location = hdr.getValue();
+            }
+        }
+        assertNotNull("Location Header returned when creating", location);
+        String url = String.format("%s%s", contactsFolderUrl, location.substring(location.lastIndexOf('/') + 1));
+        GetMethod getMethod = new GetMethod(url);
+        addBasicAuthHeaderForUser(getMethod, dav1);
+        getMethod.addRequestHeader("Content-Type", "text/vcard");
+        exe = HttpMethodExecutor.execute(client, getMethod, HttpStatus.SC_OK);
+        String respBody = new String(exe.responseBodyBytes, MimeConstants.P_CHARSET_UTF8);
+        String [] expecteds = {
+            "\r\nX-BUSYMAC-ATTACH;X-FILENAME=favicon.ico;ENCODING=B:AAABAAEAEBAAAAEAIABoBA\r\n",
+            "\r\n AAFgAAACgAAAAQAAAAIAAAAAEAIAAAAAAAQAQAABMLAAATCwAAAAAAAAAAAAAAAAAAw4cAY8\r\n",
+            "\r\nX-BUSYMAC-MODIFIED-BY:Gren Elliot\r\n",
+            "\r\nX-CUSTOM:one two three four five six seven eight nine ten eleven twelve t\r\n hirteen fourteen fifteen",
+            "\r\nX-CUSTOM:Here are my simple\\Nmultiline\\Nnotes\r\n",
+            "\r\nX-CUSTOM;TYPE=pref:semi-colon\\;seperated\\;\"stuff\"\\;here\r\n",
+            "\r\nX-CUSTOM:comma\\,\"stuff\"\\,'there'\\,too\r\n",
+            "\r\nX-HOBBY:my backslash\\\\ hobbies\r\n",
+            "\r\nX-CREATED:2015-04-05T09:50:44Z\r\n" };
+        for (String expected : expecteds) {
+            assertTrue(String.format("GET should contain '%s'\nBODY=%s", expected, respBody),
+                    respBody.contains(expected));
+        }
+
+        SearchRequest searchRequest = new SearchRequest();
+        searchRequest.setSortBy("dateDesc");
+        searchRequest.setLimit(8);
+        searchRequest.setSearchTypes("contact");
+        searchRequest.setQuery("in:Contacts");
+        ZMailbox mbox = TestUtil.getZMailbox(DAV1);
+        SearchResponse searchResp = mbox.invokeJaxb(searchRequest);
+        assertNotNull("JAXB SearchResponse object", searchResp);
+        List<SearchHit> hits = searchResp.getSearchHits();
+        assertNotNull("JAXB SearchResponse hits", hits);
+        assertEquals("JAXB SearchResponse hits", 1, hits.size());
+        ContactInfo contactInfo = (ContactInfo) hits.get(0);
     }
 
     public static final String expandPropertyGroupMemberSet =
