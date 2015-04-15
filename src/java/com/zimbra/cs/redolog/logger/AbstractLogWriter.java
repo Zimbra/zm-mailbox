@@ -54,7 +54,7 @@ public abstract class AbstractLogWriter implements LogWriter {
             CommitTxn cmt = (CommitTxn) op;
             RedoCommitCallback cb = cmt.getCallback();
             if (cb != null) {
-                long redoSeq = redoLogMgr.getRolloverManager().getCurrentSequence();
+                long redoSeq = redoLogMgr.getCurrentLogSequence();
                 CommitId cid = new CommitId(redoSeq, (CommitTxn) op);
                 Notif notif = new Notif(cb, cid);
                 // We queue it instead making the callback right away.

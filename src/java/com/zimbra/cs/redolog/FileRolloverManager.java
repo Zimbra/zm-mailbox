@@ -24,25 +24,27 @@ import java.util.Date;
 import com.zimbra.common.util.FileUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.redolog.seq.SequenceNumberGenerator;
 import com.zimbra.cs.redolog.util.RedoLogFileUtil;
 import com.zimbra.cs.redolog.util.RedoLogFileUtil.TempLogFilenameFilter;
 
-public class FileRolloverManager implements RolloverManager {
+public class FileRolloverManager extends AbstractRolloverManager {
 
     private static Log log4j = ZimbraLog.redolog;
 
 	private FileRedoLogManager mRedoLogMgr;
 	private File mRedoLogFile;
 
-    // Monotonically increasing sequence number for redolog files.
-    // Sequence starts at 0 and increments without gap, and may
-    // eventually wraparound.
-    private long mSequence;
-
 	public FileRolloverManager(FileRedoLogManager redoLogMgr, File redolog) {
-		mRedoLogMgr = redoLogMgr;
-		mRedoLogFile = redolog;
-        mSequence = 0;
+	    super();
+	    mRedoLogMgr = redoLogMgr;
+	    mRedoLogFile = redolog;
+	}
+
+	public FileRolloverManager(FileRedoLogManager redoLogMgr, File redolog, SequenceNumberGenerator generator) {
+	    super(generator);
+        mRedoLogMgr = redoLogMgr;
+        mRedoLogFile = redolog;
 	}
 
 	/**
@@ -108,25 +110,4 @@ public class FileRolloverManager implements RolloverManager {
         }
 		return new File(destDir, fname);
 	}
-
-    @Override
-    public synchronized long getCurrentSequence() {
-    	return mSequence;
-    }
-
-    @Override
-    public synchronized void initSequence(long seq) {
-        mSequence = seq;
-    }
-
-    @Override
-    public synchronized long incrementSequence() {
-        if (mSequence < Long.MAX_VALUE) {
-            ++mSequence;
-        } else {
-            mSequence = 0;
-        }
-        return mSequence;
-    }
-
 }

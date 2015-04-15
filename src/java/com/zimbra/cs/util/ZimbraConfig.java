@@ -79,6 +79,9 @@ import com.zimbra.cs.mailbox.calendar.cache.CalendarCacheManager;
 import com.zimbra.cs.memcached.ZimbraMemcachedClientConfigurer;
 import com.zimbra.cs.redolog.DefaultRedoLogProvider;
 import com.zimbra.cs.redolog.RedoLogProvider;
+import com.zimbra.cs.redolog.seq.LocalSequenceNumberGenerator;
+import com.zimbra.cs.redolog.seq.RedisSequenceNumberGenerator;
+import com.zimbra.cs.redolog.seq.SequenceNumberGenerator;
 import com.zimbra.cs.redolog.txn.LocalTxnIdGenerator;
 import com.zimbra.cs.redolog.txn.RedisTxnIdGenerator;
 import com.zimbra.cs.redolog.txn.TxnIdGenerator;
@@ -504,5 +507,22 @@ public class ZimbraConfig {
           idGenerator = new LocalTxnIdGenerator();
         }
         return idGenerator;
+    }
+
+    @Bean(name="redologSeqNumGenerator")
+    public SequenceNumberGenerator getSeqNumGenerator() throws Exception
+    {
+        SequenceNumberGenerator generator = null;
+        if (isRedisAvailable()) {
+            generator = new RedisSequenceNumberGenerator(jedisPool());
+        }
+
+        if (generator == null) {
+          if (Zimbra.isAlwaysOn()) {
+              throw new Exception("Redis is required in always on environment");
+          }
+          generator = new LocalSequenceNumberGenerator();
+        }
+        return generator;
     }
 }

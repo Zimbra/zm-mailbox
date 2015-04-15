@@ -9,11 +9,14 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.redolog.FileRedoLogManager;
+import com.zimbra.cs.redolog.FileRolloverManager;
 import com.zimbra.cs.redolog.HttpRedoLogManager;
 import com.zimbra.cs.redolog.LeaderChangeListener;
 import com.zimbra.cs.redolog.LeaderUnavailableException;
 import com.zimbra.cs.redolog.RedologLeaderListener;
+import com.zimbra.cs.redolog.RolloverManager;
 import com.zimbra.cs.redolog.op.RedoableOp;
+import com.zimbra.cs.redolog.seq.LocalSequenceNumberGenerator;
 
 /**
  * Log writer implementation which is aware of service leadership
@@ -36,7 +39,7 @@ public class LeaderAwareFileLogWriter extends FileLogWriter {
         this.leaderListener = leaderListener;
         leaderListener.addListener(new LeaderChangeListener() {
             @Override
-            public void onLeaderChange(String newLeaderSessionId) {
+            public void onLeaderChange(String newLeaderSessionId, LeaderStateChange stateChange) {
                 if (newLeaderSessionId != null) {
                     try {
                         drainLogOps();
@@ -47,12 +50,7 @@ public class LeaderAwareFileLogWriter extends FileLogWriter {
             }
         });
         stagedredofile.getParentFile().mkdirs();
-        this.alternateWriter = new FileLogWriter(redoLogMgr, stagedredofile, fsyncIntervalMS) {
-            @Override
-            protected boolean deleteOnRollover() {
-                return true;
-            }
-        };
+        this.alternateWriter = new LocalStagingFileLogWriter(redoLogMgr, stagedredofile, fsyncIntervalMS);
         try {
             alternateWriter.open();
         } catch (IOException ioe) {
@@ -126,6 +124,46 @@ public class LeaderAwareFileLogWriter extends FileLogWriter {
                 alternateWriter.log(op, data, true);
                 hasAlternateWrites = true;
             }
+        }
+    }
+
+    @Override
+    public synchronized void open() throws IOException {
+        if (!leaderListener.isLeader()) {
+            populateHeader();
+            return;
+        }
+        super.open();
+        if (this.redoLogMgr.getCurrentLogSequence() != this.getSequence()) {
+            //sequence changed since we last closed; rollover to catch up
+            rollover(null);
+        }
+    }
+
+    @Override
+    public synchronized void rollover(LinkedHashMap activeOps)
+            throws IOException {
+        super.rollover(activeOps);
+    }
+
+    private class LocalStagingFileLogWriter extends FileLogWriter {
+
+        private RolloverManager localRolloverManager;
+
+        public LocalStagingFileLogWriter(FileRedoLogManager redoLogMgr,
+                File logfile, long fsyncIntervalMS) {
+            super(redoLogMgr, logfile, fsyncIntervalMS);
+            this.localRolloverManager = new FileRolloverManager(redoLogMgr, logfile, new LocalSequenceNumberGenerator());
+        }
+
+        @Override
+        public RolloverManager getRolloverManager() {
+            return localRolloverManager;
+        }
+
+        @Override
+        protected boolean deleteOnRollover() {
+            return true;
         }
     }
 }

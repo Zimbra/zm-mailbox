@@ -80,8 +80,8 @@ public class FileHeader {
 
     private Version mVersion;			// redo log version
 
-    FileHeader() {
-    	this("unknown");
+    public FileHeader() {
+        this("unknown");
     }
 
     FileHeader(String serverId) {
@@ -105,7 +105,7 @@ public class FileHeader {
         raf.getFD().sync();
     }
 
-    void read(RandomAccessFile raf) throws IOException {
+    public void read(RandomAccessFile raf) throws IOException {
         raf.seek(0);
         byte[] header = new byte[HEADER_LEN];
         int bytesRead = raf.read(header, 0, HEADER_LEN);

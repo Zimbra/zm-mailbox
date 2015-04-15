@@ -63,7 +63,7 @@ public abstract class AbstractTxnIdGeneratorTest {
             t.start();
         }
 
-        long sleepTime = 1000000;
+        long sleepTime = 10000;
         for (Thread t : threads) {
             try {
                 t.join(sleepTime);

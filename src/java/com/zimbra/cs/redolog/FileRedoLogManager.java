@@ -243,5 +243,9 @@ public class FileRedoLogManager extends AbstractRedoLogManager implements
         }
     }
 
+    @Override
+    public FileRolloverManager getRolloverManager() {
+        return (FileRolloverManager) super.getRolloverManager();
+    }
 }
 

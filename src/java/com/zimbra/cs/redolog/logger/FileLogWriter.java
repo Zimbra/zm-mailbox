@@ -33,6 +33,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.redolog.FileRedoLogManager;
 import com.zimbra.cs.redolog.FileRolloverManager;
 import com.zimbra.cs.redolog.RedoConfig;
+import com.zimbra.cs.redolog.RolloverManager;
 import com.zimbra.cs.redolog.op.RedoableOp;
 import com.zimbra.cs.redolog.util.RedoLogFileUtil;
 import com.zimbra.cs.util.Zimbra;
@@ -149,6 +150,10 @@ public class FileLogWriter extends AbstractLogWriter implements LogWriter {
         return file.delete();
     }
 
+    public RolloverManager getRolloverManager() {
+        return redoLogMgr.getRolloverManager();
+    }
+
     /* (non-Javadoc)
      * @see com.zimbra.cs.redolog.LogWriter#open()
      */
@@ -167,10 +172,13 @@ public class FileLogWriter extends AbstractLogWriter implements LogWriter {
                 }
                 firstOpTstamp = header.getFirstOpTstamp();
                 lastOpTstamp = header.getLastOpTstamp();
+                if (header.getSequence() > getRolloverManager().getCurrentSequence()) {
+                    getRolloverManager().initSequence(header.getSequence());
+                }
             } else {
                 createTime = System.currentTimeMillis();
                 header.setCreateTime(createTime);
-                header.setSequence(redoLogMgr.getCurrentLogSequence());
+                header.setSequence(getRolloverManager().incrementSequence());
             }
             header.setOpen(true);
             header.write(raf);
@@ -185,6 +193,22 @@ public class FileLogWriter extends AbstractLogWriter implements LogWriter {
 
         if (fsyncIntervalMS > 0)
             startFsyncThread();
+    }
+
+    protected synchronized void populateHeader() throws IOException {
+        synchronized(lock) {
+            if (!file.exists()) {
+                return;
+            }
+            RandomAccessFile localRaf = new RandomAccessFile(file, "r");
+            if (localRaf.length() >= FileHeader.HEADER_LEN) {
+                header.read(localRaf);
+                createTime = header.getCreateTime();
+                firstOpTstamp = header.getFirstOpTstamp();
+                lastOpTstamp = header.getLastOpTstamp();
+            }
+            localRaf.close();
+        }
     }
 
     /* (non-Javadoc)
@@ -333,7 +357,8 @@ public class FileLogWriter extends AbstractLogWriter implements LogWriter {
     @Override
     public synchronized void rollover(LinkedHashMap /*<TxnId, RedoableOp>*/ activeOps)
     throws IOException {
-        FileRolloverManager romgr = (FileRolloverManager) redoLogMgr.getRolloverManager();
+        FileRolloverManager romgr = (FileRolloverManager) getRolloverManager();
+
         //cast OK since file writer depends on file rollover...but could be cleaner code
         long lastSeq = getSequence();
 
@@ -341,24 +366,26 @@ public class FileLogWriter extends AbstractLogWriter implements LogWriter {
         noStat(true);
         close();
 
-        romgr.incrementSequence();
-
         String currentPath = file.getAbsolutePath();
 
         // Open a temporary logger.
-        File tempLogfile = new File(file.getParentFile(), RedoLogFileUtil.getTempFilename(lastSeq + 1));
+        // temp (arbitrary) filename here uses current sequence+1 as rough guess
+        // real sequence number assigned on open
+        File tempLogfile = new File(file.getParentFile(), RedoLogFileUtil.getTempFilename(romgr.getCurrentSequence() + 1));
         FileLogWriter tempLogger =
             new FileLogWriter((FileRedoLogManager) redoLogMgr, tempLogfile, 0);
         tempLogger.open();
         tempLogger.noStat(true);
 
-        // Rewrite change entries for all active operations, maintaining
-        // their order of occurrence.  (LinkedHashMap ensures ordering.)
-        Set opsSet = activeOps.entrySet();
-        for (Iterator it = opsSet.iterator(); it.hasNext(); ) {
-            Map.Entry entry = (Map.Entry) it.next();
-            RedoableOp op = (RedoableOp) entry.getValue();
-            tempLogger.log(op, op.getInputStream(), false);
+        if (activeOps != null) {
+            // Rewrite change entries for all active operations, maintaining
+            // their order of occurrence.  (LinkedHashMap ensures ordering.)
+            Set opsSet = activeOps.entrySet();
+            for (Iterator it = opsSet.iterator(); it.hasNext(); ) {
+                Map.Entry entry = (Map.Entry) it.next();
+                RedoableOp op = (RedoableOp) entry.getValue();
+                tempLogger.log(op, op.getInputStream(), false);
+            }
         }
         tempLogger.close();
 
@@ -367,26 +394,31 @@ public class FileLogWriter extends AbstractLogWriter implements LogWriter {
         if (deleteOnRollover()) {
             // Delete the current log.  We don't need to hold on to the
             // indexing-only log files after rollover.
-            if (!file.delete())
+            ZimbraLog.redolog.debug("deleting current redolog %s", file.getAbsolutePath());
+            if (!file.delete()) {
                 throw new IOException("Unable to delete current redo log " + file.getAbsolutePath());
+            }
         } else {
+            ZimbraLog.redolog.debug("renaming %s to %s during rollover", file.getAbsolutePath(), rolloverFile.getAbsolutePath());
             File destDir = rolloverFile.getParentFile();
-            if (destDir != null && !destDir.exists())
+            if (destDir != null && !destDir.exists()) {
                 destDir.mkdirs();
-            if (!file.renameTo(rolloverFile))
+            }
+            if (!file.renameTo(rolloverFile)) {
                 throw new IOException("Unable to rename current redo log to " + rolloverFile.getAbsolutePath());
+            }
         }
 
         // Rename the temporary logger to current logfile name.
         String tempPath = tempLogfile.getAbsolutePath();
         file = new File(currentPath);
-        if (!tempLogfile.renameTo(file))
+        if (!tempLogfile.renameTo(file)) {
             throw new IOException("Unable to rename " + tempPath + " to " + currentPath);
-
+        }
         // Reopen current log.
         open();
         noStat(false);
-
+        ZimbraLog.redolog.info("file %s rolled over from %d to %d", file.getAbsolutePath(), lastSeq, getSequence());
         return;
     }
 

@@ -19,6 +19,7 @@ package com.zimbra.cs.redolog.op;
 
 import java.io.IOException;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.zimbra.cs.mailbox.Folder.FolderOptions;
 import com.zimbra.cs.redolog.RedoLogOutput;
 import com.zimbra.cs.redolog.TransactionId;
@@ -55,5 +56,11 @@ public class MockRedoableOp extends CreateFolder {
     @Override
     public void setTimestamp(long currentTimeMillis) {
         super.setTimestamp(currentTimeMillis);
+    }
+
+    @Override
+    @VisibleForTesting
+    public String getPrintableData() {
+        return super.getPrintableData();
     }
 }

@@ -21,27 +21,12 @@ import java.io.IOException;
 
 /**
  *
- * Generally rollover is handled by the redolog servlet instead of the http client, so the primary purpose of this class is to stub out the rollover operations
+ * Crash recovery is handled by the redolog servlet instead of the http client, so the primary purpose of this class is to stub out the crash recovery operations
  *
  */
-public class HttpRolloverManager implements RolloverManager {
+public class HttpRolloverManager extends AbstractRolloverManager {
 
     @Override
     public void crashRecovery() throws IOException {
     }
-
-    @Override
-    public long getCurrentSequence() {
-        return 0;
-    }
-
-    @Override
-    public void initSequence(long seq) {
-    }
-
-    @Override
-    public long incrementSequence() {
-        return 0;
-    }
-
 }

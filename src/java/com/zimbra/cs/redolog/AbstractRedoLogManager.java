@@ -147,7 +147,6 @@ public abstract class AbstractRedoLogManager implements RedoLogManager {
             // Run crash recovery.
             try {
                 mLogWriter.open();
-                mRolloverMgr.initSequence(mLogWriter.getSequence());
                 RedoPlayer redoPlayer = new RedoPlayer(true);
                 try {
                     Set<String> serverIds = new HashSet<String>();
@@ -172,7 +171,6 @@ public abstract class AbstractRedoLogManager implements RedoLogManager {
         // Reopen log after crash recovery.
         try {
             mLogWriter.open();
-            mRolloverMgr.initSequence(mLogWriter.getSequence());
             mInitialLogSize = mLogWriter.getSize();
         } catch (IOException e) {
             ZimbraLog.redolog.fatal("Unable to open redo log");
@@ -261,7 +259,6 @@ public abstract class AbstractRedoLogManager implements RedoLogManager {
     @Override
     public void commit(RedoableOp op) throws ServiceException {
         if (mEnabled) {
-            long redoSeq = mRolloverMgr.getCurrentSequence();
             CommitTxn commit = new CommitTxn(op);
             // Commit records are written without fsync.  It's okay to
             // allow fsync to happen by itself or wait for one during

@@ -9,6 +9,7 @@ import com.zimbra.common.consul.CatalogRegistration.Service;
 import com.zimbra.common.consul.ConsulClient;
 import com.zimbra.common.servicelocator.ServiceLocator;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.redolog.LeaderChangeListener.LeaderStateChange;
 import com.zimbra.cs.util.Zimbra;
 
 public class RedologLeaderListener {
@@ -85,17 +86,22 @@ public class RedologLeaderListener {
                         setLeaderSessionId(consulClient.waitForLeaderChange(getConsulService(), sessionIdBefore));
                         String newSessionId = getLeaderSessionId();
                         if (!StringUtils.equals(sessionIdBefore, newSessionId)) {
+                            LeaderStateChange stateChange = LeaderStateChange.NO_CHANGE;
                             //changed
                             ZimbraLog.redolog.info("leader session changed from [" + sessionIdBefore + "] to [" + newSessionId + "]");
                             String consulSessionId = getConsulSessionId();
                             if (consulSessionId != null && StringUtils.equals(consulSessionId, newSessionId)) {
+                                stateChange = LeaderStateChange.GAINED_LEADERSHIP;
                                 setLeader(true);
                             } else {
+                                if (consulSessionId != null && StringUtils.equals(consulSessionId, sessionIdBefore)) {
+                                    stateChange = LeaderStateChange.LOST_LEADERSHIP;
+                                }
                                 setLeader(false);
                             }
                             if (!stopped) {
                                 for (LeaderChangeListener listener : getListeners()) {
-                                    listener.onLeaderChange(newSessionId);
+                                    listener.onLeaderChange(newSessionId, stateChange);
                                 }
                             }
                         }

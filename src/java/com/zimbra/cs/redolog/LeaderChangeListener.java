@@ -5,5 +5,11 @@ package com.zimbra.cs.redolog;
  *
  */
 public interface LeaderChangeListener {
-    public void onLeaderChange(String newLeaderSessionId);
+    public void onLeaderChange(String newLeaderSessionId, LeaderStateChange stateChange);
+
+    public enum LeaderStateChange {
+        LOST_LEADERSHIP,
+        GAINED_LEADERSHIP,
+        NO_CHANGE
+    }
 }

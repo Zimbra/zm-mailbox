@@ -18,29 +18,13 @@ package com.zimbra.cs.redolog;
 
 import java.io.IOException;
 
-public interface RolloverManager {
+import com.zimbra.cs.redolog.seq.SequenceNumberGenerator;
+
+public interface RolloverManager extends SequenceNumberGenerator {
 
     /**
      * Recovers from a previous process crash in the middle of
      * RolloverManager.rollover().
      */
-    public abstract void crashRecovery() throws IOException;
-
-    /**
-     * Get the current log sequence number
-     */
-    public abstract long getCurrentSequence();
-
-    /**
-     * Initialize to a given sequence number
-     * @param seq
-     */
-    public abstract void initSequence(long seq);
-
-    /**
-     * Increment the sequence number
-     * @return the new current number
-     */
-    public abstract long incrementSequence();
-
+    public void crashRecovery() throws IOException;
 }
