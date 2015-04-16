@@ -17,36 +17,32 @@
 
 package com.zimbra.cs.mailbox;
 
-import java.util.Set;
-
-import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.acl.EffectiveACLCache;
-import com.zimbra.cs.mailbox.acl.EffectiveACLCacheMailboxListener;
 import com.zimbra.cs.mailbox.calendar.cache.CalendarCacheManager;
 import com.zimbra.cs.util.Zimbra;
 
-public class CacheManager implements MailboxListener {
+/**
+ * Caching facade for any high-level operations that want visibility to multiple other cache delegates.
+ */
+public class CacheManager {
+    protected static CacheManager singleton;
+    @Autowired protected CalendarCacheManager calendarCacheManager;
+    @Autowired protected EffectiveACLCache effectiveACLCache;
+    @Autowired protected FoldersAndTagsCache foldersAndTagsCache;
 
-    public static void purgeMailbox(Mailbox mbox) throws ServiceException {
-        Zimbra.getAppContext().getBean(CalendarCacheManager.class).purgeMailbox(mbox);
-        Zimbra.getAppContext().getBean(EffectiveACLCache.class).remove(mbox);
-        Zimbra.getAppContext().getBean(FoldersAndTagsCache.class).remove(mbox);
+    public static CacheManager getInstance() {
+        if (singleton == null) {
+            singleton = Zimbra.getAppContext().getBean(CacheManager.class);
+        }
+        return singleton;
     }
 
-    @Override
-    public Set<MailItem.Type> notifyForItemTypes() {
-        return MailboxListener.ALL_ITEM_TYPES;
-    }
-
-    @Override
-    public void notify(ChangeNotification notification) throws BeansException, ServiceException {
-
-        // Invalidate caches managed by CalendarCacheManager
-        Zimbra.getAppContext().getBean(CalendarCacheManager.class).notify(notification);
-
-        // Invalidate EffectiveACLCache
-        new EffectiveACLCacheMailboxListener(Zimbra.getAppContext().getBean(EffectiveACLCache.class)).notify(notification);
+    public void purgeMailbox(Mailbox mbox) throws ServiceException {
+        calendarCacheManager.purgeMailbox(mbox);
+        effectiveACLCache.remove(mbox);
+        foldersAndTagsCache.remove(mbox);
     }
 }

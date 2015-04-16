@@ -62,6 +62,7 @@ import com.zimbra.cs.index.DefaultIndexingQueueAdapter;
 import com.zimbra.cs.index.IndexingQueueAdapter;
 import com.zimbra.cs.index.IndexingService;
 import com.zimbra.cs.mailbox.AmqpMailboxListenerTransport;
+import com.zimbra.cs.mailbox.CacheManager;
 import com.zimbra.cs.mailbox.FoldersAndTagsCache;
 import com.zimbra.cs.mailbox.LocalSharedDeliveryCoordinator;
 import com.zimbra.cs.mailbox.MailboxListenerManager;
@@ -141,6 +142,11 @@ public class ZimbraConfig {
 
     protected RabbitTemplate amqpTemplate(ConnectionFactory amqpConnectionFactory) throws Exception {
         return new RabbitTemplate(amqpConnectionFactory);
+    }
+
+    @Bean
+    public CacheManager cacheManager() throws ServiceException {
+        return new CacheManager();
     }
 
     @Bean

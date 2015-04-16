@@ -21,7 +21,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import javax.annotation.PostConstruct;
+
 import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.zimbra.common.localconfig.DebugConfig;
@@ -32,16 +35,21 @@ import com.zimbra.cs.fb.FreeBusyProvider;
 import com.zimbra.cs.filter.FilterListener;
 import com.zimbra.cs.mailbox.MailboxListener.ChangeNotification;
 import com.zimbra.cs.mailbox.acl.AclPushListener;
+import com.zimbra.cs.mailbox.acl.EffectiveACLCache;
+import com.zimbra.cs.mailbox.acl.EffectiveACLCacheMailboxListener;
 import com.zimbra.cs.mailbox.acl.ShareExpirationListener;
 import com.zimbra.cs.mailbox.alerts.CalItemReminderService;
+import com.zimbra.cs.mailbox.calendar.cache.CalendarCacheManager;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.util.ZimbraApplication;
 import com.zimbra.cs.util.ZimbraConfig;
 
 
 public class MailboxListenerManager {
-    protected HashSet<MailboxListener> listeners = new HashSet<>();
     protected static MailboxListenerManager singleton;
+    protected HashSet<MailboxListener> listeners = new HashSet<>();
+    @Autowired protected CalendarCacheManager calendarCacheManager;
+    @Autowired protected EffectiveACLCache effectiveACLCache;
 
     public static MailboxListenerManager getInstance() {
         if (singleton == null) {
@@ -50,7 +58,8 @@ public class MailboxListenerManager {
         return singleton;
     }
 
-    public MailboxListenerManager() {
+    @PostConstruct
+    public void init() {
         reset();
     }
 
@@ -62,7 +71,8 @@ public class MailboxListenerManager {
             register(new CalItemReminderService());
         }
         register(new FilterListener());
-        register(new CacheManager());
+        register(calendarCacheManager);
+        register(new EffectiveACLCacheMailboxListener(effectiveACLCache));
         register(new FreeBusyProvider.Listener());
         register(new DataSourceListener());
         register(new ShareStartStopListener());
