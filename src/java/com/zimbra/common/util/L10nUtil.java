@@ -267,7 +267,7 @@ public class L10nUtil {
         spnego_401_error_message,
         spnego_redirect_message,
         spnego_browser_setup_message,
-        spnego_browser_config
+        spnego_browser_setup_wiki
 
         // add other messages in the future...
     }
