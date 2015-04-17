@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2014 Zimbra Software, LLC.
+ * Copyright (C) 2015 Zimbra Software, LLC.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -14,16 +14,15 @@
 package com.zimbra.cs.mailbox;
 
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
-import org.junit.Assert;
 import org.junit.BeforeClass;
-import org.junit.Test;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import redis.clients.jedis.HostAndPort;
 import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisCluster;
 import redis.clients.jedis.JedisPool;
 
 import com.zimbra.common.service.ServiceException;
@@ -33,9 +32,9 @@ import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.util.ZimbraConfig;
 
 /**
- * Unit test for {@link RedisQlessSharedDeliveryCoordinator}.
+ * Unit test for {@link RedisClusterConversationIdCache}.
  */
-public final class RedisQlessSharedDeliveryCoordinatorTest extends AbstractSharedDeliveryCoordinatorTest {
+public class RedisClusterConversationIdCacheTest extends RedisConversationIdCacheTest {
 
     @BeforeClass
     public static void init() throws Exception {
@@ -45,42 +44,37 @@ public final class RedisQlessSharedDeliveryCoordinatorTest extends AbstractShare
     }
 
     @Override
-    protected void flushCacheBetweenTests() throws Exception {
-        JedisPool jedisPool = Zimbra.getAppContext().getBean(JedisPool.class);
-        try (Jedis jedis = jedisPool.getResource()) {
-            jedis.flushDB();
-        }
+    protected ConversationIdCache constructCache() throws ServiceException {
+        JedisCluster jedisCluster = Zimbra.getAppContext().getBean(JedisCluster.class);
+        ConversationIdCache cache = new RedisClusterConversationIdCache(jedisCluster);
+        Zimbra.getAppContext().getAutowireCapableBeanFactory().autowireBean(cache);
+        return cache;
     }
 
+    @Override
     protected boolean isExternalCacheAvailableForTest() throws Exception {
-        if (Zimbra.getAppContext().getBean(ZimbraConfig.class).isRedisClusterAvailable()) {
-            return false;
+        return Zimbra.getAppContext().getBean(ZimbraConfig.class).isRedisClusterAvailable();
+    }
+
+    @Override
+    protected void flushCacheBetweenTests() throws Exception {
+        JedisCluster jedisCluster = Zimbra.getAppContext().getBean(JedisCluster.class);
+        Map<String,JedisPool> clusterNodes = jedisCluster.getClusterNodes();
+        for (JedisPool jedisPool: clusterNodes.values()) {
+            try (Jedis jedis = jedisPool.getResource()) {
+                jedis.flushDB();
+            }
         }
-        return Zimbra.getAppContext().getBean(ZimbraConfig.class).isRedisAvailable();
-    }
-
-    @Test
-    public void testFactoryIsLocalConfigAware() throws Exception {
-        SharedDeliveryCoordinator sdc = Zimbra.getAppContext().getBean(SharedDeliveryCoordinator.class);
-        Assert.assertNotNull(sdc);
-        Assert.assertEquals(RedisQlessSharedDeliveryCoordinator.class, sdc.getClass());
     }
 
 
-    // A configuration that uses all local or mock non-Redis adapters, with the sole exception
-    // of a Redis-based SharedDeliveryCoordinator.
+    // A configuration that uses all local or mock non-Redis adapters.
     @Configuration
     static class MyZimbraConfig extends LocalCachingZimbraConfig {
 
         @Override
         public Set<HostAndPort> redisUris() throws ServiceException {
             return RedisTestHelper.getRedisUris();
-        }
-
-        @Override
-        @Bean
-        public SharedDeliveryCoordinator sharedDeliveryCoordinator() throws Exception {
-            return new RedisQlessSharedDeliveryCoordinator();
         }
     }
 }

@@ -14,9 +14,12 @@
 package com.zimbra.cs.mailbox;
 
 import java.util.HashMap;
+import java.util.Set;
 
 import org.junit.BeforeClass;
+import org.springframework.context.annotation.Configuration;
 
+import redis.clients.jedis.HostAndPort;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 
@@ -29,11 +32,11 @@ import com.zimbra.cs.util.ZimbraConfig;
 /**
  * Unit test for {@link RedisConversationIdCache}.
  */
-public final class RedisConversationIdCacheTest extends AbstractConversationIdCacheTest {
+public class RedisConversationIdCacheTest extends AbstractConversationIdCacheTest {
 
     @BeforeClass
     public static void init() throws Exception {
-        MailboxTestUtil.initServer(MockStoreManager.class, "", RedisOnLocalhostZimbraConfig.class);
+        MailboxTestUtil.initServer(MockStoreManager.class, "", MyZimbraConfig.class);
         Provisioning prov = Provisioning.getInstance();
         prov.createAccount("test@zimbra.com", "secret", new HashMap<String, Object>());
     }
@@ -47,6 +50,9 @@ public final class RedisConversationIdCacheTest extends AbstractConversationIdCa
 
     @Override
     protected boolean isExternalCacheAvailableForTest() throws Exception {
+        if (Zimbra.getAppContext().getBean(ZimbraConfig.class).isRedisClusterAvailable()) {
+            return false;
+        }
         return Zimbra.getAppContext().getBean(ZimbraConfig.class).isRedisAvailable();
     }
 
@@ -55,6 +61,17 @@ public final class RedisConversationIdCacheTest extends AbstractConversationIdCa
         JedisPool jedisPool = Zimbra.getAppContext().getBean(JedisPool.class);
         try (Jedis jedis = jedisPool.getResource()) {
             jedis.flushDB();
+        }
+    }
+
+
+    // A configuration that uses all local or mock non-Redis adapters.
+    @Configuration
+    static class MyZimbraConfig extends LocalCachingZimbraConfig {
+
+        @Override
+        public Set<HostAndPort> redisUris() throws ServiceException {
+            return RedisTestHelper.getRedisUris();
         }
     }
 }

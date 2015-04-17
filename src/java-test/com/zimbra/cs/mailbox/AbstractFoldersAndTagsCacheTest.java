@@ -14,7 +14,6 @@
 package com.zimbra.cs.mailbox;
 
 import org.junit.Assert;
-import org.junit.Assume;
 import org.junit.Test;
 
 import com.zimbra.common.service.ServiceException;

@@ -48,6 +48,9 @@ public class RedisCoordinatedLocalMailboxLockTest extends AbstractMailboxLockTes
     }
 
     protected boolean isLockServiceAvailableForTest() throws Exception {
+        if (Zimbra.getAppContext().getBean(ZimbraConfig.class).isRedisClusterAvailable()) {
+            return false;
+        }
         return Zimbra.getAppContext().getBean(ZimbraConfig.class).isRedisAvailable();
     }
 

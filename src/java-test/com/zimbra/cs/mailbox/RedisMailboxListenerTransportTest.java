@@ -61,7 +61,10 @@ public final class RedisMailboxListenerTransportTest {
     }
 
     protected boolean isExternalCacheAvailableForTest() throws Exception {
-        return Zimbra.getAppContext().getBean(ZimbraConfig.class).isRedisAvailable() && !Zimbra.getAppContext().getBean(ZimbraConfig.class).isRedisClusterAvailable();
+        if (Zimbra.getAppContext().getBean(ZimbraConfig.class).isRedisClusterAvailable()) {
+            return false;
+        }
+        return Zimbra.getAppContext().getBean(ZimbraConfig.class).isRedisAvailable();
     }
 
     protected void flushCacheBetweenTests() throws Exception {

@@ -63,6 +63,7 @@ import com.zimbra.cs.index.IndexingQueueAdapter;
 import com.zimbra.cs.index.IndexingService;
 import com.zimbra.cs.mailbox.AmqpMailboxListenerTransport;
 import com.zimbra.cs.mailbox.CacheManager;
+import com.zimbra.cs.mailbox.DefaultMailboxLockFactory;
 import com.zimbra.cs.mailbox.FoldersAndTagsCache;
 import com.zimbra.cs.mailbox.LocalSharedDeliveryCoordinator;
 import com.zimbra.cs.mailbox.MailboxListenerManager;
@@ -162,6 +163,11 @@ public class ZimbraConfig {
     }
 
     @Bean
+    public FoldersAndTagsCache foldersAndTagsCache() throws ServiceException {
+        return new MemcachedFoldersAndTagsCache();
+    }
+
+    @Bean
     public ZimbraHttpClientManager httpClientManager() throws Exception {
         return new ZimbraHttpClientManager();
     }
@@ -247,11 +253,6 @@ public class ZimbraConfig {
         return result;
     }
 
-    @Bean
-    public FoldersAndTagsCache foldersAndTagsCache() throws ServiceException {
-        return new MemcachedFoldersAndTagsCache();
-    }
-
     public boolean isMemcachedAvailable() {
         try {
             Server server = Provisioning.getInstance().getLocalServer();
@@ -278,8 +279,16 @@ public class ZimbraConfig {
     }
 
     public boolean isRedisClusterAvailable() throws ServiceException {
+        return isRedisClusterAvailable(jedisCluster());
+    }
+
+    public boolean isRedisClusterAvailable(JedisCluster jedisCluster) throws ServiceException {
+        if (jedisCluster == null) {
+            return false;
+        }
         try {
-            return jedisCluster() != null;
+            jedisCluster.get("");
+            return true;
         } catch (Exception e) {
             ZimbraLog.misc.info("Failed connecting to a Redis Cluster; defaulting to non-cluster mode Redis access (%s)", e.getLocalizedMessage());
             return false;
@@ -327,7 +336,7 @@ public class ZimbraConfig {
 
     @Bean
     public MailboxLockFactory mailboxLockFactory() throws ServiceException {
-        return new MailboxLockFactory();
+        return new DefaultMailboxLockFactory();
     }
 
     @Bean

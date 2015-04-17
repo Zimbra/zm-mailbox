@@ -18,7 +18,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
-import redis.clients.jedis.Transaction;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.memcached.MemcachedKeyPrefix;
@@ -54,12 +53,11 @@ public class RedisFoldersAndTagsCache implements FoldersAndTagsCache {
     public void put(Mailbox mbox, FoldersAndTags foldersAndTags) throws ServiceException {
         try (Jedis jedis = jedisPool.getResource()) {
             String key = key(mbox);
-            Transaction transaction = jedis.multi();
-            transaction.set(key, foldersAndTags.encode().toString());
             if (expirySecs > -1) {
-                transaction.expire(key, expirySecs);
+                jedis.setex(key, expirySecs, foldersAndTags.encode().toString());
+            } else {
+                jedis.set(key, foldersAndTags.encode().toString());
             }
-            transaction.exec();
         }
     }
 

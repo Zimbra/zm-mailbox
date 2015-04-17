@@ -17,9 +17,15 @@
 package com.zimbra.cs.mailbox;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.util.Zimbra;
 
 
-public interface MailboxLockFactory {
+public class LocalMailboxLockFactory implements MailboxLockFactory {
 
-    public MailboxLock create(String accountId, Mailbox mbox) throws ServiceException;
+    @Override
+    public MailboxLock create(String accountId, Mailbox mbox) throws ServiceException {
+        MailboxLock mailboxLock = new LocalMailboxLock(accountId, mbox);
+        Zimbra.getAppContext().getAutowireCapableBeanFactory().autowireBean(mailboxLock);
+        return mailboxLock;
+    }
 }

@@ -22,6 +22,12 @@ import org.springframework.context.annotation.Configuration;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.acl.EffectiveACLCache;
 import com.zimbra.cs.mailbox.calendar.cache.CalendarCacheManager;
+import com.zimbra.cs.redolog.MockRedoLogProvider;
+import com.zimbra.cs.redolog.RedoLogProvider;
+import com.zimbra.cs.redolog.seq.LocalSequenceNumberGenerator;
+import com.zimbra.cs.redolog.seq.SequenceNumberGenerator;
+import com.zimbra.cs.redolog.txn.LocalTxnIdGenerator;
+import com.zimbra.cs.redolog.txn.TxnIdGenerator;
 import com.zimbra.cs.util.ZimbraConfig;
 
 /**
@@ -39,7 +45,12 @@ public class LocalCachingZimbraConfig extends ZimbraConfig {
     @Override
     @Bean
     public EffectiveACLCache effectiveACLCache() throws ServiceException {
-        return super.effectiveACLCache(); // TODO need a Local adapter
+        return new LocalEffectiveACLCache();
+    }
+
+    @Override
+    public List<MailboxListenerTransport> externalMailboxListeners() throws Exception {
+        return Collections.emptyList();
     }
 
     @Override
@@ -49,18 +60,25 @@ public class LocalCachingZimbraConfig extends ZimbraConfig {
     }
 
     @Override
-    public boolean isMemcachedAvailable() {
-        return false;
+    @Bean
+    public MailboxLockFactory mailboxLockFactory() throws ServiceException {
+        return new LocalMailboxLockFactory();
     }
 
     @Override
-    public boolean isRedisAvailable() throws ServiceException {
-        return false;
+    @Bean
+    public RedoLogProvider redologProvider() throws Exception {
+        return new MockRedoLogProvider();
     }
 
-    @Override
-    public List<MailboxListenerTransport> externalMailboxListeners() throws Exception {
-        return Collections.emptyList();
+    @Bean
+    public SequenceNumberGenerator redologSeqNumGenerator() throws Exception {
+        return new LocalSequenceNumberGenerator();
+    }
+
+    @Bean
+    public TxnIdGenerator redologTxnIdGenerator() throws Exception {
+        return new LocalTxnIdGenerator();
     }
 
     @Override
