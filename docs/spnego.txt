@@ -50,8 +50,24 @@ I. SPNEGO SSO
 
        4. Now, if browser is not properly configured, it will *not* respond to the challenge
           and will just give up there.
-          It will show the custom 401 page, where user can find steps to configure browser 
-          or link to zimbraSpnegoAuthErrorURL if set, else ZWC default login page where he/she can enter username/password.
+
+            Customize SPNEGO HTTP 401 Error page
+            a. zimbraSpnegoAuthErrorURL is Unset and browser not configured. 
+            It will show customise http 401 error jsp page with link to wiki page for browser configuration.
+
+            b. zmprov mcf zimbraSpnegoAuthErrorURL '/?ignoreLoginURL=1'
+            If browser not configured i.e. after http 401 error page will automatically redirect to default login page. 
+            This will not show any error page.
+
+            c. zmprov mcf zimbraSpnegoAuthErrorURL '../../zimbra/public/login.jsp?ignoreLoginURL=1'
+            If browser not configured i.e. after http 401 error page will automatically redirect to default login.jsp 
+            Make sure to append ?ignoreLoginURL=1  when you add redirect with in application context.
+            This will not show any error page.
+
+
+            d. zmprov mcf zimbraSpnegoAuthErrorURL 'http://example.com'
+            If browser not configured i.e. after http 401 error page will automatically redirect to http://example.com. 
+            This will not show any error page.
 
        If The browser is properly configured, it will respond to the challenge.  If the user is
        logged on as a local user, the SPNEGO token in the response will not be accepted by the server.

@@ -110,14 +110,18 @@
     <filter-name>SpnegoFilter</filter-name>
     <filter-class>com.zimbra.cs.servlet.SpnegoFilter</filter-class>
     <async-supported>true</async-supported>
-    
+
     <init-param>
       <param-name>passThruOnFailureUri</param-name>
       <param-value>/service/spnego</param-value>
     </init-param>
-    
+
+    <init-param>
+      <param-name>error401Page</param-name>
+      <param-value>/spnego/error401.jsp</param-value>
+    </init-param>
   </filter>
-  
+
   <filter-mapping>
     <filter-name>SpnegoFilter</filter-name>
     <url-pattern>/spnego/*</url-pattern>

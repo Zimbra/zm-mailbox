@@ -43,7 +43,9 @@ import com.zimbra.cs.service.authenticator.SpnegoAuthenticator;
 
 public class SpnegoFilter implements Filter {
     private static final String PARAM_PASS_THRU_ON_FAILURE_URI = "passThruOnFailureUri";
-    
+    private static final String ERROR_401_PAGE = "error401Page";
+    private static String error401Page ;
+
     private URI passThruOnFailureUri = null;
     private SpnegoLoginService spnegoUserRealm = null;
     
@@ -56,8 +58,8 @@ public class SpnegoFilter implements Filter {
             } catch (URISyntaxException e) {
                 throw new ServletException("Malformed URI: " + uri, e);
             }
-            
         }
+        error401Page = filterConfig.getInitParameter(ERROR_401_PAGE);
         spnegoUserRealm = getSpnegoUserRealm(filterConfig);
     }
     
@@ -120,7 +122,7 @@ public class SpnegoFilter implements Filter {
         if (spnegoUserRealm == null) {
             throw ServiceException.FAILURE("no spnego user realm", null);
         }
-        SSOAuthenticator authenticator = new SpnegoAuthenticator(req, resp, spnegoUserRealm);
+        SSOAuthenticator authenticator = new SpnegoAuthenticator(req, resp, spnegoUserRealm, error401Page);
         authenticator.authenticate();
     }
     

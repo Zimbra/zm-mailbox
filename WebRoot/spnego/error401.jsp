@@ -21,8 +21,17 @@
     <%
         Object redirectUrl = request.getAttribute("spnego.redirect.url");
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        Object autoRedirect = request.getAttribute("spnego.auto.redirect");
+        if (autoRedirect != null && redirectUrl != null && (Boolean) autoRedirect) {
     %>
-    <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"/>
+        <meta http-equiv="refresh" content="0; URL=<%=redirectUrl%>"/>
+    <%
+        } else {
+    %>
+        <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"/>
+    <%
+        }
+    %>
     <title>Spnego Authentication Failed.</title>
     <style type="text/css">
         .unstyled {
@@ -65,9 +74,13 @@
                     <%=L10nUtil.getMessage(MsgKey.spnego_redirect_message, request)%>
                 </a>
             </span>
-            <%=L10nUtil.getMessage(MsgKey.spnego_browser_setup_message, request)%>
+            <span class="newLine"><br /><br /></span>
+            <span class="newLine">
+                <a href="<%=L10nUtil.getMessage(MsgKey.spnego_browser_setup_wiki, request)%>">
+                    <%=L10nUtil.getMessage(MsgKey.spnego_browser_setup_message, request)%>
+                </a>
+            </span>
         </div>
-        <%=L10nUtil.getMessage(MsgKey.spnego_browser_config, request)%>
     </div>
 </BODY>
 </HTML>

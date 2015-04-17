@@ -23,7 +23,6 @@ import java.security.Principal;
 import java.util.Arrays;
 
 import javax.servlet.RequestDispatcher;
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -40,6 +39,7 @@ import org.eclipse.jetty.server.UserIdentity;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.ZAttrProvisioning.AutoProvAuthMech;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
@@ -48,16 +48,21 @@ import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.krb5.Krb5Principal;
-import com.zimbra.cs.service.SSOServlet;
 import com.zimbra.cs.servlet.util.AuthUtil;
 
 public class SpnegoAuthenticator extends SSOAuthenticator {
 
     private SpnegoLoginService spnegoUserRealm;
+    private String error401Page;
 
     public SpnegoAuthenticator(HttpServletRequest req, HttpServletResponse resp, SpnegoLoginService spnegoUserRealm) {
         super(req, resp);
         this.spnegoUserRealm = spnegoUserRealm;
+    }
+
+    public SpnegoAuthenticator(HttpServletRequest req, HttpServletResponse resp, SpnegoLoginService spnegoUserRealm, String error401Page) {
+        this(req, resp, spnegoUserRealm);
+        this.error401Page = error401Page;
     }
 
     @Override
@@ -180,9 +185,18 @@ public class SpnegoAuthenticator extends SSOAuthenticator {
         response.setHeader(HttpHeader.WWW_AUTHENTICATE.toString(), HttpHeader.NEGOTIATE.toString());
         //Custom 401 error page.
         try {
-            request.setAttribute("spnego.redirect.url", getErrorRedirectUrl(request));
-            RequestDispatcher requestDispatcher = request.getRequestDispatcher("/spnego/error401.jsp");
-            requestDispatcher.forward(request, response);
+            String redirectUrl = Provisioning.getInstance().getConfig().getSpnegoAuthErrorURL();
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            if (!StringUtil.isNullOrEmpty(redirectUrl)) {
+                request.setAttribute("spnego.auto.redirect", true);
+            }
+            if (!StringUtil.isNullOrEmpty(error401Page)) {
+                request.setAttribute("spnego.redirect.url", getErrorRedirectUrl(request));
+                RequestDispatcher requestDispatcher = request.getRequestDispatcher(error401Page);
+                requestDispatcher.forward(request, response);
+            } else {
+                response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+            }
         } catch (Exception e) {
             //jetty default error page.
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
