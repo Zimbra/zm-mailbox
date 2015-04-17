@@ -1,6 +1,5 @@
-------------------
 Split Domain Setup
-------------------
+==================
 
 We are often asked how to configure Zimbra Collaboration Suite so that
 some accounts are moved/migrated to Zimbra but other accounts continue
@@ -91,9 +90,8 @@ this will show you what functionality is required of your existing
 mail system so it can be a slave.  Vice versa if you are going to use
 Zimbra as the slave system.
 
---------------------------------
 Configuring Zimbra as the Master
---------------------------------
+================================
 
 Create corresponding accounts on the Zimbra system for all the
 accounts that will live on the slave system.  Note that
@@ -120,9 +118,8 @@ first.  (This is the last step!  You will bounce mail if you make this
 change before configuring the entire system and testing that mail flow
 is working as desired.)
 
--------------------------------
 Configuring Zimbra as the Slave
--------------------------------
+===============================
 
 The slave system needs to accept mail for accounts that live on the
 slave, but must forward all other mail for accounts on this domain to
@@ -155,26 +152,25 @@ you do:
     $ postfix stop
     $ postfix start
 
----------------------
 Examples of Mail Flow
----------------------
+=====================
 
 - Zimbra is master, mail sent from the internet, account lives on
   slave.
 
-    internet -> 
-    zimbra.example.com postfix server ->
-    account transport says to use smtp:mail.example.com ->
-    mail.example.com existing infrastructure MTA ->
-    mail.example.com existing infrastructure mail store
+  - internet -> 
+  - zimbra.example.com postfix server ->
+  - account transport says to use smtp:mail.example.com ->
+  - mail.example.com existing infrastructure MTA ->
+  - mail.example.com existing infrastructure mail store
 
 - Zimbra is slave and mail sent from foo@example.com (zimbra) ->
   bar@example.com (old system).  Assume foo is using Zimbra AJAX
   client.
 
-    foo's web browser ->
-    zimbra.example.com tomcat server ->
-    zimbra.example.com postfix server ->
-    account not local, finds domain transport setting ->
-    mail.example.com existing infrastructure MTA ->
-    mail.example.com existing infrastructure mail store
+  - foo's web browser ->
+  - zimbra.example.com tomcat server ->
+  - zimbra.example.com postfix server ->
+  - account not local, finds domain transport setting ->
+  - mail.example.com existing infrastructure MTA ->
+  - mail.example.com existing infrastructure mail store

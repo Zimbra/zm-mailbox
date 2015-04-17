@@ -1,6 +1,5 @@
-------------------------------------------------------------
 What is preauth?
-------------------------------------------------------------
+================
 
 Preauth stands for pre-authentication, and is a mechanism to enable a trusted 
 third party to "vouch" for a user's identity. For example, if a user has 
@@ -13,9 +12,8 @@ will then verify the data passed in the URL and create authentication token
 (the standard mechanism within Zimbra to identify users), save it in a cookie,
 and redirect the user to the mail app.
 
-------------------------------------------------------------
 How does it work?
-------------------------------------------------------------
+=================
 
 It works by having a key that is shared between the third party and Zimbra.
 Knowing this key, the third party specifies the desired username, a timestamp
@@ -27,16 +25,15 @@ that it matches the HMAC sent in the request. If it does, the server will
 construct an auth token, save it in a cookie, and redirect the user to the 
 mail application.
 
-------------------------------------------------------------
 Preparing a domain for preauth
-------------------------------------------------------------
+==============================
 
 In order for preauth to be enabled for a domain, you need to run the
 zmprov command and create a key:
 
-prov> gdpak domain.com
-preAuthKey: 4e2816f16c44fab20ecdee39fb850c3b0bb54d03f1d8e073aaea376a4f407f0c
-prov>
+    prov> gdpak domain.com
+    preAuthKey: 4e2816f16c44fab20ecdee39fb850c3b0bb54d03f1d8e073aaea376a4f407f0c
+    prov>
 
 Make note of that key value, as you'll need to use it to generate the
 computed-preauth values below. Also make sure you keep it secret, as it
@@ -49,9 +46,8 @@ domain with the value of the key.
 After generating the key, you'll probably need to restart the ZCS server so it
 picks up the updated value.
 
-------------------------------------------------------------
 What are the interfaces?
-------------------------------------------------------------
+========================
 
 There are two interfaces. One interface is URL-based, for ease of integration.
 The other interface is SOAP-based, for cases where the third party wants more
@@ -59,12 +55,12 @@ control over generating the auth token and redirecting the user.
 
 We'll describe the URL interface first, followed by the SOAP interface.
 
-------------------------------------------------------------
 URL Interface
-------------------------------------------------------------
+=============
 
 The URL interface uses the /service/reauth URL:
 
+````
 /service/preauth?
         account={account-identifier}
         &by={by-value}
@@ -72,9 +68,11 @@ The URL interface uses the /service/reauth URL:
         &expires={expires}
         [&admin=1]
         &preauth={computed-preauth}
+````
 
 The values are as follows:
 
+````
  {account-identifier}   depends on the value of the "by" attr. If "by" is not
                         specified, it is the name (i.e., john.doe@domain.com).
 
@@ -98,6 +96,7 @@ The values are as follows:
                         HMAC below, after the "account" value, and before the "by" value.
 
 {computed-preauth}      the computed pre-auth value. See below for details.
+````
 
 The preauth value is computed as follows:
 
@@ -112,87 +111,90 @@ The preauth value is computed as follows:
 
 For example, given the following values:
 
-key: 6b7ead4bd425836e8cf0079cd6c1a05acc127acd07c8ee4b61023e19250e929c
+    key: 6b7ead4bd425836e8cf0079cd6c1a05acc127acd07c8ee4b61023e19250e929c
 
-account: john.doe@domain.com
-by: name
-expires: 0
-timestamp: 1135280708088
+    account: john.doe@domain.com
+    by: name
+    expires: 0
+    timestamp: 1135280708088
 
 You would concat the account/by/expires/timestamp values together (alphabetical order, based on key name) to get:
 
-john.doe@domain.com|name|0|1135280708088
+    john.doe@domain.com|name|0|1135280708088
 
 You would then compute the SHA-1 HMAC on that string, using the key:
 
-preauth = hmac("john.doe@domain.com|name|0|1135280708088", 
-          "6b7ead4bd425836e8cf0079cd6c1a05acc127acd07c8ee4b61023e19250e929c");
+    preauth = hmac("john.doe@domain.com|name|0|1135280708088", 
+              "6b7ead4bd425836e8cf0079cd6c1a05acc127acd07c8ee4b61023e19250e929c");
 
-finally, you would take the returned hmac (which is most likely an array of
+Finally, you would take the returned hmac (which is most likely an array of
 bytes), and convert it to a hex string:
 
-preauth-value : b248f6cfd027edd45c5369f8490125204772f844
+    preauth-value : b248f6cfd027edd45c5369f8490125204772f844
 
 The resulting URL would be:
 
-/service/preauth?account=john.doe@domain.com&expires=0\
-    &timestamp=1135280708088&preauth=b248f6cfd027edd45c5369f8490125204772f844
+    /service/preauth?account=john.doe@domain.com&expires=0\
+        &timestamp=1135280708088&preauth=b248f6cfd027edd45c5369f8490125204772f844
 
 Hitting that URL on the ZCS server will cause the preauth value to be verified,
 followed by a redirect to /zimbra/mail with the auth token in a cookie.
 
 If a URL other then /zimbra/mail is desired, then you can also pass in a redirectURL:
 
- ...&redirectURL=/zimbra/h/
+    ...&redirectURL=/zimbra/h/
 
 
 If you are pre-authing an admin, the value to use with the hmac would be:
 
-john.doe@domain.com|1|name|0|1135280708088
+    john.doe@domain.com|1|name|0|1135280708088
 
 and you would include "&admin=1" in the URL.
 
 If you are not pre-authing an admin, then you must *NOT* include any value for it in string passed to the hmac.
 
-------------------------------------------------------------
 SOAP Interface
-------------------------------------------------------------
+==============
 
 The SOAP interface uses the standard AuthRequest message, but instead of
 passing in a password, you specify <preauth> data.
 
 For example:
 
- <AuthRequest xmlns="urn:zimbraAccount">
-   <account by="name|id|foreignPrincipal">{account-identifier}</account>
-   <preauth timestamp="{timestamp}" 
-            expires="{expires}">{computed-preauth}</preauth>
- </AuthRequest>
+````
+<AuthRequest xmlns="urn:zimbraAccount">
+  <account by="name|id|foreignPrincipal">{account-identifier}</account>
+  <preauth timestamp="{timestamp}"
+           expires="{expires}">{computed-preauth}</preauth>
+</AuthRequest>
+````
 
 The values are exactly the same as they were for the URL case:
 
- <AuthRequest xmlns="urn:zimbraAccount">
-   <account>john.doe@domain.com</account>
-   <preauth timestamp="1135280708088"
-            expires="0}">b248f6cfd027edd45c5369f8490125204772f844</preauth>
- </AuthRequest>
+````
+<AuthRequest xmlns="urn:zimbraAccount">
+  <account>john.doe@domain.com</account>
+  <preauth timestamp="1135280708088"
+           expires="0}">b248f6cfd027edd45c5369f8490125204772f844</preauth>
+</AuthRequest>
+````
 
 The auth token will be return in the AuthResponse. At which point, you can
 "inject" it into the app via the URL interface:
 
-https://server/service/preauth?isredirect=1&authtoken={...}
+    https://server/service/preauth?isredirect=1&authtoken={...}
 
 Going to this URL will set the cookie and redirect to /zimbra/mail. If a URL other
 then /zimbra/mail is desired, then you can also pass in a redirectURL:
 
- ...&redirectURL=/zimbra/h/
+    ...&redirectURL=/zimbra/h/
 
-------------------------------------------------------------
 Sample Java code for computing the preauth value
-------------------------------------------------------------
+================================================
 
 The following Java Code (1.5) will compute the pre-auth value.
 
+````
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
@@ -272,10 +274,12 @@ public class test {
        { '0' , '1' , '2' , '3' , '4' , '5' , '6' , '7' ,
          '8' , '9' , 'a' , 'b' , 'c' , 'd' , 'e' , 'f'};
 }
+````
 
 You can also use zmprov while debugging to generate preAuth values for
 comparison:
 
+````
 prov> gdpa domain.com john.doe@domain.com name 1135280708088 0 
 account: john.doe@domain.com
 by: name
@@ -283,13 +287,12 @@ timestamp: 1135280708088
 expires: 0
 preAuth: b248f6cfd027edd45c5369f8490125204772f844
 prov> 
-        
-------------------------------------------------
-
+````
+    
 Here is a sample JSP that does everything needed for preauth. It has a hardcoded username, which should of course be changed to match
 the username of the user you have "pre-authenticated".
 
-File Edit Options Buffers Tools Help                                                                                                                   
+File Edit Options Buffers Tools Help
 <!--
 
 To configure:
@@ -415,6 +418,3 @@ You should never see this page.
 
 </body>
 </html>
-
-    
-    

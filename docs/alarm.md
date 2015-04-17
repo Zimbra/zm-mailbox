@@ -1,48 +1,55 @@
 ALARM SYSTEM 
-------------------------------------------
+============
 
 Alarm is expected to be used by many parts of the system. Appointment is one of the uses.
 
+Alarm SQL Table per mailbox
+----
 
-Alarm SQL Table per mailbox:
-  date (indexed)
-  mail_item_id (foreign key constraint, cascade delete)
-  action (metadata blob)
+  * date (indexed)
+  * mail_item_id (foreign key constraint, cascade delete)
+  * action (metadata blob)
 
-Alarm Thread:
-   On Startup:
-     Initialize static table of IAlarmHandlers
-       e.g. AppointmentAlarmHandler, MessageFollowupAlarmHandler
-     FOR EACH MAILBOX:
-        EXECUTE alarms for mailbox (see below)
-        select NEXT alarm (1st one not-executed) from mailbox's alarm table
-           add to global sorted systemwide tree <key:TIME, value:MAILBOXID> 
-           of upcoming alarms
-   While (system is up):
-     Sleep until NEXT-ALARM-TIME
-     Foreach NEW-ALARM:
-        update Upcoming Alarm list (put this new one on front if necessary)    
-     For every entry on upcoming alarm list where the time has passed
-        EXECUTE alarms for mailbox
+Alarm Thread
+----
 
-When a new alarm is created:
-   Add to Mailbox's alarm table
-   Put on "New Alarm Queue" for Alarm Thread (use queue to avoid deadlocking with running Alarms)
-   Wake up alarm thread
+  * On Startup:
+    * Initialize static table of IAlarmHandlers
+      * e.g. AppointmentAlarmHandler, MessageFollowupAlarmHandler
+    * FOR EACH MAILBOX:
+      *  EXECUTE alarms for mailbox (see below)
+      *  select NEXT alarm (1st one not-executed) from mailbox's alarm table
+      *  add to global sorted systemwide tree <key:TIME, value:MAILBOXID> 
+         of upcoming alarms
+  * While (system is up):
+    * Sleep until NEXT-ALARM-TIME
+    * Foreach NEW-ALARM:
+      * update Upcoming Alarm list (put this new one on front if necessary)    
+    * For every entry on upcoming alarm list where the time has passed
+      * EXECUTE alarms for mailbox
 
-        
-To EXECUTE alarms for mailbox:
-   Select all rows from alarm table with time <= now
-   Pass row data to the system alarm handler registry 
-      Registry instantiates correct handler and executes
-      if executed SUCCESSFULLY:
-         Delete row from alarm table
-      else if Alarm PENDING (ie it requires client connected):
-         Add to systemwide Pending Mailbox Alarm list 
-         (mailboxes which have alarms which must be run when the client connects) 
+When a new alarm is created
+----
 
+  * Add to Mailbox's alarm table
+  * Put on "New Alarm Queue" for Alarm Thread (use queue to avoid deadlocking with running Alarms)
+  * Wake up alarm thread
+     
+To EXECUTE alarms for mailbox
+----
+
+  * Select all rows from alarm table with time <= now
+  * Pass row data to the system alarm handler registry 
+    * Registry instantiates correct handler and executes
+    * if executed SUCCESSFULLY:
+      * Delete row from alarm table
+    * else if Alarm PENDING (ie it requires client connected):
+      * Add to systemwide Pending Mailbox Alarm list 
+        (mailboxes which have alarms which must be run when the client connects) 
 
 When a MAILBOX logs on (hook into creation of SESSION object)
+----
+
    If MAILBOX is in Pending Mailbox Alarm List
       select everything in mailbox's alarm table < now
       execute the alarms (in time order) 
@@ -50,28 +57,29 @@ When a MAILBOX logs on (hook into creation of SESSION object)
       remove mailbox from Pending Mailbox Alarm list
 
 
-Alarm types:
+Alarm types
+----
 
-1) audio + display
+1. audio + display
    need to have a sound resource and a text message.
    this may be a url pointing to the zimbra server.
    how to provision sound resources? is this system-wide or per-mailbox?
    
-   dismissible attribute: true/false
-   repetition count/interval: can be defined
+   * dismissible attribute: true/false
+   * repetition count/interval: can be defined
    
-2) display
+2. display
    need to have a text message
    what about images?
    
-   dismissible attribute: true/false
-   repetition count/interval: can be defined
+   * dismissible attribute: true/false
+   * repetition count/interval: can be defined
    
-3) email
+3. email
    need to have recipients, subject, message body
    
-   dismissible attribute: n/a
-   repetition count/interval: can be defined? (this opens up to abuse)
+   * dismissible attribute: n/a
+   * repetition count/interval: can be defined? (this opens up to abuse)
          
 audio alone is probably not good usability-wise.
          
@@ -81,24 +89,28 @@ basically you want that so you can be sure that the alarm actually gets seen by 
 
 Comments
 --------
+
 Alarm table:
-	1) The Date is there so we can keep a list of the alarm and know when to trigger them.
 
-	2) The mail_item_id is there to associate the alarm with any mail-item.  
-	This doesn't have to be an appointment, it could be any mail-item.  
-	The major reason for this column is for deletion -- so we have a way of deleting alarms 
-	if the target (Appointment, Message) gets deleted.
+  1. The Date is there so we can keep a list of the alarm and know when to trigger them.
 
-	3) The Action is a metadata blob -- there will be some systemwide Factory which reads the metadata, 
+  2. The mail_item_id is there to associate the alarm with any mail-item.  
+	 This doesn't have to be an appointment, it could be any mail-item.  
+	 The major reason for this column is for deletion -- so we have a way of deleting alarms 
+	 if the target (Appointment, Message) gets deleted.
+
+  3. The Action is a metadata blob -- there will be some systemwide Factory which reads the metadata, 
 	gets the type, and instantiates the proper subclass of IAlarmHandler -- 
 	the IAlarmHandler subclass has an overloaded method (ie "Run") that has the alarm logic itself....
 	such as code to deal with notifying the client that it needs to put up a Popup or whatever...
 
-Client side actions:
+Client side actions
+----
 
 The client doesn't have to have a list of alarms --- we could just wait until the alarm executes on the server 
 and then have it post a message into the list of pending notifications for the client -- 
 the next time the client did an operation (or issued a NOP) the server would include the alarm info in the response.  
+
 If we want to have the client track the upcoming alarms, then we just do a select in the alarm table on 
 session creation and send the client a list of upcoming alarms which have popups....
 
@@ -110,6 +122,7 @@ SOAP
 
 Create new alarms:
 
+````
 <CreateAlarmRequest>
   <a type="audio|display|email" time="{time}" item="{mail item id}">
     [<res url="audio.wav"/>]
@@ -125,17 +138,21 @@ Create new alarms:
 
 <CreateAlarmResponse>
 </CreateAlarmResponse>
+````
 
 Modify an alarm:
 
+````
 <ModifyAlarmRequest>
   <!-- same as CreateAlarmRequest. 
     The alarm with the given time and mail item id will be modified. 
   -->
 </ModifyAlarmRequest>
+````
 
 Get an alarm:
 
+````
 <GetAlarmRequest>
   <a time="{time}" item="{mail item id}"/>
 </GetAlarmRequest>
@@ -145,9 +162,11 @@ Get an alarm:
     <!-- same as CreateAlarmRequest -->
   </a>
 </GetAlarmResponse>
+````
 
 Get alarms:
 
+````
 <GetAlarmsRequest>
   <a s="{start time}" e="{end time}"/>
 </GetAlarmsRequest>
@@ -157,13 +176,16 @@ Get alarms:
     <!-- same as CreateAlarmRequest -->
   </a>*
 </GetAlarmsResponse>  
+````
 
 In SoapHeader of soap responses, we need to add the following section to <notify>:
 
+````
 <alarm>
   <a ...>
   </a>*
 </alarm>
+````
 
 to indicate the list of alarms that need to be executed on the client.
 (Assuming we put due alarms onto pending list and wait for the client to retrieve at

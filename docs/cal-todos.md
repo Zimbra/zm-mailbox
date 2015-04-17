@@ -1,0 +1,140 @@
+CALENDAR Server-Side TODO list
+------------------------------
+
+  - Support for "move to trash" instead of just deleting events for WEB client
+
+  - VFREEBUSY for outlook
+
+  - Alarm System / Alerts
+
+  - need to update to new iCal4j APIs (stop using deprecated functions)
+   -- blocked on iCal4j multi-threading fixes from Ben Fortuna (iCal4j maintainer)
+
+  - need to support client-defined timezones for advanced clients
+
+  - GetApptSummaries API should return DateTime, not GMT time, allow for timezone shifts
+
+  - integrate with Indexing/Search
+
+  - testing.  We need to come up with a more or less comprehensive set of tests.  There are a LOT of cases: self-created meeting, externally-created-meeting, accept, deny, add invitees, remove invitees, reply to meeting request forwarded from someone else, etc etc......maybe that's a good thing for me to be doing: I'll sit down and try to come up with a comprehensive list of test scenarios.
+
+ - outlook integration testing (basic outlook func works, but not tested at all)
+ 
+ - test with at least one other calendar program (apple iCal maybe?)
+
+ - don't share same TzMap between all Invites in appointment: although it should mostly work, this is not strictly correct and could cause problems
+
+ 
+Stuff to make us more-or-less compliant with RFC's (2445, 2446, 2447):
+---------------------------------------------------------------------
+
+  - Method:COUNTER/DECLINECOUNTER (RFC2446: 4.2.4) -- for Propose New Time
+
+  - Method:ADD
+ 
+  - Method:REFRESH
+ 
+  - iCalendar-based FREEBUSY requests
+ 
+  - iCalendar-based DELEGATION (RFC2446: 4.2.5)
+ 
+  - support for VTODOs and VJOURNAL
+
+
+Longer-term stuff:
+------------------
+  - Two-Way sync of .ICS files (eg from Evolution)
+
+
+
+--------------------------------------------------------------------------------
+
+TEST SCENARIOS:
+---------------
+
+````
+Note that this is just the list of operations -- there are many pieces
+of state that can/should be checked between each op.  For example, in
+the "basic" test you should check the AppointmentSummaries for each
+user after each step: after step #1, there should an appointment
+status of "Busy" for C1 and should be a tentative appointment for
+C2...etc etc etc.  FreeBusy can be checked between calls, etc.
+````
+
+Basic test:
+
+  1. C1 Request Appt w/ C2 as attendee
+  2. C2 accepts
+
+Basic test:
+
+  1. C1 Request all-day Appt w/ C2 as attendee
+  2. C2 accepts
+
+Basic Modification:
+
+  1. C1 Requests
+  2. C1 Modifies appt start time
+  3. C2 accepts 2nd request
+
+Basic Modification (2):
+
+  1. C1 Requests
+  2. C1 Modifies appt, changes name 
+  3. C2 accepts 2nd request
+
+Basic Cancellation:
+
+  1. C1 Request Appt w/ C2 as attendee
+  2. C1 Cancels appointment
+
+Modification, out of order accept:
+
+  1. C1 Requests
+  2. C1 Modifies appt, changes name 
+  3. C2 accepts request from (1), should give feedback that request is old
+  4. C2 accepts request from (2)
+
+Cancellation, out of order accept:
+
+  1. C1 Requests
+  2. C1 cancels appt
+  3. C2 accepts request from (1), should give feedback that request is old
+
+Modification, remove attendee:
+
+  1. C1 Requests
+  2. C1 Modifies, removes C2 as attendee
+  3. C2 should receive cancellation notice
+
+Modification of local copy:
+
+  1. C1 Requests
+  2. C2 accepts
+  3. C2 modifies appointment, changing the name.  Should NOT give "must
+     be organizer message" -- should modify local copy
+
+Basic Recurrence:
+
+  1. Create a recurring appointment
+  2. Check to see that recurring appt is created
+
+Basic Exception:
+
+  1. C1 Create a recurring appointment
+  2. C2 accepts
+  3. C1 modifies a specific instance of that appointment, changing the
+     time
+  4. C2 should have invitation for change.  Old instance should be
+     _removed_ from C2's calendar immediately, and the new time should
+     appear as "tentative" on C2's calendar
+  5. C2 accepts
+
+Cancel single instance:
+
+  1. C1 Create a recurring appointment
+  2. C2 accepts
+  3. C1 cancels  a specific instance of that appointment
+  4. C2 should have invitation for change.  Old instance should be
+     _removed_ from C2's calendar immediately, and the new time should
+     appear as "tentative" on C2's calendar

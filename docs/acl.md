@@ -28,13 +28,13 @@ to any user, group, or well-known symbolic name (like "all" or
 With that in mind, the set of rights we want to support will probably run
 along these lines:
 
-        read       - search, view overviews and items
-        write      - edit drafts/contacts/notes, set flags
-        action     - workflow actions, like accepting appointments
-        insert     - copy/add to directory, create subfolders
-        delete     - delete items and subfolders, set \Deleted flag?
-        administer - delegate admin and change permissions
-        freebusy   - view free/busy on a calendar folder
+    read       - search, view overviews and items
+    write      - edit drafts/contacts/notes, set flags
+    action     - workflow actions, like accepting appointments
+    insert     - copy/add to directory, create subfolders
+    delete     - delete items and subfolders, set \Deleted flag?
+    administer - delegate admin and change permissions
+    freebusy   - view free/busy on a calendar folder
 
 (We might want to break "set flags" out from "write", or combine "action"
 and "write", but that's the general gist of things.)
@@ -61,15 +61,14 @@ Account object, as that can be done using Account attribute comparisons
 with no further trips to LDAP.  Fortunately, that gives us a pretty rich
 set of possible grantees right off the bat:
 
-        user   - compare grantee ID with Account's zimbraId
-        group  - compare grantee ID with Account's zimbraMemberOf values
-        domain - compare grantee ID with ID of Account's derived domain
-        COS    - compare grantee ID with Account's zimbraCOSId
-        all    - the caller needs to present a valid Zimbra credential
-        guest  - the caller needs to present a non-Zimbra email address
-                 and password
-        key    - the caller needs to present an access key
-        pub    - always succeeds
+    user   - compare grantee ID with Account's zimbraId
+    group  - compare grantee ID with Account's zimbraMemberOf values
+    domain - compare grantee ID with ID of Account's derived domain
+    COS    - compare grantee ID with Account's zimbraCOSId
+    all    - the caller needs to present a valid Zimbra credential
+    guest  - the caller needs to present a non-Zimbra email address and password
+    key    - the caller needs to present an access key
+    pub    - always succeeds
 
 (Domain grantees may require another LDAP query, but it's likely that
 they'll already be in the LdapProvisioning cache.)
@@ -101,31 +100,31 @@ treat it as if no rights are granted on the target folder.  In other
 words, take the *first* (and only the first) of the following that exists,
 stopping at "do not inherit" folders:
 
-    - the set of rights granted on the folder directly
-    - the set of rights granted on the folder's parent
-    - the set of rights granted on the folder's grandparent
-      ...
-    - the set of rights granted on the mailbox's root folder
-    - no rights at all
+  - the set of rights granted on the folder directly
+  - the set of rights granted on the folder's parent
+  - the set of rights granted on the folder's grandparent
+    ...
+  - the set of rights granted on the mailbox's root folder
+  - no rights at all
 
 So if the folder hierarchy looks like this:
 
-                 root  <- "read+write" granted to user A
-                 /  \
-                V    W  <- "read" granted to users A and B
-               /    / \
-              X    Y   Z
+       root  <- "read+write" granted to user A
+       /  \
+      V    W  <- "read" granted to users A and B
+     /    / \
+    X    Y   Z
 
 then user A has "write" rights on folders V and X, but not W, Y, and Z,
 B has "read" rights on folders W, Y, and Z but not V or X.
 
 If the folder hierarchy looks like this:
 
-                 root  <- "read+write" granted to user A
-                 /  \
-                V    W  <- "do not inherit" flag set
-               /    / \
-              X    Y   Z  <- "read" granted to users A and B
+       root  <- "read+write" granted to user A
+       /  \
+      V    W  <- "do not inherit" flag set
+     /    / \
+    X    Y   Z  <- "read" granted to users A and B
 
 then user A has "write" rights on folders V and X, but not W, Y, and Z,
 user A has "read" rights on folders V, X, and Z but not W or Y, and
@@ -258,8 +257,8 @@ To an administrator who is configuring permissions for delegated admin users it 
 particular delegated admin user has a right to perform a  specific ation on a specific target. This is how the 
 logic of checking permissions works on the server:
 
-Step 1 ($currentTarget). Is there a negative grant on $currentTarget
-                               /               \
-                           Yes=deny           No = Step 2 ($currentTarget). Is there a positive grant on $currentTarget?
-                                                               /            \
-                                                          Yes = allow      No = Step1($currentTarget.parent)
+    Step 1 ($currentTarget): Is there a negative grant on $currentTarget
+               /               \
+            Yes=deny           No = Step 2 ($currentTarget). Is there a positive grant on $currentTarget?
+                                               /            \
+                                          Yes = allow      No = Step1($currentTarget.parent)

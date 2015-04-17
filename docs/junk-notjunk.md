@@ -1,10 +1,11 @@
-			Notes on Junk/Not Junk
+Notes on Junk/Not Junk
+======================
 
 When user clicks on the Junk/Not Junk buttons in the Zimbra Web
 Client, the selected messages and conversations are moved to Junk or
 Inbox folders, as appropriate.  The SOAP request issued by the web
-client is {Msg,Conv}ActionRequest with action op set to "spam" or
-"!spam".
+client is {Msg,Conv}ActionRequest with action op set to `spam` or
+`!spam`.
 
 In addition to the folder move, you can configure the Zimbra server to
 fork a copy of the message on which the spam/!spam action was
@@ -23,7 +24,7 @@ Overview
 
 - Server notices that feedback is enabled, and sends out a feedback
   message B to the configured feedback account.  Note that the content
-  of message A is a message/rfc822 attachment inside B.
+  of message A is a `message/rfc822` attachment inside B.
 
 - Admin runs a periodic task (cron job) to drain the feedback accounts
   with the zmspamextract utility, and then uses sa-learn (in the case
@@ -39,15 +40,15 @@ Notes on terminology:
 
 - "Feedback message" is a new message sent to a configured address
   (message B in the example above) and it encapsulates the original
-  message as an message/rfc822 attachment.  B contains A.
+  message as an `message/rfc822` attachment.  B contains A.
 
 Junk/Not Junk Accounts
 ----------------------
 
 If global config attributes
 
-   zimbraSpamIsSpamAccount
-   zimbraSpamIsNotSpamAccount
+  - zimbraSpamIsSpamAccount
+  - zimbraSpamIsNotSpamAccount
 
 are configured (valid config value is an email address), then a
 feedback message is sent to these addresses on user action spam/!spam.
@@ -70,15 +71,15 @@ spam feedback messages.  When creating these accounts, we recommend:
   
 For example:
 
-   $ domain=`zmprov gcf zimbraDefaultDomainName | sed 's/^.*: //g'`
-   $ rand_name=`zmjava com.zimbra.common.util.RandomPassword 8 10 | sed 's/\.//g'`
-   $ rand_passwd=`zmjava com.zimbra.common.util.RandomPassword 31 37`
-   $ echo "Creating account $rand_name@$domain with passwd=$rand_passwd"
-   $ zmprov ca $rand_name@$domain $rand_passwd \
-           zimbraAttachmentsIndexingEnabled FALSE \
-           zimbraMailQuota 0 \
-           amavisBypassSpamChecks TRUE
-   $ zmprov mcf zimbraSpamIsSpamAccount $rand_name@$domain
+    $ domain=`zmprov gcf zimbraDefaultDomainName | sed 's/^.*: //g'`
+    $ rand_name=`zmjava com.zimbra.common.util.RandomPassword 8 10 | sed 's/\.//g'`
+    $ rand_passwd=`zmjava com.zimbra.common.util.RandomPassword 31 37`
+    $ echo "Creating account $rand_name@$domain with passwd=$rand_passwd"
+    $ zmprov ca $rand_name@$domain $rand_passwd \
+             zimbraAttachmentsIndexingEnabled FALSE \
+             zimbraMailQuota 0 \
+             amavisBypassSpamChecks TRUE
+    $ zmprov mcf zimbraSpamIsSpamAccount $rand_name@$domain
 
 The zimbra installer creates these accounts for you by default.
 
@@ -92,53 +93,53 @@ dedicated to sending this junk/not junk feedback.  The queue size is
 throttled so if this thread falls behind we choose to ignore sending
 the feedback (warnigs are logged when queue if full and feedback
 sending is ignored).  You can change queue size in server config
-(zimbraMailboxSpamHandlerSpamReportQueueSize, defaulted to 100).  Also the feedback
+(`zimbraMailboxSpamHandlerSpamReportQueueSize`, defaulted to 100).  Also the feedback
 queue is not persisted - it is in memory only, and does not survive
 server restarts.
 
 Format of Feedback Message
 --------------------------
 
-The feedback message has a text-plain part and a message/rfc822
+The feedback message has a text-plain part and a `message/rfc822`
 attachment which is the original message. In the example below, the
 (1) is the envelope of the feedback message, (2) is a spam report
 detailing who classified the message as junk or not junk, and (3) is
 the original message.
 
-  1  Received: from ...
-  1  Message-ID: <26499674.231142039856777.JavaMail@phillip.liquidsys.com>
-  1  To: spam-sink@phillip.liquidsys.com
-  1  Subject: zimbra-spam-report: user1@phillip.liquidsys.com: spam
-  1  MIME-Version: 1.0
-  1  Content-Type: multipart/mixed; boundary="----=_Part_23_13878940.114203"
-  1  Date: Fri, 10 Mar 2006 17:17:36 -0800 (PST)
-  1  From: MAILER-DAEMON
+    1  Received: from ...
+    1  Message-ID: <26499674.231142039856777.JavaMail@phillip.liquidsys.com>
+    1  To: spam-sink@phillip.liquidsys.com
+    1  Subject: zimbra-spam-report: user1@phillip.liquidsys.com: spam
+    1  MIME-Version: 1.0
+    1  Content-Type: multipart/mixed; boundary="----=_Part_23_13878940.114203"
+    1  Date: Fri, 10 Mar 2006 17:17:36 -0800 (PST)
+    1  From: MAILER-DAEMON
 
-     ------=_Part_23_13878940.114203
-  2  Content-Type: text/plain; charset=us-ascii
-  2  Content-Transfer-Encoding: 7bit
-  2  Content-Description: Zimbra spam classification report
-  2  
-  2  Classified-By: user1@phillip.liquidsys.com
-  2  Classified-As: spam
+       ------=_Part_23_13878940.114203
+    2  Content-Type: text/plain; charset=us-ascii
+    2  Content-Transfer-Encoding: 7bit
+    2  Content-Description: Zimbra spam classification report
+    2  
+    2  Classified-By: user1@phillip.liquidsys.com
+    2  Classified-As: spam
 
-     ------=_Part_23_13878940.114203
-     Content-Type: message/rfc822
-     Content-Disposition: attachment
+       ------=_Part_23_13878940.114203
+       Content-Type: message/rfc822
+       Content-Disposition: attachment
 
-  3  <Content of original message>
+    3  <Content of original message>
 
 zmspamextract Utility
 ---------------------
 
-The command line program zmspamextract can be used to dump the the
+The command line program `zmspamextract` can be used to dump the the
 feedback mailboxes, and is a flexible tool for extracting messages
 from the Zimbra store.  It uses SOAP to talk to Zimbra store servers.
 It also reads LDAP for configuration information such as which store
 server the target mailbox resides in.
 
 It can extract messages from an account configured as the
-zimbraSpamIsSpamAccount (-s), or from zimbraSpamIsNotSpamAccount (-n)
+`zimbraSpamIsSpamAccount (-s)`, or from `zimbraSpamIsNotSpamAccount (-n)`
 or you can specify any account as the target (-m).
 
 This tools needs to an admin auth token.  You can specify an admin
@@ -151,7 +152,7 @@ server.  If that mailbox server is not running admin service, then you
 can use the -u option to specify the admin service URL.  Note that the
 admin service URL has the form (trailing slash important):
 
-   https://<host>:<port-usually-7071>/service/admin/soap/
+    https://<host>:<port-usually-7071>/service/admin/soap/
 
 You can also specify a query (-q) in order to extract the results of a
 query, as opposed to extracting the default in:inbox.  You can ask
@@ -171,19 +172,19 @@ Different scenarios of zmspamextract use:
 
 - You trust only some set of users with spam training.  Don't
   configure the global config options.  Instead tell your trusted
-  users to forward their ham/spam messages as (message/rfc822)
+  users to forward their ham/spam messages as (`message/rfc822`)
   attachment to the ham/spam accounts.  Then use the -m option to
   extract from these ham/spam accounts.
 
 - Note that whether you have the global config turned on or not, the
-  spam/ham accounts can be sent message/rfc822 attachments from
+  spam/ham accounts can be sent `message/rfc822` attachments from
   Outlook, Thunderbird etc for spam training.
 
-- You have a MyHandSelectedSpamFolder that contains spam messages.
+- You have a `MyHandSelectedSpamFolder` that contains spam messages.
   Then use the -m and -r (raw) options to dump this folder out for
   spam training.
 
-Note that zmspamextract can also be used as a generic mailbox dumper,
+Note that `zmspamextract` can also be used as a generic mailbox dumper,
 but it get its name (instead of zmmsgextract) because of the -s and -n
 options and the default being !raw.
 
