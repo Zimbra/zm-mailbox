@@ -2812,7 +2812,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             }
         }
         if (!cacheMisses.isEmpty()) {
-            boolean cacheDomains = LC.ldap_cache_domain_maxsize.intValue() < collector.domains.size();
+            boolean cacheDomains = (LC.ldap_cache_domain_maxsize.intValue() >= collector.domains.size());
             if (!cacheDomains) {
                 ZimbraLog.search.info(
                         "localconfig ldap_cache_domain_maxsize=%d < number of domains=%d.  Consider increasing it.",
