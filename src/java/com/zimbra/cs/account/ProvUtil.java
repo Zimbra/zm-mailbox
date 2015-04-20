@@ -672,7 +672,10 @@ public class ProvUtil implements HttpDebugListener {
                                                 SYNC_GAL("syncGal", "syg", "{domain} [{token}]", Category.MISC, 1, 2),
                                                 UPDATE_PRESENCE_SESSION_ID("updatePresenceSessionId", "upsid", "{UC service name or id} {app-username} {app-password}", Category.MISC, 3, 3, Via.soap),
                                                 RESET_ALL_LOGGERS("resetAllLoggers", "rlog", "[-s/--server hostname]", Category.LOG, 0, 2),
-                                                RESET_LDAP_CLIENT("resetLdapClient", "rlc", "[-a]", Category.MISC, 0, 1),;
+
+                                                RESET_LDAP_CLIENT("resetLdapClient", "rlc", "[-a]", Category.MISC, 0, 1),
+                                                MOVE_ACCOUNT("moveAccount", "mva", "{name@domain} {-t hostname} [--sticky {TRUE|FALSE}]", Category.ACCOUNT, 3, 6);
+
         private String mName;
         private String mAlias;
         private String mHelp;
@@ -1377,6 +1380,8 @@ public class ProvUtil implements HttpDebugListener {
                 break;
             case RESET_LDAP_CLIENT:
                 doResetLdapClient(args);
+            case MOVE_ACCOUNT:
+                doMoveAccount(args);
                 break;
             default:
                 return false;
@@ -5177,6 +5182,56 @@ public class ProvUtil implements HttpDebugListener {
     private void loadLdapSchemaExtensionAttrs() {
         if (prov instanceof LdapProv) {
             AttributeManager.loadLdapSchemaExtensionAttrs((LdapProv) prov);
+        }
+    }
+
+    /**
+     * @param args
+     * @throws ServiceException
+     * @throws ArgException
+     */
+    private void doMoveAccount(String[] args) throws ServiceException, ArgException {
+        boolean applyDefault = true;
+        String accountName = args[1];
+        Account account = lookupAccount(accountName, Boolean.TRUE, applyDefault);
+        String sourceServer = account.getServerName();
+        String targetServer = null;
+        String originalStatus = account.getAccountStatus(prov);
+        Map<String, Object> commandParams = this.getMap(args, 2);
+        if (commandParams.containsKey("-t")) {
+            targetServer = (String) commandParams.get("-t");
+            String serverStickyness = Provisioning.FALSE;
+            if (commandParams.containsKey("--sticky")) {
+                boolean temp = Boolean.parseBoolean( (String) commandParams.get("--sticky"));
+                serverStickyness = temp ? Provisioning.TRUE : Provisioning.FALSE;
+            }
+
+            boolean networkLicense = false;
+
+            if ( MoveAccountUtils.isSharedDbTheSame(sourceServer, targetServer)
+                && MoveAccountUtils.isSolrUrlTheSame(sourceServer, targetServer)) {
+                try {
+                    MoveAccountUtils.updateHomeServerForAccount(prov, account, targetServer,
+                        serverStickyness);
+                } catch (ServiceException e) {
+                    console.println("Error updating the home server to " + targetServer + " for the account " +
+                      accountName);
+                    prov.modifyAccountStatus(account, originalStatus);
+                    prov.reload(account);
+                }
+            } else {
+                // TO DO We have to check if we have a valid license then invoke mailbox move functionality
+                if (networkLicense) {
+
+                } else {
+                    throw ServiceException.INVALID_REQUEST("Source server: " + sourceServer + " and target server: "
+                        + targetServer + " require moving of data and is not available in open source edition.", null);
+                }
+            }
+        } else {
+            console.println("Invalid arg: target server not specified" );
+            usage();
+            return;
         }
     }
 
