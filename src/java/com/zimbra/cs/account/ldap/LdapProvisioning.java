@@ -7861,12 +7861,22 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         removeAttrIgnoreCase("objectclass", dataSourceAttrs);
         LdapEntry ldapEntry = (LdapEntry) (account instanceof LdapEntry ? account : getAccountById(account.getId()));
 
-        if (ldapEntry == null)
+        if (ldapEntry == null) {
             throw AccountServiceException.NO_SUCH_ACCOUNT(account.getName());
+        }
 
         List<DataSource> existing = getAllDataSources(account);
-        if (existing.size() >= account.getLongAttr(A_zimbraDataSourceMaxNumEntries, 20))
+        if (existing.size() >= account.getLongAttr(A_zimbraDataSourceMaxNumEntries, 20)) {
             throw AccountServiceException.TOO_MANY_DATA_SOURCES();
+        }
+        String dsEmailAddr = (String) dataSourceAttrs.get(A_zimbraDataSourceEmailAddress);
+        if (!StringUtil.isNullOrEmpty(dsEmailAddr)) {
+            for (DataSource ds : existing) {
+                if (dsEmailAddr.equals(ds.getEmailAddress())) {
+                    throw AccountServiceException.DATA_SOURCE_EXISTS(dsEmailAddr);
+                }
+            }
+        }
 
         dataSourceAttrs.put(A_zimbraDataSourceName, dsName); // must be the same
         dataSourceAttrs.put(Provisioning.A_zimbraDataSourceType, dsType.toString());
