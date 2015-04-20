@@ -74,4 +74,20 @@ public final class SyncConstants {
     public static final String A_PHONENUMBER = "phone_number";
     public static final String A_CLASS = "class";
     public static final String A_SHOWITEM = "showItems";
+
+    // Sync command response statuses
+    // Reference - https://msdn.microsoft.com/en-us/library/gg675457(v=exchg.80).aspx
+    public static final Integer STATUS_SUCCESS = 1;
+    public static final Integer STATUS_INVALID_SYNC_KEY = 3;
+    public static final Integer STATUS_PROTOCOL_ERROR = 4;
+    public static final Integer STATUS_SERVER_ERROR = 5;
+    public static final Integer STATUS_ERROR_IN_CONVERSATION = 6;
+    public static final Integer STATUS_CONFLICT = 7;
+    public static final Integer STATUS_OBJECT_NOT_FOUND = 8;
+    public static final Integer STATUS_SYNC_NOT_COMPLETED = 9;
+    public static final Integer STATUS_FOLDER_HIERARCHY_CHANGED = 12;
+    public static final Integer STATUS_EMPTY_OR_PARTIAL_SYNC = 13;
+    public static final Integer STATUS_INVALID_INTERVAL = 14;
+    public static final Integer STATUS_INVALID_SYNC_REQUEST = 15;
+    public static final Integer STATUS_SYNC_RETRY = 16;
 }
