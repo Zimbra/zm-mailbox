@@ -8803,4 +8803,7 @@ TODO: delete them permanently from here
   <desc>trusted device token secret key</desc>
 </attr>
 
+<attr id="1968" name="zimbraReverseProxySSLDHParam" type="string" max="128" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="nginxproxy" since="8.7.0,9.0.0">
+  <desc>Specifies a file with DH parameters for EDH ciphers to be used by the proxy</desc>
+</attr>
 </attrs>

@@ -1751,6 +1751,24 @@ class WebZSSUpstreamEnablerVar extends WebEnablerVar {
     }
 }
 
+class WebSSLDhparamEnablerVar extends WebEnablerVar {
+
+    public WebSSLDhparamEnablerVar() {
+        super("web.ssl.dhparam.enabled", false,
+                "Indicates whether ssl_dhparam directive should be added or not");
+    }
+
+    @Override
+    public void update() {
+        String dhparam = serverSource.getAttr("zimbraReverseProxySSLDHParam");
+        if (dhparam == null || ProxyConfUtil.isEmptyString(dhparam)) {
+            mValue = false;
+        } else {
+            mValue = true;
+        }
+    }
+}
+
 public class ProxyConfGen
 {
     private static final int DEFAULT_SERVERS_NAME_HASH_MAX_SIZE = 512;
@@ -2538,6 +2556,8 @@ public class ProxyConfGen
         mConfVars.put("web.xmpp.remote.bind.url", new ProxyConfVar("web.xmpp.remote.bind.url", "zimbraReverseProxyXmppBoshRemoteHttpBindURL", "", ProxyConfValueType.STRING, ProxyConfOverride.SERVER, "Remote HTTP-BIND URL prefix for an external XMPP server where XMPP over BOSH requests need to be proxied"));
         mConfVars.put("web.xmpp.bosh.hostname", new ProxyConfVar("web.xmpp.bosh.hostname", "zimbraReverseProxyXmppBoshHostname", "", ProxyConfValueType.STRING, ProxyConfOverride.SERVER, "Hostname of the external XMPP server where XMPP over BOSH requests need to be proxied"));
         mConfVars.put("web.xmpp.bosh.port", new ProxyConfVar("web.xmpp.bosh.port", "zimbraReverseProxyXmppBoshPort", new Integer(0), ProxyConfValueType.INTEGER, ProxyConfOverride.SERVER, "Port number of the external XMPP server where XMPP over BOSH requests need to be proxied"));
+        mConfVars.put("web.ssl.dhparam.enabled", new WebSSLDhparamEnablerVar());
+        mConfVars.put("web.ssl.dhparam.file", new ProxyConfVar("web.ssl.dhparam.file", "zimbraReverseProxySSLDHParam", "", ProxyConfValueType.STRING, ProxyConfOverride.SERVER, "Filename with DH parameters for EDH ciphers to be used by the proxy"));
     }
 
     /* update the default variable map from the active configuration */
