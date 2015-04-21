@@ -32,6 +32,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraHttpClientManager;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.index.IndexDocument;
 import com.zimbra.cs.index.IndexStore;
 import com.zimbra.cs.index.Indexer;
@@ -150,13 +151,14 @@ public class SolrCloudIndex extends SolrIndexBase {
     public void initIndex() throws IOException, ServiceException {
         if (!indexExists()) {
             try {
+                Server server = Provisioning.getInstance().getLocalServer();
                 ModifiableSolrParams params = new ModifiableSolrParams();
                 params.set("action", CollectionAction.CREATE.toString());
                 params.set("name", accountId);
                 //TODO: get global/server config for num shards, configName, replication factor and max shards per node
                 params.set("numShards", 1);
-                params.set("replicationFactor", 2);
-                params.set("maxShardsPerNode", 1);
+                params.set("replicationFactor", server.getSolrReplicationFactor());
+                params.set("maxShardsPerNode", server.getSolrMaxShardsPerNode());
                 params.set("collection.configName","zimbra");
                 SolrRequest req = new QueryRequest(params);
                 req.setPath("/admin/collections");

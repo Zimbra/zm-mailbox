@@ -77061,6 +77061,175 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * Limit for how many replicas of the same Solr Collection are allowed to
+     * be created on each node. This value is used in maxShardsPerNode
+     * parameter when creating Solr Collections in SolrCloud with via
+     * Collections API.
+     *
+     * @return zimbraSolrMaxShardsPerNode, or 1 if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1970)
+    public int getSolrMaxShardsPerNode() {
+        return getIntAttr(Provisioning.A_zimbraSolrMaxShardsPerNode, 1);
+    }
+
+    /**
+     * Limit for how many replicas of the same Solr Collection are allowed to
+     * be created on each node. This value is used in maxShardsPerNode
+     * parameter when creating Solr Collections in SolrCloud with via
+     * Collections API.
+     *
+     * @param zimbraSolrMaxShardsPerNode new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1970)
+    public void setSolrMaxShardsPerNode(int zimbraSolrMaxShardsPerNode) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSolrMaxShardsPerNode, Integer.toString(zimbraSolrMaxShardsPerNode));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Limit for how many replicas of the same Solr Collection are allowed to
+     * be created on each node. This value is used in maxShardsPerNode
+     * parameter when creating Solr Collections in SolrCloud with via
+     * Collections API.
+     *
+     * @param zimbraSolrMaxShardsPerNode new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1970)
+    public Map<String,Object> setSolrMaxShardsPerNode(int zimbraSolrMaxShardsPerNode, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSolrMaxShardsPerNode, Integer.toString(zimbraSolrMaxShardsPerNode));
+        return attrs;
+    }
+
+    /**
+     * Limit for how many replicas of the same Solr Collection are allowed to
+     * be created on each node. This value is used in maxShardsPerNode
+     * parameter when creating Solr Collections in SolrCloud with via
+     * Collections API.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1970)
+    public void unsetSolrMaxShardsPerNode() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSolrMaxShardsPerNode, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Limit for how many replicas of the same Solr Collection are allowed to
+     * be created on each node. This value is used in maxShardsPerNode
+     * parameter when creating Solr Collections in SolrCloud with via
+     * Collections API.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1970)
+    public Map<String,Object> unsetSolrMaxShardsPerNode(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSolrMaxShardsPerNode, "");
+        return attrs;
+    }
+
+    /**
+     * Number of instances of a Solr Collection that will be created for each
+     * mailbox. This value is used in replicationFactor parameter when
+     * creating Solr Collections in SolrCloud with via Collections API.
+     *
+     * @return zimbraSolrReplicationFactor, or 2 if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1969)
+    public int getSolrReplicationFactor() {
+        return getIntAttr(Provisioning.A_zimbraSolrReplicationFactor, 2);
+    }
+
+    /**
+     * Number of instances of a Solr Collection that will be created for each
+     * mailbox. This value is used in replicationFactor parameter when
+     * creating Solr Collections in SolrCloud with via Collections API.
+     *
+     * @param zimbraSolrReplicationFactor new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1969)
+    public void setSolrReplicationFactor(int zimbraSolrReplicationFactor) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSolrReplicationFactor, Integer.toString(zimbraSolrReplicationFactor));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Number of instances of a Solr Collection that will be created for each
+     * mailbox. This value is used in replicationFactor parameter when
+     * creating Solr Collections in SolrCloud with via Collections API.
+     *
+     * @param zimbraSolrReplicationFactor new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1969)
+    public Map<String,Object> setSolrReplicationFactor(int zimbraSolrReplicationFactor, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSolrReplicationFactor, Integer.toString(zimbraSolrReplicationFactor));
+        return attrs;
+    }
+
+    /**
+     * Number of instances of a Solr Collection that will be created for each
+     * mailbox. This value is used in replicationFactor parameter when
+     * creating Solr Collections in SolrCloud with via Collections API.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1969)
+    public void unsetSolrReplicationFactor() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSolrReplicationFactor, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Number of instances of a Solr Collection that will be created for each
+     * mailbox. This value is used in replicationFactor parameter when
+     * creating Solr Collections in SolrCloud with via Collections API.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1969)
+    public Map<String,Object> unsetSolrReplicationFactor(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSolrReplicationFactor, "");
+        return attrs;
+    }
+
+    /**
      * Base URL for accessing Solr. Must include port number. Should point to
      * ZooKeeper when Solr is running in cloud mode.
      *

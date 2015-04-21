@@ -9881,4 +9881,14 @@ TODO: delete them permanently from here
 <attr id="1968" name="zimbraReverseProxySSLDHParam" type="string" max="128" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" affectsServices="nginxproxy" since="8.7.0,9.0.0">
   <desc>Specifies a file with DH parameters for EDH ciphers to be used by the proxy</desc>
 </attr>
+
+<attr id="1969" name="zimbraSolrReplicationFactor" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="9.0.0">
+  <globalConfigValue>2</globalConfigValue>
+  <desc>Number of instances of a Solr Collection that will be created for each mailbox. This value is used in replicationFactor parameter when creating Solr Collections in SolrCloud with via Collections API.</desc>
+</attr>
+
+<attr id="1970" name="zimbraSolrMaxShardsPerNode" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="9.0.0">
+  <globalConfigValue>1</globalConfigValue>
+  <desc>Limit for how many replicas of the same Solr Collection are allowed to be created on each node. This value is used in maxShardsPerNode parameter when creating Solr Collections in SolrCloud with via Collections API.</desc>
+</attr>
 </attrs>
