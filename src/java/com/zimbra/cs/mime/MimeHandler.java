@@ -240,10 +240,7 @@ public abstract class MimeHandler {
         throws MimeHandlerException, ObjectHandlerException, ServiceException {
 
         IndexDocument doc = new IndexDocument(new Document());
-        try (MimeTypeTokenStream tokenStream = new MimeTypeTokenStream(getContentType())) {
-            doc.addMimeType(tokenStream);
-        }
-
+        doc.addMimeType(new MimeTypeTokenStream(getContentType()));
         addFields(doc.toDocument());
         String content = getContent();
         doc.addContent(content);
