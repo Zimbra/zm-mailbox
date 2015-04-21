@@ -13587,6 +13587,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraReverseProxySSLCiphers = "zimbraReverseProxySSLCiphers";
 
     /**
+     * Specifies a file with DH parameters for EDH ciphers to be used by the
+     * proxy
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1968)
+    public static final String A_zimbraReverseProxySSLDHParam = "zimbraReverseProxySSLDHParam";
+
+    /**
      * SSL ECDH cipher curve for web proxy
      *
      * @since ZCS 8.5.0
