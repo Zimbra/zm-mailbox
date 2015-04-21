@@ -2056,6 +2056,24 @@ class WebPageSpeedDisallowedURLsVar extends ProxyConfVar {
     }
 }
 
+class WebSSLDhparamEnablerVar extends WebEnablerVar {
+
+    public WebSSLDhparamEnablerVar() {
+        super("web.ssl.dhparam.enabled", false,
+                "Indicates whether ssl_dhparam directive should be added or not");
+    }
+
+    @Override
+    public void update() {
+        String dhparam = serverSource.getAttr("zimbraReverseProxySSLDHParam");
+        if (dhparam == null || ProxyConfUtil.isEmptyString(dhparam)) {
+            mValue = false;
+        } else {
+            mValue = true;
+        }
+    }
+}
+
 public class ProxyConfGen
 {
     private static final int DEFAULT_SERVERS_NAME_HASH_MAX_SIZE = 512;
@@ -2878,6 +2896,8 @@ public class ProxyConfGen
 	    mConfVars.put("web.pagespeed.enabled", new ProxyConfVar("web.pagespeed.enabled", "zimbraReverseProxyPageSpeedEnabled", "on", ProxyConfValueType.STRING, ProxyConfOverride.SERVER, "Enables or disables pagespeed module for nginx - can be on|off - on enables, off disables"));
 	    mConfVars.put("web.pagespeed.respect.vary", new ProxyConfVar("web.pagespeed.respect.vary", "zimbraReverseProxyPageSpeedRespectVary", "off", ProxyConfValueType.STRING, ProxyConfOverride.SERVER, "Enables or disables respecting of the Vary headers on resource files, such as JavaScript and css files by proxy's Pagespeed module. off by default"));
 	    mConfVars.put("web.pagespeed.disallowed.urls", new WebPageSpeedDisallowedURLsVar());
+	    mConfVars.put("web.ssl.dhparam.enabled", new WebSSLDhparamEnablerVar());
+	    mConfVars.put("web.ssl.dhparam.file", new ProxyConfVar("web.ssl.dhparam.file", "zimbraReverseProxySSLDHParam", "", ProxyConfValueType.STRING, ProxyConfOverride.SERVER, "Filename with DH parameters for EDH ciphers to be used by the proxy"));
     }
 
     /* update the default variable map from the active configuration */

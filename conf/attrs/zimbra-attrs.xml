@@ -9877,4 +9877,8 @@ TODO: delete them permanently from here
 <attr id="1967" name="zimbraReverseProxyPageSpeedDisallowedURLs" type="string" cardinality="multi" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="nginxproxy" since="9.0.0">
   <desc>URL patterns that need to be excluded from the rewriting processs of proxy's Pagespeed module</desc>
 </attr>
+
+<attr id="1968" name="zimbraReverseProxySSLDHParam" type="string" max="128" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" affectsServices="nginxproxy" since="8.7.0,9.0.0">
+  <desc>Specifies a file with DH parameters for EDH ciphers to be used by the proxy</desc>
+</attr>
 </attrs>
