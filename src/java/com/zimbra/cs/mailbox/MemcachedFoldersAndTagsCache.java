@@ -18,7 +18,6 @@ import javax.annotation.PostConstruct;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
-import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.memcached.MemcachedKey;
 import com.zimbra.common.util.memcached.MemcachedMap;
@@ -49,8 +48,6 @@ public class MemcachedFoldersAndTagsCache implements FoldersAndTagsCache {
     /** Caches list of all folders and tags for a given mailbox */
     @Override
     public void put(Mailbox mbox, FoldersAndTags foldersAndTags) throws ServiceException {
-        if (DebugConfig.disableFoldersTagsCache)
-            return;
         Key key = new Key(mbox.getAccountId());
         mMemcachedLookup.put(key, foldersAndTags);
     }
@@ -58,8 +55,6 @@ public class MemcachedFoldersAndTagsCache implements FoldersAndTagsCache {
     /** Clears cache of folders and tags for a given mailbox */
     @Override
     public void remove(Mailbox mbox) throws ServiceException {
-        if (DebugConfig.disableFoldersTagsCache)
-            return;
         Key key = new Key(mbox.getAccountId());
         mMemcachedLookup.remove(key);
     }

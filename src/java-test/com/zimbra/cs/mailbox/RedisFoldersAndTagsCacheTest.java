@@ -17,7 +17,6 @@ import java.util.HashMap;
 import java.util.Set;
 
 import org.junit.BeforeClass;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import redis.clients.jedis.HostAndPort;
@@ -46,6 +45,7 @@ public final class RedisFoldersAndTagsCacheTest extends AbstractFoldersAndTagsCa
     protected FoldersAndTagsCache constructCache() throws ServiceException {
         FoldersAndTagsCache cache = new RedisFoldersAndTagsCache();
         Zimbra.getAppContext().getAutowireCapableBeanFactory().autowireBean(cache);
+        Zimbra.getAppContext().getAutowireCapableBeanFactory().initializeBean(cache, "foldersAndTagsCache");
         return cache;
     }
 

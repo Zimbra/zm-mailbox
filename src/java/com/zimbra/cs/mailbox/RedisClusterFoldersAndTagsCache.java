@@ -2,7 +2,7 @@ package com.zimbra.cs.mailbox;
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2014 Zimbra Software, LLC.
+ * Copyright (C) 2015 Zimbra Software, LLC.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -16,22 +16,20 @@ package com.zimbra.cs.mailbox;
  * ***** END LICENSE BLOCK *****
  */
 
-import org.springframework.beans.factory.annotation.Autowired;
-
-import redis.clients.jedis.Jedis;
-import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.JedisCluster;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.memcached.MemcachedKeyPrefix;
 
 
-public class RedisFoldersAndTagsCache implements FoldersAndTagsCache {
+public class RedisClusterFoldersAndTagsCache implements FoldersAndTagsCache {
     static final int DEFAULT_EXPIRY_SECS = 24 * 3600;
     protected int expirySecs = DEFAULT_EXPIRY_SECS;
-    @Autowired protected JedisPool jedisPool;
+    protected JedisCluster jedisCluster;
 
     /** Constructor */
-    public RedisFoldersAndTagsCache() {
+    public RedisClusterFoldersAndTagsCache(JedisCluster jedisCluster) {
+        this.jedisCluster = jedisCluster;
     }
 
     protected static String key(Mailbox mbox) {
@@ -40,33 +38,27 @@ public class RedisFoldersAndTagsCache implements FoldersAndTagsCache {
 
     @Override
     public FoldersAndTags get(Mailbox mbox) throws ServiceException {
-        try (Jedis jedis = jedisPool.getResource()) {
-            String value = jedis.get(key(mbox));
-            if (value == null) {
-                return null;
-            }
-
-            Metadata meta = new Metadata(value);
-            return FoldersAndTags.decode(meta);
+        String value = jedisCluster.get(key(mbox));
+        if (value == null) {
+            return null;
         }
+
+        Metadata meta = new Metadata(value);
+        return FoldersAndTags.decode(meta);
     }
 
     @Override
     public void put(Mailbox mbox, FoldersAndTags foldersAndTags) throws ServiceException {
-        try (Jedis jedis = jedisPool.getResource()) {
-            String key = key(mbox);
-            if (expirySecs > -1) {
-                jedis.setex(key, expirySecs, foldersAndTags.encode().toString());
-            } else {
-                jedis.set(key, foldersAndTags.encode().toString());
-            }
+        String key = key(mbox);
+        if (expirySecs > -1) {
+            jedisCluster.setex(key, expirySecs, foldersAndTags.encode().toString());
+        } else {
+            jedisCluster.set(key, foldersAndTags.encode().toString());
         }
     }
 
     @Override
     public void remove(Mailbox mbox) throws ServiceException {
-        try (Jedis jedis = jedisPool.getResource()) {
-            jedis.del(key(mbox));
-        }
+        jedisCluster.del(key(mbox));
     }
 }

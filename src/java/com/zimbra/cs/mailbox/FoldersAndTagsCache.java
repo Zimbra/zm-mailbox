@@ -14,6 +14,11 @@
  */
 package com.zimbra.cs.mailbox;
 
+import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.annotation.Around;
+import org.aspectj.lang.annotation.Aspect;
+
+import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.service.ServiceException;
 
 /**
@@ -32,4 +37,17 @@ public interface FoldersAndTagsCache {
 
     /** Clears cache of folders and tags for a given mailbox */
     public void remove(Mailbox mbox) throws ServiceException;
+
+
+
+    @Aspect
+    public static class Disable {
+        @Around("this(com.zimbra.cs.mailbox.FoldersAndTagsCache)")
+        public Object invoke(ProceedingJoinPoint proceedingJoinPoint) throws Throwable {
+            if (DebugConfig.disableFoldersTagsCache) {
+                return null;
+            }
+            return proceedingJoinPoint.proceed();
+        }
+    }
 }

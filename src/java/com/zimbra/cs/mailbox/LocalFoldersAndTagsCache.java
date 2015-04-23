@@ -22,7 +22,7 @@ import com.zimbra.common.service.ServiceException;
 
 /** An in-process FoldersAndTagsCache implementation, can be used by unit tests. */
 public class LocalFoldersAndTagsCache implements FoldersAndTagsCache {
-    protected Map<String, FoldersAndTags> map = new ConcurrentHashMap<String, FoldersAndTags>();
+    protected Map<String, String> map = new ConcurrentHashMap<>();
 
     @VisibleForTesting
     void flush() {
@@ -31,12 +31,17 @@ public class LocalFoldersAndTagsCache implements FoldersAndTagsCache {
 
     @Override
     public FoldersAndTags get(Mailbox mbox) throws ServiceException {
-        return map.get(key(mbox));
+        String value = map.get(key(mbox));
+        if (value == null) {
+            return null;
+        }
+        Metadata meta = new Metadata(value);
+        return FoldersAndTags.decode(meta);
     }
 
     @Override
     public void put(Mailbox mbox, FoldersAndTags foldersAndTags) throws ServiceException {
-        map.put(key(mbox), foldersAndTags);
+        map.put(key(mbox), foldersAndTags.encode().toString());
     }
 
     @Override

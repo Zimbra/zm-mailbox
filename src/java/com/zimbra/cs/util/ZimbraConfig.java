@@ -168,6 +168,11 @@ public class ZimbraConfig {
     }
 
     @Bean
+    public FoldersAndTagsCache.Disable foldersAndTagsCacheDisable() throws ServiceException {
+        return new FoldersAndTagsCache.Disable();
+    }
+
+    @Bean
     public ZimbraHttpClientManager httpClientManager() throws Exception {
         return new ZimbraHttpClientManager();
     }

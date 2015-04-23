@@ -25,6 +25,7 @@ public final class LocalFoldersAndTagsCacheTest extends AbstractFoldersAndTagsCa
     protected FoldersAndTagsCache constructCache() throws ServiceException {
         FoldersAndTagsCache cache = new LocalFoldersAndTagsCache();
         Zimbra.getAppContext().getAutowireCapableBeanFactory().autowireBean(cache);
+        Zimbra.getAppContext().getAutowireCapableBeanFactory().initializeBean(cache, "foldersAndTagsCache");
         return cache;
     }
 
