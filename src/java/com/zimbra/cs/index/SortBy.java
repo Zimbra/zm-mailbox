@@ -24,6 +24,7 @@ import java.util.Map;
 import com.google.common.collect.ImmutableMap;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Provisioning;
 
 /**
  * Sort order.
@@ -124,6 +125,12 @@ public enum SortBy {
         NameComparator(SortBy sort, Collator collator) {
             this.sort = sort;
             this.collator = collator;
+            try {
+                int localDecomposition = Provisioning.getInstance().getLocalServer().getContactSearchDecomposition();
+                collator.setDecomposition(localDecomposition);
+            } catch (ServiceException e) {
+                collator.setDecomposition(Collator.FULL_DECOMPOSITION);
+            }
         }
 
         @Override
