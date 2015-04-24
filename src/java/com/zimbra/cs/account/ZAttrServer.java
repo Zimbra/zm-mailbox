@@ -43578,6 +43578,93 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Specify the decomposition mode used for looking up the Contact items by
+     * the name phonetic last/first name or last/first name
+     *
+     * @return zimbraContactSearchDecomposition, or java.text.Collator.FULL_DECOMPOSITION (2) if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1971)
+    public int getContactSearchDecomposition() {
+        return getIntAttr(Provisioning.A_zimbraContactSearchDecomposition, java.text.Collator.FULL_DECOMPOSITION);
+    }
+
+    /**
+     * Specify the decomposition mode used for looking up the Contact items by
+     * the name phonetic last/first name or last/first name.
+     *
+     * @param zimbraContactSearchDecomposition new value.  If the zimbraContactSearchDecomposition is not 0, 1, or 2, then set the default value java.text.Collator.FULL_DECOMPOSITION (2).
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1971)
+    public void setContactSearchDecomposition(int zimbraContactSearchDecomposition) throws com.zimbra.common.service.ServiceException {
+        if (zimbraContactSearchDecomposition != java.text.Collator.NO_DECOMPOSITION &&
+            zimbraContactSearchDecomposition != java.text.Collator.CANONICAL_DECOMPOSITION &&
+            zimbraContactSearchDecomposition != java.text.Collator.FULL_DECOMPOSITION) {
+            // set default value
+            zimbraContactSearchDecomposition = java.text.Collator.FULL_DECOMPOSITION;
+        }
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraContactSearchDecomposition, zimbraContactSearchDecomposition);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Specify the decomposition mode used for looking up the Contact items by
+     * the name phonetic last/first name or last/first name.
+     *
+     * @param zimbraContactSearchDecomposition new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1971)
+    public Map<String,Object> setContactSearchDecomposition(int zimbraContactSearchDecomposition, Map<String,Object> attrs) {
+        if (zimbraContactSearchDecomposition != java.text.Collator.NO_DECOMPOSITION &&
+            zimbraContactSearchDecomposition != java.text.Collator.CANONICAL_DECOMPOSITION &&
+            zimbraContactSearchDecomposition != java.text.Collator.FULL_DECOMPOSITION) {
+            // set default value
+            zimbraContactSearchDecomposition = java.text.Collator.FULL_DECOMPOSITION;
+        }
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraContactSearchDecomposition, Integer.toString(zimbraContactSearchDecomposition));
+        return attrs;
+    }
+
+    /**
+     * Specify the decomposition mode used for looking up the Contact items by
+     * the name phonetic last/first name or last/first name.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1971)
+    public void unsetContactSearchDecomposition() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraContactSearchDecomposition, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Specify the decomposition mode used for looking up the Contact items by
+     * the name phonetic last/first name or last/first name.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1971)
+    public Map<String,Object> unsetContactSearchDecomposition(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraContactSearchDecomposition, "");
+        return attrs;
+    }
+
+    /**
      * The list of available dictionaries that can be used for spell
      * checking.
      *
