@@ -1,7 +1,7 @@
 package com.zimbra.cs.redolog;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -59,7 +59,7 @@ public class RedologLeaderListener {
         return consulService;
     }
 
-    private List<LeaderChangeListener> listeners = new ArrayList<LeaderChangeListener>();
+    private List<LeaderChangeListener> listeners = new CopyOnWriteArrayList<LeaderChangeListener>();
 
     public void addListener(LeaderChangeListener listener) {
         listeners.add(listener);
