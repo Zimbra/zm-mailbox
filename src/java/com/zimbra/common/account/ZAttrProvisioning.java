@@ -14478,6 +14478,12 @@ public class ZAttrProvisioning {
     public static final String A_zimbraSocialcastURL = "zimbraSocialcastURL";
 
     /**
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1971)
+    public static final String A_zimbraContactSearchDecomposition = "zimbraContactSearchDecomposition";
+
+    /**
      * If TRUE, spam messages will be affected by user mail filters instead
      * of being automatically filed into the Junk folder.
      *
