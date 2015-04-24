@@ -106,6 +106,7 @@ public class SetHeaderFilter implements Filter {
                 String soapUri = LC.zimbra_admin_service_scheme.value() + LC.zimbra_zmprov_default_soap_server.value() +
                     ':' + LC.zimbra_admin_service_port.intValue() + AdminConstants.ADMIN_SERVICE_URI;
                 provisioning.soapSetURI(soapUri);
+                provisioning.soapZimbraAdminAuthenticate();
                 Entry info = provisioning.getDomainInfo(Key.DomainBy.virtualHostname, serverName);
                 if (info == null) {
                     info = provisioning.getConfig();
