@@ -104,6 +104,7 @@ public class SetHeaderFilter implements Filter {
             try {
                 SoapProvisioning provisioning = new SoapProvisioning();
                 provisioning.soapSetURI(URLUtil.getAdminURL());
+                provisioning.soapZimbraAdminAuthenticate();
                 Entry info = provisioning.getDomainInfo(Key.DomainBy.virtualHostname, serverName);
                 if (info == null) {
                     info = provisioning.getConfig();
