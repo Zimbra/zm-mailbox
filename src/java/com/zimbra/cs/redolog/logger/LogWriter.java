@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.LinkedHashMap;
 
+import com.zimbra.cs.redolog.TransactionId;
 import com.zimbra.cs.redolog.op.RedoableOp;
 
 public interface LogWriter {
@@ -111,7 +112,7 @@ public interface LogWriter {
      *                  at the beginning of new log file
      * @throws IOException
      */
-    public void rollover(LinkedHashMap /*<TxnId, RedoableOp>*/ activeOps)
+    public void rollover(LinkedHashMap<TransactionId, RedoableOp> activeOps)
     throws IOException;
 
     /**

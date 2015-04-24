@@ -182,8 +182,8 @@ public abstract class AbstractRedoLogManager implements RedoLogManager {
             // file after rollover will still list these uncommitted ops.
             if (postStartupRecoveryOps.size() > 0) {
                 synchronized (mActiveOps) {
-                    for (Iterator iter = postStartupRecoveryOps.iterator(); iter.hasNext(); ) {
-                        RedoableOp op = (RedoableOp) iter.next();
+                    for (Iterator<RedoableOp> iter = postStartupRecoveryOps.iterator(); iter.hasNext(); ) {
+                        RedoableOp op = iter.next();
                         assert(op.isStartMarker());
                         mActiveOps.put(op.getTransactionId(), op);
                     }

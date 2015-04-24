@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.LinkedHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
@@ -15,6 +16,7 @@ import com.zimbra.cs.redolog.LeaderChangeListener;
 import com.zimbra.cs.redolog.LeaderUnavailableException;
 import com.zimbra.cs.redolog.RedologLeaderListener;
 import com.zimbra.cs.redolog.RolloverManager;
+import com.zimbra.cs.redolog.TransactionId;
 import com.zimbra.cs.redolog.op.RedoableOp;
 import com.zimbra.cs.redolog.seq.LocalSequenceNumberGenerator;
 
@@ -40,12 +42,22 @@ public class LeaderAwareFileLogWriter extends FileLogWriter {
         leaderListener.addListener(new LeaderChangeListener() {
             @Override
             public void onLeaderChange(String newLeaderSessionId, LeaderStateChange stateChange) {
-                if (newLeaderSessionId != null) {
-                    try {
-                        drainLogOps();
-                    } catch (IOException e) {
-                        ZimbraLog.redolog.error("unable to drain queued ops due to ioexception", e);
+                try {
+                    synchronized (opened) {
+                        if (stateChange == LeaderStateChange.LOST_LEADERSHIP) {
+                            if (opened.get()) {
+                                rollover(null);
+                                close();
+                            }
+                        } else if (stateChange == LeaderStateChange.GAINED_LEADERSHIP) {
+                            open();
+                        }
+                        if (newLeaderSessionId != null) {
+                            drainLogOps();
+                        }
                     }
+                } catch (IOException ioe) {
+                    ZimbraLog.redolog.error("IOException opening or closing log writer", ioe);
                 }
             }
         });
@@ -75,43 +87,52 @@ public class LeaderAwareFileLogWriter extends FileLogWriter {
     }
 
     private void drainLogOps() throws IOException {
+        assert(Thread.holdsLock(opened));
         synchronized (alternateWriter) {
             if (hasAlternateWrites) {
-                //drain the alternatewriter
                 alternateWriter.close();
                 FileLogReader logReader = new FileLogReader(stagedredofile);
                 logReader.open();
 
                 RedoableOp stagedOp = null;
+                LinkedHashMap<TransactionId, RedoableOp> activeOps = new LinkedHashMap<TransactionId, RedoableOp>();
+                boolean error = false;
                 while((stagedOp = logReader.getNextOp()) != null) {
-                    ZimbraLog.redolog.debug("staged op %s", stagedOp);
-                    if (leaderListener.isLeader()) {
-                        super.log(stagedOp, stagedOp.getInputStream(), true);
-                        ZimbraLog.redolog.debug("logged local master");
-                    } else {
-                        remoteWriter.log(stagedOp, stagedOp.getInputStream(), true);
-                        ZimbraLog.redolog.debug("logged remote master");
+                    ZimbraLog.redolog.debug("read staged op %s", stagedOp);
+                    try {
+                        if (!error) {
+                            log(stagedOp, stagedOp.getInputStream(), true, false);
+                        } else {
+                            activeOps.put(stagedOp.getTransactionId(), stagedOp);
+                        }
+                    } catch (LeaderUnavailableException lue) {
+                        ZimbraLog.redolog.debug("leader unavailable while draining", lue);
+                        error = true;
+                        activeOps.put(stagedOp.getTransactionId(), stagedOp);
                     }
                 }
                 logReader.close();
-
-                @SuppressWarnings("rawtypes")
-                LinkedHashMap activeOps = new LinkedHashMap();
+                hasAlternateWrites = activeOps.size() > 0;
                 alternateWriter.rollover(activeOps);
                 alternateWriter.open();
-                hasAlternateWrites = false;
             }
         }
     }
 
-    @Override
-    public void log(RedoableOp op, InputStream data, boolean synchronous)
+    private void log(RedoableOp op, InputStream data, boolean synchronous, boolean writeToAlt)
             throws IOException {
-        if (leaderListener.isLeader()) {
-            ZimbraLog.redolog.debug("the leader - logging directly");
-            drainLogOps();
-            super.log(op, data, synchronous);
-        } else if (leaderListener.getLeaderSessionId() != null) {
+        synchronized (opened) {
+            if (waitForOpen()) {
+                ZimbraLog.redolog.debug("the leader - logging directly");
+                super.log(op, data, synchronous);
+                return;
+            }
+        }
+
+        //not opened at this moment
+        //do remote/alternate writing outside synchronized
+        //this avoids deadlock if remote writer is actually a loopback (e.g. race when leader acquired by this node)
+        if (leaderListener.getLeaderSessionId() != null) {
             ZimbraLog.redolog.debug("not the leader - sending to existing leader");
             try {
                 remoteWriter.log(op, data, synchronous);
@@ -119,31 +140,68 @@ public class LeaderAwareFileLogWriter extends FileLogWriter {
                 throw new LeaderUnavailableException(ioe);
             }
         } else {
-            ZimbraLog.redolog.debug("no leader - queuing locally");
-            synchronized (alternateWriter) {
-                alternateWriter.log(op, data, true);
-                hasAlternateWrites = true;
+            if (writeToAlt) {
+                ZimbraLog.redolog.debug("no leader - queuing locally");
+                synchronized (alternateWriter) {
+                    alternateWriter.log(op, data, true);
+                    hasAlternateWrites = true;
+                }
+            } else {
+                throw new LeaderUnavailableException("no leader and local queuing disabled for this call");
             }
         }
     }
 
     @Override
-    public synchronized void open() throws IOException {
-        if (!leaderListener.isLeader()) {
-            populateHeader();
-            return;
-        }
-        super.open();
-        if (this.redoLogMgr.getCurrentLogSequence() != this.getSequence()) {
-            //sequence changed since we last closed; rollover to catch up
-            rollover(null);
+    public void log(RedoableOp op, InputStream data, boolean synchronous)
+            throws IOException {
+        log(op, data, synchronous, true);
+    }
+
+    private AtomicBoolean opened = new AtomicBoolean(false);
+
+    private boolean waitForOpen() {
+        //states
+        //1. leader in consul and opened - return true immediately
+        //2. leader in consul but not opened - wait for listener to trigger opened.notify
+        //3. not leader in consul but still open - return false immediately
+        //4. not leader in consul and closed - return false immediately
+
+        synchronized (opened) {
+            while (!opened.get() && leaderListener.isLeader()) {
+                try {
+                    opened.wait(1000);
+                } catch (InterruptedException e) {
+                }
+            }
+            return opened.get();
         }
     }
 
     @Override
-    public synchronized void rollover(LinkedHashMap activeOps)
-            throws IOException {
-        super.rollover(activeOps);
+    public void open() throws IOException {
+        synchronized (opened) {
+            if (!leaderListener.isLeader()) {
+                populateHeader();
+                return;
+            }
+            super.open();
+            if (this.redoLogMgr.getCurrentLogSequence() != this.getSequence()) {
+                //sequence changed since we last closed; rollover to catch up
+                rollover(null);
+            }
+            opened.set(true);
+            opened.notifyAll();
+        }
+    }
+
+    @Override
+    public void close() throws IOException {
+        synchronized (opened) {
+            opened.set(false);
+            opened.notifyAll();
+            super.close();
+        }
     }
 
     private class LocalStagingFileLogWriter extends FileLogWriter {
@@ -164,6 +222,12 @@ public class LeaderAwareFileLogWriter extends FileLogWriter {
         @Override
         protected boolean deleteOnRollover() {
             return true;
+        }
+
+        @Override
+        protected FileLogWriter newLogWriter(FileRedoLogManager redoLogMgr,
+                File logfile, long fsyncIntervalMS) {
+            return new LocalStagingFileLogWriter(redoLogMgr, logfile, fsyncIntervalMS);
         }
     }
 }

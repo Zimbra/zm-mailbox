@@ -8,6 +8,10 @@ import java.io.IOException;
  */
 public class LeaderUnavailableException extends IOException {
 
+    public LeaderUnavailableException(String msg) {
+        super(msg);
+    }
+
     public LeaderUnavailableException(IOException ioe) {
         super(ioe);
     }

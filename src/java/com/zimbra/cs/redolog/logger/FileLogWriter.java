@@ -22,7 +22,7 @@ import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import com.zimbra.common.localconfig.DebugConfig;
@@ -34,6 +34,7 @@ import com.zimbra.cs.redolog.FileRedoLogManager;
 import com.zimbra.cs.redolog.FileRolloverManager;
 import com.zimbra.cs.redolog.RedoConfig;
 import com.zimbra.cs.redolog.RolloverManager;
+import com.zimbra.cs.redolog.TransactionId;
 import com.zimbra.cs.redolog.op.RedoableOp;
 import com.zimbra.cs.redolog.util.RedoLogFileUtil;
 import com.zimbra.cs.util.Zimbra;
@@ -94,6 +95,12 @@ public class FileLogWriter extends AbstractLogWriter implements LogWriter {
 
         this.fsyncCount = logCount = 0;
         setCommitNotifyQueue(new FileCommitNotifyQueue(100));
+    }
+
+    protected FileLogWriter newLogWriter(FileRedoLogManager redoLogMgr,
+                         File logfile,
+                         long fsyncIntervalMS) {
+        return new FileLogWriter(redoLogMgr, logfile, fsyncIntervalMS);
     }
 
     @Override public long getSequence() {
@@ -353,9 +360,8 @@ public class FileLogWriter extends AbstractLogWriter implements LogWriter {
         return RedoConfig.redoLogDeleteOnRollover();
     }
 
-    @SuppressWarnings("unchecked")
     @Override
-    public synchronized void rollover(LinkedHashMap /*<TxnId, RedoableOp>*/ activeOps)
+    public synchronized void rollover(LinkedHashMap<TransactionId, RedoableOp> activeOps)
     throws IOException {
         FileRolloverManager romgr = (FileRolloverManager) getRolloverManager();
 
@@ -372,18 +378,17 @@ public class FileLogWriter extends AbstractLogWriter implements LogWriter {
         // temp (arbitrary) filename here uses current sequence+1 as rough guess
         // real sequence number assigned on open
         File tempLogfile = new File(file.getParentFile(), RedoLogFileUtil.getTempFilename(romgr.getCurrentSequence() + 1));
-        FileLogWriter tempLogger =
-            new FileLogWriter((FileRedoLogManager) redoLogMgr, tempLogfile, 0);
+        FileLogWriter tempLogger = newLogWriter((FileRedoLogManager) redoLogMgr, tempLogfile, 0);
         tempLogger.open();
         tempLogger.noStat(true);
 
         if (activeOps != null) {
             // Rewrite change entries for all active operations, maintaining
             // their order of occurrence.  (LinkedHashMap ensures ordering.)
-            Set opsSet = activeOps.entrySet();
-            for (Iterator it = opsSet.iterator(); it.hasNext(); ) {
-                Map.Entry entry = (Map.Entry) it.next();
-                RedoableOp op = (RedoableOp) entry.getValue();
+            Set<Entry<TransactionId, RedoableOp>> opsSet = activeOps.entrySet();
+            for (Iterator<Entry<TransactionId, RedoableOp>> it = opsSet.iterator(); it.hasNext(); ) {
+                Entry<TransactionId, RedoableOp> entry = it.next();
+                RedoableOp op = entry.getValue();
                 tempLogger.log(op, op.getInputStream(), false);
             }
         }

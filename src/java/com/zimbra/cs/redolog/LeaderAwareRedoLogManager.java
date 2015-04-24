@@ -36,30 +36,6 @@ public class LeaderAwareRedoLogManager extends FileRedoLogManager {
             boolean supportsCrashRecovery, RedologLeaderListener leaderListener) throws ServiceException {
         super(redolog, archdir, supportsCrashRecovery);
         this.leaderListener = leaderListener;
-        leaderListener.addListener(new LeaderChangeListener() {
-            @Override
-            public void onLeaderChange(String newLeaderSessionId, LeaderStateChange stateChange) {
-                try {
-                    if (stateChange == LeaderStateChange.LOST_LEADERSHIP) {
-                        //mEnabled false during shutdown and other states when rollover/close is invalid
-                        if (mEnabled) {
-                            getLogWriter().rollover(null);
-                            getLogWriter().close();
-                        }
-                    } else if (stateChange == LeaderStateChange.GAINED_LEADERSHIP) {
-                        if (!mEnabled) {
-                            ZimbraLog.redolog.error("somehow obtained leadership while not enabled? This is probably a bug.");
-                        } else {
-                            getLogWriter().open();
-                        }
-                    } else {
-                        //do nothing - changed between two others, this node doesn't care
-                    }
-                } catch (IOException ioe) {
-                    ZimbraLog.redolog.error("IOException opening or closing log writer", ioe);
-                }
-            }
-        });
     }
 
     @Override
@@ -87,7 +63,7 @@ public class LeaderAwareRedoLogManager extends FileRedoLogManager {
     @Override
     protected void signalLogError(Throwable e) throws ServiceException {
         if (isCausedBy(e, LeaderUnavailableException.class)) {
-            throw ServiceException.TEMPORARILY_UNAVAILABLE();
+            throw ServiceException.TEMPORARILY_UNAVAILABLE(e);
         } else {
             throw ServiceException.FAILURE("redolog exception", e);
         }

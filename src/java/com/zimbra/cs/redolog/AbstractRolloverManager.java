@@ -1,5 +1,6 @@
 package com.zimbra.cs.redolog;
 
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.redolog.seq.SequenceNumberGenerator;
 import com.zimbra.cs.util.Zimbra;
 
@@ -28,10 +29,13 @@ public abstract class AbstractRolloverManager implements RolloverManager {
     @Override
     public void initSequence(long seq) {
         generator.initSequence(seq);
+        ZimbraLog.redolog.trace("init sequence to %d for generator %s", seq, generator);
     }
 
     @Override
     public long incrementSequence() {
-        return generator.incrementSequence();
+        long seq = generator.incrementSequence();
+        ZimbraLog.redolog.trace("inc sequence to %d for generator %s", seq, generator);
+        return seq;
     }
 }
