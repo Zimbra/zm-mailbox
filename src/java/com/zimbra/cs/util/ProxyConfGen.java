@@ -48,6 +48,7 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.commons.lang.StringUtils;
 
 import com.zimbra.common.account.Key;
 import com.zimbra.common.localconfig.LC;
@@ -107,6 +108,8 @@ class ProxyConfVar
     protected static Provisioning     mProv = Provisioning.getInstance();
     public static Entry             configSource = null;
     public static Entry             serverSource = null;
+    public static final String UNKNOWN_HEADER_NAME = "X-Zimbra-Unknown-Header";
+    public static final Pattern RE_HEADER = Pattern.compile("^([^:]+):\\s+(.*)$");
 
     public ProxyConfVar(String keyword, String attribute, Object defaultValue,
             ProxyConfValueType valueType, ProxyConfOverride overrideType,
@@ -347,6 +350,20 @@ class ProxyConfVar
         } else {
             return String.format("%s:%d fail_timeout=%ds", serverName, serverPort,
                     timeout);
+        }
+    }
+
+    public static final class KeyValue {
+        public final String key;
+        public final String value;
+
+        public KeyValue(String value) {
+            this(ProxyConfVar.UNKNOWN_HEADER_NAME, value);
+        }
+
+        public KeyValue(String key, String value) {
+            this.key = key;
+            this.value = value;
         }
     }
 }
@@ -1048,6 +1065,55 @@ class WebLoginSSLUpstreamServersVar extends ServersVar {
     }
 }
 
+class AddHeadersVar extends ProxyConfVar {
+    private final ArrayList<String> rhdr;
+    private final String key;
+    private KeyValue[] headers;
+    private int i;
+
+    public AddHeadersVar(String key, ArrayList<String> rhdr, String description) {
+        super(key, null, null, ProxyConfValueType.CUSTOM, ProxyConfOverride.CUSTOM, description);
+        this.rhdr = rhdr;
+        this.key = key;
+    }
+
+    @Override
+    public void update() throws ServiceException {
+        ArrayList<KeyValue> directives = new ArrayList<KeyValue>();
+        headers = new KeyValue[rhdr.size()];
+        i = 0;
+
+        for (String hdr: rhdr) {
+            Matcher matcher = RE_HEADER.matcher(hdr);
+            if (matcher.matches()) {
+                headers[i] = new KeyValue(matcher.group(1), matcher.group(2));
+            } else {
+                headers[i] = new KeyValue(hdr);
+            }
+            directives.add(headers[i]);
+            i++;
+        }
+        mValue = directives;
+    }
+
+    @Override
+    public String format(Object o) {
+        @SuppressWarnings("unchecked")
+        ArrayList<KeyValue> rsphdr = (ArrayList<KeyValue>) o;
+        StringBuilder sb = new StringBuilder();
+        for (i = 0; i < rsphdr.size(); i++) {
+            KeyValue header = rsphdr.get(i);
+            mLog.debug("Adding directive add_header " + header.key + " " + header.value);
+            if (i == 0) {
+                sb.append(String.format("add_header %s %s;", header.key, header.value));
+            } else {
+                sb.append(String.format("\n    add_header %s %s;", header.key, header.value));
+            }
+        }
+        return sb.toString();
+    }
+}
+
 class ImapCapaVar extends ProxyConfVar {
 
     public ImapCapaVar() {
@@ -1604,9 +1670,10 @@ class DomainAttrItem {
     public Boolean useDomainClientCert;
     public String clientCertMode;
     public String clientCertCa;
+    public String[] rspHeaders;
 
     public DomainAttrItem(String dn, String vhn, String vip, String scrt, String spk,
-            String ccm, String cca) {
+            String ccm, String cca, String[] rhdr) {
         this.domainName = dn;
         this.virtualHostname = vhn;
         this.virtualIPAddress = vip;
@@ -1614,6 +1681,7 @@ class DomainAttrItem {
         this.sslPrivateKey = spk;
         this.clientCertMode = ccm;
         this.clientCertCa = cca;
+        this.rspHeaders = rhdr;
     }
 }
 
@@ -1624,7 +1692,7 @@ class DomainAttrItem {
  */
 class DomainAttrExceptionItem extends DomainAttrItem {
     public DomainAttrExceptionItem(ProxyConfException e) {
-        super(null, null, null, null, null, null, null);
+        super(null, null, null, null, null, null, null, null);
         this.exception = e;
     }
 
@@ -1798,6 +1866,7 @@ public class ProxyConfGen
     private static boolean mGenConfPerVhn = false;
     private static Map<String, ProxyConfVar> mConfVars = new HashMap<String, ProxyConfVar>();
     private static Map<String, String> mVars = new HashMap<String, String>();
+    private static Map<String, ProxyConfVar> mDomainConfVars = new HashMap<String, ProxyConfVar>();
     static List<DomainAttrItem> mDomainReverseProxyAttrs;
 
     static final String ZIMBRA_UPSTREAM_NAME = "zimbra";
@@ -1887,6 +1956,7 @@ public class ProxyConfGen
         attrsNeeded.add(Provisioning.A_zimbraReverseProxyClientCertMode);
         attrsNeeded.add(Provisioning.A_zimbraReverseProxyClientCertCA);
         attrsNeeded.add(Provisioning.A_zimbraWebClientLoginURL);
+        attrsNeeded.add(Provisioning.A_zimbraReverseProxyResponseHeaders);
 
         final List<DomainAttrItem> result = new ArrayList<DomainAttrItem>();
 
@@ -1909,6 +1979,8 @@ public class ProxyConfGen
                     .getAttr(Provisioning.A_zimbraReverseProxyClientCertMode);
                 String clientCertCA = entry
                     .getAttr(Provisioning.A_zimbraReverseProxyClientCertCA);
+                String[] rspHeaders = entry
+                    .getMultiAttr(Provisioning.A_zimbraReverseProxyResponseHeaders);
 
                 // no need to check whether clientCertMode or clientCertCA == null,
 
@@ -1948,7 +2020,7 @@ public class ProxyConfGen
                     }
                     result.add(new DomainAttrItem(domainName,
                             virtualHostnames[i], vip, certificate, privateKey,
-                            clientCertMode, clientCertCA));
+                            clientCertMode, clientCertCA, rspHeaders));
                 }
             }
         };
@@ -2253,6 +2325,7 @@ public class ProxyConfGen
 
         String defaultVal = null;
         mVars.put("vhn", item.virtualHostname);
+        int i = 0;
 
         //resolve the virtual host name
         InetAddress vip = null;
@@ -2291,6 +2364,22 @@ public class ProxyConfGen
             mVars.put("vip", vip.getHostAddress());
         }
 
+        //Get the response headers list for this domain
+        ArrayList<String> rhdr = new ArrayList<String>();
+        for(i = 0; i < item.rspHeaders.length; i++) {
+            rhdr.add(item.rspHeaders[i]);
+        }
+        mDomainConfVars.put("web.add.headers.vhost", new AddHeadersVar("web.add.headers.vhost", rhdr,
+                "add_header directive for vhost web proxy"));
+
+        mLog.debug("Updating Default Domain Variable Map");
+        try {
+            updateDefaultDomainVars();
+        } catch (ProxyConfException pe) {
+            handleException(pe);
+        } catch (ServiceException se) {
+            handleException(se);
+        }
 
         if ( item.sslCertificate != null ){
             mVars.put("ssl.crt", mDomainSSLDir + File.separator +
@@ -2558,6 +2647,14 @@ public class ProxyConfGen
         mConfVars.put("web.xmpp.bosh.port", new ProxyConfVar("web.xmpp.bosh.port", "zimbraReverseProxyXmppBoshPort", new Integer(0), ProxyConfValueType.INTEGER, ProxyConfOverride.SERVER, "Port number of the external XMPP server where XMPP over BOSH requests need to be proxied"));
         mConfVars.put("web.ssl.dhparam.enabled", new WebSSLDhparamEnablerVar());
         mConfVars.put("web.ssl.dhparam.file", new ProxyConfVar("web.ssl.dhparam.file", "zimbraReverseProxySSLDHParam", "", ProxyConfValueType.STRING, ProxyConfOverride.SERVER, "Filename with DH parameters for EDH ciphers to be used by the proxy"));
+        //Get the response headers list from globalconfig
+        String[] rspHeaders = ProxyConfVar.configSource.getMultiAttr(Provisioning.A_zimbraReverseProxyResponseHeaders);
+        ArrayList<String> rhdr = new ArrayList<String>();
+        for(int i = 0; i < rspHeaders.length; i++) {
+            rhdr.add(rspHeaders[i]);
+        }
+        mConfVars.put("web.add.headers.default", new AddHeadersVar("web.add.headers.default", rhdr,
+                "add_header directive for default web proxy"));
     }
 
     /* update the default variable map from the active configuration */
@@ -2568,6 +2665,17 @@ public class ProxyConfGen
         for (String key: keys) {
             mConfVars.get(key).update();
             mVars.put(key,mConfVars.get(key).confValue());
+        }
+    }
+
+    /* update the default domain variable map from the active configuration */
+    public static void updateDefaultDomainVars ()
+        throws ServiceException, ProxyConfException
+    {
+        Set<String> keys = mDomainConfVars.keySet();
+        for (String key: keys) {
+            mDomainConfVars.get(key).update();
+            mVars.put(key,mDomainConfVars.get(key).confValue());
         }
     }
 

@@ -16969,6 +16969,167 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
+     * Custom response headers to be added by the proxy. For example, can be
+     * used to add a HSTS header that will enforce SSL usage on the client
+     * side. Note: the value MUST be the entire header line (e.g. X-Foo: Bar,
+     * X-Zoo: &quot;Bar1; Bar2&quot;).
+     *
+     * @return zimbraReverseProxyResponseHeaders, or empty array if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1973)
+    public String[] getReverseProxyResponseHeaders() {
+        return getMultiAttr(Provisioning.A_zimbraReverseProxyResponseHeaders);
+    }
+
+    /**
+     * Custom response headers to be added by the proxy. For example, can be
+     * used to add a HSTS header that will enforce SSL usage on the client
+     * side. Note: the value MUST be the entire header line (e.g. X-Foo: Bar,
+     * X-Zoo: &quot;Bar1; Bar2&quot;).
+     *
+     * @param zimbraReverseProxyResponseHeaders new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1973)
+    public void setReverseProxyResponseHeaders(String[] zimbraReverseProxyResponseHeaders) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyResponseHeaders, zimbraReverseProxyResponseHeaders);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Custom response headers to be added by the proxy. For example, can be
+     * used to add a HSTS header that will enforce SSL usage on the client
+     * side. Note: the value MUST be the entire header line (e.g. X-Foo: Bar,
+     * X-Zoo: &quot;Bar1; Bar2&quot;).
+     *
+     * @param zimbraReverseProxyResponseHeaders new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1973)
+    public Map<String,Object> setReverseProxyResponseHeaders(String[] zimbraReverseProxyResponseHeaders, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyResponseHeaders, zimbraReverseProxyResponseHeaders);
+        return attrs;
+    }
+
+    /**
+     * Custom response headers to be added by the proxy. For example, can be
+     * used to add a HSTS header that will enforce SSL usage on the client
+     * side. Note: the value MUST be the entire header line (e.g. X-Foo: Bar,
+     * X-Zoo: &quot;Bar1; Bar2&quot;).
+     *
+     * @param zimbraReverseProxyResponseHeaders new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1973)
+    public void addReverseProxyResponseHeaders(String zimbraReverseProxyResponseHeaders) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraReverseProxyResponseHeaders, zimbraReverseProxyResponseHeaders);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Custom response headers to be added by the proxy. For example, can be
+     * used to add a HSTS header that will enforce SSL usage on the client
+     * side. Note: the value MUST be the entire header line (e.g. X-Foo: Bar,
+     * X-Zoo: &quot;Bar1; Bar2&quot;).
+     *
+     * @param zimbraReverseProxyResponseHeaders new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1973)
+    public Map<String,Object> addReverseProxyResponseHeaders(String zimbraReverseProxyResponseHeaders, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraReverseProxyResponseHeaders, zimbraReverseProxyResponseHeaders);
+        return attrs;
+    }
+
+    /**
+     * Custom response headers to be added by the proxy. For example, can be
+     * used to add a HSTS header that will enforce SSL usage on the client
+     * side. Note: the value MUST be the entire header line (e.g. X-Foo: Bar,
+     * X-Zoo: &quot;Bar1; Bar2&quot;).
+     *
+     * @param zimbraReverseProxyResponseHeaders existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1973)
+    public void removeReverseProxyResponseHeaders(String zimbraReverseProxyResponseHeaders) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraReverseProxyResponseHeaders, zimbraReverseProxyResponseHeaders);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Custom response headers to be added by the proxy. For example, can be
+     * used to add a HSTS header that will enforce SSL usage on the client
+     * side. Note: the value MUST be the entire header line (e.g. X-Foo: Bar,
+     * X-Zoo: &quot;Bar1; Bar2&quot;).
+     *
+     * @param zimbraReverseProxyResponseHeaders existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1973)
+    public Map<String,Object> removeReverseProxyResponseHeaders(String zimbraReverseProxyResponseHeaders, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraReverseProxyResponseHeaders, zimbraReverseProxyResponseHeaders);
+        return attrs;
+    }
+
+    /**
+     * Custom response headers to be added by the proxy. For example, can be
+     * used to add a HSTS header that will enforce SSL usage on the client
+     * side. Note: the value MUST be the entire header line (e.g. X-Foo: Bar,
+     * X-Zoo: &quot;Bar1; Bar2&quot;).
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1973)
+    public void unsetReverseProxyResponseHeaders() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyResponseHeaders, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Custom response headers to be added by the proxy. For example, can be
+     * used to add a HSTS header that will enforce SSL usage on the client
+     * side. Note: the value MUST be the entire header line (e.g. X-Foo: Bar,
+     * X-Zoo: &quot;Bar1; Bar2&quot;).
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1973)
+    public Map<String,Object> unsetReverseProxyResponseHeaders(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyResponseHeaders, "");
+        return attrs;
+    }
+
+    /**
      * There is a deployment scenario for migrations where all of the
      * customers users are pointed at the zimbra POP IMAP reverse proxy. We
      * then want their connections proxied back to the legacy system for
