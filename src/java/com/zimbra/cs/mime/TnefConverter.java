@@ -238,7 +238,13 @@ public class TnefConverter extends MimeVisitor {
             ByteUtil.closeStream(is);
         }
 
-        MimeMultipart convertedMulti = (MimeMultipart) converted.getContent();
+        Object convertedContent = converted.getContent();
+        if(!(convertedContent instanceof MimeMultipart)){
+            ZimbraLog.extensions.debug("TNEF attachment doesn't contain valid MimeMultiPart");
+            return null;
+        }
+
+        MimeMultipart convertedMulti = (MimeMultipart) convertedContent;
         // make sure that all the attachments are marked as attachments
         for (int i = 0; i < convertedMulti.getCount(); i++) {
             BodyPart subpart = convertedMulti.getBodyPart(i);
