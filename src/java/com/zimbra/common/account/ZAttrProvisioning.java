@@ -4398,6 +4398,24 @@ public class ZAttrProvisioning {
     public static final String A_zimbraContactRankingTableSize = "zimbraContactRankingTableSize";
 
     /**
+     * Specify the decomposition mode used for looking up the Contact items
+     * by the phonetic last/first name or last/first name. The accepted value
+     * is as follows: 0 = No decomposition. The accented characters will be
+     * compared &#039;as is&#039; (not be decomposed)
+     * (Collator.NO_DECOMPOSITION). 1 = Canonical decomposition mapping rules
+     * found in the Unicode Standard is used
+     * (Collator.CANONICAL_DECOMPOSITION). 2 = Unicode canonical and Unicode
+     * compatibility decomposition mapping rules found in the Unicode
+     * Standard is used. When this mode is selected, compatible characters,
+     * such as half-width and full-width katakana characters, are considered
+     * equivalent (Collator.FULL_DECOMPOSITION).
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1971)
+    public static final String A_zimbraContactSearchDecomposition = "zimbraContactSearchDecomposition";
+
+    /**
      * convertd URL
      *
      * @since ZCS 6.0.0_BETA1
@@ -13534,6 +13552,17 @@ public class ZAttrProvisioning {
     public static final String A_zimbraReverseProxyPortSearchBase = "zimbraReverseProxyPortSearchBase";
 
     /**
+     * Custom response headers to be added by the proxy. For example, can be
+     * used to add a HSTS header that will enforce SSL usage on the client
+     * side. Note: the value MUST be the entire header line (e.g. X-Foo: Bar,
+     * X-Zoo: &quot;Bar1; Bar2&quot;).
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1973)
+    public static final String A_zimbraReverseProxyResponseHeaders = "zimbraReverseProxyResponseHeaders";
+
+    /**
      * Time interval after which NGINX will fail over to the next route
      * lookup handler, if a handler does not respond to the route lookup
      * request within this time. Must be in valid duration format:
@@ -14476,12 +14505,6 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1389)
     public static final String A_zimbraSocialcastURL = "zimbraSocialcastURL";
-
-    /**
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1971)
-    public static final String A_zimbraContactSearchDecomposition = "zimbraContactSearchDecomposition";
 
     /**
      * If TRUE, spam messages will be affected by user mail filters instead
