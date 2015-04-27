@@ -67,7 +67,7 @@ public class URLUtil {
     }
 
     /** Perform a service locator lookup of a mailstore soap service */
-    public static String getSoapURL(ServiceLocator serviceLocator, Selector selector, boolean healthyOnly) throws ServiceException {
+    public static String getSoapURL(ServiceLocator serviceLocator, Selector<ServiceLocator.Entry> selector, boolean healthyOnly) throws ServiceException {
         try {
             ServiceLocator.Entry entry = serviceLocator.findOne(ZimbraServiceNames.MAILSTORE, selector, null, healthyOnly);
             String scheme = entry.tags.contains("ssl") ? "https" : "http";
@@ -84,7 +84,7 @@ public class URLUtil {
         }
 
         ServiceLocator serviceLocator = null;
-        Selector selector = null;
+        Selector<ServiceLocator.Entry> selector = null;
         try {
             serviceLocator = Zimbra.getAppContext().getBean(ServiceLocator.class);
             selector = Zimbra.getAppContext().getBean(Selector.class);
@@ -193,7 +193,7 @@ public class URLUtil {
      * Returns absolute URL with scheme, host, and port for admin app, using ServiceLocator.
      */
     public static String getAdminURL(ServiceLocator serviceLocator, boolean healthyOnly) throws ServiceException {
-        Selector selector = null;
+        Selector<ServiceLocator.Entry> selector = null;
         try {
             selector = Zimbra.getAppContext().getBean(Selector.class);
         } catch (NoClassDefFoundError e) {
@@ -205,7 +205,7 @@ public class URLUtil {
     /**
      * Returns absolute URL with scheme, host, and port for admin app, using ServiceLocator.
      */
-    public static String getAdminURL(ServiceLocator serviceLocator, Selector selector, boolean healthyOnly) throws ServiceException {
+    public static String getAdminURL(ServiceLocator serviceLocator, Selector<ServiceLocator.Entry> selector, boolean healthyOnly) throws ServiceException {
         try {
             ServiceLocator.Entry entry = serviceLocator.findOne(ZimbraServiceNames.MAILSTOREADMIN, selector, null, healthyOnly);
             String scheme = entry.tags.contains("ssl") ? "https" : "http";
