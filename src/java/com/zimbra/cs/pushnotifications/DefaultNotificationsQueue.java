@@ -17,7 +17,6 @@ package com.zimbra.cs.pushnotifications;
 
 import java.util.Collection;
 
-import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ThreadPool;
 import com.zimbra.common.util.ZimbraLog;
