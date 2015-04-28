@@ -70,7 +70,7 @@ final class NioImapHandler extends ImapHandler implements NioHandler {
                 }
             }
             if (LC.imap_max_consecutive_error.intValue() > 0 && consecutiveError >= LC.imap_max_consecutive_error.intValue()) {
-               ZimbraLog.imap.error("zimbraImapMaxConsecutiveError exceeded %d",imapMaxConsecutiveError);
+               ZimbraLog.imap.error("zimbraImapMaxConsecutiveError exceeded %d",LC.imap_max_consecutive_error.intValue());
                dropConnection();
             }
         }
