@@ -128,8 +128,12 @@ public enum SortBy {
             try {
                 int localDecomposition = Provisioning.getInstance().getLocalServer().getContactSearchDecomposition();
                 collator.setDecomposition(localDecomposition);
+            } catch (IllegalArgumentException e) {
+                collator.setDecomposition(Collator.FULL_DECOMPOSITION);
+                ZimbraLog.index.info("The given value is not a valid decomposition mode.  Set default value (%d)", Collator.FULL_DECOMPOSITION);
             } catch (ServiceException e) {
                 collator.setDecomposition(Collator.FULL_DECOMPOSITION);
+                ZimbraLog.index.info("Failed to get a valid decomposition mode.  Set default value (%d)", Collator.FULL_DECOMPOSITION);
             }
         }
 
