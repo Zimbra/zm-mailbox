@@ -3002,6 +3002,31 @@ public class ZAttrProvisioning {
     public static final String A_zimbraAntispamExtractionBatchSize = "zimbraAntispamExtractionBatchSize";
 
     /**
+     * Certificate for Apple Push Notification Service
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1975)
+    public static final String A_zimbraAPNSCertificate = "zimbraAPNSCertificate";
+
+    /**
+     * Password for APNS certificate
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1976)
+    public static final String A_zimbraAPNSCertificatePassword = "zimbraAPNSCertificatePassword";
+
+    /**
+     * Boolean to decide whether APNS is being used for production or
+     * development
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1977)
+    public static final String A_zimbraAPNSProduction = "zimbraAPNSProduction";
+
+    /**
      * application-specific password
      *
      * @since ZCS 8.7.0,9.0.0
