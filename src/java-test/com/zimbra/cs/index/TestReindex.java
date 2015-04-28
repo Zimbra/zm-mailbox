@@ -79,8 +79,9 @@ public class TestReindex {
     private void cleanup() throws Exception {
         Provisioning.getInstance().getLocalServer().setReindexBatchSize(originalReindexBatchSize);
         IndexingQueueAdapter queueAdapter = Zimbra.getAppContext().getBean(IndexingQueueAdapter.class);
-        if (queueAdapter != null) {
-            queueAdapter.deleteMailboxTaskCounts(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        if(queueAdapter != null) {
+            queueAdapter.drain();
+            queueAdapter.clearAllTaskCounts();
         }
         MailboxTestUtil.clearData();
     }

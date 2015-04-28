@@ -58,7 +58,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.amqp.AmqpConstants;
 import com.zimbra.cs.extension.ExtensionUtil;
-import com.zimbra.cs.index.DefaultIndexingQueueAdapter;
+import com.zimbra.cs.index.LocalIndexingQueueAdapter;
 import com.zimbra.cs.index.IndexingQueueAdapter;
 import com.zimbra.cs.index.IndexingService;
 import com.zimbra.cs.mailbox.AmqpMailboxListenerTransport;
@@ -191,7 +191,7 @@ public class ZimbraConfig {
         }
         if (instance == null) {
             //fall back to default (local) queue implementation
-            instance = new DefaultIndexingQueueAdapter();
+            instance = new LocalIndexingQueueAdapter();
         }
         return instance;
     }

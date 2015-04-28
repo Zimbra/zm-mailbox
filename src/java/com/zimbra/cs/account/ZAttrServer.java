@@ -19735,6 +19735,83 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Milliseconds that mailstore will wait between attempts to take/put an
+     * indexing task from/to a shared indexing queue.
+     *
+     * @return zimbraIndexingQueuePollingInterval, or -1 if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1974)
+    public int getIndexingQueuePollingInterval() {
+        return getIntAttr(Provisioning.A_zimbraIndexingQueuePollingInterval, -1);
+    }
+
+    /**
+     * Milliseconds that mailstore will wait between attempts to take/put an
+     * indexing task from/to a shared indexing queue.
+     *
+     * @param zimbraIndexingQueuePollingInterval new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1974)
+    public void setIndexingQueuePollingInterval(int zimbraIndexingQueuePollingInterval) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIndexingQueuePollingInterval, Integer.toString(zimbraIndexingQueuePollingInterval));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Milliseconds that mailstore will wait between attempts to take/put an
+     * indexing task from/to a shared indexing queue.
+     *
+     * @param zimbraIndexingQueuePollingInterval new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1974)
+    public Map<String,Object> setIndexingQueuePollingInterval(int zimbraIndexingQueuePollingInterval, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIndexingQueuePollingInterval, Integer.toString(zimbraIndexingQueuePollingInterval));
+        return attrs;
+    }
+
+    /**
+     * Milliseconds that mailstore will wait between attempts to take/put an
+     * indexing task from/to a shared indexing queue.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1974)
+    public void unsetIndexingQueuePollingInterval() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIndexingQueuePollingInterval, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Milliseconds that mailstore will wait between attempts to take/put an
+     * indexing task from/to a shared indexing queue.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1974)
+    public Map<String,Object> unsetIndexingQueuePollingInterval(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIndexingQueuePollingInterval, "");
+        return attrs;
+    }
+
+    /**
      * Class that implements access to shared indexing queue. When this
      * attribute is empty, servers will send documents to Solr for indexing
      * as soon as documents arrive.

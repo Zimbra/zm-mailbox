@@ -6,24 +6,24 @@ package com.zimbra.cs.index;
 import java.util.HashMap;
 import java.util.concurrent.ArrayBlockingQueue;
 
-import com.zimbra.common.account.ZAttrProvisioning;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.ReIndexStatus;
 import com.zimbra.cs.util.ProvisioningUtil;
-import com.zimbra.cs.util.Zimbra;
 
 /**
- * @author Greg Solovyev Default implementation of the indexing queue for
- *         non-cluster environment
+ * @author Greg Solovyev 
+ * Default implementation of the indexing queue for
+ * non-cluster environment
  */
-public class DefaultIndexingQueueAdapter implements IndexingQueueAdapter {
+public class LocalIndexingQueueAdapter implements IndexingQueueAdapter {
     private final ArrayBlockingQueue<AbstractIndexingTasksLocator> itemQueue;
     private final HashMap<String, Integer> totalCounters;
     private final HashMap<String, Integer> succeededCounters;
     private final HashMap<String, Integer> failedCounters;
     private final HashMap<String, Integer> taskStatus;
-    private static IndexingQueueAdapter instance = null;
+  /*  private static IndexingQueueAdapter instance = null;
 
     public static synchronized IndexingQueueAdapter getInstance() {
         if (instance == null) {
@@ -31,13 +31,13 @@ public class DefaultIndexingQueueAdapter implements IndexingQueueAdapter {
         }
         return instance;
     }
-
+*/
     /**
      *
      */
-    public DefaultIndexingQueueAdapter() {
+    public LocalIndexingQueueAdapter() {
         itemQueue = new ArrayBlockingQueue<AbstractIndexingTasksLocator>(ProvisioningUtil.getServerAttribute(
-                ZAttrProvisioning.A_zimbraIndexingQueueMaxSize, 10000));
+                Provisioning.A_zimbraIndexingQueueMaxSize, 10000));
         totalCounters = new HashMap<String, Integer>();
         succeededCounters = new HashMap<String, Integer>();
         failedCounters = new HashMap<String, Integer>();
@@ -79,14 +79,18 @@ public class DefaultIndexingQueueAdapter implements IndexingQueueAdapter {
 
     /**
      * Return the next element from the queue and remove it from the queue.
-     * Blocks until an element is available in the queue.
+     * If no element is available, return null
      * 
      * @return {@link com.zimbra.cs.index.AbstractIndexingTasksLocator}
      * @throws InterruptedException
      */
     @Override
-    public AbstractIndexingTasksLocator take() throws InterruptedException {
-        return itemQueue.take();
+    public AbstractIndexingTasksLocator take()  {
+        try {
+            return itemQueue.take();
+        } catch (InterruptedException e) {
+            return null;
+        }
     }
 
     /**
@@ -140,8 +144,9 @@ public class DefaultIndexingQueueAdapter implements IndexingQueueAdapter {
     public synchronized void deleteMailboxTaskCounts(String accountId) {
         totalCounters.remove(accountId);
         succeededCounters.remove(accountId);
+        failedCounters.remove(accountId);
     }
-
+    
     @Override
     public synchronized void clearAllTaskCounts() {
         totalCounters.clear();

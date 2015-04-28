@@ -48,7 +48,8 @@ public class TestIndexingService {
     private void cleanup() throws Exception {
         IndexingQueueAdapter queueAdapter = Zimbra.getAppContext().getBean(IndexingQueueAdapter.class);
         if(queueAdapter != null) {
-            queueAdapter.deleteMailboxTaskCounts(MockProvisioning.DEFAULT_ACCOUNT_ID);
+            queueAdapter.drain();
+            queueAdapter.clearAllTaskCounts();
         }
         MailboxTestUtil.clearData();
     }

@@ -20,12 +20,11 @@ public interface IndexingQueueAdapter {
 
     /**
      * Return the next element from the queue and remove it from the queue.
-     * Blocks until an element is available in the queue.
+     * If no element is available, return null.
      * 
      * @return {@link com.zimbra.cs.index.AbstractIndexingTasksLocator}
-     * @throws InterruptedException
      */
-    public AbstractIndexingTasksLocator take() throws InterruptedException;
+    public AbstractIndexingTasksLocator take() ;
 
     /**
      * Return the next element in the queue and keep it in the queue. Returns

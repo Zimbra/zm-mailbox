@@ -49,7 +49,6 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.HSQLDB;
 import com.zimbra.cs.index.IndexStore;
-import com.zimbra.cs.index.IndexingQueueAdapter;
 import com.zimbra.cs.index.IndexingService;
 import com.zimbra.cs.index.solr.EmbeddedSolrIndex;
 import com.zimbra.cs.mailbox.calendar.Invite;
@@ -256,9 +255,6 @@ public final class MailboxTestUtil {
             cleanupAllIndexStores();
         } catch (SolrException ex) {
             //ignore. We are deleting the folders anyway
-        }
-        if(Zimbra.getAppContext().getBean(IndexingQueueAdapter.class) != null) {
-            Zimbra.getAppContext().getBean(IndexingQueueAdapter.class).drain();
         }
 
         StoreManager sm = StoreManager.getInstance();

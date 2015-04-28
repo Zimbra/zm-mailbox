@@ -1,5 +1,10 @@
 package com.zimbra.cs.index;
 
+import org.codehaus.jackson.annotate.JsonSubTypes;
+import org.codehaus.jackson.annotate.JsonSubTypes.Type;
+import org.codehaus.jackson.annotate.JsonTypeInfo;
+
+
 
 
 /**
@@ -7,11 +12,16 @@ package com.zimbra.cs.index;
  * @author Greg Solovyev
  *
  */
+@JsonTypeInfo(use=JsonTypeInfo.Id.NAME, include=JsonTypeInfo.As.PROPERTY, property="@class")
+@JsonSubTypes({  
+        @Type(value = DeleteFromIndexTaskLocator.class, name = "DeleteFromIndexTaskLocator"),  
+        @Type(value = AddToIndexTaskLocator.class, name = "AddToIndexTaskLocator") })
+
 public abstract class AbstractIndexingTasksLocator {
-    protected final int mailboxID;
-    protected final int mailboxSchemaGroupID;
-    protected final String accountID;
-    protected final boolean indexAttachments;
+    protected int mailboxID;
+    protected int mailboxSchemaGroupID;
+    protected String accountID;
+    protected boolean indexAttachments;
     private int retries = 0;
     
     protected AbstractIndexingTasksLocator (int mailboxID, int mailboxSchemaGroupID, String accountID) {
@@ -28,6 +38,7 @@ public abstract class AbstractIndexingTasksLocator {
         this.indexAttachments = indexAttachments;
     }
     
+
     public int getMailboxID() {
         return mailboxID;
     }

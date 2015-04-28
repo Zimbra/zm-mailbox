@@ -88,6 +88,11 @@ public class IndexingService {
 
                     AbstractIndexingTasksLocator queueItem = queueAdapter.take();
 
+                    if(queueItem == null) {
+                        Thread.sleep(ProvisioningUtil.getServerAttribute(Provisioning.A_zimbraIndexingQueuePollingInterval, 500)); // avoid a tight loop
+                        continue;
+                    }
+
                     if (INDEX_EXECUTOR.isTerminating() || INDEX_EXECUTOR.isShutdown()) {
                         // this thread will not process this item, so put it
                         // back in the queue for other threads to process
@@ -106,7 +111,7 @@ public class IndexingService {
                                     // skip the tasks and they will
                                     // automatically get drained
                                     queueAdapter.incrementFailedMailboxTaskCount(queueItem.getAccountID(),
-                                            ((AddToIndexTaskLocator) queueItem).getMailItems().size());
+                                            ((AddToIndexTaskLocator) queueItem).getMailItemsToAdd().size());
                                     ZimbraLog.index
                                             .debug("%s ignoring re-indexing task for account %s. Re-indexing has been aborted.",
                                                     Thread.currentThread().getName(), queueItem.getAccountID());
@@ -186,11 +191,11 @@ public class IndexingService {
                 maxRetries = Provisioning.getInstance().getLocalServer().getMaxIndexingRetries();
                 IndexStore indexStore = IndexStore.getFactory().getIndexStore(queueItem.getAccountID());
                 MailItem.UnderlyingData ud = null;
-                List<AddToIndexTaskLocator.MailItemIdentifier> itemsToIndex = queueItem.getMailItems();
+                List<MailItemIdentifier> itemsToIndex = queueItem.getMailItemsToAdd();
                 DbConnection conn = DbPool.getConnection(queueItem.getMailboxID(), queueItem.getMailboxSchemaGroupID());
                 try {
                     List<IndexItemEntry> indexItemEntries = new ArrayList<IndexItemEntry>();
-                    for (AddToIndexTaskLocator.MailItemIdentifier itemID : itemsToIndex) {
+                    for (MailItemIdentifier itemID : itemsToIndex) {
                         try {
                             ud = DbMailItem.getById(queueItem.getMailboxID(), queueItem.getMailboxSchemaGroupID(),
                                     itemID.getId(), itemID.getType(), itemID.isInDumpster(), conn);
@@ -279,11 +284,11 @@ public class IndexingService {
                  * If we are out of retries - report a permanent failure.
                  */
                 if(queueItem.getRetries() < maxRetries) {
-                    ZimbraLog.index.warn("An attempt to index %d mail items for account %s failed. Will retry.", queueItem.getMailItems().size(), queueItem.getAccountID(), e);
+                    ZimbraLog.index.warn("An attempt to index %d mail items for account %s failed. Will retry.", queueItem.getMailItemsToAdd().size(), queueItem.getAccountID(), e);
                     queueItem.addRetry();
                     queueAdapter.put(queueItem);
                 } else {
-                    ZimbraLog.index.error("Permanently failed to index %d mail items for account %s after %d attempts.", queueItem.getMailItems().size(),queueItem.getAccountID(), queueItem.getRetries(), e);
+                    ZimbraLog.index.error("Permanently failed to index %d mail items for account %s after %d attempts.", queueItem.getMailItemsToAdd().size(),queueItem.getAccountID(), queueItem.getRetries(), e);
                     // status reporting
                     if (queueItem.isReindex()) {
                         queueAdapter.incrementFailedMailboxTaskCount(queueItem.getAccountID(), indexedItems.size());

@@ -9910,4 +9910,9 @@ TODO: delete them permanently from here
      MUST be the entire header line (e.g. X-Foo: Bar, X-Zoo: "Bar1; Bar2").
   </desc>
 </attr>
+
+<attr id="1974" name="zimbraIndexingQueuePollingInterval" type="integer" cardinality="single" min="100" max="60000" optionalIn="globalConfig,server,alwaysOnCluster" since="9.0.0">
+    <globalConfigValue>500</globalConfigValue>
+    <desc>Milliseconds that mailstore will wait between attempts to take/put an indexing task from/to a shared indexing queue.</desc>
+</attr>
 </attrs>
