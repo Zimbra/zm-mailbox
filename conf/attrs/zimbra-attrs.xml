@@ -8820,4 +8820,18 @@ TODO: delete them permanently from here
      MUST be the entire header line (e.g. X-Foo: Bar, X-Zoo: "Bar1; Bar2").
   </desc>
 </attr>
+
+<attr id="1975" name="zimbraAPNSCertificate" type="binary" cardinality="single" optionalIn="globalConfig" since="8.7.0,9.0.0">
+  <desc>Certificate for Apple Push Notification Service</desc>
+</attr>
+
+<attr id="1976" name="zimbraAPNSCertificatePassword" type="ostring" cardinality="single" optionalIn="globalConfig" since="8.7.0,9.0.0">
+  <desc>Password for APNS certificate</desc>
+</attr>
+
+<attr id="1977" name="zimbraAPNSProduction" type="boolean" cardinality="single" optionalIn="globalConfig" since="8.7.0,9.0.0">
+  <globalConfigValue>TRUE</globalConfigValue>
+  <desc>Boolean to decide whether APNS is being used for production or development</desc>
+</attr>
+
 </attrs>

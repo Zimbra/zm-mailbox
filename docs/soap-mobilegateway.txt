@@ -80,7 +80,7 @@ http://developer.android.com/google/gcm/gs.html
 </GetGcmSenderIdRequest>
 
 <GetGcmSenderIdResponse xmlns="urn:zimbraAccount">
-<gcmSenderId>{sender-id}<gcmSenderId/>
+  <gcmSenderId>{sender-id}<gcmSenderId/>
 </GetGcmSenderIdResponse>
 
 ----- Adding a Zmg Device -----
@@ -88,14 +88,14 @@ http://developer.android.com/google/gcm/gs.html
 Android clients using Google Cloud messaging should specify "gcm" as pushProvider
 
 <AddZmgDeviceRequest xmlns="urn:zimbraAccount">
-            <zmgDevice deviceId={deviceId} registrationId={registrationId} pushProvider=gcm>
-            </zmgDevice>
+  <zmgDevice deviceId={deviceId} registrationId={registrationId} pushProvider=gcm>
+  </zmgDevice>
 </AddZmgDeviceRequest>
 
 Response is "1" id device is added successfully, else response is "0"
 
 <AddZmgDeviceResponse xmlns="urn:zimbraAccount">
-<success>{ 0 | 1 }</success>
+  <success>{ 0 | 1 }</success>
 </AddZmgDeviceResponse>
 
 
@@ -108,7 +108,44 @@ msgId - messageId of the message
 subject - subject of the message
 sender - sender email address
 fragment - preview text of the conversation
-recipientAddress - recipient email address  
+recipientAddress - recipient email address
+
+Push notifications for iOS devices -
+
+- iOS clients should specify "apns" as pushProvider
+
+- AddZmgDevice can be used to register an iOS device token
+
+<AddZmgDeviceRequest xmlns="urn:zimbraAccount">
+  <zmgDevice deviceId={deviceId} registrationId={device-token} pushProvider="apns">
+  </zmgDevice>
+</AddZmgDeviceRequest>
+
+Following attributes have been introduced for configuring the server for sending Push Notifications to
+iOS devices -
+
+  1. zimbraAPNSCertificate
+    Certificate for Apple Push Notification Service
+    Value can be set using the following command - 
+    zmprov mcf zimbraAPNSCertificate <path-of-p12-file>
+
+  2. zimbraAPNSCertificatePassword
+    Password for APNS certificate
+    Value can be set using the following command - 
+    zmprov mcf zimbraAPNSCertificatePassword <password>
+
+  3. zimbraAPNSProduction
+    Boolean to decide whether APNS is being used for production or development
+    Value can be set using the following command - 
+    zmprov mcf zimbraAPNSProduction {TRUE|FALSE}
+
+Please follow the steps given in the link below to generate certificate
+
+http://www.raywenderlich.com/32960/apple-push-notification-services-in-ios-6-tutorial-part-1
+
+https://developer.apple.com/library/ios/documentation/IDEs/Conceptual/AppDistributionGuide/ConfiguringPushNotifications/ConfiguringPushNotifications.html
+
+
 
 
 

@@ -28,6 +28,7 @@ import java.util.Map;
 
 import com.zimbra.common.account.ZAttr;
 import com.zimbra.common.account.ZAttrProvisioning;
+import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.StringUtil;
 
@@ -291,6 +292,239 @@ public abstract class ZAttrConfig extends Entry {
     public Map<String,Object> unsetACE(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraACE, "");
+        return attrs;
+    }
+
+    /**
+     * Certificate for Apple Push Notification Service
+     *
+     * @return zimbraAPNSCertificate, or null if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1975)
+    public byte[] getAPNSCertificate() {
+        return getBinaryAttr(Provisioning.A_zimbraAPNSCertificate);
+    }
+
+    /**
+     * Certificate for Apple Push Notification Service
+     *
+     * @return zimbraAPNSCertificate, or null if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1975)
+    public String getAPNSCertificateAsString() {
+        return getAttr(Provisioning.A_zimbraAPNSCertificate, null);
+    }
+
+    /**
+     * Certificate for Apple Push Notification Service
+     *
+     * @param zimbraAPNSCertificate new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1975)
+    public void setAPNSCertificate(byte[] zimbraAPNSCertificate) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAPNSCertificate, zimbraAPNSCertificate==null ? "" : ByteUtil.encodeLDAPBase64(zimbraAPNSCertificate));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Certificate for Apple Push Notification Service
+     *
+     * @param zimbraAPNSCertificate new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1975)
+    public Map<String,Object> setAPNSCertificate(byte[] zimbraAPNSCertificate, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAPNSCertificate, zimbraAPNSCertificate==null ? "" : ByteUtil.encodeLDAPBase64(zimbraAPNSCertificate));
+        return attrs;
+    }
+
+    /**
+     * Certificate for Apple Push Notification Service
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1975)
+    public void unsetAPNSCertificate() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAPNSCertificate, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Certificate for Apple Push Notification Service
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1975)
+    public Map<String,Object> unsetAPNSCertificate(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAPNSCertificate, "");
+        return attrs;
+    }
+
+    /**
+     * Password for APNS certificate
+     *
+     * @return zimbraAPNSCertificatePassword, or null if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1976)
+    public String getAPNSCertificatePassword() {
+        return getAttr(Provisioning.A_zimbraAPNSCertificatePassword, null);
+    }
+
+    /**
+     * Password for APNS certificate
+     *
+     * @param zimbraAPNSCertificatePassword new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1976)
+    public void setAPNSCertificatePassword(String zimbraAPNSCertificatePassword) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAPNSCertificatePassword, zimbraAPNSCertificatePassword);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Password for APNS certificate
+     *
+     * @param zimbraAPNSCertificatePassword new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1976)
+    public Map<String,Object> setAPNSCertificatePassword(String zimbraAPNSCertificatePassword, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAPNSCertificatePassword, zimbraAPNSCertificatePassword);
+        return attrs;
+    }
+
+    /**
+     * Password for APNS certificate
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1976)
+    public void unsetAPNSCertificatePassword() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAPNSCertificatePassword, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Password for APNS certificate
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1976)
+    public Map<String,Object> unsetAPNSCertificatePassword(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAPNSCertificatePassword, "");
+        return attrs;
+    }
+
+    /**
+     * Boolean to decide whether APNS is being used for production or
+     * development
+     *
+     * @return zimbraAPNSProduction, or true if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1977)
+    public boolean isAPNSProduction() {
+        return getBooleanAttr(Provisioning.A_zimbraAPNSProduction, true);
+    }
+
+    /**
+     * Boolean to decide whether APNS is being used for production or
+     * development
+     *
+     * @param zimbraAPNSProduction new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1977)
+    public void setAPNSProduction(boolean zimbraAPNSProduction) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAPNSProduction, zimbraAPNSProduction ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Boolean to decide whether APNS is being used for production or
+     * development
+     *
+     * @param zimbraAPNSProduction new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1977)
+    public Map<String,Object> setAPNSProduction(boolean zimbraAPNSProduction, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAPNSProduction, zimbraAPNSProduction ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Boolean to decide whether APNS is being used for production or
+     * development
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1977)
+    public void unsetAPNSProduction() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAPNSProduction, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Boolean to decide whether APNS is being used for production or
+     * development
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1977)
+    public Map<String,Object> unsetAPNSProduction(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAPNSProduction, "");
         return attrs;
     }
 

@@ -30,17 +30,14 @@ import com.zimbra.cs.account.Provisioning;
 
 public class GcmPushProvider implements PushProvider {
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see com.zimbra.cs.pushnotifications.PushProvider#push(com.zimbra.cs.
-     * pushnotifications.PushNotification)
-     */
-    @Override
-    public void push(PushNotification notification) {
-        ZimbraLog.mailbox.info("Send notification using GCM");
-        String gcmUrl = null;
-        String gcmAuthorizationKey = null;
+    private String gcmUrl = null;
+    private String gcmAuthorizationKey = null;
+
+    public GcmPushProvider() {
+        init();
+    }
+
+    private void init() {
         try {
             Config config = Provisioning.getInstance().getConfig();
             gcmUrl = config.getGCMUrl();
@@ -49,6 +46,16 @@ public class GcmPushProvider implements PushProvider {
             ZimbraLog.mailbox.warn("ZMG: Failed to get GCM Attributes", e);
             return;
         }
+    }
+
+    /*
+     * (non-Javadoc)
+     *
+     * @see com.zimbra.cs.pushnotifications.PushProvider#push(com.zimbra.cs.
+     * pushnotifications.PushNotification)
+     */
+    @Override
+    public void push(PushNotification notification) {
 
         if (gcmUrl == null || gcmAuthorizationKey == null) {
             ZimbraLog.mailbox.warn("ZMG: Need GCM attributes to send notification");
@@ -60,7 +67,7 @@ public class GcmPushProvider implements PushProvider {
 
         post.addParameter("registration_id", notification.getDevice().getRegistrationId());
 
-        Map<String, String> params = notification.getPayloadForGcm();
+        Map<String, String> params = notification.getPayload();
         for (Map.Entry<String, String> entry : params.entrySet()) {
             post.addParameter(entry.getKey(), entry.getValue());
         }
