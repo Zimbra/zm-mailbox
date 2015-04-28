@@ -15,7 +15,6 @@
 
 package com.zimbra.cs.pushnotifications;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -23,13 +22,12 @@ import com.zimbra.cs.account.ZmgDevice;
 
 public class NewMessagePushNotification implements PushNotification {
 
-    private int conversationId = 0;
-    private int messageId = 0;
+    private String conversationId = "";
+    private String messageId = "";
     private String subject = "";
     private String sender = "";
     private String recipientAddress = "";
     private String fragment = "";
-    private int unreadCount = 0;
     private ZmgDevice device = null;
 
     /**
@@ -41,9 +39,9 @@ public class NewMessagePushNotification implements PushNotification {
      * @param device
      * @param fragment
      */
-    public NewMessagePushNotification(int conversationId, int messageId, String message,
+    public NewMessagePushNotification(String conversationId, String messageId, String message,
                                       String sender, String recipientAddress, ZmgDevice device,
-                                      String fragment, int unreadCount) {
+                                      String fragment) {
         this.conversationId = conversationId;
         this.messageId = messageId;
         this.subject = message;
@@ -51,13 +49,12 @@ public class NewMessagePushNotification implements PushNotification {
         this.recipientAddress = recipientAddress;
         this.fragment = fragment;
         this.device = device;
-        this.unreadCount = unreadCount;
     }
 
     /**
      * @return the conversationId
      */
-    public int getConversationId() {
+    public String getConversationId() {
         return conversationId;
     }
 
@@ -65,14 +62,14 @@ public class NewMessagePushNotification implements PushNotification {
      * @param conversationId
      *            the conversationId to set
      */
-    public void setConversationId(int conversationId) {
+    public void setConversationId(String conversationId) {
         this.conversationId = conversationId;
     }
 
     /**
      * @return the messageId
      */
-    public int getMessageId() {
+    public String getMessageId() {
         return messageId;
     }
 
@@ -80,7 +77,7 @@ public class NewMessagePushNotification implements PushNotification {
      * @param messageId
      *            the messageId to set
      */
-    public void setMessageId(int messageId) {
+    public void setMessageId(String messageId) {
         this.messageId = messageId;
     }
 
@@ -144,68 +141,23 @@ public class NewMessagePushNotification implements PushNotification {
         this.fragment = fragment;
     }
 
-    
-    /**
-     * @return the unreadCount
+    /* (non-Javadoc)
+     * @see com.zimbra.cs.pushnotifications.PushNotification#getPayloadForGcm()
      */
-    public int getUnreadCount() {
-        return unreadCount;
-    }
-
-    
-    /**
-     * @param unreadCount the unreadCount to set
-     */
-    public void setUnreadCount(int unreadCount) {
-        this.unreadCount = unreadCount;
-    }
-
-    private Map<String, String> getPayloadForApns() {
+    public Map<String, String> getPayloadForGcm() {
         Map<String, String> map = new HashMap<String, String>();
-        map.put(APNS_SOUND, "default");
-        map.put(APNS_BADGE, String.valueOf(unreadCount));
-        map.put(APNS_ALERT, "From: " + sender + "\n" + subject);
-        map.put(APNS_CID, String.valueOf(conversationId));
-        map.put(APNS_MSG_ID, String.valueOf(messageId));
-        map.put(APNS_MSG_ID, fragment);
-        map.put(APNS_RECIPIENT_ADDRESS, recipientAddress);
-        return map;
-    }
-
-    private Map<String, String> getPayloadForGcm() {
-        Map<String, String> map = new HashMap<String, String>();
-        map.put(GCM_CID, String.valueOf(conversationId));
-        map.put(GCM_MSG_ID, String.valueOf(messageId));
-        map.put(GCM_SUBJECT, subject);
-        map.put(GCM_SENDER, sender);
-        map.put(GCM_FRAGMENT, fragment);
-        map.put(GCM_RECIPIENT_ADDRESS, recipientAddress);
-        map.put(GCM_UNREAD_COUNT, String.valueOf(unreadCount));
+        map.put("data.cid", conversationId);
+        map.put("data.msgId", messageId);
+        map.put("data.subject", subject);
+        map.put("data.sender", sender);
+        map.put("data.fragment", fragment);
+        map.put("data.recipientAddress", recipientAddress);
         return map;
     }
 
     /*
      * (non-Javadoc)
-     *
-     * @see com.zimbra.cs.pushnotifications.PushNotification#getPayload()
-     */
-    @Override
-    public Map<String, String> getPayload() {
-        switch (device.getPushProvider()) {
-        case PROVIDER_IDENTIFIER_GCM:
-            return getPayloadForGcm();
-
-        case PROVIDER_IDENTIFIER_APNS:
-            return getPayloadForApns();
-
-        default:
-            return Collections.<String, String> emptyMap();
-        }
-    }
-
-    /*
-     * (non-Javadoc)
-     *
+     * 
      * @see com.zimbra.cs.pushnotifications.PushNotification#getDevice()
      */
     @Override
@@ -215,7 +167,7 @@ public class NewMessagePushNotification implements PushNotification {
 
     /*
      * (non-Javadoc)
-     *
+     * 
      * @see
      * com.zimbra.cs.pushnotifications.PushNotification#setDevice(com.zimbra
      * .cs.account.ZmgDevice)

@@ -19,11 +19,14 @@ import com.zimbra.cs.account.ZmgDevice;
 
 public class ProviderFactory {
 
+    public static final String PROVIDER_IDENTIFIER_GCM = "gcm";
+    public static final String PROVIDER_IDENTIFIER_APNS = "apns";
+
     public static PushProvider createProvider(ZmgDevice device) {
         String pushProvider = device.getPushProvider();
-        if (PushNotification.PROVIDER_IDENTIFIER_GCM.equals(pushProvider)) {
+        if (PROVIDER_IDENTIFIER_GCM.equals(pushProvider)) {
             return new GcmPushProvider();
-        } else if (PushNotification.PROVIDER_IDENTIFIER_APNS.equals(pushProvider)) {
+        } else if (PROVIDER_IDENTIFIER_APNS.equals(pushProvider)) {
             return new ApnsPushProvider();
         }
         return null;

@@ -21,26 +21,7 @@ import com.zimbra.cs.account.ZmgDevice;
 
 public interface PushNotification {
 
-    String APNS_ALERT = "alert";
-    String APNS_SOUND = "sound";
-    String APNS_BADGE = "badge";
-    String APNS_CID = "cid";
-    String APNS_MSG_ID = "msgId";
-    String APNS_FRAGMENT = "fragment";
-    String APNS_RECIPIENT_ADDRESS = "recipientAddress";
-
-    String GCM_CID = "data.cid";
-    String GCM_MSG_ID = "data.msgId";
-    String GCM_SUBJECT = "data.subject";
-    String GCM_SENDER = "data.sender";
-    String GCM_FRAGMENT = "data.fragment";
-    String GCM_RECIPIENT_ADDRESS = "data.recipientAddress";
-    String GCM_UNREAD_COUNT = "data.unreadCount";
-
-    String PROVIDER_IDENTIFIER_GCM = "gcm";
-    String PROVIDER_IDENTIFIER_APNS = "apns";
-
-    public Map<String, String> getPayload();
+    public Map<String, String> getPayloadForGcm();
 
     public ZmgDevice getDevice();
 
