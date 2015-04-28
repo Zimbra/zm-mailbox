@@ -29075,13 +29075,13 @@ public abstract class ZAttrConfig extends Entry {
      * attribute is empty, servers will send documents to Solr for indexing
      * as soon as documents arrive.
      *
-     * @return zimbraIndexingQueueProvider, or "com.zimbra.cs.index.DefaultIndexingQueueAdapter" if unset
+     * @return zimbraIndexingQueueProvider, or "com.zimbra.cs.index.LocalIndexingQueueAdapter" if unset
      *
      * @since ZCS 9.0.0
      */
     @ZAttr(id=1833)
     public String getIndexingQueueProvider() {
-        return getAttr(Provisioning.A_zimbraIndexingQueueProvider, "com.zimbra.cs.index.DefaultIndexingQueueAdapter");
+        return getAttr(Provisioning.A_zimbraIndexingQueueProvider, "com.zimbra.cs.index.LocalIndexingQueueAdapter");
     }
 
     /**

@@ -35,7 +35,7 @@ public class TestIndexingService {
         prov.createAccount("test@zimbra.com", "secret", new HashMap<String, Object>());
         
         //use local queue for testing
-        Provisioning.getInstance().getLocalServer().setIndexingQueueProvider("com.zimbra.cs.index.DefaultIndexingQueueAdapter");
+        Provisioning.getInstance().getLocalServer().setIndexingQueueProvider("com.zimbra.cs.index.LocalIndexingQueueAdapter");
     }
     
     @Before

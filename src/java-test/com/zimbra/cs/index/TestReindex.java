@@ -61,7 +61,7 @@ public class TestReindex {
 
         // use local queue for testing
         Provisioning.getInstance().getLocalServer()
-                .setIndexingQueueProvider("com.zimbra.cs.index.DefaultIndexingQueueAdapter");
+                .setIndexingQueueProvider("com.zimbra.cs.index.LocalIndexingQueueAdapter");
 
         // save pre-test values
         originalReindexBatchSize = Provisioning.getInstance().getLocalServer().getReindexBatchSize();
