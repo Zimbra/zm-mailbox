@@ -27,7 +27,7 @@ import org.springframework.context.annotation.Configuration;
 
 import redis.clients.jedis.HostAndPort;
 import redis.clients.jedis.Jedis;
-import redis.clients.jedis.JedisPool;
+import redis.clients.util.Pool;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.MockProvisioning;
@@ -64,14 +64,16 @@ public final class RedisMailItemCacheTest extends AbstractMailItemCacheTest {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     protected void flushCacheBetweenTests() throws Exception {
-        JedisPool jedisPool = Zimbra.getAppContext().getBean(JedisPool.class);
+        Pool<Jedis> jedisPool = Zimbra.getAppContext().getBean(Pool.class);
         try (Jedis jedis = jedisPool.getResource()) {
             jedis.flushDB();
         }
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void testRemoveAllOfOneMailboxesItemsRemovesKeys() throws Exception {
         Assume.assumeTrue(isExternalCacheAvailableForTest());
         cache = constructCache();
@@ -85,7 +87,7 @@ public final class RedisMailItemCacheTest extends AbstractMailItemCacheTest {
         cache.remove(mbox);
 
         // Ensure key are gone
-        JedisPool jedisPool = Zimbra.getAppContext().getBean(JedisPool.class);
+        Pool<Jedis> jedisPool = Zimbra.getAppContext().getBean(Pool.class);
         try (Jedis jedis = jedisPool.getResource()) {
             Assert.assertNull(jedis.get(RedisMailItemCache.idsPerMailboxKey(mbox)));
             Assert.assertNull(jedis.get(RedisMailItemCache.uuidsPerMailboxKey(mbox)));

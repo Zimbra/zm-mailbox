@@ -60367,7 +60367,225 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Redis url
+     * The name of the Redis master, used by Redis Sentinel. This name
+     * matches the &quot;sentinel monitor [mymaster]&quot; entry in
+     * redis-sentinel.conf.
+     *
+     * @return zimbraRedisSentinelMaster, or null if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1979)
+    public String getRedisSentinelMaster() {
+        return getAttr(Provisioning.A_zimbraRedisSentinelMaster, null);
+    }
+
+    /**
+     * The name of the Redis master, used by Redis Sentinel. This name
+     * matches the &quot;sentinel monitor [mymaster]&quot; entry in
+     * redis-sentinel.conf.
+     *
+     * @param zimbraRedisSentinelMaster new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1979)
+    public void setRedisSentinelMaster(String zimbraRedisSentinelMaster) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRedisSentinelMaster, zimbraRedisSentinelMaster);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The name of the Redis master, used by Redis Sentinel. This name
+     * matches the &quot;sentinel monitor [mymaster]&quot; entry in
+     * redis-sentinel.conf.
+     *
+     * @param zimbraRedisSentinelMaster new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1979)
+    public Map<String,Object> setRedisSentinelMaster(String zimbraRedisSentinelMaster, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRedisSentinelMaster, zimbraRedisSentinelMaster);
+        return attrs;
+    }
+
+    /**
+     * The name of the Redis master, used by Redis Sentinel. This name
+     * matches the &quot;sentinel monitor [mymaster]&quot; entry in
+     * redis-sentinel.conf.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1979)
+    public void unsetRedisSentinelMaster() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRedisSentinelMaster, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The name of the Redis master, used by Redis Sentinel. This name
+     * matches the &quot;sentinel monitor [mymaster]&quot; entry in
+     * redis-sentinel.conf.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1979)
+    public Map<String,Object> unsetRedisSentinelMaster(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRedisSentinelMaster, "");
+        return attrs;
+    }
+
+    /**
+     * Redis Sentinel URIs. Use redis:// URIs, one for each Sentinel node.
+     *
+     * @return zimbraRedisSentinelUrl, or empty array if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1978)
+    public String[] getRedisSentinelUrl() {
+        return getMultiAttr(Provisioning.A_zimbraRedisSentinelUrl);
+    }
+
+    /**
+     * Redis Sentinel URIs. Use redis:// URIs, one for each Sentinel node.
+     *
+     * @param zimbraRedisSentinelUrl new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1978)
+    public void setRedisSentinelUrl(String[] zimbraRedisSentinelUrl) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRedisSentinelUrl, zimbraRedisSentinelUrl);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Redis Sentinel URIs. Use redis:// URIs, one for each Sentinel node.
+     *
+     * @param zimbraRedisSentinelUrl new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1978)
+    public Map<String,Object> setRedisSentinelUrl(String[] zimbraRedisSentinelUrl, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRedisSentinelUrl, zimbraRedisSentinelUrl);
+        return attrs;
+    }
+
+    /**
+     * Redis Sentinel URIs. Use redis:// URIs, one for each Sentinel node.
+     *
+     * @param zimbraRedisSentinelUrl new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1978)
+    public void addRedisSentinelUrl(String zimbraRedisSentinelUrl) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraRedisSentinelUrl, zimbraRedisSentinelUrl);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Redis Sentinel URIs. Use redis:// URIs, one for each Sentinel node.
+     *
+     * @param zimbraRedisSentinelUrl new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1978)
+    public Map<String,Object> addRedisSentinelUrl(String zimbraRedisSentinelUrl, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraRedisSentinelUrl, zimbraRedisSentinelUrl);
+        return attrs;
+    }
+
+    /**
+     * Redis Sentinel URIs. Use redis:// URIs, one for each Sentinel node.
+     *
+     * @param zimbraRedisSentinelUrl existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1978)
+    public void removeRedisSentinelUrl(String zimbraRedisSentinelUrl) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraRedisSentinelUrl, zimbraRedisSentinelUrl);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Redis Sentinel URIs. Use redis:// URIs, one for each Sentinel node.
+     *
+     * @param zimbraRedisSentinelUrl existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1978)
+    public Map<String,Object> removeRedisSentinelUrl(String zimbraRedisSentinelUrl, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraRedisSentinelUrl, zimbraRedisSentinelUrl);
+        return attrs;
+    }
+
+    /**
+     * Redis Sentinel URIs. Use redis:// URIs, one for each Sentinel node.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1978)
+    public void unsetRedisSentinelUrl() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRedisSentinelUrl, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Redis Sentinel URIs. Use redis:// URIs, one for each Sentinel node.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1978)
+    public Map<String,Object> unsetRedisSentinelUrl(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRedisSentinelUrl, "");
+        return attrs;
+    }
+
+    /**
+     * Redis URIs. When using stand-alone or master/slave+Sentinel, set a
+     * single value with the redis:// URI. When using Redis Cluster, set
+     * multiple redis:// URI values, one for every master and slave node.
      *
      * @return zimbraRedisUrl, or empty array if unset
      *
@@ -60379,7 +60597,9 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Redis url
+     * Redis URIs. When using stand-alone or master/slave+Sentinel, set a
+     * single value with the redis:// URI. When using Redis Cluster, set
+     * multiple redis:// URI values, one for every master and slave node.
      *
      * @param zimbraRedisUrl new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -60394,7 +60614,9 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Redis url
+     * Redis URIs. When using stand-alone or master/slave+Sentinel, set a
+     * single value with the redis:// URI. When using Redis Cluster, set
+     * multiple redis:// URI values, one for every master and slave node.
      *
      * @param zimbraRedisUrl new value
      * @param attrs existing map to populate, or null to create a new map
@@ -60410,7 +60632,9 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Redis url
+     * Redis URIs. When using stand-alone or master/slave+Sentinel, set a
+     * single value with the redis:// URI. When using Redis Cluster, set
+     * multiple redis:// URI values, one for every master and slave node.
      *
      * @param zimbraRedisUrl new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -60425,7 +60649,9 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Redis url
+     * Redis URIs. When using stand-alone or master/slave+Sentinel, set a
+     * single value with the redis:// URI. When using Redis Cluster, set
+     * multiple redis:// URI values, one for every master and slave node.
      *
      * @param zimbraRedisUrl new to add to existing values
      * @param attrs existing map to populate, or null to create a new map
@@ -60441,7 +60667,9 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Redis url
+     * Redis URIs. When using stand-alone or master/slave+Sentinel, set a
+     * single value with the redis:// URI. When using Redis Cluster, set
+     * multiple redis:// URI values, one for every master and slave node.
      *
      * @param zimbraRedisUrl existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -60456,7 +60684,9 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Redis url
+     * Redis URIs. When using stand-alone or master/slave+Sentinel, set a
+     * single value with the redis:// URI. When using Redis Cluster, set
+     * multiple redis:// URI values, one for every master and slave node.
      *
      * @param zimbraRedisUrl existing value to remove
      * @param attrs existing map to populate, or null to create a new map
@@ -60472,7 +60702,9 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Redis url
+     * Redis URIs. When using stand-alone or master/slave+Sentinel, set a
+     * single value with the redis:// URI. When using Redis Cluster, set
+     * multiple redis:// URI values, one for every master and slave node.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -60486,7 +60718,9 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Redis url
+     * Redis URIs. When using stand-alone or master/slave+Sentinel, set a
+     * single value with the redis:// URI. When using Redis Cluster, set
+     * multiple redis:// URI values, one for every master and slave node.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs

@@ -16,8 +16,6 @@
  */
 package com.zimbra.cs.mailbox;
 
-import redis.clients.jedis.JedisPool;
-
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.util.Zimbra;
@@ -36,8 +34,7 @@ public class DefaultMailboxLockFactory implements MailboxLockFactory {
                 if (config.isRedisClusterAvailable()) {
                     // TODO
                 } else {
-                    JedisPool jedisPool = Zimbra.getAppContext().getBean(JedisPool.class);
-                    mailboxLock = new RedisCoordinatedLocalMailboxLock(jedisPool, mbox);
+                    mailboxLock = new RedisCoordinatedLocalMailboxLock(mbox);
                 }
             }
         } catch (ServiceException e) {

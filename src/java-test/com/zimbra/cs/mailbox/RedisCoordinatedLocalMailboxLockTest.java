@@ -28,6 +28,7 @@ import org.springframework.context.annotation.Bean;
 
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
+import redis.clients.util.Pool;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.MockProvisioning;
@@ -55,8 +56,9 @@ public class RedisCoordinatedLocalMailboxLockTest extends AbstractMailboxLockTes
     }
 
     @Before
+    @SuppressWarnings("unchecked")
     public void resetStoreBetweenTests() throws Exception {
-        JedisPool jedisPool = Zimbra.getAppContext().getBean(JedisPool.class);
+        Pool<Jedis> jedisPool = Zimbra.getAppContext().getBean(Pool.class);
         try (Jedis jedis = jedisPool.getResource()) {
             jedis.flushDB();
         }
@@ -64,8 +66,9 @@ public class RedisCoordinatedLocalMailboxLockTest extends AbstractMailboxLockTes
 
     /** Test timing out waiting for a lock that we won't get */
     @Test(timeout=3000)
+    @SuppressWarnings("unchecked")
     public void multiProcessLockTimeout() throws Exception {
-        JedisPool jedisPool = Zimbra.getAppContext().getBean(JedisPool.class);
+        Pool<Jedis> jedisPool = Zimbra.getAppContext().getBean(Pool.class);
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
         RedisCoordinatedLocalMailboxLock lock = new RedisCoordinatedLocalMailboxLock(jedisPool, mbox);
 
@@ -88,8 +91,9 @@ public class RedisCoordinatedLocalMailboxLockTest extends AbstractMailboxLockTes
 
     /** Test acquiring a lock that first required a subscribe-and-wait */
     @Test(timeout=5000)
+    @SuppressWarnings("unchecked")
     public void multiProcessLockSubscribeWaitNotifyThenAcquire() throws Exception {
-        JedisPool jedisPool = Zimbra.getAppContext().getBean(JedisPool.class);
+        Pool<Jedis> jedisPool = Zimbra.getAppContext().getBean(Pool.class);
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
         RedisCoordinatedLocalMailboxLock lock = new RedisCoordinatedLocalMailboxLock(jedisPool, mbox);
 

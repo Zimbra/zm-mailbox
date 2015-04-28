@@ -8989,7 +8989,7 @@ TODO: delete them permanently from here
 </attr>
 
 <attr id="1788" name="zimbraRedisUrl" type="string" cardinality="multi" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service" since="9.0.0">
-  <desc>Redis url </desc>
+  <desc>Redis URIs. When using stand-alone or master/slave+Sentinel, set a single value with the redis:// URI. When using Redis Cluster, set multiple redis:// URI values, one for every master and slave node.</desc>
 </attr>
 
 <attr id="1789" name="zimbraMysqlJdbcResultStreamingEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service" since="9.0.0">
@@ -9928,4 +9928,13 @@ TODO: delete them permanently from here
   <globalConfigValue>TRUE</globalConfigValue>
   <desc>Boolean to decide whether APNS is being used for production or development</desc>
 </attr>
+
+<attr id="1978" name="zimbraRedisSentinelUrl" type="string" cardinality="multi" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service" since="9.0.0">
+  <desc>Redis Sentinel URIs. Use redis:// URIs, one for each Sentinel node.</desc>
+</attr>
+
+<attr id="1979" name="zimbraRedisSentinelMaster" type="string" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service" since="9.0.0">
+  <desc>The name of the Redis master, used by Redis Sentinel. This name matches the "sentinel monitor [mymaster]" entry in redis-sentinel.conf.</desc>
+</attr>
+
 </attrs>

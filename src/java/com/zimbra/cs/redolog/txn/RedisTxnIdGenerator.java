@@ -3,8 +3,8 @@ package com.zimbra.cs.redolog.txn;
 import java.util.List;
 
 import redis.clients.jedis.Jedis;
-import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.Transaction;
+import redis.clients.util.Pool;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.zimbra.common.service.ServiceException;
@@ -21,10 +21,9 @@ public class RedisTxnIdGenerator implements TxnIdGenerator {
     private static final String KEY = "zmRedoLogTxnId";
     private static final int MAX_TRIES = 100;
 
-    protected JedisPool jedisPool;
+    protected Pool<Jedis> jedisPool;
 
-    public RedisTxnIdGenerator(JedisPool jedisPool) {
-        super();
+    public RedisTxnIdGenerator(Pool<Jedis> jedisPool) {
         this.jedisPool = jedisPool;
     }
 

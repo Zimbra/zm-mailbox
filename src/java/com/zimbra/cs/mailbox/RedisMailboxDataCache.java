@@ -17,8 +17,8 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import redis.clients.jedis.Jedis;
-import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.Transaction;
+import redis.clients.util.Pool;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.Mailbox.MailboxData;
@@ -28,7 +28,7 @@ import com.zimbra.cs.memcached.MemcachedKeyPrefix;
 public class RedisMailboxDataCache implements MailboxDataCache {
     static final int DEFAULT_EXPIRY_SECS = 24 * 3600;
     protected int expirySecs = DEFAULT_EXPIRY_SECS;
-    @Autowired protected JedisPool jedisPool;
+    @Autowired protected Pool<Jedis> jedisPool;
     protected ObjectMapper mapper = new ObjectMapper();
 
     /** Constructor */

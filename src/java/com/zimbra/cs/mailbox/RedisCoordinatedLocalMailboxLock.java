@@ -20,10 +20,12 @@ import java.lang.management.ManagementFactory;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
 import redis.clients.jedis.Jedis;
-import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPubSub;
 import redis.clients.jedis.Transaction;
+import redis.clients.util.Pool;
 
 import com.google.common.base.Objects;
 import com.zimbra.common.service.ServiceException;
@@ -45,7 +47,7 @@ public class RedisCoordinatedLocalMailboxLock implements MailboxLock {
     static final String WORKER_SUFFIX = "-worker";
     static final String CHANNEL_SUFFIX = "-channel";
     static final String UNLOCK_NOTIFY_MESSAGE = "unlock";
-    protected JedisPool jedisPool;
+    @Autowired protected Pool<Jedis> jedisPool;
     protected LocalMailboxLock localMailboxLock;
     protected Server localServer;
     protected Mailbox mbox;
@@ -56,11 +58,15 @@ public class RedisCoordinatedLocalMailboxLock implements MailboxLock {
             "return 1";
 
 
-    public RedisCoordinatedLocalMailboxLock(JedisPool jedisPool, Mailbox mbox) throws ServiceException {
-        this.jedisPool = jedisPool;
+    public RedisCoordinatedLocalMailboxLock(Mailbox mbox) throws ServiceException {
         this.mbox = mbox;
         localMailboxLock = new LocalMailboxLock(mbox.getAccountId(), mbox);
         localServer = Provisioning.getInstance().getLocalServer();
+    }
+
+    public RedisCoordinatedLocalMailboxLock(Pool<Jedis> jedisPool, Mailbox mbox) throws ServiceException {
+        this(mbox);
+        this.jedisPool = jedisPool;
     }
 
     protected String key(String suffix) {

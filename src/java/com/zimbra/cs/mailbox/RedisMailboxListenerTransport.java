@@ -30,10 +30,11 @@ import javax.annotation.PostConstruct;
 import org.apache.commons.lang.ObjectUtils;
 import org.apache.xerces.impl.dv.util.Base64;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import redis.clients.jedis.Jedis;
-import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPubSub;
+import redis.clients.util.Pool;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.DateUtil;
@@ -50,11 +51,14 @@ import com.zimbra.cs.session.Session;
  */
 public class RedisMailboxListenerTransport implements MailboxListenerTransport {
     static final String KEY_PREFIX = MemcachedKeyPrefix.MBOX_PENDING_MODS;
-    protected JedisPool jedisPool;
+    @Autowired protected Pool<Jedis> jedisPool;
     protected ObjectMapper objectMapper = new ObjectMapper();
     protected Map<String, Set<Session>> subscribedSessionsByAccountId = new ConcurrentHashMap<>();
 
-    public RedisMailboxListenerTransport(JedisPool jedisPool) {
+    public RedisMailboxListenerTransport() {
+    }
+
+    public RedisMailboxListenerTransport(Pool<Jedis> jedisPool) {
         this.jedisPool = jedisPool;
     }
 

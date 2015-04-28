@@ -3,21 +3,20 @@ package com.zimbra.cs.redolog.seq;
 import java.util.List;
 
 import redis.clients.jedis.Jedis;
-import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.Transaction;
 import redis.clients.jedis.exceptions.JedisDataException;
+import redis.clients.util.Pool;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.zimbra.common.util.ZimbraLog;
 
 public class RedisSequenceNumberGenerator implements SequenceNumberGenerator {
 
-    protected JedisPool jedisPool;
+    protected Pool<Jedis> jedisPool;
     private static final String KEY = "zmRedoLogSeqNum";
     private static final int MAX_TRIES = 100;
 
-    public RedisSequenceNumberGenerator(JedisPool jedisPool) {
-        super();
+    public RedisSequenceNumberGenerator(Pool<Jedis> jedisPool) {
         this.jedisPool = jedisPool;
     }
 

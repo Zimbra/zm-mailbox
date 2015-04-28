@@ -4,7 +4,7 @@ import org.junit.Assume;
 import org.junit.BeforeClass;
 
 import redis.clients.jedis.Jedis;
-import redis.clients.jedis.JedisPool;
+import redis.clients.util.Pool;
 
 import com.zimbra.cs.mailbox.MailboxTestUtil;
 import com.zimbra.cs.mailbox.RedisOnLocalhostZimbraConfig;
@@ -20,9 +20,10 @@ public class RedisSequenceNumberGeneratorTest extends AbstractSequenceNumberGene
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public SequenceNumberGenerator getGenerator() {
         try {
-            JedisPool pool = (JedisPool) Zimbra.getAppContext().getBean("jedisPool");
+            Pool<Jedis> pool = Zimbra.getAppContext().getBean(Pool.class);
             try (Jedis jedis = pool.getResource()) {
                 jedis.ping();
             }

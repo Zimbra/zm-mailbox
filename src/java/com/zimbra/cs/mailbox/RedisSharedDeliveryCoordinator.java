@@ -18,8 +18,8 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import redis.clients.jedis.Jedis;
-import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.Transaction;
+import redis.clients.util.Pool;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -30,7 +30,7 @@ public class RedisSharedDeliveryCoordinator implements SharedDeliveryCoordinator
     static final int WAIT_MS = 3000;
     public static final String ALLOWED_SUFFIX = "-allowed";
     public static final String COUNT_SUFFIX = "-count";
-    @Autowired protected JedisPool jedisPool;
+    @Autowired protected Pool<Jedis> jedisPool;
 
     /** Constructor */
     public RedisSharedDeliveryCoordinator() {

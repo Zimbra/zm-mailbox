@@ -19,8 +19,8 @@ import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import redis.clients.jedis.Jedis;
-import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.Transaction;
+import redis.clients.util.Pool;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.ACL;
@@ -33,7 +33,7 @@ import com.zimbra.cs.memcached.MemcachedKeyPrefix;
 public class RedisEffectiveACLCache implements EffectiveACLCache {
     static final int DEFAULT_EXPIRY_SECS = 24 * 3600;
     protected int expirySecs = DEFAULT_EXPIRY_SECS;
-    @Autowired protected JedisPool jedisPool;
+    @Autowired protected Pool<Jedis> jedisPool;
 
     /** Constructor */
     public RedisEffectiveACLCache() {

@@ -21,7 +21,7 @@ import org.springframework.context.annotation.Configuration;
 
 import redis.clients.jedis.HostAndPort;
 import redis.clients.jedis.Jedis;
-import redis.clients.jedis.JedisPool;
+import redis.clients.util.Pool;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Provisioning;
@@ -57,8 +57,9 @@ public class RedisSentMessageIdCacheTest extends AbstractSentMessageIdCacheTest 
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     protected void flushCacheBetweenTests() throws Exception {
-        JedisPool jedisPool = Zimbra.getAppContext().getBean(JedisPool.class);
+        Pool<Jedis> jedisPool = Zimbra.getAppContext().getBean(Pool.class);
         try (Jedis jedis = jedisPool.getResource()) {
             jedis.flushDB();
         }

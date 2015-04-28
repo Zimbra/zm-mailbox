@@ -41,6 +41,8 @@ import redis.clients.jedis.HostAndPort;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisCluster;
 import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.JedisSentinelPool;
+import redis.clients.util.Pool;
 
 import com.zimbra.common.consul.ConsulClient;
 import com.zimbra.common.consul.ConsulServiceLocator;
@@ -231,7 +233,7 @@ public class ZimbraConfig {
                         result.add(new RedisClusterMailboxListenerManager(jedisCluster()));
                         ZimbraLog.misc.info("Registered external mailbox listener: %s", uri);
                     } else if (isRedisAvailable()) {
-                        result.add(new RedisMailboxListenerTransport(jedisPool()));
+                        result.add(new RedisMailboxListenerTransport());
                         ZimbraLog.misc.info("Registered external mailbox listener: %s", uri);
                     } else {
                         ZimbraLog.misc.error("Ignoring request to register external mailbox listener: %s because no zimbraRedisUrl URIs are configured", uri);
@@ -239,7 +241,7 @@ public class ZimbraConfig {
                 } else {
                     // URI specifies a new Redis endpoint, so it gets its own pool
                     URI uri_ = new URI(uri);
-                    JedisPool jedisPool = jedisPool(uri_.getHost(), uri_.getPort());
+                    JedisPool jedisPool = new JedisPool(jedisPoolConfig(), uri_.getHost(), uri_.getPort());
                     result.add(new RedisMailboxListenerTransport(jedisPool));
                     ZimbraLog.misc.info("Registered external mailbox listener: %s", uri);
                 }
@@ -254,6 +256,9 @@ public class ZimbraConfig {
             } else {
                 ZimbraLog.misc.error("Ignoring unsupported URI scheme for external mailbox listener: %s", uri);
             }
+        }
+        for (MailboxListenerTransport transport: result) {
+            Zimbra.getAppContext().getAutowireCapableBeanFactory().autowireBean(transport);
         }
         return result;
     }
@@ -315,23 +320,35 @@ public class ZimbraConfig {
         }
     }
 
-    /** Returns a JedisPool client if possible, or null */
-    public JedisPool jedisPool(String host, int port) throws ServiceException {
+    /** Returns a Jedis Pool configuration */
+    @Bean
+    public GenericObjectPoolConfig jedisPoolConfig() throws ServiceException {
         GenericObjectPoolConfig config = new GenericObjectPoolConfig();
         Server server = Provisioning.getInstance().getLocalServer();
         config.setMaxTotal(server.getRedisMaxConnectionCount());
-        return new JedisPool(config, host, port == -1 ? 6379 : port);
+        return config;
     }
 
-    /** Returns a JedisPool client if possible, or null */
+    /** Returns a Jedis Pool if possible, or null */
     @Bean
-    public JedisPool jedisPool() throws ServiceException {
+    public Pool<Jedis> jedisPool() throws ServiceException {
         Set<HostAndPort> uris = redisUris();
         if (uris.isEmpty()) {
             return null;
         }
-        HostAndPort hostAndPort = uris.iterator().next();
-        return jedisPool(hostAndPort.getHost(), hostAndPort.getPort());
+
+        String redisMaster = Provisioning.getInstance().getLocalServer().getRedisSentinelMaster();
+        Set<String> sentinelUris = redisSentinelUris();
+
+        // Perform unmanaged non-HA config
+        if (redisMaster == null || sentinelUris == null || sentinelUris.isEmpty()) {
+            HostAndPort hostAndPort = uris.iterator().next();
+            return new JedisPool(jedisPoolConfig(), hostAndPort.getHost(), hostAndPort.getPort());
+        }
+
+        // Perform Sentinel-based HA config
+        ZimbraLog.misc.info("Using Redis Sentinels %s for Redis master %s", sentinelUris.toString(), redisMaster);
+        return new JedisSentinelPool(redisMaster, sentinelUris, jedisPoolConfig());
     }
 
     @Bean
@@ -381,7 +398,7 @@ public class ZimbraConfig {
         if (!isRedisAvailable()) {
             return null;
         }
-        JedisPool jedisPool = jedisPool();
+        Pool<Jedis> jedisPool = jedisPool();
         QlessClient instance = new QlessClient(jedisPool);
         return instance;
     }
@@ -400,6 +417,23 @@ public class ZimbraConfig {
             return result;
         } catch (URISyntaxException e) {
             throw ServiceException.PARSE_ERROR("Invalid Redis URI", e);
+        }
+    }
+
+    public Set<String> redisSentinelUris() throws ServiceException {
+        String[] uris = Provisioning.getInstance().getLocalServer().getRedisSentinelUrl();
+        if (uris.length == 0) {
+            return Collections.emptySet();
+        }
+        Set<String> result = new HashSet<>();
+        try {
+            for (String uriStr: uris) {
+                URI uri = new URI(uriStr);
+                result.add(uri.getHost() + ":" + (uri.getPort() == -1 ? 26379 : uri.getPort()));
+            }
+            return result;
+        } catch (URISyntaxException e) {
+            throw ServiceException.PARSE_ERROR("Invalid Redis Sentinel URI", e);
         }
     }
 
