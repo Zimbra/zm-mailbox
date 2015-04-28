@@ -396,7 +396,9 @@ public class FileLogWriter extends AbstractLogWriter implements LogWriter {
 
         // Rename the current log to rolled-over name.
         File rolloverFile = romgr.getRolloverFile(lastSeq);
-        if (deleteOnRollover()) {
+        if (!file.exists()) {
+            ZimbraLog.redolog.debug("skipping rename/delete for nonexistant file during rollover");
+        } else if (deleteOnRollover()) {
             // Delete the current log.  We don't need to hold on to the
             // indexing-only log files after rollover.
             ZimbraLog.redolog.debug("deleting current redolog %s", file.getAbsolutePath());
