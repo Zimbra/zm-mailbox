@@ -33,6 +33,7 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.google.common.base.Joiner;
 import com.google.common.net.HttpHeaders;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
@@ -53,7 +54,7 @@ public class CsrfFilter implements Filter {
      *
      */
     public static final String CSRF_SALT = "CSRF_SALT";
-    protected String[] allowedRefHost = null;
+    private String[] allowedRefHosts = null;
     public static final String CSRF_TOKEN = "X-Zimbra-Csrf-Token";
     public static final String AUTH_TOKEN = "AuthToken";
     public static final String CSRF_TOKEN_CHECK = "CsrfTokenCheck";
@@ -71,14 +72,16 @@ public class CsrfFilter implements Filter {
         // Initialize the parameters related to CSRF check
         Provisioning prov = Provisioning.getInstance();
         try {
-            this.allowedRefHost = prov.getConfig().getCsrfAllowedRefererHosts();
+            this.allowedRefHosts = prov.getConfig().getCsrfAllowedRefererHosts();
             nonceGen = new Random();
             CsrfTokenKey.getCurrentKey();
-            ZimbraLog.misc.info("CSRF filter was initialized : "
-            + ", CSRFAllowedRefHost: " +  this.allowedRefHost);
+            if (ZimbraLog.misc.isInfoEnabled()) {
+                ZimbraLog.misc.info("CSRF filter was initialized: "
+                        + "CSRFAllowedRefHost: [" + Joiner.on(", ").join(this.allowedRefHosts) + "]");
+            }
         } catch (ServiceException e) {
-            throw new ServletException("Error initializing CSRF filter"
-                + e.getMessage());
+            throw new ServletException("Error initializing CSRF filter: "
+                + e.getMessage(), e);
         }
 
     }
@@ -128,7 +131,7 @@ public class CsrfFilter implements Filter {
             ZimbraLog.misc.debug("CSRF filter was initialized : "
             + "CSRFcheck enabled: " +  csrfCheckEnabled
             + "CSRF referer check enabled: " +  csrfRefererCheckEnabled
-            + ", CSRFAllowedRefHost: " +  this.allowedRefHost
+            + ", CSRFAllowedRefHost: [" +  Joiner.on(", ").join(this.allowedRefHosts) + "]"
             + ", CSRFTokenValidity " +  this.maxCsrfTokenValidityInMs + "ms.");
         }
 
@@ -211,7 +214,7 @@ public class CsrfFilter implements Filter {
     private boolean allowReqBasedOnRefererHeaderCheck(HttpServletRequest req) {
 
         try {
-            if (CsrfUtil.isCsrfRequestBasedOnReferrer(req, allowedRefHost)) {
+            if (CsrfUtil.isCsrfRequestBasedOnReferrer(req, allowedRefHosts)) {
                 return false;
             }
         } catch (MalformedURLException e) {
