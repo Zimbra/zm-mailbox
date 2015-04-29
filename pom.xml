@@ -1,8 +1,7 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 <!--
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2013, 2014 Zimbra, Inc.
+ * Copyright (C) 2013, 2014, 2015 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Common Public Attribution License Version 1.0 (the "License");
  * you may not use this file except in compliance with the License. 
@@ -19,12 +18,13 @@
  * All portions of the code are Copyright (C) 2013, 2014 Zimbra, Inc. All Rights Reserved. 
  * ***** END LICENSE BLOCK *****
 -->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>zimbranative</artifactId>
     <parent>
       <groupId>com.zimbra</groupId>
       <artifactId>zimbra-parent</artifactId>
-      <version>9.0.0-SNAPSHOT</version>
+      <version>8.7.0-SNAPSHOT</version>
     </parent>
 </project>
