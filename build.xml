@@ -581,6 +581,7 @@
           <include name="xpp3.jar"/>
           <include name="yuicompressor*.jar"/>
           <include name="zimbra-native.jar"/>
+          <include name="javapns-jdk16-2.2.1.jar"/>
         </fileset>
       </delete>
     </target>

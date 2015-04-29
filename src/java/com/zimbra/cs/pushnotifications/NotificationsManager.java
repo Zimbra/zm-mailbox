@@ -18,6 +18,8 @@ package com.zimbra.cs.pushnotifications;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.ZmgDevice;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -54,8 +56,8 @@ public class NotificationsManager {
         Collection<PushNotification> notifications = new ArrayList<PushNotification>();
         Collection<ZmgDevice> devices = getDevices(mbox);
         for (ZmgDevice device : devices) {
-            PushNotification notification = createNotification(message, sender, recipientEmail,
-                device);
+            PushNotification notification = createNotification(mbox, message, sender,
+                recipientEmail, device);
             notifications.add(notification);
         }
         return notifications;
@@ -70,13 +72,17 @@ public class NotificationsManager {
         queue.putAll(notifications);
     }
 
-    private PushNotification createNotification(Message message, String sender,
+    private PushNotification createNotification(Mailbox mbox, Message message, String sender,
         String recipientEmail, ZmgDevice device) {
-        String msgId = Integer.toString(message.getId());
-        String convId = Integer.toString(message.getConversationId());
         String fragment = message.getFragment();
-        return new NewMessagePushNotification(convId, msgId, message.getSubject(), sender,
-            recipientEmail, device, fragment);
+        int unreadCount = 0;
+        try {
+            unreadCount = mbox.getFolderById(null, message.getFolderId()).getUnreadCount();
+        } catch (ServiceException e) {
+            ZimbraLog.mailbox.debug("ZMG: Exception in getting unread message count", e);
+        }
+        return new NewMessagePushNotification(message.getConversationId(), message.getId(), message.getSubject(), sender,
+            recipientEmail, device, fragment, unreadCount);
     }
 
     private Collection<ZmgDevice> getDevices(Mailbox mbox) {
