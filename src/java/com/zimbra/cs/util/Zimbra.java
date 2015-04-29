@@ -47,7 +47,6 @@ import com.zimbra.cs.account.accesscontrol.RightManager;
 import com.zimbra.cs.account.ldap.LdapProv;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.DbConnection;
-import com.zimbra.cs.db.DbSession;
 import com.zimbra.cs.db.Versions;
 import com.zimbra.cs.extension.ExtensionUtil;
 import com.zimbra.cs.index.IndexingService;
@@ -539,8 +538,6 @@ public final class Zimbra {
         try {
             if (isAlwaysOn()) {
                 conn = DbPool.getConnection();
-                DbSession.deleteSessions(conn,
-                        Provisioning.getInstance().getLocalServer().getId());
                 conn.commit();
             }
         } finally {

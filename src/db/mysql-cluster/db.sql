@@ -259,10 +259,3 @@ CREATE TABLE pending_acl_push (
    CONSTRAINT fk_pending_acl_push_mailbox_id FOREIGN KEY (mailbox_id) REFERENCES mailbox(id) ON DELETE CASCADE,
    INDEX i_date (date)
 ) ENGINE = NDBCLUSTER;
-
-CREATE TABLE current_sessions (
-	id				INTEGER UNSIGNED NOT NULL,
-	server_id		VARCHAR(127) NOT NULL,
-	PRIMARY KEY (id, server_id)
-) ENGINE = NDBCLUSTER; 
-
