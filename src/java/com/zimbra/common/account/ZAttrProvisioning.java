@@ -12685,6 +12685,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefStandardClientAccessibilityMode = "zimbraPrefStandardClientAccessibilityMode";
 
     /**
+     * If true, Tab key inserts a tab into the editor body. If false, it
+     * moves focus.
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1972)
+    public static final String A_zimbraPrefTabInEditorEnabled = "zimbraPrefTabInEditorEnabled";
+
+    /**
      * whether or not tag tree is expanded
      *
      * @since ZCS 5.0.5
