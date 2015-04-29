@@ -8814,7 +8814,7 @@ TODO: delete them permanently from here
 </attr>
 
 <attr id="1972" name="zimbraPrefTabInEditorEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="8.7.0, 9.0.0">
-  <defaultCOSValue>TRUE</defaultCOSValue>
+  <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>If true, Tab key inserts a tab into the editor body. If false, it moves focus.</desc>
 </attr>
 

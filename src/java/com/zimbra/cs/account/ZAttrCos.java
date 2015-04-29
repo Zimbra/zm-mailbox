@@ -38327,13 +38327,13 @@ public abstract class ZAttrCos extends NamedEntry {
      * If true, Tab key inserts a tab into the editor body. If false, it
      * moves focus.
      *
-     * @return zimbraPrefTabInEditorEnabled, or true if unset
+     * @return zimbraPrefTabInEditorEnabled, or false if unset
      *
      * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=1972)
     public boolean isPrefTabInEditorEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraPrefTabInEditorEnabled, true);
+        return getBooleanAttr(Provisioning.A_zimbraPrefTabInEditorEnabled, false);
     }
 
     /**
