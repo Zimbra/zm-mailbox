@@ -61,3 +61,92 @@ If the app auth token expires, the app can request a new auth token.
   <authToken lifetime="{auth-token-lifetime}">{app-auth-token}</authToken>
 </RenewMobileGatewayAppTokenResponse>
 ````
+
+------ Push Notifications ----- 
+
+Push notifications for Android Apps using Google Cloud Messaging - 
+
+For push notifications using GCM, a project needs to be created using Google APIs console page. 
+The “Project Number” aka sender id of this project is used by android client to register itself 
+for GCM. After registering itself, the android client receives a registration Id. 
+The android client uploads this registration id with its messaging server. The server will use 
+the registration id to send notifications to that device. Along with registration id, the server also needs a 
+Server API key for sending notifications, the server API key is also created while creating the project 
+on Google APIs console
+
+Please refer the following links for detailed information about Google Cloud Messaging - 
+
+http://www.androidhive.info/2012/10/android-push-notifications-using-google-cloud-messaging-gcm-php-and-mysql/
+
+http://developer.android.com/google/gcm/gs.html
+
+----- Android client can get GCM sender id by using the following request, response ----- 
+
+<GetGcmSenderIdRequest xmlns="urn:zimbraAccount">
+</GetGcmSenderIdRequest>
+
+<GetGcmSenderIdResponse xmlns="urn:zimbraAccount">
+  <gcmSenderId>{sender-id}<gcmSenderId/>
+</GetGcmSenderIdResponse>
+
+----- Adding a Zmg Device -----
+
+Android clients using Google Cloud messaging should specify "gcm" as pushProvider
+
+<AddZmgDeviceRequest xmlns="urn:zimbraAccount">
+  <zmgDevice deviceId={deviceId} registrationId={registrationId} pushProvider=gcm>
+  </zmgDevice>
+</AddZmgDeviceRequest>
+
+Response is "1" id device is added successfully, else response is "0"
+
+<AddZmgDeviceResponse xmlns="urn:zimbraAccount">
+  <success>{ 0 | 1 }</success>
+</AddZmgDeviceResponse>
+
+
+---- NewMessagePushNotification ----
+
+Payload of a new message GCM push notification contains -
+
+cid  - conversationId
+msgId - messageId of the message
+subject - subject of the message
+sender - sender email address
+fragment - preview text of the conversation
+recipientAddress - recipient email address
+
+Push notifications for iOS devices -
+
+- iOS clients should specify "apns" as pushProvider
+
+- AddZmgDevice can be used to register an iOS device token
+
+<AddZmgDeviceRequest xmlns="urn:zimbraAccount">
+  <zmgDevice deviceId={deviceId} registrationId={device-token} pushProvider="apns">
+  </zmgDevice>
+</AddZmgDeviceRequest>
+
+Following attributes have been introduced for configuring the server for sending Push Notifications to
+iOS devices -
+
+  1. zimbraAPNSCertificate
+    Certificate for Apple Push Notification Service
+    Value can be set using the following command - 
+    zmprov mcf zimbraAPNSCertificate <path-of-p12-file>
+
+  2. zimbraAPNSCertificatePassword
+    Password for APNS certificate
+    Value can be set using the following command - 
+    zmprov mcf zimbraAPNSCertificatePassword <password>
+
+  3. zimbraAPNSProduction
+    Boolean to decide whether APNS is being used for production or development
+    Value can be set using the following command - 
+    zmprov mcf zimbraAPNSProduction {TRUE|FALSE}
+
+Please follow the steps given in the link below to generate certificate
+
+http://www.raywenderlich.com/32960/apple-push-notification-services-in-ios-6-tutorial-part-1
+
+https://developer.apple.com/library/ios/documentation/IDEs/Conceptual/AppDistributionGuide/ConfiguringPushNotifications/ConfiguringPushNotifications.html
