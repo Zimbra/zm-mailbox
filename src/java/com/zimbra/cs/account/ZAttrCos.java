@@ -38324,6 +38324,83 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
+     * If true, Tab key inserts a tab into the editor body. If false, it
+     * moves focus.
+     *
+     * @return zimbraPrefTabInEditorEnabled, or true if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1972)
+    public boolean isPrefTabInEditorEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraPrefTabInEditorEnabled, true);
+    }
+
+    /**
+     * If true, Tab key inserts a tab into the editor body. If false, it
+     * moves focus.
+     *
+     * @param zimbraPrefTabInEditorEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1972)
+    public void setPrefTabInEditorEnabled(boolean zimbraPrefTabInEditorEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefTabInEditorEnabled, zimbraPrefTabInEditorEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * If true, Tab key inserts a tab into the editor body. If false, it
+     * moves focus.
+     *
+     * @param zimbraPrefTabInEditorEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1972)
+    public Map<String,Object> setPrefTabInEditorEnabled(boolean zimbraPrefTabInEditorEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefTabInEditorEnabled, zimbraPrefTabInEditorEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * If true, Tab key inserts a tab into the editor body. If false, it
+     * moves focus.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1972)
+    public void unsetPrefTabInEditorEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefTabInEditorEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * If true, Tab key inserts a tab into the editor body. If false, it
+     * moves focus.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1972)
+    public Map<String,Object> unsetPrefTabInEditorEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefTabInEditorEnabled, "");
+        return attrs;
+    }
+
+    /**
      * whether or not tag tree is expanded
      *
      * @return zimbraPrefTagTreeOpen, or true if unset

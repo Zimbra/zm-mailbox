@@ -8813,6 +8813,11 @@ TODO: delete them permanently from here
   </desc>
 </attr>
 
+<attr id="1972" name="zimbraPrefTabInEditorEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="8.7.0, 9.0.0">
+  <defaultCOSValue>TRUE</defaultCOSValue>
+  <desc>If true, Tab key inserts a tab into the editor body. If false, it moves focus.</desc>
+</attr>
+
 <attr id="1973" name="zimbraReverseProxyResponseHeaders" type="string" cardinality="multi" optionalIn="globalConfig,domain" flags="domainInfo,domainInherited" requiresRestart="nginxproxy" since="8.7.0,9.0.0">
   <desc>
      Custom response headers to be added by the proxy. For example, can be used to add a HSTS header
