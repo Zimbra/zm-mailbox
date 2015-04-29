@@ -423,7 +423,7 @@ public class SoapServlet extends ZimbraServlet {
             }
 
             // Register admin endpoint
-            adminServiceID = registerWithServiceLocator(ZimbraServiceNames.MAILSTOREADMIN, null, adminPort, "https", "zmhealthcheck-mailstoreadmin");
+            adminServiceID = registerWithServiceLocator(ZimbraServiceNames.MAILSTOREADMIN, mailstoreTags, adminPort, "https", "zmhealthcheck-mailstoreadmin");
 
         } catch (ServiceException e) {
             throw new ServletException("Failed reading provisioning before registering mailstore with service locator", e);
