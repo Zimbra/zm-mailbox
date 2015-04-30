@@ -72,7 +72,10 @@ public class PurgeMovedMailboxRequest {
     }
 
     public Name getMailbox() { return mailbox; }
-    public Boolean getForceDeleteBlobs() { return ZmBoolean.toBool(forceDeleteBlobs); }
+    public Boolean getForceDeleteBlobs() {
+        Boolean forceDelete = ZmBoolean.toBool(forceDeleteBlobs);
+        return (forceDelete == null) ? false : forceDelete;
+    }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
