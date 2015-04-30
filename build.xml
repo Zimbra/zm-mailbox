@@ -1,11 +1,13 @@
 <project name="ZimbraSoap" default="jar">
 
+  <property name="build.dir" location="target" />
+
   <import file="../ant-global.xml" />
 
   <!-- Properties -->
 
   <property name="jar.file" value="zimbrasoap.jar" />
-
+	
   <property name="wsdl.test.dir" location="${build.dir}/wsdl-test"/>
   <property name="wsdl.test.src.dir" location="src/wsdl-test"/>
   <property name="wsdl.generated.test.src.root"
@@ -46,15 +48,26 @@
     <pathelement location="${common.classes.dir}"/>
     <pathelement location="${build.classes.dir}" />
     <fileset dir="${common.jars.dir}">
-        <include name="**/*.jar"/>
+        <include name="guava*.jar"/>
+        <include name="junit*.jar"/>
+        <include name="jackson*.jar"/>
+        <include name="log4j*.jar"/>
+        <include name="dom4j*.jar"/>
+        <include name="commons-codec*.jar"/>
     </fileset>
   </path>
 
   <path id="jaxws.classpath">
-    <fileset dir="${metro.jars.dir}">
-        <include name="**/*.jar"/>
+    <fileset dir="${common.jars.dir}">
+        <include name="jaxb-api*.jar"/>
+        <include name="jaxb-core*.jar"/>
+        <include name="jaxb-impl*.jar"/>
+        <include name="jaxb-jxc*.jar"/>
+        <include name="jaxb-xjc*.jar"/>
+        <include name="jaxws-tools*.jar"/>
+        <include name="jaxws-rt*.jar"/>
     </fileset>
-  </path>
+ </path>
 
   <path id="test.class.path">
     <path refid="class.path"/>
@@ -68,6 +81,10 @@
         <include name="**/guava*.jar"/>
         <include name="**/log4j*.jar"/>
         <include name="**/junit*.jar"/>
+        <include name="**/streambuffer-*.jar"/>
+        <include name="**/policy-*.jar"/>
+        <include name="**/stax-ex-*.jar"/>
+        <include name="**/gmbal-api-only.jar"/>  <!-- NOT in Perforce -->
         <exclude name="**/junit*-src.jar"/>
         <exclude name="**/junit*-javadoc.jar"/>
     </fileset> 
@@ -105,10 +122,6 @@
     </fileset>
   </path>
 
-  <taskdef name="schemagen" classname="com.sun.tools.jxc.SchemaGenTask">
-    <classpath refid="jaxws.classpath"/>
-  </taskdef>
-
   <taskdef name="wsimport" classname="com.sun.tools.ws.ant.WsImport">
       <classpath refid="jaxws.classpath"/>
   </taskdef>
@@ -118,98 +131,24 @@
     <mkdir dir="${build.classes.dir}" />
   </target>
 
+<!--
   <target name="compile" depends="build-init" description="Compiles the source code">
     <ant dir="${common.dir}" target="jar" inheritAll="false"/>
     <javac destdir="${build.classes.dir}" debug="true" classpathref="class.path" target="${javac.target}">
       <src refid="all.java.path" />
     </javac>
   </target>
-
-    <target name="jar" depends="compile,generate-schema,wsdl-file" description="Creates the jar file">
+-->
+    <target name="jar" depends="compile" description="Creates the jar file">
         <antcall target="zimbra-jar">
             <param name="implementation.title" value="Zimbra Soap"/>
         </antcall>
     </target>
-
+<!--
   <target name="clean" description="Removes build files">
     <delete dir="${build.dir}" />
   </target>
-
-  <target name="wsdl-file" depends="compile,generate-schema">
-    <mkdir dir="${xml.schema.dir}"/>
-    <java classname="com.zimbra.soap.util.WsdlGenerator" classpathref="class.path" fork="true" failonerror="true">
-            <arg line="-output.dir ${xml.schema.dir}"/>
-    </java>
-  </target>
-
-  <target name="check-schema-done">
-    <uptodate property="schema.build.notrequired" targetFile="${xml.schema.dir}/zimbra.xsd">
-        <srcfiles dir="${src.java.dir}" includes="**/*.java"/>
-    </uptodate>
-  </target>
-
-  <target name="generate-schema" depends="compile,check-schema-done" unless="schema.build.notrequired">
-    <mkdir dir="${xml.schema.dir}"/>
-    <schemagen srcdir="${src.java.dir}" destdir="${xml.schema.dir}">
-      <classpath refid="class.path"/>
-      <exclude name="com/zimbra/soap/*.java"/>
-      <exclude name="com/zimbra/soap/util/**"/>
-      <exclude name="com/zimbra/soap/json/**"/>
-      <schema namespace="urn:zimbra" file="zimbra.xsd" />
-      <schema namespace="urn:zimbraAccount" file="zimbraAccount.xsd" />
-      <schema namespace="urn:zimbraAdmin" file="zimbraAdmin.xsd" />
-      <schema namespace="urn:zimbraAdminExt" file="zimbraAdminExt.xsd" />
-      <schema namespace="urn:zimbraMail" file="zimbraMail.xsd" />
-      <schema namespace="urn:zimbraSync" file="zimbraSync.xsd" />
-      <schema namespace="urn:zimbraRepl" file="zimbraRepl.xsd" />
-      <schema namespace="urn:zimbraVoice" file="zimbraVoice.xsd" />
-      <schema namespace="" file="extras.xsd" />
-    </schemagen>
-    <!-- fixup usage of zmBoolean - the valid values for zmBoolean and xs:boolean are the same,
-         zmBoolean is only used to force the use of "1" and "0" instead of true and false -->
-    <replaceregexp match="(tns|zimbra*|ns[0-9]):zmBoolean" replace="xs:boolean" flags="g" byline="true">
-      <fileset dir="${xml.schema.dir}" includes="*.xsd"/>
-    </replaceregexp>
-    <java classname="com.zimbra.soap.util.XsdCleaner" classpathref="class.path" fork="true" failonerror="true">
-            <arg line="--dir ${xml.schema.dir}"/>
-    </java>
-  </target>
-
-  <!-- used to build WSDL client support artifacts for a particular service -->
-  <macrodef name="service-client-support">
-    <attribute name="svcname"/>
-    <attribute name="pathelem"/>
-    <attribute name="svcclassname"/>
-
-    <sequential>
-        <mkdir dir="${wsdl.test.classes.dir}"/>
-        <delete dir="${wsdl.generated.test.src.root}/@{pathelem}client"/>
-        <!-- extension="true|false" - allow vendor extensions -->
-        <wsimport   wsdl="${xml.schema.dir}/@{svcname}.wsdl"
-                    destdir="${wsdl.test.classes.dir}"
-                    sourcedestdir="${wsdl.test.src.dir}"
-                    keep="false">
-                    <!-- package="com.zimbra.@{pathelem}client.wsimport.generated" -->
-                    <binding dir="${wsdl.test.src.dir}" includes="*-@{pathelem}.xml"/>
-            <produces dir="${wsdl.test.src.dir}"
-                includes="com/zimbra/generated/@{pathelem}client/**/*.java"/>
-        </wsimport>
-        <!-- Bug 58024 java.util.logging implicated in changing process default charset.
-             Change the autogenerated file which uses logging to use log4j instead. -->
-        <replace file="${wsdl.generated.test.src.root}/@{pathelem}client/ws/service/@{svcclassname}.java">
-            <replacefilter token="java.util.logging.Logger"
-                           value="org.apache.log4j.Logger"/>
-            <replacefilter token="logger.warning"
-                           value="logger.warn"/>
-        </replace>
-        <!-- force re-compile with modified source. -->
-        <delete file="${wsdl.generated.test.classes.root}/@{pathelem}client/ws/service/@{svcclassname}.class"/>
-    </sequential>
-  </macrodef>
-
-  <target name="wsdl-client-support" depends="jar">
-      <service-client-support svcname="ZimbraService" pathelem="zcs" svcclassname="ZcsService"/>
-  </target>
+-->
 
   <target name="check-zimbra-identity">
       <available file="/opt/zimbra/.ssh/zimbra_identity" property="ssh.zimbra.identity.present"/>
@@ -219,7 +158,8 @@
       <exec failonerror="true" executable="/opt/zimbra/bin/zmsshkeygen"/>
   </target>
 
-  <target name="wsdl-test-compile" depends="compile,wsdl-client-support">
+  <!-- used to depend on compile but prefer to do "mvn package" -->
+  <target name="wsdl-test-compile">
     <mkdir dir="${wsdl.test.classes.dir}"/>
     <javac srcdir="${wsdl.test.src.dir}" destdir="${wsdl.test.classes.dir}"
       debug="true" classpathref="wsdl.test.class.path" target="${javac.target}"/>
@@ -228,6 +168,7 @@
     </copy>
   </target>
 
+  <!-- TODO: migrate the WSDL test stuff to another (maven?) project -->
   <!-- WSDL client tests that require ZimbraServer installed and some setup in place -->
   <target name="wsdl-test" depends="wsdl-test-compile,zimbra-identity" description="Run WSDL client unit tests">
     <delete dir="${wsdl.test.dir}" quiet="true"/>
@@ -255,7 +196,7 @@
   </target>
 
   <!-- e.g. ant -DWSDLTEST=com.zimbra.soap.account.WSDLAuthRequestTest one-wsdl-test -->
-  <target name="one-wsdl-test" depends="wsdl-test-compile" description="Run a single unit test">
+  <target name="one-wsdl-test" depends="wsdl-test-compile,zimbra-identity" description="Run a single unit test">
     <delete dir="${wsdl.test.dir}-one" quiet="true"/>
     <mkdir dir="${wsdl.test.dir}-one/output"/>
     <junit printsummary="on" failureproperty="junit.failure" tempdir="${wsdl.test.dir}-one">
