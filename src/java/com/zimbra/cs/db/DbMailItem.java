@@ -242,9 +242,10 @@ public class DbMailItem {
         }
     }
 
-    public static void copy(MailItem item, int id, String uuid, Folder folder, int indexId, int parentId, String locator, String metadata, boolean fromDumpster)
+    public static String copy(MailItem item, int id, String uuid, Folder folder, int indexId, int parentId, String locator, String metadata, boolean fromDumpster)
     throws ServiceException {
         Mailbox mbox = item.getMailbox();
+        String prevFolders = null;
         if (id <= 0 || folder == null || parentId == 0) {
             throw ServiceException.FAILURE("invalid data for DB item copy", null);
         }
@@ -274,7 +275,9 @@ public class DbMailItem {
                 stmt.setInt(pos++, parentId);                  //   or, PARENT_ID specified by caller
             }
             stmt.setInt(pos++, folder.getId());                // FOLDER_ID
-            stmt.setString(pos++, item.getPrevFolders());
+            int modseq = mbox.getOperationChangeID();
+            prevFolders = findPrevFolders(item, modseq);
+            stmt.setString(pos++, prevFolders);
             if (indexId == MailItem.IndexStatus.NO.id()) {
                 stmt.setNull(pos++, Types.INTEGER);
             } else {
@@ -283,7 +286,7 @@ public class DbMailItem {
             stmt.setInt(pos++, id);                            // IMAP_ID is initially the same as ID
             stmt.setString(pos++, locator);
             stmt.setString(pos++, checkMetadataLength(metadata));  // METADATA
-            stmt.setInt(pos++, mbox.getOperationChangeID());   // MOD_METADATA
+            stmt.setInt(pos++, modseq);   // MOD_METADATA
             stmt.setLong(pos++, mbox.getOperationTimestampMillis());  // CHANGE_DATE
             stmt.setInt(pos++, mbox.getOperationChangeID());   // MOD_CONTENT
             stmt.setString(pos++, uuid);                       // UUID
@@ -306,6 +309,7 @@ public class DbMailItem {
         } finally {
             DbPool.closeStatement(stmt);
         }
+        return prevFolders;
     }
 
     public static void copyCalendarItem(CalendarItem calItem, int newId, boolean fromDumpster)
@@ -585,24 +589,7 @@ public class DbMailItem {
             }
             stmt.setInt(pos++, folder.getId());
             int modseq = mbox.getOperationChangeID();
-            //prev folders ordered by modseq ascending, e.g. 100:2;200:101;300:5
-            //only store the latest zimbraPrevFoldersToTrackMax folders
-            String prevFolders = item.getPrevFolders();
-            if (!StringUtil.isNullOrEmpty(prevFolders)) {
-                String[] modseq2FolderId = prevFolders.split(";");
-                int maxCount = mbox.getAccount().getServer().getPrevFoldersToTrackMax();
-                if (modseq2FolderId.length < maxCount) {
-                    prevFolders += ";" + modseq + ":" + item.getFolderId();
-                } else {
-                    //reached max, get rid of the oldest one
-                    String[] tmp = new String[maxCount];
-                    System.arraycopy(modseq2FolderId, 1, tmp, 0, maxCount-1);
-                    tmp[maxCount-1] = modseq + ":" + item.getFolderId();
-                    prevFolders = StringUtil.join(";", tmp);
-                }
-            } else {
-                prevFolders = modseq + ":" + item.getFolderId();
-            }
+            String prevFolders = findPrevFolders(item, modseq);
             stmt.setString(pos++, prevFolders);
             item.getUnderlyingData().setPrevFolders(prevFolders);
             if (hasIndexId) {
@@ -627,6 +614,29 @@ public class DbMailItem {
         } finally {
             DbPool.closeStatement(stmt);
         }
+    }
+
+    private static String findPrevFolders(MailItem item, int modseq) throws ServiceException {
+        //prev folders ordered by modseq ascending, e.g. 100:2;200:101;300:5
+        //only store the latest zimbraPrevFoldersToTrackMax folders
+        Mailbox mbox = item.getMailbox();
+        String prevFolders = item.getPrevFolders();
+        if (!StringUtil.isNullOrEmpty(prevFolders)) {
+            String[] modseq2FolderId = prevFolders.split(";");
+            int maxCount = mbox.getAccount().getServer().getPrevFoldersToTrackMax();
+            if (modseq2FolderId.length < maxCount) {
+                prevFolders += ";" + modseq + ":" + item.getFolderId();
+            } else {
+                //reached max, get rid of the oldest one
+                String[] tmp = new String[maxCount];
+                System.arraycopy(modseq2FolderId, 1, tmp, 0, maxCount-1);
+                tmp[maxCount-1] = modseq + ":" + item.getFolderId();
+                prevFolders = StringUtil.join(";", tmp);
+            }
+        } else {
+            prevFolders = modseq + ":" + item.getFolderId();
+        }
+        return prevFolders;
     }
 
     public static void setFolder(List<Message> msgs, Folder folder) throws ServiceException {
