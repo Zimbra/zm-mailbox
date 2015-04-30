@@ -2587,7 +2587,10 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
 
         ZimbraLog.mailop.info("Copying %s: copyId=%d, folderId=%d, folderName=%s, parentId=%d.",
                               getMailopContext(this), copyId, folder.getId(), folder.getName(), data.parentId);
-        DbMailItem.copy(this, copyId, copyUuid, folder, data.indexId, data.parentId, data.locator, data.metadata, inDumpster);
+        String prevFolders = DbMailItem.copy(this, copyId, copyUuid, folder, data.indexId, data.parentId, data.locator, data.metadata, inDumpster);
+        if (!StringUtil.isNullOrEmpty(prevFolders)) {
+            data.setPrevFolders(prevFolders);
+        }
         if (this instanceof CalendarItem)
             DbMailItem.copyCalendarItem((CalendarItem) this, copyId, inDumpster);
 
