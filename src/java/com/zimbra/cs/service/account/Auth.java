@@ -158,7 +158,7 @@ public class Auth extends AccountDocumentHandler {
             String totp = request.getAttribute(AccountConstants.E_TWO_FACTOR_CODE, null);
             String scratchCode = request.getAttribute(AccountConstants.E_TWO_FACTOR_SCRATCH_CODE, null);
             Boolean registerTrustedDevice = false;
-            if (TwoFactorManager.twoFactorAuthEnabled(acct)) {
+            if (acct != null && TwoFactorManager.twoFactorAuthEnabled(acct)) {
                 registerTrustedDevice = trustedToken != null? false: request.getAttributeBool(AccountConstants.A_TRUSTED_DEVICE, false);
             }
             String deviceId = request.getAttribute(AccountConstants.E_DEVICE_ID, null);
