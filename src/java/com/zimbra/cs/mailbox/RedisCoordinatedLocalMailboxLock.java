@@ -207,6 +207,10 @@ public class RedisCoordinatedLocalMailboxLock implements MailboxLock {
                 return semaphore.tryAcquire(timeoutMillis, TimeUnit.MILLISECONDS);
             } catch (InterruptedException e) {
                 return false;
+            } finally {
+                try {
+                    pubSubListener.unsubscribe();
+                } catch (Exception e) {}
             }
         }
     }
