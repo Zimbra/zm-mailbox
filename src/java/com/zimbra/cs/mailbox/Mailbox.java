@@ -991,9 +991,13 @@ public class Mailbox {
      * @param session  The listener to deregister for notifications. */
     public void removeListener(Session session) {
         lock.lock();
-        mListeners.remove(session);
-        if (ZimbraLog.mailbox.isDebugEnabled()) {
-            ZimbraLog.mailbox.debug("clearing listener: " + session);
+        try {
+            mListeners.remove(session);
+            if (ZimbraLog.mailbox.isDebugEnabled()) {
+                ZimbraLog.mailbox.debug("clearing listener: " + session);
+            }
+        } finally {
+            lock.release();
         }
     }
 
