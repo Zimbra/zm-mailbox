@@ -208,11 +208,6 @@ public class MySQL extends Db {
             props.put("useUnicode", "true");
             props.put("characterEncoding", "UTF-8");
             props.put("dumpQueriesOnException", "true");
-            ZimbraLog.sqltrace.info("Adding failover logic using JConnector : JCON:.");
-//            props.put("loadBalanceEnableJMX", "true");
-            props.put("loadBalanceExceptionChecker", "com.zimbra.cs.db.RetryTransactionCheckerException");
-//            props.put("loadBalanceSQLStateFailover", "08");
-//            props.put("loadBalanceSQLExceptionSubclassFailover", "com.mysql.jdbc.exceptions.jdbc4.MySQLNonTransientConnectionException");;
 
             // props.put("connectTimeout", "0");    // connect timeout in msecs
             // props.put("initialTimeout", "2");    // time to wait between re-connects
