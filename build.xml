@@ -2153,9 +2153,6 @@
                     <arg line="stop -all"/>
                 </exec>
             </then>
-            <else>
-                <fail message="Error! Cannot stop solr, because solr binary is missing" if="solr-standalone" />
-            </else>
          </if>
     </target>
 
