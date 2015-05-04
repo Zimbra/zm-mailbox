@@ -71,16 +71,19 @@ public class URLUtil {
         try {
             ServiceLocator.Entry entry = serviceLocator.findOne(ZimbraServiceNames.MAILSTORE, selector, null, healthyOnly);
             String scheme = entry.tags.contains("ssl") ? "https" : "http";
-            return scheme + "://" + entry.hostName + ":" + entry.servicePort + "/service/soap/";
+            return scheme + "://" + entry.hostName + ":" + entry.servicePort + AccountConstants.USER_SERVICE_URI;
         } catch (IOException e) {
             throw ServiceException.FAILURE("Failed contacting service locator", e);
         }
     }
 
-    /** Perform a service locator lookup of a mailstore soap service */
+    /** Returns a mailstore user soap service url */
+    @SuppressWarnings("unchecked")
     public static String getSoapURL() throws ServiceException {
-        if (!Zimbra.isAlwaysOn()) {
-            return getSoapURL(Provisioning.getInstance().getLocalServer(), true);
+        Server localServer = Provisioning.getInstance().getLocalServer();
+        boolean useLocalServer = localServer.hasMailClientService() || !Zimbra.isAlwaysOn();
+        if (useLocalServer) {
+            return getSoapURL(localServer, true);
         }
 
         ServiceLocator serviceLocator = null;
@@ -100,7 +103,7 @@ public class URLUtil {
         try {
             ServiceLocator.Entry entry = serviceLocator.findOne(ZimbraServiceNames.MAILSTORE, selector, null, false);
             String scheme = entry.tags.contains("ssl") ? "https" : "http";
-            return scheme + "://" + entry.hostName + ":" + entry.servicePort + "/service/soap/";
+            return scheme + "://" + entry.hostName + ":" + entry.servicePort + AccountConstants.USER_SERVICE_URI;
         } catch (IOException e) {
             throw ServiceException.FAILURE("Failed contacting service locator", e);
         }
@@ -192,6 +195,7 @@ public class URLUtil {
     /**
      * Returns absolute URL with scheme, host, and port for admin app, using ServiceLocator.
      */
+    @SuppressWarnings("unchecked")
     public static String getAdminURL(ServiceLocator serviceLocator, boolean healthyOnly) throws ServiceException {
         Selector<ServiceLocator.Entry> selector = null;
         try {
@@ -203,7 +207,7 @@ public class URLUtil {
     }
 
     /**
-     * Returns absolute URL with scheme, host, and port for admin app, using ServiceLocator.
+     * Returns absolute URL with scheme, host, and port for admin app.
      */
     public static String getAdminURL(ServiceLocator serviceLocator, Selector<ServiceLocator.Entry> selector, boolean healthyOnly) throws ServiceException {
         try {
@@ -216,11 +220,14 @@ public class URLUtil {
     }
 
     /**
-     * Returns absolute URL with scheme, host, and port for admin app, using ServiceLocator.
+     * Returns a mailstore admin soap service url.
      */
+    @SuppressWarnings("unchecked")
     public static String getAdminURL() throws ServiceException {
-        if (!Zimbra.isAlwaysOn()) {
-            return getAdminURL(Provisioning.getInstance().getLocalServer());
+        Server localServer = Provisioning.getInstance().getLocalServer();
+        boolean useLocalServer = localServer.hasMailClientService() || !Zimbra.isAlwaysOn();
+        if (useLocalServer) {
+            return getAdminURL(localServer);
         }
 
         ServiceLocator serviceLocator = null;
