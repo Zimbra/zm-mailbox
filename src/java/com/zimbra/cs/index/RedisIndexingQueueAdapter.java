@@ -152,10 +152,12 @@ public class RedisIndexingQueueAdapter implements IndexingQueueAdapter {
     private int getInt(String accountId, String suffix) {
         try (Jedis jedis = jedisPool.getResource()) {
             String val = jedis.get(accountId.concat(suffix));
-            try {
-                return Integer.parseInt(val);
-            } catch (NumberFormatException e) {
-                ZimbraLog.index.error("Found a non-numeric value %s at key %s in Redis",val,accountId.concat(suffix));
+            if(val != null) {
+                try {
+                    return Integer.parseInt(val);
+                } catch (NumberFormatException e) {
+                    ZimbraLog.index.error("Found a non-numeric value %s at key %s in Redis",val,accountId.concat(suffix));
+                }
             }
             return 0;
         }
