@@ -1438,7 +1438,7 @@
         <echo message="If the following deletes fail, wait for your web server"/>
         <echo message="to stop (or stop jetty manually)"/>
         <echo message="and try again later."/>
-        <delete failonerror="no">
+        <delete failonerror="no" includeemptydirs="true">
             <fileset dir="${zimbra.home.dir}/data" excludes="**/mysql/**,mysql.sock"/>
         </delete>
 
