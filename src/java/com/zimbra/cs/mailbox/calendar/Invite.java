@@ -2797,19 +2797,19 @@ public class Invite {
     public static void setDefaultAlarm(Invite inv, Account acct) throws ServiceException {
         inv.clearAlarms();
         int prefNonAllDayMinutesBefore = (int) acct.getLongAttr(
-                Provisioning.A_zimbraPrefCalendarApptReminderWarningTime, 0);
+                Provisioning.A_zimbraPrefCalendarApptReminderWarningTime, -1);
         int hoursBefore = 0;
-        int minutesBefore = 0;
+        int minutesBefore = -1;
         if (!inv.isAllDayEvent()) {
             hoursBefore = 0;
             minutesBefore = prefNonAllDayMinutesBefore;
-        } else if (prefNonAllDayMinutesBefore > 0) {
+        } else if (prefNonAllDayMinutesBefore >= 0) {
             // If preference says reminder is enabled, use 18-hours for all-day appointments,
             // regardless of preference value for non-all-day appointments.
             hoursBefore = 18;
             minutesBefore = 0;
         }
-        if (minutesBefore > 0 || hoursBefore > 0) {
+        if (minutesBefore >= 0 || hoursBefore > 0) {
             String summary = inv.getName();
             Alarm newAlarm = new Alarm(
                     Action.DISPLAY, TriggerType.RELATIVE, TriggerRelated.START,
