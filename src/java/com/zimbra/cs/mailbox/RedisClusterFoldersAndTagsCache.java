@@ -16,6 +16,8 @@ package com.zimbra.cs.mailbox;
  * ***** END LICENSE BLOCK *****
  */
 
+import org.springframework.beans.factory.annotation.Autowired;
+
 import redis.clients.jedis.JedisCluster;
 
 import com.zimbra.common.service.ServiceException;
@@ -25,7 +27,10 @@ import com.zimbra.cs.memcached.MemcachedKeyPrefix;
 public class RedisClusterFoldersAndTagsCache implements FoldersAndTagsCache {
     static final int DEFAULT_EXPIRY_SECS = 24 * 3600;
     protected int expirySecs = DEFAULT_EXPIRY_SECS;
-    protected JedisCluster jedisCluster;
+    @Autowired protected JedisCluster jedisCluster;
+
+    /** Constructor */
+    public RedisClusterFoldersAndTagsCache() {}
 
     /** Constructor */
     public RedisClusterFoldersAndTagsCache(JedisCluster jedisCluster) {

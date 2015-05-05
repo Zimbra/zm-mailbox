@@ -45,6 +45,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import javax.mail.Address;
 import javax.mail.internet.MimeMessage;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
@@ -556,7 +557,7 @@ public class Mailbox {
 
     }
 
-    private static class FolderCache {
+    static class FolderCache {
         private final Map<Integer, Folder> mapById;
         private final Map<String, Folder> mapByUuid;
 
@@ -617,6 +618,12 @@ public class Mailbox {
                 }
             }
             return copy;
+        }
+
+        @VisibleForTesting
+        void purge() {
+            mapById.clear();
+            mapByUuid.clear();
         }
     }
 
@@ -1919,9 +1926,9 @@ public class Mailbox {
         mFolderCache = null;
         requiresWriteLock = true;
         try {
-            Zimbra.getAppContext().getBean(FoldersAndTagsCache.class).remove(this);
+            mailboxManager.getFoldersAndTagsCache().remove(this);
         } catch (ServiceException e) {
-            ZimbraLog.mailbox.warn("error deleting folders/tags cache from memcached.");
+            ZimbraLog.mailbox.warn("Failed emptying FoldersAndTags cache", e);
         }
     }
 
@@ -1929,9 +1936,9 @@ public class Mailbox {
         mTagCache = null;
         requiresWriteLock = true;
         try {
-            Zimbra.getAppContext().getBean(FoldersAndTagsCache.class).remove(this);
+            mailboxManager.getFoldersAndTagsCache().remove(this);
         } catch (ServiceException e) {
-            ZimbraLog.mailbox.warn("error deleting folders/tags cache from memcached.");
+            ZimbraLog.mailbox.warn("Failed emptying FoldersAndTags cache", e);
         }
     }
 
@@ -2092,8 +2099,7 @@ public class Mailbox {
             // Load folders and tags from cache if we can
             boolean loadedFromCache = false;
             if (!initial && !DebugConfig.disableFoldersTagsCache) {
-                FoldersAndTagsCache foldersAndTagsCache = Zimbra.getAppContext().getBean(FoldersAndTagsCache.class);
-                FoldersAndTags foldersAndTags = foldersAndTagsCache.get(this);
+                FoldersAndTags foldersAndTags = mailboxManager.getFoldersAndTagsCache().get(this);
                 if (foldersAndTags != null) {
                     List<Metadata> foldersMeta = foldersAndTags.getFolderMetadata();
                     for (Metadata meta : foldersMeta) {
@@ -2189,19 +2195,25 @@ public class Mailbox {
         lock.lock();
         try {
             FoldersAndTags foldersAndTags = getFoldersAndTags();
-            Zimbra.getAppContext().getBean(FoldersAndTagsCache.class).put(this, foldersAndTags);
+            mailboxManager.getFoldersAndTagsCache().put(this, foldersAndTags);
         } finally {
             lock.release();
         }
     }
 
     FoldersAndTags getFoldersAndTags() throws ServiceException {
-        List<Folder> folderList = new ArrayList<Folder>(mFolderCache.values());
-        List<Tag> tagList = new ArrayList<Tag>();
-        for (Map.Entry<Object, Tag> entry : mTagCache.entrySet()) {
-            // A tag is cached twice, once by its id and once by name.  Dedupe.
-            if (entry.getKey() instanceof String) {
-                tagList.add(entry.getValue());
+        List<Folder> folderList = new ArrayList<>();
+        if (mFolderCache != null) {
+            folderList.addAll(mFolderCache.values());
+        }
+
+        List<Tag> tagList = new ArrayList<>();
+        if (mTagCache != null) {
+            for (Map.Entry<Object, Tag> entry : mTagCache.entrySet()) {
+                // A tag is cached twice, once by its id and once by name.  Dedupe.
+                if (entry.getKey() instanceof String) {
+                    tagList.add(entry.getValue());
+                }
             }
         }
         return new FoldersAndTags(folderList, tagList);

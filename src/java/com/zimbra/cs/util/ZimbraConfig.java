@@ -65,9 +65,14 @@ import com.zimbra.cs.index.IndexingQueueAdapter;
 import com.zimbra.cs.index.IndexingService;
 import com.zimbra.cs.mailbox.AmqpMailboxListenerTransport;
 import com.zimbra.cs.mailbox.CacheManager;
+import com.zimbra.cs.mailbox.ConversationIdCache;
 import com.zimbra.cs.mailbox.DefaultMailboxLockFactory;
 import com.zimbra.cs.mailbox.FoldersAndTagsCache;
+import com.zimbra.cs.mailbox.LocalConversationIdCache;
+import com.zimbra.cs.mailbox.LocalMailboxDataCache;
+import com.zimbra.cs.mailbox.LocalSentMessageIdCache;
 import com.zimbra.cs.mailbox.LocalSharedDeliveryCoordinator;
+import com.zimbra.cs.mailbox.MailboxDataCache;
 import com.zimbra.cs.mailbox.MailboxListenerManager;
 import com.zimbra.cs.mailbox.MailboxListenerTransport;
 import com.zimbra.cs.mailbox.MailboxLockFactory;
@@ -77,6 +82,7 @@ import com.zimbra.cs.mailbox.RedisClusterMailboxListenerManager;
 import com.zimbra.cs.mailbox.RedisClusterSharedDeliveryCoordinator;
 import com.zimbra.cs.mailbox.RedisMailboxListenerTransport;
 import com.zimbra.cs.mailbox.RedisSharedDeliveryCoordinator;
+import com.zimbra.cs.mailbox.SentMessageIdCache;
 import com.zimbra.cs.mailbox.SharedDeliveryCoordinator;
 import com.zimbra.cs.mailbox.acl.EffectiveACLCache;
 import com.zimbra.cs.mailbox.acl.MemcachedEffectiveACLCache;
@@ -162,6 +168,11 @@ public class ZimbraConfig {
         Server server = Provisioning.getInstance().getLocalServer();
         String url = server.getConsulURL();
         return new ConsulClient(url);
+    }
+
+    @Bean
+    public ConversationIdCache conversationIdCache() throws ServiceException {
+        return new LocalConversationIdCache();
     }
 
     @Bean
@@ -352,6 +363,11 @@ public class ZimbraConfig {
     }
 
     @Bean
+    public MailboxDataCache mailboxDataCache() throws ServiceException {
+        return new LocalMailboxDataCache();
+    }
+
+    @Bean
     public MailboxListenerManager mailboxListenerManager() {
         return new MailboxListenerManager();
     }
@@ -488,13 +504,18 @@ public class ZimbraConfig {
         return instance;
     }
 
-	@Bean
-	public ServiceLocator serviceLocator() throws Exception {
-	    // First try Consul, then fall back on provisioned service lists (which may be up or down)
-	    ServiceLocator sl1 = new ConsulServiceLocator(consulClient());
-	    ServiceLocator sl2 = new ProvisioningServiceLocator(Provisioning.getInstance());
-	    return new ChainedServiceLocator(sl1, sl2);
-	}
+    @Bean
+    public SentMessageIdCache sentMessageIdCache() throws ServiceException {
+        return new LocalSentMessageIdCache();
+    }
+
+    @Bean
+    public ServiceLocator serviceLocator() throws Exception {
+        // First try Consul, then fall back on provisioned service lists (which may be up or down)
+        ServiceLocator sl1 = new ConsulServiceLocator(consulClient());
+        ServiceLocator sl2 = new ProvisioningServiceLocator(Provisioning.getInstance());
+        return new ChainedServiceLocator(sl1, sl2);
+    }
 
     /** Centralized algorithm for selection of a server from a list, for load balancing and/or account reassignment, or picking a SOAP target in a cluster */
     @Bean

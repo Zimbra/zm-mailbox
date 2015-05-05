@@ -40,9 +40,29 @@ public class CacheManager {
         return singleton;
     }
 
+    public static void setInstance(CacheManager cacheManager) {
+        singleton = cacheManager;
+    }
+
     public void purgeMailbox(Mailbox mbox) throws ServiceException {
-        calendarCacheManager.purgeMailbox(mbox);
-        effectiveACLCache.remove(mbox);
-        foldersAndTagsCache.remove(mbox);
+        ServiceException e = null;
+        try {
+            calendarCacheManager.purgeMailbox(mbox);
+        } catch (ServiceException e_) {
+            e = e_;
+        }
+        try {
+            effectiveACLCache.remove(mbox);
+        } catch (ServiceException e_) {
+            e = e_;
+        }
+        try {
+            foldersAndTagsCache.remove(mbox);
+        } catch (ServiceException e_) {
+            e = e_;
+        }
+        if (e != null) {
+            throw e;
+        }
     }
 }
