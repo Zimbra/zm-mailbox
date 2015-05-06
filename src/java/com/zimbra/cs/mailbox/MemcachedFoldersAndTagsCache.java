@@ -22,12 +22,13 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.memcached.MemcachedKey;
 import com.zimbra.common.util.memcached.MemcachedMap;
 import com.zimbra.common.util.memcached.MemcachedSerializer;
+import com.zimbra.common.util.memcached.StringBasedMemcachedKey;
 import com.zimbra.common.util.memcached.ZimbraMemcachedClient;
 import com.zimbra.cs.memcached.MemcachedKeyPrefix;
 
 public class MemcachedFoldersAndTagsCache implements FoldersAndTagsCache {
     @Autowired protected ZimbraMemcachedClient memcachedClient;
-    protected MemcachedMap<Key, FoldersAndTags> mMemcachedLookup;
+    protected MemcachedMap<MemcachedKey, FoldersAndTags> mMemcachedLookup;
 
     /** Constructor */
     public MemcachedFoldersAndTagsCache() {
@@ -35,28 +36,29 @@ public class MemcachedFoldersAndTagsCache implements FoldersAndTagsCache {
 
     @PostConstruct
     public void init() {
-        mMemcachedLookup = new MemcachedMap<Key, FoldersAndTags>(memcachedClient, new Serializer(), false);
+        mMemcachedLookup = new MemcachedMap<>(memcachedClient, new Serializer(), false);
+    }
+
+    protected MemcachedKey key(Mailbox mbox) {
+        return new StringBasedMemcachedKey(MemcachedKeyPrefix.MBOX_FOLDERS_TAGS, mbox.getAccountId());
     }
 
     /** Returns cached list of all folders and tags for a given mailbox */
     @Override
     public FoldersAndTags get(Mailbox mbox) throws ServiceException {
-        Key key = new Key(mbox.getAccountId());
-        return mMemcachedLookup.get(key);
+        return mMemcachedLookup.get(key(mbox));
     }
 
     /** Caches list of all folders and tags for a given mailbox */
     @Override
     public void put(Mailbox mbox, FoldersAndTags foldersAndTags) throws ServiceException {
-        Key key = new Key(mbox.getAccountId());
-        mMemcachedLookup.put(key, foldersAndTags);
+        mMemcachedLookup.put(key(mbox), foldersAndTags);
     }
 
     /** Clears cache of folders and tags for a given mailbox */
     @Override
     public void remove(Mailbox mbox) throws ServiceException {
-        Key key = new Key(mbox.getAccountId());
-        mMemcachedLookup.remove(key);
+        mMemcachedLookup.remove(key(mbox));
     }
 
 
@@ -73,33 +75,5 @@ public class MemcachedFoldersAndTagsCache implements FoldersAndTagsCache {
             Metadata meta = new Metadata((String) obj);
             return FoldersAndTags.decode(meta);
         }
-    }
-
-
-    private static class Key implements MemcachedKey {
-        private String mKeyStr;
-
-        public Key(String accountId) {
-            mKeyStr = accountId;
-        }
-
-        @Override
-        public boolean equals(Object other) {
-            if (other instanceof Key) {
-                Key otherKey = (Key) other;
-                return mKeyStr.equals(otherKey.mKeyStr);
-            }
-            return false;
-        }
-
-        @Override
-        public int hashCode() {
-            return mKeyStr.hashCode();
-        }
-
-        @Override
-        public String getKeyPrefix() { return MemcachedKeyPrefix.MBOX_FOLDERS_TAGS; }
-        @Override
-        public String getKeyValue() { return mKeyStr; }
     }
 }
