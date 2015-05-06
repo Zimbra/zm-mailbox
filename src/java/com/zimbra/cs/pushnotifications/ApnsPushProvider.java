@@ -87,14 +87,13 @@ public class ApnsPushProvider implements PushProvider {
             for (PushedNotification notification : notifications) {
                 response = notification.getResponse();
                 if (response != null) {
-                    ZimbraLog.mailbox.info("ZMG: APNS push response = %s", response.getMessage());
+                    ZimbraLog.mailbox.debug("ZMG: APNS push response = %s", response.getMessage());
                 }
                 if (notification.isSuccessful()) {
-                    ZimbraLog.mailbox.info("ZMG: APNS push notification sent successfully to: %s",
-                        notification.getDevice().getToken());
+                    ZimbraLog.mailbox.debug("ZMG: APNS push notification sent successfully");
                 } else {
                     String invalidToken = notification.getDevice().getToken();
-                    ZimbraLog.mailbox.info("ZMG: APNS push invalid token to: %s", invalidToken);
+                    ZimbraLog.mailbox.debug("ZMG: APNS push invalid token to: %s", invalidToken);
                 }
             }
         } catch (CommunicationException e) {
