@@ -15,11 +15,13 @@
 
 package com.zimbra.cs.pushnotifications;
 
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.lmtpserver.LmtpCallback;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.pushnotifications.filters.FilterManager;
 
 public class ZmgPushNotificationCallback implements LmtpCallback {
 
@@ -34,7 +36,7 @@ public class ZmgPushNotificationCallback implements LmtpCallback {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see
      * com.zimbra.cs.lmtpserver.LmtpCallback#afterDelivery(com.zimbra.cs.account
      * .Account, com.zimbra.cs.mailbox.Mailbox, java.lang.String,
@@ -43,15 +45,19 @@ public class ZmgPushNotificationCallback implements LmtpCallback {
     @Override
     public void afterDelivery(Account account, Mailbox mbox, String envelopeSender,
         String recipientEmail, Message newMessage) {
-        if (account.isPrefZmgPushNotificationEnabled()) {
-            NotificationsManager.getInstance().buildAndPush(account, mbox, envelopeSender,
-                recipientEmail, newMessage);
+        try {
+            if (FilterManager.executeNewMessageFilters(account, newMessage)) {
+                NotificationsManager.getInstance().buildAndPush(account, mbox, envelopeSender,
+                    recipientEmail, newMessage);
+            }
+        } catch (Exception e) {
+            ZimbraLog.mailbox.warn("Exception in sending new message push notification", e);
         }
     }
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see
      * com.zimbra.cs.lmtpserver.LmtpCallback#forwardWithoutDelivery(com.zimbra
      * .cs.account.Account, com.zimbra.cs.mailbox.Mailbox, java.lang.String,
