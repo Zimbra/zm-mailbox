@@ -72,7 +72,7 @@ public class AuthResponse {
      */
     @ZimbraJsonAttribute
     @XmlElement(name=AccountConstants.E_TRUST_LIFETIME /* trustLifetime */, required=false)
-    private long trustLifetime;
+    private Long trustLifetime;
 
     /**
      * @zm-api-field-description Session information
@@ -118,7 +118,7 @@ public class AuthResponse {
     @ZimbraKeyValuePairs
     @XmlElementWrapper(name=AccountConstants.E_PREFS /* prefs */)
     @XmlElement(name=AccountConstants.E_PREF /* pref */)
-    private List<Pref> prefs = new ArrayList<Pref>();
+    private final List<Pref> prefs = new ArrayList<Pref>();
 
     /**
      * @zm-api-field-description Requested attribute settings.  Only attributes that are allowed to be returned by
@@ -127,7 +127,7 @@ public class AuthResponse {
     @ZimbraKeyValuePairs
     @XmlElementWrapper(name=AccountConstants.E_ATTRS /* attrs */)
     @XmlElement(name=AccountConstants.E_ATTR /* attr */)
-    private List<Attr> attrs = new ArrayList<Attr>();
+    private final List<Attr> attrs = new ArrayList<Attr>();
 
     public AuthResponse() {
     }
@@ -210,6 +210,6 @@ public class AuthResponse {
         return trustedToken;
     }
 
-    public long getTrustLifetime() { return trustLifetime; }
-    public AuthResponse setTrustLifetime(long trustLifetime) { this.trustLifetime = trustLifetime; return this; }
+    public Long getTrustLifetime() { return trustLifetime; }
+    public AuthResponse setTrustLifetime(Long trustLifetime) { this.trustLifetime = trustLifetime; return this; }
 }
