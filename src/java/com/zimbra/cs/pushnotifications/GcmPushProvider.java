@@ -78,13 +78,13 @@ public class GcmPushProvider implements PushProvider {
             int status = HttpClientUtil.executeMethod(post);
             if (status == HttpStatus.SC_OK) {
                 String resp = post.getResponseBodyAsString();
-                ZimbraLog.mailbox.info("ZMG: GCM push completed: device=%s status=%d response=%s",
+                ZimbraLog.mailbox.debug("ZMG: GCM push completed: device=%s status=%d response=%s",
                     notification.getDevice().getRegistrationId(), status, resp);
             } else {
-                ZimbraLog.mailbox.info("ZMG: GCM push failed: status=%d", status);
+                ZimbraLog.mailbox.debug("ZMG: GCM push failed: status=%d", status);
             }
         } catch (HttpException e) {
-            ZimbraLog.mailbox.info("ZMG: GCM push exception: " + gcmUrl, e);
+            ZimbraLog.mailbox.warn("ZMG: GCM push exception: " + gcmUrl, e);
         } catch (IOException e) {
             ZimbraLog.mailbox.warn("ZMG: GCM IO failed", e);
         } finally {
