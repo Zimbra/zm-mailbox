@@ -91,6 +91,8 @@ import com.zimbra.client.event.ZRefreshEvent;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.auth.ZAuthToken;
+import com.zimbra.common.auth.twofactor.TOTPAuthenticator;
+import com.zimbra.common.auth.twofactor.CredentialConfig.Encoding;
 import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.net.SocketFactories;
@@ -5590,11 +5592,17 @@ public class ZMailbox implements ToZJSONObject {
         return new Pair<ZFolder, String>(folder, unmatched);
     }
 
-    public EnableTwoFactorAuthResponse enableTwoFactorAuth(String password) throws ServiceException {
+    public EnableTwoFactorAuthResponse enableTwoFactorAuth(String password, TOTPAuthenticator auth) throws ServiceException {
         EnableTwoFactorAuthRequest req = new EnableTwoFactorAuthRequest();
         req.setName(getName());
         req.setPassword(password);
         EnableTwoFactorAuthResponse resp = invokeJaxb(req);
+        String secret = resp.getSecret();
+        long timestamp = System.currentTimeMillis() / 1000;
+        String totp = auth.generateCode(secret, timestamp, Encoding.BASE32);
+        req.setTwoFactorCode(totp);
+        resp = invokeJaxb(req);
+        resp.setSecret(secret);
         return resp;
     }
 
