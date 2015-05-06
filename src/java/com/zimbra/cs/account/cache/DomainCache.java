@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -25,10 +25,11 @@ package com.zimbra.cs.account.cache;
 
 import java.util.Map;
 
-import com.zimbra.common.util.MapUtil;
 import com.zimbra.common.account.Key.DomainBy;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.stats.Counter;
 import com.zimbra.common.stats.HitRateCounter;
+import com.zimbra.common.util.MapUtil;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 
@@ -36,81 +37,84 @@ import com.zimbra.cs.account.Provisioning;
  * @author schemers
  **/
 public class DomainCache implements IDomainCache {
-    
-    private Map mNameCache;
-    private Map mIdCache;
-    private Map mVirtualHostnameCache;
-    private Map mForeignNameCache;
-    private Map mKrb5RealmCache;
-    
-    private long mRefreshTTL;
-    private Counter mHitRate = new HitRateCounter();
 
-    
+    private final Map mNameCache;
+    private final Map mIdCache;
+    private final Map mVirtualHostnameCache;
+    private final Map mForeignNameCache;
+    private final Map mKrb5RealmCache;
+
+    private final long mRefreshTTL;
+    private final FreshnessChecker freshnessChecker;
+    private final Counter mHitRate = new HitRateCounter();
+
+
     public enum GetFromDomainCacheOption {
         POSITIVE, // only get from positive cache
         NEGATIVE, // only get from negative cache
         BOTH;     // try positive cache first, if not found then try the negative cache
     }
-    
+
     /*
-     * for caching non-existing domains so we don't repeatedly search LDAP for domains 
+     * for caching non-existing domains so we don't repeatedly search LDAP for domains
      * that do not exist in Zimbra LDAP.
-     * 
+     *
      * entries in the NegativeCache has the same TTS/max as this DomainCache.
      */
-    private NegativeCache mNegativeCache;
+    private final NegativeCache mNegativeCache;
 
     static class CacheEntry {
         long mLifetime;
+        public long lastFreshCheckTime;
         Domain mEntry;
         CacheEntry(Domain entry, long expires) {
             mEntry = entry;
-            mLifetime = System.currentTimeMillis() + expires;
+            lastFreshCheckTime = System.currentTimeMillis();
+            mLifetime = lastFreshCheckTime + expires;
         }
-        
+
         boolean isStale() {
             return mLifetime < System.currentTimeMillis();
         }
     }
-    
+
     public static class NonExistingDomain extends Domain {
         private NonExistingDomain() {
             super(null, null, null, null, null);
         }
     }
-    
+
 
     class NegativeCache {
-        private Map mNegativeNameCache;
-        private Map mNegativeIdCache;
-        private Map mNegativeVirtualHostnameCache;
-        private Map mNegativeForeignNameCache;
-        private Map mNegativeKrb5RealmCache;
+        private final Map mNegativeNameCache;
+        private final Map mNegativeIdCache;
+        private final Map mNegativeVirtualHostnameCache;
+        private final Map mNegativeForeignNameCache;
+        private final Map mNegativeKrb5RealmCache;
 
-        private long mNERefreshTTL;
-        
+        private final long mNERefreshTTL;
+
         /*
          * if for any reason we want to disable caching of non-existing entries
          * just set mEnabled to false, as a master switch for emergency fix.
          */
-        private boolean mEnabled = true;
-        
+        private final boolean mEnabled = true;
+
         private NegativeCache(int maxItems, long refreshTTL) {
             mNegativeNameCache = MapUtil.newLruMap(maxItems);
             mNegativeIdCache = MapUtil.newLruMap(maxItems);
-            mNegativeVirtualHostnameCache = MapUtil.newLruMap(maxItems);  
-            mNegativeForeignNameCache = MapUtil.newLruMap(maxItems);  
-            mNegativeKrb5RealmCache = MapUtil.newLruMap(maxItems);   
+            mNegativeVirtualHostnameCache = MapUtil.newLruMap(maxItems);
+            mNegativeForeignNameCache = MapUtil.newLruMap(maxItems);
+            mNegativeKrb5RealmCache = MapUtil.newLruMap(maxItems);
             mNERefreshTTL = refreshTTL;
         }
-        
+
         private void put(DomainBy domainBy, String key) {
             if (!mEnabled)
                 return;
-            
+
             NonExistingDomain nonExistingDomain = new NonExistingDomain();
-            
+
             switch (domainBy) {
             case name:
                 mNegativeNameCache.put(key, nonExistingDomain);
@@ -129,11 +133,11 @@ public class DomainCache implements IDomainCache {
                 break;
             }
         }
-        
+
         private NonExistingDomain get(DomainBy domainBy, String key) {
             if (!mEnabled)
                 return null;
-            
+
             switch (domainBy) {
             case name:
                 return (NonExistingDomain)mNegativeNameCache.get(key);
@@ -148,11 +152,11 @@ public class DomainCache implements IDomainCache {
             }
             return null;
         }
-        
+
         private void remove(DomainBy domainBy, String key) {
             if (!mEnabled)
                 return;
-            
+
             switch (domainBy) {
             case name:
                 mNegativeNameCache.remove(key);
@@ -171,24 +175,24 @@ public class DomainCache implements IDomainCache {
                 break;
             }
         }
-        
+
         private void clean(DomainBy domainBy, String key, Domain entry) {
             mNegativeNameCache.remove(entry.getName());
             mNegativeIdCache.remove(entry.getId());
-            
-            String vhost[] = entry.getMultiAttr(Provisioning.A_zimbraVirtualHostname);            
+
+            String vhost[] = entry.getMultiAttr(Provisioning.A_zimbraVirtualHostname);
             for (String vh : vhost)
                 mNegativeVirtualHostnameCache.remove(vh.toLowerCase());
-            
-            String foreignName[] = entry.getMultiAttr(Provisioning.A_zimbraForeignName);            
+
+            String foreignName[] = entry.getMultiAttr(Provisioning.A_zimbraForeignName);
             for (String fn : foreignName)
                 mNegativeForeignNameCache.remove(fn.toLowerCase());
-            
+
             String krb5Realm = entry.getAttr(Provisioning.A_zimbraAuthKerberos5Realm);
             if (krb5Realm != null)
                 mNegativeKrb5RealmCache.remove(krb5Realm);
         }
-        
+
         void clear() {
             mNegativeNameCache.clear();
             mNegativeIdCache.clear();
@@ -197,20 +201,22 @@ public class DomainCache implements IDomainCache {
             mNegativeKrb5RealmCache.clear();
         }
     }
-    
-    
+
+
 /**
  * @param maxItems
  * @param refreshTTL
  */
-    public DomainCache(int maxItems, long refreshTTL, int maxItemsNegative, long refreshTTLNegative) {
+    public DomainCache(int maxItems, long refreshTTL, int maxItemsNegative, long refreshTTLNegative,
+            FreshnessChecker freshnessChecker) {
         mNameCache = MapUtil.newLruMap(maxItems);
         mIdCache = MapUtil.newLruMap(maxItems);
-        mVirtualHostnameCache = MapUtil.newLruMap(maxItems);  
-        mForeignNameCache = MapUtil.newLruMap(maxItems); 
-        mKrb5RealmCache = MapUtil.newLruMap(maxItems);   
+        mVirtualHostnameCache = MapUtil.newLruMap(maxItems);
+        mForeignNameCache = MapUtil.newLruMap(maxItems);
+        mKrb5RealmCache = MapUtil.newLruMap(maxItems);
         mRefreshTTL = refreshTTL;
-        
+        this.freshnessChecker = freshnessChecker;
+
         mNegativeCache = new NegativeCache(maxItemsNegative, refreshTTLNegative);
     }
 
@@ -221,7 +227,7 @@ public class DomainCache implements IDomainCache {
         mVirtualHostnameCache.clear();
         mForeignNameCache.clear();
         mKrb5RealmCache.clear();
-        
+
         mNegativeCache.clear();
     }
 
@@ -230,50 +236,50 @@ public class DomainCache implements IDomainCache {
         if (entry != null) {
             mNameCache.remove(entry.getName());
             mIdCache.remove(entry.getId());
-            
-            String vhost[] = entry.getMultiAttr(Provisioning.A_zimbraVirtualHostname);            
+
+            String vhost[] = entry.getMultiAttr(Provisioning.A_zimbraVirtualHostname);
             for (String vh : vhost)
                 mVirtualHostnameCache.remove(vh.toLowerCase());
-            
-            String foreignName[] = entry.getMultiAttr(Provisioning.A_zimbraForeignName);            
+
+            String foreignName[] = entry.getMultiAttr(Provisioning.A_zimbraForeignName);
             for (String fn : foreignName)
                 mForeignNameCache.remove(fn.toLowerCase());
-            
+
             String krb5Realm = entry.getAttr(Provisioning.A_zimbraAuthKerberos5Realm);
             if (krb5Realm != null)
                 mKrb5RealmCache.remove(krb5Realm);
         }
     }
-    
+
     @Override
     public synchronized void replace(Domain entry) {
         remove(entry);
         put(DomainBy.id, entry.getId(), entry);
     }
-    
+
     @Override
     public synchronized void removeFromNegativeCache(DomainBy domainBy, String key) {
         mNegativeCache.remove(domainBy, key);
     }
-    
+
     @Override
     public synchronized void put(DomainBy domainBy, String key, Domain entry) {
         if (entry != null) {
             // clean it from the non-existing cache first
             mNegativeCache.clean(domainBy, key, entry);
-            
+
             CacheEntry cacheEntry = new CacheEntry(entry, mRefreshTTL);
             mNameCache.put(entry.getName(), cacheEntry);
             mIdCache.put(entry.getId(), cacheEntry);
-            
-            String vhost[] = entry.getMultiAttr(Provisioning.A_zimbraVirtualHostname);            
+
+            String vhost[] = entry.getMultiAttr(Provisioning.A_zimbraVirtualHostname);
             for (String vh : vhost)
-                mVirtualHostnameCache.put(vh.toLowerCase(), cacheEntry);          
-            
-            String foreignName[] = entry.getMultiAttr(Provisioning.A_zimbraForeignName);            
+                mVirtualHostnameCache.put(vh.toLowerCase(), cacheEntry);
+
+            String foreignName[] = entry.getMultiAttr(Provisioning.A_zimbraForeignName);
             for (String fn : foreignName)
-                mForeignNameCache.put(fn.toLowerCase(), cacheEntry);  
-            
+                mForeignNameCache.put(fn.toLowerCase(), cacheEntry);
+
             String krb5Realm = entry.getAttr(Provisioning.A_zimbraAuthKerberos5Realm);
             if (krb5Realm != null)
                 mKrb5RealmCache.put(krb5Realm, cacheEntry);
@@ -285,7 +291,7 @@ public class DomainCache implements IDomainCache {
     private Domain get(String key, Map cache) {
         CacheEntry ce = (CacheEntry) cache.get(key);
         if (ce != null) {
-            if (mRefreshTTL != 0 && ce.isStale()) {
+            if ((mRefreshTTL != 0 && ce.isStale()) || staleByFreshness(ce)) {
                 remove(ce.mEntry);
                 mHitRate.increment(0);
                 return null;
@@ -298,10 +304,23 @@ public class DomainCache implements IDomainCache {
             return null;
         }
     }
-    
+
+    private boolean staleByFreshness(CacheEntry ce) {
+        if (freshnessChecker == null) {
+            return false;
+        }
+        long now = System.currentTimeMillis();
+        if (now < (ce.lastFreshCheckTime + LC.ldap_cache_freshness_check_limit_ms.intValue())) {
+            return false; // Avoid checking too often
+        }
+        boolean stale = freshnessChecker.isStale(ce.mEntry);
+        ce.lastFreshCheckTime = now;
+        return stale;
+    }
+
     @Override
     public synchronized Domain getById(String key, GetFromDomainCacheOption option) {
-        
+
         switch (option) {
         case POSITIVE:
             return get(key, mIdCache);
@@ -316,10 +335,10 @@ public class DomainCache implements IDomainCache {
             return null;
         }
     }
-    
+
     @Override
     public synchronized Domain getByName(String key, GetFromDomainCacheOption option) {
-        
+
         switch (option) {
         case POSITIVE:
             return get(key.toLowerCase(), mNameCache);
@@ -334,10 +353,10 @@ public class DomainCache implements IDomainCache {
             return null;
         }
     }
-    
+
     @Override
     public synchronized Domain getByVirtualHostname(String key, GetFromDomainCacheOption option) {
-        
+
         switch (option) {
         case POSITIVE:
             return get(key.toLowerCase(), mVirtualHostnameCache);
@@ -352,10 +371,10 @@ public class DomainCache implements IDomainCache {
             return null;
         }
     }
-    
+
     @Override
     public synchronized Domain getByForeignName(String key, GetFromDomainCacheOption option) {
-        
+
         switch (option) {
         case POSITIVE:
             return get(key.toLowerCase(), mForeignNameCache);
@@ -370,10 +389,10 @@ public class DomainCache implements IDomainCache {
             return null;
         }
     }
-    
+
     @Override
     public synchronized Domain getByKrb5Realm(String key, GetFromDomainCacheOption option) {
-        
+
         switch (option) {
         case POSITIVE:
             return get(key.toLowerCase(), mKrb5RealmCache);
@@ -393,7 +412,7 @@ public class DomainCache implements IDomainCache {
     public synchronized int getSize() {
         return mIdCache.size();
     }
-    
+
     /**
      * Returns the cache hit rate as a value between 0 and 100.<br />
      */

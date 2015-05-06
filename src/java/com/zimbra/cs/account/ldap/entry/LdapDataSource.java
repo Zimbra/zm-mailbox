@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -31,27 +31,35 @@ import com.zimbra.cs.ldap.IAttributes.CheckBinary;
 import com.zimbra.cs.ldap.ZSearchResultEntry;
 
 /**
- * 
+ *
  * @author pshao
  *
  */
 public class LdapDataSource extends DataSource implements LdapEntry {
 
-	private String mDn;
+    private String mDn;
+    private final String entryCSN;
 
-	public LdapDataSource(Account acct, String dn, ZAttributes attrs, Provisioning prov) 
-	throws LdapException, ServiceException {
-		super(acct, getObjectType(attrs),
-		        attrs.getAttrString(Provisioning.A_zimbraDataSourceName),
-		        attrs.getAttrString(Provisioning.A_zimbraDataSourceId),                
-		        attrs.getAttrs(), 
-		        prov);
-		mDn = dn;
-	}
-	
-	public String getDN() {
-		return mDn;
-	}
+    public LdapDataSource(Account acct, String dn, ZAttributes attrs, Provisioning prov)
+    throws LdapException, ServiceException {
+        super(acct, getObjectType(attrs),
+                attrs.getAttrString(Provisioning.A_zimbraDataSourceName),
+                attrs.getAttrString(Provisioning.A_zimbraDataSourceId),
+                attrs.getAttrs(),
+                prov);
+        mDn = dn;
+        entryCSN = attrs.getEntryCSN();
+    }
+
+    @Override
+    public String getDN() {
+        return mDn;
+    }
+
+    @Override
+    public String getEntryCSN() {
+        return entryCSN;
+    }
 
     public static String getObjectClass(DataSourceType type) {
         switch (type) {
@@ -63,7 +71,7 @@ public class LdapDataSource extends DataSource implements LdapEntry {
                 return AttributeClass.OC_zimbraRssDataSource;
             case gal:
                 return AttributeClass.OC_zimbraGalDataSource;
-            default: 
+            default:
                 return null;
         }
     }
@@ -76,9 +84,9 @@ public class LdapDataSource extends DataSource implements LdapEntry {
         } catch (LdapException e) {
             ZimbraLog.datasource.error("cannot get DataSource type", e);
         }
-        
+
         List<String> attr = attrs.getMultiAttrStringAsList(Provisioning.A_objectClass, CheckBinary.NOCHECK);
-        if (attr.contains(AttributeClass.OC_zimbraPop3DataSource)) 
+        if (attr.contains(AttributeClass.OC_zimbraPop3DataSource))
             return DataSourceType.pop3;
         else if (attr.contains(AttributeClass.OC_zimbraImapDataSource))
             return DataSourceType.imap;

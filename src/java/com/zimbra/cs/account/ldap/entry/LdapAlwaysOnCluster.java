@@ -27,16 +27,23 @@ import com.zimbra.cs.ldap.ZAttributes;
 public class LdapAlwaysOnCluster extends AlwaysOnCluster implements LdapEntry {
 
     private final String mDn;
+    private final String entryCSN;
 
     public LdapAlwaysOnCluster(String dn, ZAttributes attrs, Map<String,Object> defaults, Provisioning prov) throws LdapException {
         super(attrs.getAttrString(Provisioning.A_cn),
                 attrs.getAttrString(Provisioning.A_zimbraId),
                 attrs.getAttrs(), defaults, prov);
         mDn = dn;
+        entryCSN = attrs.getEntryCSN();
     }
 
     @Override
     public String getDN() {
         return mDn;
+    }
+
+    @Override
+    public String getEntryCSN() {
+        return entryCSN;
     }
 }

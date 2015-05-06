@@ -23,20 +23,23 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.ldap.LdapException;
 import com.zimbra.cs.ldap.ZAttributes;
 
-/**
- * 
- * @author pshao
- *
- */
 public class LdapCalendarResource extends CalendarResource implements LdapEntry {
 
     private String mDn;
-    
+    private final String entryCSN;
+
     public LdapCalendarResource(String dn, String email, ZAttributes attrs, Map<String, Object> defaults, Provisioning prov)
     throws LdapException {
         super(email, attrs.getAttrString(Provisioning.A_zimbraId), attrs.getAttrs(), defaults, prov);
         mDn = dn;
+        entryCSN = attrs.getEntryCSN();
     }
 
+    @Override
     public String getDN() { return mDn; }
+
+    @Override
+    public String getEntryCSN() {
+        return entryCSN;
+    }
 }

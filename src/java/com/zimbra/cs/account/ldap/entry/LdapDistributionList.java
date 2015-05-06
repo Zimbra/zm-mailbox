@@ -32,6 +32,7 @@ import com.zimbra.cs.ldap.ZAttributes;
  */
 public class LdapDistributionList extends DistributionList implements LdapEntry {
     private String mDn;
+    private final String entryCSN;
     private boolean mIsBasic; // contains only basic attrs in Ldap
 
     public LdapDistributionList(String dn, String email, ZAttributes attrs,
@@ -39,11 +40,18 @@ public class LdapDistributionList extends DistributionList implements LdapEntry 
         super(email, attrs.getAttrString(Provisioning.A_zimbraId),
                 attrs.getAttrs(), prov);
         mDn = dn;
+        entryCSN = attrs.getEntryCSN();
         mIsBasic = isBasic;
     }
 
+    @Override
     public String getDN() {
         return mDn;
+    }
+
+    @Override
+    public String getEntryCSN() {
+        return entryCSN;
     }
 
     @Override

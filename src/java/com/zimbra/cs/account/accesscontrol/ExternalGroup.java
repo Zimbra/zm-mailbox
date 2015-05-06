@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -44,7 +44,8 @@ public class ExternalGroup extends NamedEntry {
     private static final NamedEntryCache<ExternalGroup> CACHE =
         new NamedEntryCache<ExternalGroup>(
                 LC.ldap_cache_group_maxsize.intValue(),
-                LC.ldap_cache_group_maxage.intValue() * Constants.MILLIS_PER_MINUTE);
+                LC.ldap_cache_group_maxage.intValue() * Constants.MILLIS_PER_MINUTE,
+                null /* TODO: devise a freshness checker.  Probably needs to know about domain too. */);
 
     private final String dn;
     private final GroupHandler groupHandler;

@@ -41,6 +41,7 @@ import com.zimbra.cs.ldap.ZSearchControls;
 import com.zimbra.cs.ldap.ZSearchResultEntry;
 import com.zimbra.cs.ldap.ZSearchResultEnumeration;
 import com.zimbra.cs.ldap.ZSearchScope;
+import com.zimbra.cs.ldap.unboundid.UBIDAttributes;
 
 /**
  * An SDK-neutral LdapHelper.
@@ -200,9 +201,16 @@ public class ZLdapHelper extends LdapHelper {
             if (zlc == null) {
                 zlc = LdapClient.getContext(LdapServerType.get(useMaster), LdapUsage.SEARCH);
             }
+            if (returnAttrs == null) {
+               returnAttrs = UBIDAttributes.ALL_ATTRS_PLUS_ENTRY_CSN;
+            }
 
-            ZSearchControls sc = (returnAttrs == null) ? ZSearchControls.SEARCH_CTLS_SUBTREE() :
-                ZSearchControls.createSearchControls(ZSearchScope.SEARCH_SCOPE_SUBTREE,
+            // TODO: maybe make SEARCH_CTLS_SUBTREE use UBIDAttributes.ALL_ATTRS_PLUS_ENTRY_CSN instead?
+            // ZSearchControls sc = (returnAttrs == null) ? ZSearchControls.SEARCH_CTLS_SUBTREE() :
+            //     ZSearchControls.createSearchControls(ZSearchScope.SEARCH_SCOPE_SUBTREE,
+            //             ZSearchControls.SIZE_UNLIMITED, returnAttrs);
+
+            ZSearchControls sc = ZSearchControls.createSearchControls(ZSearchScope.SEARCH_SCOPE_SUBTREE,
                         ZSearchControls.SIZE_UNLIMITED, returnAttrs);
 
             ZSearchResultEnumeration ne = zlc.searchDir(base, filter, sc);

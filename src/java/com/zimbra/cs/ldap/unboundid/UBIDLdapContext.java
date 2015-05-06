@@ -350,6 +350,9 @@ public class UBIDLdapContext extends ZLdapContext {
     @Override
     public ZAttributes getAttributes(String dn, String[] attrs) throws LdapException {
         try {
+            if (attrs == null) {
+                attrs = UBIDAttributes.ALL_ATTRS_PLUS_ENTRY_CSN;
+            }
             SearchResultEntry entry = UBIDLdapOperation.GET_ENTRY.execute(this, dn, attrs);
 
             if (entry == null) {

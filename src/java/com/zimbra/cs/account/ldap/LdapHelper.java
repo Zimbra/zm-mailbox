@@ -291,10 +291,7 @@ public abstract class LdapHelper {
         }
     }
 
-    /** TODO: make abstract for Kiss and later versions? */
-    public boolean compare(final String dn, final String attributeName, final String assertionValue,
+    public abstract boolean compare(final String dn, final String attributeName, final String assertionValue,
             ZLdapContext initZlc, boolean useMaster)
-    throws ServiceException {
-        throw new UnsupportedOperationException("compare operation has not been implemented");
-    }
+    throws ServiceException;
 }

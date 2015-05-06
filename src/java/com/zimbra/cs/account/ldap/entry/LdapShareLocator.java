@@ -25,14 +25,21 @@ import com.zimbra.cs.ldap.ZAttributes;
 public class LdapShareLocator extends ShareLocator implements LdapEntry {
 
     private String mDn;
+    private final String entryCSN;
 
     public LdapShareLocator(String dn, ZAttributes attrs, Provisioning prov) throws LdapException {
         super(attrs.getAttrString(Provisioning.A_cn), attrs.getAttrs(), prov);
         mDn = dn;
+        entryCSN = attrs.getEntryCSN();
     }
 
     @Override
     public String getDN() {
         return mDn;
+    }
+
+    @Override
+    public String getEntryCSN() {
+        return entryCSN;
     }
 }

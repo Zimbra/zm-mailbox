@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -25,46 +25,51 @@ package com.zimbra.cs.account.cache;
 
 import java.util.Map;
 
-import com.zimbra.common.util.MapUtil;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.stats.Counter;
 import com.zimbra.common.stats.HitRateCounter;
+import com.zimbra.common.util.MapUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 
 public class AccountCache implements IAccountCache {
-    
-    private Map<String, CacheEntry> mNameCache;
-    private Map<String, CacheEntry> mIdCache;
-    private Map<String, CacheEntry> mAliasCache;
-    private Map<String, CacheEntry> mForeignPrincipalCache;
-    private Counter mHitRate = new HitRateCounter();
 
-    private long mRefreshTTL;
+    private final Map<String, CacheEntry> mNameCache;
+    private final Map<String, CacheEntry> mIdCache;
+    private final Map<String, CacheEntry> mAliasCache;
+    private final Map<String, CacheEntry> mForeignPrincipalCache;
+    private final Counter mHitRate = new HitRateCounter();
+    private final FreshnessChecker freshnessChecker;
+
+    private final long mRefreshTTL;
 
     static class CacheEntry {
         long mLifetime;
+        public long lastFreshCheckTime;
         Account mEntry;
         CacheEntry(Account entry, long expires) {
             mEntry = entry;
-            mLifetime = System.currentTimeMillis() + expires;
+            lastFreshCheckTime = System.currentTimeMillis();
+            mLifetime = lastFreshCheckTime + expires;
         }
-        
+
         boolean isStale() {
             return mLifetime < System.currentTimeMillis();
         }
     }
-    
+
 /**
  * @param maxItems
  * @param refreshTTL
  */
-    public AccountCache(int maxItems, long refreshTTL) {
+    public AccountCache(int maxItems, long refreshTTL, FreshnessChecker freshnessChecker) {
         mNameCache = MapUtil.newLruMap(maxItems);
         mIdCache = MapUtil.newLruMap(maxItems);
-        mAliasCache = MapUtil.newLruMap(maxItems); 
-        mForeignPrincipalCache = MapUtil.newLruMap(maxItems);  
-        
+        mAliasCache = MapUtil.newLruMap(maxItems);
+        mForeignPrincipalCache = MapUtil.newLruMap(maxItems);
+
         mRefreshTTL = refreshTTL;
+        this.freshnessChecker = freshnessChecker;
     }
 
     @Override
@@ -80,38 +85,38 @@ public class AccountCache implements IAccountCache {
         if (entry != null) {
             mNameCache.remove(entry.getName());
             mIdCache.remove(entry.getId());
-            
-            String aliases[] = entry.getMultiAttr(Provisioning.A_zimbraMailAlias);            
+
+            String aliases[] = entry.getMultiAttr(Provisioning.A_zimbraMailAlias);
             for (String alias : aliases) {
                 mAliasCache.remove(alias);
             }
-            
-            String fps[] = entry.getMultiAttr(Provisioning.A_zimbraForeignPrincipal);            
+
+            String fps[] = entry.getMultiAttr(Provisioning.A_zimbraForeignPrincipal);
             for (String fp : fps) {
                 mForeignPrincipalCache.remove(fp);
             }
         }
     }
-    
+
     @Override
     public synchronized void put(Account entry) {
         if (entry != null) {
             CacheEntry cacheEntry = new CacheEntry(entry, mRefreshTTL);
             mNameCache.put(entry.getName(), cacheEntry);
             mIdCache.put(entry.getId(), cacheEntry);
-            
-            String aliases[] = entry.getMultiAttr(Provisioning.A_zimbraMailAlias);            
+
+            String aliases[] = entry.getMultiAttr(Provisioning.A_zimbraMailAlias);
             for (String alias : aliases) {
-                mAliasCache.put(alias, cacheEntry); 
+                mAliasCache.put(alias, cacheEntry);
             }
-            
-            String fps[] = entry.getMultiAttr(Provisioning.A_zimbraForeignPrincipal);            
+
+            String fps[] = entry.getMultiAttr(Provisioning.A_zimbraForeignPrincipal);
             for (String fp : fps) {
-                mForeignPrincipalCache.put(fp, cacheEntry); 
+                mForeignPrincipalCache.put(fp, cacheEntry);
             }
         }
     }
-    
+
     @Override
     public synchronized void replace(Account entry) {
         remove(entry);
@@ -121,7 +126,7 @@ public class AccountCache implements IAccountCache {
     private Account get(String key, Map cache) {
         CacheEntry ce = (CacheEntry) cache.get(key);
         if (ce != null) {
-            if (mRefreshTTL != 0 && ce.isStale()) {
+            if ((mRefreshTTL != 0 && ce.isStale()) || staleByFreshness(ce)) {
                 remove(ce.mEntry);
                 mHitRate.increment(0);
                 return null;
@@ -134,12 +139,25 @@ public class AccountCache implements IAccountCache {
             return null;
         }
     }
-    
+
+    private boolean staleByFreshness(CacheEntry ce) {
+        if (freshnessChecker == null) {
+            return false;
+        }
+        long now = System.currentTimeMillis();
+        if (now < (ce.lastFreshCheckTime + LC.ldap_cache_freshness_check_limit_ms.intValue())) {
+            return false; // Avoid checking too often
+        }
+        boolean stale = freshnessChecker.isStale(ce.mEntry);
+        ce.lastFreshCheckTime = now;
+        return stale;
+    }
+
     @Override
     public synchronized Account getById(String key) {
         return get(key, mIdCache);
     }
-    
+
     @Override
     public synchronized Account getByName(String key) {
         Account acct = get(key.toLowerCase(), mNameCache);
@@ -149,17 +167,17 @@ public class AccountCache implements IAccountCache {
             return get(key.toLowerCase(), mAliasCache);
         }
     }
-    
+
     @Override
     public synchronized Account getByForeignPrincipal(String key) {
         return get(key, mForeignPrincipalCache);
     }
-    
+
     @Override
     public synchronized int getSize() {
         return mIdCache.size();
     }
-    
+
     /**
      * Returns the cache hit rate as a value between 0 and 100.
      */

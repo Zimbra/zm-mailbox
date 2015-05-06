@@ -245,6 +245,8 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     private LdapConfig cachedGlobalConfig = null;
     private GlobalGrant cachedGlobalGrant = null;
     private static final Random sPoolRandom = new Random();
+
+    // TODO - Need a good way to keep allDLs correct in an AlwaysON environment
     private final Groups allDLs; // email addresses of all distribution lists on the system
     private final ZLdapFilterFactory filterFactory;
 
@@ -275,8 +277,11 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             useCache = false;
         }
 
+        setDIT();
+        setHelper(new ZLdapHelper(this));
+
         if (this.useCache) {
-            cache = new LdapCache.LRUMapCache();
+            cache = new LdapCache.LRUMapCache(getHelper());
         } else {
             cache = new LdapCache.NoopCache();
         }
@@ -293,8 +298,6 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         zimletCache = cache.zimletCache();
         alwaysOnClusterCache = cache.alwaysOnClusterCache();
 
-        setDIT();
-        setHelper(new ZLdapHelper(this));
         allDLs = new Groups(this);
 
         filterFactory = ZLdapFilterFactory.getInstance();
@@ -798,7 +801,8 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         try {
             ZSearchResultEntry sr = getSearchResultForAccountByQuery(base, filter, initZlc, loadFromMaster, null);
             if (sr != null) {
-                return makeAccount(sr.getDN(), sr.getAttributes());
+                Account acct = makeAccount(sr.getDN(), sr.getAttributes());
+                return acct;
             }
         } catch (ServiceException e) {
             throw ServiceException.FAILURE("unable to lookup account via query: " +
@@ -3079,13 +3083,13 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
     private Cos getCosByName(String name, ZLdapContext initZlc) throws ServiceException {
         LdapCos cos = cosCache.getByName(name);
-        if (cos != null)
+        if (cos != null) {
             return cos;
+        }
 
         try {
             String dn = mDIT.cosNametoDN(name);
-            ZAttributes attrs = helper.getAttributes(
-                    initZlc, LdapServerType.REPLICA, LdapUsage.GET_COS, dn, null);
+            ZAttributes attrs = helper.getAttributes(initZlc, LdapServerType.REPLICA, LdapUsage.GET_COS, dn, null);
             cos = new LdapCos(dn, attrs, this);
             cosCache.put(cos);
             return cos;
@@ -10461,4 +10465,12 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         return useCache;
     }
 
+    /**
+     * True if the LDAP used supports "EntryCSN" - an operational attribute which changes
+     * with every directory modification.
+     */
+    @Override
+    public boolean supportsEntryCSN() {
+        return true;
+    }
 }

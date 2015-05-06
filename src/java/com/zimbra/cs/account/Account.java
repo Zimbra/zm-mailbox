@@ -30,6 +30,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning.GroupMembership;
 import com.zimbra.cs.account.Provisioning.SetPasswordResult;
 import com.zimbra.cs.account.auth.AuthContext;
+import com.zimbra.cs.account.ldap.entry.LdapEntry;
 import com.zimbra.cs.account.names.NameUtil;
 import com.zimbra.soap.admin.type.DataSourceType;
 
@@ -37,6 +38,12 @@ import com.zimbra.soap.admin.type.DataSourceType;
  * @author schemers
  */
 public class Account extends ZAttrAccount implements GroupedEntry, AliasedEntry {
+
+    protected String entryCSN = null;
+    protected String cosDN = null;
+    protected String entryCSNforCos = null;
+    protected String domainDN = null;
+    protected String entryCSNforDomain = null;
 
     public Account(String name, String id, Map<String, Object> attrs, Map<String, Object> defaults, Provisioning prov) {
         super(name, id, attrs, defaults, prov);
@@ -402,8 +409,13 @@ public class Account extends ZAttrAccount implements GroupedEntry, AliasedEntry 
         Cos cos = getProvisioning().getCOS(this); // will set cos if not set yet
 
         Map<String, Object> defaults = null;
-        if (cos != null)
+        if (cos != null) {
+            if (cos instanceof LdapEntry) {
+                entryCSNforCos = ((LdapEntry) cos).getEntryCSN();
+                cosDN = ((LdapEntry) cos).getDN();
+            }
             defaults = cos.getAccountDefaults();
+        }
 
         if (!setSecondaryDefaults) {
             // set only primary defaults
@@ -412,8 +424,13 @@ public class Account extends ZAttrAccount implements GroupedEntry, AliasedEntry 
             // set primary and secondary defaults
             Map<String, Object> secondaryDefaults = null;
             Domain domain = getProvisioning().getDomain(this);
-            if (domain != null)
+            if (domain != null) {
+                if (domain instanceof LdapEntry) {
+                    entryCSNforDomain = ((LdapEntry) domain).getEntryCSN();
+                    domainDN = ((LdapEntry) domain).getDN();
+                }
                 secondaryDefaults = domain.getAccountDefaults();
+            }
             setDefaults(defaults, secondaryDefaults);
         }
 
@@ -506,23 +523,43 @@ public class Account extends ZAttrAccount implements GroupedEntry, AliasedEntry 
     }
 
     public void cleanExpiredTokens() throws ServiceException {
-    	String[] tokens = getAuthTokens();
-    	for(String tk : tokens) {
-    	    String[] tokenParts = tk.split("\\|");
-    	    if(tokenParts.length > 0) {
-    	        String szExpire = tokenParts[1];
-    	        Long expires = Long.parseLong(szExpire);
-    	        if(System.currentTimeMillis() > expires) {
-    	            removeAuthTokens(tk);
-    	        }
-    	    }
-    	}
+        String[] tokens = getAuthTokens();
+        for(String tk : tokens) {
+            String[] tokenParts = tk.split("\\|");
+            if(tokenParts.length > 0) {
+                String szExpire = tokenParts[1];
+                Long expires = Long.parseLong(szExpire);
+                if(System.currentTimeMillis() > expires) {
+                    removeAuthTokens(tk);
+                }
+            }
+        }
     }
 
 
     public String getClusterId() throws ServiceException {
         String clusterId = getServer() == null ? null :getServer().getAlwaysOnClusterId();
         return clusterId;
+    }
+
+    public String getEntryCSN() {
+        return entryCSN;
+    }
+
+    public String getEntryCSNforCos() {
+        return entryCSNforCos;
+    }
+
+    public String getDNforCos() {
+        return cosDN;
+    }
+
+    public String getEntryCSNforDomain() {
+        return entryCSNforDomain;
+    }
+
+    public String getDNforDomain() {
+        return domainDN;
     }
 
 }

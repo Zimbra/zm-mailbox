@@ -49,6 +49,7 @@ import com.zimbra.cs.ldap.ZSearchResultEntry;
 public class LdapDynamicGroup extends DynamicGroup implements LdapEntry {
 
     private final String dn;
+    private final String entryCSN;
     private DynamicUnit dynamicUnit;
     private StaticUnit staticUnit;
 
@@ -56,6 +57,17 @@ public class LdapDynamicGroup extends DynamicGroup implements LdapEntry {
     throws LdapException {
         super(email, attrs.getAttrString(Provisioning.A_zimbraId), attrs.getAttrs(), prov);
         this.dn = dn;
+        entryCSN = attrs.getEntryCSN();
+    }
+
+    @Override
+    public String getDN() {
+        return dn;
+    }
+
+    @Override
+    public String getEntryCSN() {
+        return entryCSN;
     }
 
     public void setSubUnits(DynamicUnit dynamicUnit, StaticUnit staticUnit) {
@@ -75,11 +87,6 @@ public class LdapDynamicGroup extends DynamicGroup implements LdapEntry {
 
     public boolean hasExternalMembers() {
         return staticUnit != null && staticUnit.hasExternalMembers();
-    }
-
-    @Override
-    public String getDN() {
-        return dn;
     }
 
     @Override
@@ -122,12 +129,14 @@ public class LdapDynamicGroup extends DynamicGroup implements LdapEntry {
 
     public static class DynamicUnit extends NamedEntry implements LdapEntry {
         private final String dn;
+        private final String entryCSN;
         private final String emailAddr;
 
         public DynamicUnit(String dn, String name, ZAttributes attrs, Provisioning prov)
         throws LdapException {
             super(name, attrs.getAttrString(Provisioning.A_zimbraId), attrs.getAttrs(), null, prov);
             this.dn = dn;
+            this.entryCSN = attrs.getEntryCSN();
             this.emailAddr = attrs.getAttrString(Provisioning.A_mail);
         }
 
@@ -141,6 +150,11 @@ public class LdapDynamicGroup extends DynamicGroup implements LdapEntry {
             return dn;
         }
 
+        @Override
+        public String getEntryCSN() {
+            return entryCSN;
+        }
+
         public String getEmailAddr() {
             return emailAddr;
         }
@@ -150,11 +164,13 @@ public class LdapDynamicGroup extends DynamicGroup implements LdapEntry {
         public static final String MEMBER_ATTR = Provisioning.A_zimbraMailForwardingAddress;
 
         private final String dn;
+        private final String entryCSN;
 
         public StaticUnit(String dn, String name, ZAttributes attrs, Provisioning prov)
         throws LdapException {
             super(name, attrs.getAttrString(Provisioning.A_zimbraId), attrs.getAttrs(), null, prov);
             this.dn = dn;
+            this.entryCSN = attrs.getEntryCSN();
         }
 
         @Override
@@ -165,6 +181,11 @@ public class LdapDynamicGroup extends DynamicGroup implements LdapEntry {
         @Override
         public String getDN() {
             return dn;
+        }
+
+        @Override
+        public String getEntryCSN() {
+            return entryCSN;
         }
 
         private boolean hasExternalMembers() {

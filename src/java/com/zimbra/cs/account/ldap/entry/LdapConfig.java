@@ -21,21 +21,24 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.ldap.LdapException;
 import com.zimbra.cs.ldap.ZAttributes;
 
-/**
- * 
- * @author pshao
- *
- */
 public class LdapConfig extends Config implements LdapEntry {
-    
+
     private String mDn;
-    
+    private final String entryCSN;
+
     public LdapConfig(String dn, ZAttributes attrs, Provisioning provisioning) throws LdapException {
         super(attrs.getAttrs(), provisioning);
         mDn = dn;
+        entryCSN = attrs.getEntryCSN();
     }
-    
+
+    @Override
     public String getDN() {
         return mDn;
+    }
+
+    @Override
+    public String getEntryCSN() {
+        return entryCSN;
     }
 }
