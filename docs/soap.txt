@@ -536,22 +536,29 @@ In order to reduce the potential of cookie reuse attacks, an optional secondary 
  <EnableTwoFactorAuthRequest xmlns="urn:zimbraAccount">
   <name>...</name>
   <password>...</password>
+  [<twoFactorCode>...</twoFactorCode>]
  </EnableTwoFactorAuthRequest>
 
  <EnableTwoFactorAuthResponse>
-   [<credentials>
-      <secret>...</secret>
-      <scratchCodes>
-        <code>...</code>
-        ...
-      </scratchCodes>
-    </credentials>]
+    [<secret>...</secret>]
+    [<scratchCodes>
+      <code>...</code>
+      ...
+    </scratchCodes>]
  </EnableTwoFactorAuthResponse>
 
 This endpoint is used for enabling two-factor authentication by the client.
 The account name and password must be explicitly passed as parameters because this endpoint bypasses authentication;
 it does so because when two-factor authentication is required but not yet enabled, the auth mechanism would require
 a second factor that the user would not be able to provide.
+
+Enabling two-factor authentication is a two-step process:
+
+1) The client calls this endpoint with the username and password as parameters. If these are valid, the response will
+contain the shared secret, which the user needs to input into an application capable of generating TOTP codes.
+
+2) The client calls this endpoint a second time, this time with the username, password, and a TOTP code generated with the secret.
+If all three are valid, two-factor authentication is enabled on the account, and the response will contain the scratch codes.
 
 ---------
 

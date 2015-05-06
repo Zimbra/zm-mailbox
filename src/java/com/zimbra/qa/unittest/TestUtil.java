@@ -86,6 +86,10 @@ import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.Key.DistributionListBy;
 import com.zimbra.common.auth.ZAuthToken;
+import com.zimbra.common.auth.twofactor.AuthenticatorConfig;
+import com.zimbra.common.auth.twofactor.TOTPAuthenticator;
+import com.zimbra.common.auth.twofactor.AuthenticatorConfig.CodeLength;
+import com.zimbra.common.auth.twofactor.AuthenticatorConfig.HashAlgorithm;
 import com.zimbra.common.lmtp.LmtpClient;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
@@ -1307,5 +1311,17 @@ extends Assert {
             conn.commit();
             conn.closeQuietly();
         }
+    }
+
+    public static TOTPAuthenticator getDefaultAuthenticator() {
+        final int WINDOW_SIZE = 30;
+        final HashAlgorithm HASH_ALGORITHM = HashAlgorithm.SHA1;
+        final CodeLength NUM_CODE_DIGITS = CodeLength.SIX;
+        AuthenticatorConfig config = new AuthenticatorConfig();
+        config.setHashAlgorithm(HASH_ALGORITHM);
+        config.setNumCodeDigits(NUM_CODE_DIGITS);
+        config.setWindowSize(WINDOW_SIZE);
+        TOTPAuthenticator auth = new TOTPAuthenticator(config);
+        return auth;
     }
 }

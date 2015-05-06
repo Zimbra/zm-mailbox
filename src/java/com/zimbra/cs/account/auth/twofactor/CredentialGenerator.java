@@ -10,8 +10,9 @@ import java.util.Set;
 import org.apache.commons.codec.binary.Base32;
 import org.apache.commons.codec.binary.Base64;
 
+import com.zimbra.common.auth.twofactor.CredentialConfig;
+import com.zimbra.common.auth.twofactor.CredentialConfig.Encoding;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.account.auth.twofactor.CredentialConfig.Encoding;
 
 public class CredentialGenerator {
     private CredentialConfig config;

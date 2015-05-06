@@ -7,13 +7,13 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.auth.AuthContext.Protocol;
 import com.zimbra.cs.account.auth.twofactor.TOTPCredentials;
 import com.zimbra.cs.account.auth.twofactor.TwoFactorManager;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.account.message.EnableTwoFactorAuthResponse;
-import com.zimbra.soap.account.message.TwoFactorCredentials;
 
 /** SOAP handler to enable/disable two-factor auth.
  * If enabling, returns the shared secret.
@@ -27,34 +27,34 @@ public class EnableTwoFactorAuth extends AccountDocumentHandler {
             throws ServiceException {
         Provisioning prov = Provisioning.getInstance();
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
-        String acctName = request.getAttribute(AccountConstants.A_NAME);
+        String acctName = request.getElement(AccountConstants.E_NAME).getText();
         Account account = prov.get(AccountBy.name, acctName);
+        if (account == null) {
+            throw AuthFailedServiceException.AUTH_FAILED("no such account");
+        }
         TwoFactorManager manager = new TwoFactorManager(account);
         EnableTwoFactorAuthResponse response = new EnableTwoFactorAuthResponse();
-        String password = request.getAttribute(AccountConstants.A_PASSWORD);
+        String password = request.getElement(AccountConstants.E_PASSWORD).getText();
         account.authAccount(password, Protocol.soap);
-        if (account.isPrefTwoFactorAuthEnabled()) {
-            encodeAlreadyEnabled(response);
+        Element totp = request.getOptionalElement(AccountConstants.E_TWO_FACTOR_CODE);
+        if (totp == null) {
+            if (account.isPrefTwoFactorAuthEnabled()) {
+                encodeAlreadyEnabled(response);
+            } else {
+                TOTPCredentials newCredentials = manager.generateCredentials();
+                response.setSecret(newCredentials.getSecret());
+            }
         } else {
-            TOTPCredentials newCredentials = manager.enableTwoFactorAuth();
+            manager.authenticate(password, totp.getText());
+            manager.enableTwoFactorAuth();
+            response.setScratchCodes(manager.getScratchCodes());
             int tokenValidityValue = account.getAuthTokenValidityValue();
             account.setAuthTokenValidityValue(tokenValidityValue == Integer.MAX_VALUE ? 0 : tokenValidityValue + 1);
-            encodeCredentials(response, newCredentials);
         }
         return zsc.jaxbToElement(response);
     }
 
-    private void encodeAlreadyEnabled(EnableTwoFactorAuthResponse response) {
-        //what to return if two-factor auth is already enabled?
-    }
-
-    private void encodeCredentials(EnableTwoFactorAuthResponse response,
-            TOTPCredentials credentials) {
-        TwoFactorCredentials credsResponse = new TwoFactorCredentials();
-        credsResponse.setSharedSecret(credentials.getSecret());
-        credsResponse.setScratchCodes(credentials.getScratchCodes());
-        response.setCredentials(credsResponse);
-    }
+    private void encodeAlreadyEnabled(EnableTwoFactorAuthResponse response) {}
 
     @Override
     public boolean needsAuth(Map<String, Object> context) {

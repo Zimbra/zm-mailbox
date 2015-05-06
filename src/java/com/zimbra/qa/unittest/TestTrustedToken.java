@@ -44,8 +44,8 @@ public class TestTrustedToken extends TestCase {
         mbox = TestUtil.getZMailbox(USER);
         mbox.invokeJaxb(new RevokeTrustedDeviceRequest());
         mbox.invokeJaxb(new RevokeOtherTrustedDevicesRequest());
-        EnableTwoFactorAuthResponse resp = mbox.enableTwoFactorAuth(PASSWORD);
-        scratchCodes = resp.getCredentials().getScratchCodes();
+        EnableTwoFactorAuthResponse resp = mbox.enableTwoFactorAuth(PASSWORD, TestUtil.getDefaultAuthenticator());
+        scratchCodes = resp.getScratchCodes();
         transport = TestUtil.getAdminSoapTransport();
         setTokenLifetime("2d");
     }
