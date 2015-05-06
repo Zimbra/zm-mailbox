@@ -15,18 +15,24 @@ public class EnableTwoFactorAuthRequest {
     /**
      * @zm-api-field-description The name of the account for which to enable two-factor auth
      */
-    @XmlElement(name=AccountConstants.A_NAME, required=true)
+    @XmlElement(name=AccountConstants.E_NAME, required=true)
     private String acctName;
 
     /**
      * @zm-api-field-description Password to use in conjunction with an account
      */
-    @XmlElement(name=AccountConstants.A_PASSWORD, required=true)
+    @XmlElement(name=AccountConstants.E_PASSWORD, required=true)
     private String password;
+
+    @XmlElement(name=AccountConstants.E_TWO_FACTOR_CODE, required=false)
+    private String twoFactorCode;
 
     public String getPassword() { return password; }
     public EnableTwoFactorAuthRequest setPassword(String password) { this.password = password; return this; }
 
     public String getName() { return acctName; }
     public EnableTwoFactorAuthRequest setName(String acctName) { this.acctName = acctName; return this; }
+
+    public String getTwoFactorCode() { return twoFactorCode; }
+    public EnableTwoFactorAuthRequest setTwoFactorCode(String code) { this.twoFactorCode = code; return this; }
 }
