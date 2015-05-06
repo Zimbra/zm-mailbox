@@ -149,12 +149,13 @@ public class ExtensionDispatcherServlet extends ZimbraServlet {
         if (handler == null)
             throw ServiceException.FAILURE("Extension HTTP handler not found at " + extPath, null);
         if (handler.hideFromDefaultPorts()) {
-        	Server server = Provisioning.getInstance().getLocalServer();
-        	int port = req.getLocalPort();
-        	int mailPort = server.getIntAttr(Provisioning.A_zimbraMailPort, 0);
-        	int mailSslPort = server.getIntAttr(Provisioning.A_zimbraMailSSLPort, 0);
-        	if (port == mailPort || port == mailSslPort)
-        		throw ServiceException.FAILURE("extension not supported on this port", null);
+            Server server = Provisioning.getInstance().getLocalServer();
+            int port = req.getLocalPort();
+            int mailPort = server.getIntAttr(Provisioning.A_zimbraMailPort, 0);
+            int mailSslPort = server.getIntAttr(Provisioning.A_zimbraMailSSLPort, 0);
+            int adminPort = server.getIntAttr(Provisioning.A_zimbraAdminPort, 0);
+            if (port == mailPort || port == mailSslPort || port == adminPort)
+                throw ServiceException.FAILURE("extension not supported on this port", null);
         }
         return handler;
     }
