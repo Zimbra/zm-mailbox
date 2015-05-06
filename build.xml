@@ -158,6 +158,14 @@
       <exec failonerror="true" executable="/opt/zimbra/bin/zmsshkeygen"/>
   </target>
 
+  <target name="check-gmbal-api-only-present">
+      <available file="${common.jars.dir}/gmbal-api-only.jar" property="gmbal.api.present"/>
+  </target>
+
+  <target name="gmbal-api-only" depends="check-gmbal-api-only-present" unless="gmbal.api.present">
+      <echo message="\n!!! MUST manually copy ${common.jars.dir}/gmbal-api-only.jar from jaxws-ri-2.2.8 distribution"/>
+  </target>
+
   <!-- used to depend on compile but prefer to do "mvn package" -->
   <target name="wsdl-test-compile">
     <mkdir dir="${wsdl.test.classes.dir}"/>
@@ -170,7 +178,9 @@
 
   <!-- TODO: migrate the WSDL test stuff to another (maven?) project -->
   <!-- WSDL client tests that require ZimbraServer installed and some setup in place -->
-  <target name="wsdl-test" depends="wsdl-test-compile,zimbra-identity" description="Run WSDL client unit tests">
+  <target name="wsdl-test" depends="wsdl-test-compile,zimbra-identity,gmbal-api-only"
+      if="gmbal.api.present" description="Run WSDL client unit tests">
+    <echo message="!!! wsdl-test may not work if 'mvn package' not done"/>
     <delete dir="${wsdl.test.dir}" quiet="true"/>
     <mkdir dir="${wsdl.test.dir}/output"/>
     <mkdir dir="${wsdl.test.dir}/report"/>
