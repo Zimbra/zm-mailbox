@@ -281,6 +281,13 @@ public class TestAppSpecificPasswords extends TestCase {
         }
     }
 
+    @Test
+    public void testAppSpecificPasswordsDisabled() throws ServiceException, IOException {
+        disableAppSpecificPasswords();
+        testPassword(PASSWORD, false);
+        enableAppSpecificPasswords();
+    }
+
     private List<AppSpecificPasswordData> getAppSpecificPasswords() throws ServiceException, IOException {
         GetAppSpecificPasswordsResponse resp = mbox.invokeJaxb(new GetAppSpecificPasswordsRequest());
         return resp.getAppSpecificPasswords();
