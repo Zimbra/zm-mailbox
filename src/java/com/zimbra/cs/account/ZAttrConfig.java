@@ -84572,8 +84572,9 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * weclient URL to directly connect when making service to JS calls from
-     * mail server in split mode
+     * Deprecated since: 9.0.0_BETA1. Obsoleted by use of Consul as a service
+     * locator.. Orig desc: Web client URL to directly connect when making
+     * service to JS calls from mail server in split mode.
      *
      * @return zimbraWebClientURL, or null if unset
      *
@@ -84585,8 +84586,9 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * weclient URL to directly connect when making service to JS calls from
-     * mail server in split mode
+     * Deprecated since: 9.0.0_BETA1. Obsoleted by use of Consul as a service
+     * locator.. Orig desc: Web client URL to directly connect when making
+     * service to JS calls from mail server in split mode.
      *
      * @param zimbraWebClientURL new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -84601,8 +84603,9 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * weclient URL to directly connect when making service to JS calls from
-     * mail server in split mode
+     * Deprecated since: 9.0.0_BETA1. Obsoleted by use of Consul as a service
+     * locator.. Orig desc: Web client URL to directly connect when making
+     * service to JS calls from mail server in split mode.
      *
      * @param zimbraWebClientURL new value
      * @param attrs existing map to populate, or null to create a new map
@@ -84618,8 +84621,9 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * weclient URL to directly connect when making service to JS calls from
-     * mail server in split mode
+     * Deprecated since: 9.0.0_BETA1. Obsoleted by use of Consul as a service
+     * locator.. Orig desc: Web client URL to directly connect when making
+     * service to JS calls from mail server in split mode.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -84633,8 +84637,9 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * weclient URL to directly connect when making service to JS calls from
-     * mail server in split mode
+     * Deprecated since: 9.0.0_BETA1. Obsoleted by use of Consul as a service
+     * locator.. Orig desc: Web client URL to directly connect when making
+     * service to JS calls from mail server in split mode.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs

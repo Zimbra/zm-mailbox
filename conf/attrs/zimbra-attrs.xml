@@ -7232,8 +7232,9 @@ TODO: delete them permanently from here
   </desc>
 </attr>
 
-<attr id="1445" name="zimbraWebClientURL" type="string" max="512" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="8.5.0">
-  <desc>weclient URL to directly connect when making service to JS calls from mail server in split mode</desc>
+<attr id="1445" name="zimbraWebClientURL" type="string" max="512" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="8.5.0" deprecatedSince="9.0.0_BETA1">
+  <desc>Web client URL to directly connect when making service to JS calls from mail server in split mode.</desc>
+  <deprecateDesc>Obsoleted by use of Consul as a service locator.</deprecateDesc>
 </attr>
 
 <attr id="1446" name="zimbraAlwaysOnClusterId" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="8.5.0">

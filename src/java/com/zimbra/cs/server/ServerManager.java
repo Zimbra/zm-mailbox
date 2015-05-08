@@ -37,6 +37,7 @@ import com.zimbra.cs.pop3.NioPop3Server;
 import com.zimbra.cs.pop3.Pop3Config;
 import com.zimbra.cs.pop3.Pop3Server;
 import com.zimbra.cs.pop3.TcpPop3Server;
+import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.util.ProvisioningUtil;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.util.ZimbraApplication;
@@ -172,6 +173,8 @@ public final class ServerManager {
         String name = getServiceLocatorServiceName(server);
         String id = name + ":" + server.getConfig().getBindPort();
         CatalogRegistration.Service service = new CatalogRegistration.Service(id, name, server.getConfig().getBindPort());
+        service.tags.add(BuildInfo.MAJORVERSION + "." + BuildInfo.MINORVERSION + ".x");
+        service.tags.add(BuildInfo.MAJORVERSION + "." + BuildInfo.MINORVERSION + "." + BuildInfo.MICROVERSION);
         if (server.getConfig().isSslEnabled()) {
             service.tags.add("ssl");
         }
