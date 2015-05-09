@@ -9893,7 +9893,7 @@ TODO: delete them permanently from here
   <desc>Limit for how many replicas of the same Solr Collection are allowed to be created on each node. This value is used in maxShardsPerNode parameter when creating Solr Collections in SolrCloud with via Collections API.</desc>
 </attr>
 
-<attr id="1971" name="zimbraContactSearchDecomposition" type="integer" cardinality="single" min="0" max="2" optionalIn="globalConfig,server" since="8.7.0,9.0.0">
+<attr id="1971" name="zimbraContactSearchDecomposition" type="integer" cardinality="single" min="0" max="2" optionalIn="globalConfig,server" flags="serverInherited" since="8.7.0,9.0.0">
   <globalConfigValue>2</globalConfigValue>
   <desc>Specify the decomposition mode used for looking up the Contact items by the phonetic last/first name or last/first name.  The accepted value is as follows: 0 = No decomposition.  The accented characters will be compared 'as is' (not be decomposed) (Collator.NO_DECOMPOSITION).  1 = Canonical decomposition mapping rules found in the Unicode Standard is used (Collator.CANONICAL_DECOMPOSITION).  2 = Unicode canonical and Unicode compatibility decomposition mapping rules found in the Unicode Standard is used.  When this mode is selected, compatible characters, such as half-width and full-width katakana characters, are considered equivalent (Collator.FULL_DECOMPOSITION).
   </desc>

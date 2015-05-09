@@ -10441,13 +10441,13 @@ public abstract class ZAttrServer extends NamedEntry {
      * such as half-width and full-width katakana characters, are considered
      * equivalent (Collator.FULL_DECOMPOSITION).
      *
-     * @return zimbraContactSearchDecomposition, or -1 if unset
+     * @return zimbraContactSearchDecomposition, or 2 if unset
      *
      * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=1971)
     public int getContactSearchDecomposition() {
-        return getIntAttr(Provisioning.A_zimbraContactSearchDecomposition, -1);
+        return getIntAttr(Provisioning.A_zimbraContactSearchDecomposition, 2);
     }
 
     /**
