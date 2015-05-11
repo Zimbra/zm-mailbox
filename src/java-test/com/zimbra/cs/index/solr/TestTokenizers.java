@@ -31,6 +31,9 @@ public class TestTokenizers extends SolrPluginTestBase {
     public void testPhraseQuery() throws Exception {
         String src = "ONE two^three.";
         assertEquals(Arrays.asList("one", "two", "^", "three"), getTokensWithoutReversals("zmtext", src));
+
+        src = "ﾊﾟﾋﾟﾌﾟﾍﾟﾎﾟ";
+        assertEquals(Arrays.asList("ぴぱ", "ぱぴ", "ぷぴ", "ぴぷ", "ぺぷ", "ぷぺ", "ぽぺ", "ぺぽ"), getTokensWithoutReversals("zmtext", src));
     }
 
     @Test
@@ -43,5 +46,6 @@ public class TestTokenizers extends SolrPluginTestBase {
         assertEquals(Collections.singletonList("test.com"), getTokens("zmcontact", "test.com"));
         assertEquals(Collections.singletonList("user1@zim"), getTokens("zmcontact", "user1@zim"));
         assertEquals(Collections.singletonList("user1@zimbra.com"), getTokens("zmcontact", "user1@zimbra.com"));
+        assertEquals(Collections.singletonList("じんぶら"), getTokens("zmcontact", "ｼﾞﾝﾌﾞﾗ"));
     }
 }
