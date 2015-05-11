@@ -2,6 +2,7 @@ package com.zimbra.cs.redolog;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Map;
 import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
@@ -12,7 +13,15 @@ import com.zimbra.cs.redolog.op.RedoableOp;
 
 public interface RedoLogManager {
 
+    /**
+     * Is system-wide crash recovery in progress
+     */
     public abstract boolean getInCrashRecovery();
+
+    /**
+     * Is crash recovery in progress for the specified mailboxId
+     */
+    public abstract boolean getInCrashRecovery(int mailboxId);
 
     /**
      * Start the log manager
@@ -149,5 +158,9 @@ public interface RedoLogManager {
      * @throws IOException
      */
     public abstract void deleteArchivedLogFiles(long oldestTimestamp) throws IOException;
+
+    public abstract boolean supportsCrashRecovery();
+
+    public abstract void crashRecoverMailboxes(Map<Integer, Integer> mboxIdsMap) throws ServiceException;
 
 }

@@ -60,9 +60,9 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.amqp.AmqpConstants;
 import com.zimbra.cs.extension.ExtensionUtil;
-import com.zimbra.cs.index.LocalIndexingQueueAdapter;
 import com.zimbra.cs.index.IndexingQueueAdapter;
 import com.zimbra.cs.index.IndexingService;
+import com.zimbra.cs.index.LocalIndexingQueueAdapter;
 import com.zimbra.cs.mailbox.AmqpMailboxListenerTransport;
 import com.zimbra.cs.mailbox.CacheManager;
 import com.zimbra.cs.mailbox.ConversationIdCache;
@@ -94,8 +94,11 @@ import com.zimbra.cs.redolog.seq.LocalSequenceNumberGenerator;
 import com.zimbra.cs.redolog.seq.RedisSequenceNumberGenerator;
 import com.zimbra.cs.redolog.seq.SequenceNumberGenerator;
 import com.zimbra.cs.redolog.txn.LocalTxnIdGenerator;
+import com.zimbra.cs.redolog.txn.LocalTxnTracker;
 import com.zimbra.cs.redolog.txn.RedisTxnIdGenerator;
+import com.zimbra.cs.redolog.txn.RedisTxnTracker;
 import com.zimbra.cs.redolog.txn.TxnIdGenerator;
+import com.zimbra.cs.redolog.txn.TxnTracker;
 import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.store.file.FileBlobStore;
 import com.zimbra.qless.QlessClient;
@@ -571,9 +574,9 @@ public class ZimbraConfig {
         return instance;
     }
 
-	@Bean
+    @Bean
     public StoreManager storeManager() throws Exception {
-		StoreManager instance = null;
+        StoreManager instance = null;
         String className = LC.zimbra_class_store.value();
         if (className != null && !className.equals("")) {
             try {
@@ -588,9 +591,20 @@ public class ZimbraConfig {
         return instance;
     }
 
-	@Bean
-	public ZimbraApplication zimbraApplication() throws Exception {
-	    ZimbraApplication instance = null;
+   @Bean
+    public TxnTracker txnTracker() throws Exception {
+        TxnTracker tracker = null;
+        if (isRedisAvailable()) {
+            tracker = new RedisTxnTracker(jedisPool());
+        } else {
+            tracker = new LocalTxnTracker();
+        }
+        return tracker;
+    }
+
+    @Bean
+    public ZimbraApplication zimbraApplication() throws Exception {
+        ZimbraApplication instance = null;
         String className = LC.zimbra_class_application.value();
         if (className != null && !className.equals("")) {
             try {
@@ -605,5 +619,6 @@ public class ZimbraConfig {
             instance = new ZimbraApplication();
         }
         return instance;
-	}
+    }
+
 }

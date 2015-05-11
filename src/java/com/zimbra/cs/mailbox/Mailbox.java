@@ -145,6 +145,8 @@ import com.zimbra.cs.mime.ParsedMessage.CalendarPartInfo;
 import com.zimbra.cs.mime.ParsedMessageDataSource;
 import com.zimbra.cs.mime.ParsedMessageOptions;
 import com.zimbra.cs.pop3.Pop3Message;
+import com.zimbra.cs.redolog.RedoLogManager;
+import com.zimbra.cs.redolog.RedoLogProvider;
 import com.zimbra.cs.redolog.op.AddDocumentRevision;
 import com.zimbra.cs.redolog.op.AlterItemTag;
 import com.zimbra.cs.redolog.op.ColorItem;
@@ -214,6 +216,7 @@ import com.zimbra.cs.redolog.op.StoreIncomingBlob;
 import com.zimbra.cs.redolog.op.TrackImap;
 import com.zimbra.cs.redolog.op.TrackSync;
 import com.zimbra.cs.redolog.op.UnlockItem;
+import com.zimbra.cs.redolog.txn.TxnTracker;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.FeedManager;
 import com.zimbra.cs.service.util.ItemData;
@@ -694,7 +697,18 @@ public class Mailbox {
         //2. this is an always on node (distributed lock does not support read/write currently)
         //3. read/write disabled by LC for debugging
 
-        return requiresWriteLock || Zimbra.isAlwaysOn() || !ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraMailBoxLockReadWrite, true);
+        return requiresWriteLock ||
+                Zimbra.isAlwaysOn() ||
+                !ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraMailBoxLockReadWrite, true);
+    }
+
+    boolean needToReplayFailedTransactions() {
+        //this is separate from requiresWriteLock to save a bit of Redis chatter
+        //when a write transaction fails, it is possible that a blocking read transaction would already be past this check
+        //if that occurs, the read will also fail. i.e. temporary failure may affect concurrent calls.
+        //Regardless, once a new invocation of beginTransaction() occurs mailbox will return to a good state
+        return (maintenance != null && maintenance.isInvalidated()) ||
+                (!currentChange().isActive() && Zimbra.getAppContext().getBean(TxnTracker.class).hasActiveTransactions(getId()));
     }
 
     /**
@@ -1611,17 +1625,48 @@ public class Mailbox {
 
     private void beginTransaction(String caller, long time, OperationContext octxt, RedoableOp recorder,
                     DbConnection conn, boolean write) throws ServiceException {
-    	write = write || requiresWriteLock();
+        write = write || requiresWriteLock() || needToReplayFailedTransactions();
         assert recorder == null || write;
         assert !Thread.holdsLock(this) : "use MailboxLock";
+
+
         lock.lock(write);
         if (!write && requiresWriteLock()) {
-            //another call must have purged the cache.
+            //another thread must have forced us into write mode due to purged cache or similar conditions
             //the lock.lock() call should have resulted in write lock already
             assert(lock.isWriteLockedByCurrentThread());
             write = true;
 
         }
+        if (write && needToReplayFailedTransactions()) {
+            RedoLogManager logMgr = RedoLogProvider.getInstance().getRedoLogManager();
+            if (!logMgr.getInCrashRecovery(this.getId())) {
+                if (maintenance == null) {
+                    //may already be in maintenance; depending on whether this was a system crash or mailbox error
+                    beginMaintenance();
+                }
+                DbConnection dbConn = conn != null ? conn : DbPool.getConnection();
+                try {
+                    mData = DbMailbox.getMailboxStats(dbConn, getId());
+                } finally {
+                    if (conn == null) {
+                        //only close if we just opened - passed in conn needs to remain open
+                        dbConn.closeQuietly();
+                    }
+                }
+                //bump up id/change checkpoint; since we don't know if last item was partially added or not
+                mData.lastItemId += DbMailbox.getItemCheckpointIncrement();
+                mData.lastChangeId += DbMailbox.getChangeCheckpointIncrement();
+                Map<Integer, Integer> mboxIdsMap = new HashMap<Integer, Integer>(1);
+                mboxIdsMap.put(this.mId, this.mId);
+                logMgr.crashRecoverMailboxes(mboxIdsMap);
+                endMaintenance(true);
+            }
+        } else if (maintenance != null && !maintenance.canAccess()) {
+            // don't permit mailbox access during maintenance
+            throw MailServiceException.MAINTENANCE(mId);
+        }
+
         currentChange().startChange(caller, octxt, recorder, write);
 
         // if a Connection object was provided, use it
@@ -1675,10 +1720,6 @@ public class Mailbox {
         }
         currentChange().itemCache = cache;
 
-        // don't permit mailbox access during maintenance
-        if (maintenance != null && !maintenance.canAccess()) {
-            throw MailServiceException.MAINTENANCE(mId);
-        }
         // we can only start a redoable operation as the transaction's base change
         if (recorder != null && needRedo && currentChange().depth > 1) {
             throw ServiceException.FAILURE("cannot start a logged transaction from within another transaction "
@@ -8985,38 +9026,18 @@ public class Mailbox {
             if (redoRecorder != null && needRedo) {
                 redoRecorder.log(true);
             }
-            boolean dbCommitSuccess = false;
-            try {
                 // Commit the main transaction in database.
-                if (conn != null) {
-                    try {
-                        conn.commit();
-                    } catch (Throwable t) {
-                        // Any exception during database commit is a disaster
-                        // because we don't know if the change is committed or
-                        // not.  Force the server to abort.  Next restart will
-                        // redo the operation to ensure the change is made and
-                        // committed.  (bug 2121)
-                        Zimbra.halt("Unable to commit database transaction.  Forcing server to abort.", t);
-                    }
-                }
-                dbCommitSuccess = true;
-            } finally {
-                if (!dbCommitSuccess) {
-                    // Write abort redo records to prevent the transactions from
-                    // being redone during crash recovery.
-
-                    // Write abort redo entries before doing database rollback.
-                    // If we do rollback first and server crashes, crash
-                    // recovery will try to redo the operation.
-                    if (needRedo) {
-                        if (redoRecorder != null) {
-                            redoRecorder.abort();
-                        }
-                    }
-                    DbPool.quietRollback(conn);
-                    rollbackDeletes = rollbackCache(currentChange());
-                    return;
+            if (conn != null) {
+                try {
+                    conn.commit();
+                } catch (Throwable t) {
+                    //Any exception during database commit is a disaster
+                    //because we don't know if the change is committed or not.
+                    //Put the mailbox into invalidated state
+                    //Next transaction will attempt to replay uncommitted for this mailbox
+                    //See bug 98111 and bug 2121
+                    invalidate();
+                    throw ServiceException.FAILURE("DB commit failure - mailbox state inconsistent.", null);
                 }
             }
 
@@ -9083,6 +9104,21 @@ public class Mailbox {
             }
         }
     }
+
+    private void invalidate() throws ServiceException {
+        if (maintenance != null) {
+            //it's already in maintenance. if we got here we must be the owning thread
+            assert(maintenance.canAccess());
+        } else {
+            beginMaintenance();
+        }
+        rollbackCache(currentChange());
+        clearTagCache();
+        clearFolderCache();
+        mData.contacts = -1;
+        endMaintenance(false);
+    }
+
 
     // if the incoming message has one of these flags, don't up our "new messages" counter
     public static final int NON_DELIVERY_FLAGS = Flag.BITMASK_DRAFT | Flag.BITMASK_FROM_ME | Flag.BITMASK_COPIED | Flag.BITMASK_DELETED;

@@ -64,7 +64,6 @@ public class HttpRedoLogManager extends AbstractRedoLogManager {
                 return new TransactionId();
             }
         };
-
     }
 
     @Override

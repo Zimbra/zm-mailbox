@@ -368,7 +368,7 @@ public class Appointment extends CalendarItem {
         boolean needReplyEmail =
             rsvpRequested &&
             redoProvider.isMaster() &&
-            (player == null || redoProvider.getRedoLogManager().getInCrashRecovery()) &&
+            (player == null || redoProvider.getRedoLogManager().getInCrashRecovery(mbox.getId())) &&
             invite.hasOrganizer() &&
             !invite.isCancel() &&
             !invite.isTodo() &&

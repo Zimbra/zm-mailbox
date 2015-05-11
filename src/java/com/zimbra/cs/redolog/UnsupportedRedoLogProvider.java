@@ -18,6 +18,7 @@ package com.zimbra.cs.redolog;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Map;
 import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
@@ -163,6 +164,21 @@ public class UnsupportedRedoLogProvider extends RedoLogProvider {
             @Override
             public void deleteArchivedLogFiles(long oldestTimestamp)
                     throws IOException {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public boolean supportsCrashRecovery() {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public void crashRecoverMailboxes(Map<Integer, Integer> mboxIdMap) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public boolean getInCrashRecovery(int mboxId) {
                 throw new UnsupportedOperationException();
             }
 

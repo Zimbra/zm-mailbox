@@ -390,92 +390,104 @@ public class RedoPlayer {
         }
     }
 
-    /**
+    public int runCrashRecovery(RedoLogManager redoLogMgr,
+            List<RedoableOp> postStartupRecoveryOps, Set<String> serverIds)
+            throws ServiceException {
+        return runCrashRecovery(redoLogMgr, postStartupRecoveryOps, serverIds, null);
+    }
+            /**
      *
      * @param redoLogMgr
      * @param postStartupRecoveryOps operations to recover/redo after startup
      *                               completes and clients are allowed to
      *                               connect
      * @return number of operations redone (regardless of their success)
+             * @throws IOException
+             * @throws ServiceException
      * @throws Exception
      */
     public int runCrashRecovery(RedoLogManager redoLogMgr,
-            List<RedoableOp> postStartupRecoveryOps, Set<String> serverIds)
-    throws Exception {
-        File redoLog = redoLogMgr.getLogFile();
-        if (!redoLog.exists())
-            return 0;
+            List<RedoableOp> postStartupRecoveryOps, Set<String> serverIds, Map<Integer, Integer> mboxIds) throws ServiceException
+     {
+        try {
+            File redoLog = redoLogMgr.getLogFile();
+            if (!redoLog.exists())
+                return 0;
 
-        long lookBackTstamp = Long.MAX_VALUE;
-        long lookBackDuration = RedoConfig.redoLogCrashRecoveryLookbackSec() * 1000;
-        if (lookBackDuration > 0) {
-            // Guess the last op's timestamp.  Use the log file's last modified time.  Sanity check it by
-            // going no earlier than the create time written in the log.  We can't rely on the last
-            // op time field in the header because that is only accurate when the file was closed normally
-            // but in crash recovery we're not dealing with a normally closed log.
-            long logLastModTime = redoLog.lastModified();
-            long logCreateTime = (new FileLogReader(redoLog)).getHeader().getCreateTime();
-            long lastOpTstamp = Math.max(logLastModTime, logCreateTime);
-            lookBackTstamp = lastOpTstamp - lookBackDuration;
-        }
+            long lookBackTstamp = Long.MAX_VALUE;
+            long lookBackDuration = RedoConfig.redoLogCrashRecoveryLookbackSec() * 1000;
+            if (lookBackDuration > 0) {
+                // Guess the last op's timestamp.  Use the log file's last modified time.  Sanity check it by
+                // going no earlier than the create time written in the log.  We can't rely on the last
+                // op time field in the header because that is only accurate when the file was closed normally
+                // but in crash recovery we're not dealing with a normally closed log.
+                long logLastModTime = redoLog.lastModified();
+                long logCreateTime = (new FileLogReader(redoLog)).getHeader().getCreateTime();
+                long lastOpTstamp = Math.max(logLastModTime, logCreateTime);
+                lookBackTstamp = lastOpTstamp - lookBackDuration;
+            }
 
-        // scanLog can truncate the current redo.log if it finds junk data at the end
-        // from the previous crash.  Close log writer before scanning and reopen after
-        // so we don't accidentally undo the truncation on the next write to the log.
-        LogWriter logWriter = redoLogMgr.getLogWriter();
-        logWriter.close();
-        scanLog(redoLog, false, null, Long.MIN_VALUE, Long.MAX_VALUE, lookBackTstamp, serverIds);
-        logWriter.open();
+            // scanLog can truncate the current redo.log if it finds junk data at the end
+            // from the previous crash.  Close log writer before scanning and reopen after
+            // so we don't accidentally undo the truncation on the next write to the log.
+            LogWriter logWriter = redoLogMgr.getLogWriter();
+            logWriter.close();
+            scanLog(redoLog, false, mboxIds, Long.MIN_VALUE, Long.MAX_VALUE, lookBackTstamp, serverIds);
+            logWriter.open();
 
-        int numOps;
-        synchronized (mOpsMapGuard) {
-            numOps = mOpsMap.size();
-        }
-        if (numOps == 0) {
-            ZimbraLog.redolog.info("No uncommitted transactions to redo");
-            return 0;
-        }
+            int numOps;
+            synchronized (mOpsMapGuard) {
+                numOps = mOpsMap.size();
+            }
+            if (numOps == 0) {
+                ZimbraLog.redolog.info("No uncommitted transactions to redo");
+                return 0;
+            }
 
-        synchronized (mOpsMapGuard) {
-            Set entrySet = mOpsMap.entrySet();
-            ZimbraLog.redolog.info("Redoing " + numOps + " uncommitted transactions");
-            for (Iterator it = entrySet.iterator(); it.hasNext(); ) {
-                Map.Entry entry = (Entry) it.next();
-                RedoableOp op = (RedoableOp) entry.getValue();
-                if (op == null)
-                    continue;
+            synchronized (mOpsMapGuard) {
+                Set entrySet = mOpsMap.entrySet();
+                ZimbraLog.redolog.info("Redoing " + numOps + " uncommitted transactions");
+                for (Iterator it = entrySet.iterator(); it.hasNext(); ) {
+                    Map.Entry entry = (Entry) it.next();
+                    RedoableOp op = (RedoableOp) entry.getValue();
+                    if (op == null)
+                        continue;
 
-                if (op.deferCrashRecovery()) {
-                    ZimbraLog.redolog.info("Deferring crash recovery to after startup: " + op);
-                    postStartupRecoveryOps.add(op);
-                    continue;
-                }
+                    if (op.deferCrashRecovery()) {
+                        ZimbraLog.redolog.info("Deferring crash recovery to after startup: " + op);
+                        postStartupRecoveryOps.add(op);
+                        continue;
+                    }
 
-                if (ZimbraLog.redolog.isInfoEnabled())
-                    ZimbraLog.redolog.info("REDOING: " + op);
+                    if (ZimbraLog.redolog.isInfoEnabled())
+                        ZimbraLog.redolog.info("REDOING: " + op);
 
-                boolean success = false;
-                try {
-                    op.redo();
-                    success = true;
-                } catch (Exception e) {
-                    ZimbraLog.redolog.error("Redo failed for [" + op + "]." +
-                            "  Backend state of affected item is indeterminate." +
-                            "  Marking operation as aborted and moving on.", e);
-                } finally {
-                    if (success) {
-                        CommitTxn commit = new CommitTxn(op);
-                        redoLogMgr.logOnly(commit, true);
-                    } else {
-                        AbortTxn abort = new AbortTxn(op);
-                        redoLogMgr.logOnly(abort, true);
+                    boolean success = false;
+                    try {
+                        op.redo();
+                        success = true;
+                    } catch (Exception e) {
+                        ZimbraLog.redolog.error("Redo failed for [" + op + "]." +
+                                "  Backend state of affected item is indeterminate." +
+                                "  Marking operation as aborted and moving on.", e);
+                    } finally {
+                        if (success) {
+                            CommitTxn commit = new CommitTxn(op);
+                            redoLogMgr.logOnly(commit, true);
+                        } else {
+                            AbortTxn abort = new AbortTxn(op);
+                            redoLogMgr.logOnly(abort, true);
+                        }
+                        op.removeTracker();
                     }
                 }
+                mOpsMap.clear();
             }
-            mOpsMap.clear();
-        }
 
-        return numOps;
+            return numOps;
+        } catch (IOException ioe) {
+            throw ServiceException.FAILURE("ioexception during recovery", ioe);
+        }
     }
 
     /**

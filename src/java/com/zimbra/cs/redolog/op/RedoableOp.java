@@ -48,6 +48,8 @@ import com.zimbra.cs.redolog.RedoLogOutput;
 import com.zimbra.cs.redolog.RedoLogProvider;
 import com.zimbra.cs.redolog.TransactionId;
 import com.zimbra.cs.redolog.Version;
+import com.zimbra.cs.redolog.txn.TxnTracker;
+import com.zimbra.cs.util.Zimbra;
 
 public abstract class RedoableOp {
 
@@ -128,8 +130,11 @@ public abstract class RedoableOp {
         // same order, but we can guarantee that only by eliminating concurrency.
 
         mTimestamp = timestamp;
-        if (isStartMarker())
+        if (isStartMarker()) {
+            //this may set an empty transactionId
+            //only rely on transactionId after log() returns
             setTransactionId(mRedoLogMgr.getNewTxnId());
+        }
     }
 
     public void log() throws ServiceException {
@@ -138,8 +143,12 @@ public abstract class RedoableOp {
 
     public void log(boolean synchronous) throws ServiceException {
         mRedoLogMgr.log(this, synchronous);
-        if (isStartMarker())
+        if (isStartMarker()) {
             mActive = true;
+            if (mMailboxId != UNKNOWN_ID) {
+                Zimbra.getAppContext().getBean(TxnTracker.class).addActiveTxn(mMailboxId, getTransactionId());
+            }
+        }
     }
 
     public void setChangeConstraint(boolean checkCreated, int changeId) {
@@ -162,10 +171,12 @@ public abstract class RedoableOp {
             mActive = false;
             mRedoLogMgr.commit(this);
             if (mChainedOps != null) {
-                for (RedoableOp rop : mChainedOps)
+                for (RedoableOp rop : mChainedOps) {
                     rop.commit();
+                }
                 mChainedOps = null;
             }
+            removeTracker();
         }
         // We don't need to hang onto the byte arrays after commit/abort.
         synchronized (mSBAVGuard) {
@@ -178,14 +189,22 @@ public abstract class RedoableOp {
             mActive = false;
             mRedoLogMgr.abort(this);
             if (mChainedOps != null) {
-                for (RedoableOp rop : mChainedOps)
+                for (RedoableOp rop : mChainedOps) {
                     rop.abort();
+                }
                 mChainedOps = null;
             }
+            removeTracker();
         }
         // We don't need to hang onto the byte arrays after commit/abort.
         synchronized (mSBAVGuard) {
             mSerializedByteArrayVector = null;
+        }
+    }
+
+    public void removeTracker() {
+        if (mMailboxId != UNKNOWN_ID) {
+            Zimbra.getAppContext().getBean(TxnTracker.class).removeActiveTxn(mMailboxId, getTransactionId());
         }
     }
 

@@ -26,6 +26,7 @@ import java.util.Set;
 
 import junit.framework.Assert;
 
+import org.apache.commons.lang.RandomStringUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -44,7 +45,9 @@ import com.zimbra.cs.mailbox.MailboxTestUtil;
 import com.zimbra.cs.mailbox.MailboxTransactionProxy;
 import com.zimbra.cs.redolog.op.MockRedoableOp;
 import com.zimbra.cs.redolog.op.RedoableOp;
+import com.zimbra.cs.redolog.txn.TxnTracker;
 import com.zimbra.cs.redolog.util.RedoLogVerify;
+import com.zimbra.cs.util.Zimbra;
 
 public class RedoPlayerTest {
     @BeforeClass
@@ -97,7 +100,7 @@ public class RedoPlayerTest {
     @Test
     public void playbackCrashedOp() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-        String folderName = "testfolder";
+        String folderName = "testfolder-" + RandomStringUtils.randomAlphanumeric(5);
         String serverId = "someserverid";
         MockRedoableOp op  = new MockRedoableOp(mbox.getId(), folderName, Mailbox.ID_FOLDER_INBOX, new FolderOptions());
 
@@ -105,6 +108,8 @@ public class RedoPlayerTest {
         op.setServerId(serverId);
         op.start(System.currentTimeMillis());
         op.log(true);
+        //remove tracker so we don't trigger automatic replay
+        Zimbra.getAppContext().getBean(TxnTracker.class).removeActiveTxn(mbox.getId(), op.getTransactionId());
 
         RedoPlayer player = new RedoPlayer(false);
 
@@ -118,7 +123,7 @@ public class RedoPlayerTest {
     @Test(expected=NoSuchItemException.class)
     public void playbackCrashedOpOtherServer() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-        String folderName = "testfolder";
+        String folderName = "testfolder-" + RandomStringUtils.randomAlphanumeric(5);
         String serverId = "someserverid";
         MockRedoableOp op  = new MockRedoableOp(mbox.getId(), folderName, Mailbox.ID_FOLDER_INBOX, new FolderOptions());
 
@@ -126,6 +131,8 @@ public class RedoPlayerTest {
         op.setServerId(serverId);
         op.start(System.currentTimeMillis());
         op.log(true);
+        //remove tracker so we don't trigger automatic replay
+        Zimbra.getAppContext().getBean(TxnTracker.class).removeActiveTxn(mbox.getId(), op.getTransactionId());
 
         RedoPlayer player = new RedoPlayer(false);
 
@@ -140,7 +147,7 @@ public class RedoPlayerTest {
     @Test
     public void playbackCrashedOpByServer() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-        String folderName = "testfolder";
+        String folderName = "testfolder-" + RandomStringUtils.randomAlphanumeric(5);
         String serverId = "someserverid";
         MockRedoableOp op  = new MockRedoableOp(mbox.getId(), folderName, Mailbox.ID_FOLDER_INBOX, new FolderOptions());
 
@@ -148,6 +155,8 @@ public class RedoPlayerTest {
         op.setServerId(serverId);
         op.start(System.currentTimeMillis());
         op.log(true);
+        //remove tracker so we don't trigger automatic replay
+        Zimbra.getAppContext().getBean(TxnTracker.class).removeActiveTxn(mbox.getId(), op.getTransactionId());
 
         RedoPlayer player = new RedoPlayer(false);
 
@@ -160,10 +169,29 @@ public class RedoPlayerTest {
         Assert.assertEquals(folderName, testFolder.getName());
     }
 
+    @Test
+    public void automaticPlaybackCrashedOp() throws Exception {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        String folderName = "testfolder-" + RandomStringUtils.randomAlphanumeric(5);
+        String serverId = "someserverid";
+        MockRedoableOp op  = new MockRedoableOp(mbox.getId(), folderName, Mailbox.ID_FOLDER_INBOX, new FolderOptions());
+
+        op.setFolderIdAndUuid(1234, "fakeuuid");
+        op.setServerId(serverId);
+        op.start(System.currentTimeMillis());
+        op.log(true);
+
+        //we never commit, but next txn notices and finishes for us, regardless of serverId
+
+        Folder testFolder = mbox.getFolderByPath(null, "/Inbox/" + folderName);
+        Assert.assertNotNull(testFolder);
+        Assert.assertEquals(folderName, testFolder.getName());
+    }
+
     @Test(expected=NoSuchItemException.class)
     public void doNotPlaybackCommitted() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-        String folderName = "testfolder";
+        String folderName = "testfolder-" + RandomStringUtils.randomAlphanumeric(5);
         MockRedoableOp op  = new MockRedoableOp(mbox.getId(), folderName, Mailbox.ID_FOLDER_INBOX, new FolderOptions());
 
         op.setFolderIdAndUuid(1234, "fakeuuid");
@@ -184,7 +212,7 @@ public class RedoPlayerTest {
     public void playbackCommitted() throws Exception {
         ZimbraLog.test.info("playbackCommitted(): begin");
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-        String folderName = "testfolder";
+        String folderName = "testfolder-" + RandomStringUtils.randomAlphanumeric(5);
         MockRedoableOp op  = new MockRedoableOp(mbox.getId(), folderName, Mailbox.ID_FOLDER_INBOX, new FolderOptions());
 
         op.setFolderIdAndUuid(1234, "fakeuuid");
@@ -213,7 +241,7 @@ public class RedoPlayerTest {
     public void playbackCommittedByServer() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
 
-        String folderName = "testfolder";
+        String folderName = "testfolder-" + RandomStringUtils.randomAlphanumeric(5);
         String serverId = MockRedoableOp.getLocalServerId();
         MockRedoableOp op  = new MockRedoableOp(mbox.getId(), folderName, Mailbox.ID_FOLDER_INBOX, new FolderOptions());
         op.setFolderIdAndUuid(1234, "fakeuuid");

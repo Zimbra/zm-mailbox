@@ -26,10 +26,13 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
 
+import com.google.common.collect.Sets;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Pair;
@@ -48,8 +51,8 @@ import com.zimbra.cs.util.Zimbra;
 public abstract class AbstractRedoLogManager implements RedoLogManager {
 
     protected boolean mEnabled;
-    private boolean mInCrashRecovery;
-    private final Object mInCrashRecoveryGuard = new Object();
+    private final AtomicBoolean inCrashRecovery = new AtomicBoolean(false);
+    private final Set<Integer> mboxIdsInRecovery = Sets.newSetFromMap(new ConcurrentHashMap<Integer, Boolean>());
     protected boolean mShuttingDown;
     protected final Object mShuttingDownGuard = new Object();
     protected boolean mInPostStartupCrashRecovery;
@@ -101,16 +104,17 @@ public abstract class AbstractRedoLogManager implements RedoLogManager {
     }
 
     private void setInCrashRecovery(boolean b) {
-        synchronized (mInCrashRecoveryGuard) {
-            mInCrashRecovery = b;
-        }
+        inCrashRecovery.set(b);
     }
 
     @Override
     public boolean getInCrashRecovery() {
-        synchronized (mInCrashRecoveryGuard) {
-            return mInCrashRecovery;
-        }
+        return inCrashRecovery.get();
+    }
+
+    @Override
+    public boolean getInCrashRecovery(int mboxId) {
+        return inCrashRecovery.get() || mboxIdsInRecovery.contains(mboxId);
     }
 
     protected abstract void initRedoLog() throws IOException;
@@ -247,7 +251,7 @@ public abstract class AbstractRedoLogManager implements RedoLogManager {
 
     @Override
     public void log(RedoableOp op, boolean synchronous) throws ServiceException {
-        if (!mEnabled || mRecoveryMode)
+        if (!mEnabled || mRecoveryMode || mboxIdsInRecovery.contains(op.getMailboxId()))
             return;
 
         logOnly(op, synchronous);
@@ -640,4 +644,24 @@ public abstract class AbstractRedoLogManager implements RedoLogManager {
         }
     }
 
+    @Override
+    public boolean supportsCrashRecovery() {
+        return mSupportsCrashRecovery;
+    }
+
+    @Override
+    public void crashRecoverMailboxes(Map<Integer, Integer> mboxIdMap) throws ServiceException {
+        mboxIdsInRecovery.addAll(mboxIdMap.values());
+
+        RedoPlayer redoPlayer = new RedoPlayer(true);
+        try {
+            List<RedoableOp> postRecoveryOps = new ArrayList<RedoableOp>();
+
+            redoPlayer.runCrashRecovery(this, postRecoveryOps, null, mboxIdMap);
+        } finally {
+            redoPlayer.shutdown();
+        }
+
+        mboxIdsInRecovery.removeAll(mboxIdMap.values());
+    }
 }

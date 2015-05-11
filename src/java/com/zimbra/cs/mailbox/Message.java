@@ -1004,7 +1004,7 @@ public class Message extends MailItem {
             RedoLogProvider redoProvider = RedoLogProvider.getInstance();
             boolean needToForward =
                 redoProvider.isMaster() &&
-                (redoPlayer == null || redoProvider.getRedoLogManager().getInCrashRecovery());
+                (redoPlayer == null || redoProvider.getRedoLogManager().getInCrashRecovery(mbox.getId()));
             if (needToForward) {
                 String[] forwardTo = null;
 
