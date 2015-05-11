@@ -80,7 +80,8 @@ public class URLUtil {
     /** Returns a mailstore user soap service url */
     @SuppressWarnings("unchecked")
     public static String getSoapURL() throws ServiceException {
-        Server localServer = Provisioning.getInstance().getLocalServer();
+        Provisioning prov = Provisioning.getInstance();
+        Server localServer = prov.getLocalServer();
         boolean useLocalServer = localServer.hasMailClientService() || !Zimbra.isAlwaysOn();
         if (useLocalServer) {
             return getSoapURL(localServer, true);
@@ -94,8 +95,8 @@ public class URLUtil {
         } catch (Exception | NoClassDefFoundError e) {}
 
         if (serviceLocator == null) {
-            ServiceLocator sl1 = new ConsulServiceLocator(new ConsulClient());
-            ServiceLocator sl2 = new ProvisioningServiceLocator(Provisioning.getInstance());
+            ServiceLocator sl1 = new ConsulServiceLocator(new ConsulClient(localServer.getConsulURL()));
+            ServiceLocator sl2 = new ProvisioningServiceLocator(prov);
             serviceLocator = new ChainedServiceLocator(sl1, sl2);
             selector = ServiceLocator.SELECT_RANDOM;
         }
@@ -224,7 +225,8 @@ public class URLUtil {
      */
     @SuppressWarnings("unchecked")
     public static String getAdminURL() throws ServiceException {
-        Server localServer = Provisioning.getInstance().getLocalServer();
+        Provisioning prov = Provisioning.getInstance();
+        Server localServer = prov.getLocalServer();
         boolean useLocalServer = localServer.hasMailClientService() || !Zimbra.isAlwaysOn();
         if (useLocalServer) {
             return getAdminURL(localServer);
@@ -238,8 +240,8 @@ public class URLUtil {
         } catch (Exception | NoClassDefFoundError e) {}
 
         if (serviceLocator == null) {
-            ServiceLocator sl1 = new ConsulServiceLocator(new ConsulClient());
-            ServiceLocator sl2 = new ProvisioningServiceLocator(Provisioning.getInstance());
+            ServiceLocator sl1 = new ConsulServiceLocator(new ConsulClient(localServer.getConsulURL()));
+            ServiceLocator sl2 = new ProvisioningServiceLocator(prov);
             serviceLocator = new ChainedServiceLocator(sl1, sl2);
             selector = ServiceLocator.SELECT_RANDOM;
         }

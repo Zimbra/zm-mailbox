@@ -64,6 +64,7 @@ import com.zimbra.common.soap.SoapHttpTransport.HttpDebugListener;
 import com.zimbra.common.soap.SoapTransport;
 import com.zimbra.common.soap.SoapTransport.DebugListener;
 import com.zimbra.common.util.AccountLogger;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.util.Log.Level;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.zclient.ZClientException;
@@ -241,8 +242,16 @@ public class SoapProvisioning extends Provisioning {
     public SoapProvisioning(boolean needSession) {
         mNeedSession = needSession;
 
-        ServiceLocator sl1 = new ConsulServiceLocator(new ConsulClient());
-        ServiceLocator sl2 = new ProvisioningServiceLocator(Provisioning.getInstance());
+        String consulUrl;
+        Provisioning prov = Provisioning.getInstance();
+        try {
+            consulUrl = prov.getLocalServer().getConsulURL();
+        } catch (ServiceException e) {
+            consulUrl = "http://127.0.0.1:8500";
+            ZimbraLog.misc.warn("Failed loading Consul URL from LDAP; defaulting to %s", consulUrl);
+        }
+        ServiceLocator sl1 = new ConsulServiceLocator(new ConsulClient(consulUrl));
+        ServiceLocator sl2 = new ProvisioningServiceLocator(prov);
         serviceLocator = new ChainedServiceLocator(sl1, sl2);
     }
 
