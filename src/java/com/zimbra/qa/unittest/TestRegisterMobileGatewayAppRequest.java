@@ -15,7 +15,6 @@
 
 package com.zimbra.qa.unittest;
 
-import com.zimbra.soap.account.message.RegisterMobileGatewayAppResponse;
 import junit.framework.TestCase;
 
 import org.junit.Test;
@@ -46,9 +45,7 @@ public class TestRegisterMobileGatewayAppRequest extends TestCase {
         zmgDevice.setRegistrationId("124h67");
         zmgDevice.setPushProvider("gcm");
         RegisterMobileGatewayAppRequest request = new RegisterMobileGatewayAppRequest(zmgDevice);
-        RegisterMobileGatewayAppResponse response = mbox.invokeJaxb(request);
-        String result = response.getMessage();
-        assertEquals("1", result);
+        mbox.invokeJaxb(request);
     }
 
     /*
