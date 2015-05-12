@@ -129,7 +129,7 @@ public class ZimbraSuite extends TestSuite
         sClasses.add(TestReIndex.class);
         sClasses.add(TestSolrCloud.class);
         sClasses.add(TestResetLdapClient.class);
-        sClasses.add(TestAddZmgDevice.class);
+        sClasses.add(TestRegisterMobileGatewayAppRequest.class);
         sClasses.add(TestGetGcmSenderId.class);
         sClasses.add(TestShareNotifications.class);
     }

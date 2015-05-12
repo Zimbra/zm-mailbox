@@ -15,17 +15,17 @@
 
 package com.zimbra.qa.unittest;
 
+import com.zimbra.soap.account.message.RegisterMobileGatewayAppResponse;
 import junit.framework.TestCase;
 
 import org.junit.Test;
 
 import com.zimbra.client.ZMailbox;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.soap.account.message.AddZmgDeviceRequest;
-import com.zimbra.soap.account.message.AddZmgDeviceResponse;
+import com.zimbra.soap.account.message.RegisterMobileGatewayAppRequest;
 import com.zimbra.soap.account.type.ZmgDeviceSpec;
 
-public class TestAddZmgDevice extends TestCase {
+public class TestRegisterMobileGatewayAppRequest extends TestCase {
 
     private static final String USER = "user2";
     private ZMailbox mbox;
@@ -41,12 +41,12 @@ public class TestAddZmgDevice extends TestCase {
     }
 
     @Test
-    public void testAddZmgDevice() throws ServiceException {
+    public void testRegisterMobileGatewayAppRequest() throws ServiceException {
         ZmgDeviceSpec zmgDevice = new ZmgDeviceSpec("1234");
         zmgDevice.setRegistrationId("124h67");
         zmgDevice.setPushProvider("gcm");
-        AddZmgDeviceRequest request = new AddZmgDeviceRequest(zmgDevice);
-        AddZmgDeviceResponse response = mbox.invokeJaxb(request);
+        RegisterMobileGatewayAppRequest request = new RegisterMobileGatewayAppRequest(zmgDevice);
+        RegisterMobileGatewayAppResponse response = mbox.invokeJaxb(request);
         String result = response.getMessage();
         assertEquals("1", result);
     }

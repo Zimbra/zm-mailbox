@@ -15,7 +15,6 @@
 package com.zimbra.cs.service.account.zmg;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -24,7 +23,10 @@ import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.account.AccountDocumentHandler;
+import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
+import com.zimbra.soap.account.message.RenewMobileGatewayAppTokenRequest;
+import com.zimbra.soap.account.message.RenewMobileGatewayAppTokenResponse;
 
 import java.util.Map;
 
@@ -43,8 +45,9 @@ public class RenewMobileGatewayAppToken extends AccountDocumentHandler {
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
-        String appUuid = request.getElement(AccountConstants.E_APP_ID).getTextTrim();
-        String appKey = request.getElement(AccountConstants.E_APP_KEY).getTextTrim();
+        RenewMobileGatewayAppTokenRequest req = JaxbUtil.elementToJaxb(request);
+        String appUuid = req.getAppId();
+        String appKey = req.getAppKey();
 
         String digest = AuthToken.generateDigest(appUuid, appKey);
         Account acct = Provisioning.getInstance().getAccountByForeignPrincipal("zmgappcreds:" + digest);
@@ -61,10 +64,10 @@ public class RenewMobileGatewayAppToken extends AccountDocumentHandler {
             throw ServiceException.FAILURE("Error in generating auth token", null);
         }
 
-        Element response = zsc.createElement(AccountConstants.RENEW_MOBILE_GATEWAY_APP_TOKEN_RESPONSE);
-        Element eAuthToken = response.addUniqueElement(AccountConstants.E_AUTH_TOKEN);
-        eAuthToken.addText(authTokenEncoded);
-        eAuthToken.addAttribute(AccountConstants.E_LIFETIME, acct.getAuthTokenLifetime());
-        return response;
+        com.zimbra.soap.account.type.AuthToken jaxbToken =
+                new com.zimbra.soap.account.type.AuthToken(authTokenEncoded, null);
+        jaxbToken.setLifetime(acct.getAuthTokenLifetime());
+        RenewMobileGatewayAppTokenResponse resp = new RenewMobileGatewayAppTokenResponse(jaxbToken);
+        return zsc.jaxbToElement(resp);
     }
 }
