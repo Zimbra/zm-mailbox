@@ -40,7 +40,7 @@ import com.zimbra.soap.json.jackson.annotate.ZimbraKeyValuePairs;
 /*
 <AuthResponse">
    <authToken>...</authToken>
-   <lifetime>...</lifetime>
+   <lifetime>{lifetime-in-milliseconds}</lifetime>
    <session .../>
    <refer>{mail-host}</refer>
    [<prefs><pref name="{name}" modified="{modified-time}">{value}</pref>...</prefs>]
@@ -61,19 +61,11 @@ public class AuthResponse {
     @XmlElement(name=AccountConstants.E_AUTH_TOKEN /* authToken */, required=true)
     private String authToken;
     /**
-     * @zm-api-field-description Life time for the authorization
+     * @zm-api-field-description Life time for the authorization - given in milliseconds
      */
     @ZimbraJsonAttribute
     @XmlElement(name=AccountConstants.E_LIFETIME /* lifetime */, required=true)
     private long lifetime;
-
-    /**
-     * @zm-api-field-description trust lifetime, if a trusted token is issued
-     */
-    @ZimbraJsonAttribute
-    @XmlElement(name=AccountConstants.E_TRUST_LIFETIME /* trustLifetime */, required=false)
-    private Long trustLifetime;
-
     /**
      * @zm-api-field-description Session information
      */
@@ -101,24 +93,12 @@ public class AuthResponse {
     private String csrfToken;
 
     /**
-     * @zm-api-field-description random secure device ID generated for the requesting device
-     */
-    @XmlElement(name=AccountConstants.E_DEVICE_ID, required=false)
-    private String deviceId;
-
-    /**
-     * @zm-api-field-description trusted device token
-     */
-    @XmlElement(name=AccountConstants.E_TRUSTED_TOKEN /* trustedToken */, required=false)
-    private String trustedToken;
-
-    /**
      * @zm-api-field-description Requested preference settings.
      */
     @ZimbraKeyValuePairs
     @XmlElementWrapper(name=AccountConstants.E_PREFS /* prefs */)
     @XmlElement(name=AccountConstants.E_PREF /* pref */)
-    private final List<Pref> prefs = new ArrayList<Pref>();
+    private List<Pref> prefs = new ArrayList<Pref>();
 
     /**
      * @zm-api-field-description Requested attribute settings.  Only attributes that are allowed to be returned by
@@ -127,7 +107,7 @@ public class AuthResponse {
     @ZimbraKeyValuePairs
     @XmlElementWrapper(name=AccountConstants.E_ATTRS /* attrs */)
     @XmlElement(name=AccountConstants.E_ATTR /* attr */)
-    private final List<Attr> attrs = new ArrayList<Attr>();
+    private List<Attr> attrs = new ArrayList<Attr>();
 
     public AuthResponse() {
     }
@@ -194,22 +174,5 @@ public class AuthResponse {
         this.csrfToken = csrfToken;
     }
 
-    public void setDeviceId(String deviceId) {
-        this.deviceId = deviceId;
-    }
 
-    public String getDeviceId() {
-        return deviceId;
-    }
-
-    public void setTrustedToken(String trustedToken) {
-        this.trustedToken = trustedToken;
-    }
-
-    public String getTrustedToken() {
-        return trustedToken;
-    }
-
-    public Long getTrustLifetime() { return trustLifetime; }
-    public AuthResponse setTrustLifetime(Long trustLifetime) { this.trustLifetime = trustLifetime; return this; }
 }

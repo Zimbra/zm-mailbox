@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -26,6 +26,7 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlEnum;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlType;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.Iterables;
@@ -45,12 +46,13 @@ import com.zimbra.soap.admin.type.IntIdAttr;
 public class DedupeBlobsRequest {
 
     @XmlEnum
+    @XmlType(namespace="urn:zimbraAdmin")
     public static enum DedupAction {
         start,
         status,
         stop,
         reset;
-        
+
         public static Action fromString(String action) throws ServiceException {
             try {
                 return Action.valueOf(action);
@@ -71,7 +73,7 @@ public class DedupeBlobsRequest {
      * @zm-api-field-description Volumes
      */
     @XmlElement(name=AdminConstants.E_VOLUME /* volume */, required=false)
-    private List<IntIdAttr> volumes = Lists.newArrayList();
+    private final List<IntIdAttr> volumes = Lists.newArrayList();
 
     public void setVolumes(Iterable <IntIdAttr> volumes) {
         this.volumes.clear();
@@ -79,7 +81,7 @@ public class DedupeBlobsRequest {
             Iterables.addAll(this.volumes, volumes);
         }
     }
-    
+
     /**
      * no-argument constructor wanted by JAXB
      */
@@ -87,7 +89,7 @@ public class DedupeBlobsRequest {
     private DedupeBlobsRequest() {
         this((DedupAction)null);
     }
-    
+
     public DedupeBlobsRequest(DedupAction action) {
         this.action = action;
     }

@@ -15,9 +15,6 @@
  * ***** END LICENSE BLOCK *****
  */
 @XmlSchema(
-    xmlns = {
-        @XmlNs(prefix="admin", namespaceURI = "urn:zimbraAdmin")
-    },
     namespace = "urn:zimbraAdmin",
     elementFormDefault = XmlNsForm.QUALIFIED
 )
