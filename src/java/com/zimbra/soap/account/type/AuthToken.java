@@ -21,6 +21,7 @@ import com.google.common.base.Objects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlValue;
 
 import com.zimbra.common.soap.AccountConstants;
@@ -43,7 +44,11 @@ public class AuthToken {
      */
     @XmlAttribute(name=AccountConstants.A_VERIFY_ACCOUNT /* verifyAccount */, required=false)
     private ZmBoolean verifyAccount;
-
+    /**
+     * @zm-api-field-description Life time of the auth token
+     */
+    @XmlAttribute(name=AccountConstants.E_LIFETIME /* lifetime */, required=false)
+    private Long lifetime;
     /**
      * no-argument constructor wanted by JAXB
      */
@@ -62,6 +67,14 @@ public class AuthToken {
 
     public Boolean getVerifyAccount() { return ZmBoolean.toBool(verifyAccount); }
     public void setVerifyAccount(Boolean verifyAccount) { this.verifyAccount = ZmBoolean.fromBool(verifyAccount); }
+
+    public Long getLifetime() {
+        return lifetime;
+    }
+
+    public void setLifetime(Long lifetime) {
+        this.lifetime = lifetime;
+    }
 
     @Override
     public String toString() {

@@ -22,41 +22,47 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.google.common.base.Objects;
 import com.zimbra.common.soap.AccountConstants;
+import com.zimbra.soap.account.type.ZmgDeviceSpec;
+import com.zimbra.soap.json.jackson.annotate.ZimbraUniqueElement;
 
+/**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required false
+ * @zm-api-command-description Registering app/device to receive push notifications
+ */
 @XmlAccessorType(XmlAccessType.NONE)
-@XmlRootElement(name = AccountConstants.E_ADD_ZMG_DEVICE_RESPONSE)
-public class AddZmgDeviceResponse {
+@XmlRootElement(name = AccountConstants.E_REGISTER_MOBILE_GATEWAY_APP_REQUEST)
+public class RegisterMobileGatewayAppRequest {
 
     /**
-     * @zm-api-field-tag response message
-     * @zm-api-field-description response message for AddZmgDeviceRequest
+     * @zm-api-field-description Zmg Device specification
      */
-    @XmlElement(name = AccountConstants.E_SUCCESS, required = true)
-    private final String message;
+    @ZimbraUniqueElement
+    @XmlElement(name = AccountConstants.E_ZMG_DEVICE /* m */, required = true)
+    private final ZmgDeviceSpec zmgDevice;
 
     /**
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
-    private AddZmgDeviceResponse() {
-        this(null);
+    private RegisterMobileGatewayAppRequest() {
+        this((ZmgDeviceSpec) null);
     }
 
-    public AddZmgDeviceResponse(String message) {
-        this.message = message;
+    public RegisterMobileGatewayAppRequest(ZmgDeviceSpec zmgDevice) {
+        this.zmgDevice = zmgDevice;
     }
 
-    public String getMessage() {
-        return message;
+    public ZmgDeviceSpec getZmgDevice() {
+        return zmgDevice;
     }
 
     public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
-        return helper.add("success", message);
+        return helper.add("zmgDevice", zmgDevice);
     }
 
     @Override
     public String toString() {
         return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
-
 }

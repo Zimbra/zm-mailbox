@@ -15,50 +15,44 @@
 
 package com.zimbra.soap.account.message;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
+import com.google.common.base.Objects;
+import com.zimbra.common.soap.AccountConstants;
+import com.zimbra.soap.account.type.AuthToken;
+import com.zimbra.soap.json.jackson.annotate.ZimbraUniqueElement;
+
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import com.google.common.base.Objects;
-import com.zimbra.common.soap.AccountConstants;
-import com.zimbra.soap.account.type.ZmgDeviceSpec;
-import com.zimbra.soap.json.jackson.annotate.ZimbraUniqueElement;
-
-/**
- * @zm-api-command-auth-required true
- * @zm-api-command-admin-auth-required false
- * @zm-api-command-description Add Zmg Device
- */
-@XmlAccessorType(XmlAccessType.NONE)
-@XmlRootElement(name = AccountConstants.E_ADD_ZMG_DEVICE_REQUEST)
-public class AddZmgDeviceRequest {
+@XmlRootElement(name = AccountConstants.E_RENEW_MOBILE_GATEWAY_APP_TOKEN_RESPONSE)
+public class RenewMobileGatewayAppTokenResponse {
 
     /**
-     * @zm-api-field-description Zmg Device specification
+     * @zm-api-field-tag auth-token
+     * @zm-api-field-description app account auth token
      */
     @ZimbraUniqueElement
-    @XmlElement(name = AccountConstants.E_ZMG_DEVICE /* m */, required = true)
-    private final ZmgDeviceSpec zmgDevice;
+    @XmlElement(name = AccountConstants.E_AUTH_TOKEN, required = true)
+    private AuthToken authToken;
 
     /**
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
-    private AddZmgDeviceRequest() {
-        this((ZmgDeviceSpec) null);
+    private RenewMobileGatewayAppTokenResponse() {
+        this(null);
     }
 
-    public AddZmgDeviceRequest(ZmgDeviceSpec zmgDevice) {
-        this.zmgDevice = zmgDevice;
+    public RenewMobileGatewayAppTokenResponse(AuthToken authToken) {
+        this.authToken = authToken;
     }
 
-    public ZmgDeviceSpec getZmgDevice() {
-        return zmgDevice;
+    public AuthToken getAuthToken() {
+        return authToken;
     }
 
     public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
-        return helper.add("zmgDevice", zmgDevice);
+        return helper.
+                add("authToken", authToken);
     }
 
     @Override

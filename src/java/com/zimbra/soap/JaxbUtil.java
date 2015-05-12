@@ -29,6 +29,12 @@ import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.namespace.QName;
 
+import com.zimbra.soap.account.message.BootstrapMobileGatewayAppRequest;
+import com.zimbra.soap.account.message.BootstrapMobileGatewayAppResponse;
+import com.zimbra.soap.account.message.RegisterMobileGatewayAppRequest;
+import com.zimbra.soap.account.message.RegisterMobileGatewayAppResponse;
+import com.zimbra.soap.account.message.RenewMobileGatewayAppTokenRequest;
+import com.zimbra.soap.account.message.RenewMobileGatewayAppTokenResponse;
 import org.dom4j.Document;
 import org.dom4j.Namespace;
 import org.dom4j.io.DocumentResult;
@@ -1024,8 +1030,12 @@ public final class JaxbUtil {
             com.zimbra.soap.voice.message.VoiceMsgActionResponse.class,
 
             //zimbra mobile gateway
-            com.zimbra.soap.account.message.AddZmgDeviceRequest.class,
-            com.zimbra.soap.account.message.AddZmgDeviceResponse.class,
+            BootstrapMobileGatewayAppRequest.class,
+            BootstrapMobileGatewayAppResponse.class,
+            RenewMobileGatewayAppTokenRequest.class,
+            RenewMobileGatewayAppTokenResponse.class,
+            RegisterMobileGatewayAppRequest.class,
+            RegisterMobileGatewayAppResponse.class,
             com.zimbra.soap.account.message.GetGcmSenderIdRequest.class,
             com.zimbra.soap.account.message.GetGcmSenderIdResponse.class
         };

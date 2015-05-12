@@ -26,11 +26,11 @@ import com.zimbra.common.soap.AccountConstants;
 public class ZmgDeviceSpec {
 
     /**
-     * @zm-api-field-tag device-id
-     * @zm-api-field-description Device ID.
+     * @zm-api-field-tag app-id
+     * @zm-api-field-description App ID.
      */
-    @XmlAttribute(name = AccountConstants.A_DEVICE_ID /* device id */, required = true)
-    private final String deviceId;
+    @XmlAttribute(name = AccountConstants.E_APP_ID /* app id */, required = true)
+    private final String appId;
 
     /**
      * @zm-api-field-tag registration-id
@@ -56,8 +56,8 @@ public class ZmgDeviceSpec {
         this((String) null);
     }
 
-    public ZmgDeviceSpec(String deviceId) {
-        this.deviceId = deviceId;
+    public ZmgDeviceSpec(String appId) {
+        this.appId = appId;
     }
 
     public void setRegistrationId(String registrationId) {
@@ -68,8 +68,8 @@ public class ZmgDeviceSpec {
         this.pushProvider = pushProvider;
     }
 
-    public String getDeviceId() {
-        return deviceId;
+    public String getAppId() {
+        return appId;
     }
 
     public String getRegistrationId() {
@@ -81,7 +81,7 @@ public class ZmgDeviceSpec {
     }
 
     public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
-        return helper.add("deviceId", deviceId).add("registrationId", registrationId)
+        return helper.add("appId", appId).add("registrationId", registrationId)
             .add("pushProvider", pushProvider);
     }
 
