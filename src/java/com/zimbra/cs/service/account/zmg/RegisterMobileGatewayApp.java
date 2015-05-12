@@ -18,7 +18,6 @@ package com.zimbra.cs.service.account.zmg;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.ZmgDevice;
@@ -27,10 +26,11 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.service.account.AccountDocumentHandler;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
-import com.zimbra.soap.account.message.AddZmgDeviceRequest;
+import com.zimbra.soap.account.message.RegisterMobileGatewayAppRequest;
+import com.zimbra.soap.account.message.RegisterMobileGatewayAppResponse;
 import com.zimbra.soap.account.type.ZmgDeviceSpec;
 
-public class AddZmgDevice extends AccountDocumentHandler {
+public class RegisterMobileGatewayApp extends AccountDocumentHandler {
 
     /*
      * (non-Javadoc)
@@ -48,9 +48,9 @@ public class AddZmgDevice extends AccountDocumentHandler {
             throw ServiceException.PERM_DENIED("can not access account");
         }
 
-        AddZmgDeviceRequest req = JaxbUtil.elementToJaxb(request);
+        RegisterMobileGatewayAppRequest req = JaxbUtil.elementToJaxb(request);
         ZmgDeviceSpec device = req.getZmgDevice();
-        String deviceId = device.getDeviceId();
+        String deviceId = device.getAppId();
         String regId = device.getRegistrationId();
         String pushProvider = device.getPushProvider();
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
@@ -60,8 +60,7 @@ public class AddZmgDevice extends AccountDocumentHandler {
             account.setPrefZmgPushNotificationEnabled(true);
         }
 
-        Element response = zsc.createElement(AccountConstants.ADD_ZMG_DEVICE_RESPONSE);
-        response.addUniqueElement(AccountConstants.E_SUCCESS).addText(Integer.toString(result));
-        return response;
+        RegisterMobileGatewayAppResponse resp = new RegisterMobileGatewayAppResponse();
+        return zsc.jaxbToElement(resp);
     }
 }
