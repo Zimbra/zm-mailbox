@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2009, 2010, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -23,7 +23,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.util.ProvisioningUtil;
@@ -100,13 +99,21 @@ public class IncomingDirectory {
 
     public synchronized static void setSweptDirectories(IncomingDirectory inc) {
         IncomingDirectorySweeper.sSweptDirectories = Arrays.asList(inc);
+        ZimbraLog.store.debug("Setting swept directory to %s", inc.getPath());
     }
 
     public synchronized static void setSweptDirectories(Collection<IncomingDirectory> swept) {
-        if (swept == null)
+        if (swept == null) {
             IncomingDirectorySweeper.sSweptDirectories = Collections.emptyList();
-        else
+            ZimbraLog.store.debug("Clearing swept directories.");
+        } else {
             IncomingDirectorySweeper.sSweptDirectories = new ArrayList<IncomingDirectory>(swept);
+            if (ZimbraLog.store.isDebugEnabled()) {
+                for (IncomingDirectory inc: swept) {
+                    ZimbraLog.store.debug("Adding %s to swept directories.", inc.getPath());
+                }
+            }
+        }
     }
 
     private static class IncomingDirectorySweeper extends Thread {
@@ -159,7 +166,9 @@ public class IncomingDirectory {
                 startTime = System.currentTimeMillis();
 
                 // delete old files in all incoming directories
+                ZimbraLog.store.debug("Sweeper examining %d paths for blobs.", sSweptDirectories.size());
                 for (IncomingDirectory inc : sSweptDirectories) {
+                    ZimbraLog.store.debug("Sweeper examining %s", inc.getPath());
                     File directory = new File(inc.getPath());
                     if (!directory.exists())
                         continue;
