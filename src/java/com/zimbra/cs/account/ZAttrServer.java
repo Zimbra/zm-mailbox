@@ -19586,6 +19586,103 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * URL for accessing extneral indexing service. First part of the URL
+     * before the first colon identifies implementation Factory and should be
+     * registered by calling IndexStore.registerFactory(prefix, classname).
+     * ZCS ships with two index Factory implementations: 1) SolrIndex
+     * identified by prefix &quot;solr&quot; 2) SolrCloudIndex indetified by
+     * prefix &quot;solrcloud&quot;
+     *
+     * @return zimbraIndexURL, or "solr:http://localhost:7983/solr" if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1669)
+    public String getIndexURL() {
+        return getAttr(Provisioning.A_zimbraIndexURL, "solr:http://localhost:7983/solr");
+    }
+
+    /**
+     * URL for accessing extneral indexing service. First part of the URL
+     * before the first colon identifies implementation Factory and should be
+     * registered by calling IndexStore.registerFactory(prefix, classname).
+     * ZCS ships with two index Factory implementations: 1) SolrIndex
+     * identified by prefix &quot;solr&quot; 2) SolrCloudIndex indetified by
+     * prefix &quot;solrcloud&quot;
+     *
+     * @param zimbraIndexURL new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1669)
+    public void setIndexURL(String zimbraIndexURL) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIndexURL, zimbraIndexURL);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * URL for accessing extneral indexing service. First part of the URL
+     * before the first colon identifies implementation Factory and should be
+     * registered by calling IndexStore.registerFactory(prefix, classname).
+     * ZCS ships with two index Factory implementations: 1) SolrIndex
+     * identified by prefix &quot;solr&quot; 2) SolrCloudIndex indetified by
+     * prefix &quot;solrcloud&quot;
+     *
+     * @param zimbraIndexURL new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1669)
+    public Map<String,Object> setIndexURL(String zimbraIndexURL, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIndexURL, zimbraIndexURL);
+        return attrs;
+    }
+
+    /**
+     * URL for accessing extneral indexing service. First part of the URL
+     * before the first colon identifies implementation Factory and should be
+     * registered by calling IndexStore.registerFactory(prefix, classname).
+     * ZCS ships with two index Factory implementations: 1) SolrIndex
+     * identified by prefix &quot;solr&quot; 2) SolrCloudIndex indetified by
+     * prefix &quot;solrcloud&quot;
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1669)
+    public void unsetIndexURL() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIndexURL, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * URL for accessing extneral indexing service. First part of the URL
+     * before the first colon identifies implementation Factory and should be
+     * registered by calling IndexStore.registerFactory(prefix, classname).
+     * ZCS ships with two index Factory implementations: 1) SolrIndex
+     * identified by prefix &quot;solr&quot; 2) SolrCloudIndex indetified by
+     * prefix &quot;solrcloud&quot;
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1669)
+    public Map<String,Object> unsetIndexURL(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIndexURL, "");
+        return attrs;
+    }
+
+    /**
      * Maximum wildcard expansions for each individual term in the query.
      *
      * @return zimbraIndexWildcardMaxTermsExpanded, or 20000 if unset
@@ -61553,83 +61650,6 @@ public abstract class ZAttrServer extends NamedEntry {
     public Map<String,Object> unsetSolrReplicationFactor(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraSolrReplicationFactor, "");
-        return attrs;
-    }
-
-    /**
-     * Base URL for accessing Solr. Must include port number. Should point to
-     * ZooKeeper when Solr is running in cloud mode.
-     *
-     * @return zimbraSolrURLBase, or "http://localhost:7983/solr" if unset
-     *
-     * @since ZCS 9.0.0
-     */
-    @ZAttr(id=1669)
-    public String getSolrURLBase() {
-        return getAttr(Provisioning.A_zimbraSolrURLBase, "http://localhost:7983/solr");
-    }
-
-    /**
-     * Base URL for accessing Solr. Must include port number. Should point to
-     * ZooKeeper when Solr is running in cloud mode.
-     *
-     * @param zimbraSolrURLBase new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 9.0.0
-     */
-    @ZAttr(id=1669)
-    public void setSolrURLBase(String zimbraSolrURLBase) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraSolrURLBase, zimbraSolrURLBase);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * Base URL for accessing Solr. Must include port number. Should point to
-     * ZooKeeper when Solr is running in cloud mode.
-     *
-     * @param zimbraSolrURLBase new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 9.0.0
-     */
-    @ZAttr(id=1669)
-    public Map<String,Object> setSolrURLBase(String zimbraSolrURLBase, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraSolrURLBase, zimbraSolrURLBase);
-        return attrs;
-    }
-
-    /**
-     * Base URL for accessing Solr. Must include port number. Should point to
-     * ZooKeeper when Solr is running in cloud mode.
-     *
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 9.0.0
-     */
-    @ZAttr(id=1669)
-    public void unsetSolrURLBase() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraSolrURLBase, "");
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * Base URL for accessing Solr. Must include port number. Should point to
-     * ZooKeeper when Solr is running in cloud mode.
-     *
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 9.0.0
-     */
-    @ZAttr(id=1669)
-    public Map<String,Object> unsetSolrURLBase(Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraSolrURLBase, "");
         return attrs;
     }
 

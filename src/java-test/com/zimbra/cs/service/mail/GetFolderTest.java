@@ -29,7 +29,6 @@ import org.junit.Test;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.zimbra.common.account.Key;
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.account.Account;
@@ -48,8 +47,10 @@ public class GetFolderTest {
     @BeforeClass
     public static void init() throws Exception {
         MailboxTestUtil.initServer();
-        LC.zimbra_class_index_store_factory.setDefault(MockSolrIndex.Factory.class.getName());
-        IndexStore.setFactory(LC.zimbra_class_index_store_factory.value());
+        /** overwrite index URL. It gets reset by MailboxTestUtil.initServer() */
+        Provisioning.getInstance().getLocalServer().setIndexURL("mock:local");
+        IndexStore.setFactory(MockSolrIndex.Factory.class.getName());
+        
         Provisioning prov = Provisioning.getInstance();
 
         Map<String, Object> attrs = Maps.newHashMap();

@@ -51,6 +51,7 @@ import com.zimbra.cs.db.HSQLDB;
 import com.zimbra.cs.index.IndexStore;
 import com.zimbra.cs.index.IndexingService;
 import com.zimbra.cs.index.solr.EmbeddedSolrIndex;
+import com.zimbra.cs.index.solr.MockSolrIndex;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
@@ -130,9 +131,13 @@ public final class MailboxTestUtil {
         DbPool.startup();
         HSQLDB.createDatabase(zimbraServerDir, false);
 
+        IndexStore.registerIndexFactory("mock", MockSolrIndex.Factory.class.getName());
+        IndexStore.registerIndexFactory("embeddedsolr",EmbeddedSolrIndex.Factory.class.getName());
+        
         //use EmbeddedSolrIndex for indexing, because Solr webapp is nor running
-        LC.zimbra_class_index_store_factory.setDefault(EmbeddedSolrIndex.Factory.class.getName());
-        IndexStore.setFactory(LC.zimbra_class_index_store_factory.value());
+        Provisioning.getInstance().getLocalServer().setIndexURL("embeddedsolr:local");
+        IndexStore.setFactory(EmbeddedSolrIndex.Factory.class.getName());
+        
         LC.zimbra_class_store.setDefault(storeManagerClass.getName());
         LC.zimbra_class_soapsessionfactory.setDefault(DefaultSoapSessionFactory.class.getName());
         deleteAllIndexFolders();

@@ -97,7 +97,12 @@ public abstract class AbstractIndexStoreTest {
         } catch (ServiceException e) {
             ZimbraLog.test.error("Problem cleaning up test@zimbra.com account", e);
         }
-        IndexStore.getFactory().destroy();
+        try {
+            IndexStore.getFactory().destroy();
+        } catch (ServiceException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
         IndexStore.setFactory(originalIndexStoreFactory);
     }
 

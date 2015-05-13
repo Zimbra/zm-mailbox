@@ -39,7 +39,6 @@ import com.zimbra.common.calendar.ICalTimeZone;
 import com.zimbra.common.calendar.ParsedDateTime;
 import com.zimbra.common.calendar.ZCalendar.ZComponent;
 import com.zimbra.common.calendar.ZCalendar.ZVCalendar;
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
@@ -67,8 +66,10 @@ public class GetMsgTest {
     @BeforeClass
     public static void init() throws Exception {
         MailboxTestUtil.initServer();
-        LC.zimbra_class_index_store_factory.setDefault(MockSolrIndex.Factory.class.getName());
-        IndexStore.setFactory(LC.zimbra_class_index_store_factory.value());
+        
+        /** overwrite index URL. It gets reset by MailboxTestUtil.initServer() */
+        Provisioning.getInstance().getLocalServer().setIndexURL("mock:local");
+        IndexStore.setFactory(MockSolrIndex.Factory.class.getName());
     }
 
     /**

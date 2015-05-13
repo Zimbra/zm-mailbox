@@ -31,7 +31,6 @@ import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.ZimbraHttpClientManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
@@ -54,7 +53,7 @@ public class TestSolrCloud {
 	private int originalReplicationFactor = 2;
 	@Before
     public void setUp() throws Exception {
-    	Assume.assumeTrue("com.zimbra.cs.index.solr.SolrCloudIndex$Factory".equals(LC.zimbra_class_index_store_factory.value()));
+    	Assume.assumeTrue("com.zimbra.cs.index.solr.SolrCloudIndex$Factory".equals(IndexStore.getFactory().getClass().getName()));
     	originalMaxShardsPerNode = ProvisioningUtil.getServerAttribute(Provisioning.A_zimbraSolrMaxShardsPerNode, 1);
     	originalReplicationFactor = ProvisioningUtil.getServerAttribute(Provisioning.A_zimbraSolrReplicationFactor, 2);
     	cleanUp();
@@ -81,9 +80,9 @@ public class TestSolrCloud {
 		if(!(indexStoreFactory instanceof SolrCloudIndex.Factory)) {
 			fail("Server is not configured to use com.zimbra.cs.index.solr.SolrCloudIndex$Factory");
 		}
-		//check that zimbraSolrURLBase points to ZK, not to Solr
-		String solrServiceURL = Provisioning.getInstance().getLocalServer().getAttr(Provisioning.A_zimbraSolrURLBase, true);
-		assertFalse("zimbraSolrURLBase should contain ZooKeeper URL(s) in form host:port,host:port", solrServiceURL.contains("http"));
+		//check that zimbraIndexURL points to ZK, not to Solr
+		String solrServiceURL = Provisioning.getInstance().getLocalServer().getIndexURL().substring(10);
+		assertFalse("zimbraIndexURL should contain ZooKeeper URL(s) in form host:port,host:port", solrServiceURL.contains("http"));
 
 		//create an account
 		String acctName = genAccountName();
@@ -135,7 +134,7 @@ public class TestSolrCloud {
 	    Provisioning.getInstance().getLocalServer().setSolrReplicationFactor(replFactor);
 	    Provisioning.getInstance().getLocalServer().setSolrMaxShardsPerNode(maxShardsPerNode);
 	    CloudSolrClient cloudSolrServer = cloudSolrServer = new CloudSolrClient(
-                Provisioning.getInstance().getLocalServer().getAttr(Provisioning.A_zimbraSolrURLBase, true), 
+	            Provisioning.getInstance().getLocalServer().getIndexURL().substring(10), 
                 new LBHttpSolrClient(Zimbra.getAppContext().getBean(ZimbraHttpClientManager.class).getInternalHttpClient()));
 	    String acctName = genAccountName();
         Account acct = TestUtil.createAccount(acctName);
@@ -191,7 +190,7 @@ public class TestSolrCloud {
         Provisioning.getInstance().getLocalServer().setSolrReplicationFactor(replFactor);
         Provisioning.getInstance().getLocalServer().setSolrMaxShardsPerNode(maxShardsPerNode);
         CloudSolrClient cloudSolrServer = cloudSolrServer = new CloudSolrClient(
-                Provisioning.getInstance().getLocalServer().getAttr(Provisioning.A_zimbraSolrURLBase, true), 
+                Provisioning.getInstance().getLocalServer().getIndexURL().substring(10), 
                 new LBHttpSolrClient(Zimbra.getAppContext().getBean(ZimbraHttpClientManager.class).getInternalHttpClient()));
         String acctName = genAccountName();
         Account acct = TestUtil.createAccount(acctName);
@@ -247,7 +246,7 @@ public class TestSolrCloud {
         Provisioning.getInstance().getLocalServer().setSolrReplicationFactor(replFactor);
         Provisioning.getInstance().getLocalServer().setSolrMaxShardsPerNode(maxShardsPerNode);
         CloudSolrClient cloudSolrServer = cloudSolrServer = new CloudSolrClient(
-                Provisioning.getInstance().getLocalServer().getAttr(Provisioning.A_zimbraSolrURLBase, true), 
+                Provisioning.getInstance().getLocalServer().getIndexURL().substring(10), 
                 new LBHttpSolrClient(Zimbra.getAppContext().getBean(ZimbraHttpClientManager.class).getInternalHttpClient()));
         String acctName = genAccountName();
         Account acct = TestUtil.createAccount(acctName);
@@ -301,7 +300,7 @@ public class TestSolrCloud {
         int maxShardsPerNode = 1;
         Provisioning.getInstance().getLocalServer().setSolrMaxShardsPerNode(maxShardsPerNode);
         CloudSolrClient cloudSolrServer = cloudSolrServer = new CloudSolrClient(
-                Provisioning.getInstance().getLocalServer().getAttr(Provisioning.A_zimbraSolrURLBase, true), 
+                Provisioning.getInstance().getLocalServer().getIndexURL().substring(10), 
                 new LBHttpSolrClient(Zimbra.getAppContext().getBean(ZimbraHttpClientManager.class).getInternalHttpClient()));
         //check clusterstatus
         ModifiableSolrParams params = new ModifiableSolrParams();

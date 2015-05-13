@@ -49,7 +49,10 @@ import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.db.Versions;
 import com.zimbra.cs.extension.ExtensionManager;
+import com.zimbra.cs.index.IndexStore;
 import com.zimbra.cs.index.IndexingService;
+import com.zimbra.cs.index.solr.SolrCloudIndex;
+import com.zimbra.cs.index.solr.SolrIndex;
 import com.zimbra.cs.iochannel.MessageChannel;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.PurgeThread;
@@ -290,8 +293,13 @@ public final class Zimbra {
             Util.halt("cannot initialize RightManager", e);
         }
 
-        ExtensionManager.getInstance().initAll();
+        //register internal IndexStore implementations before initializing extensions
+        //this way extensions can overwrite them if needed
+        IndexStore.registerIndexFactory("solr", SolrIndex.Factory.class.getName());
+        IndexStore.registerIndexFactory("solrcloud", SolrCloudIndex.Factory.class.getName());
 
+        ExtensionManager.getInstance().initAll();
+        
         try {
             StoreManager.getInstance().startup();
         } catch (IOException e) {

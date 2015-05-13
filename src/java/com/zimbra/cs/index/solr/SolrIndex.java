@@ -51,6 +51,10 @@ public class SolrIndex extends SolrIndexBase {
     private final CloseableHttpClient httpClient;
     private boolean solrCoreProvisioned = false;
     
+    protected String getBaseURL() throws ServiceException {
+       return Provisioning.getInstance().getLocalServer().getIndexURL().substring(5); 
+    }
+    
     protected SolrIndex(String accountId, CloseableHttpClient httpClient) {
         this.httpClient = httpClient; 
         this.accountId = accountId;
@@ -132,7 +136,7 @@ public class SolrIndex extends SolrIndexBase {
                 HttpSolrClient solrServer = null;
                 try {
                     solrServer = (HttpSolrClient)getSolrServer();
-                    ((HttpSolrClient)solrServer).setBaseURL(Provisioning.getInstance().getLocalServer().getSolrURLBase());
+                    ((HttpSolrClient)solrServer).setBaseURL(getBaseURL());
                     CoreAdminResponse resp = CoreAdminRequest.getStatus(accountId, solrServer);
                     solrCoreProvisioned = resp.getCoreStatus(accountId).size() > 0;
                 } catch (SolrServerException | SolrException e) {
@@ -157,7 +161,7 @@ public class SolrIndex extends SolrIndexBase {
         solrCoreProvisioned = false;
         SolrClient solrServer = getSolrServer();
         try {
-            ((HttpSolrClient)solrServer).setBaseURL(Provisioning.getInstance().getLocalServer().getSolrURLBase());
+            ((HttpSolrClient)solrServer).setBaseURL(getBaseURL());
             ModifiableSolrParams params = new ModifiableSolrParams();
             params.set("action", CollectionAction.CREATE.toString());
             params.set("name", accountId);
@@ -221,7 +225,7 @@ public class SolrIndex extends SolrIndexBase {
         if(indexExists()) {
             SolrClient solrServer = getSolrServer();
             try {
-                ((HttpSolrClient)solrServer).setBaseURL(Provisioning.getInstance().getLocalServer().getSolrURLBase());
+                ((HttpSolrClient)solrServer).setBaseURL(getBaseURL());
                 CoreAdminRequest.unloadCore(accountId, true, true, solrServer);
                 solrCoreProvisioned = false;
                 //TODO check for errors
@@ -239,7 +243,7 @@ public class SolrIndex extends SolrIndexBase {
 
     @Override
     public void setupRequest(Object obj, SolrClient solrServer) throws ServiceException {
-        ((HttpSolrClient)solrServer).setBaseURL(Provisioning.getInstance().getLocalServer().getSolrURLBase() + "/" + accountId);
+        ((HttpSolrClient)solrServer).setBaseURL(getBaseURL() + "/" + accountId);
         if (obj instanceof UpdateRequest) {
             if(ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraIndexManualCommit, false)) {
                 ((UpdateRequest) obj).setAction(ACTION.COMMIT, true, true, false);
@@ -249,7 +253,7 @@ public class SolrIndex extends SolrIndexBase {
 
     @Override
     public SolrClient getSolrServer() throws ServiceException {
-        HttpSolrClient server = new HttpSolrClient(Provisioning.getInstance().getLocalServer().getSolrURLBase() + "/" + accountId, httpClient);
+        HttpSolrClient server = new HttpSolrClient(getBaseURL() + "/" + accountId, httpClient);
         return server;
     }
 
@@ -394,7 +398,7 @@ public class SolrIndex extends SolrIndexBase {
             SolrClient solrServer = null; 
             try {
                 solrServer = getSolrServer();
-                ((HttpSolrClient)solrServer).setBaseURL(Provisioning.getInstance().getLocalServer().getSolrURLBase());
+                ((HttpSolrClient)solrServer).setBaseURL(getBaseURL());
                 CoreAdminResponse resp = CoreAdminRequest.getStatus(accountId, solrServer);
                 Iterator<Map.Entry<String, NamedList<Object>>> iter = resp.getCoreStatus().iterator();
                 while(iter.hasNext()) {
@@ -425,7 +429,7 @@ public class SolrIndex extends SolrIndexBase {
             SolrClient solrServer = null;
             try {
                 solrServer = getSolrServer();
-                ((HttpSolrClient)solrServer).setBaseURL(Provisioning.getInstance().getLocalServer().getSolrURLBase());
+                ((HttpSolrClient)solrServer).setBaseURL(getBaseURL());
                 CoreAdminResponse resp = CoreAdminRequest.getStatus(accountId, solrServer);
                 Iterator<Map.Entry<String, NamedList<Object>>> iter = resp.getCoreStatus().iterator();
                 while(iter.hasNext()) {

@@ -251,7 +251,7 @@ public class SolrCloudIndex extends SolrIndexBase {
         public Factory() throws BeansException, ServiceException {
             ZimbraLog.index.info("Created SolrCloudIndex.Factory\n");
             cloudSolrServer = new CloudSolrClient(
-                    Provisioning.getInstance().getLocalServer().getAttr(Provisioning.A_zimbraSolrURLBase, true), 
+                    Provisioning.getInstance().getLocalServer().getIndexURL().substring(10), 
                         new LBHttpSolrClient(Zimbra.getAppContext().getBean(ZimbraHttpClientManager.class).getInternalHttpClient()));
         }
 

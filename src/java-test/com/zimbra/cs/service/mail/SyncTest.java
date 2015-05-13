@@ -30,7 +30,6 @@ import org.junit.Test;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 import com.zimbra.common.account.Key;
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mailbox.Color;
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.soap.Element;
@@ -64,8 +63,10 @@ public class SyncTest {
     @BeforeClass
     public static void init() throws Exception {
         MailboxTestUtil.initServer();
-        LC.zimbra_class_index_store_factory.setDefault(MockSolrIndex.Factory.class.getName());
-        IndexStore.setFactory(LC.zimbra_class_index_store_factory.value());
+        /** overwrite index URL. It gets reset by MailboxTestUtil.initServer() */
+        Provisioning.getInstance().getLocalServer().setIndexURL("mock:local");
+        IndexStore.setFactory(MockSolrIndex.Factory.class.getName());
+        
         Provisioning prov = Provisioning.getInstance();
         prov.createAccount("test@zimbra.com", "secret", new HashMap<String, Object>());
     }

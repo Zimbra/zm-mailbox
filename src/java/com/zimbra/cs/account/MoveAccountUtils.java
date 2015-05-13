@@ -146,14 +146,14 @@ public final class MoveAccountUtils {
         Server sourceServer = prov.getServerByName(sourceServerName);
         Server targetServer = prov.getServerByName(targetServerName);
 
-        String sourceSolrUrl = sourceServer.getSolrURLBase();
-        String targetSolrUrl = targetServer.getSolrURLBase();
+        String sourceSolrUrl = sourceServer.getIndexURL();
+        String targetSolrUrl = targetServer.getIndexURL();
         if (sourceSolrUrl != null && Objects.equals(sourceSolrUrl, targetSolrUrl)) {
             return true;
         } else {
             if (ZimbraLog.misc.isDebugEnabled()) {
                 ZimbraLog.misc.debug("Target and source server solr URL is not same. Target server is: %s, source server is: %s",
-                    targetServer.getSolrURLBase(), sourceServer.getSolrURLBase());
+                    targetServer.getIndexURL(), sourceServer.getIndexURL());
             }
             return false;
         }

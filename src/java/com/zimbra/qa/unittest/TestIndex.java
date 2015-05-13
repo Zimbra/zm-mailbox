@@ -33,7 +33,6 @@ import org.junit.Test;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.client.ZMessage;
 import com.zimbra.client.ZSearchParams;
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -67,7 +66,7 @@ public class TestIndex  {
     	originalLCSetting = ProvisioningUtil.getServerAttribute(Provisioning.A_zimbraIndexManualCommit, true);
         Provisioning.getInstance().getLocalServer().setIndexManualCommit(true);
         mOriginalTextLimit = Integer.parseInt(TestUtil.getServerAttr(Provisioning.A_zimbraAttachmentsIndexedTextLimit));
-        mOriginalSolrURLBase = ProvisioningUtil.getServerAttribute(Provisioning.A_zimbraSolrURLBase, "http://localhost:7983/solr");
+        mOriginalSolrURLBase = ProvisioningUtil.getServerAttribute(Provisioning.A_zimbraIndexURL, "solr:http://localhost:7983/solr");
         mOriginalMaxRetries = Provisioning.getInstance().getLocalServer().getMaxIndexingRetries(); 
         Provisioning.getInstance().getLocalServer().setMaxIndexingRetries(2);
         cleanUp();
@@ -81,7 +80,7 @@ public class TestIndex  {
         Provisioning.getInstance().getConfig().addDefaultAnalyzerStopWords("a");
         cleanUp();
         Provisioning.getInstance().getLocalServer().setIndexManualCommit(originalLCSetting);
-        Provisioning.getInstance().getLocalServer().setSolrURLBase(mOriginalSolrURLBase);
+        Provisioning.getInstance().getLocalServer().setIndexURL(mOriginalSolrURLBase);
         Provisioning.getInstance().getLocalServer().setMaxIndexingRetries(mOriginalMaxRetries);
     }
 
@@ -209,7 +208,7 @@ public class TestIndex  {
     
     @Test 
     public void testIndexedTextLimit() throws Exception {
-        Assume.assumeTrue("com.zimbra.cs.index.solr.SolrIndex$Factory".equals(LC.zimbra_class_index_store_factory.value()));
+        Assume.assumeTrue("com.zimbra.cs.index.solr.SolrIndex$Factory".equals(IndexStore.getFactory().getClass().getName()));
         // Test text attachment
         StringBuilder body = new StringBuilder();
         for (int i = 1; i < 100; i++) {
@@ -260,7 +259,7 @@ public class TestIndex  {
     @Test 
     
     public void testFilenameSearch() throws Exception {
-        Assume.assumeTrue("com.zimbra.cs.index.solr.SolrIndex$Factory".equals(LC.zimbra_class_index_store_factory.value()));
+        Assume.assumeTrue("com.zimbra.cs.index.solr.SolrIndex$Factory".equals(IndexStore.getFactory().getClass().getName()));
         ZMailbox mbox = TestUtil.getZMailbox(acct.getName());
         String filename = NAME_PREFIX + " testFilenameSearch.txt";
         TestUtil.createDocument(mbox, Integer.toString(Mailbox.ID_FOLDER_BRIEFCASE),
@@ -271,11 +270,11 @@ public class TestIndex  {
 
     @Test
     public void testRetry() throws Exception {
-        Assume.assumeTrue("com.zimbra.cs.index.solr.SolrIndex$Factory".equals(LC.zimbra_class_index_store_factory.value()));
+        Assume.assumeTrue("com.zimbra.cs.index.solr.SolrIndex$Factory".equals(IndexStore.getFactory().getClass().getName()));
         //create an account
         assertTrue("failed to create an account", TestUtil.accountExists(acct.getName()));
         //set wrong Solr URL so that indexing fails
-        Provisioning.getInstance().getLocalServer().setSolrURLBase("http://localhost:7983/blah-blah");
+        Provisioning.getInstance().getLocalServer().setIndexURL("solr:http://localhost:7983/blah-blah");
         Mailbox mbox = TestUtil.getMailbox(acct.getName());
         //shut down the service so it does not retry before we change the URL
         Zimbra.getAppContext().getBean(IndexingService.class).shutDown();
@@ -288,7 +287,7 @@ public class TestIndex  {
             assertNotNull(e);
         }
         assertNotNull("should have one task queued for indexing", Zimbra.getAppContext().getBean(IndexingQueueAdapter.class).peek());
-        Provisioning.getInstance().getLocalServer().setSolrURLBase(mOriginalSolrURLBase);
+        Provisioning.getInstance().getLocalServer().setIndexURL(mOriginalSolrURLBase);
         Zimbra.getAppContext().getBean(IndexingService.class).startUp();
         try {
             mbox.index.waitForIndexing(5000);
@@ -303,11 +302,11 @@ public class TestIndex  {
     
     @Test
     public void testFailIndexing() throws Exception {
-        Assume.assumeTrue("com.zimbra.cs.index.solr.SolrIndex$Factory".equals(LC.zimbra_class_index_store_factory.value()));
+        Assume.assumeTrue("com.zimbra.cs.index.solr.SolrIndex$Factory".equals(IndexStore.getFactory().getClass().getName()));
         //create an account
         assertTrue("failed to create an account", TestUtil.accountExists(acct.getName()));
         //set wrong Solr URL so that indexing fails
-        Provisioning.getInstance().getLocalServer().setSolrURLBase("http://localhost:7983/blah-blah");
+        Provisioning.getInstance().getLocalServer().setIndexURL("solr:http://localhost:7983/blah-blah");
         Mailbox mbox = TestUtil.getMailbox(acct.getName());
         if(!Zimbra.getAppContext().getBean(IndexingService.class).isRunning()) {
             Zimbra.getAppContext().getBean(IndexingService.class).startUp();
@@ -320,7 +319,7 @@ public class TestIndex  {
             //this should throw an exception
             assertNotNull(e);
         }
-        Provisioning.getInstance().getLocalServer().setSolrURLBase(mOriginalSolrURLBase);
+        Provisioning.getInstance().getLocalServer().setIndexURL(mOriginalSolrURLBase);
         try {
             mbox.index.waitForIndexing(5000);
             fail("should throw an exception");

@@ -19,13 +19,14 @@ package com.zimbra.cs.index;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.extension.ExtensionManager;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.util.Zimbra;
@@ -36,9 +37,26 @@ import com.zimbra.cs.util.Zimbra;
  * @author ysasaki
  */
 public abstract class IndexStore {
-
+    private static Map<String, String> INDEX_FACTORIES = new HashMap<String,String>();
     private static Factory factory;
 
+    /**
+     * 
+     * @param prefix - prefix that identifies this index factory in zimbraIndexURL
+     * @param clazz - string name of the Factory class
+     * @throws ServiceException
+     */
+    public static void registerIndexFactory(String prefix, String clazz)  {
+        if(INDEX_FACTORIES.containsKey(prefix)) {
+            ZimbraLog.index.warn("Replacing index factory class '%s' registered for prefix '%s' with another factory class: '%s'", 
+                    INDEX_FACTORIES.get(prefix), prefix, clazz);
+        } 
+        INDEX_FACTORIES.put(prefix, clazz);
+    }
+    
+    public static String getIndexFactory(String prefix) {
+        return INDEX_FACTORIES.get(prefix);
+    }
     /**
      * {@link Indexer#close()} must be called after use.
      * @throws ServiceException
@@ -88,9 +106,17 @@ public abstract class IndexStore {
      */
     public abstract boolean verify(PrintStream out) throws IOException;
 
-    public static Factory getFactory() {
+    public static Factory getFactory() throws ServiceException {
         if (factory == null) {
-            setFactory(LC.zimbra_class_index_store_factory.value());
+            String factoryClass = null;
+            String indexURL = Provisioning.getInstance().getLocalServer().getIndexURL();
+            if(indexURL != null) {
+                String[] toks = indexURL.split(":");
+                if(toks != null && toks.length > 0) {
+                    factoryClass = getIndexFactory(toks[0]);
+                }
+            }
+            setFactory(factoryClass);
         }
         return factory;
     }

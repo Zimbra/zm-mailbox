@@ -37,7 +37,7 @@ public class TestTokenizers extends SolrPluginTestBase {
     }
 
     @Test
-    @Ignore ("This test case is ignored until bug described in https://issues.apache.org/jira/browse/SOLR-2767 is fixed in solrj.")
+    @Ignore ("This test case is ignored until bug described in https://issues.apache.org/jira/browse/SOLR-2767 is fixed in solr.")
     public void testContacts() throws Exception {
         assertEquals(Collections.singletonList("all-snv"), getTokens("zmcontact", "all-snv"));
         assertEquals(Collections.EMPTY_LIST, getTokens("zmcontact", "."));
@@ -47,6 +47,11 @@ public class TestTokenizers extends SolrPluginTestBase {
         assertEquals(Collections.singletonList("test.com"), getTokens("zmcontact", "test.com"));
         assertEquals(Collections.singletonList("user1@zim"), getTokens("zmcontact", "user1@zim"));
         assertEquals(Collections.singletonList("user1@zimbra.com"), getTokens("zmcontact", "user1@zimbra.com"));
+    }
+
+    @Test
+    @Ignore ("This test case is ignored until bug described in https://issues.apache.org/jira/browse/SOLR-2767 is fixed in solrj.")
+    public void testContactsHalfWidthKana() throws Exception {
         assertEquals(Collections.singletonList("じんぶら"), getTokens("zmcontact", "ｼﾞﾝﾌﾞﾗ"));
     }
 }

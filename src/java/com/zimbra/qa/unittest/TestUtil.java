@@ -42,9 +42,7 @@ import junit.framework.Assert;
 import org.apache.http.conn.HttpClientConnectionManager;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.solr.client.solrj.SolrClient;
-import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.impl.HttpSolrClient;
-import org.apache.solr.client.solrj.impl.HttpSolrServer;
 import org.junit.runner.JUnitCore;
 
 import com.google.common.collect.Lists;
@@ -558,7 +556,7 @@ extends Assert {
      * @throws ServiceException
      */
     public static SolrClient getSolrServer(String accountId, HttpClientConnectionManager cm) throws ServiceException {
-        return new HttpSolrClient(Provisioning.getInstance().getLocalServer().getSolrURLBase() + "/" + accountId, HttpClients.createMinimal(cm));
+        return new HttpSolrClient(Provisioning.getInstance().getLocalServer().getIndexURL().substring(5) + "/" + accountId, HttpClients.createMinimal(cm));
     }
 
     /**
