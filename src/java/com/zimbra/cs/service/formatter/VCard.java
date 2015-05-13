@@ -187,18 +187,21 @@ public class VCard {
                 if (!pval.equals("")) {
                     String pvalUCase = pval.toUpperCase();
                     String param = (pname != null ? pname + '=' + pval : PARAM_ABBREVIATIONS.get(pvalUCase));
-                    String paramUCase = param.toUpperCase();
-                    if (paramUCase.equals("ENCODING=B")) {
-                        encoding = Encoding.B;
-                    } else if (paramUCase.equals("ENCODING=BASE64")) {
-                        encoding = Encoding.B;
-                    } else if (paramUCase.equals("ENCODING=QUOTED-PRINTABLE")) {
-                        encoding = Encoding.Q;
-                    } else if (pname != null && pname.equals("CHARSET")) {
-                        charset = pval;
-                    } else {
-                        params.add(param);
+                    if (param != null) {
+                        String paramUCase = param.toUpperCase();
+                        if (paramUCase.equals("ENCODING=B")) {
+                            encoding = Encoding.B;
+                        } else if (paramUCase.equals("ENCODING=BASE64")) {
+                            encoding = Encoding.B;
+                        } else if (paramUCase.equals("ENCODING=QUOTED-PRINTABLE")) {
+                            encoding = Encoding.Q;
+                        } else if (pname != null && pname.equals("CHARSET")) {
+                            charset = pval;
+                        } else {
+                            params.add(param);
+                        }
                     }
+
                 }
 
                 if (c == ';') {
@@ -564,7 +567,12 @@ public class VCard {
                 escaped = !escaped && c == '\\';
             if (i > start && keys[f] != null) {
                 String keyToUse = new StringBuilder(keys[f]).append(suffix).toString();
-                fields.put(keyToUse, vcfDecode(value.substring(start, i)));
+                String val = fields.get(keyToUse);
+                if (val == null) {
+                    fields.put(keyToUse, vcfDecode(value.substring(start, i)));
+                } else {
+                    fields.put(keyToUse, val + ", " + vcfDecode(value.substring(start, i)));
+                }
             }
         }
     }
