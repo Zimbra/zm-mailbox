@@ -3844,7 +3844,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 </attr>
 
 <attr id="732" name="zimbraReverseProxyCacheEntryTTL" type="duration" cardinality="single" optionalIn="globalConfig" requiresRestart="nginxproxy" since="5.0.10">
-  <globalConfigValue>1h</globalConfigValue>
+  <globalConfigValue>1m</globalConfigValue>
   <desc>time interval that an entry cached by NGINX will remain in the cache</desc>
 </attr>
 

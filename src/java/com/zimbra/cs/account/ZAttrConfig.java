@@ -63153,13 +63153,13 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @see #getReverseProxyCacheEntryTTLAsString()
      *
-     * @return zimbraReverseProxyCacheEntryTTL in millseconds, or 3600000 (1h)  if unset
+     * @return zimbraReverseProxyCacheEntryTTL in millseconds, or 60000 (1m)  if unset
      *
      * @since ZCS 5.0.10
      */
     @ZAttr(id=732)
     public long getReverseProxyCacheEntryTTL() {
-        return getTimeInterval(Provisioning.A_zimbraReverseProxyCacheEntryTTL, 3600000L);
+        return getTimeInterval(Provisioning.A_zimbraReverseProxyCacheEntryTTL, 60000L);
     }
 
     /**
@@ -63169,13 +63169,13 @@ public abstract class ZAttrConfig extends Entry {
      * ms - milliseconds. If time unit is not specified, the default is
      * s(seconds).
      *
-     * @return zimbraReverseProxyCacheEntryTTL, or "1h" if unset
+     * @return zimbraReverseProxyCacheEntryTTL, or "1m" if unset
      *
      * @since ZCS 5.0.10
      */
     @ZAttr(id=732)
     public String getReverseProxyCacheEntryTTLAsString() {
-        return getAttr(Provisioning.A_zimbraReverseProxyCacheEntryTTL, "1h");
+        return getAttr(Provisioning.A_zimbraReverseProxyCacheEntryTTL, "1m");
     }
 
     /**
