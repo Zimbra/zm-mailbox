@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -26,7 +26,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.extension.ExtensionUtil;
+import com.zimbra.cs.extension.ExtensionManager;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.util.Zimbra;
 
@@ -41,13 +41,13 @@ public abstract class IndexStore {
 
     /**
      * {@link Indexer#close()} must be called after use.
-     * @throws ServiceException 
+     * @throws ServiceException
      */
     public abstract Indexer openIndexer() throws IOException, ServiceException;
 
     /**
      * {@link ZimbraIndexSearcher#close()} must be called after use.
-     * @throws ServiceException 
+     * @throws ServiceException
      */
     public abstract ZimbraIndexSearcher openSearcher() throws IOException, ServiceException;
 
@@ -63,7 +63,7 @@ public abstract class IndexStore {
 
     /**
      * Deletes the whole index data for the mailbox.
-     * @throws ServiceException 
+     * @throws ServiceException
      */
     public abstract void deleteIndex() throws IOException, ServiceException;
 
@@ -124,7 +124,7 @@ public abstract class IndexStore {
                 factoryClass = Class.forName(factoryClassName).asSubclass(Factory.class);
             } catch (ClassNotFoundException e) {
                 try {
-                    factoryClass = ExtensionUtil.findClass(factoryClassName)
+                    factoryClass = ExtensionManager.getInstance().findClass(factoryClassName)
                             .asSubclass(Factory.class);
                 } catch (ClassNotFoundException cnfe) {
                     Zimbra.halt("Unable to initialize Index Store for class " + factoryClassName, cnfe);
@@ -158,16 +158,16 @@ public abstract class IndexStore {
          */
         void destroy();
     }
-    
+
     public abstract boolean indexExists();
-    
+
     public abstract void initIndex() throws IOException, ServiceException;
-    
+
 	public long getLatestIndexGeneration(String accountId)
 			throws ServiceException {
 		return 0;
 	}
-	
+
 	/**
 	 * Fetches the list of index files
 	 * @param gen generation of index.

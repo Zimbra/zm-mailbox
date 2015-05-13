@@ -59,7 +59,7 @@ import com.zimbra.cs.ProvisioningServiceLocator;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.amqp.AmqpConstants;
-import com.zimbra.cs.extension.ExtensionUtil;
+import com.zimbra.cs.extension.ExtensionManager;
 import com.zimbra.cs.index.IndexingQueueAdapter;
 import com.zimbra.cs.index.IndexingService;
 import com.zimbra.cs.index.LocalIndexingQueueAdapter;
@@ -202,7 +202,7 @@ public class ZimbraConfig {
             try {
                 instance = (IndexingQueueAdapter) Class.forName(className).newInstance();
             } catch (ClassNotFoundException e) {
-                instance = (IndexingQueueAdapter) ExtensionUtil.findClass(className).newInstance();
+                instance = (IndexingQueueAdapter) extensionManager().findClass(className).newInstance();
             }
         }
         if (instance == null) {
@@ -220,6 +220,11 @@ public class ZimbraConfig {
     @Bean
     public EffectiveACLCache effectiveACLCache() throws ServiceException {
         return new MemcachedEffectiveACLCache();
+    }
+
+    @Bean
+    public ExtensionManager extensionManager() {
+        return new ExtensionManager();
     }
 
     /**
@@ -390,7 +395,7 @@ public class ZimbraConfig {
                     instance = (MailboxManager) Class.forName(className).newInstance();
                 } catch (ClassNotFoundException cnfe) {
                     // ignore and look in extensions
-                    instance = (MailboxManager) ExtensionUtil.findClass(className).newInstance();
+                    instance = (MailboxManager) extensionManager().findClass(className).newInstance();
                 }
             } catch (Exception e) {
                 ZimbraLog.account.error("could not instantiate MailboxManager interface of class '" + className + "'; defaulting to MailboxManager", e);
@@ -534,7 +539,7 @@ public class ZimbraConfig {
             try {
                 instance = (SharedDeliveryCoordinator) Class.forName(className).newInstance();
             } catch (ClassNotFoundException e) {
-                instance = (SharedDeliveryCoordinator) ExtensionUtil.findClass(className).newInstance();
+                instance = (SharedDeliveryCoordinator) extensionManager().findClass(className).newInstance();
             }
         }
         if (instance == null) {
@@ -562,7 +567,7 @@ public class ZimbraConfig {
                     instance = (SoapSessionFactory) Class.forName(className).newInstance();
                 } catch (ClassNotFoundException cnfe) {
                     // ignore and look in extensions
-                    instance = (SoapSessionFactory) ExtensionUtil.findClass(className).newInstance();
+                    instance = (SoapSessionFactory) extensionManager().findClass(className).newInstance();
                 }
             } catch (Exception e) {
                 ZimbraLog.account.error("could not instantiate SoapSessionFactory class '" + className + "'; defaulting to SoapSessionFactory", e);
@@ -582,7 +587,7 @@ public class ZimbraConfig {
             try {
                 instance = (StoreManager) Class.forName(className).newInstance();
             } catch (ClassNotFoundException e) {
-                instance = (StoreManager) ExtensionUtil.findClass(className).newInstance();
+                instance = (StoreManager) extensionManager().findClass(className).newInstance();
             }
         }
         if (instance == null) {

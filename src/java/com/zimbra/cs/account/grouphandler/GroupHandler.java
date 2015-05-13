@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -27,7 +27,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.ExternalGroup;
-import com.zimbra.cs.extension.ExtensionUtil;
+import com.zimbra.cs.extension.ExtensionManager;
 import com.zimbra.cs.gal.ZimbraGalGroupHandler;
 import com.zimbra.cs.ldap.IAttributes;
 import com.zimbra.cs.ldap.ILdapContext;
@@ -73,7 +73,7 @@ public abstract class GroupHandler {
         HandlerInfo handlerInfo = new HandlerInfo();
 
         try {
-            handlerInfo.mClass = ExtensionUtil.findClass(className).asSubclass(GroupHandler.class);
+            handlerInfo.mClass = ExtensionManager.getInstance().findClass(className).asSubclass(GroupHandler.class);
         } catch (ClassNotFoundException e) {
             // miss configuration or the extension is disabled
             ZimbraLog.gal.warn("GAL group handler %s not found, default to ZimbraGalGroupHandler", className);

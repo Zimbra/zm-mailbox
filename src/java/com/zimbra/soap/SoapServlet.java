@@ -53,7 +53,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.util.ZimbraServletOutputStream;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
-import com.zimbra.cs.extension.ExtensionUtil;
+import com.zimbra.cs.extension.ExtensionManager;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.util.BuildInfo;
@@ -411,9 +411,6 @@ public class SoapServlet extends ZimbraServlet {
             List<String> mailstoreTags = new ArrayList<>();
             mailstoreTags.add(BuildInfo.MAJORVERSION + "." + BuildInfo.MINORVERSION + ".x");
             mailstoreTags.add(BuildInfo.MAJORVERSION + "." + BuildInfo.MINORVERSION + "." + BuildInfo.MICROVERSION);
-            for (String extension: ExtensionUtil.getExtensionNames()) {
-                mailstoreTags.add("extension:" + extension);
-            }
 
             // Register http endpoint
             if (MailMode.http.equals(mailMode) || MailMode.both.equals(mailMode)) {

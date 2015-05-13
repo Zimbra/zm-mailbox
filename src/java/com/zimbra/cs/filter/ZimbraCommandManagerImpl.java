@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -22,7 +22,7 @@ import org.apache.jsieve.CommandManager;
 import org.apache.jsieve.ExecutableCommand;
 import org.apache.jsieve.exception.LookupException;
 
-import com.zimbra.cs.extension.ExtensionUtil;
+import com.zimbra.cs.extension.ExtensionManager;
 
 /**
  * <p>For Bug 77287</p>
@@ -47,7 +47,7 @@ public class ZimbraCommandManagerImpl implements CommandManager {
      * <p>
      * Method lookup answers the class to which a Command name is mapped.
      * </p>
-     * 
+     *
      * @param name -
      *            The name of the Command
      * @return Class - The class of the Command
@@ -61,7 +61,7 @@ public class ZimbraCommandManagerImpl implements CommandManager {
         } catch (ClassNotFoundException e) {
         	// try once more from zimbra extension
         	try {
-        		cmdClass = ExtensionUtil.loadClass(name, getClassName(name));
+        		cmdClass = ExtensionManager.getInstance().loadClass(name, getClassName(name));
         	} catch (ClassNotFoundException ee) {
         		throw new LookupException("Command named '" + name + "' not found.");
         	}
@@ -77,7 +77,7 @@ public class ZimbraCommandManagerImpl implements CommandManager {
      * Method newInstance answers an instance of the class to which a Command
      * name is mapped.
      * </p>
-     * 
+     *
      * @param name -
      *            The name of the Command
      * @return Class - The class of the Command
@@ -96,7 +96,7 @@ public class ZimbraCommandManagerImpl implements CommandManager {
     /**
      * Method isSupported answers a boolean indicating if a Command name is
      * configured.
-     * 
+     *
      * @param name -
      *            The Command name
      * @return boolean - True if the Command name is configured.
@@ -116,7 +116,7 @@ public class ZimbraCommandManagerImpl implements CommandManager {
      * Method getClassName answers the name of the class to which a Command name
      * is mapped.
      * </p>
-     * 
+     *
      * @param name -
      *            The name of the Command
      * @return String - The name of the class

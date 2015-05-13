@@ -16,27 +16,21 @@
  */
 package com.zimbra.cs.extension;
 
-import com.zimbra.cs.extension.ExtensionException;
 import com.zimbra.cs.extension.ZimbraExtension;
 
-/**
- * Test extension that lets the framework disable this extension.
- *
- * @author ysasaki
- */
-public class ResignExtension implements ZimbraExtension {
-
-    private static boolean destroyed = false;
+@ZimbraExtension.HideFromDefaultPorts
+public class HiddenDefaultPortsExtension implements ZimbraExtension {
+    private boolean initialized = false;
+    private boolean destroyed = false;
 
     @Override
     public String getName() {
-        return "resign";
+        return "hiddenDefaultPorts";
     }
 
     @Override
-    public void init() throws ExtensionException {
-        destroyed = false;
-        throw new ExtensionException("voluntarily resigned");
+    public void init() {
+        initialized = true;
     }
 
     @Override
@@ -44,7 +38,11 @@ public class ResignExtension implements ZimbraExtension {
         destroyed = true;
     }
 
-    static boolean isDestroyed() {
+    boolean isInitialized() {
+        return initialized;
+    }
+
+    boolean isDestroyed() {
         return destroyed;
     }
 

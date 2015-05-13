@@ -46,7 +46,7 @@ import com.zimbra.cs.account.accesscontrol.RightModifier;
 import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.account.gal.GalOp;
 import com.zimbra.cs.account.names.NameUtil;
-import com.zimbra.cs.extension.ExtensionUtil;
+import com.zimbra.cs.extension.ExtensionManager;
 import com.zimbra.cs.gal.GalSearchParams;
 import com.zimbra.cs.ldap.ZLdapFilterFactory.FilterId;
 import com.zimbra.cs.mime.MimeTypeInfo;
@@ -271,7 +271,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
                                 klass = Class.forName(className);
                             } catch (ClassNotFoundException cnfe) {
                                 // ignore and look in extensions
-                                klass = ExtensionUtil.findClass(className);
+                                klass = ExtensionManager.getInstance().findClass(className);
                             }
 
                             if (cacheMode != CacheMode.DEFAULT) {

@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2009, 2010, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -33,14 +33,14 @@ import com.zimbra.common.service.ServiceException;
  * HTTP handler for an extension. HTTP GET and POST requests are dispatched to the handler
  * for processing. Each extension can define multiple handlers and register them under the
  * extension with different paths.
- * 
+ *
  * @author kchen
  *
  */
 public abstract class ExtensionHttpHandler {
 
     protected ZimbraExtension mExtension;
-    
+
     /**
      * The path under which the handler is registered for an extension.
      * @return
@@ -48,7 +48,7 @@ public abstract class ExtensionHttpHandler {
     public String getPath() {
         return "/" + mExtension.getName();
     }
-    
+
     /**
      * Processes HTTP OPTIONS requests.
      * @param req
@@ -59,7 +59,7 @@ public abstract class ExtensionHttpHandler {
     public void doOptions(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException {
         throw new ServletException("HTTP OPTIONS requests are not supported");
     }
-    
+
     /**
      * Processes HTTP GET requests.
      * @param req
@@ -90,19 +90,11 @@ public abstract class ExtensionHttpHandler {
     public void init(ZimbraExtension ext) throws ServiceException {
         mExtension = ext;
     }
-    
+
     /**
      * Called to terminate the handler.
      */
     public void destroy() {
-        
-    }
 
-    /**
-     * Hides the extension for requests sent to the default mail port and
-     * mail SSL port.
-     */
-    public boolean hideFromDefaultPorts() {
-    	return false;
     }
 }

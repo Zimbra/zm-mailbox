@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2010, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -27,14 +27,17 @@ public class SimpleExtension implements ZimbraExtension {
     private boolean initialized = false;
     private boolean destroyed = false;
 
+    @Override
     public String getName() {
         return "simple";
     }
 
+    @Override
     public void init() {
         initialized = true;
     }
 
+    @Override
     public void destroy() {
         destroyed = true;
     }

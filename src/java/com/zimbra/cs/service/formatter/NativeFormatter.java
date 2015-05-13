@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -45,7 +45,6 @@ import javax.servlet.http.HttpServletResponse;
 import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.mime.MimeDetect;
 import com.zimbra.common.service.ServiceException;
@@ -57,7 +56,7 @@ import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.convert.ConversionUnsupportedException;
-import com.zimbra.cs.extension.ExtensionUtil;
+import com.zimbra.cs.extension.ExtensionManager;
 import com.zimbra.cs.html.BrowserDefang;
 import com.zimbra.cs.html.DefangFactory;
 import com.zimbra.cs.mailbox.CalendarItem;
@@ -236,7 +235,7 @@ public final class NativeFormatter extends Formatter {
                     context.getAuthAccount()) || (context.hasView() && context.getView().equals(HTML_VIEW));
             InputStream in = null;
             try {
-                if (!html || ExtensionUtil.getExtension("convertd") == null ||
+                if (!html || ExtensionManager.getInstance().getExtension("convertd") == null ||
                         contentType.startsWith(MimeConstants.CT_TEXT_HTML) || contentType.matches(MimeConstants.CT_IMAGE_WILD)) {
                     byte[] data = null;
 
@@ -362,7 +361,7 @@ public final class NativeFormatter extends Formatter {
         doc = (version > 0 ? (Document)doc.getMailbox().getItemRevision(context.opContext, doc.getId(), doc.getType(), version) : doc);
         InputStream is = doc.getContentStream();
         if (HTML_VIEW.equals(context.getView()) && !(contentType != null && contentType.startsWith(MimeConstants.CT_TEXT_HTML))) {
-            if (ExtensionUtil.getExtension("convertd") != null) {
+            if (ExtensionManager.getInstance().getExtension("convertd") != null) {
                 // If the requested view is html, but the requested content is not, use convertd extension when deployed
                 handleConversion(context, is, doc.getName(), doc.getContentType(), doc.getDigest(), doc.getSize());
             } else {

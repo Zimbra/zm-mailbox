@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -57,7 +57,7 @@ import com.zimbra.cs.account.EntryCacheDataKey;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.DirectoryEntryVisitor;
 import com.zimbra.cs.account.names.NameUtil.EmailAddress;
-import com.zimbra.cs.extension.ExtensionUtil;
+import com.zimbra.cs.extension.ExtensionManager;
 import com.zimbra.cs.ldap.IAttributes;
 import com.zimbra.cs.ldap.LdapClient;
 import com.zimbra.cs.ldap.LdapConstants;
@@ -223,7 +223,7 @@ public abstract class AutoProvision {
             if (className != null) {
                 try {
                     if (className != null) {
-                        listener = ExtensionUtil.findClass(className).
+                        listener = ExtensionManager.getInstance().findClass(className).
                                 asSubclass(AutoProvisionListener.class).newInstance();
                     }
                 } catch (ClassNotFoundException e) {
@@ -407,7 +407,7 @@ public abstract class AutoProvision {
 
     private String fillTemplate(Account acct, String template) {
         String text = template.replaceAll("\\$\\{ACCOUNT_ADDRESS\\}", acct.getName());
-        
+
         String displayName = acct.getDisplayName();
         if (displayName == null) {
             displayName = "";
@@ -420,7 +420,7 @@ public abstract class AutoProvision {
     throws ServiceException {
         String subject = fillTemplate(acct, domain.getAutoProvNotificationSubject());
         String body = fillTemplate(acct, domain.getAutoProvNotificationBody());
-        
+
         String from = domain.getAutoProvNotificationFromAddress();
         if (from == null) {
             // if From address is configured, notification is not sent.
@@ -461,7 +461,7 @@ public abstract class AutoProvision {
             // Subject
             Locale locale = acct.getLocale();
             out.setSubject(subject);
-            
+
             // NOTIFY=NEVER
             out.setNotifyOptions(SMTPMessage.NOTIFY_NEVER);
 

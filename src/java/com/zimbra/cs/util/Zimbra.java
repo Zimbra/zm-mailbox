@@ -48,7 +48,7 @@ import com.zimbra.cs.account.ldap.LdapProv;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.db.Versions;
-import com.zimbra.cs.extension.ExtensionUtil;
+import com.zimbra.cs.extension.ExtensionManager;
 import com.zimbra.cs.index.IndexingService;
 import com.zimbra.cs.iochannel.MessageChannel;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -290,7 +290,7 @@ public final class Zimbra {
             Util.halt("cannot initialize RightManager", e);
         }
 
-        ExtensionUtil.initAll();
+        ExtensionManager.getInstance().initAll();
 
         try {
             StoreManager.getInstance().startup();
@@ -307,7 +307,7 @@ public final class Zimbra {
         // ZimletUtil.loadZimlets();
 
         //start indexing service before server manager
-       ((ApplicationContext)appContext).getBean(IndexingService.class).startUp();
+        ((ApplicationContext)appContext).getBean(IndexingService.class).startUp();
 
         RedoLogProvider redoLog = RedoLogProvider.getInstance();
         if (isMailboxd) {
@@ -401,7 +401,7 @@ public final class Zimbra {
             }
         }
 
-        ExtensionUtil.postInitAll();
+        ExtensionManager.getInstance().postInitAll();
 
         inited = true;
     }
@@ -449,10 +449,6 @@ public final class Zimbra {
 
         if (isMailboxd) {
             redoLog.shutdown();
-        }
-
-        if (app.supports(ExtensionUtil.class.getName())) {
-            ExtensionUtil.destroyAll();
         }
 
         if (app.supports(EhcacheManager.class.getName())) {

@@ -28,7 +28,7 @@ import org.junit.runner.JUnitCore;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.extension.ExtensionUtil;
+import com.zimbra.cs.extension.ExtensionManager;
 import com.zimbra.qa.unittest.server.TestCalDavImportServer;
 import com.zimbra.qa.unittest.server.TestDataSourceServer;
 import com.zimbra.qa.unittest.server.TestDocumentServer;
@@ -168,7 +168,7 @@ public class ZimbraSuite extends TestSuite
                     testClass = Class.forName(testName);
                 } catch (ClassNotFoundException e) {
                     try {
-                        testClass = ExtensionUtil.findClass(testName);
+                        testClass = ExtensionManager.getInstance().findClass(testName);
                     } catch (ClassNotFoundException e2) {
                         throw ServiceException.FAILURE("Error instantiating test " + testName, e2);
                     }

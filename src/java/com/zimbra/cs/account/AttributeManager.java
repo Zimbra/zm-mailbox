@@ -43,7 +43,7 @@ import com.zimbra.cs.account.AttributeInfo.Service;
 import com.zimbra.cs.account.callback.CallbackContext;
 import com.zimbra.cs.account.callback.IDNCallback;
 import com.zimbra.cs.account.ldap.LdapProv;
-import com.zimbra.cs.extension.ExtensionUtil;
+import com.zimbra.cs.extension.ExtensionManager;
 
 public class AttributeManager {
 
@@ -173,7 +173,7 @@ public class AttributeManager {
                         mInstance = (AttributeManager) Class.forName(className).getDeclaredConstructor(String.class).newInstance(dir);
                     } catch (ClassNotFoundException cnfe) {
                         // ignore and look in extensions
-                        mInstance = (AttributeManager) ExtensionUtil.findClass(className).getDeclaredConstructor(String.class).newInstance(dir);
+                        mInstance = (AttributeManager) ExtensionManager.getInstance().findClass(className).getDeclaredConstructor(String.class).newInstance(dir);
                     }
                 } catch (Exception e) {
                     ZimbraLog.account.error("could not instantiate AttributeManager interface of class '" + className + "'; defaulting to AttributeManager", e);

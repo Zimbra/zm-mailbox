@@ -5,7 +5,7 @@ import java.util.Collection;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.extension.ExtensionUtil;
+import com.zimbra.cs.extension.ExtensionManager;
 
 /**
  * @author Greg Solovyev
@@ -54,7 +54,7 @@ public abstract class BehaviorManager {
                 }
             } catch (ClassNotFoundException e) {
                 try {
-                    factoryClass = ExtensionUtil.findClass(factoryClassName).asSubclass(Factory.class);
+                    factoryClass = ExtensionManager.getInstance().findClass(factoryClassName).asSubclass(Factory.class);
                 } catch (ClassNotFoundException cnfe) {
                     ZimbraLog.analytics.error("Unable to initialize Behavior Manager for class " + factoryClassName, cnfe);
                 }

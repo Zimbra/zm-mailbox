@@ -34,7 +34,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.extension.ExtensionTestUtil;
-import com.zimbra.cs.extension.ExtensionUtil;
+import com.zimbra.cs.extension.ExtensionManager;
 import com.zimbra.cs.mailbox.DeliveryContext;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -68,8 +68,7 @@ public final class RuleManagerWithCustomActionFilterTest {
         Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
 
-        AbstractActionCommand ext =
-                (AbstractActionCommand) ExtensionUtil.getExtension("discard");
+        AbstractActionCommand ext = (AbstractActionCommand) ExtensionManager.getInstance().getExtension("discard");
         Assert.assertNull(ext);
 
         RuleManager.clearCachedRules(account);
@@ -82,7 +81,7 @@ public final class RuleManagerWithCustomActionFilterTest {
         // register custom action extensions
         ExtensionTestUtil.registerExtension("com.zimbra.extensions.DummyCustomDiscard");
         ExtensionTestUtil.registerExtension("com.zimbra.extensions.DummyCustomTag");
-        ExtensionUtil.initAll();
+        ExtensionManager.getInstance().initAll();
 
 
     }
@@ -140,7 +139,7 @@ public final class RuleManagerWithCustomActionFilterTest {
 
         // make sure the registrations
         AbstractActionCommand ext =
-                                    (AbstractActionCommand) ExtensionUtil.getExtension("discard");
+                                    (AbstractActionCommand) ExtensionManager.getInstance().getExtension("discard");
         Assert.assertNotNull(ext);
 
 
@@ -181,11 +180,11 @@ public final class RuleManagerWithCustomActionFilterTest {
 
         // make sure the registrations
         AbstractActionCommand discard_ext =
-                (AbstractActionCommand) ExtensionUtil.getExtension("discard");
+                (AbstractActionCommand) ExtensionManager.getInstance().getExtension("discard");
         Assert.assertNotNull(discard_ext);
 
         AbstractActionCommand tag_ext =
-                (AbstractActionCommand) ExtensionUtil.getExtension("tag");
+                (AbstractActionCommand) ExtensionManager.getInstance().getExtension("tag");
         Assert.assertNotNull(tag_ext);
 
 

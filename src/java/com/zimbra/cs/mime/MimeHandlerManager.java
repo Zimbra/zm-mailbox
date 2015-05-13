@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2009, 2010, 2011, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -22,7 +22,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.FileUtil;
@@ -32,7 +31,7 @@ import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
-import com.zimbra.cs.extension.ExtensionUtil;
+import com.zimbra.cs.extension.ExtensionManager;
 import com.zimbra.cs.mime.handler.NoOpMimeHandler;
 import com.zimbra.cs.mime.handler.UnknownTypeHandler;
 import com.zimbra.cs.util.ProvisioningUtil;
@@ -181,7 +180,7 @@ public class MimeHandlerManager {
             handlerInfo.mimeType = mt;
             handlerInfo.realMimeType = mimeType;
             try {
-                handlerInfo.clazz = ExtensionUtil.loadClass(mt.getExtension(), className).asSubclass(MimeHandler.class);
+                handlerInfo.clazz = ExtensionManager.getInstance().loadClass(mt.getExtension(), className).asSubclass(MimeHandler.class);
             } catch (ClassNotFoundException e) {
                 // miss configuration or the extension is disabled
                 sLog.warn("MIME handler %s for %s (%s) not found", className, extension, mimeType);

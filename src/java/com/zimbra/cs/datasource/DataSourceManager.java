@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -36,7 +36,7 @@ import com.zimbra.cs.datasource.imap.ImapSync;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.db.DbScheduledTask;
-import com.zimbra.cs.extension.ExtensionUtil;
+import com.zimbra.cs.extension.ExtensionManager;
 import com.zimbra.cs.gal.GalImport;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -142,7 +142,7 @@ public class DataSourceManager {
                         sInstance = (DataSourceManager) Class.forName(className).newInstance();
                     } catch (ClassNotFoundException cnfe) {
                         // ignore and look in extensions
-                        sInstance = (DataSourceManager) ExtensionUtil.findClass(className).newInstance();
+                        sInstance = (DataSourceManager) ExtensionManager.getInstance().findClass(className).newInstance();
                     }
                 } catch (Exception e) {
                     ZimbraLog.system.error("Unable to initialize %s.", className, e);
@@ -186,7 +186,7 @@ public class DataSourceManager {
                     try {
                         cmdClass = Class.forName(className);
                     } catch (ClassNotFoundException x) {
-                        cmdClass = ExtensionUtil.findClass(className);
+                        cmdClass = ExtensionManager.getInstance().findClass(className);
                     }
                     Constructor<?> constructor = cmdClass.getConstructor(new Class[] {DataSource.class});
                     return (DataImport) constructor.newInstance(ds);

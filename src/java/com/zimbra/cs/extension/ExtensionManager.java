@@ -27,13 +27,22 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
+
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.redolog.op.RedoableOp;
+import com.zimbra.cs.util.Zimbra;
 
-public class ExtensionUtil {
+public class ExtensionManager {
+    protected ClassLoader sExtParentClassLoader;
+    protected List<ZimbraExtensionClassLoader> sClassLoaders = new ArrayList<>();
+    protected Map<String, ZimbraExtension> sInitializedExtensions = new LinkedHashMap<>();
 
-    private static List<ZimbraExtensionClassLoader> sClassLoaders = new ArrayList<ZimbraExtensionClassLoader>();
+    public static ExtensionManager getInstance() {
+        return Zimbra.getAppContext().getBean(ExtensionManager.class);
+    }
 
     public static URL[] dirListToURLs(File dir) {
         File[] files = dir.listFiles();
@@ -56,25 +65,24 @@ public class ExtensionUtil {
         return urls.toArray(new URL[0]);
     }
 
-    private static ClassLoader sExtParentClassLoader;
-
-    static {
+    @PostConstruct
+    public void init() {
         File extCommonDir = new File(LC.zimbra_extension_common_directory.value());
         URL[] extCommonURLs = dirListToURLs(extCommonDir);
         if (extCommonURLs == null) {
             // No ext-common libraries are present.
-            sExtParentClassLoader = ExtensionUtil.class.getClassLoader();
+            sExtParentClassLoader = ExtensionManager.class.getClassLoader();
         } else {
-            sExtParentClassLoader = new URLClassLoader(extCommonURLs, ExtensionUtil.class.getClassLoader());
+            sExtParentClassLoader = new URLClassLoader(extCommonURLs, ExtensionManager.class.getClassLoader());
         }
         loadAll();
     }
 
-    static synchronized void addClassLoader(ZimbraExtensionClassLoader zcl) {
+    synchronized void addClassLoader(ZimbraExtensionClassLoader zcl) {
         sClassLoaders.add(zcl);
     }
 
-    private static synchronized void loadAll() {
+    private synchronized void loadAll() {
         if (LC.zimbra_extension_directory.value() == null) {
             ZimbraLog.extensions.info(LC.zimbra_extension_directory.key() +
                     " is null, no extensions loaded");
@@ -104,9 +112,7 @@ public class ExtensionUtil {
         }
     }
 
-    private static Map<String, ZimbraExtension> sInitializedExtensions = new LinkedHashMap<String, ZimbraExtension>();
-
-    public static synchronized void initAll() {
+    public synchronized void initAll() {
         ZimbraLog.extensions.info("Initializing extensions");
         for (ZimbraExtensionClassLoader zcl : sClassLoaders) {
             for (String name : zcl.getExtensionClassNames()) {
@@ -144,7 +150,7 @@ public class ExtensionUtil {
         }
     }
 
-    public static synchronized void postInitAll() {
+    public synchronized void postInitAll() {
         ZimbraLog.extensions.info("Post-Initializing extensions");
 
         for (Object o : sInitializedExtensions.values()) {
@@ -155,7 +161,8 @@ public class ExtensionUtil {
     }
 
 
-    public static synchronized void destroyAll() {
+    @PreDestroy
+    public synchronized void destroyAll() {
         ZimbraLog.extensions.info("Destroying extensions");
         List<String> extNames = new ArrayList<String>(sInitializedExtensions.keySet());
         for (String extName : extNames) {
@@ -171,7 +178,7 @@ public class ExtensionUtil {
         sInitializedExtensions.clear();
     }
 
-    public static synchronized Class<?> loadClass(String extensionName, String className) throws ClassNotFoundException {
+    public synchronized Class<?> loadClass(String extensionName, String className) throws ClassNotFoundException {
         if (extensionName == null) {
             return Class.forName(className);
         }
@@ -190,9 +197,9 @@ public class ExtensionUtil {
      * @return class
      * @throws ClassNotFoundException if class is not found
      */
-    public static synchronized Class<?> findClass(String name) throws ClassNotFoundException {
+    public synchronized Class<?> findClass(String name) throws ClassNotFoundException {
         try {
-            return ExtensionUtil.class.getClassLoader().loadClass(name);
+            return ExtensionManager.class.getClassLoader().loadClass(name);
         } catch (ClassNotFoundException e) {
             // ignore and look through extensions
         }
@@ -207,12 +214,12 @@ public class ExtensionUtil {
     }
 
 
-    public static synchronized ZimbraExtension getExtension(String name) {
+    public synchronized ZimbraExtension getExtension(String name) {
         return sInitializedExtensions.get(name);
     }
 
 
-    public static synchronized Set<String> getExtensionNames() {
+    public synchronized Set<String> getExtensionNames() {
         return sInitializedExtensions.keySet();
     }
 }

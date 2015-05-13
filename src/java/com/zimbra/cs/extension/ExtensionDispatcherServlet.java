@@ -46,8 +46,9 @@ import com.zimbra.cs.servlet.ZimbraServlet;
  * @author kchen
  *
  */
+@SuppressWarnings("serial")
 public class ExtensionDispatcherServlet extends ZimbraServlet {
-    private static Map sHandlers = Collections.synchronizedMap(new HashMap());
+    private static Map<String, ExtensionHttpHandler> sHandlers = Collections.synchronizedMap(new HashMap<>());
     public static final String EXTENSION_PATH = "/service/extension";
 
     /**
@@ -77,7 +78,7 @@ public class ExtensionDispatcherServlet extends ZimbraServlet {
         ExtensionHttpHandler handler = null;
         int slash = -1;
         do {
-            handler = (ExtensionHttpHandler) sHandlers.get(path);
+            handler = sHandlers.get(path);
             if (handler == null) {
                 slash = path.lastIndexOf('/');
                 if (slash != -1) {
@@ -122,10 +123,10 @@ public class ExtensionDispatcherServlet extends ZimbraServlet {
      */
     public static void unregister(ZimbraExtension ext) {
         synchronized(sHandlers) {
-            for (Iterator it = sHandlers.keySet().iterator(); it.hasNext(); ) {
-                String path = (String) it.next();
+            for (Iterator<String> it = sHandlers.keySet().iterator(); it.hasNext(); ) {
+                String path = it.next();
                 if (path.startsWith("/" + ext.getName())) {
-                    ExtensionHttpHandler handler = (ExtensionHttpHandler) sHandlers.get(path);
+                    ExtensionHttpHandler handler = sHandlers.get(path);
                     try {
                         handler.destroy();
                     } catch (Exception e) {
@@ -148,7 +149,7 @@ public class ExtensionDispatcherServlet extends ZimbraServlet {
         ExtensionHttpHandler handler = getHandler(extPath);
         if (handler == null)
             throw ServiceException.FAILURE("Extension HTTP handler not found at " + extPath, null);
-        if (handler.hideFromDefaultPorts()) {
+        if (handler.mExtension.getClass().isAnnotationPresent(ZimbraExtension.HideFromDefaultPorts.class)) {
         	Server server = Provisioning.getInstance().getLocalServer();
         	int port = req.getLocalPort();
         	int mailPort = server.getIntAttr(Provisioning.A_zimbraMailPort, 0);
