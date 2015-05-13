@@ -25,10 +25,10 @@ public class LeaderAwareRedoLogProvider extends RedoLogProvider {
     }
 
     @Override
-    public void startup() throws ServiceException {
+    public void startup(boolean runCrashRecovery) throws ServiceException {
         initRedoLogManager();
         if (RedoConfig.redoLogEnabled()) {
-            mRedoLogManager.start();
+            mRedoLogManager.start(runCrashRecovery);
         }
     }
 

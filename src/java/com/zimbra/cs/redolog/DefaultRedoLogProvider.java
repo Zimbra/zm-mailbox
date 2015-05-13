@@ -34,16 +34,18 @@ public class DefaultRedoLogProvider extends RedoLogProvider {
 	}
 
     @Override
-    public void startup() throws ServiceException {
+    public void startup(boolean runCrashRecovery) throws ServiceException {
         initRedoLogManager();
-        if (RedoConfig.redoLogEnabled())
-            mRedoLogManager.start();
+        if (RedoConfig.redoLogEnabled()) {
+            mRedoLogManager.start(runCrashRecovery);
+        }
     }
 
     @Override
     public void shutdown() throws ServiceException {
-        if (RedoConfig.redoLogEnabled())
+        if (RedoConfig.redoLogEnabled()) {
             mRedoLogManager.stop();
+        }
     }
 
     @Override

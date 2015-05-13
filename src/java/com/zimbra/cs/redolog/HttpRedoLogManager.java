@@ -56,6 +56,7 @@ public class HttpRedoLogManager extends AbstractRedoLogManager {
 
     public HttpRedoLogManager() throws ServiceException {
         super();
+        mSupportsCrashRecovery = true;
         mRolloverMgr = new HttpRolloverManager();
         mTxnIdGenerator = new TxnIdGenerator() {
             @Override
@@ -242,5 +243,25 @@ public class HttpRedoLogManager extends AbstractRedoLogManager {
             post.releaseConnection();
         }
     }
+
+    @Override
+    public boolean supportsCrashRecovery() {
+        if (!super.supportsCrashRecovery()) {
+            return false;
+        }
+        //if no leader individual mailboxes will have to recover themselves on open
+        //often will occur with single node installs since servlet init hasn't finished yet
+        CatalogRegistration.Service service = new CatalogRegistration.Service("zimbra-redolog");
+        ConsulClient consulClient = Zimbra.getAppContext().getBean(ConsulClient.class);
+        LeaderResponse leader;
+        try {
+            leader = consulClient.findLeader(service);
+            return (leader != null && leader.sessionId != null);
+        } catch (IOException e) {
+            ZimbraLog.redolog.error("IOException finding redolog leader; skipping crash recovery", e);
+            return false;
+        }
+    }
+
 
 }

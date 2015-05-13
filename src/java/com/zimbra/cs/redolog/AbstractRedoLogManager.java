@@ -120,7 +120,7 @@ public abstract class AbstractRedoLogManager implements RedoLogManager {
     protected abstract void initRedoLog() throws IOException;
 
     @Override
-    public synchronized void start() throws ServiceException {
+    public synchronized void start(boolean runCrashRecovery) throws ServiceException {
         mEnabled = true;
 
         try {
@@ -145,7 +145,7 @@ public abstract class AbstractRedoLogManager implements RedoLogManager {
 
         ArrayList<RedoableOp> postStartupRecoveryOps = new ArrayList<RedoableOp>(100);
         int numRecoveredOps = 0;
-        if (mSupportsCrashRecovery) {
+        if (runCrashRecovery && supportsCrashRecovery()) {
             mRecoveryMode = true;
             ZimbraLog.redolog.info("Starting pre-startup crash recovery");
             // Run crash recovery.
@@ -155,8 +155,7 @@ public abstract class AbstractRedoLogManager implements RedoLogManager {
                 try {
                     Set<String> serverIds = new HashSet<String>();
                     serverIds.add(Provisioning.getInstance().getLocalServer().getId());
-                    //for now we only run crash recovery on ops which originated on this server
-                    //will need further tooling/improvements to handle crash recovery from a vanished node
+                    //run crash recovery for this node; to catch any mailboxes which haven't recovered onto other nodes already
                     numRecoveredOps = redoPlayer.runCrashRecovery(this, postStartupRecoveryOps, serverIds);
                 } finally {
                     redoPlayer.shutdown();
@@ -659,9 +658,8 @@ public abstract class AbstractRedoLogManager implements RedoLogManager {
 
             redoPlayer.runCrashRecovery(this, postRecoveryOps, null, mboxIdMap);
         } finally {
+            mboxIdsInRecovery.removeAll(mboxIdMap.values());
             redoPlayer.shutdown();
         }
-
-        mboxIdsInRecovery.removeAll(mboxIdMap.values());
     }
 }

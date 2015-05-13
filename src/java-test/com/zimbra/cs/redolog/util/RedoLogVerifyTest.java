@@ -67,7 +67,7 @@ public class RedoLogVerifyTest {
             //mock provider does not start/stop normally since most other tests don't need it
             ((MockRedoLogProvider) provider).forceStart();
         } else {
-            provider.startup();
+            provider.startup(true);
         }
         MailboxTestUtil.clearData();
     }

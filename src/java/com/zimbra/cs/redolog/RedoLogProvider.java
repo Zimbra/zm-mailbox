@@ -37,7 +37,7 @@ public abstract class RedoLogProvider {
 
     public abstract boolean isMaster();
     public abstract boolean isSlave();
-    public abstract void startup() throws ServiceException;
+    public abstract void startup(boolean runCrashRecovery) throws ServiceException;
     public abstract void shutdown() throws ServiceException;
 
     public abstract void initRedoLogManager() throws ServiceException;

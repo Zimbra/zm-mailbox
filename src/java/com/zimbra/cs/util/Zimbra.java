@@ -299,7 +299,7 @@ public final class Zimbra {
         IndexStore.registerIndexFactory("solrcloud", SolrCloudIndex.Factory.class.getName());
 
         ExtensionManager.getInstance().initAll();
-        
+
         try {
             StoreManager.getInstance().startup();
         } catch (IOException e) {
@@ -319,7 +319,7 @@ public final class Zimbra {
 
         RedoLogProvider redoLog = RedoLogProvider.getInstance();
         if (isMailboxd) {
-            redoLog.startup();
+            redoLog.startup(true);
         } else {
             redoLog.initRedoLogManager();
         }

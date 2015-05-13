@@ -44,7 +44,7 @@ public class UnsupportedRedoLogProvider extends RedoLogProvider {
     }
 
     @Override
-    public void startup() throws ServiceException {
+    public void startup(boolean runCrashRecovery) throws ServiceException {
         throw new UnsupportedOperationException();
     }
 
@@ -62,7 +62,7 @@ public class UnsupportedRedoLogProvider extends RedoLogProvider {
             }
 
             @Override
-            public void start() throws ServiceException {
+            public void start(boolean runCrashRecovery) throws ServiceException {
                 throw new UnsupportedOperationException();
             }
 

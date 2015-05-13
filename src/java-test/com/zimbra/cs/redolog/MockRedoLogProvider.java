@@ -42,7 +42,7 @@ public class MockRedoLogProvider extends RedoLogProvider {
     }
 
     @Override
-    public void startup() throws ServiceException {
+    public void startup(boolean runCrashRecovery) throws ServiceException {
     }
 
     @Override
@@ -56,7 +56,7 @@ public class MockRedoLogProvider extends RedoLogProvider {
     //we intentionally stub startup/shutdown since redo log is not needed for test
     //these methods let tests which exercise the redolog start and stop it as needed
     public void forceStart() throws ServiceException {
-        mRedoLogManager.start();
+        mRedoLogManager.start(false);
     }
 
     public void forceStop() {

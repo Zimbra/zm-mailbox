@@ -27,7 +27,7 @@ public interface RedoLogManager {
      * Start the log manager
      * @throws ServiceException
      */
-    public abstract void start() throws ServiceException;
+    public abstract void start(boolean runCrashRecovery) throws ServiceException;
 
     /**
      * Stop the log manager
@@ -159,8 +159,15 @@ public interface RedoLogManager {
      */
     public abstract void deleteArchivedLogFiles(long oldestTimestamp) throws IOException;
 
+    /**
+     * Return whether the manager supports crash recovery or not
+     */
     public abstract boolean supportsCrashRecovery();
 
+    /**
+     * Run crash recovery for one or more mailboxes
+     * @throws ServiceException
+     */
     public abstract void crashRecoverMailboxes(Map<Integer, Integer> mboxIdsMap) throws ServiceException;
 
 }
