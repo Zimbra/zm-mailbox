@@ -153,7 +153,8 @@ public class ExtensionDispatcherServlet extends ZimbraServlet {
         	int port = req.getLocalPort();
         	int mailPort = server.getIntAttr(Provisioning.A_zimbraMailPort, 0);
         	int mailSslPort = server.getIntAttr(Provisioning.A_zimbraMailSSLPort, 0);
-        	if (port == mailPort || port == mailSslPort)
+        	int adminPort = server.getIntAttr(Provisioning.A_zimbraAdminPort, 0);
+        	if (port == mailPort || port == mailSslPort || port == adminPort)
         		throw ServiceException.FAILURE("extension not supported on this port", null);
         }
         return handler;
