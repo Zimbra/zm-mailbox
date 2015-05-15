@@ -153,6 +153,7 @@ public class HttpLogWriter extends AbstractLogWriter implements LogWriter {
         PostMethod post = new PostMethod(getUrl(false));
         try {
             post.setParameter("cmd", "rollover");
+            post.setParameter("forcePeers", "true");
             int code = client.executeMethod(post);
             if (code != HttpStatus.SC_OK) {
                 throw new IOException("unexpected response from redolog servlet [" + code + "] message:[" + post.getResponseBodyAsString() + "]");
