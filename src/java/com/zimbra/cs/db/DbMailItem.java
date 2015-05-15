@@ -4393,7 +4393,7 @@ public class DbMailItem {
         }
 
         public String getLimitClause() {
-            if (rowLimit != null && Db.supports(Db.Capability.LIMIT_CLAUSE)) {
+            if (rowLimit != null && rowLimit != 0 && Db.supports(Db.Capability.LIMIT_CLAUSE)) {
                 if (offset != null) {
                     return Db.getInstance().limit(offset, rowLimit);
                 } else {
