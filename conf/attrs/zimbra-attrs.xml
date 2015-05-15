@@ -9943,4 +9943,9 @@ TODO: delete them permanently from here
   <desc>The name of the Redis master, used by Redis Sentinel. This name matches the "sentinel monitor [mymaster]" entry in redis-sentinel.conf.</desc>
 </attr>
 
+<attr id="1980" name="zimbraExtensionBindPort" type="port" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" callback="CheckPortConflict" affectsServices="service" since="9.0.0">
+    <globalConfigValue>7072</globalConfigValue>
+    <desc>HTTPs port on which zimbra extension server should listen</desc>
+</attr>
+
 </attrs>

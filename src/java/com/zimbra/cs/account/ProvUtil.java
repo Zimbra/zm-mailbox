@@ -4221,18 +4221,16 @@ public class ProvUtil implements HttpDebugListener {
     }
 
     private void doGetAllReverseProxyURLs() throws ServiceException {
-        // String REVERSE_PROXY_PROTO = "http://";
         String REVERSE_PROXY_PROTO = "";  // don't need proto for nginx.conf
-        int REVERSE_PROXY_PORT = 7072;
-        // String REVERSE_PROXY_PATH = "/service/extension/nginx-lookup";
         String REVERSE_PROXY_PATH = ExtensionDispatcherServlet.EXTENSION_PATH + "/nginx-lookup";
 
         List<Server> servers = prov.getAllMailClientServers();
         for (Server server : servers) {
+            int port = server.getIntAttr(Provisioning.A_zimbraExtensionBindPort, 7072);
             boolean isTarget = server.getBooleanAttr(Provisioning.A_zimbraReverseProxyLookupTarget, false);
             if (isTarget) {
                 String serviceName = server.getAttr(Provisioning.A_zimbraServiceHostname, "");
-                console.print(REVERSE_PROXY_PROTO + serviceName + ":" + REVERSE_PROXY_PORT + REVERSE_PROXY_PATH + " ");
+                console.print(REVERSE_PROXY_PROTO + serviceName + ":" + port + REVERSE_PROXY_PATH + " ");
             }
         }
         console.println();

@@ -334,7 +334,7 @@
                     </Array>
                 </Arg>
 	          	<Set name="host">%%zimbraExtensionBindAddress%%</Set>
-				<Set name="port">7072</Set>
+				<Set name="port">%%zimbraExtensionBindPort%%</Set>
 				<Set name="idleTimeout">%%zimbraHttpConnectorMaxIdleTimeMillis%%</Set>
 			</New>
 		</Arg>
