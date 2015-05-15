@@ -16,9 +16,8 @@
  */
 package com.zimbra.cs.account.ldap.entry;
 
-import java.util.Map;
-
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.LdapProv;
@@ -36,16 +35,20 @@ import com.zimbra.cs.ldap.ZLdapFilterFactory;
  */
 public class LdapDomain extends Domain implements LdapEntry {
 
-    private String mDn;
+    private final String mDn;
     private final String entryCSN;
+    private String configEntryCSN;
 
-    public LdapDomain(String dn, ZAttributes attrs, Map<String, Object> defaults, Provisioning prov)
+    public LdapDomain(String dn, ZAttributes attrs, Config config, Provisioning prov)
     throws LdapException {
         super(attrs.getAttrString(Provisioning.A_zimbraDomainName),
                 attrs.getAttrString(Provisioning.A_zimbraId),
-                attrs.getAttrs(), defaults, prov);
+                attrs.getAttrs(), config.getDomainDefaults(), prov);
         mDn = dn;
         entryCSN = attrs.getEntryCSN();
+        if (config instanceof LdapEntry) {
+            configEntryCSN = ((LdapEntry)config).getEntryCSN();
+        }
     }
 
     @Override
@@ -58,10 +61,15 @@ public class LdapDomain extends Domain implements LdapEntry {
         return entryCSN;
     }
 
+    /**
+     * @return EntryCSN for LDAP entry of Config consistent with this object (if appropriate)
+     */
+    public String getConfigEntryCSN() {
+        return configEntryCSN;
+    }
+
     @Override
     public String getGalSearchBase(String searchBaseRaw) throws ServiceException {
-        LdapProv ldapProv = (LdapProv)getProvisioning();
-
         if (searchBaseRaw.equalsIgnoreCase(PredefinedSearchBase.DOMAIN.name())) {
             // dynamic groups are under the cn=groups tree,
             // accounts and Dls are under the people tree

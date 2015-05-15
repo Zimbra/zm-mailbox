@@ -16,10 +16,12 @@
  */
 package com.zimbra.cs.account.accesscontrol;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Domain;
@@ -27,12 +29,19 @@ import com.zimbra.cs.account.MailTarget;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.ZimbraACE.ExternalGroupInfo;
+import com.zimbra.cs.account.cache.INamedEntryCache;
 import com.zimbra.cs.account.cache.NamedEntryCache;
 import com.zimbra.cs.account.grouphandler.GroupHandler;
+import com.zimbra.cs.account.ldap.LdapCache;
+import com.zimbra.cs.account.ldap.LdapHelper;
 import com.zimbra.cs.account.ldap.LdapProv;
+import com.zimbra.cs.account.ldap.LdapProvisioning;
+import com.zimbra.cs.account.ldap.entry.LdapEntry;
 import com.zimbra.cs.ldap.LdapClient;
 import com.zimbra.cs.ldap.LdapConstants;
 import com.zimbra.cs.ldap.LdapException;
+import com.zimbra.cs.ldap.LdapServerType;
+import com.zimbra.cs.ldap.LdapUsage;
 import com.zimbra.cs.ldap.LdapUtil;
 import com.zimbra.cs.ldap.ZAttributes;
 import com.zimbra.cs.ldap.ZLdapContext;
@@ -41,11 +50,15 @@ import com.zimbra.cs.ldap.ZSearchResultEntry;
 
 public class ExternalGroup extends NamedEntry {
 
+    private final String entryCSN;
+    private String domainDN = null;
+    private String entryCSNforDomain = null;
+
     private static final NamedEntryCache<ExternalGroup> CACHE =
         new NamedEntryCache<ExternalGroup>(
                 LC.ldap_cache_group_maxsize.intValue(),
                 LC.ldap_cache_group_maxage.intValue() * Constants.MILLIS_PER_MINUTE,
-                null /* TODO: devise a freshness checker.  Probably needs to know about domain too. */);
+                new FreshnessChecker());
 
     private final String dn;
     private final GroupHandler groupHandler;
@@ -55,13 +68,18 @@ public class ExternalGroup extends NamedEntry {
      * id:   {zimbra domain id}:{external group name}
      * name: {zimbra domain name}:{external group name}
      */
-    ExternalGroup(String dn, String id, String name, String zimbraDomainId,
+    ExternalGroup(String dn, String id, String name, Domain zimbraDomain,
             ZAttributes attrs, GroupHandler groupHandler, Provisioning prov)
     throws LdapException {
         super(name, id, attrs.getAttrs(), null, prov);
         this.dn = dn;
         this.groupHandler = groupHandler;
-        this.zimbraDomainId = zimbraDomainId;
+        this.zimbraDomainId = zimbraDomain.getId();
+        entryCSN = attrs.getEntryCSN();
+        if (zimbraDomain instanceof LdapEntry) {
+            domainDN = ((LdapEntry)zimbraDomain).getDN();
+            entryCSNforDomain = ((LdapEntry)zimbraDomain).getEntryCSN();
+        }
     }
 
     public String getDN() {
@@ -95,16 +113,16 @@ public class ExternalGroup extends NamedEntry {
         String name = ExternalGroupInfo.encode(domain.getName(), extGroupName);
 
         ExternalGroup extGroup = new ExternalGroup(
-                dn, id, name, domain.getId(), attrs, groupHandler, LdapProv.getInst());
+                dn, id, name, domain, attrs, groupHandler, LdapProv.getInst());
         return extGroup;
     }
 
     /*
      * domainBy: id when extGroupGrantee is obtained in fron persisted ZimbraACE
      *           name when extGroupGrantee is provided to zmprov or SOAP.
-     *
      */
-    static ExternalGroup get(/* AuthToken authToken, */ DomainBy domainBy,
+    @VisibleForTesting
+    public static ExternalGroup get(/* AuthToken authToken, */ DomainBy domainBy,
             String extGroupGrantee, boolean asAdmin) throws ServiceException {
         ExternalGroup group = null;
 
@@ -155,7 +173,7 @@ public class ExternalGroup extends NamedEntry {
             zlc = groupHandler.getExternalDelegatedAdminGroupsLdapContext(domain, asAdmin);
 
             ZSearchResultEntry entry = prov.getHelper().searchForEntry(
-                    searchBase, FilterId.EXTERNAL_GROUP, searchFilter, zlc, new String[]{"mail"});
+                    searchBase, FilterId.EXTERNAL_GROUP, searchFilter, zlc, groupHandler.getReturnAttrs());
 
             if (entry != null) {
                 return makeExternalGroup(domain, groupHandler, extGroupName,
@@ -168,4 +186,43 @@ public class ExternalGroup extends NamedEntry {
         }
     }
 
+    /**
+     * Difficult to design a good freshness checker as the main external info generally won't expose
+     * an entryCSN unless the external directory is OpenLDAP.
+     */
+    static class FreshnessChecker implements INamedEntryCache.FreshnessChecker<NamedEntry> {
+        FreshnessChecker() {
+        }
+
+        @Override
+        public boolean isStale(NamedEntry ne) {
+            if (!(ne instanceof ExternalGroup)) {
+                return false;
+            }
+            ExternalGroup egroup = (ExternalGroup) ne;
+            Provisioning prov = egroup.getProvisioning();
+            if (!(prov instanceof LdapProvisioning)) {
+                return false;
+            }
+            LdapHelper helper = ((LdapProvisioning)prov).getHelper();
+            ZLdapContext zlc = null;
+            try {
+                zlc = LdapClient.getContext(LdapServerType.REPLICA, LdapUsage.COMPARE);
+                if (LdapCache.isEntryStale(egroup.getDN(), egroup.entryCSN, helper, zlc)) {
+                    return true;
+                }
+                if (egroup.entryCSNforDomain != null && egroup.domainDN != null &&
+                        LdapCache.isEntryStale(egroup.domainDN, egroup.entryCSNforDomain, helper, zlc)) {
+                    return true;
+                }
+                return false;
+            } catch (ServiceException se) {
+                ZimbraLog.ldap.debug("FreshnessChecker unable to check related objects %s - assume stale",
+                        egroup.getName(), se);
+                return true;
+            } finally {
+                LdapClient.closeContext(zlc);
+            }
+        }
+    }
 }

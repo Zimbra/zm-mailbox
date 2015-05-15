@@ -243,7 +243,9 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     private final INamedEntryCache<LdapZimlet> zimletCache;
 
     private LdapConfig cachedGlobalConfig = null;
+    private long cachedGlobalConfigLastFreshCheckTime;
     private GlobalGrant cachedGlobalGrant = null;
+    private long cachedGlobalGrantLastFreshCheckTime;
     private static final Random sPoolRandom = new Random();
 
     // TODO - Need a good way to keep allDLs correct in an AlwaysON environment
@@ -694,13 +696,20 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     @Override
     public synchronized Config getConfig() throws ServiceException
     {
-        if (cachedGlobalConfig == null) {
+        if (    (cachedGlobalConfig == null) ||
+                (System.currentTimeMillis() <
+                        (cachedGlobalConfigLastFreshCheckTime + LdapCache.ldapCacheFreshnessCheckLimitMs()))) {
             String configDn = mDIT.configDN();
+            if ((cachedGlobalConfig != null) &&
+                    !LdapCache.isEntryStale(configDn, cachedGlobalConfig.getEntryCSN(), helper, null)) {
+                return cachedGlobalConfig;
+            }
             try {
                 ZAttributes attrs = helper.getAttributes(LdapUsage.GET_GLOBALCONFIG, configDn);
                 LdapConfig config = new LdapConfig(configDn, attrs, this);
 
                 if (useCache) {
+                    cachedGlobalConfigLastFreshCheckTime = System.currentTimeMillis();
                     cachedGlobalConfig = config;
                 } else {
                     return config;
@@ -715,13 +724,21 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     @Override
     public synchronized GlobalGrant getGlobalGrant() throws ServiceException
     {
-        if (cachedGlobalGrant == null) {
+        if (    (cachedGlobalGrant == null) ||
+                (System.currentTimeMillis() <
+                        (cachedGlobalGrantLastFreshCheckTime + LdapCache.ldapCacheFreshnessCheckLimitMs()))) {
             String globalGrantDn = mDIT.globalGrantDN();
+            if ((cachedGlobalGrant != null) && (cachedGlobalGrant instanceof LdapGlobalGrant) &&
+                    !LdapCache.isEntryStale(globalGrantDn,
+                            ((LdapGlobalGrant)cachedGlobalGrant).getEntryCSN(), helper, null)) {
+                return cachedGlobalGrant;
+            }
             try {
                 ZAttributes attrs = helper.getAttributes(LdapUsage.GET_GLOBALGRANT, globalGrantDn);
                 LdapGlobalGrant globalGrant = new LdapGlobalGrant(globalGrantDn, attrs, this);
 
                 if (useCache) {
+                    cachedGlobalGrantLastFreshCheckTime = System.currentTimeMillis();
                     cachedGlobalGrant = globalGrant;
                 } else {
                     return globalGrant;
@@ -1996,7 +2013,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             } else if (objectclass.contains(AttributeClass.OC_zimbraGroup)) {
                 visitor.visit(prov.makeDynamicGroup(zlc, dn, attrs));
             } else if (objectclass.contains(AttributeClass.OC_zimbraDomain)) {
-                visitor.visit(new LdapDomain(dn, attrs, prov.getConfig().getDomainDefaults(), prov));
+                visitor.visit(new LdapDomain(dn, attrs, prov.getConfig(), prov));
             } else if (objectclass.contains(AttributeClass.OC_zimbraCOS)) {
                 visitor.visit(new LdapCos(dn, attrs, prov));
             }
@@ -2638,7 +2655,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         try {
             ZSearchResultEntry sr = helper.searchForEntry(mDIT.domainBaseDN(), filter, initZlc, false);
             if (sr != null) {
-                return new LdapDomain(sr.getDN(), sr.getAttributes(), getConfig().getDomainDefaults(), this);
+                return new LdapDomain(sr.getDN(), sr.getAttributes(), getConfig(), this);
             }
         } catch (LdapMultipleEntriesMatchedException e) {
             throw AccountServiceException.MULTIPLE_DOMAINS_MATCHED("getDomainByQuery: " + e.getMessage());
@@ -3828,7 +3845,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         try {
             ZSearchResultEntry sr = helper.searchForEntry(mDIT.serverBaseDN(), filter, initZlc, false);
             if (sr != null) {
-                return new LdapServer(sr.getDN(), sr.getAttributes(), getConfig().getServerDefaults(), this);
+                return new LdapServer(sr.getDN(), sr.getAttributes(), getConfig(), this);
             }
         } catch (LdapMultipleEntriesMatchedException e) {
             throw AccountServiceException.MULTIPLE_ENTRIES_MATCHED("getServerByQuery", e);
@@ -3952,7 +3969,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         try {
             String dn = mDIT.serverNameToDN(name);
             ZAttributes attrs = helper.getAttributes(LdapUsage.GET_SERVER, dn);
-            LdapServer s = new LdapServer(dn, attrs, getConfig().getServerDefaults(), this);
+            LdapServer s = new LdapServer(dn, attrs, getConfig(), this);
             serverCache.put(s);
             return s;
         } catch (LdapEntryNotFoundException e) {
@@ -3993,59 +4010,30 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
     @Override
     public List<Server> getAllServers(String service) throws ServiceException {
-        List<Server> result = new ArrayList<Server>();
-
-        ZLdapFilter filter;
-        if (service != null) {
-            filter = filterFactory.serverByService(service);
-        } else {
-            filter = filterFactory.allServers();
-        }
-
-        try {
-            Map<String, Object> serverDefaults = getConfig().getServerDefaults();
-
-            ZSearchResultEnumeration ne = helper.searchDir(mDIT.serverBaseDN(),
-                    filter, ZSearchControls.SEARCH_CTLS_SUBTREE());
-            while (ne.hasMore()) {
-                ZSearchResultEntry sr = ne.next();
-                LdapServer s = new LdapServer(sr.getDN(), sr.getAttributes(),
-                        serverDefaults, this);
-                result.add(s);
-            }
-            ne.close();
-        } catch (ServiceException e) {
-            throw ServiceException.FAILURE("unable to list all servers", e);
-        }
-
-        if (result.size() > 0)
-            serverCache.put(result, true);
-        Collections.sort(result);
-        return result;
+        return getAllServers(service != null ? filterFactory.serverByService(service) : filterFactory.allServers());
     }
 
     @Override
     public List<Server> getAllServers(String service, String clusterId) throws ServiceException {
+        return getAllServers(filterFactory.serverByServiceAndAlwaysOnCluster(service, clusterId));
+    }
+
+    private List<Server> getAllServers(ZLdapFilter filter) throws ServiceException {
         List<Server> result = new ArrayList<Server>();
-
-        ZLdapFilter filter = filterFactory.serverByServiceAndAlwaysOnCluster(service, clusterId);
-
         try {
-            Map<String, Object> serverDefaults = getConfig().getServerDefaults();
+            Config currentConfig = getConfig();
 
             ZSearchResultEnumeration ne = helper.searchDir(mDIT.serverBaseDN(),
                     filter, ZSearchControls.SEARCH_CTLS_SUBTREE());
             while (ne.hasMore()) {
                 ZSearchResultEntry sr = ne.next();
-                LdapServer s = new LdapServer(sr.getDN(), sr.getAttributes(),
-                        serverDefaults, this);
+                LdapServer s = new LdapServer(sr.getDN(), sr.getAttributes(), currentConfig, this);
                 result.add(s);
             }
             ne.close();
         } catch (ServiceException e) {
             throw ServiceException.FAILURE("unable to list all servers by cluster id", e);
         }
-
         Collections.sort(result);
         return result;
     }
@@ -8127,8 +8115,9 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         if (zimbraId == null)
             return null;
         XMPPComponent x = null;
-        if (!nocache)
+        if (!nocache) {
             x = xmppComponentCache.getById(zimbraId);
+        }
         if (x == null) {
             x = getXMPPComponentByQuery(filterFactory.xmppComponentById(zimbraId), zlc);
             xmppComponentCache.put(x);

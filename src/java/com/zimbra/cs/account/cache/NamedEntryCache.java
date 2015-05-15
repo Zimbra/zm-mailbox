@@ -26,11 +26,11 @@ package com.zimbra.cs.account.cache;
 import java.util.List;
 import java.util.Map;
 
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.stats.Counter;
 import com.zimbra.common.stats.HitRateCounter;
 import com.zimbra.common.util.MapUtil;
 import com.zimbra.cs.account.NamedEntry;
+import com.zimbra.cs.account.ldap.LdapCache;
 
 /**
  * @author schemers
@@ -94,6 +94,7 @@ public class NamedEntryCache<E extends NamedEntry> implements INamedEntryCache<E
     @Override
     public synchronized void put(E entry) {
         if (entry != null) {
+            LdapCache.validateCacheEntry(entry);
             CacheEntry<E> cacheEntry = new CacheEntry<E>(entry, mRefreshTTL);
             mNameCache.put(entry.getName(), cacheEntry);
             mIdCache.put(entry.getId(), cacheEntry);
@@ -140,7 +141,7 @@ public class NamedEntryCache<E extends NamedEntry> implements INamedEntryCache<E
             return false;
         }
         long now = System.currentTimeMillis();
-        if (now < (ce.lastFreshCheckTime + LC.ldap_cache_freshness_check_limit_ms.intValue())) {
+        if (now < (ce.lastFreshCheckTime + LdapCache.ldapCacheFreshnessCheckLimitMs())) {
             return false; // Avoid checking too often
         }
         boolean stale = freshnessChecker.isStale(ce.entry);

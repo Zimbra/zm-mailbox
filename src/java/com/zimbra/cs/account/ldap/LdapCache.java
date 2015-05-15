@@ -44,6 +44,7 @@ import com.zimbra.cs.account.cache.IMimeTypeCache;
 import com.zimbra.cs.account.cache.INamedEntryCache;
 import com.zimbra.cs.account.cache.NamedEntryCache;
 import com.zimbra.cs.account.ldap.entry.LdapCos;
+import com.zimbra.cs.account.ldap.entry.LdapDomain;
 import com.zimbra.cs.account.ldap.entry.LdapEntry;
 import com.zimbra.cs.account.ldap.entry.LdapZimlet;
 import com.zimbra.cs.ldap.LdapClient;
@@ -56,7 +57,7 @@ import com.zimbra.cs.mime.MimeTypeInfo;
 /**
  * @author pshao
  */
-abstract class LdapCache {
+abstract public class LdapCache {
     abstract IAccountCache accountCache();
     abstract INamedEntryCache<LdapCos> cosCache();
     abstract INamedEntryCache<ShareLocator> shareLocatorCache();
@@ -68,6 +69,47 @@ abstract class LdapCache {
     abstract INamedEntryCache<Group> groupCache();
     abstract INamedEntryCache<XMPPComponent> xmppComponentCache();
     abstract INamedEntryCache<AlwaysOnCluster> alwaysOnClusterCache();
+
+    public static long ldapCacheFreshnessCheckLimitMs() {
+        return LC.ldap_cache_freshness_check_limit_ms.intValue();
+    }
+
+    /**
+     * Diagnostic code to find any places where LDAP entries are not being created in the best way.
+     */
+    public static void validateCacheEntry(NamedEntry entry) {
+        if (!ZimbraLog.ldap.isDebugEnabled() || (null == entry)) {
+            return;
+        }
+        if (entry instanceof LdapEntry) {
+            if (null == ((LdapEntry)entry).getEntryCSN()) {
+                ZimbraLog.ldap.debug("LDAP cache put entry has no 'entryCSN'\n%s", ZimbraLog.getStackTrace(12));
+            }
+        }
+    }
+
+    public static boolean isEntryStale(String dn, String oldEntryCSN, LdapHelper helper, ZLdapContext zlc) {
+        if (oldEntryCSN == null) {
+            ZimbraLog.ldap.debug("isEntryStale EntyCSN not set for %s - assume stale", dn);
+            return true;
+        }
+        try {
+            return ! helper.compare(dn, UBIDAttributes.ENTRY_CSN, oldEntryCSN, zlc, false);
+        } catch (ServiceException e) {
+            ZimbraLog.ldap.debug("isEntryStale LDAP compare on entryCSN for %s failed - assume stale", dn, e);
+            return true;
+        }
+    }
+
+    public static boolean isEntryStale(NamedEntry entry, LdapHelper helper, ZLdapContext zlc) {
+        if (entry instanceof LdapEntry) {
+            LdapEntry ldapEntry = (LdapEntry) entry;
+            return isEntryStale(ldapEntry.getDN(), ldapEntry.getEntryCSN(), helper, zlc);
+        }
+        ZimbraLog.ldap.debug("isEntryStale used with non LdapEntry class=%s", entry.getClass().getName());
+        return false;
+    }
+
 
     /**
      *
@@ -87,29 +129,6 @@ abstract class LdapCache {
         private final INamedEntryCache<Group> groupCache;
         private final INamedEntryCache<XMPPComponent> xmppComponentCache;
         private final INamedEntryCache<AlwaysOnCluster> alwaysOnClusterCache;
-
-        static boolean isEntryStale(String dn, String oldEntryCSN, LdapHelper helper, ZLdapContext zlc) {
-            if (oldEntryCSN == null) {
-                ZimbraLog.ldap.debug("isEntryStale EntyCSN not set for %s - assume stale", dn);
-                return true;
-            }
-            try {
-                return ! helper.compare(dn, UBIDAttributes.ENTRY_CSN, oldEntryCSN, zlc, false);
-            } catch (ServiceException e) {
-                ZimbraLog.ldap.debug("isEntryStale LDAP compare on entryCSN for %s failed - assume stale",
-                        dn, e);
-                return true;
-            }
-        }
-
-        static boolean isEntryStale(NamedEntry entry, LdapHelper helper, ZLdapContext zlc) {
-            if (entry instanceof LdapEntry) {
-                LdapEntry ldapEntry = (LdapEntry) entry;
-                return isEntryStale(ldapEntry.getDN(), ldapEntry.getEntryCSN(), helper, zlc);
-            }
-            ZimbraLog.ldap.debug("isEntryStale used with non LdapEntry class=%s", entry.getClass().getName());
-            return false;
-        }
 
         static class AccountFreshnessChecker implements IAccountCache.FreshnessChecker {
             private final LdapHelper helper;
@@ -152,6 +171,52 @@ abstract class LdapCache {
             }
         }
 
+        static class ServerFreshnessChecker implements INamedEntryCache.FreshnessChecker<NamedEntry> {
+            private final LdapHelper helper;
+
+            ServerFreshnessChecker(LdapHelper helper) {
+                this.helper = helper;
+            }
+
+            @Override
+            public boolean isStale(NamedEntry ne) {
+                if (!(ne instanceof Server)) {
+                    return false;
+                }
+                Server server = (Server) ne;
+                ZLdapContext zlc = null;
+                try {
+                    zlc = LdapClient.getContext(LdapServerType.REPLICA, LdapUsage.COMPARE);
+                    if (isEntryStale(server, helper, zlc)) {
+                        return true;
+                    }
+                    String entryCSNforConfig = server.getConfigEntryCSN();
+                    if (null != entryCSNforConfig) {
+                        String configDN  = helper.getProv().getDIT().configDN();
+                        if (null != configDN) {
+                            if (isEntryStale(configDN, entryCSNforConfig, helper, zlc)) {
+                                return true;
+                            }
+                        }
+                    }
+                    String entryCSNforAlwaysOnCluster = server.getAlwaysOnClusterEntryCSN();
+                    String dnForAlwaysOnCluster = server.getAlwaysOnClusterDN();
+                    if ((null != entryCSNforAlwaysOnCluster) && (null != dnForAlwaysOnCluster)) {
+                        if (isEntryStale(dnForAlwaysOnCluster, entryCSNforAlwaysOnCluster, helper, zlc)) {
+                            return true;
+                        }
+                    }
+                    return false;
+                } catch (ServiceException se) {
+                    ZimbraLog.ldap.debug("ServerFreshnessChecker unable to check related objects %s - assume stale",
+                            server.getName(), se);
+                    return true;
+                } finally {
+                    LdapClient.closeContext(zlc);
+                }
+            }
+        }
+
         static class DomainFreshnessChecker implements IDomainCache.FreshnessChecker {
             private final LdapHelper helper;
             DomainFreshnessChecker(LdapHelper helper) {
@@ -159,7 +224,37 @@ abstract class LdapCache {
             }
             @Override
             public boolean isStale(Domain entry) {
-                return isEntryStale(entry, helper, null);
+                if (!(entry instanceof Domain)) {
+                    return false;
+                }
+                Domain domain = entry;
+                ZLdapContext zlc = null;
+                try {
+                    zlc = LdapClient.getContext(LdapServerType.REPLICA, LdapUsage.COMPARE);
+                    if (isEntryStale(domain, helper, zlc)) {
+                        return true;
+                    }
+                    if (!(domain instanceof LdapDomain)) {
+                        return false;
+                    }
+                    LdapDomain ldapDomain = (LdapDomain) domain;
+                    String entryCSNforConfig = ldapDomain.getConfigEntryCSN();
+                    if (null != entryCSNforConfig) {
+                        String configDN  = helper.getProv().getDIT().configDN();
+                        if (null != configDN) {
+                            if (isEntryStale(configDN, entryCSNforConfig, helper, zlc)) {
+                                return true;
+                            }
+                        }
+                    }
+                    return false;
+                } catch (ServiceException se) {
+                    ZimbraLog.ldap.debug("DomainFreshnessChecker unable to check related objects %s - assume stale",
+                            domain.getName(), se);
+                    return true;
+                } finally {
+                    LdapClient.closeContext(zlc);
+                }
             }
         }
 
@@ -178,10 +273,12 @@ abstract class LdapCache {
             NamedEntryFreshnessChecker neFreshnessChecker = null;
             AccountFreshnessChecker acctFreshnessChecker = null;
             DomainFreshnessChecker domFreshnessChecker = null;
+            ServerFreshnessChecker svrFreshnessChecker = null;
             if (helper.getProv().supportsEntryCSN()) {
                 neFreshnessChecker = new NamedEntryFreshnessChecker(helper);
                 acctFreshnessChecker = new AccountFreshnessChecker(helper);
                 domFreshnessChecker = new DomainFreshnessChecker(helper);
+                svrFreshnessChecker = new ServerFreshnessChecker(helper);
             }
 
             accountCache = new AccountCache(LC.ldap_cache_account_maxsize.intValue(),
@@ -204,7 +301,7 @@ abstract class LdapCache {
             mimeTypeCache = new LdapMimeTypeCache();
             serverCache = new NamedEntryCache<Server>(
                     LC.ldap_cache_server_maxsize.intValue(),
-                    LC.ldap_cache_server_maxage.intValue() * Constants.MILLIS_PER_MINUTE, neFreshnessChecker);
+                    LC.ldap_cache_server_maxage.intValue() * Constants.MILLIS_PER_MINUTE, svrFreshnessChecker);
             ucServiceCache = new NamedEntryCache<UCService>(
                     LC.ldap_cache_ucservice_maxsize.intValue(),
                     LC.ldap_cache_ucservice_maxage.intValue() * Constants.MILLIS_PER_MINUTE, neFreshnessChecker);
@@ -212,7 +309,9 @@ abstract class LdapCache {
                     LC.ldap_cache_zimlet_maxsize.intValue(),
                     LC.ldap_cache_zimlet_maxage.intValue() * Constants.MILLIS_PER_MINUTE, neFreshnessChecker);
 
-            // TODO - how meaningful is the freshness checker for dynamic groups.  Ideally remove all uses.
+            /* Note: groups in this cache are expected to only contains minimal group attrs
+             *       in particular, they do not contain members (the member or zimbraMailForwardingAddress attribute)
+             */
             groupCache = new NamedEntryCache<Group>(
                     LC.ldap_cache_group_maxsize.intValue(),
                     LC.ldap_cache_group_maxage.intValue() * Constants.MILLIS_PER_MINUTE, neFreshnessChecker);

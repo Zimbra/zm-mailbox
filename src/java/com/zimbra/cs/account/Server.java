@@ -26,6 +26,7 @@ import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.ldap.entry.LdapAlwaysOnCluster;
 
 /**
  * @author schemers
@@ -34,12 +35,20 @@ import com.zimbra.common.util.ZimbraLog;
  */
 public class Server extends ZAttrServer {
 
+    protected String alwaysOnClusterEntryCSN = null;
+    protected String alwaysOnClusterDN = null;
+    protected String configEntryCSN = null;
+
     public Server(String name, String id, Map<String,Object> attrs, Map<String,Object> defaults, Provisioning prov) {
         super(name, id, attrs, defaults, prov);
         try {
             AlwaysOnCluster aoc = prov.getAlwaysOnCluster(this);
             if (aoc != null) {
                 setOverrideDefaults(aoc.getServerOverrides());
+                if (aoc instanceof LdapAlwaysOnCluster) {
+                    alwaysOnClusterEntryCSN = ((LdapAlwaysOnCluster)aoc).getEntryCSN();
+                    alwaysOnClusterDN = ((LdapAlwaysOnCluster) aoc).getDN();
+                }
             }
         } catch (ServiceException se) {
             ZimbraLog.account.warn("failed to get initialize server entry", se);
@@ -132,4 +141,24 @@ public class Server extends ZAttrServer {
         return getId() != null && getId().equals(localServer.getId());
     }
 
+    /**
+     * @return DN for LDAP entry of associated AlwaysOnCluster consistent with this object (if appropriate)
+     */
+    public String getAlwaysOnClusterDN() {
+        return alwaysOnClusterDN;
+    }
+
+    /**
+     * @return EntryCSN for LDAP entry of associated AlwaysOnCluster consistent with this object (if appropriate)
+     */
+    public String getAlwaysOnClusterEntryCSN() {
+        return alwaysOnClusterEntryCSN;
+    }
+
+    /**
+     * @return EntryCSN for LDAP entry of Config consistent with this object (if appropriate)
+     */
+    public String getConfigEntryCSN() {
+        return configEntryCSN;
+    }
 }

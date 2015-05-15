@@ -32,11 +32,12 @@ import com.zimbra.cs.gal.ZimbraGalGroupHandler;
 import com.zimbra.cs.ldap.IAttributes;
 import com.zimbra.cs.ldap.ILdapContext;
 import com.zimbra.cs.ldap.LdapClient;
+import com.zimbra.cs.ldap.LdapServerConfig.ExternalLdapConfig;
 import com.zimbra.cs.ldap.LdapUsage;
 import com.zimbra.cs.ldap.ZLdapContext;
-import com.zimbra.cs.ldap.LdapServerConfig.ExternalLdapConfig;
 
 public abstract class GroupHandler {
+    public static final String[] DEFAULT_RETURN_ATTRS = {Provisioning.A_mail};
 
     public abstract boolean isGroup(IAttributes ldapAttrs);
 
@@ -125,6 +126,10 @@ public abstract class GroupHandler {
                 "search external group");
 
         return LdapClient.getExternalContext(ldapConfig, LdapUsage.EXTERNAL_GROUP);
+    }
+
+    public String[] getReturnAttrs() {
+        return DEFAULT_RETURN_ATTRS;
     }
 
 }

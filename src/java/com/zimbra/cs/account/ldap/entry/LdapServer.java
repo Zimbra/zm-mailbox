@@ -16,8 +16,7 @@
  */
 package com.zimbra.cs.account.ldap.entry;
 
-import java.util.Map;
-
+import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.ldap.LdapException;
@@ -30,15 +29,18 @@ import com.zimbra.cs.ldap.ZAttributes;
  */
 public class LdapServer extends Server implements LdapEntry {
 
-    private String mDn;
+    private final String mDn;
     private final String entryCSN;
 
-    public LdapServer(String dn, ZAttributes attrs, Map<String,Object> defaults, Provisioning prov) throws LdapException {
+    public LdapServer(String dn, ZAttributes attrs, Config config, Provisioning prov) throws LdapException {
         super(attrs.getAttrString(Provisioning.A_cn),
                 attrs.getAttrString(Provisioning.A_zimbraId),
-                attrs.getAttrs(), defaults, prov);
+                attrs.getAttrs(), config.getServerDefaults(), prov);
         mDn = dn;
         entryCSN = attrs.getEntryCSN();
+        if (config instanceof LdapEntry) {
+            super.configEntryCSN = ((LdapEntry)config).getEntryCSN();
+        }
     }
 
     @Override

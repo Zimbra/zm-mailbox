@@ -26,23 +26,23 @@ package com.zimbra.cs.account.cache;
 import java.util.Map;
 
 import com.zimbra.common.account.Key.DomainBy;
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.stats.Counter;
 import com.zimbra.common.stats.HitRateCounter;
 import com.zimbra.common.util.MapUtil;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.ldap.LdapCache;
 
 /**
  * @author schemers
  **/
 public class DomainCache implements IDomainCache {
 
-    private final Map mNameCache;
-    private final Map mIdCache;
-    private final Map mVirtualHostnameCache;
-    private final Map mForeignNameCache;
-    private final Map mKrb5RealmCache;
+    private final Map<String, CacheEntry> mNameCache;
+    private final Map<String, CacheEntry> mIdCache;
+    private final Map<String, CacheEntry> mVirtualHostnameCache;
+    private final Map<String, CacheEntry> mForeignNameCache;
+    private final Map<String, CacheEntry> mKrb5RealmCache;
 
     private final long mRefreshTTL;
     private final FreshnessChecker freshnessChecker;
@@ -86,11 +86,11 @@ public class DomainCache implements IDomainCache {
 
 
     class NegativeCache {
-        private final Map mNegativeNameCache;
-        private final Map mNegativeIdCache;
-        private final Map mNegativeVirtualHostnameCache;
-        private final Map mNegativeForeignNameCache;
-        private final Map mNegativeKrb5RealmCache;
+        private final Map<String, NonExistingDomain> mNegativeNameCache;
+        private final Map<String, NonExistingDomain> mNegativeIdCache;
+        private final Map<String, NonExistingDomain> mNegativeVirtualHostnameCache;
+        private final Map<String, NonExistingDomain> mNegativeForeignNameCache;
+        private final Map<String, NonExistingDomain> mNegativeKrb5RealmCache;
 
         private final long mNERefreshTTL;
 
@@ -140,15 +140,15 @@ public class DomainCache implements IDomainCache {
 
             switch (domainBy) {
             case name:
-                return (NonExistingDomain)mNegativeNameCache.get(key);
+                return mNegativeNameCache.get(key);
             case id:
-                return (NonExistingDomain)mNegativeIdCache.get(key);
+                return mNegativeIdCache.get(key);
             case virtualHostname:
-                return (NonExistingDomain)mNegativeVirtualHostnameCache.get(key);
+                return mNegativeVirtualHostnameCache.get(key);
             case foreignName:
-                return (NonExistingDomain)mNegativeForeignNameCache.get(key);
+                return mNegativeForeignNameCache.get(key);
             case krb5Realm:
-                return (NonExistingDomain)mNegativeKrb5RealmCache.get(key);
+                return mNegativeKrb5RealmCache.get(key);
             }
             return null;
         }
@@ -265,6 +265,7 @@ public class DomainCache implements IDomainCache {
     @Override
     public synchronized void put(DomainBy domainBy, String key, Domain entry) {
         if (entry != null) {
+            LdapCache.validateCacheEntry(entry);
             // clean it from the non-existing cache first
             mNegativeCache.clean(domainBy, key, entry);
 
@@ -310,7 +311,7 @@ public class DomainCache implements IDomainCache {
             return false;
         }
         long now = System.currentTimeMillis();
-        if (now < (ce.lastFreshCheckTime + LC.ldap_cache_freshness_check_limit_ms.intValue())) {
+        if (now < (ce.lastFreshCheckTime + LdapCache.ldapCacheFreshnessCheckLimitMs())) {
             return false; // Avoid checking too often
         }
         boolean stale = freshnessChecker.isStale(ce.mEntry);

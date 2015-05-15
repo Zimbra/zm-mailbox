@@ -25,12 +25,12 @@ package com.zimbra.cs.account.cache;
 
 import java.util.Map;
 
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.stats.Counter;
 import com.zimbra.common.stats.HitRateCounter;
 import com.zimbra.common.util.MapUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.ldap.LdapCache;
 
 public class AccountCache implements IAccountCache {
 
@@ -101,6 +101,7 @@ public class AccountCache implements IAccountCache {
     @Override
     public synchronized void put(Account entry) {
         if (entry != null) {
+            LdapCache.validateCacheEntry(entry);
             CacheEntry cacheEntry = new CacheEntry(entry, mRefreshTTL);
             mNameCache.put(entry.getName(), cacheEntry);
             mIdCache.put(entry.getId(), cacheEntry);
@@ -123,8 +124,8 @@ public class AccountCache implements IAccountCache {
         put(entry);
     }
 
-    private Account get(String key, Map cache) {
-        CacheEntry ce = (CacheEntry) cache.get(key);
+    private Account get(String key, Map<String, CacheEntry> cache) {
+        CacheEntry ce = cache.get(key);
         if (ce != null) {
             if ((mRefreshTTL != 0 && ce.isStale()) || staleByFreshness(ce)) {
                 remove(ce.mEntry);
@@ -145,7 +146,7 @@ public class AccountCache implements IAccountCache {
             return false;
         }
         long now = System.currentTimeMillis();
-        if (now < (ce.lastFreshCheckTime + LC.ldap_cache_freshness_check_limit_ms.intValue())) {
+        if (now < (ce.lastFreshCheckTime + LdapCache.ldapCacheFreshnessCheckLimitMs())) {
             return false; // Avoid checking too often
         }
         boolean stale = freshnessChecker.isStale(ce.mEntry);
