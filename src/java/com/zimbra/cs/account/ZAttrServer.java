@@ -12049,7 +12049,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @return zimbraExtensionBindPort, or 7072 if unset
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=1980)
     public int getExtensionBindPort() {
@@ -12061,7 +12061,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @return zimbraExtensionBindPort, or "7072" if unset
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=1980)
     public String getExtensionBindPortAsString() {
@@ -12074,7 +12074,7 @@ public abstract class ZAttrServer extends NamedEntry {
      * @param zimbraExtensionBindPort new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=1980)
     public void setExtensionBindPort(int zimbraExtensionBindPort) throws com.zimbra.common.service.ServiceException {
@@ -12090,7 +12090,7 @@ public abstract class ZAttrServer extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=1980)
     public Map<String,Object> setExtensionBindPort(int zimbraExtensionBindPort, Map<String,Object> attrs) {
@@ -12105,7 +12105,7 @@ public abstract class ZAttrServer extends NamedEntry {
      * @param zimbraExtensionBindPort new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=1980)
     public void setExtensionBindPortAsString(String zimbraExtensionBindPort) throws com.zimbra.common.service.ServiceException {
@@ -12121,7 +12121,7 @@ public abstract class ZAttrServer extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=1980)
     public Map<String,Object> setExtensionBindPortAsString(String zimbraExtensionBindPort, Map<String,Object> attrs) {
@@ -12135,7 +12135,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=1980)
     public void unsetExtensionBindPort() throws com.zimbra.common.service.ServiceException {
@@ -12150,7 +12150,7 @@ public abstract class ZAttrServer extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=1980)
     public Map<String,Object> unsetExtensionBindPort(Map<String,Object> attrs) {
