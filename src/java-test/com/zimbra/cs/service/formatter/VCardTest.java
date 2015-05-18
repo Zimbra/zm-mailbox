@@ -262,4 +262,24 @@ public final class VCardTest {
         Assert.assertEquals(String.format("X-BUSYMAC-ATTACH params=%s number", attach.getParams()),
                 2, attach.getParams().size());
     }
+
+    private static String noColon =
+            "BEGIN:VCARD\n" +
+            "VERSION:3.0\n" +
+            "FN:John Smith\n" +
+            "N:Smith;John;;;\n" +
+            "NONSENSE and very long and not very exciting line which does not contain a colon\n" +
+            "X-BUSYMAC-MODIFIED-BY:Gren Elliot\n" +
+            "END:VCARD\n";
+
+    @Test
+    public void noColon() throws ServiceException {
+        try {
+            VCard.parseVCard(noColon);
+            Assert.fail("Should detect problem with property which doesn't contain a colon");
+        } catch (ServiceException se) {
+            Assert.assertTrue(String.format("Exception msg [%s] contains 'parse error: missing ':']", se.getMessage()),
+                    se.getMessage().contains("parse error: missing ':'"));
+        }
+    }
 }
