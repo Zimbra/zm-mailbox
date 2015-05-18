@@ -8296,7 +8296,7 @@ TODO: delete them permanently from here
   <desc>Auth token secret key used for encrypting data/auth token in share URL when created for external users.</desc>
 </attr>
 
-<attr id="1649" name="zimbraReverseProxyLogToSyslog" type="boolean" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" requiresRestart="nginxproxy" since="9.0.0">
+<attr id="1649" name="zimbraReverseProxyLogToSyslog" type="boolean" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" requiresRestart="nginxproxy" affectsServices="nginxproxy" since="9.0.0">
   <globalConfigValue>TRUE</globalConfigValue>
   <desc>whether nginx proxy should log to syslog</desc>
 </attr>
@@ -8414,24 +8414,24 @@ TODO: delete them permanently from here
   <desc>Value for postconf smtp_tls_protocols</desc>
 </attr>
 
-<attr id="1671" name="zimbraReverseProxyModSecurityEnabled" type="enum" value="on,off" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" requiresRestart="nginxproxy" since="9.0.0">
+<attr id="1671" name="zimbraReverseProxyModSecurityEnabled" type="enum" value="on,off" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" requiresRestart="nginxproxy" affectsServices="nginxproxy" since="9.0.0">
   <globalConfigValue>on</globalConfigValue>
   <desc>on   - ModSecurity for nginx enabled
         off  - ModSecurity for nginx disabled
   </desc>
 </attr>
 
-<attr id="1672" name="zimbraReverseProxySSLStapling" type="enum" value="on,off" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" requiresRestart="nginxproxy" since="9.0.0">
+<attr id="1672" name="zimbraReverseProxySSLStapling" type="enum" value="on,off" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" requiresRestart="nginxproxy" affectsServices="nginxproxy" since="9.0.0">
   <globalConfigValue>off</globalConfigValue>
   <desc>Enables or disables stapling of OCSP responses by nginx</desc>
 </attr>
 
-<attr id="1673" name="zimbraReverseProxySSLStaplingResponderURL" type="string" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" requiresRestart="nginxproxy" since="9.0.0">
+<attr id="1673" name="zimbraReverseProxySSLStaplingResponderURL" type="string" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" requiresRestart="nginxproxy" affectsServices="nginxproxy" since="9.0.0">
   <desc>OCSP Responder URL which overrides the URL of the OCSP responder specified in the “Authority Information Access” certificate extension.
         Only “http://” OCSP responders are supported</desc>
 </attr>
 
-<attr id="1674" name="zimbraReverseProxySPDYEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" requiresRestart="nginxproxy" since="9.0.0">
+<attr id="1674" name="zimbraReverseProxySPDYEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" requiresRestart="nginxproxy" affectsServices="nginxproxy" since="9.0.0">
   <globalConfigValue>TRUE</globalConfigValue>
   <desc>Enable/Disable SPDY support for nginx</desc>
 </attr>
@@ -8453,31 +8453,31 @@ TODO: delete them permanently from here
   <desc>URL for accessing the Consul agent.</desc>
 </attr>
 
-<attr id="1679" name="zimbraReverseProxySSLSessionTimeout" type="duration" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" requiresRestart="nginxproxy" since="8.7.0,9.0.0">
+<attr id="1679" name="zimbraReverseProxySSLSessionTimeout" type="duration" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" requiresRestart="nginxproxy" affectsServices="nginxproxy" since="8.7.0,9.0.0">
   <globalConfigValue>10m</globalConfigValue>
   <desc>SSL session timeout value for the proxy in minutes</desc>
 </attr>
 
-<attr id="1680" name="zimbraReverseProxySSLSessionCacheSize" type="string" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" requiresRestart="nginxproxy" since="8.7.0,9.0.0">
+<attr id="1680" name="zimbraReverseProxySSLSessionCacheSize" type="string" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" requiresRestart="nginxproxy" affectsServices="nginxproxy" since="8.7.0,9.0.0">
   <globalConfigValue>10m</globalConfigValue>
   <desc>SSL session cache size in megabytes. Need to have 'm' (for megabytes) suffix at the end</desc>
 </attr>
 
-<attr id="1681" name="zimbraReverseProxyLimitReqZoneRate" type="integer" min="1" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" requiresRestart="nginxproxy" since="9.0.0">
+<attr id="1681" name="zimbraReverseProxyLimitReqZoneRate" type="integer" min="1" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" requiresRestart="nginxproxy" affectsServices="nginxproxy" since="9.0.0">
   <globalConfigValue>120</globalConfigValue>
   <desc>Maximum rate in requests per second to be enforced by the proxy for a particualr zone. Requests in excess of this are throttled.</desc>
 </attr>
 
-<attr id="1682" name="zimbraReverseProxyLimitReqZoneSize" type="string" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" requiresRestart="nginxproxy" since="9.0.0">
+<attr id="1682" name="zimbraReverseProxyLimitReqZoneSize" type="string" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" requiresRestart="nginxproxy" affectsServices="nginxproxy" since="9.0.0">
   <globalConfigValue>10m</globalConfigValue>
   <desc>Shared memory zone size in megabytes used by ngx_http_limit_req_module to store the current number of excessive requests per client IP</desc>
 </attr>
 
-<attr id="1683" name="zimbraReverseProxyRestrictedIPs" type="string" cardinality="multi" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" requiresRestart="nginxproxy" since="9.0.0">
+<attr id="1683" name="zimbraReverseProxyRestrictedIPs" type="string" cardinality="multi" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" requiresRestart="nginxproxy" affectsServices="nginxproxy" since="9.0.0">
   <desc>Client network or IP address to be denied access by the proxy</desc>
 </attr>
 
-<attr id="1684" name="zimbraReverseProxyBlockedURLs" type="string" cardinality="multi" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" requiresRestart="nginxproxy" since="9.0.0">
+<attr id="1684" name="zimbraReverseProxyBlockedURLs" type="string" cardinality="multi" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" requiresRestart="nginxproxy" affectsServices="nginxproxy" since="9.0.0">
   <globalConfigValue>/scripts</globalConfigValue>
   <globalConfigValue>/lcgi</globalConfigValue>
   <globalConfigValue>/cgi-bin</globalConfigValue>
@@ -8486,7 +8486,7 @@ TODO: delete them permanently from here
   <desc>URL prefixes that don't exist in mailboxd and need to be blocked by the proxy</desc>
 </attr>
 
-<attr id="1685" name="zimbraReverseProxyBlockedUserAgents" type="string" cardinality="multi" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" requiresRestart="nginxproxy" since="9.0.0">
+<attr id="1685" name="zimbraReverseProxyBlockedUserAgents" type="string" cardinality="multi" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" requiresRestart="nginxproxy" affectsServices="nginxproxy" since="9.0.0">
   <desc>User Agents that need to be blocked by the proxy (Case insensitive eg. Firefox, chrome, SAFARI etc)</desc>
 </attr>
 
@@ -8668,7 +8668,7 @@ TODO: delete them permanently from here
   <desc>Client IP/IPRange whitelist for this domain (IPRange needs to be in CIDR notation e.g:192.168.1.0/24). If configured, all IPs outside this whitelist will be blocked. If unset, all IPs are allowed</desc>  
 </attr>
 
-<attr id="1722" name="zimbraReverseProxyZSSHostname" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="nginxproxy" since="8.7.0,9.0.0">
+<attr id="1722" name="zimbraReverseProxyZSSHostname" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="nginxproxy" affectsServices="nginxproxy" since="8.7.0,9.0.0">
   <desc>Hostname of the upstream ZSS server being reverse-proxied</desc>
 </attr>
 
@@ -8979,7 +8979,7 @@ TODO: delete them permanently from here
   <desc>Value for postconf lmtp_tls_mandatory_protocols</desc>
 </attr>
 
-<attr id="1785" name="zimbraReverseProxyZmlookupCachingEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" requiresRestart="nginxproxy" since="8.7.0,9.0.0">
+<attr id="1785" name="zimbraReverseProxyZmlookupCachingEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" requiresRestart="nginxproxy" affectsServices="nginxproxy" since="8.7.0,9.0.0">
   <globalConfigValue>TRUE</globalConfigValue>
   <desc>whether nginx should cache upstream routes in memcache</desc>
 </attr>
@@ -9143,7 +9143,7 @@ TODO: delete them permanently from here
   <desc> TTL in seconds for index reader cache. If idle for longer than this value (seconds) then remove the IndexReader from the cache.</desc>
 </attr>
 
-<attr id="1818" name="zimbraReverseProxySNIEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="nginxproxy" since="9.0.0">
+<attr id="1818" name="zimbraReverseProxySNIEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" requiresRestart="nginxproxy" affectsServices="nginxproxy" since="9.0.0">
   <globalConfigValue>FALSE</globalConfigValue>
   <desc>Enable the use of Server Name Indication (SNI) TLS extension in the proxy. When set to TRUE, and using SNI capable clients, there is no need for a separate IP address per domain (zimbraVirtualIPAddress)</desc>
 </attr>
@@ -9835,20 +9835,20 @@ TODO: delete them permanently from here
   <desc>Notifications Queue Thread Pool Size</desc>
 </attr>
 
-<attr id="1957" name="zimbraReverseProxyXmppBoshLocalHttpBindURL" type="string" max="1024" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" affectsServices="nginxproxy" since="8.7.0,9.0.0">
+<attr id="1957" name="zimbraReverseProxyXmppBoshLocalHttpBindURL" type="string" max="1024" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="nginxproxy" affectsServices="nginxproxy" since="8.7.0,9.0.0">
   <globalConfigValue>/http-bind</globalConfigValue>
   <desc>Local HTTP-BIND URL prefix where ZWC sends XMPP over BOSH requests</desc>
 </attr>
 
-<attr id="1958" name="zimbraReverseProxyXmppBoshRemoteHttpBindURL" type="string" max="1024" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" affectsServices="nginxproxy" since="8.7.0,9.0.0">
+<attr id="1958" name="zimbraReverseProxyXmppBoshRemoteHttpBindURL" type="string" max="1024" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="nginxproxy" affectsServices="nginxproxy" since="8.7.0,9.0.0">
   <desc>Remote HTTP-BIND URL prefix for an external XMPP server where XMPP over BOSH requests need to be proxied. This needs to be configured only if its different from zimbraReverseProxyXmppBoshLocalHttpBindURL</desc>
 </attr>
 
-<attr id="1959" name="zimbraReverseProxyXmppBoshHostname" type="string" max="1024" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" affectsServices="nginxproxy" since="8.7.0,9.0.0">
+<attr id="1959" name="zimbraReverseProxyXmppBoshHostname" type="string" max="1024" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="nginxproxy" affectsServices="nginxproxy" since="8.7.0,9.0.0">
   <desc>Hostname of the external XMPP server where XMPP over BOSH requests need to be proxied</desc>
 </attr>
 
-<attr id="1960" name="zimbraReverseProxyXmppBoshPort" type="integer" min="0" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" affectsServices="nginxproxy" since="8.7.0,9.0.0">
+<attr id="1960" name="zimbraReverseProxyXmppBoshPort" type="integer" min="0" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="nginxproxy" affectsServices="nginxproxy" since="8.7.0,9.0.0">
   <desc>Port number of the external XMPP server where XMPP over BOSH requests need to be proxied</desc>
 </attr>
 
@@ -9870,21 +9870,21 @@ TODO: delete them permanently from here
   <desc>trusted device token secret key</desc>
 </attr>
 
-<attr id="1965" name="zimbraReverseProxyPageSpeedEnabled" type="enum" value="on,off" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="nginxproxy" since="9.0.0">
+<attr id="1965" name="zimbraReverseProxyPageSpeedEnabled" type="enum" value="on,off" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" requiresRestart="nginxproxy" affectsServices="nginxproxy" since="9.0.0">
   <globalConfigValue>on</globalConfigValue>
   <desc>Enables or disables pagespeed module for nginx</desc>
 </attr>
 
-<attr id="1966" name="zimbraReverseProxyPageSpeedRespectVary" type="enum" value="on,off" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="nginxproxy" since="9.0.0">
+<attr id="1966" name="zimbraReverseProxyPageSpeedRespectVary" type="enum" value="on,off" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" requiresRestart="nginxproxy" affectsServices="nginxproxy" since="9.0.0">
   <globalConfigValue>off</globalConfigValue>
   <desc>Enables or disables respecting of the Vary headers on resource files, such as JavaScript and css files by proxy's Pagespeed module. Disabled (i.e off) by default.</desc>
 </attr>
 
-<attr id="1967" name="zimbraReverseProxyPageSpeedDisallowedURLs" type="string" cardinality="multi" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="nginxproxy" since="9.0.0">
+<attr id="1967" name="zimbraReverseProxyPageSpeedDisallowedURLs" type="string" cardinality="multi" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" requiresRestart="nginxproxy" affectsServices="nginxproxy" since="9.0.0">
   <desc>URL patterns that need to be excluded from the rewriting processs of proxy's Pagespeed module</desc>
 </attr>
 
-<attr id="1968" name="zimbraReverseProxySSLDHParam" type="string" max="128" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" affectsServices="nginxproxy" since="8.7.0,9.0.0">
+<attr id="1968" name="zimbraReverseProxySSLDHParam" type="string" max="128" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="nginxproxy" affectsServices="nginxproxy" since="8.7.0,9.0.0">
   <desc>Specifies a file with DH parameters for EDH ciphers to be used by the proxy</desc>
 </attr>
 
@@ -9909,7 +9909,7 @@ TODO: delete them permanently from here
   <desc>If true, Tab key inserts a tab into the editor body. If false, it moves focus.</desc>
 </attr>
 
-<attr id="1973" name="zimbraReverseProxyResponseHeaders" type="string" cardinality="multi" optionalIn="globalConfig,domain" flags="domainInfo,domainInherited" affectsServices="nginxproxy" since="8.7.0,9.0.0">
+<attr id="1973" name="zimbraReverseProxyResponseHeaders" type="string" cardinality="multi" optionalIn="globalConfig,domain" flags="domainInfo,domainInherited" requiresRestart="nginxproxy" affectsServices="nginxproxy" since="8.7.0,9.0.0">
   <desc>
      Custom response headers to be added by the proxy. For example, can be used to add a HSTS header
      that will enforce SSL usage on the client side. Note: the value
