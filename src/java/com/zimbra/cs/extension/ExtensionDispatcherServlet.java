@@ -109,7 +109,11 @@ public class ExtensionDispatcherServlet extends ZimbraServlet {
         if ("OPTIONS".equals(method)) {
             handler.doOptions(req, resp);
         } else if ("GET".equals(method)) {
-            handler.doGet(req, resp);
+            if (req.getPathInfo().endsWith("/healthcheck")) {
+                handleHealthCheck(req, resp);
+            } else {
+                handler.doGet(req, resp);
+            }
         } else if ("POST".equals(method)) {
             handler.doPost(req, resp);
         } else {
@@ -150,14 +154,20 @@ public class ExtensionDispatcherServlet extends ZimbraServlet {
         if (handler == null)
             throw ServiceException.FAILURE("Extension HTTP handler not found at " + extPath, null);
         if (handler.mExtension.getClass().isAnnotationPresent(ZimbraExtension.HideFromDefaultPorts.class)) {
-        	Server server = Provisioning.getInstance().getLocalServer();
-        	int port = req.getLocalPort();
-        	int mailPort = server.getIntAttr(Provisioning.A_zimbraMailPort, 0);
-        	int mailSslPort = server.getIntAttr(Provisioning.A_zimbraMailSSLPort, 0);
-        	int adminPort = server.getIntAttr(Provisioning.A_zimbraAdminPort, 0);
-        	if (port == mailPort || port == mailSslPort || port == adminPort)
-        		throw ServiceException.FAILURE("extension not supported on this port", null);
+            Server server = Provisioning.getInstance().getLocalServer();
+            int port = req.getLocalPort();
+            int mailPort = server.getIntAttr(Provisioning.A_zimbraMailPort, 0);
+            int mailSslPort = server.getIntAttr(Provisioning.A_zimbraMailSSLPort, 0);
+            int adminPort = server.getIntAttr(Provisioning.A_zimbraAdminPort, 0);
+            if (port == mailPort || port == mailSslPort || port == adminPort)
+                throw ServiceException.FAILURE("extension not supported on this port", null);
         }
         return handler;
+    }
+
+    protected void handleHealthCheck(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException {
+        resp.setStatus(HttpServletResponse.SC_OK);
+        resp.setContentType("text/plain");
+        resp.getWriter().println("healthy");
     }
 }
