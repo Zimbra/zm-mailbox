@@ -8839,4 +8839,8 @@ TODO: delete them permanently from here
   <desc>Boolean to decide whether APNS is being used for production or development</desc>
 </attr>
 
+<attr id="1980" name="zimbraExtensionBindPort" type="port" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" callback="CheckPortConflict" requiresRestart="mailbox" since="8.7.0,9.0.0">
+  <globalConfigValue>7072</globalConfigValue>
+  <desc>HTTPs port on which zimbra extension server should listen</desc>
+</attr>
 </attrs>

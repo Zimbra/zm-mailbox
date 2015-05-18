@@ -726,95 +726,6 @@ class MemcacheServersVar extends ProxyConfVar {
     }
 }
 
-class LookupHandlersVar extends ProxyConfVar {
-
-    public LookupHandlersVar(String key, String desc) {
-        super(key, null, null, ProxyConfValueType.CUSTOM,
-                ProxyConfOverride.CUSTOM, desc);
-    }
-
-    @Override
-    public void update() throws ServiceException, ProxyConfException {
-
-        ArrayList<String> servers = new ArrayList<String>();
-
-        // $(zmprov garpu)
-        List<Server> allServers = mProv.getAllServers();
-        int REVERSE_PROXY_PORT = 7072;
-        for (Server s: allServers) {
-            String sn = s.getAttr(Provisioning.A_zimbraServiceHostname,"");
-            boolean isTarget = s.getBooleanAttr(Provisioning.A_zimbraReverseProxyLookupTarget, false);
-            if (isTarget) {
-                InetAddress ip = ProxyConfUtil.getLookupTargetIPbyIPMode(sn);
-
-                Formatter f = new Formatter();
-                if (ip instanceof Inet4Address) {
-                    f.format("%s:%d", ip.getHostAddress(), REVERSE_PROXY_PORT);
-                } else {
-                    f.format("[%s]:%d", ip.getHostAddress(), REVERSE_PROXY_PORT);
-                }
-                servers.add(f.toString());
-                mLog.debug("Route Lookup: Added server " + sn + "(" + ip.getHostAddress() + ")");
-            }
-        }
-
-        mValue = servers;
-    }
-
-
-}
-
-@Deprecated
-/**
- * only for back compatibility
- */
-class RouteHandlersVar extends LookupHandlersVar {
-    public RouteHandlersVar() {
-        super("web.:routehandlers",
-              "List of web route lookup handlers (i.e. servers " +
-              "for which zimbraReverseProxyLookupTarget is true)");
-    }
-
-    @Override
-    public String format(Object o) {
-
-        String REVERSE_PROXY_PATH = ExtensionDispatcherServlet.EXTENSION_PATH + "/nginx-lookup";
-        @SuppressWarnings("unchecked")
-        ArrayList<String> servers = (ArrayList<String>) o;
-        String conf = "";
-        for (String s: servers) {
-            conf = conf + "    zmroutehandlers   " + s + REVERSE_PROXY_PATH + ";" + "\n";
-        }
-        return conf;
-    }
-}
-
-@Deprecated
-/**
- * only for back compatibility
- */
-class AuthHttpHandlersVar extends LookupHandlersVar {
-
-    public AuthHttpHandlersVar() {
-        super("mail.:auth_http",
-              "List of mail route lookup handlers (i.e. servers " +
-              "for which zimbraReverseProxyLookupTarget is true)");
-    }
-
-    @Override
-    public String format(Object o) {
-
-        String REVERSE_PROXY_PATH = ExtensionDispatcherServlet.EXTENSION_PATH + "/nginx-lookup";
-        @SuppressWarnings("unchecked")
-        ArrayList<String> servers = (ArrayList<String>) o;
-        String conf = "";
-        for (String s: servers) {
-            conf = conf + "    auth_http   " + s + REVERSE_PROXY_PATH + ";" + "\n";
-        }
-        return conf;
-    }
-}
-
 /**
  * The variable for nginx "upstream" servers block
  * @author jiankuan
@@ -1227,21 +1138,21 @@ class ZMLookupHandlerVar extends ProxyConfVar{
     @Override
     public void update() throws ServiceException, ProxyConfException {
         ArrayList<String> servers = new ArrayList<String>();
-        int REVERSE_PROXY_PORT = 7072;
 
         String[] handlerNames = serverSource.getMultiAttr("zimbraReverseProxyAvailableLookupTargets");
         if (handlerNames.length > 0) {
             for (String handlerName: handlerNames) {
                 Server s = mProv.getServerByName(handlerName);
                 String sn = s.getAttr(Provisioning.A_zimbraServiceHostname, "");
+                int port = s.getIntAttr(Provisioning.A_zimbraExtensionBindPort, 7072);
                 boolean isTarget = s.getBooleanAttr(Provisioning.A_zimbraReverseProxyLookupTarget, false);
                 if (isTarget) {
                     InetAddress ip = ProxyConfUtil.getLookupTargetIPbyIPMode(sn);
                     Formatter f = new Formatter();
                     if (ip instanceof Inet4Address) {
-                        f.format("%s:%d", ip.getHostAddress(), REVERSE_PROXY_PORT);
+                        f.format("%s:%d", ip.getHostAddress(), port);
                     } else {
-                        f.format("[%s]:%d", ip.getHostAddress(), REVERSE_PROXY_PORT);
+                        f.format("[%s]:%d", ip.getHostAddress(), port);
                     }
                     servers.add(f.toString());
                     mLog.debug("Route Lookup: Added server " + ip);
@@ -1253,14 +1164,15 @@ class ZMLookupHandlerVar extends ProxyConfVar{
             for (Server s : allServers)
             {
                 String sn = s.getAttr(Provisioning.A_zimbraServiceHostname, "");
+                int port = s.getIntAttr(Provisioning.A_zimbraExtensionBindPort, 7072);
                 boolean isTarget = s.getBooleanAttr(Provisioning.A_zimbraReverseProxyLookupTarget, false);
                 if (isTarget) {
                     InetAddress ip = ProxyConfUtil.getLookupTargetIPbyIPMode(sn);
                     Formatter f = new Formatter();
                     if (ip instanceof Inet4Address) {
-                        f.format("%s:%d", ip.getHostAddress(), REVERSE_PROXY_PORT);
+                        f.format("%s:%d", ip.getHostAddress(), port);
                     } else {
-                        f.format("[%s]:%d", ip.getHostAddress(), REVERSE_PROXY_PORT);
+                        f.format("[%s]:%d", ip.getHostAddress(), port);
                     }
                     servers.add(f.toString());
                     mLog.debug("Route Lookup: Added server " + ip);

@@ -470,6 +470,125 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
     }
 
     /**
+     * HTTPs port on which zimbra extension server should listen
+     *
+     * <p>Use getExtensionBindPortAsString to access value as a string.
+     *
+     * @see #getExtensionBindPortAsString()
+     *
+     * @return zimbraExtensionBindPort, or -1 if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1980)
+    public int getExtensionBindPort() {
+        return getIntAttr(Provisioning.A_zimbraExtensionBindPort, -1);
+    }
+
+    /**
+     * HTTPs port on which zimbra extension server should listen
+     *
+     * @return zimbraExtensionBindPort, or null if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1980)
+    public String getExtensionBindPortAsString() {
+        return getAttr(Provisioning.A_zimbraExtensionBindPort, null);
+    }
+
+    /**
+     * HTTPs port on which zimbra extension server should listen
+     *
+     * @param zimbraExtensionBindPort new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1980)
+    public void setExtensionBindPort(int zimbraExtensionBindPort) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraExtensionBindPort, Integer.toString(zimbraExtensionBindPort));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * HTTPs port on which zimbra extension server should listen
+     *
+     * @param zimbraExtensionBindPort new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1980)
+    public Map<String,Object> setExtensionBindPort(int zimbraExtensionBindPort, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraExtensionBindPort, Integer.toString(zimbraExtensionBindPort));
+        return attrs;
+    }
+
+    /**
+     * HTTPs port on which zimbra extension server should listen
+     *
+     * @param zimbraExtensionBindPort new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1980)
+    public void setExtensionBindPortAsString(String zimbraExtensionBindPort) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraExtensionBindPort, zimbraExtensionBindPort);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * HTTPs port on which zimbra extension server should listen
+     *
+     * @param zimbraExtensionBindPort new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1980)
+    public Map<String,Object> setExtensionBindPortAsString(String zimbraExtensionBindPort, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraExtensionBindPort, zimbraExtensionBindPort);
+        return attrs;
+    }
+
+    /**
+     * HTTPs port on which zimbra extension server should listen
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1980)
+    public void unsetExtensionBindPort() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraExtensionBindPort, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * HTTPs port on which zimbra extension server should listen
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1980)
+    public Map<String,Object> unsetExtensionBindPort(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraExtensionBindPort, "");
+        return attrs;
+    }
+
+    /**
      * Zimbra Systems Unique ID
      *
      * @return zimbraId, or null if unset
