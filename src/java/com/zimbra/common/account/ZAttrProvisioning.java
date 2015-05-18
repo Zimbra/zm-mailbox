@@ -5427,6 +5427,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraExtensionBindAddress = "zimbraExtensionBindAddress";
 
     /**
+     * HTTPs port on which zimbra extension server should listen
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1980)
+    public static final String A_zimbraExtensionBindPort = "zimbraExtensionBindPort";
+
+    /**
      * Time when external virtual account was last automatically disabled by
      * the system. Applicable only when zimbraIsExternalVirtualAccount on the
      * account is set to TRUE.
