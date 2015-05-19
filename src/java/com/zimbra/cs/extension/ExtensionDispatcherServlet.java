@@ -92,6 +92,11 @@ public class ExtensionDispatcherServlet extends ZimbraServlet {
     @Override
     public void service(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException {
         ZimbraLog.clearContext();
+        String method = req.getMethod();
+        if ("GET".equals(method) && req.getPathInfo().endsWith("/healthcheck")) {
+            handleHealthCheck(req, resp);
+            return;
+        }
         ExtensionHttpHandler handler = null;
         try {
             handler = getHandler(req);
@@ -105,15 +110,10 @@ public class ExtensionDispatcherServlet extends ZimbraServlet {
             resp.sendError(HttpServletResponse.SC_NOT_FOUND, "Not Found");
             return;
         }
-        String method = req.getMethod();
         if ("OPTIONS".equals(method)) {
             handler.doOptions(req, resp);
         } else if ("GET".equals(method)) {
-            if (req.getPathInfo().endsWith("/healthcheck")) {
-                handleHealthCheck(req, resp);
-            } else {
-                handler.doGet(req, resp);
-            }
+            handler.doGet(req, resp);
         } else if ("POST".equals(method)) {
             handler.doPost(req, resp);
         } else {
