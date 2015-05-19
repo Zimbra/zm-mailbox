@@ -425,6 +425,13 @@ public class RenameDomain {
         // old domain's timestamp?  use new timestamp seems more right.
         domainAttrs.remove(Provisioning.A_zimbraCreateTimestamp);
 
+        // Remove DKIM parameter, user/admin need to recreate DKIM entries as per new domain name.
+        domainAttrs.remove("DKIMDomain");
+        domainAttrs.remove("DKIMIdentity");
+        domainAttrs.remove("DKIMKey");
+        domainAttrs.remove("DKIMSelector");
+        domainAttrs.remove("DKIMPublicKey");
+
         // domain level system accounts should be updated to use the new domain name
         String curNotebookAcctName = (String)domainAttrs.get(Provisioning.A_zimbraNotebookAccount);
         String newNotebookAcctName = getNewAddress(curNotebookAcctName);

@@ -1439,6 +1439,7 @@ public class ProvUtil implements HttpDebugListener {
         printOutput("domain " + args[1] + " renamed to " + args[2]);
         printOutput("Note: use zmlocalconfig to check and update any localconfig settings referencing domain '" + args[1]
             + "' on all servers.");
+        printOutput("Use /opt/zimbra/libexec/zmdkimkeyutil to recreate the DKIM entries for new domain name if required.");
     }
 
     private void doGetQuotaUsage(String[] args) throws ServiceException {
