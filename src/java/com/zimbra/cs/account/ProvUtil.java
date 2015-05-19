@@ -4229,12 +4229,7 @@ public class ProvUtil implements HttpDebugListener {
         for (Server server : servers ) {
             boolean isTarget = server.getBooleanAttr(Provisioning.A_zimbraMtaAuthTarget, false);
             if (isTarget) {
-                String url;
-                if (server.isFeatureAppSpecificPasswordsEnabled()) {
-                    url = URLUtil.getMtaAuthURL(server) + " ";
-                } else {
-                    url = URLUtil.getAdminURL(server) + " ";
-                }
+                String url = URLUtil.getMtaAuthURL(server) + " ";
                 console.print(url);
             }
         }

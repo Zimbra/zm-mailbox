@@ -82,7 +82,7 @@ public class URLUtil {
      */
     public static String getMtaAuthURL(Server server) {
         String hostname = server.getAttr(Provisioning.A_zimbraServiceHostname);
-        int port = server.getIntAttr(Provisioning.A_zimbraMtaAuthPort, 0);
+        int port = server.getMtaAuthPort();
         StringBuffer sb = new StringBuffer(128);
         String path = AdminConstants.ADMIN_SERVICE_URI;
         sb.append(LC.zimbra_admin_service_scheme.value()).append(hostname).append(":").append(port).append(path);
