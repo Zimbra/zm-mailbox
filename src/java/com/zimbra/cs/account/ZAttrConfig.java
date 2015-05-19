@@ -13467,19 +13467,23 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Enabled using the configured server ID for blob dir
+     * Whether to append the server ID (or cluster ID where applicable) to
+     * blob store paths. Applies to new and existing blobs; therefore
+     * generally should not be changed on existing systems.
      *
-     * @return zimbraConfiguredServerIDForBlobDirEnabled, or false if unset
+     * @return zimbraConfiguredServerIDForBlobDirEnabled, or true if unset
      *
      * @since ZCS 8.5.0
      */
     @ZAttr(id=1551)
     public boolean isConfiguredServerIDForBlobDirEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraConfiguredServerIDForBlobDirEnabled, false);
+        return getBooleanAttr(Provisioning.A_zimbraConfiguredServerIDForBlobDirEnabled, true);
     }
 
     /**
-     * Enabled using the configured server ID for blob dir
+     * Whether to append the server ID (or cluster ID where applicable) to
+     * blob store paths. Applies to new and existing blobs; therefore
+     * generally should not be changed on existing systems.
      *
      * @param zimbraConfiguredServerIDForBlobDirEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -13494,7 +13498,9 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Enabled using the configured server ID for blob dir
+     * Whether to append the server ID (or cluster ID where applicable) to
+     * blob store paths. Applies to new and existing blobs; therefore
+     * generally should not be changed on existing systems.
      *
      * @param zimbraConfiguredServerIDForBlobDirEnabled new value
      * @param attrs existing map to populate, or null to create a new map
@@ -13510,7 +13516,9 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Enabled using the configured server ID for blob dir
+     * Whether to append the server ID (or cluster ID where applicable) to
+     * blob store paths. Applies to new and existing blobs; therefore
+     * generally should not be changed on existing systems.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -13524,7 +13532,9 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Enabled using the configured server ID for blob dir
+     * Whether to append the server ID (or cluster ID where applicable) to
+     * blob store paths. Applies to new and existing blobs; therefore
+     * generally should not be changed on existing systems.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs

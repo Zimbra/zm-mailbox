@@ -7766,8 +7766,9 @@ TODO: delete them permanently from here
 </attr>
 
 <attr id="1551" name="zimbraConfiguredServerIDForBlobDirEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="8.5.0">
-  <globalConfigValue>FALSE</globalConfigValue>
-  <desc>Enabled using the configured server ID for blob dir</desc>
+  <globalConfigValue>TRUE</globalConfigValue>
+  <globalConfigValueUpgrade>FALSE</globalConfigValueUpgrade>
+  <desc>Whether to append the server ID (or cluster ID where applicable) to blob store paths. Applies to new and existing blobs; therefore generally should not be changed on existing systems.</desc>
 </attr>
 
 <attr id="1552" name="zimbraMtaSmtpdSaslTlsSecurityOptions" type="string" cardinality="multi" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="8.5.0">

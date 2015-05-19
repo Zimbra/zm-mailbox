@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -35,6 +35,7 @@ public final class VolumeServiceException extends ServiceException {
     public static final String NOT_ABSOLUTE_PATH             = "volume.NOT_ABSOLUTE_PATH";
     public static final String SUBDIR_OF_ANOTHER_VOLUME      = "volume.SUBDIR_OF_ANOTHER_VOLUME";
     public static final String INVALID_METADATA              = "volume.INVALID_METADATA";
+    public static final String FAILURE                       = "volume.FAILURE";
 
     private VolumeServiceException(String message, String code, boolean isReceiversFault) {
         super(message, code, isReceiversFault);
@@ -103,8 +104,13 @@ public final class VolumeServiceException extends ServiceException {
                 anotherVol.getId() + ", path=" + anotherVol.getRootPath() + ")",
                 SUBDIR_OF_ANOTHER_VOLUME, SENDERS_FAULT, null);
     }
-    
+
     public static VolumeServiceException INVALID_METADATA(Throwable cause) {
         return new VolumeServiceException("could not decode metadata", INVALID_METADATA, true, cause);
     }
+
+    public static VolumeServiceException FAILURE(Throwable cause) {
+        return new VolumeServiceException("volume failure", FAILURE, true, cause);
+    }
+
 }

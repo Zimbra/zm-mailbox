@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -66,7 +66,7 @@ public final class Volume {
     private boolean compressBlobs;
     private long compressionThreshold;
     private Metadata metadata;
-    
+
     public static class VolumeMetadata {
         private long lastSyncDate;
         private long currentSyncDate;
@@ -88,7 +88,7 @@ public final class Volume {
             this.lastSyncDate = meta.getLong(FN_DATE_LASTSYNC, 0);
             this.currentSyncDate = meta.getLong(FN_DATE_CURRENTSYNC, 0);
             this.groupId = meta.getInt(FN_LAST_GROUP_ID, 0);
-            
+
             //to handle pre-9.0 serialized metadata
             if(this.lastSyncDate > 0 && this.lastSyncDate < Integer.MAX_VALUE) {
                 this.lastSyncDate = this.lastSyncDate*1000;
@@ -97,37 +97,38 @@ public final class Volume {
                 this.currentSyncDate = this.currentSyncDate*1000;
             }
         }
-        
+
         public VolumeMetadata(long lastSyncDate, long currentSyncDate, int groupId) {
             this.lastSyncDate = lastSyncDate;
             this.currentSyncDate = currentSyncDate;
             this.groupId = groupId;
         }
-        
+
         public long getLastSyncDate() {
             return lastSyncDate;
         }
-        
+
         public long getCurrentSyncDate() {
             return currentSyncDate;
         }
-        
+
         public int getGroupId() {
             return groupId;
         }
-        
+
         public void setLastSyncDate(long date) {
             this.lastSyncDate = date;
         }
-        
+
         public void setCurrentSyncDate(long date) {
             this.currentSyncDate = date;
         }
-        
+
         public void setGroupId(int id) {
             this.groupId = id;
         }
-        
+
+        @Override
         public String toString() {
             return serialize().toString();
         }
@@ -162,7 +163,7 @@ public final class Volume {
             volume.compressBlobs = copy.compressBlobs;
             volume.compressionThreshold = copy.compressionThreshold;
             volume.metadata = copy.metadata;
-            
+
         }
 
         public Builder setId(short id) {
@@ -219,7 +220,7 @@ public final class Volume {
             volume.compressionThreshold = value;
             return this;
         }
-        
+
         public Builder setMetadata(VolumeMetadata metadata) {
             volume.metadata = metadata.serialize();
             return this;
@@ -256,7 +257,18 @@ public final class Volume {
                 throw VolumeServiceException.INVALID_REQUEST("compressionThreshold cannot be a negative number");
             }
 
-            volume.incomingMsgDir = volume.rootPath + File.separator + INCOMING_DIR;
+            StringBuilder incomingMsgDir = new StringBuilder(volume.rootPath);
+            incomingMsgDir.append(File.separator);
+            try {
+                if (Provisioning.getInstance().getLocalServer().isConfiguredServerIDForBlobDirEnabled()) {
+                    incomingMsgDir.append(volume.getConfiguredServerID()).append(File.separator);
+                }
+            } catch (ServiceException e) {
+                throw VolumeServiceException.FAILURE(e);
+            }
+            incomingMsgDir.append(INCOMING_DIR);
+
+            volume.incomingMsgDir = incomingMsgDir.toString();
             switch (volume.type) {
                 case TYPE_MESSAGE:
                 case TYPE_MESSAGE_SECONDARY:
@@ -323,7 +335,7 @@ public final class Volume {
     public long getCompressionThreshold() {
         return compressionThreshold;
     }
-    
+
     public VolumeMetadata getMetadata() throws ServiceException {
         return new VolumeMetadata(metadata);
     }
@@ -332,7 +344,7 @@ public final class Volume {
         return Provisioning.getInstance().getLocalServer().isMailboxVolumeRelativePath() ? LC.zimbra_home.value() + File.separator + path : path;
     }
 
-    public static String getConfiguredServerID() throws ServiceException
+    protected String getConfiguredServerID() throws ServiceException
     {
         StringBuilder finalPath = new StringBuilder();
         if (Zimbra.isAlwaysOn())
@@ -359,14 +371,15 @@ public final class Volume {
     private StringBuilder getMailboxDir(int mboxId, String subdir) throws ServiceException {
         StringBuilder result = new StringBuilder();
         int dir = (mboxId >> mboxBits) & mboxGroupBitmask;
-        
+
         result.append(rootPath).append(File.separator);
 
-        if (Provisioning.getInstance().getLocalServer().isConfiguredServerIDForBlobDirEnabled())
+        if (Provisioning.getInstance().getLocalServer().isConfiguredServerIDForBlobDirEnabled()) {
             result.append(getConfiguredServerID()).append(File.separator);
+        }
 
         result.append(dir).append(File.separator).append(mboxId);
-        
+
         if (subdir != null) {
             result.append(File.separator).append(subdir);
         }
