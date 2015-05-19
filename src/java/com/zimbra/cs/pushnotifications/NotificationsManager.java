@@ -17,12 +17,17 @@ package com.zimbra.cs.pushnotifications;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.ZmgDevice;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.mailbox.Message;
 
 public class NotificationsManager {
@@ -51,21 +56,77 @@ public class NotificationsManager {
         }
     }
 
-    public Collection<PushNotification> build(Account account, Mailbox mbox, String sender,
-        String recipientEmail, Message message) {
+    public Collection<PushNotification> buildNewMessageNotification(Account account, Mailbox mbox,
+        String sender, Message message, MailboxOperation op) {
         Collection<PushNotification> notifications = new ArrayList<PushNotification>();
         Collection<ZmgDevice> devices = getDevices(mbox);
         for (ZmgDevice device : devices) {
-            PushNotification notification = createNotification(mbox, message, sender,
-                recipientEmail, device);
+            PushNotification notification = createNotification(mbox, message, sender, device, op);
             notifications.add(notification);
         }
         return notifications;
     }
 
-    public void buildAndPush(Account account, Mailbox mbox, String sender, String recipientEmail,
-        Message message) {
-        queue.putAll(build(account, mbox, sender, recipientEmail, message));
+    public Collection<PushNotification> buildSyncDataNotification(Mailbox mbox, MailItem mailItem,
+        MailboxOperation op) {
+        Collection<PushNotification> notifications = new ArrayList<PushNotification>();
+        Collection<ZmgDevice> devices = getDevices(mbox);
+        for (ZmgDevice device : devices) {
+            PushNotification notification = createNotification(mbox, mailItem, op, device);
+            notifications.add(notification);
+        }
+        return notifications;
+    }
+
+    public Collection<PushNotification> buildSyncDataNotification(Account account,
+        DataSource dataSource, String action) {
+        Mailbox mbox;
+        try {
+            mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+            Collection<PushNotification> notifications = new ArrayList<PushNotification>();
+            Collection<ZmgDevice> devices = getDevices(mbox);
+            for (ZmgDevice device : devices) {
+                PushNotification notification = createNotification(mbox, dataSource, action, device);
+                notifications.add(notification);
+            }
+            return notifications;
+        } catch (ServiceException e) {
+            return Collections.<PushNotification> emptyList();
+        }
+
+    }
+
+    public Collection<PushNotification> buildContentAvailableNotification(Account account) {
+        Mailbox mbox;
+        try {
+            mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+            Collection<PushNotification> notifications = new ArrayList<PushNotification>();
+            Collection<ZmgDevice> devices = getDevices(mbox);
+            for (ZmgDevice device : devices) {
+                PushNotification notification = createNotification(device);
+                notifications.add(notification);
+            }
+            return notifications;
+        } catch (ServiceException e) {
+            return Collections.<PushNotification> emptyList();
+        }
+    }
+
+    public void pushNewMessageNotification(Account account, Mailbox mbox, String sender,
+        Message message, MailboxOperation op) {
+        queue.putAll(buildNewMessageNotification(account, mbox, sender, message, op));
+    }
+
+    public void pushSyncDataNotification(Mailbox mbox, MailItem mailItem, MailboxOperation op) {
+        queue.putAll(buildSyncDataNotification(mbox, mailItem, op));
+    }
+
+    public void pushSyncDataNotification(Account account, DataSource dataSource, String action) {
+        queue.putAll(buildSyncDataNotification(account, dataSource, action));
+    }
+
+    public void pushContentAvailableNotification(Account account) {
+        queue.putAll(buildContentAvailableNotification(account));
     }
 
     public void push(Collection<PushNotification> notifications) {
@@ -73,7 +134,7 @@ public class NotificationsManager {
     }
 
     private PushNotification createNotification(Mailbox mbox, Message message, String sender,
-        String recipientEmail, ZmgDevice device) {
+        ZmgDevice device, MailboxOperation op) {
         String fragment = message.getFragment();
         int unreadCount = 0;
         try {
@@ -81,8 +142,23 @@ public class NotificationsManager {
         } catch (ServiceException e) {
             ZimbraLog.mailbox.debug("ZMG: Exception in getting unread message count", e);
         }
-        return new NewMessagePushNotification(message.getConversationId(), message.getId(), message.getSubject(), sender,
-            recipientEmail, device, fragment, unreadCount);
+        return new NewMessagePushNotification(message.getConversationId(), message.getId(),
+            message.getSubject(), sender, device, fragment, unreadCount, message.getType().name(),
+            op.name());
+    }
+
+    private PushNotification createNotification(Mailbox mbox, MailItem mailItem,
+        MailboxOperation op, ZmgDevice device) {
+        return new SyncDataPushNotification(mailItem, op.name(), device);
+    }
+
+    private PushNotification createNotification(Mailbox mbox, DataSource dataSource, String action,
+        ZmgDevice device) {
+        return new SyncDataPushNotification(dataSource, action, device);
+    }
+
+    private PushNotification createNotification(ZmgDevice device) {
+        return new ContentAvailablePushNotification(device);
     }
 
     private Collection<ZmgDevice> getDevices(Mailbox mbox) {

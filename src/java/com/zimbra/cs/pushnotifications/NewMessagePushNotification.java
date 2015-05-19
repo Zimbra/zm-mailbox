@@ -15,10 +15,13 @@
 
 package com.zimbra.cs.pushnotifications;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.Collection;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.ZmgDevice;
 
 public class NewMessagePushNotification implements PushNotification {
@@ -27,10 +30,11 @@ public class NewMessagePushNotification implements PushNotification {
     private int messageId = 0;
     private String subject = "";
     private String sender = "";
-    private String recipientAddress = "";
     private String fragment = "";
     private int unreadCount = 0;
     private ZmgDevice device = null;
+    private String type;
+    private String action;
 
     /**
      * @param conversationId
@@ -42,16 +46,17 @@ public class NewMessagePushNotification implements PushNotification {
      * @param fragment
      */
     public NewMessagePushNotification(int conversationId, int messageId, String message,
-                                      String sender, String recipientAddress, ZmgDevice device,
-                                      String fragment, int unreadCount) {
+                                      String sender, ZmgDevice device, String fragment,
+                                      int unreadCount, String type, String op) {
         this.conversationId = conversationId;
         this.messageId = messageId;
         this.subject = message;
         this.sender = sender;
-        this.recipientAddress = recipientAddress;
         this.fragment = fragment;
         this.device = device;
         this.unreadCount = unreadCount;
+        this.type = type;
+        this.action = op;
     }
 
     /**
@@ -115,21 +120,6 @@ public class NewMessagePushNotification implements PushNotification {
     }
 
     /**
-     * @return the recipientAddress
-     */
-    public String getRecipientAddress() {
-        return recipientAddress;
-    }
-
-    /**
-     * @param recipientAddress
-     *            the recipientAddress to set
-     */
-    public void setRecipientAddress(String recipientAddress) {
-        this.recipientAddress = recipientAddress;
-    }
-
-    /**
      * @return the fragment
      */
     public String getFragment() {
@@ -144,7 +134,6 @@ public class NewMessagePushNotification implements PushNotification {
         this.fragment = fragment;
     }
 
-    
     /**
      * @return the unreadCount
      */
@@ -152,45 +141,71 @@ public class NewMessagePushNotification implements PushNotification {
         return unreadCount;
     }
 
-    
     /**
-     * @param unreadCount the unreadCount to set
+     * @param unreadCount
+     *            the unreadCount to set
      */
     public void setUnreadCount(int unreadCount) {
         this.unreadCount = unreadCount;
     }
 
-    private Map<String, String> getPayloadForApns() {
-        Map<String, String> map = new HashMap<String, String>();
-        map.put(APNS_SOUND, "default");
-        map.put(APNS_BADGE, String.valueOf(unreadCount));
-        map.put(APNS_ALERT, "From: " + sender + "\n" + subject);
-        map.put(APNS_CID, String.valueOf(conversationId));
-        map.put(APNS_MSG_ID, String.valueOf(messageId));
-        map.put(APNS_MSG_ID, fragment);
-        map.put(APNS_RECIPIENT_ADDRESS, recipientAddress);
-        return map;
+    private String getPayloadForApns() {
+        JSONObject aps = new JSONObject();
+        JSONObject payload = new JSONObject();
+        try {
+            aps.put(APNS_SOUND, "default");
+            aps.put(APNS_BADGE, unreadCount);
+            aps.put(APNS_ALERT, "From: " + sender + "\n" + subject);
+
+            payload.put(APNS_APS, aps);
+            payload.put(CID, conversationId);
+            payload.put(ID, messageId);
+            payload.put(SENDER, sender);
+            payload.put(FRAGMENT, fragment);
+            payload.put(TYPE, type);
+            payload.put(ACTION, action);
+        } catch (JSONException e) {
+            ZimbraLog.mailbox.warn(
+                "ZMG: Exception in creating APNS payload for new message notification", e);
+            return "";
+        }
+
+        return payload.toString();
     }
 
-    private Map<String, String> getPayloadForGcm() {
-        Map<String, String> map = new HashMap<String, String>();
-        map.put(GCM_CID, String.valueOf(conversationId));
-        map.put(GCM_MSG_ID, String.valueOf(messageId));
-        map.put(GCM_SUBJECT, subject);
-        map.put(GCM_SENDER, sender);
-        map.put(GCM_FRAGMENT, fragment);
-        map.put(GCM_RECIPIENT_ADDRESS, recipientAddress);
-        map.put(GCM_UNREAD_COUNT, String.valueOf(unreadCount));
-        return map;
+    private String getPayloadForGcm() {
+        JSONObject gcmData = new JSONObject();
+        JSONObject payload = new JSONObject();
+        try {
+            gcmData.put(CID, conversationId);
+            gcmData.put(ID, messageId);
+            gcmData.put(SUBJECT, subject);
+            gcmData.put(SENDER, sender);
+            gcmData.put(FRAGMENT, fragment);
+            gcmData.put(UNREAD_COUNT, unreadCount);
+            gcmData.put(TYPE, type);
+            gcmData.put(ACTION, action);
+
+            Collection<String> registrationIds = new ArrayList<String>();
+            registrationIds.add(device.getRegistrationId());
+            payload.put(GCM_REGISTRATION_IDS, registrationIds);
+            payload.put(GCM_DATA, gcmData);
+        } catch (JSONException e) {
+            ZimbraLog.mailbox.warn(
+                "ZMG: Exception in creating GCM payload for new message notification", e);
+            return "";
+        }
+
+        return payload.toString();
     }
 
     /*
      * (non-Javadoc)
-     *
+     * 
      * @see com.zimbra.cs.pushnotifications.PushNotification#getPayload()
      */
     @Override
-    public Map<String, String> getPayload() {
+    public String getPayload() {
         switch (device.getPushProvider()) {
         case PROVIDER_IDENTIFIER_GCM:
             return getPayloadForGcm();
@@ -199,13 +214,13 @@ public class NewMessagePushNotification implements PushNotification {
             return getPayloadForApns();
 
         default:
-            return Collections.<String, String> emptyMap();
+            return "";
         }
     }
 
     /*
      * (non-Javadoc)
-     *
+     * 
      * @see com.zimbra.cs.pushnotifications.PushNotification#getDevice()
      */
     @Override
@@ -215,7 +230,7 @@ public class NewMessagePushNotification implements PushNotification {
 
     /*
      * (non-Javadoc)
-     *
+     * 
      * @see
      * com.zimbra.cs.pushnotifications.PushNotification#setDevice(com.zimbra
      * .cs.account.ZmgDevice)
