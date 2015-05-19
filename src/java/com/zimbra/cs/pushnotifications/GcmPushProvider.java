@@ -24,7 +24,6 @@ import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.httpclient.methods.StringRequestEntity;
 
-import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraHttpConnectionManager;
 import com.zimbra.common.util.ZimbraLog;
@@ -53,7 +52,7 @@ public class GcmPushProvider implements PushProvider {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see com.zimbra.cs.pushnotifications.PushProvider#push(com.zimbra.cs.
      * pushnotifications.PushNotification)
      */

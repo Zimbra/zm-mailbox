@@ -24,7 +24,7 @@ import com.zimbra.cs.mailbox.Message;
 public class FilterManager {
 
     /**
-     * Default filter chain that can be executed before all push notifications 
+     * Default filter chain that can be executed before all push notifications
      * @param account
      * @return TRUE if filter chain passes else FALSE
      */
@@ -34,7 +34,7 @@ public class FilterManager {
     }
 
     /**
-     * Executes a filter chain before a new message push notification 
+     * Executes a filter chain before a new message push notification
      * @param account
      * @param message
      * @return TRUE if filter chain passes else FALSE
