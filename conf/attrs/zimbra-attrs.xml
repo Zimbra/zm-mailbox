@@ -8445,9 +8445,11 @@ TODO: delete them permanently from here
     <globalConfigValue>8500</globalConfigValue>
     <desc>HTTP port for Consul service</desc>
 </attr>
+
 <attr id="1677" name="zimbraConsulBindAddress" type="string" max="128" cardinality="multi" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="9.0.0">
   <desc>Interface address on which Consul should listen; if empty, binds to all interfaces</desc>
 </attr>
+
 <attr id="1678" name="zimbraConsulURL" type="string" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="9.0.0">
   <globalConfigValue>http://127.0.0.1:8500</globalConfigValue>
   <desc>URL for accessing the Consul agent.</desc>
@@ -9474,7 +9476,7 @@ TODO: delete them permanently from here
   <desc> Flag to enable smtptolmtp server</desc>
 </attr>
 
-<attr id="1886" name="zimbraMailboxSmtpToLmtpPort" type="port" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service" since="9.0.0">
+<attr id="1886" name="zimbraMailboxSmtpToLmtpPort" type="port" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" callback="CheckPortConflict" affectsServices="service" since="9.0.0">
   <globalConfigValue>7024</globalConfigValue>
   <desc>SmtptoLmtp port</desc>
 </attr>
@@ -9848,7 +9850,7 @@ TODO: delete them permanently from here
   <desc>Hostname of the external XMPP server where XMPP over BOSH requests need to be proxied</desc>
 </attr>
 
-<attr id="1960" name="zimbraReverseProxyXmppBoshPort" type="integer" min="0" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="nginxproxy" affectsServices="nginxproxy" since="8.7.0,9.0.0">
+<attr id="1960" name="zimbraReverseProxyXmppBoshPort" type="port" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="nginxproxy" affectsServices="nginxproxy" since="8.7.0,9.0.0">
   <desc>Port number of the external XMPP server where XMPP over BOSH requests need to be proxied</desc>
 </attr>
 

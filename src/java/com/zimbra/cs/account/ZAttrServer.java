@@ -57522,6 +57522,10 @@ public abstract class ZAttrServer extends NamedEntry {
      * Port number of the external XMPP server where XMPP over BOSH requests
      * need to be proxied
      *
+     * <p>Use getReverseProxyXmppBoshPortAsString to access value as a string.
+     *
+     * @see #getReverseProxyXmppBoshPortAsString()
+     *
      * @return zimbraReverseProxyXmppBoshPort, or -1 if unset
      *
      * @since ZCS 8.7.0,9.0.0
@@ -57529,6 +57533,19 @@ public abstract class ZAttrServer extends NamedEntry {
     @ZAttr(id=1960)
     public int getReverseProxyXmppBoshPort() {
         return getIntAttr(Provisioning.A_zimbraReverseProxyXmppBoshPort, -1);
+    }
+
+    /**
+     * Port number of the external XMPP server where XMPP over BOSH requests
+     * need to be proxied
+     *
+     * @return zimbraReverseProxyXmppBoshPort, or null if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1960)
+    public String getReverseProxyXmppBoshPortAsString() {
+        return getAttr(Provisioning.A_zimbraReverseProxyXmppBoshPort, null);
     }
 
     /**
@@ -57561,6 +57578,39 @@ public abstract class ZAttrServer extends NamedEntry {
     public Map<String,Object> setReverseProxyXmppBoshPort(int zimbraReverseProxyXmppBoshPort, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraReverseProxyXmppBoshPort, Integer.toString(zimbraReverseProxyXmppBoshPort));
+        return attrs;
+    }
+
+    /**
+     * Port number of the external XMPP server where XMPP over BOSH requests
+     * need to be proxied
+     *
+     * @param zimbraReverseProxyXmppBoshPort new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1960)
+    public void setReverseProxyXmppBoshPortAsString(String zimbraReverseProxyXmppBoshPort) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyXmppBoshPort, zimbraReverseProxyXmppBoshPort);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Port number of the external XMPP server where XMPP over BOSH requests
+     * need to be proxied
+     *
+     * @param zimbraReverseProxyXmppBoshPort new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1960)
+    public Map<String,Object> setReverseProxyXmppBoshPortAsString(String zimbraReverseProxyXmppBoshPort, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyXmppBoshPort, zimbraReverseProxyXmppBoshPort);
         return attrs;
     }
 
