@@ -8795,7 +8795,7 @@ TODO: delete them permanently from here
   <desc>Hostname of the external XMPP server where XMPP over BOSH requests need to be proxied</desc>
 </attr>
 
-<attr id="1960" name="zimbraReverseProxyXmppBoshPort" type="integer" min="0" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.7.0,9.0.0">
+<attr id="1960" name="zimbraReverseProxyXmppBoshPort" type="port" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.7.0,9.0.0">
   <desc>Port number of the external XMPP server where XMPP over BOSH requests need to be proxied</desc>
 </attr>
 
