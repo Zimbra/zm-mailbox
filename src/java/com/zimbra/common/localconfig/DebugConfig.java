@@ -267,6 +267,9 @@ public final class DebugConfig {
 
     public static final boolean imapForceSpecialUse = value("imap_force_special_use", true);
 
+    public static final boolean pushNotificationVerboseMode = value(
+        "push_notification_verbose_mode", false);
+
     /*
      * Use multiple threads to cut down time to calculate counts of objects for domain admin
      * where there are a large number of domains.
