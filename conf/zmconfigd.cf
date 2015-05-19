@@ -404,6 +404,16 @@ SECTION proxy
 	VAR zimbraReverseProxyBlockedUserAgents	
 	VAR zimbraReverseProxyZSSHostname
 	VAR zimbraReverseProxyZmlookupCachingEnabled
+	VAR zimbraReverseProxySNIEnabled
+	VAR zimbraReverseProxyXmppBoshLocalHttpBindURL
+	VAR zimbraReverseProxyXmppBoshRemoteHttpBindURL
+	VAR zimbraReverseProxyXmppBoshHostname
+	VAR zimbraReverseProxyXmppBoshPort
+	VAR zimbraReverseProxyPageSpeedEnabled
+	VAR zimbraReverseProxyPageSpeedRespectVary
+	VAR zimbraReverseProxyPageSpeedDisallowedURLs
+	VAR zimbraReverseProxySSLDHParam
+	VAR zimbraReverseProxyResponseHeaders
 	PROXYGEN
 	RESTART proxy
 
