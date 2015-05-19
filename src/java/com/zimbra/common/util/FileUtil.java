@@ -188,11 +188,7 @@ public class FileUtil {
                 }
             }
             if (fout != null) {
-                try {
-                    fout.close();
-                } catch (IOException ioe) {
-                    ZimbraLog.misc.warn("FileUtil.copy(" + from + "," + to + "): ignoring exception while closing output channel", ioe);
-                }
+                fout.close();
             }
             if (!isComplete) {
                 to.delete();
