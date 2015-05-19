@@ -19,9 +19,9 @@ package com.zimbra.cs.service.mail;
 import java.util.Map;
 
 import com.zimbra.common.account.Key;
-import com.zimbra.common.account.Key.DataSourceBy;
-import com.zimbra.soap.admin.type.DataSourceType;
+import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.cs.account.Account;
@@ -32,8 +32,10 @@ import com.zimbra.cs.db.DbDataSource;
 import com.zimbra.cs.db.DbImapFolder;
 import com.zimbra.cs.db.DbPop3Message;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.common.soap.Element;
+import com.zimbra.cs.pushnotifications.NotificationsManager;
+import com.zimbra.cs.pushnotifications.PushNotification;
 import com.zimbra.soap.ZimbraSoapContext;
+import com.zimbra.soap.admin.type.DataSourceType;
 
 
 public class DeleteDataSource extends MailDocumentHandler {
@@ -70,12 +72,17 @@ public class DeleteDataSource extends MailDocumentHandler {
             prov.deleteDataSource(account, dataSourceId);
             if (dstype == DataSourceType.pop3)
                 DbPop3Message.deleteUids(mbox, dataSourceId);
-            else if (dstype == DataSourceType.imap)
+            else if (dstype == DataSourceType.imap) {
                 DbImapFolder.deleteImapData(mbox, dataSourceId);
+                if (DebugConfig.pushNotificationVerboseMode) {
+                    NotificationsManager.getInstance().pushSyncDataNotification(account, dsrc,
+                        PushNotification.DELETE_DATASOURCE);
+                }
+            }
             DbDataSource.deleteAllMappings(dsrc);
             DataSourceManager.cancelSchedule(account, dataSourceId);
         }
-        
+ 
         Element response = zsc.createElement(MailConstants.DELETE_DATA_SOURCE_RESPONSE);
         return response;
     }

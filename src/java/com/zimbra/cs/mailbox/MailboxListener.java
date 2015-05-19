@@ -31,6 +31,7 @@ import com.zimbra.cs.mailbox.MailItem.Type;
 import com.zimbra.cs.mailbox.acl.AclPushListener;
 import com.zimbra.cs.mailbox.acl.ShareExpirationListener;
 import com.zimbra.cs.mailbox.alerts.CalItemReminderService;
+import com.zimbra.cs.pushnotifications.PushNotificationListener;
 import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.util.ZimbraApplication;
 
@@ -96,6 +97,7 @@ public abstract class MailboxListener {
         register(new FreeBusyProvider.Listener());
         register(new DataSourceListener());
         register(new ShareStartStopListener());
+        register(new PushNotificationListener());
         if (application.supports(AclPushListener.class)) {
             register(new AclPushListener());
         }

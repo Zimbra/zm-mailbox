@@ -72,7 +72,6 @@ import com.zimbra.cs.mailbox.Notification;
 import com.zimbra.cs.mailbox.QuotaWarning;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.mime.ParsedMessageOptions;
-import com.zimbra.cs.pushnotifications.ZmgPushNotificationCallback;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.BlobInputStream;
@@ -109,7 +108,6 @@ public class ZimbraLmtpBackend implements LmtpBackend {
     static {
         addCallback(Notification.getInstance());
         addCallback(QuotaWarning.getInstance());
-        addCallback(ZmgPushNotificationCallback.getInstance());
     }
 
     private static Map<Integer, ReentrantLock> createMailboxDeliveryLocks() {

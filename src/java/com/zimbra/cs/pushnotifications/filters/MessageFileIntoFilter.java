@@ -15,21 +15,31 @@
 
 package com.zimbra.cs.pushnotifications.filters;
 
+import java.util.List;
+
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.DataSource;
+import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 
 public class MessageFileIntoFilter implements Filter {
 
     private Message message;
+    private Account account;
 
-    public MessageFileIntoFilter(Message message) {
+    public static final String DATA_SOURCE_INBOX = "Inbox";
+
+    public MessageFileIntoFilter(Account account, Message message) {
         this.message = message;
+        this.account = account;
     }
 
     /*
      * (non-Javadoc)
-     *
+     * 
      * @see com.zimbra.cs.pushnotifications.filters.Filter#apply()
      */
     @Override
@@ -44,11 +54,32 @@ public class MessageFileIntoFilter implements Filter {
         }
 
         int folderId = message.getFolderId();
-        if (!(Mailbox.ID_FOLDER_INBOX == folderId)) {
-            ZimbraLog.mailbox.debug("Message is not filed into INBOX");
+        if (Mailbox.ID_FOLDER_INBOX == folderId) {
+            return true;
+        } else if (isDataSourceInbox(folderId)) {
+            return true;
+        }
+        return false;
+    }
+
+    private boolean isDataSourceInbox(int folderId) {
+        try {
+            Mailbox mbox = message.getMailbox();
+            List<DataSource> dataSources = account.getAllDataSources();
+            for (DataSource dataSource : dataSources) {
+                Folder dataSourceFolder = mbox.getFolderById(null, dataSource.getFolderId());
+                List<Folder> subFolders = dataSourceFolder.getSubfolders(null);
+                for (Folder folder : subFolders) {
+                    if (DATA_SOURCE_INBOX.equals(folder.getName()) && folderId == folder.getId()) {
+                        return true;
+                    }
+                }
+            }
+        } catch (ServiceException e) {
+            ZimbraLog.mailbox.warn("Exception in processing MessageFileIntoFilter");
             return false;
         }
-        return true;
+        return false;
     }
 
 }
