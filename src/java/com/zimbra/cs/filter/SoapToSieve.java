@@ -221,7 +221,20 @@ public final class SoapToSieve {
             snippet = String.format(format, FilterUtil.escape(bodyTest.getValue()));
         } else if (test instanceof FilterTest.AddressBookTest) {
             FilterTest.AddressBookTest abTest = (FilterTest.AddressBookTest) test;
-            snippet = "addressbook :in \"" + FilterUtil.escape(abTest.getHeader()) + '"';
+            String header = abTest.getHeader();
+            if (header.contains(",")) {
+                String[] headerList = header.split(",");
+                StringBuilder format = new StringBuilder();
+                for (String item: headerList) {
+                    if (format.length() > 0) {
+                        format.append(",");
+                    }
+                    format.append("\"").append(FilterUtil.escape(item)).append("\"");
+                }
+                snippet = "addressbook :in [" + format.toString() + ']';
+            } else {
+                snippet = "addressbook :in \"" + FilterUtil.escape(header) + '"';
+            }
         } else if (test instanceof FilterTest.ContactRankingTest) {
             FilterTest.ContactRankingTest rankingTest = (FilterTest.ContactRankingTest) test;
             snippet = "contact_ranking :in \"" + FilterUtil.escape(rankingTest.getHeader()) + '"';

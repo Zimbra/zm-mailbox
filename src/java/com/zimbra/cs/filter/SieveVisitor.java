@@ -422,7 +422,16 @@ public abstract class SieveVisitor {
                 accept(node, props);
                 visitAttachmentTest(node, VisitPhase.end, props);
             } else if ("addressbook".equalsIgnoreCase(nodeName)) {
-                String header = getValue(node, 0, 1, 0, 0);
+                StringBuilder format = new StringBuilder();
+                Node argNode = getNode(node, 0, 1, 0);
+                int argNodeLen = argNode.jjtGetNumChildren();
+                for (int i = 0; i < argNodeLen; i++) {
+                    if (i > 0) {
+                        format.append(",");
+                    }
+                    format.append(getValue(argNode, i));
+                }
+                String header = format.toString();
                 visitAddressBookTest(node, VisitPhase.begin, props, header);
                 accept(node, props);
                 visitAddressBookTest(node, VisitPhase.end, props, header);
