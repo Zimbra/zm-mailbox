@@ -82,7 +82,7 @@ public class DeleteDataSource extends MailDocumentHandler {
             DbDataSource.deleteAllMappings(dsrc);
             DataSourceManager.cancelSchedule(account, dataSourceId);
         }
- 
+
         Element response = zsc.createElement(MailConstants.DELETE_DATA_SOURCE_RESPONSE);
         return response;
     }

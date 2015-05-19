@@ -138,7 +138,7 @@ recipientAddress - recipient email address
 
 Notifications are sent in json format. Following are sample json notifications -
 
-GCM - 
+GCM -
 
 {"data":{"sender":"Demo User One <user1@host.local>","id":257,"subject":"sdf","unreadCount":1,
 "action":"CreateMessage","type":"MESSAGE","fragment":"sdf","cid":-257},"registration_ids":["12345"]}
