@@ -14,7 +14,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.auth.twofactor.CredentialConfig.Encoding;
 
 public class CredentialGenerator {
-    private CredentialConfig config;
+    private final CredentialConfig config;
 
     public CredentialGenerator(CredentialConfig config) {
         this.config = config;
@@ -68,7 +68,7 @@ public class CredentialGenerator {
                 return new String(encoded).toUpperCase();
             case BASE64:
                 encoded = Base64.encodeBase64(bytes);
-                return new String(encoded);
+                return new String(encoded).toUpperCase();
             default:
                 return null;
         }
