@@ -122,6 +122,10 @@ import com.zimbra.soap.account.message.AuthRequest;
 import com.zimbra.soap.account.message.AuthResponse;
 import com.zimbra.soap.account.message.ChangePasswordRequest;
 import com.zimbra.soap.account.message.ChangePasswordResponse;
+import com.zimbra.soap.account.message.DisableTwoFactorAuthRequest;
+import com.zimbra.soap.account.message.DisableTwoFactorAuthResponse;
+import com.zimbra.soap.account.message.EnableTwoFactorAuthRequest;
+import com.zimbra.soap.account.message.EnableTwoFactorAuthResponse;
 import com.zimbra.soap.account.message.EndSessionRequest;
 import com.zimbra.soap.account.message.GetIdentitiesRequest;
 import com.zimbra.soap.account.message.GetIdentitiesResponse;
@@ -269,6 +273,10 @@ public class ZMailbox implements ToZJSONObject {
         private String mRequestedSkin;
         private boolean mCsrfSupported; // Used by AuthRequest
         private Map<String, String> mCustomHeaders;
+        private String mTwoFactorCode;
+        private String mTwoFactorScratchCode;
+        private boolean mTwoFactorSupported;
+        private boolean mAppSpecificPasswordsSupported;
 
         public Options() {
         }
@@ -384,6 +392,18 @@ public class ZMailbox implements ToZJSONObject {
 
         public boolean getCsrfSupported() { return mCsrfSupported; }
         public Options setCsrfSupported(boolean csrfSupported) { mCsrfSupported = csrfSupported;  return this; }
+
+        public String getTwoFactorCode() { return mTwoFactorCode; }
+        public Options setTwoFactorCode(String code) { mTwoFactorCode = code; return this; }
+
+        public String getTwoFactorScratchCode() { return mTwoFactorScratchCode; }
+        public Options setTwoFactorScratchCode(String code) { mTwoFactorScratchCode = code; return this; }
+
+        public boolean getTwoFactorSupported() { return mTwoFactorSupported; }
+        public Options setTwoFactorSupported(boolean bool) { mTwoFactorSupported = bool; return this; }
+
+        public boolean getAppSpecificPasswordsSupported() { return mAppSpecificPasswordsSupported; }
+        public Options setAppSpecificPasswordsSupported(boolean bool) { mAppSpecificPasswordsSupported = bool; return this; }
 
         public Map<String, String> getCustomHeaders() {
             if (mCustomHeaders == null) {
@@ -614,7 +634,8 @@ public class ZMailbox implements ToZJSONObject {
         }
     }
 
-    private ZAuthResult authByPassword(Options options, String password) throws ServiceException {
+
+    public ZAuthResult authByPassword(Options options, String password) throws ServiceException {
         if (mTransport == null) {
             throw ZClientException.CLIENT_ERROR("must call setURI before calling authenticate", null);
         }
@@ -622,6 +643,8 @@ public class ZMailbox implements ToZJSONObject {
         AccountSelector account = new AccountSelector(com.zimbra.soap.type.AccountBy.name, options.getAccount());
         AuthRequest auth = new AuthRequest(account, password);
         auth.setPassword(password);
+        auth.setTwoFactorCode(options.getTwoFactorCode());
+        auth.setTwoFactorScratchCode(options.getTwoFactorScratchCode());
         auth.setVirtualHost(options.getVirtualHost());
         auth.setRequestedSkin(options.getRequestedSkin());
         auth.setCsrfSupported(options.getCsrfSupported());
@@ -5525,6 +5548,19 @@ public class ZMailbox implements ToZJSONObject {
             folder = subfolder;
         }
         return new Pair<ZFolder, String>(folder, unmatched);
+    }
+
+    public EnableTwoFactorAuthResponse enableTwoFactorAuth(String password) throws ServiceException {
+        EnableTwoFactorAuthRequest req = new EnableTwoFactorAuthRequest();
+        req.setName(getName());
+        req.setPassword(password);
+        EnableTwoFactorAuthResponse resp = invokeJaxb(req);
+        return resp;
+    }
+
+    public DisableTwoFactorAuthResponse disableTwoFactorAuth(String password) throws ServiceException {
+        DisableTwoFactorAuthRequest req = new DisableTwoFactorAuthRequest();
+        return invokeJaxb(req);
     }
 }
 
