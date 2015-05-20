@@ -248,6 +248,7 @@ public class Auth extends AccountDocumentHandler {
                             manager.authenticateAppSpecificPassword(password);
                         } else {
                             //if two-factor auth enabled but credentials not specified, throw error
+                            prov.authAccount(acct, password, AuthContext.Protocol.soap, authCtxt);
                             needTwoFactorAuth(acct);
                         }
                     } else {

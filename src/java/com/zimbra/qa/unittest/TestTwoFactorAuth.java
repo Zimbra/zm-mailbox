@@ -16,17 +16,12 @@ import com.zimbra.common.auth.twofactor.AuthenticatorConfig.HashAlgorithm;
 import com.zimbra.common.auth.twofactor.CredentialConfig.Encoding;
 import com.zimbra.common.auth.twofactor.TOTPAuthenticator;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.SoapTransport;
 import com.zimbra.cs.account.AccountServiceException;
-import com.zimbra.qa.unittest.prov.soap.SoapTest;
+import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 import com.zimbra.soap.account.message.EnableTwoFactorAuthRequest;
 import com.zimbra.soap.account.message.EnableTwoFactorAuthResponse;
 import com.zimbra.soap.account.message.GenerateScratchCodesRequest;
 import com.zimbra.soap.account.message.GenerateScratchCodesResponse;
-import com.zimbra.soap.admin.message.GetCosRequest;
-import com.zimbra.soap.admin.message.GetCosResponse;
-import com.zimbra.soap.admin.type.CosSelector;
-import com.zimbra.soap.admin.type.CosSelector.CosBy;
 
 /**
  *
@@ -39,7 +34,6 @@ public class TestTwoFactorAuth extends TestCase {
     private static ZMailbox mbox;
     private String secret;
     private List<String> scratchCodes;
-    private static SoapTransport adminTransport;
 
     /*
      * Make sure these settings match those on the server! Otherwise the TOTP
@@ -60,7 +54,6 @@ public class TestTwoFactorAuth extends TestCase {
         mbox = TestUtil.getZMailbox(USER_NAME, resp.getScratchCodes().remove(0));
         secret = resp.getSecret();
         scratchCodes = resp.getScratchCodes();
-        adminTransport = TestUtil.getAdminSoapTransport();
     }
 
     @Override
@@ -166,10 +159,13 @@ public class TestTwoFactorAuth extends TestCase {
         this.scratchCodes = newCodes;
     }
 
-   private static String getCosId() throws Exception {
-       GetCosRequest cosRequest = new GetCosRequest();
-       cosRequest.setCos(new CosSelector(CosBy.name, "default"));
-       GetCosResponse cosResponse = SoapTest.invokeJaxb(adminTransport, cosRequest);
-       return cosResponse.getCos().getId();
-   }
+    @Test
+    public void testAuthenticateWithWrongPassword() throws ServiceException {
+        try {
+            TestUtil.testAuth(mbox, USER_NAME, "wrongpassword");
+            fail();
+        } catch (ServiceException e) {
+            assertEquals(AuthFailedServiceException.AUTH_FAILED, e.getCode());
+        }
+    }
 }
