@@ -50,14 +50,6 @@ public class BootstrapMobileGatewayApp extends AccountDocumentHandler {
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
 
-        Provisioning prov = Provisioning.getInstance();
-        Domain domain = prov.getDefaultZMGDomain();
-        if (domain == null) {
-            ZimbraLog.misc.info("zimbraMobileGatewayDefaultAppAccountDomainId has not been configured. It is " +
-                    "required for enabling Mobile Gateway features.");
-            throw ServiceException.FORBIDDEN("Operation disallowed");
-        }
-
         BootstrapMobileGatewayAppRequest req = JaxbUtil.elementToJaxb(request);
 
         String appUuid = UUIDUtil.generateUUID();
@@ -73,7 +65,14 @@ public class BootstrapMobileGatewayApp extends AccountDocumentHandler {
         if (req.getWantAppToken()) {
             // Return an "anticipatory auth token" to the app
 
-            // First generate an account id that would be used at a later point in time to create account for the app
+            Provisioning prov = Provisioning.getInstance();
+            Domain domain = prov.getDefaultZMGDomain();
+            if (domain == null) {
+                ZimbraLog.misc.info("zimbraMobileGatewayDefaultAppAccountDomainId has not been configured.");
+                throw ServiceException.FORBIDDEN("Operation disallowed");
+            }
+
+            // Generate an account id that would be used at a later point in time to create account for the app
             String appAccountId = LdapUtil.generateUUID();
 
             // This would be used whenever we need to identify the account using app credentials (appUuid & key)
