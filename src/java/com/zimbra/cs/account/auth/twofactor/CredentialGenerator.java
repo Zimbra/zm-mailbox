@@ -69,7 +69,7 @@ public class CredentialGenerator {
                 return new String(encoded).toUpperCase();
             case BASE64:
                 encoded = Base64.encodeBase64(bytes);
-                return new String(encoded);
+                return new String(encoded).toUpperCase();
             default:
                 return null;
         }
