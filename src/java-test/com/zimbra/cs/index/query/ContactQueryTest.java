@@ -80,9 +80,13 @@ public final class ContactQueryTest {
         fields.put(ContactConstants.A_firstName, "Jonathan");
         fields.put(ContactConstants.A_lastName, "Smith");
         fields.put(ContactConstants.A_email, "jonathan.smith@zimbra.com");
+        mbox.createContact(null, new ParsedContact(fields), Mailbox.ID_FOLDER_CONTACTS, null);
+        fields.put(ContactConstants.A_firstName, "Jon");
+        fields.put(ContactConstants.A_lastName, "Smith");
+        fields.put(ContactConstants.A_email, "jon.smith@zimbra.com");
         Contact contact = mbox.createContact(null, new ParsedContact(fields), Mailbox.ID_FOLDER_CONTACTS, null);
         ZimbraQueryResults results = mbox.index.search(new OperationContext(mbox), "contact:\"Jon Smith\"",
-                EnumSet.of(MailItem.Type.CONTACT), SortBy.NONE, 100);
+                EnumSet.of(MailItem.Type.CONTACT), SortBy.NAME_ASC, 100);
         Assert.assertTrue("Expected some hits", results.hasNext());
         Assert.assertEquals("Hit ItemId not as expected", contact.getId(), results.getNext().getItemId());
         results.close();
@@ -117,6 +121,24 @@ public final class ContactQueryTest {
         results.close();
 
         results = mbox.index.search(new OperationContext(mbox), "contact:\"Las*t\"",
+                EnumSet.of(MailItem.Type.CONTACT), SortBy.NONE, 100);
+        Assert.assertTrue(results.hasNext());
+        Assert.assertEquals(contact.getId(), results.getNext().getItemId());
+        results.close();
+
+        results = mbox.index.search(new OperationContext(mbox), "contact:\"*ast\"",
+                EnumSet.of(MailItem.Type.CONTACT), SortBy.NONE, 100);
+        Assert.assertTrue(results.hasNext());
+        Assert.assertEquals(contact.getId(), results.getNext().getItemId());
+        results.close();
+
+        results = mbox.index.search(new OperationContext(mbox), "contact:\"*as*\"",
+                EnumSet.of(MailItem.Type.CONTACT), SortBy.NONE, 100);
+        Assert.assertTrue(results.hasNext());
+        Assert.assertEquals(contact.getId(), results.getNext().getItemId());
+        results.close();
+
+        results = mbox.index.search(new OperationContext(mbox), "contact:\"irst\"",
                 EnumSet.of(MailItem.Type.CONTACT), SortBy.NONE, 100);
         Assert.assertTrue(results.hasNext());
         Assert.assertEquals(contact.getId(), results.getNext().getItemId());

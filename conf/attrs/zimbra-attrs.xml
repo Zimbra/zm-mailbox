@@ -9951,4 +9951,9 @@ TODO: delete them permanently from here
   <desc>HTTPs port on which zimbra extension server should listen</desc>
 </attr>
 
+<attr id="1981" name="zimbraContactsSearchInfixQuerySupported" type="boolean" cardinality="single" optionalIn="globalConfig" since="9.0.0">
+  <globalConfigValue>TRUE</globalConfigValue>
+  <desc>Boolean to decide whether the infix query is being used for searching the contact items.</desc>
+</attr>
+
 </attrs>

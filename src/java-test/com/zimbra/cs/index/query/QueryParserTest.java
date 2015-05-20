@@ -593,10 +593,10 @@ public final class QueryParserTest {
         parser.setTypes(EnumSet.of(MailItem.Type.CONTACT));
 
         String src = "zimbra";
-        Assert.assertEquals("(Q(CONTACT:zimbra) || Q(l.content:zimbra))", Query.toString(parser.parse(src)));
+        Assert.assertEquals("(Q(CONTACT:zimbra))", Query.toString(parser.parse(src)));
 
         src = "in"; // stop word
-        Assert.assertEquals("(Q(CONTACT:in) || Q(l.content:in))", Query.toString(parser.parse(src)));
+        Assert.assertEquals("(Q(CONTACT:in))", Query.toString(parser.parse(src)));
     }
 
     @Test
@@ -604,7 +604,7 @@ public final class QueryParserTest {
         QueryParser parser = new QueryParser(null);
         parser.setTypes(EnumSet.of(MailItem.Type.CONTACT));
 
-        Assert.assertEquals("(Q(CONTACT:Zimbra \"quoted\" test) || Q(l.content:Zimbra \"quoted\" test))",
+        Assert.assertEquals("(Q(CONTACT:Zimbra \"quoted\" test))",
                 Query.toString(parser.parse("\"Zimbra \\\"quoted\\\" test\"")));
     }
 

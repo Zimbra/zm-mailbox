@@ -30,6 +30,7 @@ import com.zimbra.cs.index.LuceneQueryOperation;
 import com.zimbra.cs.index.NoTermQueryOperation;
 import com.zimbra.cs.index.QueryOperation;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.account.Provisioning;
 
 /**
  * Special text query to search contacts.
@@ -39,21 +40,45 @@ import com.zimbra.cs.mailbox.Mailbox;
 public final class ContactQuery extends Query {
     private final String text;
     private final String withWildcard;
+    private boolean contactsSearchInfixQuerySupported;
 
-    public ContactQuery(String text) {
+	public ContactQuery(String text) {
+	try {
+		contactsSearchInfixQuerySupported = Provisioning.getInstance().getConfig().isContactsSearchInfixQuerySupported();
+	} catch (ServiceException e) {
+		contactsSearchInfixQuerySupported = true;
+	}
     	this.text = text;
     	this.withWildcard = buildWildcardQuery(text);
     }
 
-    private String buildWildcardQuery(String text) {
+	private String buildWildcardQuery(String text) {
 		List<String> tokensWithWildcards = new LinkedList<String>();
 		String[] tokens = text.split("\\s");
 		for (int i = 0; i < tokens.length; i++) {
 			String token = tokens[i];
-			if (token.endsWith("*")) {
-				tokensWithWildcards.add(token);
+			if (contactsSearchInfixQuerySupported) {
+				//  "keyword"  --> "*keyword*"
+				// "*keyword*" --> "*keyword*"
+				// "*keyword"  --> "*keyword"
+				//  "keyword*" -->  "keyword*"
+				if (!token.startsWith("*") && !token.endsWith("*")) {
+					tokensWithWildcards.add("*" + token + "*");
+				} else {
+					tokensWithWildcards.add(token);
+				}
 			} else {
-				tokensWithWildcards.add(token + "*");
+				//  "keyword"  -->  "keyword*"
+				// "*keyword*" -->  "keyword*"
+				// "*keyword"  --> "*keyword"
+				//  "keyword*" -->  "keyword*"
+				if (!token.startsWith("*") && !token.endsWith("*")) {
+					tokensWithWildcards.add(token + "*");
+				} else if (token.startsWith("*") && token.endsWith("*")) {
+					tokensWithWildcards.add(token.substring(1, token.length()));
+				} else {
+					tokensWithWildcards.add(token);
+				}
 			}
 		}
 		return Joiner.on(" ").join(tokensWithWildcards);

@@ -728,8 +728,6 @@ public final class QueryParser {
                 if (types.contains(MailItem.Type.CONTACT)) { // combine with CONTACT query
                     List<Query> clauses = new ArrayList<Query>(3);
                     clauses.add(new ContactQuery(text));
-                    clauses.add(new ConjQuery(ConjQuery.Conjunction.OR));
-                    clauses.add(createContentQuery(text));
                     return new SubQuery(clauses);
                 } else {
                     return createContentQuery(text);

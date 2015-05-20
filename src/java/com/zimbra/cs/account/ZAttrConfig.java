@@ -14412,6 +14412,83 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * Boolean to decide whether the infix query is being used for searching
+     * the contact items.
+     *
+     * @return zimbraContactsSearchInfixQuerySupported, or true if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1981)
+    public boolean isContactsSearchInfixQuerySupported() {
+        return getBooleanAttr(Provisioning.A_zimbraContactsSearchInfixQuerySupported, true);
+    }
+
+    /**
+     * Boolean to decide whether the infix query is being used for searching
+     * the contact items.
+     *
+     * @param zimbraContactsSearchInfixQuerySupported new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1981)
+    public void setContactsSearchInfixQuerySupported(boolean zimbraContactsSearchInfixQuerySupported) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraContactsSearchInfixQuerySupported, zimbraContactsSearchInfixQuerySupported ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Boolean to decide whether the infix query is being used for searching
+     * the contact items.
+     *
+     * @param zimbraContactsSearchInfixQuerySupported new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1981)
+    public Map<String,Object> setContactsSearchInfixQuerySupported(boolean zimbraContactsSearchInfixQuerySupported, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraContactsSearchInfixQuerySupported, zimbraContactsSearchInfixQuerySupported ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Boolean to decide whether the infix query is being used for searching
+     * the contact items.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1981)
+    public void unsetContactsSearchInfixQuerySupported() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraContactsSearchInfixQuerySupported, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Boolean to decide whether the infix query is being used for searching
+     * the contact items.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1981)
+    public Map<String,Object> unsetContactsSearchInfixQuerySupported(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraContactsSearchInfixQuerySupported, "");
+        return attrs;
+    }
+
+    /**
      * Flag to enable contact ranking table
      *
      * @return zimbraConversationIgnoreMaillistPrefix, or true if unset
