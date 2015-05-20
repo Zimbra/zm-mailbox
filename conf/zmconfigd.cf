@@ -396,6 +396,12 @@ SECTION proxy
     VAR zimbraReverseProxySSLSessionCacheSize
 	VAR zimbraReverseProxyZSSHostname
 	VAR zimbraReverseProxyZmlookupCachingEnabled
+	VAR zimbraReverseProxyXmppBoshLocalHttpBindURL
+    VAR zimbraReverseProxyXmppBoshRemoteHttpBindURL
+    VAR zimbraReverseProxyXmppBoshHostname
+    VAR zimbraReverseProxyXmppBoshPort
+    VAR zimbraReverseProxySSLDHParam
+    VAR zimbraReverseProxyResponseHeaders
 	PROXYGEN
 	RESTART proxy
 
