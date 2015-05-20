@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -38,9 +38,9 @@ import com.zimbra.soap.type.ZmBoolean;
 @XmlRootElement(name=AdminConstants.E_AUTH_REQUEST)
 @XmlType(propOrder = {})
 public class AuthRequest {
-    
+
     /**
-     * @zm-api-field-description controls whether the auth token cookie in the response should 
+     * @zm-api-field-description controls whether the auth token cookie in the response should
      * be persisted when the browser exits.<br />
      * 0: (default)<br />
      *    the cookie will be deleted when the Web browser exits.<br />
@@ -82,6 +82,20 @@ public class AuthRequest {
     @XmlElement(name=AccountConstants.E_VIRTUAL_HOST /* virtualHost */, required=false)
     private String virtualHost;
 
+    /**
+     *@zm-api-field-description the TOTP code used for two-factor authentication
+     *
+     */
+    @XmlElement(name=AccountConstants.E_TWO_FACTOR_CODE /* twoFactorCode */, required=false)
+    private String twoFactorCode;
+
+    /**
+     *@zm-api-field-description a single-use scratch code for two-factor authentication
+     *
+     */
+    @XmlElement(name=AccountConstants.E_TWO_FACTOR_SCRATCH_CODE /* twoFactorScratchCode */, required=false)
+    private String twoFactorScratchCode;
+
     public AuthRequest() {
         this((String)null, (String)null);
     }
@@ -94,14 +108,14 @@ public class AuthRequest {
         this.virtualHost = null;
     }
 
-    public Boolean getPersistAuthTokenCookie() { 
-        return ZmBoolean.toBool(persistAuthTokenCookie); 
+    public Boolean getPersistAuthTokenCookie() {
+        return ZmBoolean.toBool(persistAuthTokenCookie);
     }
-    
-    public void setPersistAuthTokenCookie(Boolean persistAuthTokenCookie) { 
-        this.persistAuthTokenCookie = ZmBoolean.fromBool(persistAuthTokenCookie); 
+
+    public void setPersistAuthTokenCookie(Boolean persistAuthTokenCookie) {
+        this.persistAuthTokenCookie = ZmBoolean.fromBool(persistAuthTokenCookie);
     }
-    
+
     public void setAuthToken(String authToken) {
         this.authToken = authToken;
     }
