@@ -31,6 +31,8 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.auth.AuthContext.Protocol;
+import com.zimbra.cs.account.auth.twofactor.TwoFactorManager;
 import com.zimbra.cs.account.krb5.Krb5Login;
 import com.zimbra.cs.account.krb5.Krb5Principal;
 import com.zimbra.cs.account.ldap.LdapProv;
@@ -199,7 +201,27 @@ public abstract class AuthMechanism {
                 Map<String, Object> authCtxt) throws ServiceException {
 
             String encodedPassword = acct.getAttr(Provisioning.A_userPassword);
-
+            //if two-factor auth is enabled, check non-http protocols against app-specific passwords
+            boolean tryAppSpecificPassword = false;
+            if (authCtxt != null && TwoFactorManager.appSpecificPasswordsEnabled(acct)) {
+                Protocol proto = (Protocol) authCtxt.get("proto");
+                if (proto != null) {
+                    switch(proto) {
+                    case imap:
+                    case pop3:
+                    case zsync:
+                    case http_dav:
+                        tryAppSpecificPassword = true;
+                    default:
+                        break;
+                    }
+                }
+            }
+            if (tryAppSpecificPassword) {
+                TwoFactorManager manager = new TwoFactorManager(acct);
+                manager.authenticateAppSpecificPassword(password);
+                return;
+            }
             if (encodedPassword == null) {
                 throw AuthFailedServiceException.AUTH_FAILED(acct.getName(),
                         namePassedIn(authCtxt), "missing "+Provisioning.A_userPassword);

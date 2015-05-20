@@ -47,6 +47,7 @@ import org.junit.runner.JUnitCore;
 
 import com.google.common.collect.Lists;
 import com.google.common.io.Closeables;
+import com.zimbra.client.ZAuthResult;
 import com.zimbra.client.ZContact;
 import com.zimbra.client.ZDataSource;
 import com.zimbra.client.ZDateTime;
@@ -69,6 +70,7 @@ import com.zimbra.client.ZInvite.ZStatus;
 import com.zimbra.client.ZInvite.ZTransparency;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.client.ZMailbox.ContactSortBy;
+import com.zimbra.client.ZMailbox.Options;
 import com.zimbra.client.ZMailbox.OwnerBy;
 import com.zimbra.client.ZMailbox.SharedItemBy;
 import com.zimbra.client.ZMailbox.ZAppointmentResult;
@@ -690,11 +692,19 @@ extends Assert {
 
     public static ZMailbox getZMailbox(String username)
     throws ServiceException {
+        return getZMailbox(username, null);
+    }
+
+    public static ZMailbox getZMailbox(String username, String scratchCode)
+    throws ServiceException {
         ZMailbox.Options options = new ZMailbox.Options();
         options.setAccount(getAddress(username));
-        options.setAccountBy(AccountBy.name);
+        options.setAccountBy(Key.AccountBy.name);
         options.setPassword(DEFAULT_PASSWORD);
-        options.setUri(getSoapUrl());
+        options.setUri(TestUtil.getSoapUrl());
+        if (scratchCode != null) {
+            options.setTwoFactorScratchCode(scratchCode);
+        }
         return ZMailbox.getMailbox(options);
     }
 
@@ -1312,5 +1322,22 @@ extends Assert {
             conn.commit();
             conn.closeQuietly();
         }
+    }
+
+    public static ZAuthResult testAuth(ZMailbox mbox, String account, String password) throws ServiceException {
+        return testAuth(mbox, account, password, null, null);
+    }
+
+    public static ZAuthResult testAuth(ZMailbox mbox, String account, String password, String twoFactorCode, String twoFactorScratchCode) throws ServiceException {
+        Options options = new Options();
+        options.setAccount(account);
+        options.setPassword(password);
+        options.setTwoFactorSupported(true);
+        if (twoFactorCode != null) {
+            options.setTwoFactorCode(twoFactorCode);
+        } else if (twoFactorScratchCode != null) {
+            options.setTwoFactorScratchCode(twoFactorScratchCode);
+        }
+        return mbox.authByPassword(options, password);
     }
 }

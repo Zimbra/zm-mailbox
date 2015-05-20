@@ -137,6 +137,21 @@ public class URLUtil {
     }
 
     /**
+     * Returns absolute URL with scheme, host, and port for MTA auth on server.
+     * @param server
+     * @param path what follows port number; begins with slash
+     * @return
+     */
+    public static String getMtaAuthURL(Server server) {
+        String hostname = server.getAttr(Provisioning.A_zimbraServiceHostname);
+        int port = server.getIntAttr(Provisioning.A_zimbraMtaAuthPort, 0);
+        StringBuffer sb = new StringBuffer(128);
+        String path = AdminConstants.ADMIN_SERVICE_URI;
+        sb.append(PROTO_HTTPS).append("://").append(hostname).append(":").append(port).append(path);
+        return sb.toString();
+    }
+
+    /**
      * Returns absolute URL with scheme, host, and port for admin app on server.
      * Admin app only runs over SSL.
      * @param server

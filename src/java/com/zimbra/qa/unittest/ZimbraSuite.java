@@ -124,6 +124,7 @@ public class ZimbraSuite extends TestSuite
         sClasses.add(TestSearchJunkTrash.class);
         sClasses.add(TestJaxb.class);
         sClasses.add(TestCollectConfigServletsAccess.class);
+        //sClasses.add(TestDLMembership.class);
         sClasses.add(TestCommunityIntegration.class);
         sClasses.add(TestSearchSortByDate.class);
         sClasses.add(TestReIndex.class);
@@ -132,6 +133,10 @@ public class ZimbraSuite extends TestSuite
         sClasses.add(TestRegisterMobileGatewayAppRequest.class);
         sClasses.add(TestGetGcmSenderId.class);
         sClasses.add(TestShareNotifications.class);
+        sClasses.add(TestDLMembership.class);
+        sClasses.add(TestTwoFactorAuth.class);
+        sClasses.add(TestTwoFactorAuthAdmin.class);
+        sClasses.add(TestAppSpecificPasswords.class);
     }
 
     /**

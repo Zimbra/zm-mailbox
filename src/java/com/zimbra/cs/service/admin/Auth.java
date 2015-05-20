@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -45,6 +45,7 @@ import com.zimbra.cs.account.ZimbraAuthToken;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.account.auth.AuthMechanism.AuthMech;
+import com.zimbra.cs.account.auth.twofactor.TwoFactorManager;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.util.AccountUtil;
@@ -105,6 +106,8 @@ public class Auth extends AdminDocumentHandler {
                 throw ServiceException.INVALID_REQUEST("missing <name> or <account>", null);
 
             String password = request.getAttribute(AdminConstants.E_PASSWORD);
+            String totp = request.getAttribute(AccountConstants.E_TWO_FACTOR_CODE, null);
+            String scratchCode = request.getAttribute(AccountConstants.E_TWO_FACTOR_SCRATCH_CODE, null);
             Element virtualHostEl = request.getOptionalElement(AccountConstants.E_VIRTUAL_HOST);
             String virtualHost = virtualHostEl == null ? null : virtualHostEl.getText().toLowerCase();
 
@@ -156,6 +159,15 @@ public class Auth extends AdminDocumentHandler {
                 authCtxt.put(AuthContext.AC_USER_AGENT, zsc.getUserAgent());
                 authCtxt.put(AuthContext.AC_AS_ADMIN, Boolean.TRUE);
                 prov.authAccount(acct, password, AuthContext.Protocol.soap, authCtxt);
+                boolean usingTwoFactorAuth = TwoFactorManager.twoFactorAuthEnabled(acct);
+                if (usingTwoFactorAuth) {
+                    TwoFactorManager manager = new TwoFactorManager(acct);
+                    if (totp != null) {
+                        manager.authenticate(password, totp);
+                    } else if (scratchCode != null) {
+                        manager.authenticateScratchCode(password, scratchCode);
+                    }
+                }
                 checkAdmin(acct);
                 AuthMech authedByMech = (AuthMech) authCtxt.get(AuthContext.AC_AUTHED_BY_MECH);
                 at = AuthProvider.getAuthToken(acct, true, authedByMech);

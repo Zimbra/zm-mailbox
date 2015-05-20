@@ -312,7 +312,7 @@ public class SoapServlet extends ZimbraServlet {
         remoteIp.addToLoggingContext();
 
         //checkAuthToken(req.getCookies(), context);
-
+        context.put(SoapEngine.REQUEST_PORT, req.getServerPort());
         Element envelope = null;
         try {
             envelope = mEngine.dispatch(req.getRequestURI(), buffer, context);
