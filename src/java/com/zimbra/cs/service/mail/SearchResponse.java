@@ -233,6 +233,7 @@ final class SearchResponse {
         if(!msg.getFlagString().equalsIgnoreCase("")) {
             cMsgHit.setFlags(msg.getFlagString());
         }
+        cMsgHit.setDate(msg.getDate());
         cMsgHit.toElement(el);
         return el;
     }
