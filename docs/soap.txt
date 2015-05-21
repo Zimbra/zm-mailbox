@@ -426,7 +426,6 @@ global soap/system errors used with zimbra:Error/Code:
    [<prefs>[<pref name="..."/>...]</prefs>]
    [<attrs>[<attr name="..."/>...]</attrs>]
    [<twoFactorCode>...</twoFactorCode>]
-   [<scratchCode>...</scratchCode>]
    [<requestedSkin>{skin}</requestedSkin>]
    [<trustedToken>...</trustedToken>]
    [<deviceId>...</deviceId>]
@@ -500,7 +499,7 @@ See also //depot/zimbra/main/ThirdParty/nginx/docs/HTTP for more details on the 
 
 Two-Factor Authentication
 
-If two-factor authentication is enabled, AuthRequest requires one of two extra parameters: "twoFactorCode" or "scratchCode". Realistically, this means that authentication is divided into several steps:
+If two-factor authentication is enabled, AuthRequest requires an extra "twoFactorCode" parameter. Realistically, this means that authentication is divided into several steps:
 
 1. Client sends an AuthRequest with the username and password, as usual
 

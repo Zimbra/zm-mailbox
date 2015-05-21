@@ -10,11 +10,11 @@ import java.util.Set;
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.zimbra.common.auth.twofactor.AuthenticatorConfig;
-import com.zimbra.common.auth.twofactor.CredentialConfig;
-import com.zimbra.common.auth.twofactor.TOTPAuthenticator;
 import com.zimbra.common.auth.twofactor.AuthenticatorConfig.CodeLength;
 import com.zimbra.common.auth.twofactor.AuthenticatorConfig.HashAlgorithm;
+import com.zimbra.common.auth.twofactor.CredentialConfig;
 import com.zimbra.common.auth.twofactor.CredentialConfig.Encoding;
+import com.zimbra.common.auth.twofactor.TOTPAuthenticator;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -217,22 +217,62 @@ public class TwoFactorManager {
         return config;
     }
 
-    public void authenticate(String password, String totp) throws ServiceException {
-        if (totp == null) {
-            ZimbraLog.account.error("TOTP code missing");
-            throw AuthFailedServiceException.AUTH_FAILED("TOTP code missing");
-        }
+    private boolean checkTOTPCode(String code) throws ServiceException {
         long curTime = System.currentTimeMillis() / 1000;
         AuthenticatorConfig config = getAuthenticatorConfig();
         TOTPAuthenticator auth = new TOTPAuthenticator(config);
-        if (!auth.validateCode(secret, curTime, totp, getSecretEncoding())) {
-            failedLogin();
-            ZimbraLog.account.error("invalid two-factor code");
+        return auth.validateCode(secret, curTime, code, getSecretEncoding());
+    }
+
+    public void authenticateTOTP(String code) throws ServiceException {
+        if (!checkTOTPCode(code)) {
+            ZimbraLog.account.error("invalid TOTP code");
             throw AuthFailedServiceException.AUTH_FAILED("invalid TOTP code");
         }
     }
 
-    public void authenticateScratchCode(String password, String scratchCode) throws ServiceException {
+    public void authenticate(String code) throws ServiceException {
+        if (code == null) {
+            ZimbraLog.account.error("two-factor code missing");
+            throw AuthFailedServiceException.AUTH_FAILED("two-factor code missing");
+        }
+        Boolean codeIsScratchCode = isScratchCode(code);
+        if (codeIsScratchCode == null || codeIsScratchCode.equals(false)) {
+            if (!checkTOTPCode(code)) {
+                boolean success = false;
+                if (codeIsScratchCode == null) {
+                    //could maybe be a scratch code
+                    success = checkScratchCodes(code);
+                }
+                if (!success) {
+                    failedLogin();
+                    ZimbraLog.account.error("invalid two-factor code");
+                    throw AuthFailedServiceException.AUTH_FAILED("invalid two-factor code");
+                }
+            }
+        } else {
+            authenticateScratchCode(code);
+        }
+    }
+
+    private Boolean isScratchCode(String code) throws ServiceException {
+        int totpLength = getGlobalConfig().getTwoFactorCodeLength();
+        int scratchCodeLength = getGlobalConfig().getTwoFactorScratchCodeLength();
+        if (totpLength == scratchCodeLength) {
+            try {
+                Integer.valueOf(code);
+                //most likely a TOTP code, but theoretically possible for this to be a scratch code with only digits
+                return null;
+            } catch (NumberFormatException e) {
+                //has alnum characters, so must be a scratch code
+                return true;
+            }
+        } else {
+            return code.length() != totpLength;
+        }
+    }
+
+    public void authenticateScratchCode(String scratchCode) throws ServiceException {
         if (!checkScratchCodes(scratchCode)) {
             failedLogin();
             ZimbraLog.account.error("invalid scratch code");

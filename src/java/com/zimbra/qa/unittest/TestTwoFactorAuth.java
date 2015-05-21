@@ -77,42 +77,38 @@ public class TestTwoFactorAuth extends TestCase {
         // make sure authentication succeeds for each window in the allowed
         // range
         for (int i = -1 * WINDOW_OFFSET; i <= WINDOW_OFFSET; i++) {
-            tryCode(PASSWORD, generateCode(curTime() + WINDOW_SIZE * i), false, true);
+            tryCode(PASSWORD, generateCode(curTime() + WINDOW_SIZE * i), true);
         }
         // make sure authentication fails outside the window range
         tryCode(PASSWORD, generateCode(curTime() - WINDOW_SIZE
-                * (WINDOW_OFFSET + 1)), false, false);
+                * (WINDOW_OFFSET + 1)), false);
         tryCode(PASSWORD, generateCode(curTime() + WINDOW_SIZE
-                * (WINDOW_OFFSET + 1)), false, false);
+                * (WINDOW_OFFSET + 1)), false);
     }
 
     @Test
     public void testScratchCodes() throws ServiceException {
         // each code should only work once
         for (String code : scratchCodes) {
-            tryCode(PASSWORD, code, true, true);
-            tryCode(PASSWORD, code, true, false);
+            tryCode(PASSWORD, code, true);
+            tryCode(PASSWORD, code, false);
         }
     }
 
     @Test
     public void testBadCredentials() throws ServiceException {
-        tryCode("wrongpassword", generateCode(curTime()), false, false);
-        tryCode(PASSWORD, "badcode", false, false);
+        tryCode("wrongpassword", generateCode(curTime()), false);
+        tryCode(PASSWORD, "badcode", false);
     }
 
     private long curTime() {
         return System.currentTimeMillis() / 1000;
     }
 
-    private void tryCode(String password, String code, boolean isScratchCode, boolean shouldWork)
+    private void tryCode(String password, String code, boolean shouldWork)
             throws ServiceException {
         try {
-            if (isScratchCode) {
-                TestUtil.testAuth(mbox, USER_NAME, password, null, code);
-            } else {
-                TestUtil.testAuth(mbox, USER_NAME, password, code, null);
-            }
+            TestUtil.testAuth(mbox, USER_NAME, password, code);
             if (!shouldWork) {
                 fail();
             }
@@ -147,14 +143,14 @@ public class TestTwoFactorAuth extends TestCase {
     public void testGenerateNewScratchCodes() throws ServiceException {
         GenerateScratchCodesResponse resp = mbox.invokeJaxb(new GenerateScratchCodesRequest());
         List<String> newCodes = resp.getScratchCodes();
-        tryCode(PASSWORD, newCodes.remove(0), true, true);
+        tryCode(PASSWORD, newCodes.remove(0), true);
         List<String> oldCodes = newCodes;
         resp = mbox.invokeJaxb(new GenerateScratchCodesRequest());
         newCodes = resp.getScratchCodes();
         //check that the old codes don't work
-        tryCode(PASSWORD, oldCodes.remove(0), true, false);
+        tryCode(PASSWORD, oldCodes.remove(0), false);
         //but the new ones do
-        tryCode(PASSWORD, newCodes.remove(0), true, true);
+        tryCode(PASSWORD, newCodes.remove(0), true);
         //store remaining in case some other test wants to use them
         this.scratchCodes = newCodes;
     }

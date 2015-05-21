@@ -74,7 +74,6 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
     private static final String LO_ADMIN = "admin";
     private static final String LO_PASSWORD = "password";
     private static final String LO_TOTP = "totp";
-    private static final String LO_SCRATCHCODE = "scratchcode";
     private static final String LO_PASSFILE = "passfile";
     private static final String LO_URL = "url";
     private static final String LO_ZADMIN = "zadmin";
@@ -201,8 +200,6 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
 
         mOptions.addOption(new Option(null, LO_TOTP, true, "TOTP token for two-factor auth"));
 
-        mOptions.addOption(new Option(null, LO_SCRATCHCODE, true, "Scratch code for two-factor auth"));
-
         try {
             mOut = new PrintStream(System.out, true, "utf-8");
         } catch (UnsupportedEncodingException e) {}
@@ -254,9 +251,7 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
         if (CliUtil.hasOption(cl,LO_TOTP)) {
             mTwoFactorCode = CliUtil.getOptionValue(cl, LO_TOTP);
         }
-        if (CliUtil.hasOption(cl, LO_SCRATCHCODE)) {
-            mTwoFactorScratchCode = CliUtil.getOptionValue(cl, LO_SCRATCHCODE);
-        }
+
         mAdminAccountName = CliUtil.getOptionValue(cl, LO_ADMIN);
 
         if (!CliUtil.hasOption(cl, LO_ADMIN) && CliUtil.hasOption(cl, LO_ZADMIN)) {
@@ -431,8 +426,6 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
         auth.addElement(AccountConstants.E_PASSWORD).setText(mPassword);
         if (mTwoFactorCode != null) {
             auth.addElement(AccountConstants.E_TWO_FACTOR_CODE).setText(mTwoFactorCode);
-        } else if (mTwoFactorScratchCode != null) {
-            auth.addElement(AccountConstants.E_TWO_FACTOR_SCRATCH_CODE).setText(mTwoFactorScratchCode);
         }
         // Authenticate and get auth token
         Element response = getTransport().invoke(auth, false, !mUseSession, null);

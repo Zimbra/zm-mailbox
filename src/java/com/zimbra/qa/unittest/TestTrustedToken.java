@@ -114,7 +114,7 @@ public class TestTrustedToken extends TestCase {
         options.setUri(TestUtil.getSoapUrl());
         options.setTrustedDevice(true);
         options.setDeviceId("123456");
-        options.setTwoFactorScratchCode(scratchCodes.remove(0));
+        options.setTwoFactorCode(scratchCodes.remove(0));
         mbox = new ZMailbox(options);
         Thread.sleep(1000);
         testAuthWithTrustedToken(mbox.getTrustedToken(), false);
@@ -131,7 +131,7 @@ public class TestTrustedToken extends TestCase {
         options.setAccountBy(Key.AccountBy.name);
         options.setPassword(PASSWORD);
         options.setUri(TestUtil.getSoapUrl());
-        options.setTwoFactorScratchCode(scratchCode);
+        options.setTwoFactorCode(scratchCode);
         options.setTrustedDevice(true);
         options.setGenerateDeviceId(true);
         mbox = ZMailbox.getMailbox(options);

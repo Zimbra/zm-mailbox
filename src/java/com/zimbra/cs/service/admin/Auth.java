@@ -106,8 +106,7 @@ public class Auth extends AdminDocumentHandler {
                 throw ServiceException.INVALID_REQUEST("missing <name> or <account>", null);
 
             String password = request.getAttribute(AdminConstants.E_PASSWORD);
-            String totp = request.getAttribute(AccountConstants.E_TWO_FACTOR_CODE, null);
-            String scratchCode = request.getAttribute(AccountConstants.E_TWO_FACTOR_SCRATCH_CODE, null);
+            String twoFactorCode = request.getAttribute(AccountConstants.E_TWO_FACTOR_CODE, null);
             Element virtualHostEl = request.getOptionalElement(AccountConstants.E_VIRTUAL_HOST);
             String virtualHost = virtualHostEl == null ? null : virtualHostEl.getText().toLowerCase();
 
@@ -162,10 +161,8 @@ public class Auth extends AdminDocumentHandler {
                 boolean usingTwoFactorAuth = TwoFactorManager.twoFactorAuthEnabled(acct);
                 if (usingTwoFactorAuth) {
                     TwoFactorManager manager = new TwoFactorManager(acct);
-                    if (totp != null) {
-                        manager.authenticate(password, totp);
-                    } else if (scratchCode != null) {
-                        manager.authenticateScratchCode(password, scratchCode);
+                    if (twoFactorCode != null) {
+                        manager.authenticate(twoFactorCode);
                     }
                 }
                 checkAdmin(acct);

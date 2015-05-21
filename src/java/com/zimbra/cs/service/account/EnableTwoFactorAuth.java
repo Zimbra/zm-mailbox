@@ -15,8 +15,7 @@ import com.zimbra.cs.account.auth.twofactor.TwoFactorManager;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.account.message.EnableTwoFactorAuthResponse;
 
-/** SOAP handler to enable/disable two-factor auth.
- * If enabling, returns the shared secret.
+/** SOAP handler to enable two-factor auth.
  * @author iraykin
  *
  */
@@ -36,8 +35,8 @@ public class EnableTwoFactorAuth extends AccountDocumentHandler {
         EnableTwoFactorAuthResponse response = new EnableTwoFactorAuthResponse();
         String password = request.getElement(AccountConstants.E_PASSWORD).getText();
         account.authAccount(password, Protocol.soap);
-        Element totp = request.getOptionalElement(AccountConstants.E_TWO_FACTOR_CODE);
-        if (totp == null) {
+        Element twoFactorCode = request.getOptionalElement(AccountConstants.E_TWO_FACTOR_CODE);
+        if (twoFactorCode == null) {
             if (account.isPrefTwoFactorAuthEnabled()) {
                 encodeAlreadyEnabled(response);
             } else {
@@ -45,7 +44,7 @@ public class EnableTwoFactorAuth extends AccountDocumentHandler {
                 response.setSecret(newCredentials.getSecret());
             }
         } else {
-            manager.authenticate(password, totp.getText());
+            manager.authenticateTOTP(twoFactorCode.getText());
             manager.enableTwoFactorAuth();
             response.setScratchCodes(manager.getScratchCodes());
             int tokenValidityValue = account.getAuthTokenValidityValue();
