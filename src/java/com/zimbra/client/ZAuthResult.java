@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -17,9 +17,6 @@
 
 package com.zimbra.client;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -29,10 +26,11 @@ import com.zimbra.soap.account.message.AuthResponse;
 import com.zimbra.soap.account.type.Session;
 
 public class ZAuthResult {
-    
+
     private long expires;
+    private long trustExpires;
     private AuthResponse data;
-    
+
     /*
     public ZAuthResult(Element e) throws ServiceException {
         mAuthToken = new ZAuthToken(e.getElement(AccountConstants.E_AUTH_TOKEN), false);
@@ -45,10 +43,13 @@ public class ZAuthResult {
         mSkin = e.getAttribute(AccountConstants.E_SKIN, null);
     }
     */
-    
+
     public ZAuthResult(AuthResponse res) {
         data = res;
         expires = data.getLifetime() + System.currentTimeMillis();
+        if (data.getTrustedToken() != null) {
+            trustExpires = data.getTrustLifetime() + System.currentTimeMillis();
+        }
     }
 
     public ZAuthToken getAuthToken() {
@@ -71,15 +72,15 @@ public class ZAuthResult {
         }
         session.setId(id);
     }
-    
+
     public long getExpires() {
         return expires;
     }
-    
+
     public long getLifetime() {
         return data.getLifetime();
     }
-    
+
     public String getRefer() {
         return data.getRefer();
     }
@@ -98,5 +99,17 @@ public class ZAuthResult {
 
     public String getCsrfToken() {
         return data.getCsrfToken();
+    }
+
+    public String getTrustedToken() {
+        return data.getTrustedToken();
+    }
+
+    public long getTrustLifetime() {
+        return trustExpires;
+    }
+
+    public String getDeviceId() {
+        return data.getDeviceId();
     }
 }

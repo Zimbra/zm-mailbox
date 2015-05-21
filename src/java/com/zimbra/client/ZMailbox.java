@@ -277,6 +277,10 @@ public class ZMailbox implements ToZJSONObject {
         private String mTwoFactorScratchCode;
         private boolean mTwoFactorSupported;
         private boolean mAppSpecificPasswordsSupported;
+        private boolean mTrustedDevice;
+        private String mTrustedDeviceToken;
+        private String mDeviceId;
+        private boolean mGenerateDeviceId;
 
         public Options() {
         }
@@ -405,12 +409,28 @@ public class ZMailbox implements ToZJSONObject {
         public boolean getAppSpecificPasswordsSupported() { return mAppSpecificPasswordsSupported; }
         public Options setAppSpecificPasswordsSupported(boolean bool) { mAppSpecificPasswordsSupported = bool; return this; }
 
+        public boolean getTrustedDevice() { return mTrustedDevice; }
+        public Options setTrustedDevice(boolean bool) { mTrustedDevice = bool; return this; }
+
+        public String getTrustedDeviceToken() { return mTrustedDeviceToken; }
+        public Options setTrustedDeviceToken(String token) { mTrustedDeviceToken = token; return this; }
+
+        public String getDeviceId() { return mDeviceId; }
+        public Options setDeviceId(String deviceId) {  mDeviceId = deviceId; return this; }
+
+        public boolean getGenerateDeviceId() { return mGenerateDeviceId; }
+        public Options setGenerateDeviceId(boolean bool) { mGenerateDeviceId = bool; return this; }
+
         public Map<String, String> getCustomHeaders() {
             if (mCustomHeaders == null) {
                 mCustomHeaders = new HashMap<String, String>();
             }
             return mCustomHeaders;
         }
+    }
+
+    public static enum TrustedStatus {
+        trusted, not_trusted;
     }
 
     private static class ItemCache {
@@ -457,6 +477,7 @@ public class ZMailbox implements ToZJSONObject {
 
     private ZAuthToken mAuthToken;
     private String mCsrfToken;
+    private String mTrustedToken;
     private SoapHttpTransport mTransport;
     private NotifyPreference mNotifyPreference;
     private Map<String, ZTag> mNameToTag;
@@ -522,6 +543,7 @@ public class ZMailbox implements ToZJSONObject {
             mAuthResult = authByPassword(options, password);
             initAuthToken(mAuthResult.getAuthToken());
             initCsrfToken(mAuthResult.getCsrfToken());
+            initTrustedToken(mAuthResult.getTrustedToken());
         }
         if (options.getTargetAccount() != null) {
             initTargetAccount(options.getTargetAccount(), options.getTargetAccountBy());
@@ -570,7 +592,7 @@ public class ZMailbox implements ToZJSONObject {
         return mHandlers.remove(handler);
     }
 
-    private void initAuthToken(ZAuthToken authToken){
+    public void initAuthToken(ZAuthToken authToken){
         mAuthToken = authToken;
         mTransport.setAuthToken(mAuthToken);
     }
@@ -578,6 +600,11 @@ public class ZMailbox implements ToZJSONObject {
     public void initCsrfToken(String csrfToken){
         mCsrfToken = csrfToken;
         mTransport.setCsrfToken(mCsrfToken);
+    }
+
+    public void initTrustedToken(String trustedToken) {
+        mTrustedToken = trustedToken;
+        mTransport.setTrustedToken(mTrustedToken);
     }
 
     private void initPreAuth(Options options) {
@@ -648,6 +675,21 @@ public class ZMailbox implements ToZJSONObject {
         auth.setVirtualHost(options.getVirtualHost());
         auth.setRequestedSkin(options.getRequestedSkin());
         auth.setCsrfSupported(options.getCsrfSupported());
+        if (options.getTrustedDevice()) {
+            auth.setDeviceTrusted(true);
+        }
+        if (options.getAuthToken() != null) {
+            auth.setAuthToken(new AuthToken(options.getAuthToken().getValue(), false));
+        }
+        if (options.getDeviceId() != null) {
+            auth.setDeviceId(options.getDeviceId());
+        }
+        if (options.getTrustedDeviceToken() != null) {
+            auth.setTrustedDeviceToken(options.getTrustedDeviceToken());
+        }
+        if (options.getGenerateDeviceId()) {
+            auth.setGenerateDeviceId(true);
+        }
         addAttrsAndPrefs(auth, options);
 
         AuthResponse authRes = invokeJaxb(auth);
@@ -656,7 +698,7 @@ public class ZMailbox implements ToZJSONObject {
         return r;
     }
 
-    private ZAuthResult authByAuthToken(Options options) throws ServiceException {
+    public ZAuthResult authByAuthToken(Options options) throws ServiceException {
         if (mTransport == null) {
             throw ZClientException.CLIENT_ERROR("must call setURI before calling authenticate", null);
         }
@@ -684,6 +726,10 @@ public class ZMailbox implements ToZJSONObject {
 
     public String getCsrfToken() {
         return mCsrfToken;
+    }
+
+    public String getTrustedToken() {
+        return mTrustedToken;
     }
 
     /**
