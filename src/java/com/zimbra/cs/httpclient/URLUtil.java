@@ -82,7 +82,7 @@ public class URLUtil {
     public static String getSoapURL() throws ServiceException {
         Provisioning prov = Provisioning.getInstance();
         Server localServer = prov.getLocalServer();
-        boolean useLocalServer = localServer.hasMailClientService() || !Zimbra.isAlwaysOn();
+        boolean useLocalServer = localServer.hasMailClientService();
         if (useLocalServer) {
             return getSoapURL(localServer, true);
         }
@@ -242,7 +242,7 @@ public class URLUtil {
     public static String getAdminURL() throws ServiceException {
         Provisioning prov = Provisioning.getInstance();
         Server localServer = prov.getLocalServer();
-        boolean useLocalServer = localServer.hasMailClientService() || !Zimbra.isAlwaysOn();
+        boolean useLocalServer = localServer.hasMailClientService();
         if (useLocalServer) {
             return getAdminURL(localServer);
         }

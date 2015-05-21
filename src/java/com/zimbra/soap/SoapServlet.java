@@ -411,28 +411,28 @@ public class SoapServlet extends ZimbraServlet {
             int adminPort      = localServer.getAdminPort();
 
             // Prepare mailstore tags
-            List<String> mailstoreTags = new ArrayList<>();
-            mailstoreTags.add(BuildInfo.MAJORVERSION + "." + BuildInfo.MINORVERSION + ".x");
-            mailstoreTags.add(BuildInfo.MAJORVERSION + "." + BuildInfo.MINORVERSION + "." + BuildInfo.MICROVERSION);
+            List<String> versionTags = new ArrayList<>();
+            versionTags.add(BuildInfo.MAJORVERSION + "." + BuildInfo.MINORVERSION + ".x");
+            versionTags.add(BuildInfo.MAJORVERSION + "." + BuildInfo.MINORVERSION + "." + BuildInfo.MICROVERSION);
 
             // Register http endpoint
             if (MailMode.http.equals(mailMode) || MailMode.both.equals(mailMode)) {
                 String checkScript = "zmhealthcheck-mailstore";
                 String checkUrl = "-url http://localhost:" + httpPort;
-                httpServiceID = registerWithServiceLocator(ZimbraServiceNames.MAILSTORE, mailstoreTags, httpPort, checkScript, checkUrl);
+                httpServiceID = registerWithServiceLocator(ZimbraServiceNames.MAILSTORE, versionTags, httpPort, checkScript, checkUrl);
             }
 
             // Register https endpoint
             if (MailMode.https.equals(mailMode) || MailMode.both.equals(mailMode)) {
                 String checkScript = "zmhealthcheck-mailstore";
                 String checkUrl = "-url https://localhost:" + httpsPort;
-                httpsServiceID = registerWithServiceLocator(ZimbraServiceNames.MAILSTORE, mailstoreTags, httpsPort, checkScript, checkUrl);
+                httpsServiceID = registerWithServiceLocator(ZimbraServiceNames.MAILSTORE, versionTags, httpsPort, checkScript, checkUrl);
             }
 
             // Register admin endpoint
             String checkScript = "zmhealthcheck-mailstoreadmin";
             String checkUrl = "-url https://localhost:" + adminPort;
-            adminServiceID = registerWithServiceLocator(ZimbraServiceNames.MAILSTOREADMIN, mailstoreTags, adminPort, checkScript, checkUrl);
+            adminServiceID = registerWithServiceLocator(ZimbraServiceNames.MAILSTOREADMIN, versionTags, adminPort, checkScript, checkUrl);
 
             // Register mailstore extensions
             int extensionPort = localServer.getExtensionBindPort();
@@ -440,9 +440,7 @@ public class SoapServlet extends ZimbraServlet {
                 String serviceName = ZimbraServiceNames.getNameForMailstoreExtension(extensionName);
                 checkScript = "zmhealthcheck-mailstore-extension";
                 checkUrl = "https://localhost:" + extensionPort + "/service/extension/" + extensionName + "/healthcheck";
-                List<String> tags = new ArrayList<>(mailstoreTags);
-                tags.add("ssl");
-                extensionServiceIDs.add(registerWithServiceLocator(serviceName, tags, extensionPort, checkScript, checkUrl));
+                extensionServiceIDs.add(registerWithServiceLocator(serviceName, versionTags, extensionPort, checkScript, checkUrl));
             }
 
         } catch (ServiceException e) {
@@ -453,7 +451,7 @@ public class SoapServlet extends ZimbraServlet {
     protected String registerWithServiceLocator(String serviceName, List<String> tags, int port, String checkScript, String checkUrl) {
         String serviceID = serviceName + ":" + port;
         CatalogRegistration.Service service = new CatalogRegistration.Service(serviceID, serviceName, port, tags);
-        if (checkUrl.startsWith("https")) {
+        if (checkUrl.contains("https://") && !service.tags.contains("ssl")) {
             service.tags.add("ssl");
         }
         if (checkScript != null) {
