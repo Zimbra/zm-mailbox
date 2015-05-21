@@ -201,26 +201,23 @@ public abstract class AuthMechanism {
                 Map<String, Object> authCtxt) throws ServiceException {
 
             String encodedPassword = acct.getAttr(Provisioning.A_userPassword);
-            //if two-factor auth is enabled, check non-http protocols against app-specific passwords
-            boolean tryAppSpecificPassword = false;
-            if (authCtxt != null && TwoFactorManager.appSpecificPasswordsEnabled(acct)) {
+            if (TwoFactorManager.twoFactorAuthRequired(acct) && authCtxt != null) {
+                //if two-factor auth is enabled, check non-http protocols against app-specific passwords
                 Protocol proto = (Protocol) authCtxt.get("proto");
-                if (proto != null) {
-                    switch(proto) {
-                    case imap:
-                    case pop3:
-                    case zsync:
-                    case http_dav:
-                        tryAppSpecificPassword = true;
-                    default:
-                        break;
+                switch(proto) {
+                case soap:
+                case http_basic:
+                    break;
+                default:
+                    if (TwoFactorManager.appSpecificPasswordsEnabled(acct)) {
+                        TwoFactorManager manager = new TwoFactorManager(acct);
+                        manager.authenticateAppSpecificPassword(password);
+                        return;
+                    } else {
+                        throw AuthFailedServiceException.AUTH_FAILED(acct.getName(),
+                                namePassedIn(authCtxt), "invalid password");
                     }
                 }
-            }
-            if (tryAppSpecificPassword) {
-                TwoFactorManager manager = new TwoFactorManager(acct);
-                manager.authenticateAppSpecificPassword(password);
-                return;
             }
             if (encodedPassword == null) {
                 throw AuthFailedServiceException.AUTH_FAILED(acct.getName(),
