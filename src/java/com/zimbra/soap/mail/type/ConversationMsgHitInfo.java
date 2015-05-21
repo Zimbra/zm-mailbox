@@ -65,6 +65,13 @@ public class ConversationMsgHitInfo {
     private Long autoSendTime;
 
     /**
+     * @zm-api-field-tag date
+     * @zm-api-field-description date
+     */
+    @XmlAttribute(name=MailConstants.A_DATE /* d */, required=false)
+    private Long date;
+
+    /**
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
@@ -88,11 +95,13 @@ public class ConversationMsgHitInfo {
     public void setAutoSendTime(Long autoSendTime) {
         this.autoSendTime = autoSendTime;
     }
+    public void setDate(Long date) { this.date = date; }
     public String getId() { return id; }
     public Long getSize() { return size; }
     public String getFolderId() { return folderId; }
     public String getFlags() { return flags; }
     public Long getAutoSendTime() { return autoSendTime; }
+    public Long getDate() { return date; }
 
     /** Done like this rather than using JAXB for performance reasons */
     public Element toElement(Element parent) {
@@ -109,6 +118,9 @@ public class ConversationMsgHitInfo {
         if (autoSendTime != null) {
             mel.addAttribute(MailConstants.A_AUTO_SEND_TIME, autoSendTime);
         }
+        if (date != null) {
+            mel.addAttribute(MailConstants.A_DATE, date);
+        }
         return mel;
     }
 
@@ -118,7 +130,8 @@ public class ConversationMsgHitInfo {
             .add("size", size)
             .add("folderId", folderId)
             .add("flags", flags)
-            .add("autoSendTime", autoSendTime);
+            .add("autoSendTime", autoSendTime)
+            .add("date", date);
     }
 
     @Override
