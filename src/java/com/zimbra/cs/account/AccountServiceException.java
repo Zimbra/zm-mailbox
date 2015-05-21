@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -87,6 +87,7 @@ public class AccountServiceException extends ServiceException {
     public static final String TOO_MANY_SEARCH_RESULTS = "account.TOO_MANY_SEARCH_RESULTS";
     public static final String TOO_MANY_TRUSTED_SENDERS = "account.TOO_MANY_TRUSTED_SENDERS";
     public static final String TWO_FACTOR_SETUP_REQUIRED = "account.TWO_FACTOR_SETUP_REQUIRED";
+    public static final String INVALID_TRUSTED_DEVICE_TOKEN = "account.INVALID_TRUSTED_DEVICE_TOKEN";
 
     private AccountServiceException(String message, String code, boolean isReceiversFault) {
         super(message, code, isReceiversFault);
@@ -387,5 +388,9 @@ public class AccountServiceException extends ServiceException {
 
     public static AccountServiceException TWO_FACTOR_SETUP_REQUIRED() {
         return new AccountServiceException("two-factor authentication setup required", TWO_FACTOR_SETUP_REQUIRED, SENDERS_FAULT, null);
+    }
+
+    public static AccountServiceException INVALID_TRUSTED_DEVICE_TOKEN() {
+        return new AccountServiceException("invalid trusted device token", INVALID_TRUSTED_DEVICE_TOKEN, SENDERS_FAULT, null);
     }
 }

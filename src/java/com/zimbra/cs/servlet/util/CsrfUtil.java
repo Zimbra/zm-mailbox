@@ -47,6 +47,7 @@ import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.CsrfTokenKey;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.TokenUtil;
 import com.zimbra.cs.account.ZimbraAuthToken;
 import com.zimbra.cs.service.AuthProvider;
 
@@ -322,7 +323,7 @@ public final class CsrfUtil {
             if (key == null) {
                 throw new AuthTokenException("unknown key version");
             }
-            String computedHmac = ZimbraAuthToken.getHmac(csrfTokenData, key.getKey());
+            String computedHmac = TokenUtil.getHmac(csrfTokenData, key.getKey());
 
             if (computedHmac.equals(hmacFromToken)) {
                 Map<?,?> decodedData = getAttrs(csrfTokenData);
@@ -451,7 +452,7 @@ public final class CsrfUtil {
                 tokenData = new String(Hex.encodeHex(encodedBuff.toString().getBytes()));
             }
             CsrfTokenKey key = getCurrentKey();
-            String hmac = ZimbraAuthToken.getHmac(tokenData, key.getKey());
+            String hmac = TokenUtil.getHmac(tokenData, key.getKey());
             String encoded = key.getVersion() + "_" + hmac;
             storeTokenData(tokenData, at, authTokenExpiration, crumb);
             return encoded;
@@ -555,7 +556,7 @@ public final class CsrfUtil {
 
         String data = new String(Hex.encodeHex(encodedBuff.toString().getBytes()));
         CsrfTokenKey key = getCurrentKey();
-        String hmac = ZimbraAuthToken.getHmac(data, key.getKey());
+        String hmac = TokenUtil.getHmac(data, key.getKey());
         String encoded = key.getVersion() + "_" + hmac + "_" + data;
         return encoded;
 

@@ -56,7 +56,7 @@ import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.SearchAccountsOptions;
 import com.zimbra.cs.account.ShareInfoData;
-import com.zimbra.cs.account.ZimbraAuthToken;
+import com.zimbra.cs.account.TokenUtil;
 import com.zimbra.cs.ldap.ZLdapFilterFactory;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Flag;
@@ -440,7 +440,7 @@ public class ExternalUserProvServlet extends ZimbraServlet {
             if (key == null) {
                 throw new ServletException("unknown key version");
             }
-            String computedHmac = ZimbraAuthToken.getHmac(data, key.getKey());
+            String computedHmac = TokenUtil.getHmac(data, key.getKey());
             if (!computedHmac.equals(hmac)) {
                 throw new ServletException("hmac failure");
             }

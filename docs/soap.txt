@@ -417,7 +417,7 @@ global soap/system errors used with zimbra:Error/Code:
    account.TOO_MANY_DATA_SOURCES
    account.TOO_MANY_SEARCH_RESULTS
 
- <AuthRequest xmlns="urn:zimbraAccount" [persistAuthTokenCookie="1"][csrfTokenSecured="0|1"]>
+ <AuthRequest xmlns="urn:zimbraAccount" [persistAuthTokenCookie="1"][csrfTokenSecured="0|1"] [trusted="0|1"] [generateDeviceId="0|1"]>
    [<account by="name|id|foreignPrincipal">...</account>]
    [<password>...</password>]
    [<preauth timestamp="{timestamp}" expires="{expires}">{computed-preauth-value}</preauth>]
@@ -426,8 +426,10 @@ global soap/system errors used with zimbra:Error/Code:
    [<prefs>[<pref name="..."/>...]</prefs>]
    [<attrs>[<attr name="..."/>...]</attrs>]
    [<twoFactorCode>...</twoFactorCode>]
-   [<scratchCode>…</scratchCode>]
+   [<scratchCode>...</scratchCode>]
    [<requestedSkin>{skin}</requestedSkin>]
+   [<trustedToken>...</trustedToken>]
+   [<deviceId>...</deviceId>]
  </AuthRequest>
 
  <AuthResponse">
@@ -439,6 +441,9 @@ global soap/system errors used with zimbra:Error/Code:
    [<prefs><pref name="{name}" modified="{modified-time}">{value}</pref>...</prefs>]
    [<attrs><attr name="{name}">{value}</attr>...</attrs>]
    [<skin>{skin-name}</skin>]
+   [<trustedToken>...</trustedToken>]
+   [<trustLifetime>...</trustLifetime>]
+   [<deviceId>...</deviceId>]
  </AuthResponse>
 
 Note:
@@ -474,6 +479,10 @@ If verifyAccount="0" (default), only the auth token is verified and any <account
 
   {skin-name} = if requested-skin specified, the name of the skin to use
   
+  {trusted} = if trusted=1, the requesting client will not require two-factor authentication in the future
+
+  {generateDeviceId} = if 1, the server will generate a unique ID for the client, and return it in the deviceId element.
+
 Additional Notes about Auth behavior when mailstore is accessed via reverse proxy (i.e. nginx)
 
 1. All mail stores are capable of validating the user and generating an Auth Token. Nginx will direct the auth request to an arbitrary server based on round robin balancing.
@@ -491,7 +500,7 @@ See also //depot/zimbra/main/ThirdParty/nginx/docs/HTTP for more details on the 
 
 Two-Factor Authentication
 
-If two-factor authentication is enabled, AuthRequest requires one of two extra parameters: “twoFactorCode” or “scratchCode”. Realistically, this means that authentication is divided into several steps:
+If two-factor authentication is enabled, AuthRequest requires one of two extra parameters: "twoFactorCode" or "scratchCode". Realistically, this means that authentication is divided into several steps:
 
 1. Client sends an AuthRequest with the username and password, as usual
 
@@ -506,12 +515,28 @@ If two-factor authentication is enabled, AuthRequest requires one of two extra p
 Additionally, if two-factor auth is enabled on the COS level but the user has not received the shared secret yet, the server will throw a TWO_FACTOR_AUTH_SETUP_REQUIRED error.
 
 
+Trusted Devices
+
+Trusted devices functionality allows the user to bypass two-factor authentication on specified devices. This functionality works as follows:
+
+1. When a user specifies a device as trusted by setting trusted=1 in the AuthRequest, the response contains a trusted device cookie that will persist across sessions for a configurable amount of time (default 30 days).
+
+2. When the user attempts to re-authenticate (either after the auth token expires or after a logout), the client sends the trusted device token to the Auth endpoint.
+
+3. If the credentials are valid and the trusted device token is valid, the server lets the user bypass two-factor authentication.
+
+
+Secondary Device Verification
+
+In order to reduce the potential of cookie reuse attacks, an optional secondary device identification mechanism is implemented. When a trusted device is registered, the client can provide the optional "deviceId" parameter in the AuthRequest, or alternatively, set the request attribute generateDeviceId. In this case, any subsequent attempts to use the trusted device token to bypass two-factor auth will also require the same deviceId to be passed in the request.
+
+
 ---------
 
  <EnableTwoFactorAuthRequest xmlns="urn:zimbraAccount">
   <name>...</name>
   <password>...</password>
- </TwoFactorAuthRequest>
+ </EnableTwoFactorAuthRequest>
 
  <EnableTwoFactorAuthResponse>
    [<credentials>
@@ -521,7 +546,7 @@ Additionally, if two-factor auth is enabled on the COS level but the user has no
         ...
       </scratchCodes>
     </credentials>]
- </TwoFactorAuthResponse>
+ </EnableTwoFactorAuthResponse>
 
 This endpoint is used for enabling two-factor authentication by the client.
 The account name and password must be explicitly passed as parameters because this endpoint bypasses authentication;
@@ -530,13 +555,28 @@ a second factor that the user would not be able to provide.
 
 ---------
 
- DisableTwoFactorAuthRequest xmlns="urn:zimbraAccount">
- </TwoFactorAuthRequest>
+ <DisableTwoFactorAuthRequest xmlns="urn:zimbraAccount">
+ </DisableTwoFactorAuthRequest>
 
  <DisableTwoFactorAuthResponse>
- </TwoFactorAuthResponse>
+ </DisableTwoFactorAuthResponse>
 
 This endpoint is used for disabling two-factor authentication by the client.
+
+---------
+
+ <GenerateScratchCodesRequest xmlns=“urn:zimbraAccount”>
+ </GenerateScratchCodesRequest>
+
+ <GenerateScratchCodesResponse>
+   <scratchCodes>
+     <scratchCode>...</scratchCode>
+     <scratchCode>...</scratchCode>
+     ...
+   </scratchCodes>
+ </GenerateScratchCodesResponse>
+
+Generate new scratch codes for this account. This invalidates any previous codes.
 
 ---------
 
@@ -560,7 +600,7 @@ Revokes the app-specific password for the specified name.
 
 ---------
 
- <GetAppSpecificPasswordsRequest xmlns="urn:zimbraAccount" appName="{name}">
+ <GetAppSpecificPasswordsRequest xmlns="urn:zimbraAccount">
  </GetAppSpecificPasswordsRequest>
 
  <GetAppSpecificPasswordsResponse>
@@ -575,6 +615,39 @@ Revokes the app-specific password for the specified name.
 Returns info on all app-specific passwords provisioned for this account.
 Only the app name, password creation time, and last used time is returned.
 
+---------
+
+
+ <GetTrustedDevicesRequest xmlns=“urn:zimbraAccount”>
+ </GetTrustedDevicesRequest>
+
+ <GetTrustedDevicesResponse thisDeviceTrusted=[0|1] nOtherDevices={# other trusted devices}/>
+
+Returns a summary of trusted devices for this account: whether the current device is trusted (as defined by the provided auth token), and the number of other trusted devices.
+
+
+---------
+
+ <RevokeTrustedDeviceRequest xmlns=“urn:zimbraAccount”>
+ </RevokeTrustedDeviceRequest>
+
+ <RevokeTrustedDevicesResponse>
+ </RevokeTrustedDevicesResponse>
+
+Revokes trust for the current device. If the current device is not trusted, does nothing.
+
+
+---------
+
+ <RevokeOtherTrustedDevicesRequest xmlns=“urn:zimbraAccount”>
+ </RevokeOtherTrustedDevicesRequest>
+
+ <RevokeOtherTrustedDevicesResponse>
+ </RevokeOtherTrustedDevicesResponse>
+
+Revokes trust from all trusted devices except the current one.
+
+ 
 ---------
 
  <ChangePasswordRequest>

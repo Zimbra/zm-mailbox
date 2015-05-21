@@ -25,7 +25,6 @@ import javax.crypto.Mac;
 import javax.crypto.SecretKey;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethod;
@@ -41,7 +40,6 @@ import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.BlobMetaData;
-import com.zimbra.common.util.BlobMetaDataEncodingException;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.MapUtil;
@@ -144,18 +142,7 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
         if (parts.length != 3) {
             throw new AuthTokenException("invalid authtoken format");
         }
-        return getAttrs(parts[2]);
-    }
-
-    private static Map<?, ?> getAttrs(String data) throws AuthTokenException{
-        try {
-            String decoded = new String(Hex.decodeHex(data.toCharArray()));
-            return BlobMetaData.decode(decoded);
-        } catch (DecoderException e) {
-            throw new AuthTokenException("decoding exception", e);
-        } catch (BlobMetaDataEncodingException e) {
-            throw new AuthTokenException("blob decoding exception", e);
-        }
+        return TokenUtil.getAttrs(parts[2]);
     }
 
     protected ZimbraAuthToken(String encoded) throws AuthTokenException {
@@ -178,11 +165,11 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
             if (key == null) {
                 throw new AuthTokenException("unknown key version");
             }
-            String computedHmac = getHmac(data, key.getKey());
+            String computedHmac = TokenUtil.getHmac(data, key.getKey());
             if (!computedHmac.equals(hmac)) {
                 throw new AuthTokenException("hmac failure");
             }
-            Map<?, ?> map = getAttrs(data);
+            Map<?, ?> map = TokenUtil.getAttrs(data);
 
             accountId = (String) map.get(C_ID);
             adminAccountId = (String) map.get(C_AID);
@@ -455,23 +442,10 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
 
             String data = new String(Hex.encodeHex(encodedBuff.toString().getBytes()));
             AuthTokenKey key = getCurrentKey();
-            String hmac = getHmac(data, key.getKey());
+            String hmac = TokenUtil.getHmac(data, key.getKey());
             encoded = key.getVersion() + "_" + hmac + "_" + data;
         }
         return encoded;
-    }
-
-    public static String getHmac(String data, byte[] key) {
-        try {
-            ByteKey bk = new ByteKey(key);
-            Mac mac = Mac.getInstance("HmacSHA1");
-            mac.init(bk);
-            return new String(Hex.encodeHex(mac.doFinal(data.getBytes())));
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException("fatal error", e);
-        } catch (InvalidKeyException e) {
-            throw new RuntimeException("fatal error", e);
-        }
     }
 
     @Override
@@ -645,6 +619,7 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
          this.register();
     }
 
+    @Override
     public boolean isZMGAppBootstrap() {
         return C_TYPE_ZMG_APP.equals(type);
     }

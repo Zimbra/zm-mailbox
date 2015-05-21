@@ -68,6 +68,11 @@ public class AuthContext {
      */
     public static final String AC_PROTOCOL = "proto";
 
+    /*
+     * Unique device ID, used for identifying trusted mobile devices.
+     */
+    public static final String AC_DEVICE_ID = "did";
+
     public enum Protocol {
         client_certificate,
         http_basic,
