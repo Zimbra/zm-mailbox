@@ -16,7 +16,6 @@
 package com.zimbra.cs.pushnotifications;
 
 import java.util.List;
-import java.util.Map;
 
 import javapns.Push;
 import javapns.communication.exceptions.CommunicationException;
@@ -65,21 +64,12 @@ public class ApnsPushProvider implements PushProvider {
                 ZimbraLog.mailbox.warn("ZMG: Need APNS attributes to send notification");
                 return;
             }
-
-            PushNotificationPayload payload = PushNotificationPayload.complex();
-
-            Map<String, String> params = zmgNotification.getPayload();
-            for (Map.Entry<String, String> entry : params.entrySet()) {
-                if (entry.getKey().equals(PushNotification.APNS_ALERT)) {
-                    payload.addAlert(entry.getValue());
-                } else if (entry.getKey().equals(PushNotification.APNS_SOUND)) {
-                    payload.addSound(entry.getValue());
-                } else if (entry.getKey().equals(PushNotification.APNS_BADGE)) {
-                    payload.addBadge(Integer.parseInt(entry.getValue()));
-                } else {
-                    payload.addCustomDictionary(entry.getKey(), entry.getValue());
-                }
+            String jsonString = zmgNotification.getPayload();
+            if (jsonString.isEmpty()) {
+                return;
             }
+
+            PushNotificationPayload payload = PushNotificationPayload.fromJSON(jsonString);
 
             List<PushedNotification> notifications = Push.payload(payload, certificate,
                 certificatePassword, production, zmgNotification.getDevice().getRegistrationId());

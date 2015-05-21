@@ -40,11 +40,8 @@ public class FilterManager {
      * @return TRUE if filter chain passes else FALSE
      */
     public static boolean executeNewMessageFilters(Account account, Message message) {
-        if (executeDefaultFilters(account)) {
-            FilterChain filterChain = new NewMessageFilterChain(message);
-            return filterChain.execute();
-        }
-        return false;
+        FilterChain filterChain = new NewMessageFilterChain(account, message);
+        return filterChain.execute();
     }
 
 }
