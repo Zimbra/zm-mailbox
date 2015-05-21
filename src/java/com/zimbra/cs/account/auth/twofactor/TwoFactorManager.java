@@ -9,6 +9,12 @@ import java.util.Set;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
+import com.zimbra.common.auth.twofactor.AuthenticatorConfig;
+import com.zimbra.common.auth.twofactor.CredentialConfig;
+import com.zimbra.common.auth.twofactor.TOTPAuthenticator;
+import com.zimbra.common.auth.twofactor.AuthenticatorConfig.CodeLength;
+import com.zimbra.common.auth.twofactor.AuthenticatorConfig.HashAlgorithm;
+import com.zimbra.common.auth.twofactor.CredentialConfig.Encoding;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -22,9 +28,6 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.TrustedDevice;
 import com.zimbra.cs.account.TrustedDeviceToken;
-import com.zimbra.cs.account.auth.twofactor.AuthenticatorConfig.CodeLength;
-import com.zimbra.cs.account.auth.twofactor.AuthenticatorConfig.HashAlgorithm;
-import com.zimbra.cs.account.auth.twofactor.CredentialConfig.Encoding;
 import com.zimbra.cs.account.ldap.ChangePasswordListener;
 import com.zimbra.cs.account.ldap.LdapLockoutPolicy;
 
@@ -248,9 +251,9 @@ public class TwoFactorManager {
         throw AuthFailedServiceException.AUTH_FAILED("invalid app-specific password");
     }
 
-    private boolean checkScratchCodes(String totp) throws ServiceException {
+    private boolean checkScratchCodes(String scratchCode) throws ServiceException {
         for (String code: scratchCodes) {
-            if (code.equals(totp)) {
+            if (code.equals(scratchCode)) {
                 invalidateScratchCode(code);
                 return true;
             }
@@ -258,14 +261,17 @@ public class TwoFactorManager {
         return false;
     }
 
+    public List<String> getScratchCodes() {
+        return scratchCodes;
+    }
+
     private void invalidateScratchCode(String code) throws ServiceException {
         scratchCodes.remove(code);
         storeScratchCodes();
     }
 
-    public TOTPCredentials enableTwoFactorAuth() throws ServiceException {
+    public TOTPCredentials generateCredentials() throws ServiceException {
         if (!account.isPrefTwoFactorAuthEnabled()) {
-            account.setPrefTwoFactorAuthEnabled(true);
             TOTPCredentials creds = generateNewCredentials();
             storeCredentials(creds);
             return creds;
@@ -273,6 +279,10 @@ public class TwoFactorManager {
             ZimbraLog.account.info("two-factor authentication already enabled");
             return null;
         }
+    }
+
+    public void enableTwoFactorAuth() throws ServiceException {
+        account.setPrefTwoFactorAuthEnabled(true);
     }
 
     public boolean disableTwoFactorAuth() throws ServiceException {

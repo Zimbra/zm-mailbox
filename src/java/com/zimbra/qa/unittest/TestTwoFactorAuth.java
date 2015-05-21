@@ -1,5 +1,6 @@
 package com.zimbra.qa.unittest;
 
+import java.io.IOException;
 import java.util.List;
 
 import junit.framework.TestCase;
@@ -9,17 +10,23 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.zimbra.client.ZMailbox;
+import com.zimbra.common.auth.twofactor.AuthenticatorConfig;
+import com.zimbra.common.auth.twofactor.AuthenticatorConfig.CodeLength;
+import com.zimbra.common.auth.twofactor.AuthenticatorConfig.HashAlgorithm;
+import com.zimbra.common.auth.twofactor.CredentialConfig.Encoding;
+import com.zimbra.common.auth.twofactor.TOTPAuthenticator;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.SoapTransport;
 import com.zimbra.cs.account.AccountServiceException;
-import com.zimbra.cs.account.auth.twofactor.AuthenticatorConfig;
-import com.zimbra.cs.account.auth.twofactor.AuthenticatorConfig.CodeLength;
-import com.zimbra.cs.account.auth.twofactor.AuthenticatorConfig.HashAlgorithm;
-import com.zimbra.cs.account.auth.twofactor.CredentialConfig.Encoding;
-import com.zimbra.cs.account.auth.twofactor.TOTPAuthenticator;
+import com.zimbra.qa.unittest.prov.soap.SoapTest;
+import com.zimbra.soap.account.message.EnableTwoFactorAuthRequest;
 import com.zimbra.soap.account.message.EnableTwoFactorAuthResponse;
 import com.zimbra.soap.account.message.GenerateScratchCodesRequest;
 import com.zimbra.soap.account.message.GenerateScratchCodesResponse;
-import com.zimbra.soap.account.message.TwoFactorCredentials;
+import com.zimbra.soap.admin.message.GetCosRequest;
+import com.zimbra.soap.admin.message.GetCosResponse;
+import com.zimbra.soap.admin.type.CosSelector;
+import com.zimbra.soap.admin.type.CosSelector.CosBy;
 
 /**
  *
@@ -32,6 +39,7 @@ public class TestTwoFactorAuth extends TestCase {
     private static ZMailbox mbox;
     private String secret;
     private List<String> scratchCodes;
+    private static SoapTransport adminTransport;
 
     /*
      * Make sure these settings match those on the server! Otherwise the TOTP
@@ -45,14 +53,14 @@ public class TestTwoFactorAuth extends TestCase {
 
     @Override
     @BeforeClass
-    public void setUp() throws ServiceException {
+    public void setUp() throws ServiceException, IOException {
         mbox = TestUtil.getZMailbox(USER_NAME);
-        EnableTwoFactorAuthResponse resp = mbox.enableTwoFactorAuth(PASSWORD);
+        EnableTwoFactorAuthResponse resp = mbox.enableTwoFactorAuth(PASSWORD, TestUtil.getDefaultAuthenticator());
         //have to re-authenticate since the previous auth token was invalidated by enabling two-factor auth
-        mbox = TestUtil.getZMailbox(USER_NAME, resp.getCredentials().getScratchCodes().remove(0));
-        TwoFactorCredentials creds = resp.getCredentials();
-        secret = creds.getSharedSecret();
-        scratchCodes = creds.getScratchCodes();
+        mbox = TestUtil.getZMailbox(USER_NAME, resp.getScratchCodes().remove(0));
+        secret = resp.getSecret();
+        scratchCodes = resp.getScratchCodes();
+        adminTransport = TestUtil.getAdminSoapTransport();
     }
 
     @Override
@@ -135,8 +143,11 @@ public class TestTwoFactorAuth extends TestCase {
 
     @Test
     public void testAlreadyEnabled() throws ServiceException {
-        EnableTwoFactorAuthResponse resp = mbox.enableTwoFactorAuth(PASSWORD);
-        assertNull(resp.getCredentials());
+        EnableTwoFactorAuthRequest req = new EnableTwoFactorAuthRequest();
+        req.setName(USER_NAME);
+        req.setPassword(PASSWORD);
+        EnableTwoFactorAuthResponse resp = mbox.invokeJaxb(req);
+        assertNull(resp.getSecret());
     }
 
     @Test
@@ -154,4 +165,11 @@ public class TestTwoFactorAuth extends TestCase {
         //store remaining in case some other test wants to use them
         this.scratchCodes = newCodes;
     }
+
+   private static String getCosId() throws Exception {
+       GetCosRequest cosRequest = new GetCosRequest();
+       cosRequest.setCos(new CosSelector(CosBy.name, "default"));
+       GetCosResponse cosResponse = SoapTest.invokeJaxb(adminTransport, cosRequest);
+       return cosResponse.getCos().getId();
+   }
 }

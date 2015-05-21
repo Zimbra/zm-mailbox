@@ -89,9 +89,9 @@ public class TestTwoFactorAuthAdmin extends TestCase {
     @Test
     public void testEnableTwoFactorAuth() throws ServiceException {
         try {
-            EnableTwoFactorAuthResponse resp = mbox.enableTwoFactorAuth(PASSWORD);
+            EnableTwoFactorAuthResponse resp = mbox.enableTwoFactorAuth(PASSWORD, TestUtil.getDefaultAuthenticator());
             //have to re-authenticate since the previous auth token was invalidated by enabling two-factor auth
-            mbox = TestUtil.getZMailbox(USER_NAME, resp.getCredentials().getScratchCodes().get(0));
+            mbox = TestUtil.getZMailbox(USER_NAME, resp.getScratchCodes().get(0));
         } catch (ServiceException e) {
             fail("should be able to enable two-factor auth");
         }

@@ -66,20 +66,28 @@ public class TestAppSpecificPasswords extends TestCase {
     @Override
     public void setUp() throws ServiceException, IOException {
         mbox = TestUtil.getZMailbox(USER);
-        EnableTwoFactorAuthResponse resp = mbox.enableTwoFactorAuth(PASSWORD);
+        EnableTwoFactorAuthResponse resp = mbox.enableTwoFactorAuth(PASSWORD, TestUtil.getDefaultAuthenticator());
         //reauthenticating to get new auth token
-        mbox = TestUtil.getZMailbox(USER, resp.getCredentials().getScratchCodes().remove(0));
+        mbox = TestUtil.getZMailbox(USER, resp.getScratchCodes().remove(0));
         transport = TestUtil.getAdminSoapTransport();
         enableAppSpecificPasswords();
         revokeAllAppPasswords();
     }
 
     private void enableAppSpecificPasswords() throws ServiceException, IOException {
+        toggleAppSpecificPasswords(true);
+    }
+
+    private void disableAppSpecificPasswords() throws ServiceException, IOException {
+        toggleAppSpecificPasswords(false);
+    }
+
+    private void toggleAppSpecificPasswords(boolean bool) throws ServiceException, IOException {
         GetAllServersRequest req = new GetAllServersRequest();
         req.setService((String) null);
         GetAllServersResponse resp = SoapTest.invokeJaxb(transport, req);
         Map<String, Object> attrs = new HashMap<String, Object>();
-        attrs.put(Provisioning.A_zimbraFeatureAppSpecificPasswordsEnabled, ProvisioningConstants.TRUE);
+        attrs.put(Provisioning.A_zimbraFeatureAppSpecificPasswordsEnabled, bool ? ProvisioningConstants.TRUE : ProvisioningConstants.FALSE);
         for (ServerInfo server: resp.getServerList()) {
             ModifyServerRequest modifyRequest = new ModifyServerRequest();
             modifyRequest.setId(server.getId());
