@@ -40,6 +40,7 @@ import com.zimbra.cs.mailbox.acl.EffectiveACLCacheMailboxListener;
 import com.zimbra.cs.mailbox.acl.ShareExpirationListener;
 import com.zimbra.cs.mailbox.alerts.CalItemReminderService;
 import com.zimbra.cs.mailbox.calendar.cache.CalendarCacheManager;
+import com.zimbra.cs.pushnotifications.PushNotificationListener;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.util.ZimbraApplication;
 import com.zimbra.cs.util.ZimbraConfig;
@@ -76,6 +77,7 @@ public class MailboxListenerManager {
         register(new FreeBusyProvider.Listener());
         register(new DataSourceListener());
         register(new ShareStartStopListener());
+        register(new PushNotificationListener());
         if (application.supports(AclPushListener.class)) {
             register(new AclPushListener());
         }

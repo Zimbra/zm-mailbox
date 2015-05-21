@@ -134,8 +134,17 @@ msgId - messageId of the message
 subject - subject of the message
 sender - sender email address
 fragment - preview text of the conversation
-recipientAddress - recipient email address
+
+Notifications are sent in json format. Following are sample json notifications -
+
+GCM -
+
+{"data":{"sender":"Demo User One <user1@host.local>","id":257,"subject":"sdf","unreadCount":1,
+"action":"CreateMessage","type":"MESSAGE","fragment":"sdf","cid":-257},"registration_ids":["12345"]}
 
 
+APNS -
 
-
+{"sender":"Demo User One <user1@host.local>","id":257,
+"aps":{"alert":"From: Demo User One <user1@host.local>\nsdf","sound":"default","badge":1},
+"action":"CreateMessage","type":"MESSAGE","fragment":"sdf","cid":-257}

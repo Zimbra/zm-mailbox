@@ -16,14 +16,17 @@
 package com.zimbra.cs.pushnotifications;
 
 import java.io.IOException;
-import java.util.Map;
+import java.io.UnsupportedEncodingException;
 
+import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.methods.PostMethod;
+import org.apache.commons.httpclient.methods.StringRequestEntity;
 
 import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraHttpConnectionManager;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Provisioning;
@@ -62,26 +65,33 @@ public class GcmPushProvider implements PushProvider {
             return;
         }
 
-        PostMethod post = new PostMethod(gcmUrl);
-        post.addRequestHeader("Authorization", "key=" + gcmAuthorizationKey);
-
-        post.addParameter("registration_id", notification.getDevice().getRegistrationId());
-
-        Map<String, String> params = notification.getPayload();
-        for (Map.Entry<String, String> entry : params.entrySet()) {
-            post.addParameter(entry.getKey(), entry.getValue());
+        String payload = notification.getPayload();
+        if (payload.isEmpty()) {
+            return;
         }
 
-        post.setRequestHeader("Content-Type", "application/x-www-form-urlencoded;charset=UTF-8");
+        PostMethod post = new PostMethod(gcmUrl);
+        post.addRequestHeader("Authorization", "key=" + gcmAuthorizationKey);
+        post.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+        try {
+            post.setRequestEntity(new StringRequestEntity(payload, "application/json", "UTF-8"));
+        } catch (UnsupportedEncodingException e) {
+            ZimbraLog.mailbox.warn("ZMG: Exception in forming GCM request", e);
+        }
 
         try {
-            int status = HttpClientUtil.executeMethod(post);
+            HttpClient httpClient = ZimbraHttpConnectionManager.getExternalHttpConnMgr()
+                .getDefaultHttpClient();
+            int status = httpClient.executeMethod(post);
             if (status == HttpStatus.SC_OK) {
                 String resp = post.getResponseBodyAsString();
                 ZimbraLog.mailbox.debug("ZMG: GCM push completed: device=%s status=%d response=%s",
                     notification.getDevice().getRegistrationId(), status, resp);
             } else {
-                ZimbraLog.mailbox.debug("ZMG: GCM push failed: status=%d", status);
+                ZimbraLog.mailbox.debug("ZMG: GCM push failed: status=%d, payload= %s", status,
+                    notification.getPayload());
+                ZimbraLog.mailbox.debug("ZMG: GCM push failed: response = %s",
+                    post.getResponseBodyAsString());
             }
         } catch (HttpException e) {
             ZimbraLog.mailbox.warn("ZMG: GCM push exception: " + gcmUrl, e);
