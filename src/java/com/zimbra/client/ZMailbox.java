@@ -91,8 +91,8 @@ import com.zimbra.client.event.ZRefreshEvent;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.auth.ZAuthToken;
-import com.zimbra.common.auth.twofactor.TOTPAuthenticator;
 import com.zimbra.common.auth.twofactor.CredentialConfig.Encoding;
+import com.zimbra.common.auth.twofactor.TOTPAuthenticator;
 import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.net.SocketFactories;
@@ -276,8 +276,6 @@ public class ZMailbox implements ToZJSONObject {
         private boolean mCsrfSupported; // Used by AuthRequest
         private Map<String, String> mCustomHeaders;
         private String mTwoFactorCode;
-        private String mTwoFactorScratchCode;
-        private boolean mTwoFactorSupported;
         private boolean mAppSpecificPasswordsSupported;
         private boolean mTrustedDevice;
         private String mTrustedDeviceToken;
@@ -401,12 +399,6 @@ public class ZMailbox implements ToZJSONObject {
 
         public String getTwoFactorCode() { return mTwoFactorCode; }
         public Options setTwoFactorCode(String code) { mTwoFactorCode = code; return this; }
-
-        public String getTwoFactorScratchCode() { return mTwoFactorScratchCode; }
-        public Options setTwoFactorScratchCode(String code) { mTwoFactorScratchCode = code; return this; }
-
-        public boolean getTwoFactorSupported() { return mTwoFactorSupported; }
-        public Options setTwoFactorSupported(boolean bool) { mTwoFactorSupported = bool; return this; }
 
         public boolean getAppSpecificPasswordsSupported() { return mAppSpecificPasswordsSupported; }
         public Options setAppSpecificPasswordsSupported(boolean bool) { mAppSpecificPasswordsSupported = bool; return this; }
@@ -673,7 +665,6 @@ public class ZMailbox implements ToZJSONObject {
         AuthRequest auth = new AuthRequest(account, password);
         auth.setPassword(password);
         auth.setTwoFactorCode(options.getTwoFactorCode());
-        auth.setTwoFactorScratchCode(options.getTwoFactorScratchCode());
         auth.setVirtualHost(options.getVirtualHost());
         auth.setRequestedSkin(options.getRequestedSkin());
         auth.setCsrfSupported(options.getCsrfSupported());
