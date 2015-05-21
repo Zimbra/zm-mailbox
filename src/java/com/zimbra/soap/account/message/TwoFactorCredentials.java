@@ -2,21 +2,23 @@ package com.zimbra.soap.account.message;
 
 import java.util.List;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
-import javax.xml.bind.annotation.XmlElements;
 
 import com.zimbra.common.soap.AccountConstants;
+import com.zimbra.soap.json.jackson.annotate.ZimbraJsonArrayForWrapper;
 
+@XmlAccessorType(XmlAccessType.NONE)
 public class TwoFactorCredentials {
 
     @XmlElement(name=AccountConstants.E_TWO_FACTOR_SECRET)
     private String sharedSecret;
 
+    @ZimbraJsonArrayForWrapper
     @XmlElementWrapper(name=AccountConstants.E_TWO_FACTOR_SCRATCH_CODES)
-    @XmlElements({
-        @XmlElement(name=AccountConstants.E_TWO_FACTOR_SCRATCH_CODE, type=String.class)
-    })
+    @XmlElement(name=AccountConstants.E_TWO_FACTOR_SCRATCH_CODE, type=String.class)
     private List<String> scratchCodes;
 
     public String getSharedSecret() {return sharedSecret; }
