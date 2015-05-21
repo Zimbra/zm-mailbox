@@ -89,13 +89,6 @@ public class AuthRequest {
     @XmlElement(name=AccountConstants.E_TWO_FACTOR_CODE /* twoFactorCode */, required=false)
     private String twoFactorCode;
 
-    /**
-     *@zm-api-field-description a single-use scratch code for two-factor authentication
-     *
-     */
-    @XmlElement(name=AccountConstants.E_TWO_FACTOR_SCRATCH_CODE /* twoFactorScratchCode */, required=false)
-    private String twoFactorScratchCode;
-
     public AuthRequest() {
         this((String)null, (String)null);
     }
