@@ -35,7 +35,7 @@ import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.session.PendingModifications.ModificationKey;
 
-public class PushNotificationListener extends MailboxListener {
+public class PushNotificationListener implements MailboxListener {
 
     public static final ImmutableSet<MailboxOperation> EVENTS = ImmutableSet.of(
         MailboxOperation.MoveItem, MailboxOperation.RenameItem, MailboxOperation.RenameItemPath,
@@ -45,7 +45,7 @@ public class PushNotificationListener extends MailboxListener {
         MailItem.Type.FOLDER, MailItem.Type.MESSAGE);
 
     @Override
-    public Set<MailItem.Type> registerForItemTypes() {
+    public Set<MailItem.Type> notifyForItemTypes() {
         return ITEMTYPES;
     }
 
