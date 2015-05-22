@@ -68,16 +68,16 @@ import com.zimbra.cs.mailbox.CacheManager;
 import com.zimbra.cs.mailbox.ConversationIdCache;
 import com.zimbra.cs.mailbox.DefaultMailboxLockFactory;
 import com.zimbra.cs.mailbox.FoldersAndTagsCache;
-import com.zimbra.cs.mailbox.LocalConversationIdCache;
 import com.zimbra.cs.mailbox.LocalMailboxDataCache;
-import com.zimbra.cs.mailbox.LocalSentMessageIdCache;
 import com.zimbra.cs.mailbox.LocalSharedDeliveryCoordinator;
 import com.zimbra.cs.mailbox.MailboxDataCache;
 import com.zimbra.cs.mailbox.MailboxListenerManager;
 import com.zimbra.cs.mailbox.MailboxListenerTransport;
 import com.zimbra.cs.mailbox.MailboxLockFactory;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.MemcachedConversationIdCache;
 import com.zimbra.cs.mailbox.MemcachedFoldersAndTagsCache;
+import com.zimbra.cs.mailbox.MemcachedSentMessageIdCache;
 import com.zimbra.cs.mailbox.RedisClusterMailboxListenerManager;
 import com.zimbra.cs.mailbox.RedisClusterSharedDeliveryCoordinator;
 import com.zimbra.cs.mailbox.RedisMailboxListenerTransport;
@@ -175,7 +175,7 @@ public class ZimbraConfig {
 
     @Bean
     public ConversationIdCache conversationIdCache() throws ServiceException {
-        return new LocalConversationIdCache();
+        return new MemcachedConversationIdCache();
     }
 
     @Bean
@@ -514,7 +514,7 @@ public class ZimbraConfig {
 
     @Bean
     public SentMessageIdCache sentMessageIdCache() throws ServiceException {
-        return new LocalSentMessageIdCache();
+        return new MemcachedSentMessageIdCache();
     }
 
     @Bean
