@@ -1889,7 +1889,21 @@
         </for>
     </target>
 
-    <target name="stop-servers" depends="stop-webserver,stop-ldap"/>
+    <target name="stop-servers" depends="stop-webserver,stop-ldap"
+            description="stop LDAP and Jetty servers" />
+
+    <target name="start-servers"
+            description="start LDAP and Jetty servers">
+        <antcall target="start-ldap"/>
+        <sleep seconds="2"/>
+        <antcall target="start-webserver"/>
+    </target>
+
+    <target name="restart-servers"
+            description="stop LDAP and Jetty servers and start them again">
+        <antcall target="stop-servers"/>
+        <antcall target="start-servers"/>
+    </target>
 
     <!-- LDAP service control -->
     <target name="stop-ldap" depends="stop-ldap-windows,stop-ldap-unix"/>
@@ -1951,6 +1965,9 @@
     <target name="start-jetty-unix" if="is-unix">
         <exec executable="${zimbra.home.dir}/bin/jetty">
             <arg value="start"/>
+
+            <env key="JAVA_HOME" value="/opt/zimbra/java"/>
+            <env key="JAVA" value="/opt/zimbra/java/bin/java"/>
         </exec>
     </target>
 
@@ -1987,6 +2004,9 @@
             <then>
                 <exec executable="${zimbra.home.dir}/bin/jetty">
                     <arg value="stop"/>
+
+                    <env key="JAVA_HOME" value="/opt/zimbra/java"/>
+                    <env key="JAVA" value="/opt/zimbra/java/bin/java"/>
                 </exec>
             </then>
             <else>
