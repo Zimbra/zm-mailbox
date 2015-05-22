@@ -43,7 +43,7 @@ import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
-import net.spy.memcached.HashAlgorithm;
+import net.spy.memcached.DefaultHashAlgorithm;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -4416,7 +4416,7 @@ public class ProvUtil implements HttpDebugListener {
                             hostname, serverList, config.hashAlgorithm,
                             config.binaryProtocol, config.defaultExpirySeconds, config.defaultTimeoutMillis);
                 } else if (config.serverList != null) {
-                    if (HashAlgorithm.KETAMA_HASH.toString().equals(config.hashAlgorithm)) {
+                    if (DefaultHashAlgorithm.KETAMA_HASH.toString().equals(config.hashAlgorithm)) {
                         // Don't print the default hash algorithm to keep the output clutter-free.
                         console.printf(hostnameFormat + " => %s\n", hostname, serverList);
                     } else {

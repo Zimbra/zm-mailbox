@@ -19,7 +19,7 @@ package com.zimbra.cs.memcached;
 
 import javax.annotation.PostConstruct;
 
-import net.spy.memcached.HashAlgorithm;
+import net.spy.memcached.DefaultHashAlgorithm;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -41,7 +41,7 @@ public class ZimbraMemcachedClientConfigurer {
         Server server = Provisioning.getInstance().getLocalServer();
         String[] serverList = server.getMultiAttr(Provisioning.A_zimbraMemcachedClientServerList);
         boolean useBinaryProtocol = server.getBooleanAttr(Provisioning.A_zimbraMemcachedClientBinaryProtocolEnabled, false);
-        String hashAlgorithm = server.getAttr(Provisioning.A_zimbraMemcachedClientHashAlgorithm, HashAlgorithm.KETAMA_HASH.toString());
+        String hashAlgorithm = server.getAttr(Provisioning.A_zimbraMemcachedClientHashAlgorithm, DefaultHashAlgorithm.KETAMA_HASH.toString());
         int expirySeconds = (int) server.getLongAttr(Provisioning.A_zimbraMemcachedClientExpirySeconds, 86400);
         long timeoutMillis = server.getLongAttr(Provisioning.A_zimbraMemcachedClientTimeoutMillis, 10000);
         client.connect(serverList, useBinaryProtocol, hashAlgorithm, expirySeconds, timeoutMillis);
