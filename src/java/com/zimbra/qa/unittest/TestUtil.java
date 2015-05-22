@@ -92,9 +92,9 @@ import com.zimbra.common.account.Key.DistributionListBy;
 import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.auth.twofactor.AuthenticatorConfig;
-import com.zimbra.common.auth.twofactor.TOTPAuthenticator;
 import com.zimbra.common.auth.twofactor.AuthenticatorConfig.CodeLength;
 import com.zimbra.common.auth.twofactor.AuthenticatorConfig.HashAlgorithm;
+import com.zimbra.common.auth.twofactor.TOTPAuthenticator;
 import com.zimbra.common.lmtp.LmtpClient;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
@@ -700,15 +700,15 @@ extends Assert {
         return getZMailbox(username, null);
     }
 
-    public static ZMailbox getZMailbox(String username, String scratchCode, TrustedStatus trusted)
+    public static ZMailbox getZMailbox(String username, String twoFactorCode, TrustedStatus trusted)
     throws ServiceException {
         ZMailbox.Options options = new ZMailbox.Options();
         options.setAccount(getAddress(username));
         options.setAccountBy(Key.AccountBy.name);
         options.setPassword(DEFAULT_PASSWORD);
         options.setUri(TestUtil.getSoapUrl());
-        if (scratchCode != null) {
-            options.setTwoFactorScratchCode(scratchCode);
+        if (twoFactorCode != null) {
+            options.setTwoFactorCode(twoFactorCode);
         }
         if (trusted == TrustedStatus.trusted) {
             options.setTrustedDevice(true);
@@ -1316,6 +1316,20 @@ extends Assert {
         }
     }
 
+    public static ZAuthResult testAuth(ZMailbox mbox, String account, String password) throws ServiceException {
+        return testAuth(mbox, account, password, null);
+    }
+
+    public static ZAuthResult testAuth(ZMailbox mbox, String account, String password, String twoFactorCode) throws ServiceException {
+        Options options = new Options();
+        options.setAccount(account);
+        options.setPassword(password);
+        if (twoFactorCode != null) {
+            options.setTwoFactorCode(twoFactorCode);
+        }
+        return mbox.authByPassword(options, password);
+    }
+
     public static void updateMailItemChangeDateAndFlag (Mailbox mbox, int itemId, long changeDate, int flagValue) throws ServiceException {
         DbConnection conn = DbPool.getConnection(mbox);;
         try {
@@ -1347,22 +1361,5 @@ extends Assert {
         config.setWindowSize(WINDOW_SIZE);
         TOTPAuthenticator auth = new TOTPAuthenticator(config);
         return auth;
-    }
-
-    public static ZAuthResult testAuth(ZMailbox mbox, String account, String password) throws ServiceException {
-        return testAuth(mbox, account, password, null, null);
-    }
-
-    public static ZAuthResult testAuth(ZMailbox mbox, String account, String password, String twoFactorCode, String twoFactorScratchCode) throws ServiceException {
-        Options options = new Options();
-        options.setAccount(account);
-        options.setPassword(password);
-        options.setTwoFactorSupported(true);
-        if (twoFactorCode != null) {
-            options.setTwoFactorCode(twoFactorCode);
-        } else if (twoFactorScratchCode != null) {
-            options.setTwoFactorScratchCode(twoFactorScratchCode);
-        }
-        return mbox.authByPassword(options, password);
     }
 }

@@ -155,8 +155,7 @@ public class Auth extends AccountDocumentHandler {
             }
 
             Element preAuthEl = request.getOptionalElement(AccountConstants.E_PREAUTH);
-            String totp = request.getAttribute(AccountConstants.E_TWO_FACTOR_CODE, null);
-            String scratchCode = request.getAttribute(AccountConstants.E_TWO_FACTOR_SCRATCH_CODE, null);
+            String twoFactorCode = request.getAttribute(AccountConstants.E_TWO_FACTOR_CODE, null);
             Boolean registerTrustedDevice = false;
             if (acct != null && TwoFactorManager.twoFactorAuthEnabled(acct)) {
                 registerTrustedDevice = trustedToken != null? false: request.getAttributeBool(AccountConstants.A_TRUSTED_DEVICE, false);
@@ -237,7 +236,7 @@ public class Auth extends AccountDocumentHandler {
             // if account was auto provisioned, we had already authenticated the principal
             if (!acctAutoProvisioned) {
                 if (password != null) {
-                    if (usingTwoFactorAuth && totp == null && scratchCode == null) {
+                    if (usingTwoFactorAuth && twoFactorCode == null) {
                         int mtaAuthPort = acct.getServer().getMtaAuthPort();
                         boolean supportsAppSpecificPaswords =  acct.getServer().isFeatureAppSpecificPasswordsEnabled() && zsc.getPort() == mtaAuthPort;
                         if (supportsAppSpecificPaswords) {
@@ -255,10 +254,8 @@ public class Auth extends AccountDocumentHandler {
                         prov.authAccount(acct, password, AuthContext.Protocol.soap, authCtxt);
                         if (usingTwoFactorAuth) {
                             TwoFactorManager manager = new TwoFactorManager(acct);
-                            if (totp != null) {
-                                manager.authenticate(password, totp);
-                            } else if (scratchCode != null) {
-                                manager.authenticateScratchCode(password, scratchCode);
+                            if (twoFactorCode != null) {
+                                manager.authenticate(twoFactorCode);
                             }
                         }
                     }
