@@ -153,14 +153,6 @@ public class AuthRequest {
     private String twoFactorCode;
 
     /**
-     *@zm-api-field-description a single-use scratch code for two-factor authentication
-     *
-     */
-    @XmlElement(name=AccountConstants.E_TWO_FACTOR_SCRATCH_CODE /* twoFactorScratchCode */, required=false)
-    private String twoFactorScratchCode;
-
-
-    /**
      *@zm-api-field-description whether the client represents a trusted device
      *
      */
@@ -282,15 +274,6 @@ public class AuthRequest {
 
     public String getTwoFactorCode() {
         return twoFactorCode;
-    }
-
-    public AuthRequest setTwoFactorScratchCode(String code) {
-        this.twoFactorScratchCode = code;
-        return this;
-    }
-
-    public String getTwoFactorScratchCode() {
-        return twoFactorScratchCode;
     }
 
     public AuthRequest setDeviceTrusted(Boolean deviceTrusted) {
