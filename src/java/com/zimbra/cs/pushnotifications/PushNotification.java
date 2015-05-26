@@ -33,15 +33,16 @@ public interface PushNotification {
     String CONTENT_AVAILABLE = "content-available";
 
     String CID = "cid";
-    String SUBJECT = "subject";
-    String SENDER = "sender";
-    String FRAGMENT = "fragment";
-    String RECIPIENT_ADDRESS = "recipientAddress";
-    String UNREAD_COUNT = "unreadCount";
+    String SUBJECT = "su";
+    String SENDER_ADDRESS = "sa";
+    String SENDER_DISPLAY_NAME = "sdn";
+    String FRAGMENT = "fr";
+    String RECIPIENT_ADDRESS = "ra";
+    String UNREAD_COUNT = "uc";
 
     String ID = "id";
-    String TYPE = "type";
-    String ACTION = "action";
+    String TYPE = "ty";
+    String ACTION = "ac";
 
     // Actions that can be performed on a data source
     String CREATE_DATASOURCE = "CreateDataSource";

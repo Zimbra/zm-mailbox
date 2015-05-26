@@ -24,17 +24,20 @@ import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.pushnotifications.PushNotification;
 
 public class MessageFileIntoFilter implements Filter {
 
     private Message message;
     private Account account;
+    private DataSource dataSource;
 
     public static final String DATA_SOURCE_INBOX = "Inbox";
 
-    public MessageFileIntoFilter(Account account, Message message) {
+    public MessageFileIntoFilter(Account account, Message message, DataSource dataSource) {
         this.message = message;
         this.account = account;
+        this.dataSource = dataSource;
     }
 
     /*
@@ -56,7 +59,9 @@ public class MessageFileIntoFilter implements Filter {
         int folderId = message.getFolderId();
         if (Mailbox.ID_FOLDER_INBOX == folderId) {
             return true;
-        } else if (isDataSourceInbox(folderId)) {
+        } else if (dataSource != null && isDataSourceInbox(folderId)
+            && dataSource.getEmailAddress() != null
+            && (System.currentTimeMillis() - message.getDate()) < PushNotification.OLD_MESSAGE_TIME) {
             return true;
         }
         return false;
@@ -65,14 +70,11 @@ public class MessageFileIntoFilter implements Filter {
     private boolean isDataSourceInbox(int folderId) {
         try {
             Mailbox mbox = message.getMailbox();
-            List<DataSource> dataSources = account.getAllDataSources();
-            for (DataSource dataSource : dataSources) {
-                Folder dataSourceFolder = mbox.getFolderById(null, dataSource.getFolderId());
-                List<Folder> subFolders = dataSourceFolder.getSubfolders(null);
-                for (Folder folder : subFolders) {
-                    if (DATA_SOURCE_INBOX.equals(folder.getName()) && folderId == folder.getId()) {
-                        return true;
-                    }
+            Folder dataSourceFolder = mbox.getFolderById(null, dataSource.getFolderId());
+            List<Folder> subFolders = dataSourceFolder.getSubfolders(null);
+            for (Folder folder : subFolders) {
+                if (DATA_SOURCE_INBOX.equals(folder.getName()) && folderId == folder.getId()) {
+                    return true;
                 }
             }
         } catch (ServiceException e) {

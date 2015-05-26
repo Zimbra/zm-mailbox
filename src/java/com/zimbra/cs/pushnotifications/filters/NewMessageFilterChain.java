@@ -20,6 +20,7 @@ import java.util.List;
 
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.mailbox.Message;
 
 /**
@@ -29,12 +30,12 @@ public class NewMessageFilterChain implements FilterChain {
 
     List<Filter> filterChain = new ArrayList<Filter>();
 
-    public NewMessageFilterChain(Account account, Message message) {
-        init(account, message);
+    public NewMessageFilterChain(Account account, Message message, DataSource dataSource) {
+        init(account, message, dataSource);
     }
 
-    private void init(Account account, Message message) {
-        addFilter(new MessageFileIntoFilter(account, message));
+    private void init(Account account, Message message, DataSource dataSource) {
+        addFilter(new MessageFileIntoFilter(account, message, dataSource));
     }
 
     /*
