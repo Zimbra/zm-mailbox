@@ -21,7 +21,6 @@ import java.util.Collections;
 import java.util.List;
 
 import com.zimbra.common.account.Key.DomainBy;
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.ZimbraLog;
@@ -69,9 +68,22 @@ abstract public class LdapCache {
     abstract INamedEntryCache<Group> groupCache();
     abstract INamedEntryCache<XMPPComponent> xmppComponentCache();
     abstract INamedEntryCache<AlwaysOnCluster> alwaysOnClusterCache();
+    abstract boolean isServerCacheSetup();
+
+    private static Server localServer = null;
+    private static long ldapCacheFreshnessCheckLimitMs = -1;
+    private static boolean gotldapCacheFreshnessCheckLimitMs = false;
 
     public static long ldapCacheFreshnessCheckLimitMs() {
-        return LC.ldap_cache_freshness_check_limit_ms.intValue();
+        if (!gotldapCacheFreshnessCheckLimitMs) {
+            if (localServer != null) {
+                ldapCacheFreshnessCheckLimitMs = localServer.getLdapCacheFreshnessCheckLimit();
+                gotldapCacheFreshnessCheckLimitMs = true;
+            } else {
+                ldapCacheFreshnessCheckLimitMs = 100;
+            }
+        }
+        return ldapCacheFreshnessCheckLimitMs;
     }
 
     /**
@@ -118,18 +130,17 @@ abstract public class LdapCache {
      */
     static class LRUMapCache extends LdapCache {
 
-        private final IAccountCache accountCache;
-        private final INamedEntryCache<LdapCos> cosCache;
-        private final INamedEntryCache<ShareLocator> shareLocatorCache;
-        private final IDomainCache domainCache;
-        private final IMimeTypeCache mimeTypeCache;
-        private final INamedEntryCache<Server> serverCache;
-        private final INamedEntryCache<UCService> ucServiceCache;
-        private final INamedEntryCache<LdapZimlet> zimletCache;
-        private final INamedEntryCache<Group> groupCache;
-        private final INamedEntryCache<XMPPComponent> xmppComponentCache;
-        private final INamedEntryCache<AlwaysOnCluster> alwaysOnClusterCache;
-
+        private IAccountCache accountCache = null;
+        private INamedEntryCache<LdapCos> cosCache = null;
+        private INamedEntryCache<ShareLocator> shareLocatorCache = null;
+        private IDomainCache domainCache = null;
+        private IMimeTypeCache mimeTypeCache = null;
+        private INamedEntryCache<Server> serverCache = null;
+        private INamedEntryCache<UCService> ucServiceCache = null;
+        private INamedEntryCache<LdapZimlet> zimletCache = null;
+        private INamedEntryCache<Group> groupCache = null;
+        private INamedEntryCache<XMPPComponent> xmppComponentCache = null;
+        private INamedEntryCache<AlwaysOnCluster> alwaysOnClusterCache = null;
         static class AccountFreshnessChecker implements IAccountCache.FreshnessChecker {
             private final LdapHelper helper;
 
@@ -269,11 +280,18 @@ abstract public class LdapCache {
             }
         }
 
+        private AccountFreshnessChecker acctFreshnessChecker = null;
+        private NamedEntryFreshnessChecker neFreshnessChecker = null;
+        private DomainFreshnessChecker domFreshnessChecker = null;
+        private ServerFreshnessChecker svrFreshnessChecker = null;
+        /* Cache config depends on server, alwaysoncluster and config - objects for 2 of which are cached.  The
+         * caches for those can therefore be setup too early.
+         * serverCacheSetup and alwaysOnClusterCacheSetup track when that has happened.
+         */
+        private boolean serverCacheSetup = false;
+        private boolean alwaysOnClusterCacheSetup = false;
+
         public LRUMapCache(LdapHelper helper) {
-            NamedEntryFreshnessChecker neFreshnessChecker = null;
-            AccountFreshnessChecker acctFreshnessChecker = null;
-            DomainFreshnessChecker domFreshnessChecker = null;
-            ServerFreshnessChecker svrFreshnessChecker = null;
             if (helper.getProv().supportsEntryCSN()) {
                 neFreshnessChecker = new NamedEntryFreshnessChecker(helper);
                 acctFreshnessChecker = new AccountFreshnessChecker(helper);
@@ -281,66 +299,48 @@ abstract public class LdapCache {
                 svrFreshnessChecker = new ServerFreshnessChecker(helper);
             }
 
-            accountCache = new AccountCache(LC.ldap_cache_account_maxsize.intValue(),
-                    LC.ldap_cache_account_maxage.intValue() * Constants.MILLIS_PER_MINUTE, acctFreshnessChecker);
-
-            cosCache = new NamedEntryCache<LdapCos>(LC.ldap_cache_cos_maxsize.intValue(),
-                    LC.ldap_cache_cos_maxage.intValue() * Constants.MILLIS_PER_MINUTE, neFreshnessChecker);
-            shareLocatorCache = new NamedEntryCache<ShareLocator>(
-                    LC.ldap_cache_share_locator_maxsize.intValue(),
-                    LC.ldap_cache_share_locator_maxage.intValue() * Constants.MILLIS_PER_MINUTE, neFreshnessChecker);
-            domainCache = new DomainCache(
-                    LC.ldap_cache_domain_maxsize.intValue(),
-                    LC.ldap_cache_domain_maxage.intValue() * Constants.MILLIS_PER_MINUTE,
-                    LC.ldap_cache_external_domain_maxsize.intValue(),
-                    LC.ldap_cache_external_domain_maxage.intValue() * Constants.MILLIS_PER_MINUTE, domFreshnessChecker);
-
             /* Not planning to worry about whether the mime type cache is absolutely accurate.  It can be
              * flushed if needed and don't imagine mime types change much.
              */
             mimeTypeCache = new LdapMimeTypeCache();
-            serverCache = new NamedEntryCache<Server>(
-                    LC.ldap_cache_server_maxsize.intValue(),
-                    LC.ldap_cache_server_maxage.intValue() * Constants.MILLIS_PER_MINUTE, svrFreshnessChecker);
-            ucServiceCache = new NamedEntryCache<UCService>(
-                    LC.ldap_cache_ucservice_maxsize.intValue(),
-                    LC.ldap_cache_ucservice_maxage.intValue() * Constants.MILLIS_PER_MINUTE, neFreshnessChecker);
-            zimletCache = new NamedEntryCache<LdapZimlet>(
-                    LC.ldap_cache_zimlet_maxsize.intValue(),
-                    LC.ldap_cache_zimlet_maxage.intValue() * Constants.MILLIS_PER_MINUTE, neFreshnessChecker);
-
-            /* Note: groups in this cache are expected to only contains minimal group attrs
-             *       in particular, they do not contain members (the member or zimbraMailForwardingAddress attribute)
-             */
-            groupCache = new NamedEntryCache<Group>(
-                    LC.ldap_cache_group_maxsize.intValue(),
-                    LC.ldap_cache_group_maxage.intValue() * Constants.MILLIS_PER_MINUTE, neFreshnessChecker);
-            xmppComponentCache = new NamedEntryCache<XMPPComponent>(
-                    LC.ldap_cache_xmppcomponent_maxsize.intValue(),
-                    LC.ldap_cache_xmppcomponent_maxage.intValue() * Constants.MILLIS_PER_MINUTE, neFreshnessChecker);
-            alwaysOnClusterCache = new NamedEntryCache<AlwaysOnCluster>(
-                    LC.ldap_cache_alwaysoncluster_maxsize.intValue(),
-                    LC.ldap_cache_alwaysoncluster_maxage.intValue() * Constants.MILLIS_PER_MINUTE, neFreshnessChecker);
         }
 
         @Override
         IAccountCache accountCache() {
+            if (accountCache != null) {
+                return accountCache;
+            }
+            Server svr = getLocalServer();
+            synchronized(this) {
+                if (accountCache == null) {
+                    if (svr != null) {
+                        accountCache = new AccountCache(svr.getLdapCacheAccountMaxSize(),
+                                svr.getLdapCacheAccountMaxAge(), acctFreshnessChecker);
+                    } else {
+                        accountCache = new AccountCache(20000, 15 * Constants.MILLIS_PER_MINUTE, acctFreshnessChecker);
+                    }
+                }
+            }
             return accountCache;
         }
 
         @Override
-        INamedEntryCache<LdapCos> cosCache() {
-            return cosCache;
-        }
-
-        @Override
         IDomainCache domainCache() {
+            if (domainCache != null) {
+                return domainCache;
+            }
+            Server svr = getLocalServer();
+            synchronized(this) {
+                if (svr != null) {
+                    domainCache = new DomainCache(svr.getLdapCacheDomainMaxSize(), svr.getLdapCacheDomainMaxAge(),
+                            svr.getLdapCacheExternalDomainMaxSize(), svr.getLdapCacheExternalDomainMaxAge(),
+                            domFreshnessChecker);
+                } else {
+                    domainCache = new DomainCache(500, 15 * Constants.MILLIS_PER_MINUTE,
+                            10000, 15 * Constants.MILLIS_PER_MINUTE, domFreshnessChecker);
+                }
+            }
             return domainCache;
-        }
-
-        @Override
-        INamedEntryCache<Group> groupCache() {
-            return groupCache;
         }
 
         @Override
@@ -349,36 +349,198 @@ abstract public class LdapCache {
         }
 
         @Override
+        INamedEntryCache<LdapCos> cosCache() {
+            if (cosCache != null) {
+                return cosCache;
+            }
+            Server svr = getLocalServer();
+            synchronized(this) {
+                if (svr != null) {
+                    cosCache = new NamedEntryCache<LdapCos>(svr.getLdapCacheCosMaxSize(),
+                            svr.getLdapCacheCosMaxAge(), neFreshnessChecker);
+                } else {
+                    ZimbraLog.ldap.debug("CosCache setup using defaults");
+                    cosCache = new NamedEntryCache<LdapCos>(100, 15 * Constants.MILLIS_PER_MINUTE, neFreshnessChecker);
+                }
+            }
+            return cosCache;
+        }
+
+        /** Note: groups in this cache are expected to only contains minimal group attrs
+         *       in particular, they do not contain members (the member or zimbraMailForwardingAddress attribute)
+         */
+        @Override
+        INamedEntryCache<Group> groupCache() {
+            if (groupCache != null) {
+                return groupCache;
+            }
+            Server svr = getLocalServer();
+            synchronized(this) {
+                if (svr != null) {
+                    groupCache = new NamedEntryCache<Group>(svr.getLdapCacheGroupMaxSize(),
+                            svr.getLdapCacheGroupMaxAge(), neFreshnessChecker);
+                } else {
+                    ZimbraLog.ldap.debug("GroupCache setup using defaults");
+                    groupCache = new NamedEntryCache<Group>(2000, 15 * Constants.MILLIS_PER_MINUTE, neFreshnessChecker);
+                }
+            }
+            return groupCache;
+        }
+
+        @Override
         INamedEntryCache<Server> serverCache() {
+            if (serverCacheSetup && (serverCache != null)) {
+                return serverCache;
+            }
+            Server svr = localServer;
+            if (svr != null) {
+                if (serverCache != null) {
+                    ZimbraLog.ldap.debug("ServerCache setup using server=%s", svr.getName());
+                }
+                synchronized(this) {
+                    if (!serverCacheSetup) {
+                        serverCache = new NamedEntryCache<Server>(svr.getLdapCacheServerMaxSize(),
+                                svr.getLdapCacheServerMaxAge(), svrFreshnessChecker);
+                        serverCacheSetup = true;
+                    }
+                }
+            } else {
+                synchronized(this) {
+                    if (serverCache == null) {
+                        ZimbraLog.ldap.debug("ServerCache setup using defaults");
+                        serverCache = new NamedEntryCache<Server>(100, 15 * Constants.MILLIS_PER_MINUTE,
+                                svrFreshnessChecker);
+                    }
+                }
+            }
             return serverCache;
         }
 
         @Override
         INamedEntryCache<UCService> ucServiceCache() {
+            if (ucServiceCache != null) {
+                return ucServiceCache;
+            }
+            Server svr = getLocalServer();
+            synchronized(this) {
+                if (svr != null) {
+                    ucServiceCache = new NamedEntryCache<UCService>(svr.getLdapCacheUCServiceMaxSize(),
+                            svr.getLdapCacheUCServiceMaxAge(), neFreshnessChecker);
+                } else {
+                    ZimbraLog.ldap.debug("UCServiceCache setup using defaults");
+                    ucServiceCache = new NamedEntryCache<UCService>(100,
+                            15 * Constants.MILLIS_PER_MINUTE, neFreshnessChecker);
+                }
+            }
             return ucServiceCache;
         }
 
         @Override
         INamedEntryCache<ShareLocator> shareLocatorCache() {
+            if (shareLocatorCache != null) {
+                return shareLocatorCache;
+            }
+            Server svr = getLocalServer();
+            synchronized(this) {
+                if (svr != null) {
+                    shareLocatorCache = new NamedEntryCache<ShareLocator>(svr.getLdapCacheShareLocatorMaxSize(),
+                            svr.getLdapCacheShareLocatorMaxAge(), neFreshnessChecker);
+                } else {
+                    ZimbraLog.ldap.debug("ShareLocatorCache setup using defaults");
+                    shareLocatorCache = new NamedEntryCache<ShareLocator>(5000, 15 * Constants.MILLIS_PER_MINUTE,
+                            neFreshnessChecker);
+                }
+            }
             return shareLocatorCache;
         }
 
         @Override
         INamedEntryCache<XMPPComponent> xmppComponentCache() {
+            if (xmppComponentCache != null) {
+                return xmppComponentCache;
+            }
+            Server svr = getLocalServer();
+            synchronized(this) {
+                if (svr != null) {
+                    xmppComponentCache = new NamedEntryCache<XMPPComponent>(svr.getLdapCacheXMPPComponentMaxSize(),
+                            svr.getLdapCacheXMPPComponentMaxAge(), neFreshnessChecker);
+                } else {
+                    ZimbraLog.ldap.debug("XMPPComponentCache setup using defaults");
+                    xmppComponentCache = new NamedEntryCache<XMPPComponent>(2000, 15 * Constants.MILLIS_PER_MINUTE,
+                            neFreshnessChecker);
+                }
+            }
             return xmppComponentCache;
         }
 
         @Override
         INamedEntryCache<LdapZimlet> zimletCache() {
+            if (zimletCache != null) {
+                return zimletCache;
+            }
+            Server svr = getLocalServer();
+            synchronized(this) {
+                if (svr != null) {
+                    zimletCache = new NamedEntryCache<LdapZimlet>(svr.getLdapCacheZimletMaxSize(),
+                            svr.getLdapCacheZimletMaxAge(), neFreshnessChecker);
+                } else {
+                    ZimbraLog.ldap.debug("ZimletCache setup using defaults");
+                    zimletCache = new NamedEntryCache<LdapZimlet>(100, 15 * Constants.MILLIS_PER_MINUTE, neFreshnessChecker);
+                }
+            }
             return zimletCache;
         }
 
         @Override
         INamedEntryCache<AlwaysOnCluster> alwaysOnClusterCache() {
+            if (alwaysOnClusterCacheSetup && (alwaysOnClusterCache != null)) {
+                return alwaysOnClusterCache;
+            }
+            Server svr = localServer;
+            if (svr != null) {
+                if (alwaysOnClusterCache != null) {
+                    ZimbraLog.ldap.debug("AlwaysOnClusterCache setup using server=%s", svr.getName());
+                }
+                synchronized(this) {
+                    if (!alwaysOnClusterCacheSetup) {
+                        alwaysOnClusterCache = new NamedEntryCache<AlwaysOnCluster>(
+                                svr.getLdapCacheAlwaysOnClusterMaxSize(),
+                                svr.getLdapCacheAlwaysOnClusterMaxAge(), neFreshnessChecker);
+                        alwaysOnClusterCacheSetup = true;
+                    }
+                }
+            } else {
+                synchronized(this) {
+                    if (alwaysOnClusterCache == null) {
+                        ZimbraLog.ldap.debug("AlwaysOnClusterCache setup using defaults");
+                        alwaysOnClusterCache = new NamedEntryCache<AlwaysOnCluster>(100,
+                                15 * Constants.MILLIS_PER_MINUTE, neFreshnessChecker);
+                    }
+                }
+            }
             return alwaysOnClusterCache;
         }
-    }
 
+        @Override
+        boolean isServerCacheSetup() {
+            return serverCacheSetup;
+        }
+
+        public void setLocalServer(Server server) {
+            localServer = server;
+        }
+
+        private static Server getLocalServer() {
+            if (localServer == null) {
+                try {
+                    localServer = Provisioning.getInstance().getLocalServer();
+                } catch (ServiceException e) {
+                    localServer = null;
+                }
+            }
+            return localServer;
+        }
+    }
 
     /**
      *
@@ -579,5 +741,9 @@ abstract public class LdapCache {
             return alwaysOnClusterCache;
         }
 
+        @Override
+        boolean isServerCacheSetup() {
+            return (null != serverCache);
+        }
     }
 }

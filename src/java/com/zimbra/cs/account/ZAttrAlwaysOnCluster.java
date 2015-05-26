@@ -19680,6 +19680,3040 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
     }
 
     /**
+     * Maximum age of entries in the in memory cache of Account objects. Note
+     * that modifications to the LDAP directory that affect the validity of
+     * cache entries are generally noticed and will also cause cache entry
+     * invalidation. . Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * <p>Use getLdapCacheAccountMaxAgeAsString to access value as a string.
+     *
+     * @see #getLdapCacheAccountMaxAgeAsString()
+     *
+     * @return zimbraLdapCacheAccountMaxAge in millseconds, or -1 if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1984)
+    public long getLdapCacheAccountMaxAge() {
+        return getTimeInterval(Provisioning.A_zimbraLdapCacheAccountMaxAge, -1L);
+    }
+
+    /**
+     * Maximum age of entries in the in memory cache of Account objects. Note
+     * that modifications to the LDAP directory that affect the validity of
+     * cache entries are generally noticed and will also cause cache entry
+     * invalidation. . Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * @return zimbraLdapCacheAccountMaxAge, or null if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1984)
+    public String getLdapCacheAccountMaxAgeAsString() {
+        return getAttr(Provisioning.A_zimbraLdapCacheAccountMaxAge, null);
+    }
+
+    /**
+     * Maximum age of entries in the in memory cache of Account objects. Note
+     * that modifications to the LDAP directory that affect the validity of
+     * cache entries are generally noticed and will also cause cache entry
+     * invalidation. . Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * @param zimbraLdapCacheAccountMaxAge new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1984)
+    public void setLdapCacheAccountMaxAge(String zimbraLdapCacheAccountMaxAge) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheAccountMaxAge, zimbraLdapCacheAccountMaxAge);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum age of entries in the in memory cache of Account objects. Note
+     * that modifications to the LDAP directory that affect the validity of
+     * cache entries are generally noticed and will also cause cache entry
+     * invalidation. . Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * @param zimbraLdapCacheAccountMaxAge new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1984)
+    public Map<String,Object> setLdapCacheAccountMaxAge(String zimbraLdapCacheAccountMaxAge, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheAccountMaxAge, zimbraLdapCacheAccountMaxAge);
+        return attrs;
+    }
+
+    /**
+     * Maximum age of entries in the in memory cache of Account objects. Note
+     * that modifications to the LDAP directory that affect the validity of
+     * cache entries are generally noticed and will also cause cache entry
+     * invalidation. . Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1984)
+    public void unsetLdapCacheAccountMaxAge() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheAccountMaxAge, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum age of entries in the in memory cache of Account objects. Note
+     * that modifications to the LDAP directory that affect the validity of
+     * cache entries are generally noticed and will also cause cache entry
+     * invalidation. . Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1984)
+    public Map<String,Object> unsetLdapCacheAccountMaxAge(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheAccountMaxAge, "");
+        return attrs;
+    }
+
+    /**
+     * Maximum number of entries in the in memory cache of Account objects
+     *
+     * @return zimbraLdapCacheAccountMaxSize, or -1 if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1983)
+    public int getLdapCacheAccountMaxSize() {
+        return getIntAttr(Provisioning.A_zimbraLdapCacheAccountMaxSize, -1);
+    }
+
+    /**
+     * Maximum number of entries in the in memory cache of Account objects
+     *
+     * @param zimbraLdapCacheAccountMaxSize new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1983)
+    public void setLdapCacheAccountMaxSize(int zimbraLdapCacheAccountMaxSize) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheAccountMaxSize, Integer.toString(zimbraLdapCacheAccountMaxSize));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of entries in the in memory cache of Account objects
+     *
+     * @param zimbraLdapCacheAccountMaxSize new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1983)
+    public Map<String,Object> setLdapCacheAccountMaxSize(int zimbraLdapCacheAccountMaxSize, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheAccountMaxSize, Integer.toString(zimbraLdapCacheAccountMaxSize));
+        return attrs;
+    }
+
+    /**
+     * Maximum number of entries in the in memory cache of Account objects
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1983)
+    public void unsetLdapCacheAccountMaxSize() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheAccountMaxSize, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of entries in the in memory cache of Account objects
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1983)
+    public Map<String,Object> unsetLdapCacheAccountMaxSize(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheAccountMaxSize, "");
+        return attrs;
+    }
+
+    /**
+     * Maximum age of entries in the in memory cache of AlwaysOnCluster
+     * objects. Note that modifications to the LDAP directory that affect the
+     * validity of cache entries are generally noticed and will also cause
+     * cache entry invalidation. . Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * <p>Use getLdapCacheAlwaysOnClusterMaxAgeAsString to access value as a string.
+     *
+     * @see #getLdapCacheAlwaysOnClusterMaxAgeAsString()
+     *
+     * @return zimbraLdapCacheAlwaysOnClusterMaxAge in millseconds, or -1 if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2003)
+    public long getLdapCacheAlwaysOnClusterMaxAge() {
+        return getTimeInterval(Provisioning.A_zimbraLdapCacheAlwaysOnClusterMaxAge, -1L);
+    }
+
+    /**
+     * Maximum age of entries in the in memory cache of AlwaysOnCluster
+     * objects. Note that modifications to the LDAP directory that affect the
+     * validity of cache entries are generally noticed and will also cause
+     * cache entry invalidation. . Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @return zimbraLdapCacheAlwaysOnClusterMaxAge, or null if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2003)
+    public String getLdapCacheAlwaysOnClusterMaxAgeAsString() {
+        return getAttr(Provisioning.A_zimbraLdapCacheAlwaysOnClusterMaxAge, null);
+    }
+
+    /**
+     * Maximum age of entries in the in memory cache of AlwaysOnCluster
+     * objects. Note that modifications to the LDAP directory that affect the
+     * validity of cache entries are generally noticed and will also cause
+     * cache entry invalidation. . Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @param zimbraLdapCacheAlwaysOnClusterMaxAge new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2003)
+    public void setLdapCacheAlwaysOnClusterMaxAge(String zimbraLdapCacheAlwaysOnClusterMaxAge) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheAlwaysOnClusterMaxAge, zimbraLdapCacheAlwaysOnClusterMaxAge);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum age of entries in the in memory cache of AlwaysOnCluster
+     * objects. Note that modifications to the LDAP directory that affect the
+     * validity of cache entries are generally noticed and will also cause
+     * cache entry invalidation. . Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @param zimbraLdapCacheAlwaysOnClusterMaxAge new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2003)
+    public Map<String,Object> setLdapCacheAlwaysOnClusterMaxAge(String zimbraLdapCacheAlwaysOnClusterMaxAge, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheAlwaysOnClusterMaxAge, zimbraLdapCacheAlwaysOnClusterMaxAge);
+        return attrs;
+    }
+
+    /**
+     * Maximum age of entries in the in memory cache of AlwaysOnCluster
+     * objects. Note that modifications to the LDAP directory that affect the
+     * validity of cache entries are generally noticed and will also cause
+     * cache entry invalidation. . Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2003)
+    public void unsetLdapCacheAlwaysOnClusterMaxAge() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheAlwaysOnClusterMaxAge, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum age of entries in the in memory cache of AlwaysOnCluster
+     * objects. Note that modifications to the LDAP directory that affect the
+     * validity of cache entries are generally noticed and will also cause
+     * cache entry invalidation. . Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2003)
+    public Map<String,Object> unsetLdapCacheAlwaysOnClusterMaxAge(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheAlwaysOnClusterMaxAge, "");
+        return attrs;
+    }
+
+    /**
+     * Maximum number of entries in the in memory cache of AlwaysOnCluster
+     * objects
+     *
+     * @return zimbraLdapCacheAlwaysOnClusterMaxSize, or -1 if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2002)
+    public int getLdapCacheAlwaysOnClusterMaxSize() {
+        return getIntAttr(Provisioning.A_zimbraLdapCacheAlwaysOnClusterMaxSize, -1);
+    }
+
+    /**
+     * Maximum number of entries in the in memory cache of AlwaysOnCluster
+     * objects
+     *
+     * @param zimbraLdapCacheAlwaysOnClusterMaxSize new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2002)
+    public void setLdapCacheAlwaysOnClusterMaxSize(int zimbraLdapCacheAlwaysOnClusterMaxSize) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheAlwaysOnClusterMaxSize, Integer.toString(zimbraLdapCacheAlwaysOnClusterMaxSize));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of entries in the in memory cache of AlwaysOnCluster
+     * objects
+     *
+     * @param zimbraLdapCacheAlwaysOnClusterMaxSize new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2002)
+    public Map<String,Object> setLdapCacheAlwaysOnClusterMaxSize(int zimbraLdapCacheAlwaysOnClusterMaxSize, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheAlwaysOnClusterMaxSize, Integer.toString(zimbraLdapCacheAlwaysOnClusterMaxSize));
+        return attrs;
+    }
+
+    /**
+     * Maximum number of entries in the in memory cache of AlwaysOnCluster
+     * objects
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2002)
+    public void unsetLdapCacheAlwaysOnClusterMaxSize() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheAlwaysOnClusterMaxSize, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of entries in the in memory cache of AlwaysOnCluster
+     * objects
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2002)
+    public Map<String,Object> unsetLdapCacheAlwaysOnClusterMaxSize(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheAlwaysOnClusterMaxSize, "");
+        return attrs;
+    }
+
+    /**
+     * Maximum age of entries in the in memory cache of Cos objects. Note
+     * that modifications to the LDAP directory that affect the validity of
+     * cache entries are generally noticed and will also cause cache entry
+     * invalidation. . Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * <p>Use getLdapCacheCosMaxAgeAsString to access value as a string.
+     *
+     * @see #getLdapCacheCosMaxAgeAsString()
+     *
+     * @return zimbraLdapCacheCosMaxAge in millseconds, or -1 if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1986)
+    public long getLdapCacheCosMaxAge() {
+        return getTimeInterval(Provisioning.A_zimbraLdapCacheCosMaxAge, -1L);
+    }
+
+    /**
+     * Maximum age of entries in the in memory cache of Cos objects. Note
+     * that modifications to the LDAP directory that affect the validity of
+     * cache entries are generally noticed and will also cause cache entry
+     * invalidation. . Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * @return zimbraLdapCacheCosMaxAge, or null if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1986)
+    public String getLdapCacheCosMaxAgeAsString() {
+        return getAttr(Provisioning.A_zimbraLdapCacheCosMaxAge, null);
+    }
+
+    /**
+     * Maximum age of entries in the in memory cache of Cos objects. Note
+     * that modifications to the LDAP directory that affect the validity of
+     * cache entries are generally noticed and will also cause cache entry
+     * invalidation. . Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * @param zimbraLdapCacheCosMaxAge new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1986)
+    public void setLdapCacheCosMaxAge(String zimbraLdapCacheCosMaxAge) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheCosMaxAge, zimbraLdapCacheCosMaxAge);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum age of entries in the in memory cache of Cos objects. Note
+     * that modifications to the LDAP directory that affect the validity of
+     * cache entries are generally noticed and will also cause cache entry
+     * invalidation. . Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * @param zimbraLdapCacheCosMaxAge new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1986)
+    public Map<String,Object> setLdapCacheCosMaxAge(String zimbraLdapCacheCosMaxAge, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheCosMaxAge, zimbraLdapCacheCosMaxAge);
+        return attrs;
+    }
+
+    /**
+     * Maximum age of entries in the in memory cache of Cos objects. Note
+     * that modifications to the LDAP directory that affect the validity of
+     * cache entries are generally noticed and will also cause cache entry
+     * invalidation. . Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1986)
+    public void unsetLdapCacheCosMaxAge() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheCosMaxAge, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum age of entries in the in memory cache of Cos objects. Note
+     * that modifications to the LDAP directory that affect the validity of
+     * cache entries are generally noticed and will also cause cache entry
+     * invalidation. . Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1986)
+    public Map<String,Object> unsetLdapCacheCosMaxAge(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheCosMaxAge, "");
+        return attrs;
+    }
+
+    /**
+     * Maximum number of entries in the in memory cache of Cos objects
+     *
+     * @return zimbraLdapCacheCosMaxSize, or -1 if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1985)
+    public int getLdapCacheCosMaxSize() {
+        return getIntAttr(Provisioning.A_zimbraLdapCacheCosMaxSize, -1);
+    }
+
+    /**
+     * Maximum number of entries in the in memory cache of Cos objects
+     *
+     * @param zimbraLdapCacheCosMaxSize new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1985)
+    public void setLdapCacheCosMaxSize(int zimbraLdapCacheCosMaxSize) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheCosMaxSize, Integer.toString(zimbraLdapCacheCosMaxSize));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of entries in the in memory cache of Cos objects
+     *
+     * @param zimbraLdapCacheCosMaxSize new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1985)
+    public Map<String,Object> setLdapCacheCosMaxSize(int zimbraLdapCacheCosMaxSize, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheCosMaxSize, Integer.toString(zimbraLdapCacheCosMaxSize));
+        return attrs;
+    }
+
+    /**
+     * Maximum number of entries in the in memory cache of Cos objects
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1985)
+    public void unsetLdapCacheCosMaxSize() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheCosMaxSize, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of entries in the in memory cache of Cos objects
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1985)
+    public Map<String,Object> unsetLdapCacheCosMaxSize(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheCosMaxSize, "");
+        return attrs;
+    }
+
+    /**
+     * Maximum age of entries in the in memory cache of Domain objects. Note
+     * that modifications to the LDAP directory that affect the validity of
+     * cache entries are generally noticed and will also cause cache entry
+     * invalidation. . Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * <p>Use getLdapCacheDomainMaxAgeAsString to access value as a string.
+     *
+     * @see #getLdapCacheDomainMaxAgeAsString()
+     *
+     * @return zimbraLdapCacheDomainMaxAge in millseconds, or -1 if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1990)
+    public long getLdapCacheDomainMaxAge() {
+        return getTimeInterval(Provisioning.A_zimbraLdapCacheDomainMaxAge, -1L);
+    }
+
+    /**
+     * Maximum age of entries in the in memory cache of Domain objects. Note
+     * that modifications to the LDAP directory that affect the validity of
+     * cache entries are generally noticed and will also cause cache entry
+     * invalidation. . Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * @return zimbraLdapCacheDomainMaxAge, or null if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1990)
+    public String getLdapCacheDomainMaxAgeAsString() {
+        return getAttr(Provisioning.A_zimbraLdapCacheDomainMaxAge, null);
+    }
+
+    /**
+     * Maximum age of entries in the in memory cache of Domain objects. Note
+     * that modifications to the LDAP directory that affect the validity of
+     * cache entries are generally noticed and will also cause cache entry
+     * invalidation. . Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * @param zimbraLdapCacheDomainMaxAge new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1990)
+    public void setLdapCacheDomainMaxAge(String zimbraLdapCacheDomainMaxAge) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheDomainMaxAge, zimbraLdapCacheDomainMaxAge);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum age of entries in the in memory cache of Domain objects. Note
+     * that modifications to the LDAP directory that affect the validity of
+     * cache entries are generally noticed and will also cause cache entry
+     * invalidation. . Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * @param zimbraLdapCacheDomainMaxAge new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1990)
+    public Map<String,Object> setLdapCacheDomainMaxAge(String zimbraLdapCacheDomainMaxAge, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheDomainMaxAge, zimbraLdapCacheDomainMaxAge);
+        return attrs;
+    }
+
+    /**
+     * Maximum age of entries in the in memory cache of Domain objects. Note
+     * that modifications to the LDAP directory that affect the validity of
+     * cache entries are generally noticed and will also cause cache entry
+     * invalidation. . Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1990)
+    public void unsetLdapCacheDomainMaxAge() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheDomainMaxAge, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum age of entries in the in memory cache of Domain objects. Note
+     * that modifications to the LDAP directory that affect the validity of
+     * cache entries are generally noticed and will also cause cache entry
+     * invalidation. . Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1990)
+    public Map<String,Object> unsetLdapCacheDomainMaxAge(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheDomainMaxAge, "");
+        return attrs;
+    }
+
+    /**
+     * Maximum number of entries in the in memory cache of Domain objects
+     *
+     * @return zimbraLdapCacheDomainMaxSize, or -1 if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1989)
+    public int getLdapCacheDomainMaxSize() {
+        return getIntAttr(Provisioning.A_zimbraLdapCacheDomainMaxSize, -1);
+    }
+
+    /**
+     * Maximum number of entries in the in memory cache of Domain objects
+     *
+     * @param zimbraLdapCacheDomainMaxSize new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1989)
+    public void setLdapCacheDomainMaxSize(int zimbraLdapCacheDomainMaxSize) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheDomainMaxSize, Integer.toString(zimbraLdapCacheDomainMaxSize));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of entries in the in memory cache of Domain objects
+     *
+     * @param zimbraLdapCacheDomainMaxSize new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1989)
+    public Map<String,Object> setLdapCacheDomainMaxSize(int zimbraLdapCacheDomainMaxSize, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheDomainMaxSize, Integer.toString(zimbraLdapCacheDomainMaxSize));
+        return attrs;
+    }
+
+    /**
+     * Maximum number of entries in the in memory cache of Domain objects
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1989)
+    public void unsetLdapCacheDomainMaxSize() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheDomainMaxSize, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of entries in the in memory cache of Domain objects
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1989)
+    public Map<String,Object> unsetLdapCacheDomainMaxSize(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheDomainMaxSize, "");
+        return attrs;
+    }
+
+    /**
+     * Maximum age of entries in the in memory cache of ExternalDomain
+     * objects. Note that modifications to the LDAP directory that affect the
+     * validity of cache entries are generally noticed and will also cause
+     * cache entry invalidation. . Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * <p>Use getLdapCacheExternalDomainMaxAgeAsString to access value as a string.
+     *
+     * @see #getLdapCacheExternalDomainMaxAgeAsString()
+     *
+     * @return zimbraLdapCacheExternalDomainMaxAge in millseconds, or -1 if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1892)
+    public long getLdapCacheExternalDomainMaxAge() {
+        return getTimeInterval(Provisioning.A_zimbraLdapCacheExternalDomainMaxAge, -1L);
+    }
+
+    /**
+     * Maximum age of entries in the in memory cache of ExternalDomain
+     * objects. Note that modifications to the LDAP directory that affect the
+     * validity of cache entries are generally noticed and will also cause
+     * cache entry invalidation. . Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @return zimbraLdapCacheExternalDomainMaxAge, or null if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1892)
+    public String getLdapCacheExternalDomainMaxAgeAsString() {
+        return getAttr(Provisioning.A_zimbraLdapCacheExternalDomainMaxAge, null);
+    }
+
+    /**
+     * Maximum age of entries in the in memory cache of ExternalDomain
+     * objects. Note that modifications to the LDAP directory that affect the
+     * validity of cache entries are generally noticed and will also cause
+     * cache entry invalidation. . Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @param zimbraLdapCacheExternalDomainMaxAge new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1892)
+    public void setLdapCacheExternalDomainMaxAge(String zimbraLdapCacheExternalDomainMaxAge) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheExternalDomainMaxAge, zimbraLdapCacheExternalDomainMaxAge);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum age of entries in the in memory cache of ExternalDomain
+     * objects. Note that modifications to the LDAP directory that affect the
+     * validity of cache entries are generally noticed and will also cause
+     * cache entry invalidation. . Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @param zimbraLdapCacheExternalDomainMaxAge new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1892)
+    public Map<String,Object> setLdapCacheExternalDomainMaxAge(String zimbraLdapCacheExternalDomainMaxAge, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheExternalDomainMaxAge, zimbraLdapCacheExternalDomainMaxAge);
+        return attrs;
+    }
+
+    /**
+     * Maximum age of entries in the in memory cache of ExternalDomain
+     * objects. Note that modifications to the LDAP directory that affect the
+     * validity of cache entries are generally noticed and will also cause
+     * cache entry invalidation. . Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1892)
+    public void unsetLdapCacheExternalDomainMaxAge() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheExternalDomainMaxAge, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum age of entries in the in memory cache of ExternalDomain
+     * objects. Note that modifications to the LDAP directory that affect the
+     * validity of cache entries are generally noticed and will also cause
+     * cache entry invalidation. . Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1892)
+    public Map<String,Object> unsetLdapCacheExternalDomainMaxAge(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheExternalDomainMaxAge, "");
+        return attrs;
+    }
+
+    /**
+     * Maximum number of entries in the in memory cache of ExternalDomain
+     * objects
+     *
+     * @return zimbraLdapCacheExternalDomainMaxSize, or -1 if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1891)
+    public int getLdapCacheExternalDomainMaxSize() {
+        return getIntAttr(Provisioning.A_zimbraLdapCacheExternalDomainMaxSize, -1);
+    }
+
+    /**
+     * Maximum number of entries in the in memory cache of ExternalDomain
+     * objects
+     *
+     * @param zimbraLdapCacheExternalDomainMaxSize new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1891)
+    public void setLdapCacheExternalDomainMaxSize(int zimbraLdapCacheExternalDomainMaxSize) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheExternalDomainMaxSize, Integer.toString(zimbraLdapCacheExternalDomainMaxSize));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of entries in the in memory cache of ExternalDomain
+     * objects
+     *
+     * @param zimbraLdapCacheExternalDomainMaxSize new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1891)
+    public Map<String,Object> setLdapCacheExternalDomainMaxSize(int zimbraLdapCacheExternalDomainMaxSize, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheExternalDomainMaxSize, Integer.toString(zimbraLdapCacheExternalDomainMaxSize));
+        return attrs;
+    }
+
+    /**
+     * Maximum number of entries in the in memory cache of ExternalDomain
+     * objects
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1891)
+    public void unsetLdapCacheExternalDomainMaxSize() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheExternalDomainMaxSize, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of entries in the in memory cache of ExternalDomain
+     * objects
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1891)
+    public Map<String,Object> unsetLdapCacheExternalDomainMaxSize(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheExternalDomainMaxSize, "");
+        return attrs;
+    }
+
+    /**
+     * If an entry in a zimbraLdap cache has been retrieved more recently
+     * than this duration, the LDAP directory will not be consulted to check
+     * that related entries have not been modified. This prevents
+     * un-necessary load on the LDAP directory in some circumstances. Setting
+     * this value to a longer duration may improve performance slightly at
+     * the cost of missing some updates.. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * <p>Use getLdapCacheFreshnessCheckLimitAsString to access value as a string.
+     *
+     * @see #getLdapCacheFreshnessCheckLimitAsString()
+     *
+     * @return zimbraLdapCacheFreshnessCheckLimit in millseconds, or -1 if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1982)
+    public long getLdapCacheFreshnessCheckLimit() {
+        return getTimeInterval(Provisioning.A_zimbraLdapCacheFreshnessCheckLimit, -1L);
+    }
+
+    /**
+     * If an entry in a zimbraLdap cache has been retrieved more recently
+     * than this duration, the LDAP directory will not be consulted to check
+     * that related entries have not been modified. This prevents
+     * un-necessary load on the LDAP directory in some circumstances. Setting
+     * this value to a longer duration may improve performance slightly at
+     * the cost of missing some updates.. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @return zimbraLdapCacheFreshnessCheckLimit, or null if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1982)
+    public String getLdapCacheFreshnessCheckLimitAsString() {
+        return getAttr(Provisioning.A_zimbraLdapCacheFreshnessCheckLimit, null);
+    }
+
+    /**
+     * If an entry in a zimbraLdap cache has been retrieved more recently
+     * than this duration, the LDAP directory will not be consulted to check
+     * that related entries have not been modified. This prevents
+     * un-necessary load on the LDAP directory in some circumstances. Setting
+     * this value to a longer duration may improve performance slightly at
+     * the cost of missing some updates.. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @param zimbraLdapCacheFreshnessCheckLimit new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1982)
+    public void setLdapCacheFreshnessCheckLimit(String zimbraLdapCacheFreshnessCheckLimit) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheFreshnessCheckLimit, zimbraLdapCacheFreshnessCheckLimit);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * If an entry in a zimbraLdap cache has been retrieved more recently
+     * than this duration, the LDAP directory will not be consulted to check
+     * that related entries have not been modified. This prevents
+     * un-necessary load on the LDAP directory in some circumstances. Setting
+     * this value to a longer duration may improve performance slightly at
+     * the cost of missing some updates.. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @param zimbraLdapCacheFreshnessCheckLimit new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1982)
+    public Map<String,Object> setLdapCacheFreshnessCheckLimit(String zimbraLdapCacheFreshnessCheckLimit, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheFreshnessCheckLimit, zimbraLdapCacheFreshnessCheckLimit);
+        return attrs;
+    }
+
+    /**
+     * If an entry in a zimbraLdap cache has been retrieved more recently
+     * than this duration, the LDAP directory will not be consulted to check
+     * that related entries have not been modified. This prevents
+     * un-necessary load on the LDAP directory in some circumstances. Setting
+     * this value to a longer duration may improve performance slightly at
+     * the cost of missing some updates.. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1982)
+    public void unsetLdapCacheFreshnessCheckLimit() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheFreshnessCheckLimit, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * If an entry in a zimbraLdap cache has been retrieved more recently
+     * than this duration, the LDAP directory will not be consulted to check
+     * that related entries have not been modified. This prevents
+     * un-necessary load on the LDAP directory in some circumstances. Setting
+     * this value to a longer duration may improve performance slightly at
+     * the cost of missing some updates.. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1982)
+    public Map<String,Object> unsetLdapCacheFreshnessCheckLimit(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheFreshnessCheckLimit, "");
+        return attrs;
+    }
+
+    /**
+     * Maximum age of entries in the in memory cache of Group objects. Note
+     * that modifications to the LDAP directory that affect the validity of
+     * cache entries are generally noticed and will also cause cache entry
+     * invalidation. . Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * <p>Use getLdapCacheGroupMaxAgeAsString to access value as a string.
+     *
+     * @see #getLdapCacheGroupMaxAgeAsString()
+     *
+     * @return zimbraLdapCacheGroupMaxAge in millseconds, or -1 if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1995)
+    public long getLdapCacheGroupMaxAge() {
+        return getTimeInterval(Provisioning.A_zimbraLdapCacheGroupMaxAge, -1L);
+    }
+
+    /**
+     * Maximum age of entries in the in memory cache of Group objects. Note
+     * that modifications to the LDAP directory that affect the validity of
+     * cache entries are generally noticed and will also cause cache entry
+     * invalidation. . Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * @return zimbraLdapCacheGroupMaxAge, or null if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1995)
+    public String getLdapCacheGroupMaxAgeAsString() {
+        return getAttr(Provisioning.A_zimbraLdapCacheGroupMaxAge, null);
+    }
+
+    /**
+     * Maximum age of entries in the in memory cache of Group objects. Note
+     * that modifications to the LDAP directory that affect the validity of
+     * cache entries are generally noticed and will also cause cache entry
+     * invalidation. . Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * @param zimbraLdapCacheGroupMaxAge new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1995)
+    public void setLdapCacheGroupMaxAge(String zimbraLdapCacheGroupMaxAge) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheGroupMaxAge, zimbraLdapCacheGroupMaxAge);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum age of entries in the in memory cache of Group objects. Note
+     * that modifications to the LDAP directory that affect the validity of
+     * cache entries are generally noticed and will also cause cache entry
+     * invalidation. . Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * @param zimbraLdapCacheGroupMaxAge new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1995)
+    public Map<String,Object> setLdapCacheGroupMaxAge(String zimbraLdapCacheGroupMaxAge, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheGroupMaxAge, zimbraLdapCacheGroupMaxAge);
+        return attrs;
+    }
+
+    /**
+     * Maximum age of entries in the in memory cache of Group objects. Note
+     * that modifications to the LDAP directory that affect the validity of
+     * cache entries are generally noticed and will also cause cache entry
+     * invalidation. . Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1995)
+    public void unsetLdapCacheGroupMaxAge() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheGroupMaxAge, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum age of entries in the in memory cache of Group objects. Note
+     * that modifications to the LDAP directory that affect the validity of
+     * cache entries are generally noticed and will also cause cache entry
+     * invalidation. . Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1995)
+    public Map<String,Object> unsetLdapCacheGroupMaxAge(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheGroupMaxAge, "");
+        return attrs;
+    }
+
+    /**
+     * Maximum number of entries in the in memory cache of Group objects
+     *
+     * @return zimbraLdapCacheGroupMaxSize, or -1 if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1893)
+    public int getLdapCacheGroupMaxSize() {
+        return getIntAttr(Provisioning.A_zimbraLdapCacheGroupMaxSize, -1);
+    }
+
+    /**
+     * Maximum number of entries in the in memory cache of Group objects
+     *
+     * @param zimbraLdapCacheGroupMaxSize new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1893)
+    public void setLdapCacheGroupMaxSize(int zimbraLdapCacheGroupMaxSize) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheGroupMaxSize, Integer.toString(zimbraLdapCacheGroupMaxSize));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of entries in the in memory cache of Group objects
+     *
+     * @param zimbraLdapCacheGroupMaxSize new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1893)
+    public Map<String,Object> setLdapCacheGroupMaxSize(int zimbraLdapCacheGroupMaxSize, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheGroupMaxSize, Integer.toString(zimbraLdapCacheGroupMaxSize));
+        return attrs;
+    }
+
+    /**
+     * Maximum number of entries in the in memory cache of Group objects
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1893)
+    public void unsetLdapCacheGroupMaxSize() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheGroupMaxSize, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of entries in the in memory cache of Group objects
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1893)
+    public Map<String,Object> unsetLdapCacheGroupMaxSize(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheGroupMaxSize, "");
+        return attrs;
+    }
+
+    /**
+     * Maximum age of entries in the in memory cache of MimeTypeInfo objects.
+     * Note that modifications to the LDAP directory that affect the validity
+     * of cache entries are generally noticed and will also cause cache entry
+     * invalidation. . Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * <p>Use getLdapCacheMimeTypeInfoMaxAgeAsString to access value as a string.
+     *
+     * @see #getLdapCacheMimeTypeInfoMaxAgeAsString()
+     *
+     * @return zimbraLdapCacheMimeTypeInfoMaxAge in millseconds, or -1 if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1994)
+    public long getLdapCacheMimeTypeInfoMaxAge() {
+        return getTimeInterval(Provisioning.A_zimbraLdapCacheMimeTypeInfoMaxAge, -1L);
+    }
+
+    /**
+     * Maximum age of entries in the in memory cache of MimeTypeInfo objects.
+     * Note that modifications to the LDAP directory that affect the validity
+     * of cache entries are generally noticed and will also cause cache entry
+     * invalidation. . Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * @return zimbraLdapCacheMimeTypeInfoMaxAge, or null if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1994)
+    public String getLdapCacheMimeTypeInfoMaxAgeAsString() {
+        return getAttr(Provisioning.A_zimbraLdapCacheMimeTypeInfoMaxAge, null);
+    }
+
+    /**
+     * Maximum age of entries in the in memory cache of MimeTypeInfo objects.
+     * Note that modifications to the LDAP directory that affect the validity
+     * of cache entries are generally noticed and will also cause cache entry
+     * invalidation. . Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * @param zimbraLdapCacheMimeTypeInfoMaxAge new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1994)
+    public void setLdapCacheMimeTypeInfoMaxAge(String zimbraLdapCacheMimeTypeInfoMaxAge) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheMimeTypeInfoMaxAge, zimbraLdapCacheMimeTypeInfoMaxAge);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum age of entries in the in memory cache of MimeTypeInfo objects.
+     * Note that modifications to the LDAP directory that affect the validity
+     * of cache entries are generally noticed and will also cause cache entry
+     * invalidation. . Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * @param zimbraLdapCacheMimeTypeInfoMaxAge new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1994)
+    public Map<String,Object> setLdapCacheMimeTypeInfoMaxAge(String zimbraLdapCacheMimeTypeInfoMaxAge, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheMimeTypeInfoMaxAge, zimbraLdapCacheMimeTypeInfoMaxAge);
+        return attrs;
+    }
+
+    /**
+     * Maximum age of entries in the in memory cache of MimeTypeInfo objects.
+     * Note that modifications to the LDAP directory that affect the validity
+     * of cache entries are generally noticed and will also cause cache entry
+     * invalidation. . Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1994)
+    public void unsetLdapCacheMimeTypeInfoMaxAge() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheMimeTypeInfoMaxAge, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum age of entries in the in memory cache of MimeTypeInfo objects.
+     * Note that modifications to the LDAP directory that affect the validity
+     * of cache entries are generally noticed and will also cause cache entry
+     * invalidation. . Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1994)
+    public Map<String,Object> unsetLdapCacheMimeTypeInfoMaxAge(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheMimeTypeInfoMaxAge, "");
+        return attrs;
+    }
+
+    /**
+     * Maximum age of entries in the in memory caches of ReverseProxyLookup
+     * Domain related objects. Note that modifications to the LDAP directory
+     * that affect the validity of cache entries are generally noticed and
+     * will also cause cache entry invalidation. . Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
+     *
+     * <p>Use getLdapCacheReverseProxyLookupDomainMaxAgeAsString to access value as a string.
+     *
+     * @see #getLdapCacheReverseProxyLookupDomainMaxAgeAsString()
+     *
+     * @return zimbraLdapCacheReverseProxyLookupDomainMaxAge in millseconds, or -1 if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2009)
+    public long getLdapCacheReverseProxyLookupDomainMaxAge() {
+        return getTimeInterval(Provisioning.A_zimbraLdapCacheReverseProxyLookupDomainMaxAge, -1L);
+    }
+
+    /**
+     * Maximum age of entries in the in memory caches of ReverseProxyLookup
+     * Domain related objects. Note that modifications to the LDAP directory
+     * that affect the validity of cache entries are generally noticed and
+     * will also cause cache entry invalidation. . Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
+     *
+     * @return zimbraLdapCacheReverseProxyLookupDomainMaxAge, or null if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2009)
+    public String getLdapCacheReverseProxyLookupDomainMaxAgeAsString() {
+        return getAttr(Provisioning.A_zimbraLdapCacheReverseProxyLookupDomainMaxAge, null);
+    }
+
+    /**
+     * Maximum age of entries in the in memory caches of ReverseProxyLookup
+     * Domain related objects. Note that modifications to the LDAP directory
+     * that affect the validity of cache entries are generally noticed and
+     * will also cause cache entry invalidation. . Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
+     *
+     * @param zimbraLdapCacheReverseProxyLookupDomainMaxAge new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2009)
+    public void setLdapCacheReverseProxyLookupDomainMaxAge(String zimbraLdapCacheReverseProxyLookupDomainMaxAge) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheReverseProxyLookupDomainMaxAge, zimbraLdapCacheReverseProxyLookupDomainMaxAge);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum age of entries in the in memory caches of ReverseProxyLookup
+     * Domain related objects. Note that modifications to the LDAP directory
+     * that affect the validity of cache entries are generally noticed and
+     * will also cause cache entry invalidation. . Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
+     *
+     * @param zimbraLdapCacheReverseProxyLookupDomainMaxAge new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2009)
+    public Map<String,Object> setLdapCacheReverseProxyLookupDomainMaxAge(String zimbraLdapCacheReverseProxyLookupDomainMaxAge, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheReverseProxyLookupDomainMaxAge, zimbraLdapCacheReverseProxyLookupDomainMaxAge);
+        return attrs;
+    }
+
+    /**
+     * Maximum age of entries in the in memory caches of ReverseProxyLookup
+     * Domain related objects. Note that modifications to the LDAP directory
+     * that affect the validity of cache entries are generally noticed and
+     * will also cause cache entry invalidation. . Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2009)
+    public void unsetLdapCacheReverseProxyLookupDomainMaxAge() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheReverseProxyLookupDomainMaxAge, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum age of entries in the in memory caches of ReverseProxyLookup
+     * Domain related objects. Note that modifications to the LDAP directory
+     * that affect the validity of cache entries are generally noticed and
+     * will also cause cache entry invalidation. . Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2009)
+    public Map<String,Object> unsetLdapCacheReverseProxyLookupDomainMaxAge(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheReverseProxyLookupDomainMaxAge, "");
+        return attrs;
+    }
+
+    /**
+     * Maximum number of entries in the in memory caches of
+     * ReverseProxyLookup Domain related objects
+     *
+     * @return zimbraLdapCacheReverseProxyLookupDomainMaxSize, or -1 if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2008)
+    public int getLdapCacheReverseProxyLookupDomainMaxSize() {
+        return getIntAttr(Provisioning.A_zimbraLdapCacheReverseProxyLookupDomainMaxSize, -1);
+    }
+
+    /**
+     * Maximum number of entries in the in memory caches of
+     * ReverseProxyLookup Domain related objects
+     *
+     * @param zimbraLdapCacheReverseProxyLookupDomainMaxSize new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2008)
+    public void setLdapCacheReverseProxyLookupDomainMaxSize(int zimbraLdapCacheReverseProxyLookupDomainMaxSize) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheReverseProxyLookupDomainMaxSize, Integer.toString(zimbraLdapCacheReverseProxyLookupDomainMaxSize));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of entries in the in memory caches of
+     * ReverseProxyLookup Domain related objects
+     *
+     * @param zimbraLdapCacheReverseProxyLookupDomainMaxSize new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2008)
+    public Map<String,Object> setLdapCacheReverseProxyLookupDomainMaxSize(int zimbraLdapCacheReverseProxyLookupDomainMaxSize, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheReverseProxyLookupDomainMaxSize, Integer.toString(zimbraLdapCacheReverseProxyLookupDomainMaxSize));
+        return attrs;
+    }
+
+    /**
+     * Maximum number of entries in the in memory caches of
+     * ReverseProxyLookup Domain related objects
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2008)
+    public void unsetLdapCacheReverseProxyLookupDomainMaxSize() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheReverseProxyLookupDomainMaxSize, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of entries in the in memory caches of
+     * ReverseProxyLookup Domain related objects
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2008)
+    public Map<String,Object> unsetLdapCacheReverseProxyLookupDomainMaxSize(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheReverseProxyLookupDomainMaxSize, "");
+        return attrs;
+    }
+
+    /**
+     * Maximum age of entries in the in memory cache of ReverseProxyLookup
+     * ServerInfo objects. Note that modifications to the LDAP directory that
+     * affect the validity of cache entries are generally noticed and will
+     * also cause cache entry invalidation. . Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
+     *
+     * <p>Use getLdapCacheReverseProxyLookupServerMaxAgeAsString to access value as a string.
+     *
+     * @see #getLdapCacheReverseProxyLookupServerMaxAgeAsString()
+     *
+     * @return zimbraLdapCacheReverseProxyLookupServerMaxAge in millseconds, or -1 if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2011)
+    public long getLdapCacheReverseProxyLookupServerMaxAge() {
+        return getTimeInterval(Provisioning.A_zimbraLdapCacheReverseProxyLookupServerMaxAge, -1L);
+    }
+
+    /**
+     * Maximum age of entries in the in memory cache of ReverseProxyLookup
+     * ServerInfo objects. Note that modifications to the LDAP directory that
+     * affect the validity of cache entries are generally noticed and will
+     * also cause cache entry invalidation. . Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
+     *
+     * @return zimbraLdapCacheReverseProxyLookupServerMaxAge, or null if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2011)
+    public String getLdapCacheReverseProxyLookupServerMaxAgeAsString() {
+        return getAttr(Provisioning.A_zimbraLdapCacheReverseProxyLookupServerMaxAge, null);
+    }
+
+    /**
+     * Maximum age of entries in the in memory cache of ReverseProxyLookup
+     * ServerInfo objects. Note that modifications to the LDAP directory that
+     * affect the validity of cache entries are generally noticed and will
+     * also cause cache entry invalidation. . Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
+     *
+     * @param zimbraLdapCacheReverseProxyLookupServerMaxAge new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2011)
+    public void setLdapCacheReverseProxyLookupServerMaxAge(String zimbraLdapCacheReverseProxyLookupServerMaxAge) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheReverseProxyLookupServerMaxAge, zimbraLdapCacheReverseProxyLookupServerMaxAge);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum age of entries in the in memory cache of ReverseProxyLookup
+     * ServerInfo objects. Note that modifications to the LDAP directory that
+     * affect the validity of cache entries are generally noticed and will
+     * also cause cache entry invalidation. . Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
+     *
+     * @param zimbraLdapCacheReverseProxyLookupServerMaxAge new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2011)
+    public Map<String,Object> setLdapCacheReverseProxyLookupServerMaxAge(String zimbraLdapCacheReverseProxyLookupServerMaxAge, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheReverseProxyLookupServerMaxAge, zimbraLdapCacheReverseProxyLookupServerMaxAge);
+        return attrs;
+    }
+
+    /**
+     * Maximum age of entries in the in memory cache of ReverseProxyLookup
+     * ServerInfo objects. Note that modifications to the LDAP directory that
+     * affect the validity of cache entries are generally noticed and will
+     * also cause cache entry invalidation. . Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2011)
+    public void unsetLdapCacheReverseProxyLookupServerMaxAge() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheReverseProxyLookupServerMaxAge, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum age of entries in the in memory cache of ReverseProxyLookup
+     * ServerInfo objects. Note that modifications to the LDAP directory that
+     * affect the validity of cache entries are generally noticed and will
+     * also cause cache entry invalidation. . Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2011)
+    public Map<String,Object> unsetLdapCacheReverseProxyLookupServerMaxAge(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheReverseProxyLookupServerMaxAge, "");
+        return attrs;
+    }
+
+    /**
+     * Maximum number of entries in the in memory cache of ReverseProxyLookup
+     * ServerInfo objects
+     *
+     * @return zimbraLdapCacheReverseProxyLookupServerMaxSize, or -1 if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2010)
+    public int getLdapCacheReverseProxyLookupServerMaxSize() {
+        return getIntAttr(Provisioning.A_zimbraLdapCacheReverseProxyLookupServerMaxSize, -1);
+    }
+
+    /**
+     * Maximum number of entries in the in memory cache of ReverseProxyLookup
+     * ServerInfo objects
+     *
+     * @param zimbraLdapCacheReverseProxyLookupServerMaxSize new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2010)
+    public void setLdapCacheReverseProxyLookupServerMaxSize(int zimbraLdapCacheReverseProxyLookupServerMaxSize) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheReverseProxyLookupServerMaxSize, Integer.toString(zimbraLdapCacheReverseProxyLookupServerMaxSize));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of entries in the in memory cache of ReverseProxyLookup
+     * ServerInfo objects
+     *
+     * @param zimbraLdapCacheReverseProxyLookupServerMaxSize new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2010)
+    public Map<String,Object> setLdapCacheReverseProxyLookupServerMaxSize(int zimbraLdapCacheReverseProxyLookupServerMaxSize, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheReverseProxyLookupServerMaxSize, Integer.toString(zimbraLdapCacheReverseProxyLookupServerMaxSize));
+        return attrs;
+    }
+
+    /**
+     * Maximum number of entries in the in memory cache of ReverseProxyLookup
+     * ServerInfo objects
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2010)
+    public void unsetLdapCacheReverseProxyLookupServerMaxSize() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheReverseProxyLookupServerMaxSize, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of entries in the in memory cache of ReverseProxyLookup
+     * ServerInfo objects
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2010)
+    public Map<String,Object> unsetLdapCacheReverseProxyLookupServerMaxSize(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheReverseProxyLookupServerMaxSize, "");
+        return attrs;
+    }
+
+    /**
+     * Maximum age of entries in the in memory cache of Right objects. Note
+     * that modifications to the LDAP directory that affect the validity of
+     * cache entries are generally noticed and will also cause cache entry
+     * invalidation. . Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * <p>Use getLdapCacheRightMaxAgeAsString to access value as a string.
+     *
+     * @see #getLdapCacheRightMaxAgeAsString()
+     *
+     * @return zimbraLdapCacheRightMaxAge in millseconds, or -1 if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1997)
+    public long getLdapCacheRightMaxAge() {
+        return getTimeInterval(Provisioning.A_zimbraLdapCacheRightMaxAge, -1L);
+    }
+
+    /**
+     * Maximum age of entries in the in memory cache of Right objects. Note
+     * that modifications to the LDAP directory that affect the validity of
+     * cache entries are generally noticed and will also cause cache entry
+     * invalidation. . Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * @return zimbraLdapCacheRightMaxAge, or null if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1997)
+    public String getLdapCacheRightMaxAgeAsString() {
+        return getAttr(Provisioning.A_zimbraLdapCacheRightMaxAge, null);
+    }
+
+    /**
+     * Maximum age of entries in the in memory cache of Right objects. Note
+     * that modifications to the LDAP directory that affect the validity of
+     * cache entries are generally noticed and will also cause cache entry
+     * invalidation. . Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * @param zimbraLdapCacheRightMaxAge new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1997)
+    public void setLdapCacheRightMaxAge(String zimbraLdapCacheRightMaxAge) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheRightMaxAge, zimbraLdapCacheRightMaxAge);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum age of entries in the in memory cache of Right objects. Note
+     * that modifications to the LDAP directory that affect the validity of
+     * cache entries are generally noticed and will also cause cache entry
+     * invalidation. . Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * @param zimbraLdapCacheRightMaxAge new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1997)
+    public Map<String,Object> setLdapCacheRightMaxAge(String zimbraLdapCacheRightMaxAge, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheRightMaxAge, zimbraLdapCacheRightMaxAge);
+        return attrs;
+    }
+
+    /**
+     * Maximum age of entries in the in memory cache of Right objects. Note
+     * that modifications to the LDAP directory that affect the validity of
+     * cache entries are generally noticed and will also cause cache entry
+     * invalidation. . Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1997)
+    public void unsetLdapCacheRightMaxAge() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheRightMaxAge, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum age of entries in the in memory cache of Right objects. Note
+     * that modifications to the LDAP directory that affect the validity of
+     * cache entries are generally noticed and will also cause cache entry
+     * invalidation. . Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1997)
+    public Map<String,Object> unsetLdapCacheRightMaxAge(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheRightMaxAge, "");
+        return attrs;
+    }
+
+    /**
+     * Maximum number of entries in the in memory cache of Right objects
+     *
+     * @return zimbraLdapCacheRightMaxSize, or -1 if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1996)
+    public int getLdapCacheRightMaxSize() {
+        return getIntAttr(Provisioning.A_zimbraLdapCacheRightMaxSize, -1);
+    }
+
+    /**
+     * Maximum number of entries in the in memory cache of Right objects
+     *
+     * @param zimbraLdapCacheRightMaxSize new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1996)
+    public void setLdapCacheRightMaxSize(int zimbraLdapCacheRightMaxSize) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheRightMaxSize, Integer.toString(zimbraLdapCacheRightMaxSize));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of entries in the in memory cache of Right objects
+     *
+     * @param zimbraLdapCacheRightMaxSize new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1996)
+    public Map<String,Object> setLdapCacheRightMaxSize(int zimbraLdapCacheRightMaxSize, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheRightMaxSize, Integer.toString(zimbraLdapCacheRightMaxSize));
+        return attrs;
+    }
+
+    /**
+     * Maximum number of entries in the in memory cache of Right objects
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1996)
+    public void unsetLdapCacheRightMaxSize() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheRightMaxSize, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of entries in the in memory cache of Right objects
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1996)
+    public Map<String,Object> unsetLdapCacheRightMaxSize(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheRightMaxSize, "");
+        return attrs;
+    }
+
+    /**
+     * Maximum age of entries in the in memory cache of Server objects. Note
+     * that modifications to the LDAP directory that affect the validity of
+     * cache entries are generally noticed and will also cause cache entry
+     * invalidation. . Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * <p>Use getLdapCacheServerMaxAgeAsString to access value as a string.
+     *
+     * @see #getLdapCacheServerMaxAgeAsString()
+     *
+     * @return zimbraLdapCacheServerMaxAge in millseconds, or -1 if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1999)
+    public long getLdapCacheServerMaxAge() {
+        return getTimeInterval(Provisioning.A_zimbraLdapCacheServerMaxAge, -1L);
+    }
+
+    /**
+     * Maximum age of entries in the in memory cache of Server objects. Note
+     * that modifications to the LDAP directory that affect the validity of
+     * cache entries are generally noticed and will also cause cache entry
+     * invalidation. . Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * @return zimbraLdapCacheServerMaxAge, or null if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1999)
+    public String getLdapCacheServerMaxAgeAsString() {
+        return getAttr(Provisioning.A_zimbraLdapCacheServerMaxAge, null);
+    }
+
+    /**
+     * Maximum age of entries in the in memory cache of Server objects. Note
+     * that modifications to the LDAP directory that affect the validity of
+     * cache entries are generally noticed and will also cause cache entry
+     * invalidation. . Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * @param zimbraLdapCacheServerMaxAge new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1999)
+    public void setLdapCacheServerMaxAge(String zimbraLdapCacheServerMaxAge) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheServerMaxAge, zimbraLdapCacheServerMaxAge);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum age of entries in the in memory cache of Server objects. Note
+     * that modifications to the LDAP directory that affect the validity of
+     * cache entries are generally noticed and will also cause cache entry
+     * invalidation. . Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * @param zimbraLdapCacheServerMaxAge new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1999)
+    public Map<String,Object> setLdapCacheServerMaxAge(String zimbraLdapCacheServerMaxAge, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheServerMaxAge, zimbraLdapCacheServerMaxAge);
+        return attrs;
+    }
+
+    /**
+     * Maximum age of entries in the in memory cache of Server objects. Note
+     * that modifications to the LDAP directory that affect the validity of
+     * cache entries are generally noticed and will also cause cache entry
+     * invalidation. . Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1999)
+    public void unsetLdapCacheServerMaxAge() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheServerMaxAge, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum age of entries in the in memory cache of Server objects. Note
+     * that modifications to the LDAP directory that affect the validity of
+     * cache entries are generally noticed and will also cause cache entry
+     * invalidation. . Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1999)
+    public Map<String,Object> unsetLdapCacheServerMaxAge(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheServerMaxAge, "");
+        return attrs;
+    }
+
+    /**
+     * Maximum number of entries in the in memory cache of Server objects
+     *
+     * @return zimbraLdapCacheServerMaxSize, or -1 if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1998)
+    public int getLdapCacheServerMaxSize() {
+        return getIntAttr(Provisioning.A_zimbraLdapCacheServerMaxSize, -1);
+    }
+
+    /**
+     * Maximum number of entries in the in memory cache of Server objects
+     *
+     * @param zimbraLdapCacheServerMaxSize new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1998)
+    public void setLdapCacheServerMaxSize(int zimbraLdapCacheServerMaxSize) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheServerMaxSize, Integer.toString(zimbraLdapCacheServerMaxSize));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of entries in the in memory cache of Server objects
+     *
+     * @param zimbraLdapCacheServerMaxSize new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1998)
+    public Map<String,Object> setLdapCacheServerMaxSize(int zimbraLdapCacheServerMaxSize, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheServerMaxSize, Integer.toString(zimbraLdapCacheServerMaxSize));
+        return attrs;
+    }
+
+    /**
+     * Maximum number of entries in the in memory cache of Server objects
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1998)
+    public void unsetLdapCacheServerMaxSize() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheServerMaxSize, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of entries in the in memory cache of Server objects
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1998)
+    public Map<String,Object> unsetLdapCacheServerMaxSize(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheServerMaxSize, "");
+        return attrs;
+    }
+
+    /**
+     * Maximum age of entries in the in memory cache of ShareLocator objects.
+     * Note that modifications to the LDAP directory that affect the validity
+     * of cache entries are generally noticed and will also cause cache entry
+     * invalidation. . Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * <p>Use getLdapCacheShareLocatorMaxAgeAsString to access value as a string.
+     *
+     * @see #getLdapCacheShareLocatorMaxAgeAsString()
+     *
+     * @return zimbraLdapCacheShareLocatorMaxAge in millseconds, or -1 if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1988)
+    public long getLdapCacheShareLocatorMaxAge() {
+        return getTimeInterval(Provisioning.A_zimbraLdapCacheShareLocatorMaxAge, -1L);
+    }
+
+    /**
+     * Maximum age of entries in the in memory cache of ShareLocator objects.
+     * Note that modifications to the LDAP directory that affect the validity
+     * of cache entries are generally noticed and will also cause cache entry
+     * invalidation. . Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * @return zimbraLdapCacheShareLocatorMaxAge, or null if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1988)
+    public String getLdapCacheShareLocatorMaxAgeAsString() {
+        return getAttr(Provisioning.A_zimbraLdapCacheShareLocatorMaxAge, null);
+    }
+
+    /**
+     * Maximum age of entries in the in memory cache of ShareLocator objects.
+     * Note that modifications to the LDAP directory that affect the validity
+     * of cache entries are generally noticed and will also cause cache entry
+     * invalidation. . Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * @param zimbraLdapCacheShareLocatorMaxAge new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1988)
+    public void setLdapCacheShareLocatorMaxAge(String zimbraLdapCacheShareLocatorMaxAge) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheShareLocatorMaxAge, zimbraLdapCacheShareLocatorMaxAge);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum age of entries in the in memory cache of ShareLocator objects.
+     * Note that modifications to the LDAP directory that affect the validity
+     * of cache entries are generally noticed and will also cause cache entry
+     * invalidation. . Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * @param zimbraLdapCacheShareLocatorMaxAge new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1988)
+    public Map<String,Object> setLdapCacheShareLocatorMaxAge(String zimbraLdapCacheShareLocatorMaxAge, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheShareLocatorMaxAge, zimbraLdapCacheShareLocatorMaxAge);
+        return attrs;
+    }
+
+    /**
+     * Maximum age of entries in the in memory cache of ShareLocator objects.
+     * Note that modifications to the LDAP directory that affect the validity
+     * of cache entries are generally noticed and will also cause cache entry
+     * invalidation. . Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1988)
+    public void unsetLdapCacheShareLocatorMaxAge() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheShareLocatorMaxAge, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum age of entries in the in memory cache of ShareLocator objects.
+     * Note that modifications to the LDAP directory that affect the validity
+     * of cache entries are generally noticed and will also cause cache entry
+     * invalidation. . Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1988)
+    public Map<String,Object> unsetLdapCacheShareLocatorMaxAge(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheShareLocatorMaxAge, "");
+        return attrs;
+    }
+
+    /**
+     * Maximum number of entries in the in memory cache of ShareLocator
+     * objects
+     *
+     * @return zimbraLdapCacheShareLocatorMaxSize, or -1 if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1987)
+    public int getLdapCacheShareLocatorMaxSize() {
+        return getIntAttr(Provisioning.A_zimbraLdapCacheShareLocatorMaxSize, -1);
+    }
+
+    /**
+     * Maximum number of entries in the in memory cache of ShareLocator
+     * objects
+     *
+     * @param zimbraLdapCacheShareLocatorMaxSize new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1987)
+    public void setLdapCacheShareLocatorMaxSize(int zimbraLdapCacheShareLocatorMaxSize) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheShareLocatorMaxSize, Integer.toString(zimbraLdapCacheShareLocatorMaxSize));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of entries in the in memory cache of ShareLocator
+     * objects
+     *
+     * @param zimbraLdapCacheShareLocatorMaxSize new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1987)
+    public Map<String,Object> setLdapCacheShareLocatorMaxSize(int zimbraLdapCacheShareLocatorMaxSize, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheShareLocatorMaxSize, Integer.toString(zimbraLdapCacheShareLocatorMaxSize));
+        return attrs;
+    }
+
+    /**
+     * Maximum number of entries in the in memory cache of ShareLocator
+     * objects
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1987)
+    public void unsetLdapCacheShareLocatorMaxSize() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheShareLocatorMaxSize, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of entries in the in memory cache of ShareLocator
+     * objects
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=1987)
+    public Map<String,Object> unsetLdapCacheShareLocatorMaxSize(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheShareLocatorMaxSize, "");
+        return attrs;
+    }
+
+    /**
+     * Maximum age of entries in the in memory cache of UCService objects.
+     * Note that modifications to the LDAP directory that affect the validity
+     * of cache entries are generally noticed and will also cause cache entry
+     * invalidation. . Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * <p>Use getLdapCacheUCServiceMaxAgeAsString to access value as a string.
+     *
+     * @see #getLdapCacheUCServiceMaxAgeAsString()
+     *
+     * @return zimbraLdapCacheUCServiceMaxAge in millseconds, or -1 if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2001)
+    public long getLdapCacheUCServiceMaxAge() {
+        return getTimeInterval(Provisioning.A_zimbraLdapCacheUCServiceMaxAge, -1L);
+    }
+
+    /**
+     * Maximum age of entries in the in memory cache of UCService objects.
+     * Note that modifications to the LDAP directory that affect the validity
+     * of cache entries are generally noticed and will also cause cache entry
+     * invalidation. . Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * @return zimbraLdapCacheUCServiceMaxAge, or null if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2001)
+    public String getLdapCacheUCServiceMaxAgeAsString() {
+        return getAttr(Provisioning.A_zimbraLdapCacheUCServiceMaxAge, null);
+    }
+
+    /**
+     * Maximum age of entries in the in memory cache of UCService objects.
+     * Note that modifications to the LDAP directory that affect the validity
+     * of cache entries are generally noticed and will also cause cache entry
+     * invalidation. . Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * @param zimbraLdapCacheUCServiceMaxAge new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2001)
+    public void setLdapCacheUCServiceMaxAge(String zimbraLdapCacheUCServiceMaxAge) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheUCServiceMaxAge, zimbraLdapCacheUCServiceMaxAge);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum age of entries in the in memory cache of UCService objects.
+     * Note that modifications to the LDAP directory that affect the validity
+     * of cache entries are generally noticed and will also cause cache entry
+     * invalidation. . Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * @param zimbraLdapCacheUCServiceMaxAge new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2001)
+    public Map<String,Object> setLdapCacheUCServiceMaxAge(String zimbraLdapCacheUCServiceMaxAge, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheUCServiceMaxAge, zimbraLdapCacheUCServiceMaxAge);
+        return attrs;
+    }
+
+    /**
+     * Maximum age of entries in the in memory cache of UCService objects.
+     * Note that modifications to the LDAP directory that affect the validity
+     * of cache entries are generally noticed and will also cause cache entry
+     * invalidation. . Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2001)
+    public void unsetLdapCacheUCServiceMaxAge() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheUCServiceMaxAge, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum age of entries in the in memory cache of UCService objects.
+     * Note that modifications to the LDAP directory that affect the validity
+     * of cache entries are generally noticed and will also cause cache entry
+     * invalidation. . Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2001)
+    public Map<String,Object> unsetLdapCacheUCServiceMaxAge(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheUCServiceMaxAge, "");
+        return attrs;
+    }
+
+    /**
+     * Maximum number of entries in the in memory cache of UCService objects
+     *
+     * @return zimbraLdapCacheUCServiceMaxSize, or -1 if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2000)
+    public int getLdapCacheUCServiceMaxSize() {
+        return getIntAttr(Provisioning.A_zimbraLdapCacheUCServiceMaxSize, -1);
+    }
+
+    /**
+     * Maximum number of entries in the in memory cache of UCService objects
+     *
+     * @param zimbraLdapCacheUCServiceMaxSize new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2000)
+    public void setLdapCacheUCServiceMaxSize(int zimbraLdapCacheUCServiceMaxSize) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheUCServiceMaxSize, Integer.toString(zimbraLdapCacheUCServiceMaxSize));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of entries in the in memory cache of UCService objects
+     *
+     * @param zimbraLdapCacheUCServiceMaxSize new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2000)
+    public Map<String,Object> setLdapCacheUCServiceMaxSize(int zimbraLdapCacheUCServiceMaxSize, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheUCServiceMaxSize, Integer.toString(zimbraLdapCacheUCServiceMaxSize));
+        return attrs;
+    }
+
+    /**
+     * Maximum number of entries in the in memory cache of UCService objects
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2000)
+    public void unsetLdapCacheUCServiceMaxSize() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheUCServiceMaxSize, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of entries in the in memory cache of UCService objects
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2000)
+    public Map<String,Object> unsetLdapCacheUCServiceMaxSize(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheUCServiceMaxSize, "");
+        return attrs;
+    }
+
+    /**
+     * Maximum age of entries in the in memory cache of XMPPComponent
+     * objects. Note that modifications to the LDAP directory that affect the
+     * validity of cache entries are generally noticed and will also cause
+     * cache entry invalidation. . Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * <p>Use getLdapCacheXMPPComponentMaxAgeAsString to access value as a string.
+     *
+     * @see #getLdapCacheXMPPComponentMaxAgeAsString()
+     *
+     * @return zimbraLdapCacheXMPPComponentMaxAge in millseconds, or -1 if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2005)
+    public long getLdapCacheXMPPComponentMaxAge() {
+        return getTimeInterval(Provisioning.A_zimbraLdapCacheXMPPComponentMaxAge, -1L);
+    }
+
+    /**
+     * Maximum age of entries in the in memory cache of XMPPComponent
+     * objects. Note that modifications to the LDAP directory that affect the
+     * validity of cache entries are generally noticed and will also cause
+     * cache entry invalidation. . Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @return zimbraLdapCacheXMPPComponentMaxAge, or null if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2005)
+    public String getLdapCacheXMPPComponentMaxAgeAsString() {
+        return getAttr(Provisioning.A_zimbraLdapCacheXMPPComponentMaxAge, null);
+    }
+
+    /**
+     * Maximum age of entries in the in memory cache of XMPPComponent
+     * objects. Note that modifications to the LDAP directory that affect the
+     * validity of cache entries are generally noticed and will also cause
+     * cache entry invalidation. . Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @param zimbraLdapCacheXMPPComponentMaxAge new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2005)
+    public void setLdapCacheXMPPComponentMaxAge(String zimbraLdapCacheXMPPComponentMaxAge) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheXMPPComponentMaxAge, zimbraLdapCacheXMPPComponentMaxAge);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum age of entries in the in memory cache of XMPPComponent
+     * objects. Note that modifications to the LDAP directory that affect the
+     * validity of cache entries are generally noticed and will also cause
+     * cache entry invalidation. . Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @param zimbraLdapCacheXMPPComponentMaxAge new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2005)
+    public Map<String,Object> setLdapCacheXMPPComponentMaxAge(String zimbraLdapCacheXMPPComponentMaxAge, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheXMPPComponentMaxAge, zimbraLdapCacheXMPPComponentMaxAge);
+        return attrs;
+    }
+
+    /**
+     * Maximum age of entries in the in memory cache of XMPPComponent
+     * objects. Note that modifications to the LDAP directory that affect the
+     * validity of cache entries are generally noticed and will also cause
+     * cache entry invalidation. . Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2005)
+    public void unsetLdapCacheXMPPComponentMaxAge() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheXMPPComponentMaxAge, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum age of entries in the in memory cache of XMPPComponent
+     * objects. Note that modifications to the LDAP directory that affect the
+     * validity of cache entries are generally noticed and will also cause
+     * cache entry invalidation. . Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2005)
+    public Map<String,Object> unsetLdapCacheXMPPComponentMaxAge(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheXMPPComponentMaxAge, "");
+        return attrs;
+    }
+
+    /**
+     * Maximum number of entries in the in memory cache of XMPPComponent
+     * objects
+     *
+     * @return zimbraLdapCacheXMPPComponentMaxSize, or -1 if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2004)
+    public int getLdapCacheXMPPComponentMaxSize() {
+        return getIntAttr(Provisioning.A_zimbraLdapCacheXMPPComponentMaxSize, -1);
+    }
+
+    /**
+     * Maximum number of entries in the in memory cache of XMPPComponent
+     * objects
+     *
+     * @param zimbraLdapCacheXMPPComponentMaxSize new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2004)
+    public void setLdapCacheXMPPComponentMaxSize(int zimbraLdapCacheXMPPComponentMaxSize) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheXMPPComponentMaxSize, Integer.toString(zimbraLdapCacheXMPPComponentMaxSize));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of entries in the in memory cache of XMPPComponent
+     * objects
+     *
+     * @param zimbraLdapCacheXMPPComponentMaxSize new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2004)
+    public Map<String,Object> setLdapCacheXMPPComponentMaxSize(int zimbraLdapCacheXMPPComponentMaxSize, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheXMPPComponentMaxSize, Integer.toString(zimbraLdapCacheXMPPComponentMaxSize));
+        return attrs;
+    }
+
+    /**
+     * Maximum number of entries in the in memory cache of XMPPComponent
+     * objects
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2004)
+    public void unsetLdapCacheXMPPComponentMaxSize() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheXMPPComponentMaxSize, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of entries in the in memory cache of XMPPComponent
+     * objects
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2004)
+    public Map<String,Object> unsetLdapCacheXMPPComponentMaxSize(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheXMPPComponentMaxSize, "");
+        return attrs;
+    }
+
+    /**
+     * Maximum age of entries in the in memory cache of Zimlet objects. Note
+     * that modifications to the LDAP directory that affect the validity of
+     * cache entries are generally noticed and will also cause cache entry
+     * invalidation. . Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * <p>Use getLdapCacheZimletMaxAgeAsString to access value as a string.
+     *
+     * @see #getLdapCacheZimletMaxAgeAsString()
+     *
+     * @return zimbraLdapCacheZimletMaxAge in millseconds, or -1 if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2007)
+    public long getLdapCacheZimletMaxAge() {
+        return getTimeInterval(Provisioning.A_zimbraLdapCacheZimletMaxAge, -1L);
+    }
+
+    /**
+     * Maximum age of entries in the in memory cache of Zimlet objects. Note
+     * that modifications to the LDAP directory that affect the validity of
+     * cache entries are generally noticed and will also cause cache entry
+     * invalidation. . Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * @return zimbraLdapCacheZimletMaxAge, or null if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2007)
+    public String getLdapCacheZimletMaxAgeAsString() {
+        return getAttr(Provisioning.A_zimbraLdapCacheZimletMaxAge, null);
+    }
+
+    /**
+     * Maximum age of entries in the in memory cache of Zimlet objects. Note
+     * that modifications to the LDAP directory that affect the validity of
+     * cache entries are generally noticed and will also cause cache entry
+     * invalidation. . Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * @param zimbraLdapCacheZimletMaxAge new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2007)
+    public void setLdapCacheZimletMaxAge(String zimbraLdapCacheZimletMaxAge) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheZimletMaxAge, zimbraLdapCacheZimletMaxAge);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum age of entries in the in memory cache of Zimlet objects. Note
+     * that modifications to the LDAP directory that affect the validity of
+     * cache entries are generally noticed and will also cause cache entry
+     * invalidation. . Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * @param zimbraLdapCacheZimletMaxAge new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2007)
+    public Map<String,Object> setLdapCacheZimletMaxAge(String zimbraLdapCacheZimletMaxAge, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheZimletMaxAge, zimbraLdapCacheZimletMaxAge);
+        return attrs;
+    }
+
+    /**
+     * Maximum age of entries in the in memory cache of Zimlet objects. Note
+     * that modifications to the LDAP directory that affect the validity of
+     * cache entries are generally noticed and will also cause cache entry
+     * invalidation. . Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2007)
+    public void unsetLdapCacheZimletMaxAge() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheZimletMaxAge, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum age of entries in the in memory cache of Zimlet objects. Note
+     * that modifications to the LDAP directory that affect the validity of
+     * cache entries are generally noticed and will also cause cache entry
+     * invalidation. . Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2007)
+    public Map<String,Object> unsetLdapCacheZimletMaxAge(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheZimletMaxAge, "");
+        return attrs;
+    }
+
+    /**
+     * Maximum number of entries in the in memory cache of Zimlet objects
+     *
+     * @return zimbraLdapCacheZimletMaxSize, or -1 if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2006)
+    public int getLdapCacheZimletMaxSize() {
+        return getIntAttr(Provisioning.A_zimbraLdapCacheZimletMaxSize, -1);
+    }
+
+    /**
+     * Maximum number of entries in the in memory cache of Zimlet objects
+     *
+     * @param zimbraLdapCacheZimletMaxSize new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2006)
+    public void setLdapCacheZimletMaxSize(int zimbraLdapCacheZimletMaxSize) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheZimletMaxSize, Integer.toString(zimbraLdapCacheZimletMaxSize));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of entries in the in memory cache of Zimlet objects
+     *
+     * @param zimbraLdapCacheZimletMaxSize new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2006)
+    public Map<String,Object> setLdapCacheZimletMaxSize(int zimbraLdapCacheZimletMaxSize, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheZimletMaxSize, Integer.toString(zimbraLdapCacheZimletMaxSize));
+        return attrs;
+    }
+
+    /**
+     * Maximum number of entries in the in memory cache of Zimlet objects
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2006)
+    public void unsetLdapCacheZimletMaxSize() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheZimletMaxSize, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of entries in the in memory cache of Zimlet objects
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2006)
+    public Map<String,Object> unsetLdapCacheZimletMaxSize(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapCacheZimletMaxSize, "");
+        return attrs;
+    }
+
+    /**
      * interface address on which LMTP server should listen; if empty, binds
      * to all interfaces
      *

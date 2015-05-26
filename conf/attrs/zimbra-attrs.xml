@@ -9501,19 +9501,22 @@ TODO: delete them permanently from here
   <desc>Minimum TTL in millis for uncompressed file cache used by File blob store</desc>
 </attr>
 
-<attr id="1991" name="zimbraMailboxArchiveFormatterDisableTimeout" type="boolean" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service" since="9.0.0">
-  <globalConfigValue>TRUE</globalConfigValue>
-  <desc>Disable timeout for archive formatter.Introduced in bug 56458. This is a workaround for an issue in Jetty 6.1.22.zc6m when we upgrade we should re-evaluate/remove these settings and the code that uses them. </desc>
+<attr id="1891" name="zimbraLdapCacheExternalDomainMaxSize" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service" since="9.0.0">
+  <globalConfigValue>10000</globalConfigValue>
+  <desc>Maximum number of entries in the in memory cache of ExternalDomain objects</desc>
 </attr>
 
-<attr id="1992" name="zimbraMailboxCsvFormatterDisableTimeout" type="boolean" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service" since="9.0.0">
-  <globalConfigValue>TRUE</globalConfigValue>
-  <desc>Disable timeout for csv formatter. Introduced in bug 56458. This is a workaround for an issue in Jetty 6.1.22.zc6m when we upgrade we should re-evaluate/remove these settings and the code that uses them. </desc>
+<attr id="1892" name="zimbraLdapCacheExternalDomainMaxAge" type="duration" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service" since="9.0.0">
+  <globalConfigValue>15m</globalConfigValue>
+  <desc>Maximum age of entries in the in memory cache of ExternalDomain objects.
+  Note that modifications to the LDAP directory that affect the validity of cache entries are generally noticed and
+  will also cause cache entry invalidation.
+  </desc>
 </attr>
 
-<attr id="1993" name="zimbraMailboxArchiveFormatterSearchChunkSize" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service" since="9.0.0">
-  <globalConfigValue>4096</globalConfigValue>
-  <desc>Archive formatter search chunk size in bytes</desc>
+<attr id="1893" name="zimbraLdapCacheGroupMaxSize" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service" since="9.0.0">
+  <globalConfigValue>2000</globalConfigValue>
+  <desc>Maximum number of entries in the in memory cache of Group objects</desc>
 </attr>
 
 <attr id="1894" name="zimbraMimeOverrideDefaultTransferEncodingToBase64" type="boolean" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service" since="9.0.0">
@@ -9954,6 +9957,201 @@ TODO: delete them permanently from here
 <attr id="1981" name="zimbraContactsSearchInfixQuerySupported" type="boolean" cardinality="single" optionalIn="globalConfig" since="9.0.0">
   <globalConfigValue>TRUE</globalConfigValue>
   <desc>Boolean to decide whether the infix query is being used for searching the contact items.</desc>
+</attr>
+
+<attr id="1982" name="zimbraLdapCacheFreshnessCheckLimit" type="duration" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service" since="9.0.0">
+  <globalConfigValue>100ms</globalConfigValue>
+  <desc>If an entry in a zimbraLdap cache has been retrieved more recently than this duration, the LDAP directory
+  will not be consulted to check that related entries have not been modified.  This prevents un-necessary load on
+  the LDAP directory in some circumstances.  Setting this value to a longer duration may improve performance slightly
+  at the cost of missing some updates.</desc>
+</attr>
+
+<attr id="1983" name="zimbraLdapCacheAccountMaxSize" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service" since="9.0.0">
+  <globalConfigValue>20000</globalConfigValue>
+  <desc>Maximum number of entries in the in memory cache of Account objects</desc>
+</attr>
+
+<attr id="1984" name="zimbraLdapCacheAccountMaxAge" type="duration" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service" since="9.0.0">
+  <globalConfigValue>15m</globalConfigValue>
+  <desc>Maximum age of entries in the in memory cache of Account objects.
+  Note that modifications to the LDAP directory that affect the validity of cache entries are generally noticed and
+  will also cause cache entry invalidation.
+  </desc>
+</attr>
+
+<attr id="1985" name="zimbraLdapCacheCosMaxSize" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service" since="9.0.0">
+  <globalConfigValue>100</globalConfigValue>
+  <desc>Maximum number of entries in the in memory cache of Cos objects</desc>
+</attr>
+
+<attr id="1986" name="zimbraLdapCacheCosMaxAge" type="duration" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service" since="9.0.0">
+  <globalConfigValue>15m</globalConfigValue>
+  <desc>Maximum age of entries in the in memory cache of Cos objects.
+  Note that modifications to the LDAP directory that affect the validity of cache entries are generally noticed and
+  will also cause cache entry invalidation.
+  </desc>
+</attr>
+
+<attr id="1987" name="zimbraLdapCacheShareLocatorMaxSize" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service" since="9.0.0">
+  <globalConfigValue>5000</globalConfigValue>
+  <desc>Maximum number of entries in the in memory cache of ShareLocator objects</desc>
+</attr>
+
+<attr id="1988" name="zimbraLdapCacheShareLocatorMaxAge" type="duration" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service" since="9.0.0">
+  <globalConfigValue>15m</globalConfigValue>
+  <desc>Maximum age of entries in the in memory cache of ShareLocator objects.
+  Note that modifications to the LDAP directory that affect the validity of cache entries are generally noticed and
+  will also cause cache entry invalidation.
+  </desc>
+</attr>
+
+<attr id="1989" name="zimbraLdapCacheDomainMaxSize" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service" since="9.0.0">
+  <globalConfigValue>500</globalConfigValue>
+  <desc>Maximum number of entries in the in memory cache of Domain objects</desc>
+</attr>
+
+<attr id="1990" name="zimbraLdapCacheDomainMaxAge" type="duration" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service" since="9.0.0">
+  <globalConfigValue>15m</globalConfigValue>
+  <desc>Maximum age of entries in the in memory cache of Domain objects.
+  Note that modifications to the LDAP directory that affect the validity of cache entries are generally noticed and
+  will also cause cache entry invalidation.
+  </desc>
+</attr>
+
+<attr id="1991" name="zimbraMailboxArchiveFormatterDisableTimeout" type="boolean" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service" since="9.0.0">
+  <globalConfigValue>TRUE</globalConfigValue>
+  <desc>Disable timeout for archive formatter.Introduced in bug 56458. This is a workaround for an issue in Jetty 6.1.22.zc6m when we upgrade we should re-evaluate/remove these settings and the code that uses them. </desc>
+</attr>
+
+<attr id="1992" name="zimbraMailboxCsvFormatterDisableTimeout" type="boolean" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service" since="9.0.0">
+  <globalConfigValue>TRUE</globalConfigValue>
+  <desc>Disable timeout for csv formatter. Introduced in bug 56458. This is a workaround for an issue in Jetty 6.1.22.zc6m when we upgrade we should re-evaluate/remove these settings and the code that uses them. </desc>
+</attr>
+
+<attr id="1993" name="zimbraMailboxArchiveFormatterSearchChunkSize" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service" since="9.0.0">
+  <globalConfigValue>4096</globalConfigValue>
+  <desc>Archive formatter search chunk size in bytes</desc>
+</attr>
+
+<attr id="1994" name="zimbraLdapCacheMimeTypeInfoMaxAge" type="duration" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service" since="9.0.0">
+  <globalConfigValue>15m</globalConfigValue>
+  <desc>Maximum age of entries in the in memory cache of MimeTypeInfo objects.
+  Note that modifications to the LDAP directory that affect the validity of cache entries are generally noticed and
+  will also cause cache entry invalidation.
+  </desc>
+</attr>
+
+<attr id="1995" name="zimbraLdapCacheGroupMaxAge" type="duration" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service" since="9.0.0">
+  <globalConfigValue>15m</globalConfigValue>
+  <desc>Maximum age of entries in the in memory cache of Group objects.
+  Note that modifications to the LDAP directory that affect the validity of cache entries are generally noticed and
+  will also cause cache entry invalidation.
+  </desc>
+</attr>
+
+<attr id="1996" name="zimbraLdapCacheRightMaxSize" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service" since="9.0.0">
+  <globalConfigValue>100</globalConfigValue>
+  <desc>Maximum number of entries in the in memory cache of Right objects</desc>
+</attr>
+
+<attr id="1997" name="zimbraLdapCacheRightMaxAge" type="duration" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service" since="9.0.0">
+  <globalConfigValue>15m</globalConfigValue>
+  <desc>Maximum age of entries in the in memory cache of Right objects.
+  Note that modifications to the LDAP directory that affect the validity of cache entries are generally noticed and
+  will also cause cache entry invalidation.
+  </desc>
+</attr>
+
+<attr id="1998" name="zimbraLdapCacheServerMaxSize" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service" since="9.0.0">
+  <globalConfigValue>100</globalConfigValue>
+  <desc>Maximum number of entries in the in memory cache of Server objects</desc>
+</attr>
+
+<attr id="1999" name="zimbraLdapCacheServerMaxAge" type="duration" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service" since="9.0.0">
+  <globalConfigValue>15m</globalConfigValue>
+  <desc>Maximum age of entries in the in memory cache of Server objects.
+  Note that modifications to the LDAP directory that affect the validity of cache entries are generally noticed and
+  will also cause cache entry invalidation.
+  </desc>
+</attr>
+
+<attr id="2000" name="zimbraLdapCacheUCServiceMaxSize" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service" since="9.0.0">
+  <globalConfigValue>100</globalConfigValue>
+  <desc>Maximum number of entries in the in memory cache of UCService objects</desc>
+</attr>
+
+<attr id="2001" name="zimbraLdapCacheUCServiceMaxAge" type="duration" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service" since="9.0.0">
+  <globalConfigValue>15m</globalConfigValue>
+  <desc>Maximum age of entries in the in memory cache of UCService objects.
+  Note that modifications to the LDAP directory that affect the validity of cache entries are generally noticed and
+  will also cause cache entry invalidation.
+  </desc>
+</attr>
+
+<attr id="2002" name="zimbraLdapCacheAlwaysOnClusterMaxSize" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service" since="9.0.0">
+  <globalConfigValue>100</globalConfigValue>
+  <desc>Maximum number of entries in the in memory cache of AlwaysOnCluster objects</desc>
+</attr>
+
+<attr id="2003" name="zimbraLdapCacheAlwaysOnClusterMaxAge" type="duration" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service" since="9.0.0">
+  <globalConfigValue>15m</globalConfigValue>
+  <desc>Maximum age of entries in the in memory cache of AlwaysOnCluster objects.
+  Note that modifications to the LDAP directory that affect the validity of cache entries are generally noticed and
+  will also cause cache entry invalidation.
+  </desc>
+</attr>
+
+<attr id="2004" name="zimbraLdapCacheXMPPComponentMaxSize" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service" since="9.0.0">
+  <globalConfigValue>100</globalConfigValue>
+  <desc>Maximum number of entries in the in memory cache of XMPPComponent objects</desc>
+</attr>
+
+<attr id="2005" name="zimbraLdapCacheXMPPComponentMaxAge" type="duration" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service" since="9.0.0">
+  <globalConfigValue>15m</globalConfigValue>
+  <desc>Maximum age of entries in the in memory cache of XMPPComponent objects.
+  Note that modifications to the LDAP directory that affect the validity of cache entries are generally noticed and
+  will also cause cache entry invalidation.
+  </desc>
+</attr>
+
+<attr id="2006" name="zimbraLdapCacheZimletMaxSize" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service" since="9.0.0">
+  <globalConfigValue>100</globalConfigValue>
+  <desc>Maximum number of entries in the in memory cache of Zimlet objects</desc>
+</attr>
+
+<attr id="2007" name="zimbraLdapCacheZimletMaxAge" type="duration" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service" since="9.0.0">
+  <globalConfigValue>15m</globalConfigValue>
+  <desc>Maximum age of entries in the in memory cache of Zimlet objects.
+  Note that modifications to the LDAP directory that affect the validity of cache entries are generally noticed and
+  will also cause cache entry invalidation.
+  </desc>
+</attr>
+
+<attr id="2008" name="zimbraLdapCacheReverseProxyLookupDomainMaxSize" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" requiresRestart="nginxproxy" affectsServices="nginxproxy" since="9.0.0">
+  <globalConfigValue>100</globalConfigValue>
+  <desc>Maximum number of entries in the in memory caches of ReverseProxyLookup Domain related objects</desc>
+</attr>
+
+<attr id="2009" name="zimbraLdapCacheReverseProxyLookupDomainMaxAge" type="duration" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" requiresRestart="nginxproxy" affectsServices="nginxproxy" since="9.0.0">
+  <globalConfigValue>15m</globalConfigValue>
+  <desc>Maximum age of entries in the in memory caches of ReverseProxyLookup Domain related objects.
+  Note that modifications to the LDAP directory that affect the validity of cache entries are generally noticed and
+  will also cause cache entry invalidation.
+  </desc>
+</attr>
+
+<attr id="2010" name="zimbraLdapCacheReverseProxyLookupServerMaxSize" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" requiresRestart="nginxproxy" affectsServices="nginxproxy" since="9.0.0">
+  <globalConfigValue>100</globalConfigValue>
+  <desc>Maximum number of entries in the in memory cache of ReverseProxyLookup ServerInfo objects</desc>
+</attr>
+
+<attr id="2011" name="zimbraLdapCacheReverseProxyLookupServerMaxAge" type="duration" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" requiresRestart="nginxproxy" affectsServices="nginxproxy" since="9.0.0">
+  <globalConfigValue>15m</globalConfigValue>
+  <desc>Maximum age of entries in the in memory cache of ReverseProxyLookup ServerInfo objects.
+  Note that modifications to the LDAP directory that affect the validity of cache entries are generally noticed and
+  will also cause cache entry invalidation.
+  </desc>
 </attr>
 
 </attrs>

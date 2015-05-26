@@ -98,7 +98,7 @@ public class TestLdapCache {
     public void accountTest() throws Exception {
         Account account = ldapProv.getAccountByName(USER_NAME);
         Account newAccount = ldapProv.getAccountByName(USER_NAME);
-        Assert.assertEquals("account with no mods", account, newAccount);
+        Assert.assertSame("account with no mods", account, newAccount);
         String origDesc[] = account.getDescription();
         Assert.assertEquals(String.format("Number of descriptions in origDesc %s", Joiner.on(',').join(origDesc)),
                 0, origDesc.length);
@@ -112,9 +112,9 @@ public class TestLdapCache {
                 1, newDesc.length);
         Assert.assertEquals("new account description", "Pink", newDesc[0]);
         account = ldapProv.getAccountByName(USER_NAME);
-        Assert.assertEquals("account get again after mod", account, newAccount);
+        Assert.assertSame("account get again after mod", account, newAccount);
         account = ldapProv.getAccountById(account.getId());
-        Assert.assertEquals("account get again by ID after mod", account, newAccount);
+        Assert.assertSame("account get again by ID after mod", account, newAccount);
         Cos acctCos = account.getCOS();
         acctCos.addDescription("Green");
         Thread.sleep(LdapCache.ldapCacheFreshnessCheckLimitMs() + 1);
@@ -141,7 +141,7 @@ public class TestLdapCache {
             Assert.assertNotNull("Server object", server);
             serverId = server.getId();
             Server newServer = ldapProv.getServerByName(SERVER_NAME);
-            Assert.assertEquals("Server with no mods", server, newServer);
+            Assert.assertSame("Server with no mods", server, newServer);
             String origDesc[] = server.getDescription();
             Assert.assertEquals(String.format("Number of descriptions in origDesc %s", Joiner.on(',').join(origDesc)),
                     0, origDesc.length);
@@ -154,9 +154,9 @@ public class TestLdapCache {
                     1, newDesc.length);
             Assert.assertEquals("new server description", "Pink", newDesc[0]);
             server = ldapProv.getServerByName(SERVER_NAME);
-            Assert.assertEquals("server get again after mod", server, newServer);
+            Assert.assertSame("server get again after mod", server, newServer);
             server = ldapProv.getServerById(newServer.getId());
-            Assert.assertEquals("server get again by ID after mod", server, newServer);
+            Assert.assertSame("server get again by ID after mod", server, newServer);
             config.setSpamTagPercent(spamTagPercent + 2);
             Thread.sleep(LdapCache.ldapCacheFreshnessCheckLimitMs() + 1);
             newServer = ldapProv.getServerByName(SERVER_NAME);
@@ -178,7 +178,7 @@ public class TestLdapCache {
         String domDesc[] = domain.getDescription();
         try {
             Domain newDomain = ldapProv.getDomainByName(DOMAIN_NAME);
-            Assert.assertEquals("Domain with no mods", domain, newDomain);
+            Assert.assertSame("Domain with no mods", domain, newDomain);
             String origDesc[] = domain.getDescription();
             Assert.assertEquals(String.format("Number of descriptions in origDesc %s", Joiner.on(',').join(origDesc)),
                     0, origDesc.length);
@@ -191,9 +191,9 @@ public class TestLdapCache {
                     1, newDesc.length);
             Assert.assertEquals("new Domain description", "Pink", newDesc[0]);
             domain = ldapProv.getDomainByName(DOMAIN_NAME);
-            Assert.assertEquals("Domain get again after mod", domain, newDomain);
+            Assert.assertSame("Domain get again after mod", domain, newDomain);
             domain = ldapProv.getDomainById(newDomain.getId());
-            Assert.assertEquals("Domain get again by ID after mod", domain, newDomain);
+            Assert.assertSame("Domain get again by ID after mod", domain, newDomain);
             config.setSpamTagPercent(spamTagPercent + 2);
             Thread.sleep(LdapCache.ldapCacheFreshnessCheckLimitMs() + 1);
             newDomain = ldapProv.getDomainByName(DOMAIN_NAME);
@@ -208,7 +208,7 @@ public class TestLdapCache {
     public void cosTest() throws Exception {
         Cos cos = ldapProv.getCosByName(COS_NAME);
         Cos newCos = ldapProv.getCosByName(COS_NAME);
-        Assert.assertEquals("cos with no mods", cos, newCos);
+        Assert.assertSame("cos with no mods", cos, newCos);
         String origDesc[] = cos.getDescription();
         Assert.assertEquals(String.format("Number of descriptions in origDesc %s", Joiner.on(',').join(origDesc)),
                 0, origDesc.length);
@@ -221,9 +221,9 @@ public class TestLdapCache {
                 1, newDesc.length);
         Assert.assertEquals("new COS description", "Pink", newDesc[0]);
         cos = ldapProv.getCosByName(COS_NAME);
-        Assert.assertEquals("cos get again after mod", cos, newCos);
+        Assert.assertSame("cos get again after mod", cos, newCos);
         cos = ldapProv.getCosById(cos.getId());
-        Assert.assertEquals("cos get again by ID after mod", cos, newCos);
+        Assert.assertSame("cos get again by ID after mod", cos, newCos);
     }
 
     private static final String ext_machine = "example.com";
@@ -246,7 +246,7 @@ public class TestLdapCache {
         ExternalGroup egroup = ExternalGroup.get(DomainBy.name, ext_group_grantee, false);
         Assert.assertNotNull("egroup initial get", egroup);
         ExternalGroup newEgroup = ExternalGroup.get(DomainBy.id, egroup.getId(), false);
-        Assert.assertEquals("ExternalGroup get again", newEgroup, egroup);
+        Assert.assertSame("ExternalGroup get again", newEgroup, egroup);
         edom.addDescription("Maroon");
         Thread.sleep(LdapCache.ldapCacheFreshnessCheckLimitMs() + 1);
         newEgroup = ExternalGroup.get(DomainBy.id, egroup.getId(), false);

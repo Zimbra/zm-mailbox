@@ -18,7 +18,6 @@ package com.zimbra.cs.account.accesscontrol;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.zimbra.common.account.Key.DomainBy;
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.ZimbraLog;
@@ -28,6 +27,7 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.MailTarget;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.accesscontrol.ZimbraACE.ExternalGroupInfo;
 import com.zimbra.cs.account.cache.INamedEntryCache;
 import com.zimbra.cs.account.cache.NamedEntryCache;
@@ -54,11 +54,21 @@ public class ExternalGroup extends NamedEntry {
     private String domainDN = null;
     private String entryCSNforDomain = null;
 
-    private static final NamedEntryCache<ExternalGroup> CACHE =
-        new NamedEntryCache<ExternalGroup>(
-                LC.ldap_cache_group_maxsize.intValue(),
-                LC.ldap_cache_group_maxage.intValue() * Constants.MILLIS_PER_MINUTE,
-                new FreshnessChecker());
+    private static final NamedEntryCache<ExternalGroup> CACHE;
+    static {
+        int maxsize;
+        long maxage;
+            try {
+                Server svr = Provisioning.getInstance().getLocalServer();
+                maxsize = svr.getLdapCacheGroupMaxSize();
+                maxage = svr.getLdapCacheGroupMaxAge();
+            } catch (ServiceException e) {
+                maxsize = 2000;
+                maxage = 15 * Constants.MILLIS_PER_MINUTE;
+                ZimbraLog.ldap.debug("ExternalGroupCache setup using defaults");
+            }
+        CACHE = new NamedEntryCache<ExternalGroup>(maxsize, maxage, new FreshnessChecker());
+    }
 
     private final String dn;
     private final GroupHandler groupHandler;

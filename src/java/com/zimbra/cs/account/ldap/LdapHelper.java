@@ -50,7 +50,7 @@ public abstract class LdapHelper {
         this.ldapProv = ldapProv;
     }
 
-    protected LdapProv getProv() {
+    public LdapProv getProv() {
         return ldapProv;
     }
 
