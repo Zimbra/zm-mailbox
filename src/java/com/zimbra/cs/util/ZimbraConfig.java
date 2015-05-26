@@ -413,6 +413,7 @@ public class ZimbraConfig {
     }
 
     @Bean
+    @Lazy(false)
     public ZimbraMemcachedClientConfigurer memcachedClientConfigurer() throws Exception {
         return new ZimbraMemcachedClientConfigurer();
     }

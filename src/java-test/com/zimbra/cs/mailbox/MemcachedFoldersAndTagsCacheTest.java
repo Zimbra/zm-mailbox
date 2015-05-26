@@ -64,7 +64,7 @@ public final class MemcachedFoldersAndTagsCacheTest extends AbstractFoldersAndTa
     @Configuration
     static class LocalConfig extends LocalCachingZimbraConfig {
         @Override
-        public ZimbraMemcachedClientConfigurer memcachedClientConfigurer() throws Exception {
+        public ZimbraMemcachedClientConfigurer memcachedClientConfigurer() {
             return new MemcachedOnLocalhostZimbraMemcachedClientConfigurer();
         }
     }

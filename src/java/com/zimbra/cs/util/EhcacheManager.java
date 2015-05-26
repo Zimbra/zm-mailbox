@@ -27,7 +27,6 @@ import com.zimbra.common.account.ZAttrProvisioning;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.common.util.memcached.ZimbraMemcachedClient;
 import com.zimbra.cs.account.Provisioning;
 
 /**
@@ -53,7 +52,7 @@ public final class EhcacheManager {
         disk.setPath(LC.zimbra_home.value() + File.separator + "data" + File.separator + "mailboxd");
         conf.addDiskStore(disk);
         conf.addCache(createImapActiveSessionCache());
-        if (Zimbra.getAppContext().getBean(ZimbraMemcachedClient.class).isConnected()) {
+        if (Zimbra.getAppContext().getBean(ZimbraConfig.class).isMemcachedAvailable()) {
             ZimbraLog.imap.info("Using Memcached for inactive session cache");
         } else {
             conf.addCache(createImapInactiveSessionCache());

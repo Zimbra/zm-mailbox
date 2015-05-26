@@ -67,7 +67,7 @@ public final class MemcachedMailItemCacheTest extends AbstractMailItemCacheTest 
     @Configuration
     static class LocalConfig extends LocalCachingZimbraConfig {
         @Override
-        public ZimbraMemcachedClientConfigurer memcachedClientConfigurer() throws Exception {
+        public ZimbraMemcachedClientConfigurer memcachedClientConfigurer() {
             return new MemcachedOnLocalhostZimbraMemcachedClientConfigurer();
         }
     }

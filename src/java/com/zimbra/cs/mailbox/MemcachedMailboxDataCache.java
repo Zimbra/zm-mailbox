@@ -22,73 +22,44 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.memcached.MemcachedKey;
 import com.zimbra.common.util.memcached.MemcachedMap;
 import com.zimbra.common.util.memcached.MemcachedSerializer;
+import com.zimbra.common.util.memcached.StringBasedMemcachedKey;
 import com.zimbra.common.util.memcached.ZimbraMemcachedClient;
 import com.zimbra.cs.memcached.MemcachedKeyPrefix;
 
 public class MemcachedMailboxDataCache implements MailboxDataCache {
     @Autowired protected ZimbraMemcachedClient memcachedClient;
-    protected MemcachedMap<Key, Mailbox.MailboxData> memcachedLookup;
+    protected MemcachedMap<MemcachedKey, Mailbox.MailboxData> memcachedLookup;
 
     public MemcachedMailboxDataCache() {
     }
 
     @PostConstruct
     public void init() {
-        memcachedLookup = new MemcachedMap<Key, Mailbox.MailboxData>(memcachedClient, new MailboxDataSerializer(), true);
+        memcachedLookup = new MemcachedMap<>(memcachedClient, new MailboxDataSerializer(), true);
+    }
+
+    protected MemcachedKey key(Mailbox mbox) {
+        return new StringBasedMemcachedKey(MemcachedKeyPrefix.MBOX_DATA, mbox.getAccountId());
     }
 
     @Override
     public Mailbox.MailboxData get(Mailbox mbox) throws ServiceException {
-        Key key = new Key(mbox);
-        return memcachedLookup.get(key);
+        return memcachedLookup.get(key(mbox));
     }
 
     @Override
     public void put(Mailbox mbox, Mailbox.MailboxData mailboxData) throws ServiceException {
-        Key key = new Key(mbox);
-        memcachedLookup.put(key, mailboxData);
+        memcachedLookup.put(key(mbox), mailboxData);
     }
 
     @Override
     public void remove(Mailbox mbox) throws ServiceException {
-        Key key = new Key(mbox);
-        memcachedLookup.remove(key);
-    }
-
-
-    private static class Key implements MemcachedKey {
-        private String keyStr;
-
-        public Key(Mailbox mbox) {
-            keyStr = mbox.getAccountId();
-        }
-
-        @Override
-        public boolean equals(Object other) {
-            if (other instanceof Key) {
-                Key otherKey = (Key) other;
-                return keyStr.equals(otherKey.keyStr);
-            }
-            return false;
-        }
-
-        @Override
-        public int hashCode() {
-            return keyStr.hashCode();
-        }
-
-        @Override
-        public String getKeyPrefix() { return MemcachedKeyPrefix.MBOX_DATA; }
-        @Override
-        public String getKeyValue() { return keyStr; }
+        memcachedLookup.remove(key(mbox));
     }
 
 
     static class MailboxDataSerializer implements MemcachedSerializer<Mailbox.MailboxData> {
         private ObjectMapper mapper = new ObjectMapper();
-
-        MailboxDataSerializer() {
-        }
 
         @Override
         public Object serialize(Mailbox.MailboxData value) throws ServiceException {

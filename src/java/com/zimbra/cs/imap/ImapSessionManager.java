@@ -36,7 +36,6 @@ import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.common.util.memcached.ZimbraMemcachedClient;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.imap.ImapHandler.ImapExtension;
 import com.zimbra.cs.index.SearchParams;
@@ -54,6 +53,7 @@ import com.zimbra.cs.mailbox.util.TagUtil;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.util.EhcacheManager;
 import com.zimbra.cs.util.Zimbra;
+import com.zimbra.cs.util.ZimbraConfig;
 
 final class ImapSessionManager {
     static final long SERIALIZER_INTERVAL_MSEC =
@@ -104,7 +104,7 @@ final class ImapSessionManager {
             activeSessionCache = new DiskImapCache();
         }
         //inactive preference order memcache, ehcache, diskcache
-        inactiveSessionCache = Zimbra.getAppContext().getBean(ZimbraMemcachedClient.class).isConnected() ?
+        inactiveSessionCache = Zimbra.getAppContext().getBean(ZimbraConfig.class).isMemcachedAvailable() ?
                 new MemcachedImapCache() : (useCache ?
                 new EhcacheImapCache(EhcacheManager.IMAP_INACTIVE_SESSION_CACHE, false) :
                 activeSessionCache);
@@ -587,7 +587,7 @@ final class ImapSessionManager {
 
     /**
      * Try to retrieve from inactive session cache, then fall back to active session cache.
-     * @throws ServiceException 
+     * @throws ServiceException
      */
     private ImapFolder getCache(Folder folder) throws ServiceException {
         ImapFolder i4folder = inactiveSessionCache.get(cacheKey(folder, false));
@@ -599,7 +599,7 @@ final class ImapSessionManager {
 
     /**
      * Remove cached values from both active session cache and inactive session cache.
-     * @throws ServiceException 
+     * @throws ServiceException
      */
     private void clearCache(Folder folder) throws ServiceException {
         activeSessionCache.remove(cacheKey(folder, true));
