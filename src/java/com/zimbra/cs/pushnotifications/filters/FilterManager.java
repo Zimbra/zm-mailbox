@@ -23,7 +23,6 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DataSource;
-import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
@@ -74,6 +73,9 @@ public class FilterManager {
     public static DataSource getDataSource(Account account, Message msg) {
         Mailbox mbox;
         try {
+            if (account == null || msg == null) {
+                return null;
+            }
             mbox = MailboxManager.getInstance().getMailboxByAccount(account);
             Map<Integer, DataSource> dataSourceMap = new HashMap<Integer, DataSource>();
             List<DataSource> dataSources = account.getAllDataSources();
@@ -87,7 +89,7 @@ public class FilterManager {
                 return dataSourceMap.get(AccountUtil.getRootFolderIdForItem(msg, mbox,
                     dataSourceMap.keySet()));
             }
-        } catch (ServiceException e) {
+        } catch (Exception e) {
             ZimbraLog.mailbox.debug("Exception in retriving data source", e);
             return null;
         }
