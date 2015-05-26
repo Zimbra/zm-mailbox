@@ -15,8 +15,19 @@
 
 package com.zimbra.cs.pushnotifications.filters;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.DataSource;
+import com.zimbra.cs.mailbox.Folder;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.util.AccountUtil;
 
 /**
  * Create and execute {@link FilterChain}
@@ -35,13 +46,52 @@ public class FilterManager {
 
     /**
      * Executes a filter chain before a new message push notification
+     * 
+     * @param account
+     * @param message
+     * @param datasource
+     * @return TRUE if filter chain passes else FALSE
+     */
+    public static boolean executeNewMessageFilters(Account account, Message message,
+        DataSource dataSource) {
+        FilterChain filterChain = new NewMessageFilterChain(account, message, dataSource);
+        return filterChain.execute();
+    }
+
+    /**
+     * Executes a filter chain before a new message push notification
+     * 
      * @param account
      * @param message
      * @return TRUE if filter chain passes else FALSE
      */
     public static boolean executeNewMessageFilters(Account account, Message message) {
-        FilterChain filterChain = new NewMessageFilterChain(account, message);
+        FilterChain filterChain = new NewMessageFilterChain(account, message, getDataSource(
+            account, message));
         return filterChain.execute();
+    }
+
+    public static DataSource getDataSource(Account account, Message msg) {
+        Mailbox mbox;
+        try {
+            mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+            Map<Integer, DataSource> dataSourceMap = new HashMap<Integer, DataSource>();
+            List<DataSource> dataSources = account.getAllDataSources();
+            if (dataSources != null) {
+                for (DataSource dataSource : dataSources) {
+                    int dataSourceFolderId = dataSource.getFolderId();
+                    if ((dataSourceFolderId != -1) && (dataSource.getEmailAddress() != null)) {
+                        dataSourceMap.put(dataSourceFolderId, dataSource);
+                    }
+                }
+                return dataSourceMap.get(AccountUtil.getRootFolderIdForItem(msg, mbox,
+                    dataSourceMap.keySet()));
+            }
+        } catch (ServiceException e) {
+            ZimbraLog.mailbox.debug("Exception in retriving data source", e);
+            return null;
+        }
+        return null;
     }
 
 }
