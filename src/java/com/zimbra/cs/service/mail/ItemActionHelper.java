@@ -180,7 +180,7 @@ public class ItemActionHelper {
         for (int convId : ids) {
             Integer rootFolderIdForConv = null;
             for (Message msg : mbox.getMessagesByConversation(octxt, convId, SortBy.NONE, -1)) {
-                int rootFolderIdForThisMsg = getRootFolderIdForItem(msg, mbox, dsRootFolderIds);
+                int rootFolderIdForThisMsg = AccountUtil.getRootFolderIdForItem(msg, mbox, dsRootFolderIds);
                 if (rootFolderIdForConv == null) {
                     rootFolderIdForConv = rootFolderIdForThisMsg;
                 } else if (rootFolderIdForConv != rootFolderIdForThisMsg) {
@@ -210,16 +210,6 @@ public class ItemActionHelper {
         }
 
         return returnList;
-    }
-
-    private static int getRootFolderIdForItem(MailItem item, Mailbox mbox, Set<Integer> dsRootFolderIds)
-            throws ServiceException {
-        int folderId = item.getFolderId();
-        if (folderId == Mailbox.ID_FOLDER_USER_ROOT || folderId == Mailbox.ID_FOLDER_ROOT ||
-                dsRootFolderIds.contains(folderId)) {
-            return folderId;
-        }
-        return getRootFolderIdForItem(mbox.getFolderById(null, folderId), mbox, dsRootFolderIds);
     }
 
     public static ItemActionHelper COPY(OperationContext octxt, Mailbox mbox, SoapProtocol responseProto,

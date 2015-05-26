@@ -608,4 +608,14 @@ public class AccountUtil {
         }
         return false;
     }
+
+    public static int getRootFolderIdForItem(MailItem item, Mailbox mbox,
+        Set<Integer> dsRootFolderIds) throws ServiceException {
+        int folderId = item.getFolderId();
+        if (folderId == Mailbox.ID_FOLDER_USER_ROOT || folderId == Mailbox.ID_FOLDER_ROOT
+            || dsRootFolderIds.contains(folderId)) {
+            return folderId;
+        }
+        return getRootFolderIdForItem(mbox.getFolderById(null, folderId), mbox, dsRootFolderIds);
+    }
 }
