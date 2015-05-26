@@ -23,6 +23,7 @@ import com.google.common.collect.ImmutableSet;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -76,19 +77,18 @@ public class PushNotificationListener extends MailboxListener {
                     Mailbox mbox;
                     try {
                         mbox = MailboxManager.getInstance().getMailboxByAccount(account);
-                        if (FilterManager.executeNewMessageFilters(account, msg)) {
-                            if ((System.currentTimeMillis() - msg.getDate()) < PushNotification.OLD_MESSAGE_TIME) {
-                                NotificationsManager.getInstance().pushNewMessageNotification(account, mbox,
-                                    msg.getSender(), msg, notification.op);
-                            }
+                        DataSource dataSource = FilterManager.getDataSource(account, msg);
+                        String recipient = dataSource != null ? dataSource.getEmailAddress()
+                            : account.getName();
+                        if (FilterManager.executeNewMessageFilters(account, msg, dataSource)) {
+                            NotificationsManager.getInstance().pushNewMessageNotification(account,
+                                mbox, recipient, msg, notification.op);
                         }
                     } catch (Exception e) {
                         ZimbraLog.mailbox.warn(
                             "Exception in building notification from mailbox event", e);
                     }
-
                 }
-
             }
         } else if (DebugConfig.pushNotificationVerboseMode && notification.mods.modified != null
             && EVENTS.contains(notification.op)) {

@@ -31,6 +31,8 @@ public class NewMessagePushNotification implements PushNotification {
     private String subject = "";
     private String sender = "";
     private String fragment = "";
+    private String recipient = "";
+    private String senderDisplayName = "";
     private int unreadCount = 0;
     private ZmgDevice device = null;
     private String type;
@@ -46,12 +48,15 @@ public class NewMessagePushNotification implements PushNotification {
      * @param fragment
      */
     public NewMessagePushNotification(int conversationId, int messageId, String message,
-                                      String sender, ZmgDevice device, String fragment,
-                                      int unreadCount, String type, String op) {
+                                      String sender, String senderDisplayName, String recipient,
+                                      ZmgDevice device, String fragment, int unreadCount,
+                                      String type, String op) {
         this.conversationId = conversationId;
         this.messageId = messageId;
         this.subject = message;
         this.sender = sender;
+        this.senderDisplayName = senderDisplayName;
+        this.recipient = recipient;
         this.fragment = fragment;
         this.device = device;
         this.unreadCount = unreadCount;
@@ -119,6 +124,36 @@ public class NewMessagePushNotification implements PushNotification {
         this.sender = sender;
     }
 
+    
+    /**
+     * @return the senderDisplayName
+     */
+    public String getSenderDisplayName() {
+        return senderDisplayName;
+    }
+
+    
+    /**
+     * @param senderDisplayName the senderDisplayName to set
+     */
+    public void setSenderDisplayName(String senderDisplayName) {
+        this.senderDisplayName = senderDisplayName;
+    }
+
+    /**
+     * @return the recipient
+     */
+    public String getRecipient() {
+        return recipient;
+    }
+
+    /**
+     * @param recipient the recipient to set
+     */
+    public void setRecipient(String recipient) {
+        this.recipient = recipient;
+    }
+
     /**
      * @return the fragment
      */
@@ -160,7 +195,9 @@ public class NewMessagePushNotification implements PushNotification {
             payload.put(APNS_APS, aps);
             payload.put(CID, conversationId);
             payload.put(ID, messageId);
-            payload.put(SENDER, sender);
+            payload.put(SENDER_ADDRESS, sender);
+            payload.put(SENDER_DISPLAY_NAME, senderDisplayName);
+            payload.put(RECIPIENT_ADDRESS, recipient);
             payload.put(FRAGMENT, fragment);
             payload.put(TYPE, type);
             payload.put(ACTION, action);
@@ -180,7 +217,9 @@ public class NewMessagePushNotification implements PushNotification {
             gcmData.put(CID, conversationId);
             gcmData.put(ID, messageId);
             gcmData.put(SUBJECT, subject);
-            gcmData.put(SENDER, sender);
+            gcmData.put(SENDER_ADDRESS, sender);
+            gcmData.put(SENDER_DISPLAY_NAME, senderDisplayName);
+            gcmData.put(RECIPIENT_ADDRESS, recipient);
             gcmData.put(FRAGMENT, fragment);
             gcmData.put(UNREAD_COUNT, unreadCount);
             gcmData.put(TYPE, type);

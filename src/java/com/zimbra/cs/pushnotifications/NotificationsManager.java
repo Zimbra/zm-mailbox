@@ -19,6 +19,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 
+import javax.mail.internet.AddressException;
+
+import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -57,11 +60,11 @@ public class NotificationsManager {
     }
 
     public Collection<PushNotification> buildNewMessageNotification(Account account, Mailbox mbox,
-        String sender, Message message, MailboxOperation op) {
+        String recipient, Message message, MailboxOperation op) {
         Collection<PushNotification> notifications = new ArrayList<PushNotification>();
         Collection<ZmgDevice> devices = getDevices(mbox);
         for (ZmgDevice device : devices) {
-            PushNotification notification = createNotification(mbox, message, sender, device, op);
+            PushNotification notification = createNotification(mbox, message, recipient, device, op);
             notifications.add(notification);
         }
         return notifications;
@@ -112,9 +115,9 @@ public class NotificationsManager {
         }
     }
 
-    public void pushNewMessageNotification(Account account, Mailbox mbox, String sender,
+    public void pushNewMessageNotification(Account account, Mailbox mbox, String recipient,
         Message message, MailboxOperation op) {
-        queue.putAll(buildNewMessageNotification(account, mbox, sender, message, op));
+        queue.putAll(buildNewMessageNotification(account, mbox, recipient, message, op));
     }
 
     public void pushSyncDataNotification(Mailbox mbox, MailItem mailItem, MailboxOperation op) {
@@ -133,18 +136,28 @@ public class NotificationsManager {
         queue.putAll(notifications);
     }
 
-    private PushNotification createNotification(Mailbox mbox, Message message, String sender,
+    private PushNotification createNotification(Mailbox mbox, Message message, String recipient,
         ZmgDevice device, MailboxOperation op) {
         String fragment = message.getFragment();
         int unreadCount = 0;
+        JavaMailInternetAddress sender = null;
         try {
             unreadCount = mbox.getFolderById(null, message.getFolderId()).getUnreadCount();
+            sender = new JavaMailInternetAddress(message.getSender());
         } catch (ServiceException e) {
             ZimbraLog.mailbox.debug("ZMG: Exception in getting unread message count", e);
+        } catch (AddressException e) {
+            ZimbraLog.mailbox.debug("ZMG: Exception in getting sender email address", e);
+        }
+        String senderEmailAddress = "";
+        String senderDisplayName = "";
+        if (sender != null) {
+            senderEmailAddress = (sender.getAddress() != null) ? sender.getAddress() : "";
+            senderDisplayName = (sender.getPersonal() != null) ? sender.getPersonal() : "";
         }
         return new NewMessagePushNotification(message.getConversationId(), message.getId(),
-            message.getSubject(), sender, device, fragment, unreadCount, message.getType().name(),
-            op.name());
+            message.getSubject(), senderEmailAddress, senderDisplayName, recipient, device,
+            fragment, unreadCount, message.getType().name(), op.name());
     }
 
     private PushNotification createNotification(Mailbox mbox, MailItem mailItem,

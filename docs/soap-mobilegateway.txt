@@ -130,25 +130,30 @@ https://developer.apple.com/library/ios/documentation/IDEs/Conceptual/AppDistrib
 Payload of a new message GCM push notification contains -
 
 cid  - conversationId
-msgId - messageId of the message
-subject - subject of the message
-sender - sender email address
-fragment - preview text of the conversation
-recipientAddress - recipient email address
+su - subject of the message
+sa - sender email address
+sdn - sender display name
+fr - preview text of the conversation
+ra - recipient email address
+uc - unread count of the meesages in this folder
+ac - action that happened in this notification
+ty - type of the object in this notification
+id - id of the object in this notification
+
 
 Notifications are sent in json format. Following are sample json notifications -
 
 GCM -
 
-{"data":{"sender":"Demo User One <user1@host.local>","id":257,"subject":"sdf","unreadCount":1,
-"action":"CreateMessage","type":"MESSAGE","fragment":"sdf","cid":-257},"registration_ids":["12345"]}
-
+{"data":{"su":"afadfadfgdg","ac":"CreateMessage","ty":"MESSAGE","id":291,
+"sdn":"Rohan Ambasta","fr":"asdfdsgdg","sa":"rambasta@zimbra.com","uc":26,"cid":-291,
+"ra":"zimbrasoap@gmail.com"},"registration_ids":["..."]}
 
 APNS -
 
-{"sender":"Demo User One <user1@host.local>","id":257,
-"aps":{"alert":"From: Demo User One <user1@host.local>\nsdf","sound":"default","badge":1},
-"action":"CreateMessage","type":"MESSAGE","fragment":"sdf","cid":-257}
+{"ac":"CreateMessage","aps":{"badge":26,"alert":"From: rambasta@zimbra.com\nafadfadfgdg","sound":"default"},
+"ty":"MESSAGE","id":291,"sdn":"Rohan Ambasta","fr":"asdfdsgdg","sa":"rambasta@zimbra.com",
+"cid":-291,"ra":"zimbrasoap@gmail.com"}
 
 
 
