@@ -285,6 +285,22 @@ public final class DebugConfig {
             value ("debug_number_of_threads_to_use_for_domain_admin_count_objects", 3);
 
     public static final int syncMaximumChangeCount = value ("sync_maximum_change_count", 3990 );
+
+    /*
+     *  Turn off the detection logic of a series of symbol characters in the sender's
+     *  display name.  If this key is false (default), a sender's display name which
+     *  consists of a certain length of consecutive symbols will not be tokenized,
+     *  but treated as a whole, like a smiley mark.
+     */
+    public static boolean disableDetectConsecutiveSymbolsInSenderNameAsSmileyMark =
+            value("debug_disable_detect_consecutive_symbols_in_sender_name_as_smiley_mark", false);
+
+    /* If "debug_disable_detect_consecutive_symbols_in_sender_name_as_smiley_mark" is in effect,
+     * this determines the maximum length of the consecutive symbols.
+     */
+    public static int numberOfConsecutiveSymbolsInSenderName =
+            value("debug_number_of_consecutive_symbols_in_sender_name", 3);
+
     private static boolean value(String key, boolean defaultValue) {
         String value = LC.get(key);
         return value.isEmpty() ? defaultValue : Boolean.parseBoolean(value);
