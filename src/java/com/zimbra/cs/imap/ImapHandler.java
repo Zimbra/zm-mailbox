@@ -4078,6 +4078,9 @@ abstract class ImapHandler {
                                 boolean add = operation == StoreAction.ADD ^ !i4flag.mPositive;
                                 if (i4flag.mPermanent) {
                                     // real Flag (not a Tag); do a batch update to the DB
+                                    if((i4flag.mBitmask & Flag.BITMASK_DELETED) > 0) {
+                                        ZimbraLog.imap.info("IMAP client has flagged the item with id %d to be Deleted altertag", msg.msgId);
+                                    }
                                     mbox.alterTag(getContext(), ArrayUtil.toIntArray(idlist), MailItem.Type.UNKNOWN, i4flag.mName, add, null);
                                 } else {
                                     // session tag; update one-by-one in memory only
