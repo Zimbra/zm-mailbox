@@ -73,7 +73,7 @@ public class MessageFileIntoFilter implements Filter {
             Folder dataSourceFolder = mbox.getFolderById(null, dataSource.getFolderId());
             List<Folder> subFolders = dataSourceFolder.getSubfolders(null);
             for (Folder folder : subFolders) {
-                if (DATA_SOURCE_INBOX.equals(folder.getName()) && folderId == folder.getId()) {
+                if (DATA_SOURCE_INBOX.equalsIgnoreCase(folder.getName()) && folderId == folder.getId()) {
                     return true;
                 }
             }
