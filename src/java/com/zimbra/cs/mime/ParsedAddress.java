@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.google.common.base.Joiner;
+import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.mime.InternetAddress;
 import com.zimbra.common.util.StringUtil;
@@ -461,7 +462,13 @@ public final class ParsedAddress implements Comparable<ParsedAddress> {
                 mType = NameTokenType.TOKEN;
         }
 
-        private boolean isAbbreviation() {
+        public NameToken(String raw, NameTokenType type, int length) {
+            mValue = raw;
+            mType = type;
+            mEndOffset = length;
+        }
+
+		private boolean isAbbreviation() {
             if (mValue.length() % 2 == 1)
                 return false;
 
@@ -500,6 +507,11 @@ public final class ParsedAddress implements Comparable<ParsedAddress> {
         private static final Set<Character> TOKEN_DELIMITERS = new HashSet<Character>(Arrays.asList(
                 ',', ';', '/', ':', '(', ')', '[', ']', '\u3010', '\u3011'
         ));
+        private static final Set<Character> TOKEN_SYMBOLS = new HashSet<Character>(Arrays.asList(
+                '!', '\"', '#', '$', '%', '&', '\'', '(', ')', '*', '+', ',', '-', '.', '/',
+                ':', ';', '<', '=', '>', '?', '@', '[', '\\', ']', '^', '_', '`', '{', '|', '}', '~'
+            ));
+        private static final int TYPICAL_NUM_SYMBOLS_IN_SMILEY = DebugConfig.numberOfConsecutiveSymbolsInSenderName;
 
         static List<NameToken> tokenize(String raw) {
             if (raw == null)
@@ -508,10 +520,30 @@ public final class ParsedAddress implements Comparable<ParsedAddress> {
             raw = raw.trim().replaceAll("\\s+", " ");
             int start = 0, index = 0, length = raw.length();
             List<NameToken> tokens = new ArrayList<NameToken>(6);
+
+            int smileySymbolCount = 0;
             do {
                 start = index;
                 while (index < length) {
                     char c = raw.charAt(index++);
+                    if (!DebugConfig.disableDetectConsecutiveSymbolsInSenderNameAsSmileyMark) {
+                        /*
+                         * Check whether the raw string consists of only symbol characters or it contains
+                         * a set of consecutive symbol character which is most likely a smiley mark,
+                         * such as :-) or \(^o^)/
+                         */
+                        if (TOKEN_SYMBOLS.contains(c)) {
+                            smileySymbolCount++;
+                            if (smileySymbolCount >= TYPICAL_NUM_SYMBOLS_IN_SMILEY) {
+                                tokens.clear();
+                                tokens.add(new NameToken(raw, NameTokenType.TOKEN, length));
+                                index = length;
+                                break;
+                            }
+                        } else if (smileySymbolCount > 0){
+                            smileySymbolCount = 0;
+                        }
+                    }
                     boolean delimiter = TOKEN_DELIMITERS.contains(c) || c == '\\' || c == '"' || Character.isWhitespace(c);
                     // check for end of a token!
                     if (delimiter || index >= length) {
