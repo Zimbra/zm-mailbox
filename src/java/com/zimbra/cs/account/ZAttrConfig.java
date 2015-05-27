@@ -87882,6 +87882,239 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * Specify which help file&#039;s link should be displayed on the
+     * pull-down menu in the Ajax Web client. The value is case-sensitive.
+     * When &quot;productHelp&quot; is specified, &quot;Product Help&quot;
+     * menu item will available and link to the default help files stored in
+     * the same mail server (http://[service
+     * URL]/help/[locale]/advanced/zimbra_user_help.htm) or URL specified in
+     * skin or ZmMsg properties file (&quot;helpURI&quot;). When
+     * &quot;onlineHelp&quot; is specified, &quot;Help Central Online&quot;
+     * menu item will be available to link to http://help.zimbra.com/. When
+     * &quot;newFeatures&quot; is specified, &quot;New Features&quot; menu
+     * item will be available to link to
+     * http://www.zimbra.com/products/whats_new.html.
+     *
+     * @return zimbraWebClientSupportedHelps, or empty array if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2012)
+    public String[] getWebClientSupportedHelps() {
+        String[] value = getMultiAttr(Provisioning.A_zimbraWebClientSupportedHelps); return value.length > 0 ? value : new String[] {"productHelp","onlineHelp","newFeatures"};
+    }
+
+    /**
+     * Specify which help file&#039;s link should be displayed on the
+     * pull-down menu in the Ajax Web client. The value is case-sensitive.
+     * When &quot;productHelp&quot; is specified, &quot;Product Help&quot;
+     * menu item will available and link to the default help files stored in
+     * the same mail server (http://[service
+     * URL]/help/[locale]/advanced/zimbra_user_help.htm) or URL specified in
+     * skin or ZmMsg properties file (&quot;helpURI&quot;). When
+     * &quot;onlineHelp&quot; is specified, &quot;Help Central Online&quot;
+     * menu item will be available to link to http://help.zimbra.com/. When
+     * &quot;newFeatures&quot; is specified, &quot;New Features&quot; menu
+     * item will be available to link to
+     * http://www.zimbra.com/products/whats_new.html.
+     *
+     * @param zimbraWebClientSupportedHelps new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2012)
+    public void setWebClientSupportedHelps(String[] zimbraWebClientSupportedHelps) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraWebClientSupportedHelps, zimbraWebClientSupportedHelps);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Specify which help file&#039;s link should be displayed on the
+     * pull-down menu in the Ajax Web client. The value is case-sensitive.
+     * When &quot;productHelp&quot; is specified, &quot;Product Help&quot;
+     * menu item will available and link to the default help files stored in
+     * the same mail server (http://[service
+     * URL]/help/[locale]/advanced/zimbra_user_help.htm) or URL specified in
+     * skin or ZmMsg properties file (&quot;helpURI&quot;). When
+     * &quot;onlineHelp&quot; is specified, &quot;Help Central Online&quot;
+     * menu item will be available to link to http://help.zimbra.com/. When
+     * &quot;newFeatures&quot; is specified, &quot;New Features&quot; menu
+     * item will be available to link to
+     * http://www.zimbra.com/products/whats_new.html.
+     *
+     * @param zimbraWebClientSupportedHelps new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2012)
+    public Map<String,Object> setWebClientSupportedHelps(String[] zimbraWebClientSupportedHelps, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraWebClientSupportedHelps, zimbraWebClientSupportedHelps);
+        return attrs;
+    }
+
+    /**
+     * Specify which help file&#039;s link should be displayed on the
+     * pull-down menu in the Ajax Web client. The value is case-sensitive.
+     * When &quot;productHelp&quot; is specified, &quot;Product Help&quot;
+     * menu item will available and link to the default help files stored in
+     * the same mail server (http://[service
+     * URL]/help/[locale]/advanced/zimbra_user_help.htm) or URL specified in
+     * skin or ZmMsg properties file (&quot;helpURI&quot;). When
+     * &quot;onlineHelp&quot; is specified, &quot;Help Central Online&quot;
+     * menu item will be available to link to http://help.zimbra.com/. When
+     * &quot;newFeatures&quot; is specified, &quot;New Features&quot; menu
+     * item will be available to link to
+     * http://www.zimbra.com/products/whats_new.html.
+     *
+     * @param zimbraWebClientSupportedHelps new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2012)
+    public void addWebClientSupportedHelps(String zimbraWebClientSupportedHelps) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraWebClientSupportedHelps, zimbraWebClientSupportedHelps);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Specify which help file&#039;s link should be displayed on the
+     * pull-down menu in the Ajax Web client. The value is case-sensitive.
+     * When &quot;productHelp&quot; is specified, &quot;Product Help&quot;
+     * menu item will available and link to the default help files stored in
+     * the same mail server (http://[service
+     * URL]/help/[locale]/advanced/zimbra_user_help.htm) or URL specified in
+     * skin or ZmMsg properties file (&quot;helpURI&quot;). When
+     * &quot;onlineHelp&quot; is specified, &quot;Help Central Online&quot;
+     * menu item will be available to link to http://help.zimbra.com/. When
+     * &quot;newFeatures&quot; is specified, &quot;New Features&quot; menu
+     * item will be available to link to
+     * http://www.zimbra.com/products/whats_new.html.
+     *
+     * @param zimbraWebClientSupportedHelps new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2012)
+    public Map<String,Object> addWebClientSupportedHelps(String zimbraWebClientSupportedHelps, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraWebClientSupportedHelps, zimbraWebClientSupportedHelps);
+        return attrs;
+    }
+
+    /**
+     * Specify which help file&#039;s link should be displayed on the
+     * pull-down menu in the Ajax Web client. The value is case-sensitive.
+     * When &quot;productHelp&quot; is specified, &quot;Product Help&quot;
+     * menu item will available and link to the default help files stored in
+     * the same mail server (http://[service
+     * URL]/help/[locale]/advanced/zimbra_user_help.htm) or URL specified in
+     * skin or ZmMsg properties file (&quot;helpURI&quot;). When
+     * &quot;onlineHelp&quot; is specified, &quot;Help Central Online&quot;
+     * menu item will be available to link to http://help.zimbra.com/. When
+     * &quot;newFeatures&quot; is specified, &quot;New Features&quot; menu
+     * item will be available to link to
+     * http://www.zimbra.com/products/whats_new.html.
+     *
+     * @param zimbraWebClientSupportedHelps existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2012)
+    public void removeWebClientSupportedHelps(String zimbraWebClientSupportedHelps) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraWebClientSupportedHelps, zimbraWebClientSupportedHelps);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Specify which help file&#039;s link should be displayed on the
+     * pull-down menu in the Ajax Web client. The value is case-sensitive.
+     * When &quot;productHelp&quot; is specified, &quot;Product Help&quot;
+     * menu item will available and link to the default help files stored in
+     * the same mail server (http://[service
+     * URL]/help/[locale]/advanced/zimbra_user_help.htm) or URL specified in
+     * skin or ZmMsg properties file (&quot;helpURI&quot;). When
+     * &quot;onlineHelp&quot; is specified, &quot;Help Central Online&quot;
+     * menu item will be available to link to http://help.zimbra.com/. When
+     * &quot;newFeatures&quot; is specified, &quot;New Features&quot; menu
+     * item will be available to link to
+     * http://www.zimbra.com/products/whats_new.html.
+     *
+     * @param zimbraWebClientSupportedHelps existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2012)
+    public Map<String,Object> removeWebClientSupportedHelps(String zimbraWebClientSupportedHelps, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraWebClientSupportedHelps, zimbraWebClientSupportedHelps);
+        return attrs;
+    }
+
+    /**
+     * Specify which help file&#039;s link should be displayed on the
+     * pull-down menu in the Ajax Web client. The value is case-sensitive.
+     * When &quot;productHelp&quot; is specified, &quot;Product Help&quot;
+     * menu item will available and link to the default help files stored in
+     * the same mail server (http://[service
+     * URL]/help/[locale]/advanced/zimbra_user_help.htm) or URL specified in
+     * skin or ZmMsg properties file (&quot;helpURI&quot;). When
+     * &quot;onlineHelp&quot; is specified, &quot;Help Central Online&quot;
+     * menu item will be available to link to http://help.zimbra.com/. When
+     * &quot;newFeatures&quot; is specified, &quot;New Features&quot; menu
+     * item will be available to link to
+     * http://www.zimbra.com/products/whats_new.html.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2012)
+    public void unsetWebClientSupportedHelps() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraWebClientSupportedHelps, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Specify which help file&#039;s link should be displayed on the
+     * pull-down menu in the Ajax Web client. The value is case-sensitive.
+     * When &quot;productHelp&quot; is specified, &quot;Product Help&quot;
+     * menu item will available and link to the default help files stored in
+     * the same mail server (http://[service
+     * URL]/help/[locale]/advanced/zimbra_user_help.htm) or URL specified in
+     * skin or ZmMsg properties file (&quot;helpURI&quot;). When
+     * &quot;onlineHelp&quot; is specified, &quot;Help Central Online&quot;
+     * menu item will be available to link to http://help.zimbra.com/. When
+     * &quot;newFeatures&quot; is specified, &quot;New Features&quot; menu
+     * item will be available to link to
+     * http://www.zimbra.com/products/whats_new.html.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2012)
+    public Map<String,Object> unsetWebClientSupportedHelps(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraWebClientSupportedHelps, "");
+        return attrs;
+    }
+
+    /**
      * Deprecated since: 9.0.0_BETA1. Obsoleted by use of Consul as a service
      * locator.. Orig desc: Web client URL to directly connect when making
      * service to JS calls from mail server in split mode.
