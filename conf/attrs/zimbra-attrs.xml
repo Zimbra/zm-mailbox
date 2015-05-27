@@ -10161,4 +10161,9 @@ TODO: delete them permanently from here
   <desc>Specify which help file's link should be displayed on the pull-down menu in the Ajax Web client.  The value is case-sensitive.  When "productHelp" is specified, "Product Help" menu item will available and link to the default help files stored in the same mail server (http://[service URL]/help/[locale]/advanced/zimbra_user_help.htm) or URL specified in skin or ZmMsg properties file ("helpURI").  When "onlineHelp" is specified, "Help Central Online" menu item will be available to link to http://help.zimbra.com/.  When "newFeatures" is specified, "New Features" menu item will be available to link to http://www.zimbra.com/products/whats_new.html.</desc>
 </attr>
 
+<attr id="2013" name="zimbraImapInactiveSessionCacheMaxDiskSize" type="long" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service" requiresRestart="mailbox" since="8.7.0,9.0.0">
+  <globalConfigValue>10737418240</globalConfigValue>
+  <desc> Ehcache: the maximum disk size of inactive IMAP cache in Bytes before eviction.By default this value is 10GB.This is a rough limit,Due to internals of ehcache actual size on disk will often exceed this limit by a modest margin. </desc>
+</attr>
+
 </attrs>

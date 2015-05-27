@@ -86,13 +86,21 @@ public final class EhcacheManager {
         conf.setDiskPersistent(true);
         conf.setMaxElementsInMemory(1); // virtually disk cache only
         int maxElementsOnDisk;
+        long maxBytesOnLocalDisk;
         try {
             maxElementsOnDisk = Provisioning.getInstance().getLocalServer().getImapInactiveSessionCacheSize();
         } catch (ServiceException e) {
-            ZimbraLog.imap.error("Exception while fetching imap max consecutive error",e);
+            ZimbraLog.imap.error("Exception while fetching attribute imap InactiveSessionCacheSize",e);
             maxElementsOnDisk = 10000;
         }
+        try {
+            maxBytesOnLocalDisk = Provisioning.getInstance().getLocalServer().getImapInactiveSessionCacheMaxDiskSize();
+               } catch (ServiceException e) {
+                   ZimbraLog.imap.error("Exception while fetching attribute imap ImapInactiveSessionCacheMaxDiskSize",e);
+                   maxBytesOnLocalDisk = 10737418240L ;
+               }
         conf.setMaxElementsOnDisk(maxElementsOnDisk);
+        conf.setMaxBytesLocalDisk(maxBytesOnLocalDisk);
         return conf;
     }
 
