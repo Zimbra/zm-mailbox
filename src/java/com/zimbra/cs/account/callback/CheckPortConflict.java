@@ -70,6 +70,7 @@ public class CheckPortConflict extends AttributeCallback {
         NonProxyPortAttrs.add(Provisioning.A_zimbraMailSSLClientCertPort);
 
         NonProxyPortAttrs.add(Provisioning.A_zimbraLmtpBindPort);
+        NonProxyPortAttrs.add(Provisioning.A_zimbraSmtpPort);
         NonProxyPortAttrs.add(Provisioning.A_zimbraRemoteManagementPort);
         NonProxyPortAttrs.add(Provisioning.A_zimbraMemcachedBindPort);
         NonProxyPortAttrs.add(Provisioning.A_zimbraMessageChannelPort);
