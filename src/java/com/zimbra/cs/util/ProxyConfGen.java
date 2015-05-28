@@ -65,6 +65,10 @@ import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.ldap.LdapProv;
 import com.zimbra.cs.extension.ExtensionDispatcherServlet;
 
+import com.zimbra.common.servicelocator.ServiceLocator;
+import com.zimbra.common.servicelocator.ZimbraServiceNames;
+import com.zimbra.cs.util.Zimbra;
+
 enum ProxyConfOverride {
     NONE,
     CONFIG,
@@ -111,16 +115,17 @@ class ProxyConfVar
     public ProxyConfOverride        mOverride;
     public String                   mDescription;
 
-    protected static Log              mLog = LogFactory.getLog (ProxyConfGen.class);
-    protected static Provisioning     mProv = Provisioning.getInstance();
+    protected static Log            mLog = LogFactory.getLog (ProxyConfGen.class);
+    protected static Provisioning   mProv = Provisioning.getInstance();
     public static Entry             configSource = null;
     public static Entry             serverSource = null;
     public static final String UNKNOWN_HEADER_NAME = "X-Zimbra-Unknown-Header";
     public static final Pattern RE_HEADER = Pattern.compile("^([^:]+):\\s+(.*)$");
+    protected ServiceLocator        serviceLocator = null;
 
     public ProxyConfVar(String keyword, String attribute, Object defaultValue,
             ProxyConfValueType valueType, ProxyConfOverride overrideType,
-            String description) {
+            String description) throws ProxyConfException {
         mKeyword = keyword;
         mAttribute = attribute;
         mValueType = valueType;
@@ -128,6 +133,12 @@ class ProxyConfVar
         mOverride = overrideType;
         mValue = mDefault;
         mDescription = description;
+        try {
+            Zimbra.startupMinimal();
+            serviceLocator = Zimbra.getAppContext().getBean(ServiceLocator.class);
+        } catch (ServiceException e) {
+            throw new ProxyConfException("unable to get the ServiceLocator");
+        }
     }
 
     public String confValue () throws ProxyConfException
@@ -411,7 +422,7 @@ class ProxyConfVar
 abstract class WebEnablerVar extends ProxyConfVar {
 
     public WebEnablerVar(String keyword, Object defaultValue,
-            String description) {
+            String description) throws ProxyConfException {
         super(keyword, null, defaultValue,
                 ProxyConfValueType.ENABLER, ProxyConfOverride.CUSTOM, description);
     }
@@ -423,7 +434,7 @@ abstract class WebEnablerVar extends ProxyConfVar {
 
 class HttpEnablerVar extends WebEnablerVar {
 
-    public HttpEnablerVar() {
+    public HttpEnablerVar() throws ProxyConfException {
         super("web.http.enabled", true,
                 "Indicates whether HTTP Proxy will accept connections on HTTP " +
                 "(true unless zimbraReverseProxyMailMode is 'https')");
@@ -441,7 +452,7 @@ class HttpEnablerVar extends WebEnablerVar {
 }
 
 class HttpsEnablerVar extends WebEnablerVar {
-    public HttpsEnablerVar() {
+    public HttpsEnablerVar() throws ProxyConfException {
         super("web.https.enabled", true,
                 "Indicates whether HTTP Proxy will accept connections on HTTPS " +
                 "(true unless zimbraReverseProxyMailMode is 'http')");
@@ -460,7 +471,7 @@ class HttpsEnablerVar extends WebEnablerVar {
 abstract class IPModeEnablerVar extends ProxyConfVar {
     public IPModeEnablerVar(String keyword,
             Object defaultValue,
-             String description) {
+             String description) throws ProxyConfException {
         super(keyword, null, defaultValue, ProxyConfValueType.ENABLER,
                 ProxyConfOverride.CUSTOM, description);
     }
@@ -485,7 +496,7 @@ abstract class IPModeEnablerVar extends ProxyConfVar {
 
 class MainLogFileVar extends ProxyConfVar {
 
-    public MainLogFileVar() {
+    public MainLogFileVar() throws ProxyConfException {
         super("main.logfile", "zimbraReverseProxyLogToSyslog", "syslog:server=unix:/dev/log,facility=local0,tag=nginx",
                 ProxyConfValueType.STRING, ProxyConfOverride.CONFIG,
                 "Proxy Log file path (based on whether zimbraReverseProxyLogToSyslog is true or false)");
@@ -503,7 +514,7 @@ class MainLogFileVar extends ProxyConfVar {
 
 class WebLogFileVar extends ProxyConfVar {
 
-    public WebLogFileVar() {
+    public WebLogFileVar() throws ProxyConfException {
         super("web.logfile", "zimbraReverseProxyLogToSyslog", "syslog:server=unix:/dev/log,facility=local0,tag=nginx,severity=info",
                 ProxyConfValueType.STRING, ProxyConfOverride.CONFIG,
                 "Proxy Access Log file path (based on whether zimbraReverseProxyLogToSyslog is true or false)");
@@ -521,7 +532,7 @@ class WebLogFileVar extends ProxyConfVar {
 
 class Pop3GreetingVar extends ProxyConfVar {
 
-    public Pop3GreetingVar() {
+    public Pop3GreetingVar() throws ProxyConfException {
         super("mail.pop3.greeting", "zimbraReverseProxyPop3ExposeVersionOnBanner", "",
                 ProxyConfValueType.STRING, ProxyConfOverride.CONFIG,
                 "Proxy IMAP banner message (contains build version if " +
@@ -540,7 +551,7 @@ class Pop3GreetingVar extends ProxyConfVar {
 
 class ImapGreetingVar extends ProxyConfVar {
 
-    public ImapGreetingVar() {
+    public ImapGreetingVar() throws ProxyConfException {
         super("mail.imap.greeting", "zimbraReverseProxyImapExposeVersionOnBanner", "",
                 ProxyConfValueType.STRING, ProxyConfOverride.CONFIG,
                 "Proxy IMAP banner message (contains build version if " +
@@ -559,7 +570,7 @@ class ImapGreetingVar extends ProxyConfVar {
 
 class SaslHostFromIPVar extends ProxyConfVar {
 
-    public SaslHostFromIPVar() {
+    public SaslHostFromIPVar() throws ProxyConfException {
         super("mail.sasl_host_from_ip", "zimbraKerobosServicePrincipalFromInterfaceAddress",
                 false, ProxyConfValueType.BOOLEAN, ProxyConfOverride.SERVER,
                 "Whether to use incoming interface IP address to determine service " +
@@ -573,138 +584,9 @@ class SaslHostFromIPVar extends ProxyConfVar {
     }
 }
 
-class WebUpstreamClientServersVar extends ProxyConfVar {
-
-    public WebUpstreamClientServersVar() {
-        super("web.upstream.webclient.:servers", null, null, ProxyConfValueType.CUSTOM,
-                ProxyConfOverride.CUSTOM,
-                "List of upstream HTTP webclient servers used by Web Proxy");
-    }
-
-    @Override
-    public void update() throws ServiceException, ProxyConfException {
-        ArrayList<String> directives = new ArrayList<String>();
-        String portName = configSource.getAttr(Provisioning.A_zimbraReverseProxyHttpPortAttribute, "");
-
-        List<Server> webclientservers = mProv.getAllWebClientServers();
-        for (Server server : webclientservers) {
-            String serverName = server.getAttr(
-                    Provisioning.A_zimbraServiceHostname, "");
-
-            if (isValidUpstream(server, serverName)) {
-                directives.add(generateServerDirective(server, serverName, portName));
-                mLog.debug("Added server to HTTP webclient upstream: " + serverName);
-            }
-        }
-        mValue = directives;
-    }
-
-    @Override
-    public String format(Object o) {
-        @SuppressWarnings("unchecked")
-        ArrayList<String> servers = (ArrayList<String>) o;
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < servers.size(); i++) {
-            String s = servers.get(i);
-            if (i == 0) {
-                sb.append(String.format("server    %s;\n", s));
-            } else {
-                sb.append(String.format("        server    %s;\n", s));
-            }
-        }
-        return sb.toString();
-    }
-}
-
-class WebSSLUpstreamClientServersVar extends ProxyConfVar {
-
-    public WebSSLUpstreamClientServersVar() {
-        super("web.ssl.upstream.webclient.:servers", null, null, ProxyConfValueType.CUSTOM,
-                ProxyConfOverride.CUSTOM,
-                "List of upstream HTTPS webclient servers used by Web Proxy");
-    }
-
-    @Override
-    public void update() throws ServiceException, ProxyConfException {
-        ArrayList<String> directives = new ArrayList<String>();
-        String portName = configSource.getAttr(Provisioning.A_zimbraReverseProxyHttpSSLPortAttribute, "");
-
-        List<Server> webclientservers = mProv.getAllWebClientServers();
-        for (Server server : webclientservers) {
-            String serverName = server.getAttr(
-                    Provisioning.A_zimbraServiceHostname, "");
-
-            if (isValidUpstream(server, serverName)) {
-                directives.add(generateServerDirective(server, serverName, portName));
-                mLog.debug("Added server to HTTPS webclient upstream: " + serverName);
-            }
-        }
-        mValue = directives;
-    }
-
-    @Override
-    public String format(Object o) {
-        @SuppressWarnings("unchecked")
-        ArrayList<String> servers = (ArrayList<String>) o;
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < servers.size(); i++) {
-            String s = servers.get(i);
-            if (i == 0) {
-                sb.append(String.format("server    %s;\n", s));
-            } else {
-                sb.append(String.format("        server    %s;\n", s));
-            }
-        }
-        return sb.toString();
-    }
-}
-
-class WebAdminUpstreamAdminClientServersVar extends ProxyConfVar {
-
-    public WebAdminUpstreamAdminClientServersVar() {
-        super("web.admin.upstream.:servers", null, null, ProxyConfValueType.CUSTOM,
-                ProxyConfOverride.CUSTOM,
-                "List of upstream HTTPS Admin client servers used by Web Proxy");
-    }
-
-    @Override
-    public void update() throws ServiceException, ProxyConfException {
-        ArrayList<String> directives = new ArrayList<String>();
-        String portName = configSource.getAttr(Provisioning.A_zimbraReverseProxyAdminPortAttribute, "");
-
-        List<Server> adminclientservers = mProv.getAllAdminClientServers();
-        for (Server server : adminclientservers) {
-            String serverName = server.getAttr(
-                    Provisioning.A_zimbraServiceHostname, "");
-
-            if (isValidUpstream(server, serverName)) {
-                directives.add(generateServerDirective(server, serverName, portName));
-                mLog.debug("Added server to HTTPS Admin client upstream: " + serverName);
-            }
-        }
-        mValue = directives;
-    }
-
-    @Override
-    public String format(Object o) {
-        @SuppressWarnings("unchecked")
-        ArrayList<String> servers = (ArrayList<String>) o;
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < servers.size(); i++) {
-            String s = servers.get(i);
-            if (i == 0) {
-                sb.append(String.format("server    %s;\n", s));
-            } else {
-                sb.append(String.format("        server    %s;\n", s));
-            }
-        }
-        return sb.toString();
-    }
-}
-
 class MemcacheServersVar extends ProxyConfVar {
 
-    public MemcacheServersVar() {
+    public MemcacheServersVar() throws ProxyConfException {
         super("memcache.:servers", null, null, ProxyConfValueType.CUSTOM,
                 ProxyConfOverride.CUSTOM,
                 "List of known memcache servers (i.e. servers having memcached service enabled)");
@@ -762,7 +644,7 @@ abstract class ServersVar extends ProxyConfVar {
      */
     private final String mPortAttrName;
 
-    public ServersVar(String key, String portAttrName, String description) {
+    public ServersVar(String key, String portAttrName, String description) throws ProxyConfException {
         super(key, null, null, ProxyConfValueType.CUSTOM, ProxyConfOverride.CUSTOM, description);
         this.mPortAttrName = portAttrName;
     }
@@ -794,7 +676,6 @@ abstract class ServersVar extends ProxyConfVar {
                 }
             }
         }
-
         mValue = directives;
     }
 
@@ -815,9 +696,42 @@ abstract class ServersVar extends ProxyConfVar {
     }
 }
 
-class WebUpstreamServersVar extends ServersVar {
+class WebServersVar extends ServersVar {
 
-    public WebUpstreamServersVar() {
+    public WebServersVar() throws ProxyConfException {
+        super("web.upstream.webclient.:servers", Provisioning.A_zimbraReverseProxyHttpPortAttribute,
+                "List of upstream HTTP webclient servers used by Web Proxy");
+    }
+
+    @Override
+    public void update() throws ServiceException {
+        ArrayList<String> directives = new ArrayList<String>();
+        String portName = configSource.getAttr(Provisioning.A_zimbraReverseProxyHttpPortAttribute, "");
+
+        try {
+            List<ServiceLocator.Entry> entries = serviceLocator.find(ZimbraServiceNames.WEB, null, true);
+            if (entries.isEmpty()) {
+                throw ServiceException.NOT_FOUND("No healthy instances of " + ZimbraServiceNames.WEB);
+            }
+
+            for (ServiceLocator.Entry entry : entries) {
+                Server server = mProv.getServerByName(entry.hostName);
+                String serverName = server.getAttr(Provisioning.A_zimbraServiceHostname, "");
+                if (isValidUpstream(server, serverName)) {
+                    directives.add(generateServerDirective(server, serverName, portName));
+                    mLog.debug("Added server to HTTP webclient upstream: " + serverName);
+                }
+            }
+        } catch (IOException e) {
+            throw ServiceException.FAILURE("Failed contacting service locator 1", e);
+        }
+        mValue = directives;
+    }
+}
+
+class WebMailstoreServersVar extends ServersVar {
+
+    public WebMailstoreServersVar() throws ProxyConfException {
         super("web.upstream.:servers", Provisioning.A_zimbraReverseProxyHttpPortAttribute,
                 "List of upstream HTTP servers used by Web Proxy (i.e. servers " +
                 "for which zimbraReverseProxyLookupTarget is true, and whose " +
@@ -829,23 +743,63 @@ class WebUpstreamServersVar extends ServersVar {
         ArrayList<String> directives = new ArrayList<String>();
         String portName = configSource.getAttr(Provisioning.A_zimbraReverseProxyHttpPortAttribute, "");
 
-        List<Server> mailclientservers = mProv.getAllMailClientServers();
-        for (Server server : mailclientservers) {
-            String serverName = server.getAttr(
-                    Provisioning.A_zimbraServiceHostname, "");
-
-            if (isValidUpstream(server, serverName)) {
-                directives.add(generateServerDirective(server, serverName, portName));
-                mLog.debug("Added server to HTTP mailstore upstream: " + serverName);
+        try {
+            List<ServiceLocator.Entry> entries = serviceLocator.find(ZimbraServiceNames.MAILSTORE, null, true);
+            if (entries.isEmpty()) {
+                throw ServiceException.NOT_FOUND("No healthy instances of " + ZimbraServiceNames.MAILSTORE);
             }
+
+            for (ServiceLocator.Entry entry : entries) {
+                Server server = mProv.getServerByName(entry.hostName);
+                String serverName = server.getAttr(Provisioning.A_zimbraServiceHostname, "");
+                if (isValidUpstream(server, serverName)) {
+                    directives.add(generateServerDirective(server, serverName, portName));
+                    mLog.debug("Added server to HTTP mailstore upstream: " + serverName);
+                }
+            }
+        } catch (IOException e) {
+            throw ServiceException.FAILURE("Failed contacting service locator 2", e);
         }
         mValue = directives;
     }
 }
 
-class WebSSLUpstreamServersVar extends ServersVar {
+class WebSSLServersVar extends ServersVar {
 
-    public WebSSLUpstreamServersVar() {
+    public WebSSLServersVar() throws ProxyConfException {
+        super("web.ssl.upstream.webclient.:servers", Provisioning.A_zimbraReverseProxyHttpSSLPortAttribute,
+                "List of upstream HTTPS webclient servers used by Web Proxy");
+    }
+
+    @Override
+    public void update() throws ServiceException {
+        ArrayList<String> directives = new ArrayList<String>();
+        String portName = configSource.getAttr(Provisioning.A_zimbraReverseProxyHttpSSLPortAttribute, "");
+
+        try {
+            List<ServiceLocator.Entry> entries = serviceLocator.find(ZimbraServiceNames.WEB, "ssl", true);
+            if (entries.isEmpty()) {
+                throw ServiceException.NOT_FOUND("No healthy instances of " + ZimbraServiceNames.WEB + " with ssl");
+            }
+
+            for (ServiceLocator.Entry entry : entries) {
+                Server server = mProv.getServerByName(entry.hostName);
+                String serverName = server.getAttr(Provisioning.A_zimbraServiceHostname, "");
+                if (isValidUpstream(server, serverName)) {
+                    directives.add(generateServerDirective(server, serverName, portName));
+                    mLog.debug("Added server to HTTPS webclient upstream: " + serverName);
+                }
+            }
+        } catch (IOException e) {
+            throw ServiceException.FAILURE("Failed contacting service locator 3", e);
+        }
+        mValue = directives;
+    }
+}
+
+class WebSSLMailstoreServersVar extends ServersVar {
+
+    public WebSSLMailstoreServersVar() throws ProxyConfException {
         super("web.ssl.upstream.:servers", Provisioning.A_zimbraReverseProxyHttpSSLPortAttribute,
                 "List of upstream HTTPS servers used by Web Proxy (i.e. servers " +
                 "for which zimbraReverseProxyLookupTarget is true, and whose " +
@@ -857,22 +811,62 @@ class WebSSLUpstreamServersVar extends ServersVar {
         ArrayList<String> directives = new ArrayList<String>();
         String portName = configSource.getAttr(Provisioning.A_zimbraReverseProxyHttpSSLPortAttribute, "");
 
-        List<Server> mailclientservers = mProv.getAllMailClientServers();
-        for (Server server : mailclientservers) {
-            String serverName = server.getAttr(
-                    Provisioning.A_zimbraServiceHostname, "");
-
-            if (isValidUpstream(server, serverName)) {
-                directives.add(generateServerDirective(server, serverName, portName));
-                mLog.debug("Added server to HTTPS mailstore upstream: " + serverName);
+        try {
+            List<ServiceLocator.Entry> entries = serviceLocator.find(ZimbraServiceNames.MAILSTORE, "ssl", true);
+            if (entries.isEmpty()) {
+                throw ServiceException.NOT_FOUND("No healthy instances of " + ZimbraServiceNames.MAILSTORE + " with ssl");
             }
+
+            for (ServiceLocator.Entry entry : entries) {
+                Server server = mProv.getServerByName(entry.hostName);
+                String serverName = server.getAttr(Provisioning.A_zimbraServiceHostname, "");
+                if (isValidUpstream(server, serverName)) {
+                    directives.add(generateServerDirective(server, serverName, portName));
+                    mLog.debug("Added server to HTTPS mailstore upstream: " + serverName);
+                }
+            }
+        } catch (IOException e) {
+            throw ServiceException.FAILURE("Failed contacting service locator 4", e);
         }
         mValue = directives;
     }
 }
 
-class WebAdminUpstreamServersVar extends ServersVar {
-    public WebAdminUpstreamServersVar() {
+class WebAdminServersVar extends ServersVar {
+
+    public WebAdminServersVar() throws ProxyConfException {
+        super("web.admin.upstream.:servers", Provisioning.A_zimbraReverseProxyAdminPortAttribute,
+                "List of upstream HTTPS Admin client servers used by Web Proxy");
+    }
+
+    @Override
+    public void update() throws ServiceException {
+        ArrayList<String> directives = new ArrayList<String>();
+        String portName = configSource.getAttr(Provisioning.A_zimbraReverseProxyAdminPortAttribute, "");
+
+        try {
+            List<ServiceLocator.Entry> entries = serviceLocator.find(ZimbraServiceNames.WEBADMIN, "ssl", true);
+            if (entries.isEmpty()) {
+                throw ServiceException.NOT_FOUND("No healthy instances of " + ZimbraServiceNames.WEBADMIN);
+            }
+
+            for (ServiceLocator.Entry entry : entries) {
+                Server server = mProv.getServerByName(entry.hostName);
+                String serverName = server.getAttr(Provisioning.A_zimbraServiceHostname, "");
+                if (isValidUpstream(server, serverName)) {
+                    directives.add(generateServerDirective(server, serverName, portName));
+                    mLog.debug("Added server to HTTPS Admin client upstream: " + serverName);
+                }
+            }
+        } catch (IOException e) {
+            throw ServiceException.FAILURE("Failed contacting service locator 5", e);
+        }
+        mValue = directives;
+    }
+}
+
+class WebMailstoreAdminServersVar extends ServersVar {
+    public WebMailstoreAdminServersVar() throws ProxyConfException {
         super("web.admin.upstream.:servers", Provisioning.A_zimbraReverseProxyAdminPortAttribute,
                 "List of upstream admin console servers used by Web Proxy (i.e. servers " +
                 "for which zimbraReverseProxyLookupTarget is true");
@@ -883,15 +877,22 @@ class WebAdminUpstreamServersVar extends ServersVar {
         ArrayList<String> directives = new ArrayList<String>();
         String portName = configSource.getAttr(Provisioning.A_zimbraReverseProxyAdminPortAttribute, "");
 
-        List<Server> mailclientservers = mProv.getAllMailClientServers();
-        for (Server server : mailclientservers) {
-            String serverName = server.getAttr(
-                    Provisioning.A_zimbraServiceHostname, "");
-
-            if (isValidUpstream(server, serverName)) {
-                directives.add(generateServerDirective(server, serverName, portName));
-                mLog.debug("Added server to HTTPS Admin mailstore upstream: " + serverName);
+        try {
+            List<ServiceLocator.Entry> entries = serviceLocator.find(ZimbraServiceNames.MAILSTOREADMIN, "ssl", true);
+            if (entries.isEmpty()) {
+                throw ServiceException.NOT_FOUND("No healthy instances of " + ZimbraServiceNames.MAILSTOREADMIN);
             }
+
+            for (ServiceLocator.Entry entry : entries) {
+                Server server = mProv.getServerByName(entry.hostName);
+                String serverName = server.getAttr(Provisioning.A_zimbraServiceHostname, "");
+                if (isValidUpstream(server, serverName)) {
+                    directives.add(generateServerDirective(server, serverName, portName));
+                    mLog.debug("Added server to HTTPS Admin mailstore upstream: " + serverName);
+                }
+            }
+        } catch (IOException e) {
+            throw ServiceException.FAILURE("Failed contacting service locator 6", e);
         }
         mValue = directives;
     }
@@ -899,7 +900,7 @@ class WebAdminUpstreamServersVar extends ServersVar {
 
 class WebEwsUpstreamServersVar extends ServersVar {
 
-    public WebEwsUpstreamServersVar() {
+    public WebEwsUpstreamServersVar() throws ProxyConfException {
         super("web.upstream.ewsserver.:servers", Provisioning.A_zimbraReverseProxyUpstreamEwsServers,
                 "List of upstream EWS servers used by Web Proxy");
     }
@@ -925,7 +926,7 @@ class WebEwsUpstreamServersVar extends ServersVar {
 
 class WebEwsSSLUpstreamServersVar extends ServersVar {
 
-    public WebEwsSSLUpstreamServersVar() {
+    public WebEwsSSLUpstreamServersVar() throws ProxyConfException {
         super("web.ssl.upstream.ewsserver.:servers",Provisioning.A_zimbraReverseProxyUpstreamEwsServers,
                 "List of upstream EWS servers used by Web Proxy");
     }
@@ -951,7 +952,7 @@ class WebEwsSSLUpstreamServersVar extends ServersVar {
 
 class WebLoginUpstreamServersVar extends ServersVar {
 
-    public WebLoginUpstreamServersVar() {
+    public WebLoginUpstreamServersVar() throws ProxyConfException {
         super("web.upstream.loginserver.:servers", Provisioning.A_zimbraReverseProxyUpstreamLoginServers,
                 "List of upstream Login servers used by Web Proxy");
     }
@@ -977,7 +978,7 @@ class WebLoginUpstreamServersVar extends ServersVar {
 
 class WebLoginSSLUpstreamServersVar extends ServersVar {
 
-    public WebLoginSSLUpstreamServersVar() {
+    public WebLoginSSLUpstreamServersVar() throws ProxyConfException {
         super("web.ssl.upstream.loginserver.:servers",Provisioning.A_zimbraReverseProxyUpstreamLoginServers,
                 "List of upstream Login servers used by Web Proxy");
     }
@@ -1007,7 +1008,7 @@ class ListenVipsVar extends ProxyConfVar {
     private final IPMode ipmode;
     private final String key;
 
-    public ListenVipsVar(String key, ArrayList<InetAddress> vips, String portAttrName, IPMode ipmode, String description) {
+    public ListenVipsVar(String key, ArrayList<InetAddress> vips, String portAttrName, IPMode ipmode, String description) throws ProxyConfException {
         super(key, null, null, ProxyConfValueType.CUSTOM, ProxyConfOverride.CUSTOM, description);
         this.vips = vips;
         this.portAttrName = portAttrName;
@@ -1057,7 +1058,7 @@ class AddHeadersVar extends ProxyConfVar {
     private KeyValue[] headers;
     private int i;
 
-    public AddHeadersVar(String key, ArrayList<String> rhdr, String description) {
+    public AddHeadersVar(String key, ArrayList<String> rhdr, String description) throws ProxyConfException {
         super(key, null, null, ProxyConfValueType.CUSTOM, ProxyConfOverride.CUSTOM, description);
         this.rhdr = rhdr;
         this.key = key;
@@ -1102,7 +1103,7 @@ class AddHeadersVar extends ProxyConfVar {
 
 class ImapCapaVar extends ProxyConfVar {
 
-    public ImapCapaVar() {
+    public ImapCapaVar() throws ProxyConfException {
         super("mail.imapcapa", null, getDefaultImapCapabilities(),
                 ProxyConfValueType.CUSTOM, ProxyConfOverride.CUSTOM,
                 "IMAP Capability List");
@@ -1153,7 +1154,7 @@ class ImapCapaVar extends ProxyConfVar {
 
 class Pop3CapaVar extends ProxyConfVar {
 
-    public Pop3CapaVar() {
+    public Pop3CapaVar() throws ProxyConfException {
         super("mail.pop3capa", null, getDefaultPop3Capabilities(),
                 ProxyConfValueType.CUSTOM, ProxyConfOverride.CUSTOM,
                 "POP3 Capability List");
@@ -1200,7 +1201,7 @@ class Pop3CapaVar extends ProxyConfVar {
 }
 
 class ZMLookupHandlerVar extends ProxyConfVar{
-    public ZMLookupHandlerVar() {
+    public ZMLookupHandlerVar() throws ProxyConfException {
         super("zmlookup.:handlers",
               "zimbraReverseProxyLookupTarget",
               new ArrayList<String>(),
@@ -1277,7 +1278,7 @@ class ZMLookupHandlerVar extends ProxyConfVar{
 }
 
 class ZMSSOCertAuthDefaultEnablerVar extends ProxyConfVar {
-    public ZMSSOCertAuthDefaultEnablerVar() {
+    public ZMSSOCertAuthDefaultEnablerVar() throws ProxyConfException {
         super("web.sso.certauth.default.enabled",
               null,
               null,
@@ -1300,7 +1301,7 @@ class ZMSSOCertAuthDefaultEnablerVar extends ProxyConfVar {
 }
 
 class ClientCertAuthDefaultCAVar extends ProxyConfVar {
-    public ClientCertAuthDefaultCAVar() {
+    public ClientCertAuthDefaultCAVar() throws ProxyConfException {
         super("ssl.clientcertca.default",
               "zimbraReverseProxyClientCertCA",
               ProxyConfGen.getDefaultClientCertCaPath(),
@@ -1317,7 +1318,7 @@ class ClientCertAuthDefaultCAVar extends ProxyConfVar {
 }
 
 class SSORedirectEnablerVar extends ProxyConfVar {
-    public SSORedirectEnablerVar() {
+    public SSORedirectEnablerVar() throws ProxyConfException {
         super("web.sso.redirect.enabled.default",
               "zimbraWebClientLoginURL",
               false,
@@ -1339,7 +1340,7 @@ class SSORedirectEnablerVar extends ProxyConfVar {
 }
 
 class ZMSSOEnablerVar extends ProxyConfVar {
-    public ZMSSOEnablerVar() {
+    public ZMSSOEnablerVar() throws ProxyConfException {
         super("web.sso.enabled",
               "zimbraReverseProxyClientCertMode",
               false,
@@ -1359,7 +1360,7 @@ class ZMSSOEnablerVar extends ProxyConfVar {
 }
 
 class ZMSSODefaultEnablerVar extends ProxyConfVar {
-    public ZMSSODefaultEnablerVar() {
+    public ZMSSODefaultEnablerVar() throws ProxyConfException {
         super("web.sso.enabled",
               "zimbraReverseProxyClientCertMode",
               false,
@@ -1382,7 +1383,7 @@ class ErrorPagesVar extends ProxyConfVar {
 
     static final String[] ERRORS = {"502", "504"};
 
-    public ErrorPagesVar() {
+    public ErrorPagesVar() throws ProxyConfException {
         super("web.:errorPages",
               "zimbraReverseProxyErrorHandlerURL",
               "",
@@ -1418,7 +1419,7 @@ class TimeoutVar extends ProxyConfVar {
     private final Number offset;
     public TimeoutVar(String keyword, String attribute, Object defaultValue, ProxyConfValueType type,
             ProxyConfOverride overrideType, Number offset,
-            String description) {
+            String description) throws ProxyConfException {
         super(keyword, attribute, defaultValue, type,
                 overrideType, description);
         this.offset = offset;
@@ -1451,7 +1452,7 @@ class TimeoutVar extends ProxyConfVar {
 class TimeInSecVarWrapper extends ProxyConfVar {
     protected ProxyConfVar mVar;
 
-    public TimeInSecVarWrapper (ProxyConfVar var) {
+    public TimeInSecVarWrapper (ProxyConfVar var) throws ProxyConfException {
         super(null, null, null, null, null, null);
 
         if (var.mValueType != ProxyConfValueType.TIME) {
@@ -1480,7 +1481,7 @@ class TimeInSecVarWrapper extends ProxyConfVar {
  *
  */
 class WebProxyUpstreamTargetVar extends ProxyConfVar {
-    public WebProxyUpstreamTargetVar() {
+    public WebProxyUpstreamTargetVar() throws ProxyConfException {
         super("web.upstream.schema", "zimbraReverseProxySSLToUpstreamEnabled", true, ProxyConfValueType.BOOLEAN,
                 ProxyConfOverride.SERVER, "The target of proxy_pass for web proxy");
     }
@@ -1502,7 +1503,7 @@ class WebProxyUpstreamTargetVar extends ProxyConfVar {
  *
  */
 class WebProxyUpstreamClientTargetVar extends ProxyConfVar {
-    public WebProxyUpstreamClientTargetVar() {
+    public WebProxyUpstreamClientTargetVar() throws ProxyConfException {
         super("web.upstream.schema", "zimbraReverseProxySSLToUpstreamEnabled", true, ProxyConfValueType.BOOLEAN,
                 ProxyConfOverride.SERVER, "The target of proxy_pass for web client proxy");
     }
@@ -1519,7 +1520,7 @@ class WebProxyUpstreamClientTargetVar extends ProxyConfVar {
 }
 
 class WebProxyUpstreamLoginTargetVar extends ProxyConfVar {
-    public WebProxyUpstreamLoginTargetVar() {
+    public WebProxyUpstreamLoginTargetVar() throws ProxyConfException {
         super("web.upstream.schema", "zimbraReverseProxySSLToUpstreamEnabled", true, ProxyConfValueType.BOOLEAN,
                 ProxyConfOverride.SERVER, "The login target of proxy_pass for web proxy");
     }
@@ -1536,7 +1537,7 @@ class WebProxyUpstreamLoginTargetVar extends ProxyConfVar {
 }
 
 class WebProxyUpstreamEwsTargetVar extends ProxyConfVar {
-    public WebProxyUpstreamEwsTargetVar() {
+    public WebProxyUpstreamEwsTargetVar() throws ProxyConfException {
         super("web.upstream.schema", "zimbraReverseProxySSLToUpstreamEnabled", true, ProxyConfValueType.BOOLEAN,
                 ProxyConfOverride.SERVER, "The ews target of proxy_pass for web proxy");
     }
@@ -1554,7 +1555,7 @@ class WebProxyUpstreamEwsTargetVar extends ProxyConfVar {
 
 class WebSSLSessionCacheSizeVar extends ProxyConfVar {
 
-    public WebSSLSessionCacheSizeVar() {
+    public WebSSLSessionCacheSizeVar() throws ProxyConfException {
         super("ssl.session.cachesize", "zimbraReverseProxySSLSessionCacheSize", "10m",
                 ProxyConfValueType.STRING, ProxyConfOverride.SERVER,
                 "SSL session cache size for the proxy");
@@ -1574,7 +1575,7 @@ class WebSSLSessionCacheSizeVar extends ProxyConfVar {
 
 class WebUpstreamRestrictedIPsVar extends ProxyConfVar {
 
-    public WebUpstreamRestrictedIPsVar() {
+    public WebUpstreamRestrictedIPsVar() throws ProxyConfException {
         super("web.upstream.restricted.:ips", Provisioning.A_zimbraReverseProxyRestrictedIPs, new ArrayList<String>(),
                ProxyConfValueType.CUSTOM, ProxyConfOverride.CUSTOM,
                "List of Client network or IP address to be denied access by the proxy");
@@ -1619,7 +1620,7 @@ class WebUpstreamRestrictedIPsVar extends ProxyConfVar {
  */
 class EwsEnablerVar extends WebEnablerVar {
 
-    public EwsEnablerVar() {
+    public EwsEnablerVar() throws ProxyConfException {
         super("web.ews.upstream.disable", "#",
                 "Indicates whether EWS upstream servers blob in nginx.conf.web should be populated " +
                 "(false unless zimbraReverseProxyUpstreamEwsServers is populated)");
@@ -1644,7 +1645,7 @@ class EwsEnablerVar extends WebEnablerVar {
  */
 class LoginEnablerVar extends WebEnablerVar {
 
-    public LoginEnablerVar() {
+    public LoginEnablerVar() throws ProxyConfException {
         super("web.login.upstream.disable", "#",
                 "Indicates whether upstream Login servers blob in nginx.conf.web should be populated " +
                 "(false unless zimbraReverseProxyUpstreamLoginServers is populated)");
@@ -1664,7 +1665,7 @@ class LoginEnablerVar extends WebEnablerVar {
 
 class SSLStaplingEnablerVar extends ProxyConfVar {
 
-    public SSLStaplingEnablerVar() {
+    public SSLStaplingEnablerVar() throws ProxyConfException {
         super("ssl.stapling.responder.enabled",
               "zimbraReverseProxySSLStaplingResponderURL",
               false,
@@ -1687,7 +1688,7 @@ class SSLStaplingEnablerVar extends ProxyConfVar {
 
 class WebXmppBoshEnablerVar extends ProxyConfVar {
 
-    public WebXmppBoshEnablerVar() {
+    public WebXmppBoshEnablerVar() throws ProxyConfException {
         super("web.xmpp.bosh.upstream.disable",
               "",
               false,
@@ -1762,7 +1763,7 @@ class DomainAttrExceptionItem extends DomainAttrItem {
  */
 class WebSSLProtocolsVar extends ProxyConfVar {
 
-    public WebSSLProtocolsVar() {
+    public WebSSLProtocolsVar() throws ProxyConfException {
         super("web.ssl.protocols", null, getEnabledSSLProtocols(),
                 ProxyConfValueType.CUSTOM, ProxyConfOverride.CUSTOM,
                 "SSL Protocols enabled for the web proxy");
@@ -1812,7 +1813,7 @@ class WebSSLProtocolsVar extends ProxyConfVar {
  */
 class MailSSLProtocolsVar extends ProxyConfVar {
 
-    public MailSSLProtocolsVar() {
+    public MailSSLProtocolsVar() throws ProxyConfException {
         super("mail.ssl.protocols", null, getEnabledSSLProtocols(),
                 ProxyConfValueType.CUSTOM, ProxyConfOverride.CUSTOM,
                 "SSL Protocols enabled for the mail proxy");
@@ -1859,7 +1860,7 @@ class MailSSLProtocolsVar extends ProxyConfVar {
 
 class WebUpstreamBlockedURLsVar extends ProxyConfVar {
 
-    public WebUpstreamBlockedURLsVar() {
+    public WebUpstreamBlockedURLsVar() throws ProxyConfException {
         super("web.upstream.blocked.urls", "zimbraReverseProxyBlockedURLs", getDefaultBlockedURLs(),
                 ProxyConfValueType.CUSTOM, ProxyConfOverride.CUSTOM,
                 "URL prefixes that need to be blocked by the web proxy");
@@ -1913,7 +1914,7 @@ class WebUpstreamBlockedURLsVar extends ProxyConfVar {
 
 class WebBlockedUserAgentsEnablerVar extends WebEnablerVar {
 
-    public WebBlockedUserAgentsEnablerVar() {
+    public WebBlockedUserAgentsEnablerVar() throws ProxyConfException {
         super("web.blocked.user.agents.enabled", "#",
                 "Indicates whether user agent blocking section should be populated " +
                 "(false unless zimbraReverseProxyBlockedUserAgents is populated)");
@@ -1933,7 +1934,7 @@ class WebBlockedUserAgentsEnablerVar extends WebEnablerVar {
 
 class WebBlockedUserAgentsVar extends ProxyConfVar {
 
-    public WebBlockedUserAgentsVar() {
+    public WebBlockedUserAgentsVar() throws ProxyConfException {
         super("web.blocked.user.agents", "zimbraReverseProxyBlockedUserAgents", new ArrayList<String> (),
                 ProxyConfValueType.CUSTOM, ProxyConfOverride.CUSTOM,
                 "User Agents that need to be blocked by the web proxy");
@@ -1977,7 +1978,7 @@ class WebBlockedUserAgentsVar extends ProxyConfVar {
 
 class WebZSSUpstreamEnablerVar extends WebEnablerVar {
 
-    public WebZSSUpstreamEnablerVar() {
+    public WebZSSUpstreamEnablerVar() throws ProxyConfException {
         super("web.zss.upstream.disable", "#",
                 "Indicates whether zss location block should be populated " +
                 "(false unless zimbraReverseProxyZSSHostname is set)");
@@ -1997,7 +1998,7 @@ class WebZSSUpstreamEnablerVar extends WebEnablerVar {
 
 class WebPageSpeedDisallowedURLsVar extends ProxyConfVar {
 
-    public WebPageSpeedDisallowedURLsVar() {
+    public WebPageSpeedDisallowedURLsVar() throws ProxyConfException {
         super("web.pagespeed.disallowed.urls", "zimbraReverseProxyPageSpeedDisallowedURLs", new ArrayList<String> (),
                 ProxyConfValueType.CUSTOM, ProxyConfOverride.CUSTOM,
                 "URL patterns that need to be excluded from the rewriting processs of proxy's Pagespeed module");
@@ -2038,7 +2039,7 @@ class WebPageSpeedDisallowedURLsVar extends ProxyConfVar {
 
 class WebSSLDhparamEnablerVar extends WebEnablerVar {
 
-    public WebSSLDhparamEnablerVar() {
+    public WebSSLDhparamEnablerVar() throws ProxyConfException {
         super("web.ssl.dhparam.enabled", false,
                 "Indicates whether ssl_dhparam directive should be added or not");
     }
@@ -2705,7 +2706,7 @@ public class ProxyConfGen
         }
     }
 
-    public static void buildDefaultVars ()
+    public static void buildDefaultVars () throws ProxyConfException
     {
         mConfVars.put("core.workdir", new ProxyConfVar("core.workdir", null, mWorkingDir, ProxyConfValueType.STRING, ProxyConfOverride.NONE, "Working Directory for NGINX worker processes"));
         mConfVars.put("core.includes", new ProxyConfVar("core.includes", null, mConfIncludesDir, ProxyConfValueType.STRING, ProxyConfOverride.NONE, "Include directory (relative to ${core.workdir}/conf)"));
@@ -2785,12 +2786,12 @@ public class ProxyConfGen
         mConfVars.put("web.upstream.webclient.name", new ProxyConfVar("web.upstream.webclient.name", null, ZIMBRA_UPSTREAM_WEBCLIENT_NAME, ProxyConfValueType.STRING, ProxyConfOverride.CONFIG,"Symbolic name for HTTP upstream webclient cluster"));
         mConfVars.put("web.ssl.upstream.name", new ProxyConfVar("web.ssl.upstream.name", null, ZIMBRA_SSL_UPSTREAM_NAME, ProxyConfValueType.STRING, ProxyConfOverride.CONFIG,"Symbolic name for HTTPS upstream cluster"));
         mConfVars.put("web.ssl.upstream.webclient.name", new ProxyConfVar("web.ssl.upstream.webclient.name", null, ZIMBRA_SSL_UPSTREAM_WEBCLIENT_NAME, ProxyConfValueType.STRING, ProxyConfOverride.CONFIG,"Symbolic name for HTTPS upstream webclient cluster"));
-        mConfVars.put("web.upstream.:servers", new WebUpstreamServersVar());
-        mConfVars.put("web.upstream.webclient.:servers", new WebUpstreamClientServersVar());
+        mConfVars.put("web.upstream.:servers", new WebMailstoreServersVar());
+        mConfVars.put("web.upstream.webclient.:servers", new WebServersVar());
         mConfVars.put("web.server_names.max_size", new ProxyConfVar("web.server_names.max_size", "proxy_server_names_hash_max_size", DEFAULT_SERVERS_NAME_HASH_MAX_SIZE, ProxyConfValueType.INTEGER, ProxyConfOverride.LOCALCONFIG, "the server names hash max size, needed to be increased if too many virtual host names are added"));
         mConfVars.put("web.server_names.bucket_size", new ProxyConfVar("web.server_names.bucket_size", "proxy_server_names_hash_bucket_size", DEFAULT_SERVERS_NAME_HASH_BUCKET_SIZE, ProxyConfValueType.INTEGER, ProxyConfOverride.LOCALCONFIG, "the server names hash bucket size, needed to be increased if too many virtual host names are added"));
-        mConfVars.put("web.ssl.upstream.:servers", new WebSSLUpstreamServersVar());
-        mConfVars.put("web.ssl.upstream.webclient.:servers", new WebSSLUpstreamClientServersVar());
+        mConfVars.put("web.ssl.upstream.:servers", new WebSSLMailstoreServersVar());
+        mConfVars.put("web.ssl.upstream.webclient.:servers", new WebSSLServersVar());
         mConfVars.put("web.uploadmax", new ProxyConfVar("web.uploadmax", "zimbraFileUploadMaxSize", new Long(10485760), ProxyConfValueType.LONG, ProxyConfOverride.SERVER,"Maximum accepted client request body size (indicated by Content-Length) - if content length exceeds this limit, then request fails with HTTP 413"));
         mConfVars.put("web.:error_pages", new ErrorPagesVar());
         mConfVars.put("web.http.port", new ProxyConfVar("web.http.port", Provisioning.A_zimbraMailProxyPort, new Integer(0), ProxyConfValueType.INTEGER, ProxyConfOverride.SERVER,"Web Proxy HTTP Port"));
@@ -2829,8 +2830,8 @@ public class ProxyConfGen
         mConfVars.put("web.admin.uport", new ProxyConfVar("web.admin.uport", "zimbraAdminPort", new Integer(7071), ProxyConfValueType.INTEGER, ProxyConfOverride.SERVER, "Admin console upstream port"));
         mConfVars.put("web.admin.upstream.name", new ProxyConfVar("web.admin.upstream.name", null, ZIMBRA_ADMIN_CONSOLE_UPSTREAM_NAME, ProxyConfValueType.STRING, ProxyConfOverride.CONFIG, "Symbolic name for admin console upstream cluster"));
         mConfVars.put("web.admin.upstream.adminclient.name", new ProxyConfVar("web.admin.upstream.adminclient.name", null, ZIMBRA_ADMIN_CONSOLE_CLIENT_UPSTREAM_NAME, ProxyConfValueType.STRING, ProxyConfOverride.CONFIG, "Symbolic name for admin client console upstream cluster"));
-        mConfVars.put("web.admin.upstream.:servers", new WebAdminUpstreamServersVar());
-        mConfVars.put("web.admin.upstream.adminclient.:servers", new WebAdminUpstreamAdminClientServersVar());
+        mConfVars.put("web.admin.upstream.:servers", new WebMailstoreAdminServersVar());
+        mConfVars.put("web.admin.upstream.adminclient.:servers", new WebAdminServersVar());
 		mConfVars.put("web.upstream.noop.timeout", new TimeoutVar("web.upstream.noop.timeout", "zimbraMailboxNoopMaxTimeout", 1200*1000L, ProxyConfValueType.TIME, ProxyConfOverride.SERVER, 20*1000L, "the response timeout for NoOpRequest"));
         mConfVars.put("web.upstream.waitset.timeout", new TimeoutVar("web.upstream.waitset.timeout", "zimbraWaitsetMaxRequestTimeout", 1200*1000L, ProxyConfValueType.TIME, ProxyConfOverride.SERVER, 20*1000L, "the response timeout for WaitSetRequest"));
         mConfVars.put("main.accept_mutex", new ProxyConfVar("main.accept_mutex", "zimbraReverseProxyAcceptMutex", "on", ProxyConfValueType.STRING, ProxyConfOverride.SERVER, "accept_mutex flag for NGINX - can be on|off - on indicates regular distribution, off gets better distribution of client connections between workers"));
@@ -3214,7 +3215,7 @@ public class ProxyConfGen
     }
 
     private static void writeClientCAtoFile(String clientCA)
-            throws ServiceException {
+            throws ServiceException, ProxyConfException {
         int exitCode;
         ProxyConfVar clientCAEnabledVar = null;
 
