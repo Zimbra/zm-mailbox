@@ -137,7 +137,7 @@ class ProxyConfVar
             Zimbra.startupMinimal();
             serviceLocator = Zimbra.getAppContext().getBean(ServiceLocator.class);
         } catch (ServiceException e) {
-            throw new ProxyConfException("unable to get the ServiceLocator");
+            mLog.info("unable to get the ServiceLocator. Will fallback to LDAP");
         }
     }
 
@@ -711,7 +711,7 @@ class WebServersVar extends ServersVar {
         try {
             List<ServiceLocator.Entry> entries = serviceLocator.find(ZimbraServiceNames.WEB, null, true);
             if (entries.isEmpty()) {
-                throw ServiceException.NOT_FOUND("No healthy instances of " + ZimbraServiceNames.WEB);
+                throw new IOException("No healthy instances of " + ZimbraServiceNames.WEB + " found in consul");
             }
 
             for (ServiceLocator.Entry entry : entries) {
@@ -723,15 +723,24 @@ class WebServersVar extends ServersVar {
                 }
             }
         } catch (IOException e) {
-            throw ServiceException.FAILURE("Failed contacting service locator 1", e);
+            mLog.debug("Failed locating an instance of " + ZimbraServiceNames.WEB);
+            e.printStackTrace();
+            List<Server> webservers = mProv.getAllWebClientServers();
+            for (Server server : webservers) {
+                String serverName = server.getAttr(Provisioning.A_zimbraServiceHostname, "");
+                if (isValidUpstream(server, serverName)) {
+                    directives.add(generateServerDirective(server, serverName, portName));
+                    mLog.debug("Added server to HTTP web upstream: " + serverName);
+                }
+            }
         }
         mValue = directives;
     }
 }
 
-class WebMailstoreServersVar extends ServersVar {
+class MailstoreServersVar extends ServersVar {
 
-    public WebMailstoreServersVar() throws ProxyConfException {
+    public MailstoreServersVar() throws ProxyConfException {
         super("web.upstream.:servers", Provisioning.A_zimbraReverseProxyHttpPortAttribute,
                 "List of upstream HTTP servers used by Web Proxy (i.e. servers " +
                 "for which zimbraReverseProxyLookupTarget is true, and whose " +
@@ -746,7 +755,7 @@ class WebMailstoreServersVar extends ServersVar {
         try {
             List<ServiceLocator.Entry> entries = serviceLocator.find(ZimbraServiceNames.MAILSTORE, null, true);
             if (entries.isEmpty()) {
-                throw ServiceException.NOT_FOUND("No healthy instances of " + ZimbraServiceNames.MAILSTORE);
+                throw new IOException("No healthy instances of " + ZimbraServiceNames.MAILSTORE + " found in consul");
             }
 
             for (ServiceLocator.Entry entry : entries) {
@@ -758,7 +767,16 @@ class WebMailstoreServersVar extends ServersVar {
                 }
             }
         } catch (IOException e) {
-            throw ServiceException.FAILURE("Failed contacting service locator 2", e);
+            mLog.debug("Failed locating an instance of " + ZimbraServiceNames.MAILSTORE);
+            e.printStackTrace();
+            List<Server> mailstoreservers = mProv.getAllMailClientServers();
+            for (Server server : mailstoreservers) {
+                String serverName = server.getAttr(Provisioning.A_zimbraServiceHostname, "");
+                if (isValidUpstream(server, serverName)) {
+                    directives.add(generateServerDirective(server, serverName, portName));
+                    mLog.debug("Added server to HTTP mailstore upstream: " + serverName);
+                }
+            }
         }
         mValue = directives;
     }
@@ -779,7 +797,7 @@ class WebSSLServersVar extends ServersVar {
         try {
             List<ServiceLocator.Entry> entries = serviceLocator.find(ZimbraServiceNames.WEB, "ssl", true);
             if (entries.isEmpty()) {
-                throw ServiceException.NOT_FOUND("No healthy instances of " + ZimbraServiceNames.WEB + " with ssl");
+                throw new IOException("No healthy SSL instances of " + ZimbraServiceNames.WEB + " found in consul");
             }
 
             for (ServiceLocator.Entry entry : entries) {
@@ -791,15 +809,24 @@ class WebSSLServersVar extends ServersVar {
                 }
             }
         } catch (IOException e) {
-            throw ServiceException.FAILURE("Failed contacting service locator 3", e);
+            mLog.debug("Failed locating an SSL instance of " + ZimbraServiceNames.WEB);
+            e.printStackTrace();
+            List<Server> webservers = mProv.getAllWebClientServers();
+            for (Server server : webservers) {
+                String serverName = server.getAttr(Provisioning.A_zimbraServiceHostname, "");
+                if (isValidUpstream(server, serverName)) {
+                    directives.add(generateServerDirective(server, serverName, portName));
+                    mLog.debug("Added server to HTTPS web upstream: " + serverName);
+                }
+            }
         }
         mValue = directives;
     }
 }
 
-class WebSSLMailstoreServersVar extends ServersVar {
+class MailstoreSSLServersVar extends ServersVar {
 
-    public WebSSLMailstoreServersVar() throws ProxyConfException {
+    public MailstoreSSLServersVar() throws ProxyConfException {
         super("web.ssl.upstream.:servers", Provisioning.A_zimbraReverseProxyHttpSSLPortAttribute,
                 "List of upstream HTTPS servers used by Web Proxy (i.e. servers " +
                 "for which zimbraReverseProxyLookupTarget is true, and whose " +
@@ -814,7 +841,7 @@ class WebSSLMailstoreServersVar extends ServersVar {
         try {
             List<ServiceLocator.Entry> entries = serviceLocator.find(ZimbraServiceNames.MAILSTORE, "ssl", true);
             if (entries.isEmpty()) {
-                throw ServiceException.NOT_FOUND("No healthy instances of " + ZimbraServiceNames.MAILSTORE + " with ssl");
+                throw new IOException("No healthy SSL instances of " + ZimbraServiceNames.MAILSTORE + " found in consul");
             }
 
             for (ServiceLocator.Entry entry : entries) {
@@ -826,7 +853,16 @@ class WebSSLMailstoreServersVar extends ServersVar {
                 }
             }
         } catch (IOException e) {
-            throw ServiceException.FAILURE("Failed contacting service locator 4", e);
+            mLog.debug("Failed locating an SSL instance of " + ZimbraServiceNames.MAILSTORE);
+            e.printStackTrace();
+            List<Server> mailstoreservers = mProv.getAllMailClientServers();
+            for (Server server : mailstoreservers) {
+                String serverName = server.getAttr(Provisioning.A_zimbraServiceHostname, "");
+                if (isValidUpstream(server, serverName)) {
+                    directives.add(generateServerDirective(server, serverName, portName));
+                    mLog.debug("Added server to HTTPS mailstore upstream: " + serverName);
+                }
+            }
         }
         mValue = directives;
     }
@@ -847,7 +883,7 @@ class WebAdminServersVar extends ServersVar {
         try {
             List<ServiceLocator.Entry> entries = serviceLocator.find(ZimbraServiceNames.WEBADMIN, "ssl", true);
             if (entries.isEmpty()) {
-                throw ServiceException.NOT_FOUND("No healthy instances of " + ZimbraServiceNames.WEBADMIN);
+                throw new IOException("No healthy SSL instances of " + ZimbraServiceNames.WEBADMIN + " found in consul");
             }
 
             for (ServiceLocator.Entry entry : entries) {
@@ -859,14 +895,23 @@ class WebAdminServersVar extends ServersVar {
                 }
             }
         } catch (IOException e) {
-            throw ServiceException.FAILURE("Failed contacting service locator 5", e);
+            mLog.debug("Failed locating an SSL instance of " + ZimbraServiceNames.WEBADMIN);
+            e.printStackTrace();
+            List<Server> webadminservers = mProv.getAllAdminClientServers();
+            for (Server server : webadminservers) {
+                String serverName = server.getAttr(Provisioning.A_zimbraServiceHostname, "");
+                if (isValidUpstream(server, serverName)) {
+                    directives.add(generateServerDirective(server, serverName, portName));
+                    mLog.debug("Added server to HTTPS Admin client upstream: " + serverName);
+                }
+            }
         }
         mValue = directives;
     }
 }
 
-class WebMailstoreAdminServersVar extends ServersVar {
-    public WebMailstoreAdminServersVar() throws ProxyConfException {
+class MailstoreAdminServersVar extends ServersVar {
+    public MailstoreAdminServersVar() throws ProxyConfException {
         super("web.admin.upstream.:servers", Provisioning.A_zimbraReverseProxyAdminPortAttribute,
                 "List of upstream admin console servers used by Web Proxy (i.e. servers " +
                 "for which zimbraReverseProxyLookupTarget is true");
@@ -880,7 +925,7 @@ class WebMailstoreAdminServersVar extends ServersVar {
         try {
             List<ServiceLocator.Entry> entries = serviceLocator.find(ZimbraServiceNames.MAILSTOREADMIN, "ssl", true);
             if (entries.isEmpty()) {
-                throw ServiceException.NOT_FOUND("No healthy instances of " + ZimbraServiceNames.MAILSTOREADMIN);
+                throw new IOException("No healthy SSL instances of " + ZimbraServiceNames.MAILSTOREADMIN + " found in consul");
             }
 
             for (ServiceLocator.Entry entry : entries) {
@@ -892,7 +937,16 @@ class WebMailstoreAdminServersVar extends ServersVar {
                 }
             }
         } catch (IOException e) {
-            throw ServiceException.FAILURE("Failed contacting service locator 6", e);
+            mLog.debug("Failed locating an SSL instance of " + ZimbraServiceNames.MAILSTOREADMIN); 
+            e.printStackTrace();
+            List<Server> mailstoreadminservers = mProv.getAllMailClientServers();
+            for (Server server : mailstoreadminservers) {
+                String serverName = server.getAttr(Provisioning.A_zimbraServiceHostname, "");
+                if (isValidUpstream(server, serverName)) {
+                    directives.add(generateServerDirective(server, serverName, portName));
+                    mLog.debug("Added server to HTTPS Admin mailstore upstream: " + serverName);
+                }
+            }
         }
         mValue = directives;
     }
@@ -2786,11 +2840,11 @@ public class ProxyConfGen
         mConfVars.put("web.upstream.webclient.name", new ProxyConfVar("web.upstream.webclient.name", null, ZIMBRA_UPSTREAM_WEBCLIENT_NAME, ProxyConfValueType.STRING, ProxyConfOverride.CONFIG,"Symbolic name for HTTP upstream webclient cluster"));
         mConfVars.put("web.ssl.upstream.name", new ProxyConfVar("web.ssl.upstream.name", null, ZIMBRA_SSL_UPSTREAM_NAME, ProxyConfValueType.STRING, ProxyConfOverride.CONFIG,"Symbolic name for HTTPS upstream cluster"));
         mConfVars.put("web.ssl.upstream.webclient.name", new ProxyConfVar("web.ssl.upstream.webclient.name", null, ZIMBRA_SSL_UPSTREAM_WEBCLIENT_NAME, ProxyConfValueType.STRING, ProxyConfOverride.CONFIG,"Symbolic name for HTTPS upstream webclient cluster"));
-        mConfVars.put("web.upstream.:servers", new WebMailstoreServersVar());
+        mConfVars.put("web.upstream.:servers", new MailstoreServersVar());
         mConfVars.put("web.upstream.webclient.:servers", new WebServersVar());
         mConfVars.put("web.server_names.max_size", new ProxyConfVar("web.server_names.max_size", "proxy_server_names_hash_max_size", DEFAULT_SERVERS_NAME_HASH_MAX_SIZE, ProxyConfValueType.INTEGER, ProxyConfOverride.LOCALCONFIG, "the server names hash max size, needed to be increased if too many virtual host names are added"));
         mConfVars.put("web.server_names.bucket_size", new ProxyConfVar("web.server_names.bucket_size", "proxy_server_names_hash_bucket_size", DEFAULT_SERVERS_NAME_HASH_BUCKET_SIZE, ProxyConfValueType.INTEGER, ProxyConfOverride.LOCALCONFIG, "the server names hash bucket size, needed to be increased if too many virtual host names are added"));
-        mConfVars.put("web.ssl.upstream.:servers", new WebSSLMailstoreServersVar());
+        mConfVars.put("web.ssl.upstream.:servers", new MailstoreSSLServersVar());
         mConfVars.put("web.ssl.upstream.webclient.:servers", new WebSSLServersVar());
         mConfVars.put("web.uploadmax", new ProxyConfVar("web.uploadmax", "zimbraFileUploadMaxSize", new Long(10485760), ProxyConfValueType.LONG, ProxyConfOverride.SERVER,"Maximum accepted client request body size (indicated by Content-Length) - if content length exceeds this limit, then request fails with HTTP 413"));
         mConfVars.put("web.:error_pages", new ErrorPagesVar());
@@ -2830,7 +2884,7 @@ public class ProxyConfGen
         mConfVars.put("web.admin.uport", new ProxyConfVar("web.admin.uport", "zimbraAdminPort", new Integer(7071), ProxyConfValueType.INTEGER, ProxyConfOverride.SERVER, "Admin console upstream port"));
         mConfVars.put("web.admin.upstream.name", new ProxyConfVar("web.admin.upstream.name", null, ZIMBRA_ADMIN_CONSOLE_UPSTREAM_NAME, ProxyConfValueType.STRING, ProxyConfOverride.CONFIG, "Symbolic name for admin console upstream cluster"));
         mConfVars.put("web.admin.upstream.adminclient.name", new ProxyConfVar("web.admin.upstream.adminclient.name", null, ZIMBRA_ADMIN_CONSOLE_CLIENT_UPSTREAM_NAME, ProxyConfValueType.STRING, ProxyConfOverride.CONFIG, "Symbolic name for admin client console upstream cluster"));
-        mConfVars.put("web.admin.upstream.:servers", new WebMailstoreAdminServersVar());
+        mConfVars.put("web.admin.upstream.:servers", new MailstoreAdminServersVar());
         mConfVars.put("web.admin.upstream.adminclient.:servers", new WebAdminServersVar());
 		mConfVars.put("web.upstream.noop.timeout", new TimeoutVar("web.upstream.noop.timeout", "zimbraMailboxNoopMaxTimeout", 1200*1000L, ProxyConfValueType.TIME, ProxyConfOverride.SERVER, 20*1000L, "the response timeout for NoOpRequest"));
         mConfVars.put("web.upstream.waitset.timeout", new TimeoutVar("web.upstream.waitset.timeout", "zimbraWaitsetMaxRequestTimeout", 1200*1000L, ProxyConfValueType.TIME, ProxyConfOverride.SERVER, 20*1000L, "the response timeout for WaitSetRequest"));
