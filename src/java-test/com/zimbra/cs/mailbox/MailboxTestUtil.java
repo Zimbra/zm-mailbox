@@ -133,12 +133,14 @@ public final class MailboxTestUtil {
 
         IndexStore.registerIndexFactory("mock", MockSolrIndex.Factory.class.getName());
         IndexStore.registerIndexFactory("embeddedsolr",EmbeddedSolrIndex.Factory.class.getName());
-        
+
         //use EmbeddedSolrIndex for indexing, because Solr webapp is nor running
         Provisioning.getInstance().getLocalServer().setIndexURL("embeddedsolr:local");
         IndexStore.setFactory(EmbeddedSolrIndex.Factory.class.getName());
-        
+
         LC.zimbra_class_store.setDefault(storeManagerClass.getName());
+        DebugConfig.storeAllowUnknownFsType = true;
+
         LC.zimbra_class_soapsessionfactory.setDefault(DefaultSoapSessionFactory.class.getName());
         deleteAllIndexFolders();
         setupEmbeddedSolrDirs(true);

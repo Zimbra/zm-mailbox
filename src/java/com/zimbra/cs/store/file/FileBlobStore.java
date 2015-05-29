@@ -44,7 +44,7 @@ import com.zimbra.znative.IO;
 /**
  * @since 2004.10.13
  */
-public final class FileBlobStore extends StoreManager {
+public class FileBlobStore extends StoreManager {
     private static final VolumeManager MANAGER = VolumeManager.getInstance();
 
     @Override

@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -16,29 +16,44 @@
  */
 package com.zimbra.cs.volume;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.io.Closeables;
+import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.db.DbPool;
-import com.zimbra.cs.db.DbVolume;
 import com.zimbra.cs.db.DbPool.DbConnection;
+import com.zimbra.cs.db.DbVolume;
 import com.zimbra.cs.redolog.op.CreateVolume;
 import com.zimbra.cs.redolog.op.DeleteVolume;
 import com.zimbra.cs.redolog.op.ModifyVolume;
 import com.zimbra.cs.redolog.op.RedoableOp;
 import com.zimbra.cs.redolog.op.SetCurrentVolume;
 import com.zimbra.cs.store.IncomingDirectory;
+import com.zimbra.cs.util.Zimbra;
 
 public final class VolumeManager {
 
     private static final VolumeManager SINGLETON = new VolumeManager();
+
+    private static final String UNKNOWN_FILESYSTEM = "unknownfs";
+    private Map<String, String> volumeFsTypes = new HashMap<String, String>();
+    private boolean usingNfs = false;
 
     private final Map<Short, Volume> id2volume = Maps.newHashMap();
     private Volume currentMessageVolume;
@@ -49,7 +64,7 @@ public final class VolumeManager {
         try {
             load();
         } catch (ServiceException e){
-            ZimbraLog.store.error("Failed to initialize VolumeManager", e);
+            Zimbra.halt("Failed to initialize VolumeManager", e);
         }
     }
 
@@ -91,6 +106,17 @@ public final class VolumeManager {
             }
         } finally {
             conn.closeQuietly();
+        }
+        initializeFsTypes();
+        List<Volume> volumes = getAllVolumes();
+        if (volumes != null) {
+            for (Volume volume : volumes) {
+                if (volume.getType() == Volume.TYPE_INDEX) {
+                    continue;
+                }
+                String type = validateFilesystemType(Volume.getAbsolutePath(volume.getRootPath()));
+                ZimbraLog.store.debug("volume %s has type %s", volume.getRootPath(), type);
+            }
         }
     }
 
@@ -416,6 +442,106 @@ public final class VolumeManager {
         if (!root.exists() || !root.isDirectory() || !root.canWrite()) {
             throw VolumeServiceException.NO_SUCH_PATH(path);
         }
+        initializeFsTypes();
+        validateFilesystemType(path);
     }
 
+    public void initializeFsTypes() {
+        synchronized (volumeFsTypes) {
+            volumeFsTypes.clear();
+            usingNfs = false;
+            List<String> command = new ArrayList<String>(1);
+            command.add("mount");
+            BufferedReader in = null;
+            try {
+                ProcessBuilder pb = new ProcessBuilder(command);
+                Process p = pb.start();
+                in = new BufferedReader(new InputStreamReader(p.getInputStream()));
+                parseMount(in);
+            } catch (IOException ioe) {
+                ZimbraLog.store.warn("ioexception determining filesystem types", ioe);
+            } finally {
+                Closeables.closeQuietly(in);
+            }
+        }
+    }
+
+    final Pattern acceptableTypePattern = Pattern.compile(DebugConfig.storeSupportedFsPattern);
+    final Pattern blockedTypePattern = Pattern.compile(DebugConfig.storeBlockedFsPattern);
+
+    public String validateFilesystemType(String path) throws ServiceException {
+        Entry<String, String> match = null;
+        synchronized (volumeFsTypes) {
+            for (Entry<String, String> entry : volumeFsTypes.entrySet()) {
+                if (path.startsWith(entry.getKey())) {
+                    //possible match
+                    if (match == null || entry.getKey().length() > match.getKey().length()) {
+                        match = entry;
+                    }
+                }
+            }
+        }
+        String type = match == null ? UNKNOWN_FILESYSTEM : match.getValue();
+        if (type.startsWith("nfs")) {
+            usingNfs = true;
+        }
+        if (acceptableTypePattern.matcher(type).matches()) {
+            return type;
+        } else if (!blockedTypePattern.matcher(type).matches() && DebugConfig.storeAllowUnknownFsType) {
+            ZimbraLog.store.warn("Filesystem type [%s] not supported for path [%s]. Operation not recommended.", type, path);
+            return type;
+        } else {
+            throw ServiceException.FAILURE("cannot use filesystem type [" + type + "] for store path [" + path +"]", null);
+        }
+
+    }
+
+    private void parseMount(BufferedReader in) throws IOException {
+        String line = null;
+        Pattern pattern = Pattern.compile(DebugConfig.storeMountFsPattern);
+        while ((line = in.readLine()) != null) {
+            Matcher matcher = pattern.matcher(line);
+            if (matcher.find()) {
+                String path = matcher.group(1);
+                String type = matcher.group(2);
+                if (type != null) {
+                    type = type.toLowerCase();
+                } else {
+                    type = UNKNOWN_FILESYSTEM;
+                }
+                if (type.equalsIgnoreCase("nfs")) {
+                    //mount sometimes reports nfsv4 as plain 'nfs'
+                    //use nfsstat to get the version param
+                    BufferedReader nfsStatReader = null;
+                    try {
+                        ProcessBuilder pb = new ProcessBuilder("nfsstat", "-m", path);
+                        Process p = pb.start();
+                        nfsStatReader = new BufferedReader(new InputStreamReader(p.getInputStream()));
+                        String statLine = null;
+                        int majorVer = -1;
+                        Pattern statPattern = Pattern.compile(DebugConfig.storeNfsVersPattern);
+                        while ((statLine = nfsStatReader.readLine()) != null) {
+                            Matcher statMatcher = statPattern.matcher(statLine);
+                            if (statMatcher.find()) {
+                                majorVer = Integer.valueOf(statMatcher.group(1));
+                                type = type + majorVer;
+                                break;
+                            }
+                        }
+                        if (majorVer == -1) {
+                            ZimbraLog.store.warn("unable to determine nfs version? check $nfsstat -m %s output for vers= string", path);
+                        }
+                    } finally {
+                        Closeables.closeQuietly(nfsStatReader);
+                    }
+                }
+                ZimbraLog.store.debug("path [%s] type [%s]", path, type);
+                volumeFsTypes.put(path, type);
+            }
+        }
+    }
+
+    public boolean isUsingNfs() {
+        return usingNfs;
+    }
 }
