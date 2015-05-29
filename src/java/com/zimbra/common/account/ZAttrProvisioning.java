@@ -7345,6 +7345,17 @@ public class ZAttrProvisioning {
     public static final String A_zimbraImapExposeVersionOnBanner = "zimbraImapExposeVersionOnBanner";
 
     /**
+     * Ehcache: the maximum disk size of inactive IMAP cache in Bytes before
+     * eviction.By default this value is 10GB.This is a rough limit,Due to
+     * internals of ehcache actual size on disk will often exceed this limit
+     * by a modest margin.
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2013)
+    public static final String A_zimbraImapInactiveSessionCacheMaxDiskSize = "zimbraImapInactiveSessionCacheMaxDiskSize";
+
+    /**
      * Maximum number of concurrent IMAP connections allowed. New connections
      * exceeding this limit are rejected.
      *
