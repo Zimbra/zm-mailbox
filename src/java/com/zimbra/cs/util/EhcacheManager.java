@@ -24,7 +24,9 @@ import net.sf.ehcache.config.Configuration;
 import net.sf.ehcache.config.DiskStoreConfiguration;
 
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.memcached.MemcachedConnector;
 
 /**
@@ -83,6 +85,14 @@ public final class EhcacheManager {
         conf.setOverflowToDisk(true);
         conf.setDiskPersistent(true);
         conf.setMaxElementsInMemory(1); // virtually disk cache only
+        long maxBytesOnLocalDisk;
+        try {
+            maxBytesOnLocalDisk = Provisioning.getInstance().getLocalServer().getImapInactiveSessionCacheMaxDiskSize();
+               } catch (ServiceException e) {
+                   ZimbraLog.imap.error("Exception while fetching attribute imap ImapInactiveSessionCacheMaxDiskSize",e);
+                   maxBytesOnLocalDisk = 10737418240L ;
+               }
+        conf.setMaxBytesLocalDisk(maxBytesOnLocalDisk);
         conf.setMaxElementsOnDisk(LC.imap_inactive_session_cache_size.intValue());
         return conf;
     }

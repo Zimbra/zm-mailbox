@@ -10676,6 +10676,93 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Ehcache: the maximum disk size of inactive IMAP cache in Bytes before
+     * eviction.By default this value is 10GB.This is a rough limit,Due to
+     * internals of ehcache actual size on disk will often exceed this limit
+     * by a modest margin.
+     *
+     * @return zimbraImapInactiveSessionCacheMaxDiskSize, or 10737418240 if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2013)
+    public long getImapInactiveSessionCacheMaxDiskSize() {
+        return getLongAttr(Provisioning.A_zimbraImapInactiveSessionCacheMaxDiskSize, 10737418240L);
+    }
+
+    /**
+     * Ehcache: the maximum disk size of inactive IMAP cache in Bytes before
+     * eviction.By default this value is 10GB.This is a rough limit,Due to
+     * internals of ehcache actual size on disk will often exceed this limit
+     * by a modest margin.
+     *
+     * @param zimbraImapInactiveSessionCacheMaxDiskSize new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2013)
+    public void setImapInactiveSessionCacheMaxDiskSize(long zimbraImapInactiveSessionCacheMaxDiskSize) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraImapInactiveSessionCacheMaxDiskSize, Long.toString(zimbraImapInactiveSessionCacheMaxDiskSize));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Ehcache: the maximum disk size of inactive IMAP cache in Bytes before
+     * eviction.By default this value is 10GB.This is a rough limit,Due to
+     * internals of ehcache actual size on disk will often exceed this limit
+     * by a modest margin.
+     *
+     * @param zimbraImapInactiveSessionCacheMaxDiskSize new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2013)
+    public Map<String,Object> setImapInactiveSessionCacheMaxDiskSize(long zimbraImapInactiveSessionCacheMaxDiskSize, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraImapInactiveSessionCacheMaxDiskSize, Long.toString(zimbraImapInactiveSessionCacheMaxDiskSize));
+        return attrs;
+    }
+
+    /**
+     * Ehcache: the maximum disk size of inactive IMAP cache in Bytes before
+     * eviction.By default this value is 10GB.This is a rough limit,Due to
+     * internals of ehcache actual size on disk will often exceed this limit
+     * by a modest margin.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2013)
+    public void unsetImapInactiveSessionCacheMaxDiskSize() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraImapInactiveSessionCacheMaxDiskSize, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Ehcache: the maximum disk size of inactive IMAP cache in Bytes before
+     * eviction.By default this value is 10GB.This is a rough limit,Due to
+     * internals of ehcache actual size on disk will often exceed this limit
+     * by a modest margin.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2013)
+    public Map<String,Object> unsetImapInactiveSessionCacheMaxDiskSize(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraImapInactiveSessionCacheMaxDiskSize, "");
+        return attrs;
+    }
+
+    /**
      * Maximum number of concurrent IMAP connections allowed. New connections
      * exceeding this limit are rejected.
      *
