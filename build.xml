@@ -1024,6 +1024,19 @@
             </java>
           </then>
         </if>
+        <if>
+    	    <isset property="is-mac"/>
+    	    <then>
+                <java classname="com.zimbra.cs.localconfig.LocalConfigCLI" fork="true" classpathref="class.path" failonerror="true">
+                  <sysproperty key="zimbra.config" value="${dist.dir}/conf/localconfig.xml"/>
+                  <arg line='-e store_supported_fs_pattern="(hfs)|(nfs4)"'/>
+                </java>
+                <java classname="com.zimbra.cs.localconfig.LocalConfigCLI" fork="true" classpathref="class.path" failonerror="true">
+                  <sysproperty key="zimbra.config" value="${dist.dir}/conf/localconfig.xml"/>
+                  <arg line='-e store_mount_fs_pattern="on (.*) \((\w*),?"'/>
+                </java>
+            </then>
+        </if>
         <copy tofile="${dist.dir}/conf/log4j.properties" file="${config.dir}/log4j.properties${production.suffix}"
               overwrite="true"/>
         <copy todir="${dist.dir}/conf" file="${config.dir}/magic" overwrite="true"/>
