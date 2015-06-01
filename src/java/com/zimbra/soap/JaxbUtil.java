@@ -29,12 +29,6 @@ import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.namespace.QName;
 
-import com.zimbra.soap.account.message.BootstrapMobileGatewayAppRequest;
-import com.zimbra.soap.account.message.BootstrapMobileGatewayAppResponse;
-import com.zimbra.soap.account.message.RegisterMobileGatewayAppRequest;
-import com.zimbra.soap.account.message.RegisterMobileGatewayAppResponse;
-import com.zimbra.soap.account.message.RenewMobileGatewayAppTokenRequest;
-import com.zimbra.soap.account.message.RenewMobileGatewayAppTokenResponse;
 import org.dom4j.Document;
 import org.dom4j.Namespace;
 import org.dom4j.io.DocumentResult;
@@ -292,6 +286,8 @@ public final class JaxbUtil {
             com.zimbra.soap.mail.message.GetCustomMetadataResponse.class,
             com.zimbra.soap.mail.message.GetDataSourcesRequest.class,
             com.zimbra.soap.mail.message.GetDataSourcesResponse.class,
+            com.zimbra.soap.mail.message.GetDataSourceUsageRequest.class,
+            com.zimbra.soap.mail.message.GetDataSourceUsageResponse.class,
             com.zimbra.soap.mail.message.GetDocumentShareURLRequest.class,
             com.zimbra.soap.mail.message.GetDocumentShareURLResponse.class,
             com.zimbra.soap.mail.message.GetEffectiveFolderPermsRequest.class,
@@ -1030,12 +1026,6 @@ public final class JaxbUtil {
             com.zimbra.soap.voice.message.VoiceMsgActionResponse.class,
 
             //zimbra mobile gateway
-            BootstrapMobileGatewayAppRequest.class,
-            BootstrapMobileGatewayAppResponse.class,
-            RenewMobileGatewayAppTokenRequest.class,
-            RenewMobileGatewayAppTokenResponse.class,
-            RegisterMobileGatewayAppRequest.class,
-            RegisterMobileGatewayAppResponse.class,
             com.zimbra.soap.account.message.GetGcmSenderIdRequest.class,
             com.zimbra.soap.account.message.GetGcmSenderIdResponse.class
         };
