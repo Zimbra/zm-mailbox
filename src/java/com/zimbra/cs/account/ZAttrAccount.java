@@ -8547,6 +8547,78 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Quota allotted to each data source
+     *
+     * @return zimbraDataSourceQuota, or 0 if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2015)
+    public long getDataSourceQuota() {
+        return getLongAttr(Provisioning.A_zimbraDataSourceQuota, 0L);
+    }
+
+    /**
+     * Quota allotted to each data source
+     *
+     * @param zimbraDataSourceQuota new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2015)
+    public void setDataSourceQuota(long zimbraDataSourceQuota) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDataSourceQuota, Long.toString(zimbraDataSourceQuota));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Quota allotted to each data source
+     *
+     * @param zimbraDataSourceQuota new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2015)
+    public Map<String,Object> setDataSourceQuota(long zimbraDataSourceQuota, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDataSourceQuota, Long.toString(zimbraDataSourceQuota));
+        return attrs;
+    }
+
+    /**
+     * Quota allotted to each data source
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2015)
+    public void unsetDataSourceQuota() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDataSourceQuota, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Quota allotted to each data source
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2015)
+    public Map<String,Object> unsetDataSourceQuota(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDataSourceQuota, "");
+        return attrs;
+    }
+
+    /**
      * The time interval between automated data imports for a Rss data
      * source. If explicitly set to 0, the data source will not be scheduled
      * for automated polling. . Must be in valid duration format:
@@ -8661,6 +8733,78 @@ public abstract class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetDataSourceRssPollingInterval(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraDataSourceRssPollingInterval, "");
+        return attrs;
+    }
+
+    /**
+     * Quota allotted to all data sources
+     *
+     * @return zimbraDataSourceTotalQuota, or 0 if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2016)
+    public long getDataSourceTotalQuota() {
+        return getLongAttr(Provisioning.A_zimbraDataSourceTotalQuota, 0L);
+    }
+
+    /**
+     * Quota allotted to all data sources
+     *
+     * @param zimbraDataSourceTotalQuota new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2016)
+    public void setDataSourceTotalQuota(long zimbraDataSourceTotalQuota) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDataSourceTotalQuota, Long.toString(zimbraDataSourceTotalQuota));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Quota allotted to all data sources
+     *
+     * @param zimbraDataSourceTotalQuota new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2016)
+    public Map<String,Object> setDataSourceTotalQuota(long zimbraDataSourceTotalQuota, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDataSourceTotalQuota, Long.toString(zimbraDataSourceTotalQuota));
+        return attrs;
+    }
+
+    /**
+     * Quota allotted to all data sources
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2016)
+    public void unsetDataSourceTotalQuota() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDataSourceTotalQuota, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Quota allotted to all data sources
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2016)
+    public Map<String,Object> unsetDataSourceTotalQuota(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDataSourceTotalQuota, "");
         return attrs;
     }
 
@@ -12950,6 +13094,78 @@ public abstract class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetFeatureCrocodocEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureCrocodocEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * Whether data source purging is enabled
+     *
+     * @return zimbraFeatureDataSourcePurgingEnabled, or false if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2014)
+    public boolean isFeatureDataSourcePurgingEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraFeatureDataSourcePurgingEnabled, false);
+    }
+
+    /**
+     * Whether data source purging is enabled
+     *
+     * @param zimbraFeatureDataSourcePurgingEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2014)
+    public void setFeatureDataSourcePurgingEnabled(boolean zimbraFeatureDataSourcePurgingEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureDataSourcePurgingEnabled, zimbraFeatureDataSourcePurgingEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether data source purging is enabled
+     *
+     * @param zimbraFeatureDataSourcePurgingEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2014)
+    public Map<String,Object> setFeatureDataSourcePurgingEnabled(boolean zimbraFeatureDataSourcePurgingEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureDataSourcePurgingEnabled, zimbraFeatureDataSourcePurgingEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether data source purging is enabled
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2014)
+    public void unsetFeatureDataSourcePurgingEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureDataSourcePurgingEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether data source purging is enabled
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2014)
+    public Map<String,Object> unsetFeatureDataSourcePurgingEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureDataSourcePurgingEnabled, "");
         return attrs;
     }
 

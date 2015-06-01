@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -94,6 +94,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.ShareLocator;
 import com.zimbra.cs.datasource.DataSourceManager;
+import com.zimbra.cs.db.DbDataSource;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbMailItem.QueryParams;
 import com.zimbra.cs.db.DbMailbox;
@@ -698,7 +699,7 @@ public class Mailbox {
     // This class handles all the indexing internals for the Mailbox
     public final MailboxIndex index;
     public final MailboxLock lock;
-    
+
     /**
      * Bug: 94985 - Only allow one large empty folder operation to run at a time
      * to reduce the danger of having too many expensive operations running
@@ -5723,7 +5724,7 @@ public class Mailbox {
             }
 
             blob = StoreManager.getInstance().storeIncoming(in);
-            
+
             if (id != null && id.ud != null && id.ud.getBlobDigest() != null && !id.ud.getBlobDigest().isEmpty()) {
                 blob.setDigest(id.ud.getBlobDigest());
             }
@@ -5745,7 +5746,7 @@ public class Mailbox {
             StoreManager.getInstance().quietDelete(blob);
         }
     }
-    
+
     public Message addMessage(OperationContext octxt, InputStream in, long sizeHint, Long receivedDate, DeliveryOptions dopt, DeliveryContext dctxt)
         throws IOException, ServiceException {
         return addMessage(octxt, in, sizeHint, receivedDate, dopt, dctxt, null);
@@ -6088,7 +6089,13 @@ public class Mailbox {
                 redoRecorder.setMergedConversations(mergeConvs);
                 for (Conversation smaller : mergeConvs) {
                     ZimbraLog.mailbox.info("merging conversation %d for references threading", smaller.getId());
-                    conv.merge(smaller);
+//                    try {
+                        conv.merge(smaller);
+//                    } catch (ServiceException e) {
+//                        if (!e.getCode().equals(MailServiceException.NO_SUCH_MSG)) {
+//                            throw e;
+//                        }
+//                    }
                 }
             }
 
@@ -9915,6 +9922,49 @@ public class Mailbox {
             itemIdsWithDeletedFlag = null;
         } else {
             ZimbraLog.purge.debug("IMAP deleted message life time is not set, so bypassed purging messages with IMAP \\Deleted flag");
+        }
+    }
+
+    public long getTotalDataSourceUsage() throws ServiceException {
+        long usage = 0L;
+        for (DataSource ds: getAccount().getAllDataSources()) {
+            usage += getDataSourceUsage(ds);
+        }
+        return usage;
+    }
+
+    public void purgeDataSourceMessage(OperationContext octxt, Message msg, String dataSourceId) throws ServiceException {
+        beginTransaction("purgeMessage", octxt);
+        boolean success = false;
+        try {
+            DbDataSource.purgeMessage(this, msg, dataSourceId);
+            success = true;
+        } finally {
+            endTransaction(success);
+        }
+    }
+
+    public boolean dataSourceMessageIsPurged(DataSource ds, String remoteId) throws ServiceException {
+        beginReadTransaction("checkUidPurged", null);
+        boolean success = false;
+        try {
+            boolean isPurged = DbDataSource.uidIsPurged(ds, remoteId);
+            success = true;
+            return isPurged;
+        } finally {
+            endTransaction(success);
+        }
+    }
+
+    public long getDataSourceUsage(DataSource dataSource) throws ServiceException {
+        beginReadTransaction("dataSourceUsage", null);
+        boolean success = false;
+        try {
+            long usage = DbDataSource.getDataSourceUsage(dataSource);
+            success = true;
+            return usage;
+        } finally {
+            endTransaction(success);
         }
     }
 }

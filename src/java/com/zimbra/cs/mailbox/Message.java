@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -1362,23 +1362,27 @@ public class Message extends MailItem {
         return moved;
     }
 
+    public ParsedMessage getParsedMessage() throws ServiceException {
+        ParsedMessage pm = null;
+        mMailbox.lock.lock();
+        try {
+            // force the pm's received-date to be the correct one
+            ParsedMessageOptions opt = new ParsedMessageOptions().setContent(getMimeMessage(false))
+                .setReceivedDate(getDate())
+                .setAttachmentIndexing(getMailbox().attachmentsIndexingEnabled())
+                .setSize(getSize())
+                .setDigest(getDigest());
+            pm = new ParsedMessage(opt);
+            return pm;
+        } finally {
+            mMailbox.lock.release();
+        }
+    }
+
     @Override
     public List<IndexDocument> generateIndexData() throws TemporaryIndexingException {
         try {
-            ParsedMessage pm = null;
-            mMailbox.lock.lock();
-            try {
-                // force the pm's received-date to be the correct one
-                ParsedMessageOptions opt = new ParsedMessageOptions().setContent(getMimeMessage(false))
-                    .setReceivedDate(getDate())
-                    .setAttachmentIndexing(getMailbox().attachmentsIndexingEnabled())
-                    .setSize(getSize())
-                    .setDigest(getDigest());
-                pm = new ParsedMessage(opt);
-            } finally {
-                mMailbox.lock.release();
-            }
-
+            ParsedMessage pm = getParsedMessage();
             pm.setDefaultCharset(getAccount().getPrefMailDefaultCharset());
 
             if (mMailbox.index.isReIndexInProgress()) {

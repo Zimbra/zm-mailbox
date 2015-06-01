@@ -45981,6 +45981,83 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * The total size (in bytes) of the in-memory queue of conversations to
+     * be purged for each data source
+     *
+     * @return zimbraPurgedConversationsQueueSize, or 1000000 if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2017)
+    public long getPurgedConversationsQueueSize() {
+        return getLongAttr(Provisioning.A_zimbraPurgedConversationsQueueSize, 1000000L);
+    }
+
+    /**
+     * The total size (in bytes) of the in-memory queue of conversations to
+     * be purged for each data source
+     *
+     * @param zimbraPurgedConversationsQueueSize new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2017)
+    public void setPurgedConversationsQueueSize(long zimbraPurgedConversationsQueueSize) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPurgedConversationsQueueSize, Long.toString(zimbraPurgedConversationsQueueSize));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The total size (in bytes) of the in-memory queue of conversations to
+     * be purged for each data source
+     *
+     * @param zimbraPurgedConversationsQueueSize new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2017)
+    public Map<String,Object> setPurgedConversationsQueueSize(long zimbraPurgedConversationsQueueSize, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPurgedConversationsQueueSize, Long.toString(zimbraPurgedConversationsQueueSize));
+        return attrs;
+    }
+
+    /**
+     * The total size (in bytes) of the in-memory queue of conversations to
+     * be purged for each data source
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2017)
+    public void unsetPurgedConversationsQueueSize() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPurgedConversationsQueueSize, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The total size (in bytes) of the in-memory queue of conversations to
+     * be purged for each data source
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2017)
+    public Map<String,Object> unsetPurgedConversationsQueueSize(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPurgedConversationsQueueSize, "");
+        return attrs;
+    }
+
+    /**
      * redolog rollover destination
      *
      * @return zimbraRedoLogArchiveDir, or "redolog/archive" if unset

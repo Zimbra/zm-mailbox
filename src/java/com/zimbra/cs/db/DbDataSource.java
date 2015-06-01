@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2008, 2009, 2010, 2011, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -19,11 +19,19 @@ package com.zimbra.cs.db;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
+import java.util.Collections;
 import java.util.Formatter;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
+import com.google.common.base.Objects;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ListUtil;
@@ -32,8 +40,11 @@ import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.datasource.DataSourceManager;
 import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.mailbox.Flag;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Metadata;
+import com.zimbra.cs.purge.DataSourcePurge.PurgeableConv;
 
 public class DbDataSource {
 
@@ -58,6 +69,8 @@ public class DbDataSource {
     }
 
     public static final String TABLE_DATA_SOURCE_ITEM = "data_source_item";
+    public static final String TABLE_PURGED_MESSAGES = "purged_messages";
+    public static final String TABLE_PURGED_CONVERSATIONS = "purged_conversations";
 
     public static void addMapping(DataSource ds, DataSourceItem item) throws ServiceException {
         addMapping(ds, item, false);
@@ -190,7 +203,7 @@ public class DbDataSource {
             }
         }
     }
-    
+
     public static void deleteMappings(DataSource ds, Collection<Integer> itemIds) throws ServiceException {
         deleteMappings(ds, itemIds, false);
     }
@@ -206,7 +219,7 @@ public class DbDataSource {
             if (isBatch) {
                 conn = mbox.getOperationConnection();
             } else {
-                conn = DbPool.getConnection(mbox);    
+                conn = DbPool.getConnection(mbox);
             }
             int numRows = 0;
             for (List<Integer> curIds : splitIds) {
@@ -227,7 +240,7 @@ public class DbDataSource {
 
                 numRows += stmt.executeUpdate();
                 if (!isBatch) {
-                    conn.commit();    
+                    conn.commit();
                 }
                 stmt.close();
             }
@@ -351,7 +364,7 @@ public class DbDataSource {
                 stmt.setInt(pos++, folderId);
                 int numRows = stmt.executeUpdate();
                 if (!isBatch) {
-                    conn.commit();    
+                    conn.commit();
                 }
                 stmt.close();
                 ZimbraLog.datasource.debug("Deleted %d mappings for %s", numRows, ds.getName());
@@ -555,7 +568,7 @@ public class DbDataSource {
         }
         return items;
     }
-    
+
     public static DataSourceItem getMapping(DataSource ds, int itemId) throws ServiceException {
         return getMapping(ds, itemId, false);
     }
@@ -576,7 +589,7 @@ public class DbDataSource {
             if (isBatch) {
                 conn = mbox.getOperationConnection();
             } else {
-                conn = DbPool.getConnection(mbox);    
+                conn = DbPool.getConnection(mbox);
             }
             StringBuilder sb = new StringBuilder();
             sb.append("SELECT folder_id, remote_id, metadata FROM ");
@@ -605,7 +618,7 @@ public class DbDataSource {
             DbPool.closeResults(rs);
             DbPool.closeStatement(stmt);
             if (!isBatch) {
-                DbPool.quietClose(conn);    
+                DbPool.quietClose(conn);
             }
         }
         return new DataSourceItem(folderId, itemId, remoteId, md);
@@ -764,6 +777,164 @@ public class DbDataSource {
         return items;
     }
 
+    public static int getDataSourceUsage(DataSource ds) throws ServiceException {
+        Mailbox mbox = DataSourceManager.getInstance().getMailbox(ds);
+        ZimbraLog.datasource.debug("Getting size of %s", ds.getName());
+
+        DbConnection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        int totalSize = 0;
+        try {
+            conn = mbox.getOperationConnection();
+            StringBuilder sb = new StringBuilder();
+            sb.append("SELECT sum(mi.size) FROM ");
+            sb.append(getTableName(mbox)).append(" ds");
+            sb.append(" INNER JOIN ");
+            sb.append(DbMailItem.getMailItemTableName(mbox)).append(" mi");
+            sb.append(" ON ds.mailbox_id = mi.mailbox_id AND ds.item_id = mi.id");
+            sb.append(" WHERE ds.mailbox_id = ? AND ds.data_source_id = ? AND mi.type = ?");
+            stmt = conn.prepareStatement(sb.toString());
+            int pos = 1;
+            pos = DbMailItem.setMailboxId(stmt, mbox, pos);
+            stmt.setString(pos++, ds.getId());
+            stmt.setByte(pos++, MailItem.Type.MESSAGE.toByte());
+            rs = stmt.executeQuery();
+            while (rs.next()) {
+                totalSize = rs.getInt(1);
+                break;
+            }
+            rs.close();
+            stmt.close();
+            return totalSize;
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("Unable to get size of dataSource " + ds.getName(), e);
+        } finally {
+            DbPool.closeResults(rs);
+            DbPool.closeStatement(stmt);
+        }
+    }
+
+
+    public static List<PurgeableConv> getOldestConversationsUpToSize(DataSource ds, long targetSize) throws ServiceException {
+        return getOldestConversationsUpToSize(Collections.singletonList(ds), targetSize, 0);
+    }
+
+    public static List<PurgeableConv> getOldestConversationsUpToSize(List<DataSource> dataSources, long targetSize) throws ServiceException {
+        return getOldestConversationsUpToSize(dataSources, targetSize, 0);
+    }
+
+    public static List<PurgeableConv> getOldestConversationsUpToSize(DataSource ds, long targetSize, long startDate) throws ServiceException {
+        return getOldestConversationsUpToSize(Collections.singletonList(ds), targetSize, 0);
+    }
+
+    public static List<PurgeableConv> getOldestConversationsUpToSize(List<DataSource> dataSources, long targetSize, long startDate) throws ServiceException {
+        Mailbox mbox = DataSourceManager.getInstance().getMailbox(dataSources.get(0));
+        DbConnection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        long totalSize = 0;
+        try {
+            conn = DbPool.getConnection();
+            StringBuilder sb = new StringBuilder();
+            sb.append("SELECT DISTINCT COALESCE(msgs.parent_id, msgs.msg_id) AS item_id,"
+                    + " msgs.data_source_id AS data_source,"
+                    + " COALESCE(convs.latest_date, msgs.mdate) AS newest_msg_date,"
+                    + " COALESCE(convs.num_msgs, 1) AS num_msgs,"
+                    + " COALESCE(convs.conv_size, msgs.msize) AS size");
+            sb.append(" FROM ");
+            sb.append("(SELECT di.data_source_id AS data_source_id, "
+                    + " mi.id AS msg_id,"
+                    + " mi.parent_id AS parent_id,"
+                    + " mi.size AS msize,"
+                    + " mi.date AS mdate FROM ");
+            sb.append(getTableName(mbox)).append(" di ");
+            sb.append(" INNER JOIN ");
+            sb.append(DbMailItem.getMailItemTableName(mbox)).append(" mi ");
+            sb.append(" ON di.mailbox_id = mi.mailbox_id AND di.item_id = mi.id");
+            sb.append(" WHERE di.mailbox_id = ? AND mi.type = ? AND ");
+            sb.append(DbUtil.whereIn("di.data_source_id", dataSources.size()));
+            sb.append(") AS msgs");
+            sb.append(" LEFT JOIN ");
+            sb.append("(SELECT parent_id, max(date) AS latest_date, count(date) AS num_msgs, sum(size) AS conv_size");
+            sb.append(" FROM ").append(DbMailItem.getMailItemTableName(mbox));
+            sb.append(" WHERE mailbox_id = ? AND type = ? GROUP BY parent_id) AS convs");
+            sb.append(" ON msgs.parent_id = convs.parent_id");
+            if (startDate > 0L) {
+                sb.append(" WHERE COALESCE(convs.latest_date, msgs.mdate) > ?");
+            }
+            sb.append(" ORDER BY COALESCE(convs.latest_date, msgs.mdate) ASC");
+            stmt = conn.prepareStatement(sb.toString());
+            int pos = 1;
+            pos = DbMailItem.setMailboxId(stmt, mbox, pos);
+            stmt.setByte(pos++, MailItem.Type.MESSAGE.toByte());
+            for (DataSource ds: dataSources) {
+                stmt.setString(pos++, ds.getId());
+            }
+            pos = DbMailItem.setMailboxId(stmt, mbox, pos);
+            stmt.setByte(pos++, MailItem.Type.MESSAGE.toByte());
+            if (startDate > 0L) {
+                stmt.setLong(pos++, startDate);
+            }
+            rs = stmt.executeQuery();
+            List<PurgeableConv> convs = new LinkedList<PurgeableConv>();
+            while (rs.next() && totalSize < targetSize) {
+                long convSize = rs.getLong("size");
+                int itemId = rs.getInt("item_id");
+                int numMsgs = rs.getInt("num_msgs");
+                long convDate = rs.getLong("newest_msg_date");
+                String dataSourceId = rs.getString("data_source");
+                convs.add(new PurgeableConv(itemId, convSize, convDate, dataSourceId, numMsgs));
+                totalSize += convSize;
+            }
+            rs.close();
+            stmt.close();
+            return convs;
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("Unable to get oldest conversations for data sources", e);
+        } finally {
+            DbPool.closeResults(rs);
+            DbPool.closeStatement(stmt);
+            DbPool.quietClose(conn);
+        }
+    }
+
+    public static Set<Integer> getConvMessageIdsInDataSource(Mailbox mbox, Integer convId, String dsId) throws ServiceException {
+        DbConnection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        try {
+            conn = DbPool.getConnection();
+            StringBuilder sb = new StringBuilder();
+            sb.append("SELECT mi.id FROM ");
+            sb.append("(SELECT id, mailbox_id FROM ");
+            sb.append(DbMailItem.getMailItemTableName(mbox));
+            sb.append(" WHERE mailbox_id = ? AND parent_id = ?");
+            sb.append(") mi");
+            sb.append(" INNER JOIN ").append(getTableName(mbox)).append(" dsi ");
+            sb.append("ON dsi.mailbox_id = mi.mailbox_id AND dsi.item_id = mi.id ");
+            sb.append("WHERE dsi.data_source_id = ?");
+            stmt = conn.prepareStatement(sb.toString());
+            int pos = 1;
+            pos = DbMailItem.setMailboxId(stmt, mbox, pos);
+            stmt.setInt(pos++, convId);
+            stmt.setString(pos++, dsId);
+            rs = stmt.executeQuery();
+            Set<Integer> ids = new HashSet<Integer>();
+            while (rs.next()) {
+                ids.add(rs.getInt(1));
+            }
+            rs.close();
+            stmt.close();
+            return ids;
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("Unable to get message IDs for conversation in data source", e);
+        } finally {
+            DbPool.closeResults(rs);
+            DbPool.closeStatement(stmt);
+            DbPool.quietClose(conn);
+        }
+    }
     public static String getTableName(int mailboxId, int groupId) {
         return DbMailbox.qualifyTableName(groupId, TABLE_DATA_SOURCE_ITEM);
     }
@@ -772,4 +943,354 @@ public class DbDataSource {
         return DbMailbox.qualifyTableName(mbox, TABLE_DATA_SOURCE_ITEM);
     }
 
+    public static String getPurgedConvsTableName(Mailbox mbox) {
+        return DbMailbox.qualifyTableName(mbox, TABLE_PURGED_CONVERSATIONS);
+    }
+
+    public static String getPurgedMessagesTableName(Mailbox mbox) {
+        return DbMailbox.qualifyTableName(mbox, TABLE_PURGED_MESSAGES);
+    }
+
+    public static void purgeMessage(Mailbox mbox, Message msg, String dsId) throws ServiceException {
+        ZimbraLog.datasource.debug("Purging message %d from data source %s", msg.getId(), dsId);
+        DbConnection conn = null;
+        PreparedStatement stmt = null;
+        try {
+            conn = mbox.getOperationConnection();
+            StringBuilder sb = new StringBuilder();
+            sb.append("INSERT INTO ").append(getPurgedMessagesTableName(mbox));
+            sb.append(" (mailbox_id, data_source_id, item_id, parent_id, remote_id, remote_folder_id, purge_date) ");
+            sb.append("SELECT dsi.mailbox_id, dsi.data_source_id, dsi.item_id, ?, dsi.remote_id, dsi_inner.remote_id, ?");
+            sb.append(" FROM ");
+            sb.append("(SELECT * FROM ").append(getTableName(mbox));
+            sb.append(" WHERE mailbox_id = ? AND data_source_id = ? AND item_id = ?) dsi");
+            sb.append(" INNER JOIN ");
+            sb.append("(SELECT item_id, remote_id FROM ").append(getTableName(mbox));
+            sb.append(" WHERE mailbox_id = ? AND data_source_id = ?) dsi_inner");
+            sb.append(" ON dsi.folder_id = dsi_inner.item_id");
+            stmt = conn.prepareStatement(sb.toString());
+            int pos = 1;
+            if (msg.getConversationId() < 0) {
+                stmt.setNull(pos++, Types.INTEGER);
+            } else {
+                stmt.setInt(pos++, msg.getConversationId());
+            }
+            stmt.setInt(pos++, (int)(System.currentTimeMillis() / 1000));
+            pos = DbMailItem.setMailboxId(stmt, mbox, pos);
+            stmt.setString(pos++, dsId);
+            stmt.setInt(pos++, msg.getId());
+            pos = DbMailItem.setMailboxId(stmt, mbox, pos);
+            stmt.setString(pos++, dsId);
+            stmt.execute();
+            conn.commit();
+            stmt.close();
+        } catch (SQLException e) {
+            if (Db.errorMatches(e, Db.Error.DUPLICATE_ROW)) {
+                ZimbraLog.datasource.warn(String.format("purging message %d more than once", msg.getId()));
+                return;
+            }
+            throw ServiceException.FAILURE("Unable to record purged message", e);
+        } finally {
+            DbPool.closeStatement(stmt);
+        }
+    }
+
+    public static void moveToPurgedConversations(Mailbox mbox, MailItem item, String dsId) throws ServiceException {
+        DbConnection conn = null;
+        PreparedStatement stmt = null;
+        try {
+            conn = DbPool.getConnection();
+            StringBuilder sb = new StringBuilder();
+            sb.append("INSERT INTO ").append(getPurgedConvsTableName(mbox));
+            sb.append("(mailbox_id, data_source_id, item_id, hash)");
+            sb.append(" SELECT ?, ").append(String.format("'%s', ", dsId)).append(" conv_id, hash");
+            sb.append(" FROM ").append(DbMailItem.getConversationTableName(mbox)).append(" ci");
+            sb.append(" WHERE ci.mailbox_id = ? AND ci.conv_id = ?");
+            stmt = conn.prepareStatement(sb.toString());
+            int pos = 1;
+            stmt.setInt(pos++, mbox.getId());
+            pos = DbMailItem.setMailboxId(stmt, mbox, pos);
+            stmt.setInt(pos++, item.getId());
+            stmt.execute();
+            conn.commit();
+            stmt.close();
+        } catch (SQLException e) {
+            if (Db.errorMatches(e, Db.Error.DUPLICATE_ROW)) {
+                ZimbraLog.datasource.warn(String.format("moving item %d to purged conversations table more than once", item.getId()));
+                return;
+            }
+            throw ServiceException.FAILURE("Unable to move conversation to purged_conversations table", e);
+        } finally {
+            DbPool.closeStatement(stmt);
+            DbPool.quietClose(conn);
+        }
+    }
+
+    public static boolean uidIsPurged(DataSource ds, String remoteId) throws ServiceException {
+        Mailbox mbox = DataSourceManager.getInstance().getMailbox(ds);
+        DbConnection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs;
+        try {
+            conn = mbox.getOperationConnection();
+            StringBuilder sb = new StringBuilder();
+            sb.append(" SELECT COUNT(*) FROM ").append(getPurgedMessagesTableName(mbox));
+            sb.append(" WHERE mailbox_id = ? AND data_source_id = ? AND remote_id = ?");
+            sb.append(" GROUP BY remote_id");
+            stmt = conn.prepareStatement(sb.toString());
+            int pos = 1;
+            stmt.setInt(pos++, mbox.getId());
+            stmt.setString(pos++, ds.getId());
+            stmt.setString(pos++, remoteId);
+            rs = stmt.executeQuery();
+            boolean exists = false;
+            while (rs.next()) {
+                int count = rs.getInt(1);
+                if (count > 0) {
+                    exists = true;
+                    if (count > 1) {
+                        ZimbraLog.datasource.warn("remote id should not show up in the purged messages table more than once");
+                    }
+                }
+            }
+            rs.close();
+            stmt.close();
+            return exists;
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("Unable to move conversation to purged_conversations table", e);
+        } finally {
+            DbPool.closeStatement(stmt);
+        }
+    }
+
+    private static void removeFromPurgedMessageTable(Mailbox mbox, DataSource ds, PurgedMessage msg) throws ServiceException {
+        DbConnection conn = null;
+        PreparedStatement stmt = null;
+        try {
+            conn = DbPool.getConnection();
+            StringBuilder sb = new StringBuilder();
+            sb.append("DELETE FROM ").append(getPurgedMessagesTableName(mbox));
+            sb.append(" WHERE mailbox_id = ? AND data_source_id = ? AND item_id = ?");
+            stmt = conn.prepareStatement(sb.toString());
+            int pos = 1;
+            pos = DbMailItem.setMailboxId(stmt, mbox, pos);
+            stmt.setString(pos++, ds.getId());
+            stmt.setInt(pos++, msg.getMsgId());
+            stmt.executeUpdate();
+            stmt.close();
+            conn.commit();
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("Unable delete purged message", e);
+        } finally {
+            DbPool.closeStatement(stmt);
+            DbPool.quietClose(conn);
+        }
+    }
+
+    private static void removeFromPurgedConversationTable(Mailbox mbox, DataSource ds, PurgedMessage msg) throws ServiceException {
+        DbConnection conn = null;
+        PreparedStatement stmt = null;
+        try {
+            conn = DbPool.getConnection();
+            StringBuilder sb = new StringBuilder();
+            sb.append("DELETE FROM ").append(getPurgedConvsTableName(mbox));
+            sb.append(" WHERE mailbox_id = ? AND data_source_id = ? AND item_id = ?");
+            stmt = conn.prepareStatement(sb.toString());
+            int pos = 1;
+            pos = DbMailItem.setMailboxId(stmt, mbox, pos);
+            stmt.setString(pos++, ds.getId());
+            Integer parentId = msg.getParentId();
+            stmt.setInt(pos++, parentId != null && parentId > 0 ? parentId : msg.getMsgId());
+            stmt.executeUpdate();
+            stmt.close();
+            conn.commit();
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("Unable delete purged conversation", e);
+        } finally {
+            DbPool.closeStatement(stmt);
+            DbPool.quietClose(conn);
+        }
+    }
+    public static void removePurgedMessage(DataSource ds, PurgedMessage msg)  throws ServiceException {
+        Mailbox mbox = DataSourceManager.getInstance().getMailbox(ds);
+        removeFromPurgedMessageTable(mbox, ds, msg);
+        removeFromPurgedConversationTable(mbox, ds, msg);
+    }
+
+    public static List<PurgedConversation> lookupPurgedConversationsByHash(DataSource ds, List<String> hashes) throws ServiceException {
+        Mailbox mbox = DataSourceManager.getInstance().getMailbox(ds);
+        DbConnection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs;
+        Map<Integer, PurgedConversation> convMap = new HashMap<Integer, PurgedConversation>();
+        try {
+            conn = DbPool.getConnection();
+            StringBuilder sb = new StringBuilder();
+            sb.append("SELECT pm.item_id, pm.parent_id, pm.remote_id, pm.remote_folder_id FROM");
+            sb.append(" (SELECT item_id, parent_id, remote_id, remote_folder_id FROM ").append(getPurgedMessagesTableName(mbox));
+            sb.append(" WHERE mailbox_id = ? AND data_source_id = ?)");
+            sb.append(" pm ");
+            sb.append(" INNER JOIN ");
+            sb.append("(SELECT DISTINCT item_id FROM ").append(getPurgedConvsTableName(mbox));
+            sb.append(" WHERE mailbox_id = ? AND data_source_id = ? AND ");
+            sb.append(DbUtil.whereIn("hash", hashes.size()));
+            sb.append(") pc ");
+            sb.append("ON COALESCE(pm.parent_id, pm.item_id) = pc.item_id");
+            stmt = conn.prepareStatement(sb.toString());
+            int pos = 1;
+            pos = DbMailItem.setMailboxId(stmt, mbox, pos);
+            stmt.setString(pos++, ds.getId());
+            pos = DbMailItem.setMailboxId(stmt, mbox, pos);
+            stmt.setString(pos++, ds.getId());
+            for (String hash: hashes) {
+                stmt.setString(pos++, hash);
+            }
+            rs = stmt.executeQuery();
+            while (rs.next()) {
+                Integer msgId = rs.getInt(1);
+                Integer parentId = rs.getInt(2);
+                String remoteId =  rs.getString(3);
+                String remoteFolderId = rs.getString(4);
+                PurgedConversation conv = null;
+                if (convMap.containsKey(parentId)) {
+                    conv = convMap.get(parentId);
+                } else {
+                    conv = new PurgedConversation(ds, parentId);
+                    convMap.put(parentId, conv);
+                }
+                conv.addMessage(new PurgedMessage(msgId, parentId, remoteId, remoteFolderId));
+            }
+            rs.close();
+            stmt.close();
+            Collection<PurgedConversation> values = convMap.values();
+            return new ArrayList<PurgedConversation>(values);
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("Unable to get purged conversations", e);
+        } finally {
+            DbPool.closeStatement(stmt);
+            DbPool.quietClose(conn);
+        }
+    }
+
+    private static void deletePurgeDataByDataSource(Mailbox mbox, String dataSourceId, String tableName) throws ServiceException {
+        DbConnection conn = null;
+        PreparedStatement stmt = null;
+        try {
+            conn = DbPool.getConnection();
+            StringBuilder sb = new StringBuilder();
+            sb.append("DELETE FROM ").append(tableName);
+            sb.append(" WHERE mailbox_id = ? AND data_source_id = ?");
+            stmt = conn.prepareStatement(sb.toString());
+            int pos = 1;
+            pos = DbMailItem.setMailboxId(stmt, mbox, pos);
+            stmt.setString(pos++, dataSourceId);
+            stmt.executeUpdate();
+            stmt.close();
+            conn.commit();
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("Unable delete purged conversations for data source", e);
+        } finally {
+            DbPool.closeStatement(stmt);
+            DbPool.quietClose(conn);
+        }
+    }
+
+    public static void deletePurgedDataForDataSource(Mailbox mbox, String dataSourceId) throws ServiceException {
+        deletePurgeDataByDataSource(mbox, dataSourceId, getPurgedConvsTableName(mbox));
+        deletePurgeDataByDataSource(mbox, dataSourceId, getPurgedMessagesTableName(mbox));
+    }
+
+    public static void storePurgedConversationHash(Mailbox mbox, String dataSourceId, Integer convId, String hash)
+    throws ServiceException {
+        DbConnection conn = null;
+        PreparedStatement stmt = null;
+        try {
+            conn = DbPool.getConnection();
+            StringBuilder sb = new StringBuilder();
+            sb.append("INSERT INTO ").append(getPurgedConvsTableName(mbox));
+            sb.append(" (mailbox_id, data_source_id, item_id, hash) VALUES (?, ?, ?, ?)");
+            stmt = conn.prepareStatement(sb.toString());
+            int pos = 1;
+            pos = DbMailItem.setMailboxId(stmt, mbox, pos);
+            stmt.setString(pos++,  dataSourceId);
+            stmt.setInt(pos++, convId);
+            stmt.setString(pos++, hash);
+            stmt.executeUpdate();
+            stmt.close();
+            conn.commit();
+        } catch (SQLException e) {
+            if (Db.errorMatches(e, Db.Error.DUPLICATE_ROW)) {
+                ZimbraLog.datasource.warn("inserting duplicate hash");
+            } else {
+                throw ServiceException.FAILURE("Unable to insert purged conversation hash", e);
+            }
+        } finally {
+            DbPool.closeStatement(stmt);
+            DbPool.quietClose(conn);
+        }
+    }
+
+    public static class PurgedConversation {
+        private Integer id;
+        private DataSource ds;
+        private List<PurgedMessage> messages = new ArrayList<PurgedMessage>();
+
+        public PurgedConversation(DataSource ds, Integer convId) {
+            this.ds = ds;
+            this.id = convId;
+        }
+
+        public void addMessage(PurgedMessage pm) {
+            messages.add(pm);
+        }
+
+        public List<PurgedMessage> getMessages() {
+            return messages;
+        }
+
+        public Integer getId() {
+            return id;
+        }
+
+        public void unpurge() throws ServiceException {
+            for (PurgedMessage msg: messages) {
+                DbDataSource.removePurgedMessage(ds, msg);
+            }
+        }
+    }
+
+    public static class PurgedMessage {
+        private Integer msgId;
+        private Integer parentId;
+        private String remoteId;
+        private String remoteFolder;
+
+        public PurgedMessage(Integer msgId, Integer parentId, String remoteId, String remoteFolder) {
+            this.msgId = msgId;
+            this.parentId = parentId;
+            this.remoteId = remoteId;
+            this.remoteFolder = remoteFolder;
+        }
+
+        public Integer getMsgId() { return msgId; }
+
+        public Integer getParentId() { return parentId; }
+
+        public String getRemoteId() { return remoteId; }
+
+        public String getRemoteFolder() { return remoteFolder; }
+
+        public String getUid() { return remoteId.split("_")[1]; }
+
+        public Integer getLocalFolderId() { return Integer.valueOf(remoteId.split("_")[0]); }
+
+        @Override
+        public String toString() {
+            Objects.ToStringHelper helper = Objects.toStringHelper(this);
+            helper.add("id", msgId);
+            helper.add("remote id", remoteId);
+            helper.add("folder", remoteFolder);
+            return helper.toString();
+        }
+    }
 }
