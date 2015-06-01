@@ -15,11 +15,6 @@
  * ***** END LICENSE BLOCK *****
  */
 
-/*
- * Created on Sep 23, 2004
- *
- * Window - Preferences - Java - Code Style - Code Templates
- */
 package com.zimbra.cs.account;
 
 import java.util.Map;
@@ -30,8 +25,6 @@ import com.zimbra.cs.account.ldap.entry.LdapAlwaysOnCluster;
 
 /**
  * @author schemers
- *
- * Window - Preferences - Java - Code Style - Code Templates
  */
 public class Server extends ZAttrServer {
 
@@ -44,7 +37,7 @@ public class Server extends ZAttrServer {
         try {
             AlwaysOnCluster aoc = prov.getAlwaysOnCluster(this);
             if (aoc != null) {
-                setOverrideDefaults(aoc.getServerOverrides());
+                setOverrideValues(aoc.getServerOverrides());
                 if (aoc instanceof LdapAlwaysOnCluster) {
                     alwaysOnClusterEntryCSN = ((LdapAlwaysOnCluster)aoc).getEntryCSN();
                     alwaysOnClusterDN = ((LdapAlwaysOnCluster) aoc).getDN();

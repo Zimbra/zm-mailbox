@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -80,7 +80,7 @@ public abstract class Entry implements ToZJSONObject {
     private Map<String,Object> mAttrs;
     private Map<String,Object> mDefaults;
     private Map<String,Object> mSecondaryDefaults;
-    private Map<String, Object> overrideDefaults;
+    private Map<String, Object> overrideValues;
     private Map<String, Object> mData;
     private Map<String, Set<String>> mMultiAttrSetCache;
     private Map<String, Set<byte[]>> mMultiBinaryAttrSetCache;
@@ -97,28 +97,28 @@ public abstract class Entry implements ToZJSONObject {
 
     protected Entry(Map<String,Object> attrs, Map<String,Object> defaults,
             Provisioning provisioning) {
-    	mProvisioning = provisioning;
-    	mAttrs = attrs;
+        mProvisioning = provisioning;
+        mAttrs = attrs;
         mDefaults = defaults;
         setAttributeManager();
     }
 
     protected Entry(Map<String,Object> attrs, Map<String,Object> defaults,
             Map<String,Object> secondaryDefaults, Provisioning provisioning) {
-    	mProvisioning = provisioning;
-    	mAttrs = attrs;
+        mProvisioning = provisioning;
+        mAttrs = attrs;
         mDefaults = defaults;
         mSecondaryDefaults = secondaryDefaults;
         setAttributeManager();
     }
 
     protected Entry(Map<String,Object> attrs, Map<String,Object> defaults,
-            Map<String,Object> secondaryDefaults, Map<String,Object> overrideDefaults, Provisioning provisioning) {
+            Map<String,Object> secondaryDefaults, Map<String,Object> overrideValues, Provisioning provisioning) {
         mProvisioning = provisioning;
         mAttrs = attrs;
         mDefaults = defaults;
         mSecondaryDefaults = secondaryDefaults;
-        this.overrideDefaults = overrideDefaults;
+        this.overrideValues = overrideValues;
         setAttributeManager();
     }
 
@@ -135,7 +135,7 @@ public abstract class Entry implements ToZJSONObject {
     }
 
     public Provisioning getProvisioning() {
-    	return mProvisioning;
+        return mProvisioning;
     }
 
     // for debugging/logging, subclass should define a proper "label"
@@ -145,11 +145,11 @@ public abstract class Entry implements ToZJSONObject {
     }
 
     public synchronized void setAttrs(Map<String,Object> attrs,
-            Map<String,Object> defaults, Map<String,Object> secondaryDefaults, Map<String,Object> overrideDefaults) {
+            Map<String,Object> defaults, Map<String,Object> secondaryDefaults, Map<String,Object> overrideValues) {
         mAttrs = attrs;
         mDefaults = defaults;
         mSecondaryDefaults = secondaryDefaults;
-        this.overrideDefaults = overrideDefaults;
+        this.overrideValues = overrideValues;
         resetData();
     }
 
@@ -175,8 +175,8 @@ public abstract class Entry implements ToZJSONObject {
         resetData();
     }
 
-    public synchronized void setOverrideDefaults(Map<String,Object> overrideDefaults) {
-        this.overrideDefaults = overrideDefaults;
+    public synchronized void setOverrideValues(Map<String,Object> overrideValues) {
+        this.overrideValues = overrideValues;
         resetData();
     }
 
@@ -198,47 +198,68 @@ public abstract class Entry implements ToZJSONObject {
      * @return
      */
     private Object getObject(String name, boolean applyDefaults) {
-        Object v = mAttrs.get(name);
-        if (v != null) return v;
+        Object v;
+        if (applyDefaults && (overrideValues != null)) {
+            v = overrideValues.get(name);
+            if (v != null) {
+                return v;
+            }
+        }
+        v = mAttrs.get(name);
+        if (v != null) {
+            return v;
+        }
 
         v = getValueByRealAttrName(name, mAttrs);
-        if (v != null) return v;
+        if (v != null) {
+            return v;
+        }
 
-        if (!applyDefaults)
+        if (!applyDefaults) {
             return null;
+        }
 
         return getAttrDefault(name);
     }
 
     public Object getAttrDefault(String name) {
-
         Object v;
+        if (overrideValues != null) {
+            v = overrideValues.get(name);
+            if (v != null) {
+                return v;
+            }
 
-        if (overrideDefaults != null) {
-            v = overrideDefaults.get(name);
-            if (v != null) return v;
-
-            v = getValueByRealAttrName(name, overrideDefaults);
-            if (v != null) return v;
+            v = getValueByRealAttrName(name, overrideValues);
+            if (v != null) {
+                return v;
+            }
         }
 
         // check defaults
         if (mDefaults != null) {
             v = mDefaults.get(name);
-            if (v != null) return v;
+            if (v != null) {
+                return v;
+            }
 
             v = getValueByRealAttrName(name, mDefaults);
-            if (v != null) return v;
+            if (v != null) {
+                return v;
+            }
         }
 
         // check secondary defaults
         if (mSecondaryDefaults != null) {
             v = mSecondaryDefaults.get(name);
-            if (v != null) return v;
+            if (v != null) {
+                return v;
+            }
 
             v = getValueByRealAttrName(name, mSecondaryDefaults);
-            if (v != null) return v;
-
+            if (v != null) {
+                return v;
+            }
         }
         return null;
     }
@@ -330,8 +351,8 @@ public abstract class Entry implements ToZJSONObject {
             attrs.putAll(mAttrs);
 
             // override with overrides if set
-            if (overrideDefaults != null) {
-                attrs.putAll(overrideDefaults);
+            if (overrideValues != null) {
+                attrs.putAll(overrideValues);
             }
             return attrs;
         } else {
@@ -710,5 +731,4 @@ public abstract class Entry implements ToZJSONObject {
         }
         return sorted;
     }
-
 }
