@@ -1842,9 +1842,9 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>URL prefix for where the zimbra app resides on this server</desc>
 </attr>
 
-<attr id="341" name="zimbraPrefCalendarApptReminderWarningTime" type="integer" min="0" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+<attr id="341" name="zimbraPrefCalendarApptReminderWarningTime" type="integer" min="-1" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
   <defaultCOSValue>5</defaultCOSValue>
-  <desc>number of minutes (0 = never) before appt to show reminder dialog</desc>
+  <desc>number of minutes (-1 = never) before appt to show reminder dialog</desc>
 </attr>
 
 <attr id="342" name="zimbraFeatureMailForwardingEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">

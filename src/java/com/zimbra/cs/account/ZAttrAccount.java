@@ -35222,7 +35222,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * number of minutes (0 = never) before appt to show reminder dialog
+     * number of minutes (-1 = never) before appt to show reminder dialog
      *
      * @return zimbraPrefCalendarApptReminderWarningTime, or 5 if unset
      */
@@ -35232,7 +35232,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * number of minutes (0 = never) before appt to show reminder dialog
+     * number of minutes (-1 = never) before appt to show reminder dialog
      *
      * @param zimbraPrefCalendarApptReminderWarningTime new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -35245,7 +35245,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * number of minutes (0 = never) before appt to show reminder dialog
+     * number of minutes (-1 = never) before appt to show reminder dialog
      *
      * @param zimbraPrefCalendarApptReminderWarningTime new value
      * @param attrs existing map to populate, or null to create a new map
@@ -35259,7 +35259,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * number of minutes (0 = never) before appt to show reminder dialog
+     * number of minutes (-1 = never) before appt to show reminder dialog
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -35271,7 +35271,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * number of minutes (0 = never) before appt to show reminder dialog
+     * number of minutes (-1 = never) before appt to show reminder dialog
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
