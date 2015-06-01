@@ -4861,6 +4861,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraDataSourcePort = "zimbraDataSourcePort";
 
     /**
+     * Quota allotted to each data source
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2015)
+    public static final String A_zimbraDataSourceQuota = "zimbraDataSourceQuota";
+
+    /**
      * Read timeout in seconds
      *
      * @since ZCS 6.0.7
@@ -4943,6 +4951,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1912)
     public static final String A_zimbraDataSourceSmtpPort = "zimbraDataSourceSmtpPort";
+
+    /**
+     * Quota allotted to all data sources
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2016)
+    public static final String A_zimbraDataSourceTotalQuota = "zimbraDataSourceTotalQuota";
 
     /**
      * type of data source (pop3, imap, caldav, etc)
@@ -5808,6 +5824,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1381)
     public static final String A_zimbraFeatureCrocodocEnabled = "zimbraFeatureCrocodocEnabled";
+
+    /**
+     * Whether data source purging is enabled
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2014)
+    public static final String A_zimbraFeatureDataSourcePurgingEnabled = "zimbraFeatureDataSourcePurgingEnabled";
 
     /**
      * enable end-user mail discarding defined in mail filters features
@@ -12948,6 +12972,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1351)
     public static final String A_zimbraPublicSharingEnabled = "zimbraPublicSharingEnabled";
+
+    /**
+     * The total size (in bytes) of the in-memory queue of conversations to
+     * be purged for each data source
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2017)
+    public static final String A_zimbraPurgedConversationsQueueSize = "zimbraPurgedConversationsQueueSize";
 
     /**
      * Last time a quota warning was sent.

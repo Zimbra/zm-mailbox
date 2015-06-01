@@ -322,6 +322,8 @@ public class AccountConstants {
     public static final String E_ATTR = "attr";
     public static final String E_ATTRS = "attrs";
     public static final String E_QUOTA_USED = "used";
+    public static final String E_DS_QUOTA = "dsQuota";
+    public static final String E_DS_TOTAL_QUOTA = "dsTotalQuota";
     public static final String E_PREVIOUS_SESSION = "prevSession";
     public static final String E_LAST_ACCESS = "accessed";
     public static final String E_RECENT_MSGS = "recent";
@@ -351,6 +353,7 @@ public class AccountConstants {
     public static final String E_SIGNATURE = "signature";
     public static final String E_DATA_SOURCES = "dataSources";
     public static final String E_DATA_SOURCE = "dataSource";
+    public static final String E_DATA_SOURCE_USAGE = "dataSourceUsage";
     public static final String E_CHILD_ACCOUNTS = "childAccounts";
     public static final String E_CHILD_ACCOUNT = "childAccount";
     public static final String E_CONTENT = "content";

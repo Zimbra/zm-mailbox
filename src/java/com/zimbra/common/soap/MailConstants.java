@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -266,6 +266,8 @@ public final class MailConstants {
     public static final String E_GET_COMMENTS_RESPONSE = "GetCommentsResponse";
     public static final String E_GET_SHARE_NOTIFICATIONS_REQUEST = "GetShareNotificationsRequest";
     public static final String E_GET_SHARE_NOTIFICATIONS_RESPONSE = "GetShareNotificationsResponse";
+    public static final String E_GET_DATA_SOURCE_USAGE_REQUEST = "GetDataSourceUsageRequest";
+    public static final String E_GET_DATA_SOURCE_USAGE_RESPONSE = "GetDataSourceUsageResponse";
 
     public static final String E_GET_SYSTEM_RETENTION_POLICY_REQUEST = "GetSystemRetentionPolicyRequest";
     public static final String E_GET_SYSTEM_RETENTION_POLICY_RESPONSE = "GetSystemRetentionPolicyResponse";
@@ -483,6 +485,8 @@ public final class MailConstants {
     public static final QName IMPORT_DATA_RESPONSE = QName.get(E_IMPORT_DATA_RESPONSE, NAMESPACE);
     public static final QName GET_IMPORT_STATUS_REQUEST = QName.get(E_GET_IMPORT_STATUS_REQUEST, NAMESPACE);
     public static final QName GET_IMPORT_STATUS_RESPONSE = QName.get(E_GET_IMPORT_STATUS_RESPONSE, NAMESPACE);
+    public static final QName GET_DATA_SOURCE_USAGE_REQUEST = QName.get(E_GET_DATA_SOURCE_USAGE_REQUEST, NAMESPACE);
+    public static final QName GET_DATA_SOURCE_USAGE_RESPONSE = QName.get(E_GET_DATA_SOURCE_USAGE_RESPONSE, NAMESPACE);
 
     public static final QName CREATE_WAIT_SET_REQUEST = QName.get(E_CREATE_WAIT_SET_REQUEST, NAMESPACE);
     public static final QName CREATE_WAIT_SET_RESPONSE = QName.get(E_CREATE_WAIT_SET_RESPONSE, NAMESPACE);
@@ -1121,6 +1125,7 @@ public final class MailConstants {
     public static final String A_DS_FAILING_SINCE = "failingSince";
     public static final String A_DS_OAUTH_TOKEN = "oauthToken";
     public static final String A_DS_TEST = "test";
+    public static final String A_DS_USAGE = "usage";
 
     public static final String A_ACCT_RELATIVE_PATH = "acctRelPath";
 
