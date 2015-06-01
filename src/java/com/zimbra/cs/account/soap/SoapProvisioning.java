@@ -64,9 +64,9 @@ import com.zimbra.common.soap.SoapHttpTransport.HttpDebugListener;
 import com.zimbra.common.soap.SoapTransport;
 import com.zimbra.common.soap.SoapTransport.DebugListener;
 import com.zimbra.common.util.AccountLogger;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.util.Log.Level;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.zclient.ZClientException;
 import com.zimbra.cs.ProvisioningServiceLocator;
 import com.zimbra.cs.account.AccessManager;
@@ -237,7 +237,7 @@ public class SoapProvisioning extends Provisioning {
     private DebugListener mDebugListener;
     private HttpDebugListener mHttpDebugListener;
     private final boolean mNeedSession;
-    private ServiceLocator serviceLocator;
+    private final ServiceLocator serviceLocator;
 
     public SoapProvisioning(boolean needSession) {
         mNeedSession = needSession;
@@ -1365,12 +1365,23 @@ public class SoapProvisioning extends Provisioning {
     @Override
     public Server getLocalServer() throws ServiceException {
         String hostname = LC.zimbra_server_hostname.value();
-        if (hostname == null)
+        if (hostname == null) {
             throw ServiceException.FAILURE("zimbra_server_hostname not specified in localconfig.xml", null);
+        }
         Server local = get(ServerBy.name, hostname);
-        if (local == null)
+        if (local == null) {
             throw ServiceException.FAILURE("Could not find an LDAP entry for server '" + hostname + "'", null);
+        }
         return local;
+    }
+
+    @Override
+    public Server getLocalServerIfDefined() {
+        try {
+            return getLocalServer();
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     /**

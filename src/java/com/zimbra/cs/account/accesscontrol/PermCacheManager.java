@@ -26,6 +26,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.accesscontrol.PermissionCache.CachedPermission;
 
 class PermCacheManager {
@@ -61,25 +62,24 @@ class PermCacheManager {
     private static long ACL_CACHE_TARGET_MAXAGE;
     private static int ACL_CACHE_CREDENTIAL_MAXSIZE;
     static {
-            try {
-                ACL_CACHE_TARGET_MAXSIZE = Provisioning.getInstance().getLocalServer().getAdminAclCacheTargetMaxsize();
-                ACL_CACHE_TARGET_MAXAGE = Provisioning.getInstance().getLocalServer().getAdminAclCacheTargetMaxAge()* Constants.MILLIS_PER_MINUTE;
-                ACL_CACHE_CREDENTIAL_MAXSIZE = Provisioning.getInstance().getLocalServer().getAdminAclCacheTargetMaxsize();
-            } catch (ServiceException e) {
-                ZimbraLog.cache.error("Error while fetching acl cache config attributes from ldap", e);
+            Server localServer = Provisioning.getInstance().getLocalServerIfDefined();
+            if (localServer != null) {
+                ACL_CACHE_TARGET_MAXSIZE = localServer.getAdminAclCacheTargetMaxsize();
+                ACL_CACHE_TARGET_MAXAGE = localServer.getAdminAclCacheTargetMaxAge() * Constants.MILLIS_PER_MINUTE;
+                ACL_CACHE_CREDENTIAL_MAXSIZE = localServer.getAdminAclCacheTargetMaxsize();
+            } else {
+                ZimbraLog.cache.info("Unable to fetch acl cache config attributes from ldap");
                 ACL_CACHE_TARGET_MAXSIZE = 1024 ;
-                ACL_CACHE_TARGET_MAXAGE = 15;
+                ACL_CACHE_TARGET_MAXAGE = 15 * Constants.MILLIS_PER_MINUTE;
                 ACL_CACHE_CREDENTIAL_MAXSIZE = 512;
             }
     }
 
-
-
     private static PermCacheManager theInstance = new PermCacheManager();
 
-    private LruMap<String, PermCache> targetCache;
+    private final LruMap<String, PermCache> targetCache;
 
-    private Counter hitRate = new Counter();
+    private final Counter hitRate = new Counter();
 
     // timestamp at which permission cache is invalidated
     // any permission cached prior to this time will be thrown away
@@ -213,7 +213,7 @@ class PermCacheManager {
 
         private long resetAt;
 
-        private LruMap<String, byte[]> credentialToPermissionMap;;
+        private final LruMap<String, byte[]> credentialToPermissionMap;;
 
         private PermCache() {
             credentialToPermissionMap = MapUtil.newLruMap(ACL_CACHE_CREDENTIAL_MAXSIZE);

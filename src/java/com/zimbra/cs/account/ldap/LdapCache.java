@@ -532,11 +532,7 @@ abstract public class LdapCache {
 
         private static Server getLocalServer() {
             if (localServer == null) {
-                try {
-                    localServer = Provisioning.getInstance().getLocalServer();
-                } catch (ServiceException e) {
-                    localServer = null;
-                }
+                localServer = Provisioning.getInstance().getLocalServerIfDefined();
             }
             return localServer;
         }

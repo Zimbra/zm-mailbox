@@ -4847,6 +4847,19 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
     @Override
     public Server getLocalServer() throws ServiceException {
+        return getLocalServer(false /* allowAbsent */);
+    }
+
+    @Override
+    public Server getLocalServerIfDefined() {
+        try {
+            return getLocalServer(true /* allowAbsent */);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private Server getLocalServer(boolean allowAbsent) throws ServiceException {
         String hostname = LC.zimbra_server_hostname.value();
         if (hostname == null) {
             Zimbra.halt("zimbra_server_hostname not specified in localconfig.xml");
@@ -4856,6 +4869,9 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             local = getServerByName(hostname, true, true);
         } else {
             local = getServerByName(hostname, false, false);
+        }
+        if (allowAbsent) {
+            return local;
         }
         if (local == null) {
             Zimbra.halt("Could not find an LDAP entry for server '" + hostname + "'");

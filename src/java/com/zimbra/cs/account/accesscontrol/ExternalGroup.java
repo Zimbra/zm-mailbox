@@ -58,11 +58,11 @@ public class ExternalGroup extends NamedEntry {
     static {
         int maxsize;
         long maxage;
-            try {
-                Server svr = Provisioning.getInstance().getLocalServer();
+            Server svr = Provisioning.getInstance().getLocalServerIfDefined();
+            if (svr != null) {
                 maxsize = svr.getLdapCacheGroupMaxSize();
                 maxage = svr.getLdapCacheGroupMaxAge();
-            } catch (ServiceException e) {
+            } else {
                 maxsize = 2000;
                 maxage = 15 * Constants.MILLIS_PER_MINUTE;
                 ZimbraLog.ldap.debug("ExternalGroupCache setup using defaults");
