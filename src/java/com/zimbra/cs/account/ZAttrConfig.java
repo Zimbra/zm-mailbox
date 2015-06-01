@@ -25878,6 +25878,93 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * Ehcache: the maximum disk size of inactive IMAP cache in Bytes before
+     * eviction.By default this value is 10GB.This is a rough limit,Due to
+     * internals of ehcache actual size on disk will often exceed this limit
+     * by a modest margin.
+     *
+     * @return zimbraImapInactiveSessionCacheMaxDiskSize, or 10737418240 if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2013)
+    public long getImapInactiveSessionCacheMaxDiskSize() {
+        return getLongAttr(Provisioning.A_zimbraImapInactiveSessionCacheMaxDiskSize, 10737418240L);
+    }
+
+    /**
+     * Ehcache: the maximum disk size of inactive IMAP cache in Bytes before
+     * eviction.By default this value is 10GB.This is a rough limit,Due to
+     * internals of ehcache actual size on disk will often exceed this limit
+     * by a modest margin.
+     *
+     * @param zimbraImapInactiveSessionCacheMaxDiskSize new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2013)
+    public void setImapInactiveSessionCacheMaxDiskSize(long zimbraImapInactiveSessionCacheMaxDiskSize) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraImapInactiveSessionCacheMaxDiskSize, Long.toString(zimbraImapInactiveSessionCacheMaxDiskSize));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Ehcache: the maximum disk size of inactive IMAP cache in Bytes before
+     * eviction.By default this value is 10GB.This is a rough limit,Due to
+     * internals of ehcache actual size on disk will often exceed this limit
+     * by a modest margin.
+     *
+     * @param zimbraImapInactiveSessionCacheMaxDiskSize new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2013)
+    public Map<String,Object> setImapInactiveSessionCacheMaxDiskSize(long zimbraImapInactiveSessionCacheMaxDiskSize, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraImapInactiveSessionCacheMaxDiskSize, Long.toString(zimbraImapInactiveSessionCacheMaxDiskSize));
+        return attrs;
+    }
+
+    /**
+     * Ehcache: the maximum disk size of inactive IMAP cache in Bytes before
+     * eviction.By default this value is 10GB.This is a rough limit,Due to
+     * internals of ehcache actual size on disk will often exceed this limit
+     * by a modest margin.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2013)
+    public void unsetImapInactiveSessionCacheMaxDiskSize() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraImapInactiveSessionCacheMaxDiskSize, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Ehcache: the maximum disk size of inactive IMAP cache in Bytes before
+     * eviction.By default this value is 10GB.This is a rough limit,Due to
+     * internals of ehcache actual size on disk will often exceed this limit
+     * by a modest margin.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2013)
+    public Map<String,Object> unsetImapInactiveSessionCacheMaxDiskSize(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraImapInactiveSessionCacheMaxDiskSize, "");
+        return attrs;
+    }
+
+    /**
      * Ehcache: the maximum number of inactive IMAP cache entries on disk
      * before eviction.
      *
@@ -63628,6 +63715,83 @@ public abstract class ZAttrConfig extends Entry {
     public Map<String,Object> unsetPublicServiceProtocol(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPublicServiceProtocol, "");
+        return attrs;
+    }
+
+    /**
+     * The total size (in bytes) of the in-memory queue of conversations to
+     * be purged for each data source
+     *
+     * @return zimbraPurgedConversationsQueueSize, or 1000000 if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2017)
+    public long getPurgedConversationsQueueSize() {
+        return getLongAttr(Provisioning.A_zimbraPurgedConversationsQueueSize, 1000000L);
+    }
+
+    /**
+     * The total size (in bytes) of the in-memory queue of conversations to
+     * be purged for each data source
+     *
+     * @param zimbraPurgedConversationsQueueSize new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2017)
+    public void setPurgedConversationsQueueSize(long zimbraPurgedConversationsQueueSize) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPurgedConversationsQueueSize, Long.toString(zimbraPurgedConversationsQueueSize));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The total size (in bytes) of the in-memory queue of conversations to
+     * be purged for each data source
+     *
+     * @param zimbraPurgedConversationsQueueSize new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2017)
+    public Map<String,Object> setPurgedConversationsQueueSize(long zimbraPurgedConversationsQueueSize, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPurgedConversationsQueueSize, Long.toString(zimbraPurgedConversationsQueueSize));
+        return attrs;
+    }
+
+    /**
+     * The total size (in bytes) of the in-memory queue of conversations to
+     * be purged for each data source
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2017)
+    public void unsetPurgedConversationsQueueSize() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPurgedConversationsQueueSize, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The total size (in bytes) of the in-memory queue of conversations to
+     * be purged for each data source
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2017)
+    public Map<String,Object> unsetPurgedConversationsQueueSize(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPurgedConversationsQueueSize, "");
         return attrs;
     }
 

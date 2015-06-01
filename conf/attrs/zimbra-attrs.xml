@@ -10166,4 +10166,24 @@ TODO: delete them permanently from here
   <desc> Ehcache: the maximum disk size of inactive IMAP cache in Bytes before eviction.By default this value is 10GB.This is a rough limit,Due to internals of ehcache actual size on disk will often exceed this limit by a modest margin. </desc>
 </attr>
 
+<attr id="2014" name="zimbraFeatureDataSourcePurgingEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="8.7.0,9.0.0">
+  <defaultCOSValue>FALSE</defaultCOSValue>
+  <desc>Whether data source purging is enabled</desc>
+</attr>
+
+<attr id="2015" name="zimbraDataSourceQuota" type="long" min="0" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" callback="DataSourceQuota" since="8.7.0,9.0.0">
+  <defaultCOSValue>0</defaultCOSValue>
+  <desc>Quota allotted to each data source</desc>
+</attr>
+
+<attr id="2016" name="zimbraDataSourceTotalQuota" type="long" min="0" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" callback="DataSourceQuota" since="8.7.0,9.0.0">
+  <defaultCOSValue>0</defaultCOSValue>
+  <desc>Quota allotted to all data sources</desc>
+</attr>
+
+<attr id="2017" name="zimbraPurgedConversationsQueueSize" type="long" cardinality="single" optionalIn="globalConfig" since="8.7.0,9.0.0">
+  <globalConfigValue>1000000</globalConfigValue>
+  <desc>The total size (in bytes) of the in-memory queue of conversations to be purged for each data source</desc>
+</attr>
+
 </attrs>
