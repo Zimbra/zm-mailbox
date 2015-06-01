@@ -11324,7 +11324,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefCalendarApptAllowAtendeeEdit = "zimbraPrefCalendarApptAllowAtendeeEdit";
 
     /**
-     * number of minutes (0 = never) before appt to show reminder dialog
+     * number of minutes (-1 = never) before appt to show reminder dialog
      */
     @ZAttr(id=341)
     public static final String A_zimbraPrefCalendarApptReminderWarningTime = "zimbraPrefCalendarApptReminderWarningTime";
