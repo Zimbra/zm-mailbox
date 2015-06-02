@@ -832,6 +832,10 @@ public final class LC {
     public static final KnownKey zimbra_waitset_default_request_timeout = KnownKey.newKey(300);
     public static final KnownKey zimbra_waitset_min_request_timeout = KnownKey.newKey(30);
     public static final KnownKey zimbra_waitset_max_request_timeout = KnownKey.newKey(1200);
+
+    //Timeout active waitset thread those are not updated within timeout limit. Default 20 mins
+    public static final KnownKey zimbra_active_waitset_timeout_minutes = KnownKey.newKey(20 * Constants.MILLIS_PER_MINUTE);
+
     public static final KnownKey zimbra_waitset_max_per_account = KnownKey.newKey(5);
     public static final KnownKey zmdisklog_warn_threshold = KnownKey.newKey(85);
     public static final KnownKey zmdisklog_critical_threshold = KnownKey.newKey(95);
