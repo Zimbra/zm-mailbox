@@ -69,7 +69,7 @@ public class WaitSetMgr {
 
     private static final int WAITSET_SWEEP_DELAY = 1000 * 60; // once every minute
 
-    private static final int WAITSET_TIMEOUT = 1000 * 60 * 20; // 20min
+    private static final int WAITSET_TIMEOUT = LC.zimbra_active_waitset_timeout_minutes.intValue();
 
     /**
      * Create a new WaitSet, optionally specifying an initial set of accounts
