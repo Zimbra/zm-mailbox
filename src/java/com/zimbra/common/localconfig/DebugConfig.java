@@ -284,7 +284,15 @@ public final class DebugConfig {
     public static final int numberOfThreadsToUseForDomainAdminCountObjects =
             value ("debug_number_of_threads_to_use_for_domain_admin_count_objects", 3);
 
-    public static final int syncMaximumChangeCount = value ("sync_maximum_change_count", 3990 );
+    /**
+     * "sync_maximum_change_count" page limit of maximum changes to be sent in a SyncResponse.
+     */
+    public static final int syncMaximumChangeCount = value ("sync_maximum_change_count", 3990);
+
+    /**
+     * "sync_maximum_delete_count" page limit of maximum deleted items to be sent in a SyncResponse.
+     */
+    public static final int syncMaximumDeleteCount = value ("sync_maximum_delete_count", 0);
 
     /*
      *  Turn off the detection logic of a series of symbol characters in the sender's
