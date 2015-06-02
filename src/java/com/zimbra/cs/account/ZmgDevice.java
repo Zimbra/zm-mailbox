@@ -19,6 +19,7 @@ import java.util.Collection;
 import java.util.Collections;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.db.DbZmgDevices;
 import com.zimbra.cs.mailbox.Mailbox;
 
@@ -106,7 +107,7 @@ public class ZmgDevice {
         try {
             return DbZmgDevices.getDevices(mbox);
         } catch (ServiceException e) {
-            e.printStackTrace();
+            ZimbraLog.misc.warn("Error in getting registered ZMG devices from db", e);
             return Collections.<ZmgDevice> emptyList();
         }
     }
