@@ -8460,6 +8460,10 @@ public class Mailbox {
             globalTimeout = Constants.MILLIS_PER_MONTH;
         }
 
+        // call to purge expired messages with IMAP \Deleted flag
+        // for expiration check, used zimbraMailTrashLifetime
+        purgeExpiredIMAPDeletedMessages(trashTimeout);
+
         PurgeOldMessages redoRecorder = new PurgeOldMessages(mId);
 
         boolean success = false;
@@ -9828,5 +9832,44 @@ public class Mailbox {
     } finally {
         lock.release();
     }
+    }
+
+    /**
+     * Finds and deletes old mail items deleted by imap client. Here, "old" depends on zimbraMailImapDeletedMessageLifeTime.
+     * @throws ServiceException
+     */
+    public void purgeExpiredIMAPDeletedMessages (long imapDeletedMessageLifeTime) throws ServiceException {
+        if(imapDeletedMessageLifeTime > 0) {
+            ZimbraLog.purge.debug("Purging expired messages with IMAP \\Deleted flag");
+            Server server = getAccount().getServer();
+            int purgeBatchSize = server.getMailPurgeBatchSize();
+            long cutOff = (System.currentTimeMillis() - imapDeletedMessageLifeTime) / 1000;
+            ZimbraLog.purge.debug("IMAP deleted message lifetime = %d, cutOff = %d", imapDeletedMessageLifeTime, cutOff);
+            int batch = 0;
+            List<Integer> itemIdsWithDeletedFlag = null;
+            do {
+                itemIdsWithDeletedFlag = DbMailItem.getIMAPDeletedItems(this, cutOff, purgeBatchSize);
+                if (itemIdsWithDeletedFlag != null && itemIdsWithDeletedFlag.size() > 0) {
+                    batch++;
+                    ZimbraLog.purge.debug("Batch %d - Found %d items with \\Deleted flags", batch, itemIdsWithDeletedFlag.size());
+                    int itemIds[] = new int[itemIdsWithDeletedFlag.size()];
+                    int pos = 0;
+                    for (Integer integer : itemIdsWithDeletedFlag) {
+                        itemIds[pos] = integer;
+                        pos++;
+                    }
+                    delete(null, itemIds, MailItem.Type.UNKNOWN, null);
+                    ZimbraLog.purge.debug("Batch %d - Finished", batch);
+                }
+            } while (!(itemIdsWithDeletedFlag.size() < purgeBatchSize));
+            if (batch == 0 && (itemIdsWithDeletedFlag == null || itemIdsWithDeletedFlag.size() == 0)){
+                ZimbraLog.purge.debug("Could not find any expired messages with IMAP \\Deleted flag");
+            } else {
+                ZimbraLog.purge.debug("Purged total " + ((batch > 1 ? (batch * purgeBatchSize) : 0) + itemIdsWithDeletedFlag.size()) + " expired messages with IMAP \\Deleted flag");
+            }
+            itemIdsWithDeletedFlag = null;
+        } else {
+            ZimbraLog.purge.debug("IMAP deleted message life time is not set, so bypassed purging messages with IMAP \\Deleted flag");
+        }
     }
 }

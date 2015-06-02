@@ -4994,4 +4994,38 @@ public class DbMailItem {
             DbPool.quietClose(conn);
         }
     }
+
+    /**
+     * Finds mail items with deleted flag (\Deleted)
+     *
+     * @param mbox Object of Mailbox
+     * @param cutOff Cut off time
+     * @throws ServiceException
+     */
+    public static List<Integer> getIMAPDeletedItems (Mailbox mbox, long cutOff, int batchSize) throws ServiceException {
+        List<Integer> imapDeletedItems = new ArrayList<Integer>();
+        DbConnection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        try {
+            conn = DbPool.getConnection(mbox);
+            stmt = conn.prepareStatement("SELECT id FROM " + getMailItemTableName(mbox) +
+                    " WHERE " + IN_THIS_MAILBOX_AND + " change_date < ? AND " +
+                    Db.getInstance().bitAND("flags", String.valueOf(Flag.BITMASK_DELETED)) + " = " + String.valueOf(Flag.BITMASK_DELETED) +
+                    " limit " + batchSize);
+            setMailboxId(stmt, mbox, 1);
+            stmt.setLong(2, cutOff);
+            rs = stmt.executeQuery();
+            while (rs.next()) {
+                imapDeletedItems.add(rs.getInt("id"));
+            }
+        } catch (SQLException sqle) {
+            throw ServiceException.FAILURE("error while fetching imap deleted items", sqle);
+        } finally {
+            conn.closeQuietly(rs);
+            conn.closeQuietly(stmt);
+            DbPool.quietClose(conn);
+        }
+        return imapDeletedItems;
+    }
 }

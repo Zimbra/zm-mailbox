@@ -803,4 +803,48 @@ public class PurgeTest {
     private Mailbox getMailbox() throws ServiceException {
         return MailboxManager.getInstance().getMailboxByAccount(getAccount());
     }
+
+    /**
+     * Confirms that IMAP deleted messages are purged based on the value of
+     * <tt>zimbraMailTrashLifetime<tt>.  See bug 74953 for more details.
+     */
+    @Test
+    public void testExpiredIMAPDeletedOnChangeDate()
+    throws Exception {
+        Account account = getAccount();
+        account.setMailTrashLifetime("24h");
+
+        // Insert message
+        String subject = "testNotExpiredIMAPDeletedOnChangeDate";
+        Mailbox mbox = getMailbox();
+        Message kept = TestUtil.addMessage(mbox, Mailbox.ID_FOLDER_INBOX, subject, System.currentTimeMillis() - Constants.MILLIS_PER_MONTH);
+        long changeDate = (System.currentTimeMillis() - (Constants.MILLIS_PER_DAY * 2)) / 1000;
+        TestUtil.updateMailItemChangeDateAndFlag(mbox, kept.getId(), changeDate, Flag.BITMASK_DELETED);
+
+        // Run purge and verify results
+        mbox.purgeMessages(null);
+        assertFalse("kept was not purged", messageExists(kept.getId()));
+    }
+
+    /**
+     * Confirms that IMAP deleted messages are not purged based on the value of
+     * <tt>zimbraMailTrashLifetime<tt>.  See bug 74953 for more details.
+     */
+    @Test
+    public void testNotExpiredIMAPDeletedOnChangeDate()
+    throws Exception {
+        Account account = getAccount();
+        account.setMailTrashLifetime("24h");
+
+        // Insert message
+        String subject = "testNotExpiredIMAPDeletedOnChangeDate";
+        Mailbox mbox = getMailbox();
+        Message kept = TestUtil.addMessage(mbox, Mailbox.ID_FOLDER_INBOX, subject, System.currentTimeMillis() - Constants.MILLIS_PER_MONTH);
+        long changeDate = (System.currentTimeMillis() - (Constants.MILLIS_PER_HOUR * 5)) / 1000;
+        TestUtil.updateMailItemChangeDateAndFlag(mbox, kept.getId(), changeDate, Flag.BITMASK_DELETED);
+
+        // Run purge and verify results
+        mbox.purgeMessages(null);
+        assertTrue("kept was purged", messageExists(kept.getId()));
+    }
 }
