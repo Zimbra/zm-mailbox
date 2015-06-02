@@ -98,6 +98,7 @@ import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.FileUploadServlet.Upload;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.servlet.ZimbraServlet;
+import com.zimbra.cs.servlet.util.AuthUtil;
 import com.zimbra.cs.util.AccountUtil;
 
 @SuppressWarnings("serial")
@@ -286,8 +287,9 @@ public class DavServlet extends ZimbraServlet {
 
         //bug fix - send 400 for Range requests
         String rangeHeader = req.getHeader(DavProtocol.HEADER_RANGE);
-        if(null != rangeHeader){
-           sendError(resp, HttpServletResponse.SC_BAD_REQUEST, "Range header not supported", null, Level.debug);
+        if (null != rangeHeader){
+            sendError(resp, HttpServletResponse.SC_BAD_REQUEST, "Range header not supported", null, Level.debug);
+            return;
         }
 
         RequestType rtype = getAllowedRequestType(req);
@@ -303,12 +305,19 @@ public class DavServlet extends ZimbraServlet {
         DavContext ctxt;
         try {
             AuthToken at = AuthProvider.getAuthToken(req, false);
-            if (at != null && (at.isExpired() || !at.isRegistered()))
+            if (at != null && (at.isExpired() || !at.isRegistered())) {
                 at = null;
-            if (at != null && (rtype == RequestType.both || rtype == RequestType.authtoken))
+            }
+            if (at != null && (rtype == RequestType.both || rtype == RequestType.authtoken)) {
                 authUser = Provisioning.getInstance().get(AccountBy.id, at.getAccountId());
-            else if (at == null && (rtype == RequestType.both || rtype == RequestType.password))
-                authUser = basicAuthRequest(req, resp, true);
+            } else if (at == null && (rtype == RequestType.both || rtype == RequestType.password)) {
+                AuthUtil.AuthResult result = AuthUtil.basicAuthRequest(req, resp, true, this);
+                if (result.sendErrorCalled) {
+                    logResponseInfo(resp);
+                    return;
+                }
+                authUser = result.authorizedAccount;
+            }
             if (authUser == null) {
                 try {
                     sendError(resp, HttpServletResponse.SC_UNAUTHORIZED, "Authentication failed", null, Level.debug);

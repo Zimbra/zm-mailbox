@@ -303,6 +303,15 @@ public class TestCalDav extends TestCase {
         }
     }
 
+    public void testBadBasicAuth() throws Exception {
+        Account dav1 = TestUtil.createAccount(DAV1);
+        String calFolderUrl = getFolderUrl(dav1, "Calendar").replaceAll("@", "%40");
+        HttpClient client = new HttpClient();
+        GetMethod method = new GetMethod(calFolderUrl);
+        addBasicAuthHeaderForUser(method, dav1, "badPassword");
+        HttpMethodExecutor.execute(client, method, HttpStatus.SC_UNAUTHORIZED);
+    }
+
     public void testPostToSchedulingOutbox() throws Exception {
         Account dav1 = TestUtil.createAccount(DAV1);
         Account dav2 = TestUtil.createAccount(DAV2);
@@ -340,10 +349,15 @@ public class TestCalDav extends TestCase {
         HttpMethodExecutor.execute(client, method, HttpStatus.SC_BAD_REQUEST);
     }
 
-    public static void addBasicAuthHeaderForUser(HttpMethod method, Account acct) throws UnsupportedEncodingException {
+    public static void addBasicAuthHeaderForUser(HttpMethod method, Account acct, String password)
+    throws UnsupportedEncodingException {
         String basicAuthEncoding = DatatypeConverter.printBase64Binary(
-                String.format("%s:%s", acct.getName(), "test123").getBytes("UTF-8"));
+                String.format("%s:%s", acct.getName(), password).getBytes("UTF-8"));
         method.addRequestHeader("Authorization", "Basic " + basicAuthEncoding);
+    }
+
+    public static void addBasicAuthHeaderForUser(HttpMethod method, Account acct) throws UnsupportedEncodingException {
+        addBasicAuthHeaderForUser(method, acct, "test123");
     }
 
     public static StringBuilder getLocalServerRoot() throws ServiceException {
