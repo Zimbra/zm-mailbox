@@ -9037,7 +9037,7 @@ public class Mailbox {
                     //Next transaction will attempt to replay uncommitted for this mailbox
                     //See bug 98111 and bug 2121
                     invalidate();
-                    throw ServiceException.FAILURE("DB commit failure - mailbox state inconsistent.", null);
+                    throw ServiceException.FAILURE("DB commit failure - mailbox state inconsistent.", t);
                 }
             }
 
