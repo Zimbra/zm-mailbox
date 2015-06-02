@@ -4260,8 +4260,8 @@ public class ProvUtil implements HttpDebugListener {
             MailMode mailMode = Provisioning.MailMode.fromString(mode);
 
             boolean isPlain = (mailMode == Provisioning.MailMode.http ||
-                    mailMode == Provisioning.MailMode.mixed ||
-                    mailMode == Provisioning.MailMode.both);
+                              (!LC.zimbra_require_interprocess_security.booleanValue() &&
+                              (mailMode == Provisioning.MailMode.mixed || mailMode == Provisioning.MailMode.both)));
 
             int backendPort;
             if (isPlain) {
