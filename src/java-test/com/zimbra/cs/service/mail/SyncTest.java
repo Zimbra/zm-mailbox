@@ -50,7 +50,7 @@ import com.zimbra.cs.mailbox.MailboxTestUtil;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mime.ParsedContact;
 import com.zimbra.cs.service.AuthProvider;
-import com.zimbra.cs.service.mail.Sync.SyncToken;
+import com.zimbra.cs.service.util.SyncToken;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.SoapEngine;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -397,7 +397,7 @@ public class SyncTest {
         Assert.assertEquals(1, itemsAddedOrModified.size()); //pending to sync.
         Assert.assertTrue(syncRes.getMore());
         SyncToken syncToken = new SyncToken(token);
-        int lastChange = syncToken.getChangeModSeq();
+        int lastChange = syncToken.getChangeId();
         int lastDel = syncToken.getDeleteModSeq();
         Assert.assertTrue(lastDel < lastChange);
 
@@ -427,7 +427,7 @@ public class SyncTest {
         Assert.assertEquals(0, itemsAddedOrModified.size()); //All synced.
         Assert.assertTrue(syncRes.getMore());
         syncToken = new SyncToken(token);
-        lastChange = syncToken.getChangeModSeq();
+        lastChange = syncToken.getChangeId();
         lastDel = syncToken.getDeleteModSeq();
         Assert.assertTrue(lastDel < lastChange);
         Assert.assertTrue(syncRes.getMore());
@@ -462,7 +462,7 @@ public class SyncTest {
         Assert.assertEquals(1, itemsAddedOrModified.size()); //pending to sync.
         Assert.assertTrue(syncRes.getMore());
         syncToken = new SyncToken(token);
-        lastChange = syncToken.getChangeModSeq();
+        lastChange = syncToken.getChangeId();
         lastDel = syncToken.getDeleteModSeq();
         Assert.assertTrue(lastDel > lastChange);
         Assert.assertTrue(syncRes.getMore());
@@ -499,7 +499,7 @@ public class SyncTest {
         Assert.assertEquals(1, itemsAddedOrModified.size()); //pending to sync.
         Assert.assertTrue(syncRes.getMore());
         syncToken = new SyncToken(token);
-        lastChange = syncToken.getChangeModSeq();
+        lastChange = syncToken.getChangeId();
         lastDel = syncToken.getDeleteModSeq();
         Assert.assertTrue(lastDel == mbox.getLastChangeID());
         Assert.assertTrue(syncRes.getMore());
@@ -533,46 +533,11 @@ public class SyncTest {
         removeItemsFromList(itemsAddedOrModified, listObj);
         Assert.assertEquals(0, itemsAddedOrModified.size()); //All synced.
         syncToken = new SyncToken(token);
-        lastChange = syncToken.getChangeModSeq();
+        lastChange = syncToken.getChangeId();
         lastDel = syncToken.getDeleteModSeq();
-        Assert.assertTrue(lastChange == mbox.getLastChangeID());
+        Assert.assertEquals(lastChange, mbox.getLastChangeID());
         Assert.assertTrue(lastDel == -1);
         Assert.assertNull(syncRes.getMore());
-    }
-
-    @Test
-    public void syncTokenParseTest() throws Exception {
-        String token = "123";
-        Sync.SyncToken synctoken = new Sync.SyncToken(token);
-        Assert.assertEquals(123, synctoken.getChangeModSeq());
-        Assert.assertEquals(token, synctoken.toString());
-
-        token = "123-032";
-        synctoken = new Sync.SyncToken(token);
-        Assert.assertEquals(123, synctoken.getChangeModSeq());
-        Assert.assertEquals(32, synctoken.getChangeItemId());
-        Assert.assertEquals("123-32", synctoken.toString());
-
-        token = "123-032:d0345-908";
-        synctoken = new Sync.SyncToken(token);
-        Assert.assertEquals(123, synctoken.getChangeModSeq());
-        Assert.assertEquals(32, synctoken.getChangeItemId());
-        Assert.assertEquals(345, synctoken.getDeleteModSeq());
-        Assert.assertEquals(908, synctoken.getDeleteItemId());
-        Assert.assertEquals("123-32:d345-908", synctoken.toString());
-
-        token = "123:d0345-908";
-        synctoken = new Sync.SyncToken(token);
-        Assert.assertEquals(123, synctoken.getChangeModSeq());
-        Assert.assertEquals(345, synctoken.getDeleteModSeq());
-        Assert.assertEquals(908, synctoken.getDeleteItemId());
-        Assert.assertEquals("123:d345-908", synctoken.toString());
-
-        token = "123:d0345";
-        synctoken = new Sync.SyncToken(token);
-        Assert.assertEquals(123, synctoken.getChangeModSeq());
-        Assert.assertEquals(345, synctoken.getDeleteModSeq());
-        Assert.assertEquals("123:d345", synctoken.toString());
     }
 
     private static void removeDeleteFromList(Set<Integer> deleted, String [] deletes) {
