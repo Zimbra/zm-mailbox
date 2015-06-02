@@ -49,7 +49,7 @@ import com.zimbra.common.consul.ConsulServiceLocator;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.servicelocator.ChainedServiceLocator;
-import com.zimbra.common.servicelocator.RandomSelector;
+import com.zimbra.common.servicelocator.RoundRobinSelector;
 import com.zimbra.common.servicelocator.Selector;
 import com.zimbra.common.servicelocator.ServiceLocator;
 import com.zimbra.common.util.ZimbraHttpClientManager;
@@ -519,6 +519,11 @@ public class ZimbraConfig {
     }
 
     @Bean
+    public ServerAssigner serverAssigner() throws Exception {
+        return new ServerAssigner(serviceLocator(), serviceLocatorHostSelector());
+    }
+
+    @Bean
     public ServiceLocator serviceLocator() throws Exception {
         // First try Consul, then fall back on provisioned service lists (which may be up or down)
         ServiceLocator sl1 = new ConsulServiceLocator(consulClient());
@@ -529,7 +534,7 @@ public class ZimbraConfig {
     /** Centralized algorithm for selection of a server from a list, for load balancing and/or account reassignment, or picking a SOAP target in a cluster */
     @Bean
     public Selector<ServiceLocator.Entry> serviceLocatorHostSelector() throws ServiceException {
-        return new RandomSelector<ServiceLocator.Entry>();
+        return new RoundRobinSelector<ServiceLocator.Entry>();
     }
 
     @Bean

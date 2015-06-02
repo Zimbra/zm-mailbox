@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2009, 2010, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -23,91 +23,130 @@
  */
 package com.zimbra.cs.lmtpserver;
 
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.Multimap;
-import com.zimbra.common.util.ZimbraLog;
-
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
+
 
 public class LmtpEnvelope {
-	
-	private List<LmtpAddress> mRecipients; 
-	private List<LmtpAddress> mLocalRecipients;
-	private List<LmtpAddress> mRemoteRecipients;
-    private Multimap<String, LmtpAddress> mRemoteServerToRecipientsMap;
+
+	private List<LmtpAddress> mRecipients;
     private LmtpAddress mSender;
     private int mSize;
     private LmtpBodyType mBodyType;
-    
+
     public LmtpEnvelope() {
     	mRecipients = new LinkedList<LmtpAddress>();
-    	mLocalRecipients = new LinkedList<LmtpAddress>();
-    	mRemoteRecipients = new LinkedList<LmtpAddress>();
-    	mRemoteServerToRecipientsMap = ArrayListMultimap.create();
     }
-    
+
     public boolean hasSender() {
     	return mSender != null;
     }
-    
+
     public boolean hasRecipients() {
     	return mRecipients.size() > 0;
     }
-    
+
     public void setSender(LmtpAddress sender) {
     	mSender = sender;
     }
-    
-    public void addLocalRecipient(LmtpAddress recipient) {
-    	mRecipients.add(recipient);
-    	mLocalRecipients.add(recipient);
-    }
 
-    public void addRemoteRecipient(LmtpAddress recipient) {
-        if (recipient.getRemoteServer() == null) {
-            ZimbraLog.lmtp.error("Server for remote recipient %s has not been set", recipient);
-            return;
-        }
+    public void addRecipient(LmtpAddress recipient) {
     	mRecipients.add(recipient);
-    	mRemoteRecipients.add(recipient);
-        mRemoteServerToRecipientsMap.put(recipient.getRemoteServer(), recipient);
     }
 
     public List<LmtpAddress> getRecipients() {
     	return mRecipients;
     }
-    
+
     public List<LmtpAddress> getLocalRecipients() {
-    	return mLocalRecipients;
+        List<LmtpAddress> list = new ArrayList<>();
+        for (LmtpAddress recipient: mRecipients) {
+            if (recipient.isOnLocalServer()) {
+                list.add(recipient);
+            }
+        }
+        return list;
+    }
+
+    public List<LmtpAddress> getLocalRecipients(Collection<LmtpAddress> recipients) {
+        List<LmtpAddress> list = new ArrayList<>();
+        for (LmtpAddress recipient: recipients) {
+            if (recipient.isOnLocalServer()) {
+                list.add(recipient);
+            }
+        }
+        return list;
     }
 
     public List<LmtpAddress> getRemoteRecipients() {
-    	return mRemoteRecipients;
+        List<LmtpAddress> list = new ArrayList<>();
+        for (LmtpAddress recipient: mRecipients) {
+            if (!recipient.isOnLocalServer()) {
+                list.add(recipient);
+            }
+        }
+        return list;
+    }
+
+    public List<LmtpAddress> getRemoteRecipients(Collection<LmtpAddress> recipients) {
+        List<LmtpAddress> list = new ArrayList<>();
+        for (LmtpAddress recipient: recipients) {
+            if (!recipient.isOnLocalServer()) {
+                list.add(recipient);
+            }
+        }
+        return list;
+    }
+
+    public List<LmtpAddress> getRemoteRecipients(LmtpReply filter) {
+        List<LmtpAddress> matches = new ArrayList<>();
+        for (LmtpAddress lmtpAddress: getRemoteRecipients()) {
+            if (lmtpAddress.getDeliveryStatus() == filter) {
+                matches.add(lmtpAddress);
+            }
+        }
+        return matches;
     }
 
     public Multimap<String, LmtpAddress> getRemoteServerToRecipientsMap() {
-    	return mRemoteServerToRecipientsMap;
+        Multimap<String, LmtpAddress> multimap = ArrayListMultimap.create();
+        for (LmtpAddress recipient: mRecipients) {
+            if (!recipient.isOnLocalServer()) {
+                multimap.put(recipient.getRemoteServer(), recipient);
+            }
+        }
+        return multimap;
+    }
+
+    public Multimap<String, LmtpAddress> getRemoteServerToRecipientsMap(Collection<LmtpAddress> recipients) {
+        Multimap<String, LmtpAddress> multimap = ArrayListMultimap.create();
+        for (LmtpAddress recipient: recipients) {
+            multimap.put(recipient.getRemoteServer(), recipient);
+        }
+        return multimap;
     }
 
     public LmtpAddress getSender() {
     	return mSender;
     }
-	
+
     public LmtpBodyType getBodyType() {
 		return mBodyType;
 	}
-	
+
     public void setBodyType(LmtpBodyType bodyType) {
 		mBodyType = bodyType;
 	}
-	
+
     public int getSize() {
 		return mSize;
 	}
-	
+
     public void setSize(int size) {
 		mSize = size;
 	}

@@ -1474,11 +1474,10 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public static boolean onLocalServer(Account account, Reasons reasons) throws ServiceException {
         String target    = account.getAttr(Provisioning.A_zimbraMailHost);
         String localhost = getInstance().getLocalServer().getAttr(Provisioning.A_zimbraServiceHostname);
-        boolean isLocal = (target != null && target.equalsIgnoreCase(localhost));
-        boolean onLocalSvr =  (isLocal || isAlwaysOn(account));
+        boolean onLocalSvr = (target != null && target.equalsIgnoreCase(localhost));
         if (!onLocalSvr && reasons != null) {
-            reasons.addReason(String.format("onLocalSvr=%b isLocal=%b target=%s localhost=%s account=%s",
-                    onLocalSvr, isLocal, target, localhost, account.getName()));
+            reasons.addReason(String.format("onLocalSvr=%b target=%s localhost=%s account=%s",
+                    onLocalSvr, target, localhost, account.getName()));
         }
         return onLocalSvr;
     }
