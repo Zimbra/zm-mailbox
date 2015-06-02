@@ -173,7 +173,7 @@ public final class ExistingMessageHandler implements FilterHandler {
             mailbox.setTags(octxt, newMsg.getId(), MailItem.Type.MESSAGE,
                     FilterUtil.getFlagBitmask(flagActions, source.getFlagBitmask()),
                     FilterUtil.getTagsUnion(source.getTags(), tags));
-            return new ItemId(mailbox, messageId);
+            return new ItemId(mailbox, newMsg.getId());
         }
 
         ItemId id = FilterUtil.addMessage(new DeliveryContext(), mailbox, getParsedMessage(),
