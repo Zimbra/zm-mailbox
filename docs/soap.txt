@@ -417,7 +417,7 @@ global soap/system errors used with zimbra:Error/Code:
    account.TOO_MANY_DATA_SOURCES
    account.TOO_MANY_SEARCH_RESULTS
 
- <AuthRequest xmlns="urn:zimbraAccount" [persistAuthTokenCookie="1"][csrfTokenSecured="0|1"] [trusted="0|1"] [generateDeviceId="0|1"]>
+ <AuthRequest xmlns="urn:zimbraAccount" [persistAuthTokenCookie="1"][csrfTokenSecured="0|1"] [deviceTrusted="0|1"] [generateDeviceId="0|1"]>
    [<account by="name|id|foreignPrincipal">...</account>]
    [<password>...</password>]
    [<preauth timestamp="{timestamp}" expires="{expires}">{computed-preauth-value}</preauth>]
@@ -518,7 +518,7 @@ Trusted Devices
 
 Trusted devices functionality allows the user to bypass two-factor authentication on specified devices. This functionality works as follows:
 
-1. When a user specifies a device as trusted by setting trusted=1 in the AuthRequest, the response contains a trusted device cookie that will persist across sessions for a configurable amount of time (default 30 days).
+1. When a user specifies a device as trusted by setting deviceTrusted=1 in the AuthRequest, the response contains a trusted device cookie that will persist across sessions for a configurable amount of time (default 30 days).
 
 2. When the user attempts to re-authenticate (either after the auth token expires or after a logout), the client sends the trusted device token to the Auth endpoint.
 
