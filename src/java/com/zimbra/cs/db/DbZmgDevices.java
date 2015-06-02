@@ -93,6 +93,7 @@ public class DbZmgDevices {
         } finally {
             DbPool.closeResults(rs);
             DbPool.closeStatement(stmt);
+            DbPool.quietClose(conn);
         }
     }
 }
