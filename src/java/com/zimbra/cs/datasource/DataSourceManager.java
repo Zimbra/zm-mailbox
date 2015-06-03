@@ -16,14 +16,29 @@
  */
 package com.zimbra.cs.datasource;
 
+import static com.zimbra.common.util.TaskUtil.newDaemonThreadFactory;
+import static java.util.Collections.newSetFromMap;
+import static java.util.concurrent.Executors.newCachedThreadPool;
+
+import java.io.File;
+import java.lang.reflect.Constructor;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+
+import javax.mail.MessagingException;
+import javax.mail.Session;
+import javax.mail.Transport;
+
 import com.sun.mail.smtp.SMTPTransport;
-import com.zimbra.cs.mailclient.smtp.SmtpTransport;
-import com.zimbra.cs.util.JMSession;
-import com.zimbra.soap.admin.type.DataSourceType;
 import com.zimbra.common.account.ZAttrProvisioning.AccountStatus;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
@@ -38,24 +53,15 @@ import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.db.DbScheduledTask;
 import com.zimbra.cs.extension.ExtensionUtil;
 import com.zimbra.cs.gal.GalImport;
+import com.zimbra.cs.ldap.LdapDateUtil;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.ScheduledTaskManager;
+import com.zimbra.cs.mailclient.smtp.SmtpTransport;
+import com.zimbra.cs.util.JMSession;
 import com.zimbra.cs.util.Zimbra;
-
-import javax.mail.MessagingException;
-import javax.mail.Session;
-import javax.mail.Transport;
-import java.io.File;
-import java.lang.reflect.Constructor;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-
-import static com.zimbra.common.util.TaskUtil.newDaemonThreadFactory;
-import static java.util.Collections.newSetFromMap;
-import static java.util.concurrent.Executors.newCachedThreadPool;
+import com.zimbra.soap.admin.type.DataSourceType;
 
 public class DataSourceManager {
 
@@ -389,7 +395,7 @@ public class DataSourceManager {
         Map<String, Object> attrs = new HashMap<String, Object>();
         attrs.put(Provisioning.A_zimbraDataSourceLastError, error);
         if (ds.getAttr(Provisioning.A_zimbraDataSourceFailingSince) == null) {
-            attrs.put(Provisioning.A_zimbraDataSourceFailingSince, DateUtil.toGeneralizedTime(new Date()));
+            attrs.put(Provisioning.A_zimbraDataSourceFailingSince, LdapDateUtil.toGeneralizedTime(new Date()));
         }
         try {
             Provisioning.getInstance().modifyDataSource(ds.getAccount(), ds.getId(), attrs);

@@ -46,6 +46,7 @@ import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AttributeManager.IDNType;
+import com.zimbra.cs.ldap.LdapDateUtil;
 
 public abstract class Entry implements ToZJSONObject {
 
@@ -370,7 +371,7 @@ public abstract class Entry implements ToZJSONObject {
         String v = getAttr(name);
         if (v == null)
             return defaultValue;
-        Date d = DateUtil.parseGeneralizedTime(v);
+        Date d = LdapDateUtil.parseGeneralizedTime(v);
         return d == null ? defaultValue : d;
     }
 

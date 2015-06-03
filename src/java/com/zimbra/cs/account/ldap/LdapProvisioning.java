@@ -55,7 +55,6 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.service.ServiceException.Argument;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.Constants;
-import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.EmailUtil;
 import com.zimbra.common.util.L10nUtil;
 import com.zimbra.common.util.Log;
@@ -164,6 +163,7 @@ import com.zimbra.cs.ldap.IAttributes;
 import com.zimbra.cs.ldap.IAttributes.CheckBinary;
 import com.zimbra.cs.ldap.LdapClient;
 import com.zimbra.cs.ldap.LdapConstants;
+import com.zimbra.cs.ldap.LdapDateUtil;
 import com.zimbra.cs.ldap.LdapException;
 import com.zimbra.cs.ldap.LdapException.LdapContextNotEmptyException;
 import com.zimbra.cs.ldap.LdapException.LdapEntryAlreadyExistException;
@@ -1238,7 +1238,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
                 zimbraIdStr = uuid;
             }
             entry.setAttr(A_zimbraId, zimbraIdStr);
-            entry.setAttr(A_zimbraCreateTimestamp, DateUtil.toGeneralizedTime(new Date()));
+            entry.setAttr(A_zimbraCreateTimestamp, LdapDateUtil.toGeneralizedTime(new Date()));
 
             // default account status is active
             if (!entry.hasAttribute(Provisioning.A_zimbraAccountStatus)) {
@@ -1325,7 +1325,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
                 //user entered
                 checkPasswordStrength(password, null, cos, entry);
             }
-            entry.setAttr(Provisioning.A_zimbraPasswordModifiedTime, DateUtil.toGeneralizedTime(new Date()));
+            entry.setAttr(Provisioning.A_zimbraPasswordModifiedTime, LdapDateUtil.toGeneralizedTime(new Date()));
 
             String ucPassword = entry.getAttrString(Provisioning.A_zimbraUCPassword);
             if (ucPassword != null) {
@@ -2257,7 +2257,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
                 zlc.createEntry(aliasDn, "zimbraAlias",
                     new String[] { Provisioning.A_uid, aliasName,
                                    Provisioning.A_zimbraId, aliasUuid,
-                                   Provisioning.A_zimbraCreateTimestamp, DateUtil.toGeneralizedTime(new Date()),
+                                   Provisioning.A_zimbraCreateTimestamp, LdapDateUtil.toGeneralizedTime(new Date()),
                                    Provisioning.A_zimbraAliasTargetId, targetEntryId} );
             } catch (LdapEntryAlreadyExistException e) {
                 /*
@@ -2285,7 +2285,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
                             new String[] {
                             Provisioning.A_uid, aliasName,
                             Provisioning.A_zimbraId, aliasUuid,
-                            Provisioning.A_zimbraCreateTimestamp, DateUtil.toGeneralizedTime(new Date()),
+                            Provisioning.A_zimbraCreateTimestamp, LdapDateUtil.toGeneralizedTime(new Date()),
                             Provisioning.A_zimbraAliasTargetId, targetEntryId} );
                 } else if (targetEntryId.equals(targetEntry.getId())) {
                     // the alias target points to this account/DL
@@ -2564,7 +2564,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
             String zimbraIdStr = LdapUtil.generateUUID();
             entry.setAttr(A_zimbraId, zimbraIdStr);
-            entry.setAttr(A_zimbraCreateTimestamp, DateUtil.toGeneralizedTime(new Date()));
+            entry.setAttr(A_zimbraCreateTimestamp, LdapDateUtil.toGeneralizedTime(new Date()));
             entry.setAttr(A_zimbraDomainName, name);
 
             String mailStatus = (String) domainAttrs.get(A_zimbraMailStatus);
@@ -2970,7 +2970,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
             String zimbraIdStr = LdapUtil.generateUUID();
             entry.setAttr(A_zimbraId, zimbraIdStr);
-            entry.setAttr(A_zimbraCreateTimestamp, DateUtil.toGeneralizedTime(new Date()));
+            entry.setAttr(A_zimbraCreateTimestamp, LdapDateUtil.toGeneralizedTime(new Date()));
             entry.setAttr(A_cn, destCosName);
             String dn = mDIT.cosNametoDN(destCosName);
             entry.setDN(dn);
@@ -3787,7 +3787,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
             String zimbraIdStr = LdapUtil.generateUUID();
             entry.setAttr(A_zimbraId, zimbraIdStr);
-            entry.setAttr(A_zimbraCreateTimestamp, DateUtil.toGeneralizedTime(new Date()));
+            entry.setAttr(A_zimbraCreateTimestamp, LdapDateUtil.toGeneralizedTime(new Date()));
             entry.setAttr(A_cn, name);
             String dn = mDIT.serverNameToDN(name);
 
@@ -4062,7 +4062,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
             String zimbraIdStr = LdapUtil.generateUUID();
             entry.setAttr(A_zimbraId, zimbraIdStr);
-            entry.setAttr(A_zimbraCreateTimestamp, DateUtil.toGeneralizedTime(new Date()));
+            entry.setAttr(A_zimbraCreateTimestamp, LdapDateUtil.toGeneralizedTime(new Date()));
             entry.setAttr(A_cn, name);
             String dn = mDIT.alwaysOnClusterNameToDN(name);
             entry.setDN(dn);
@@ -4293,7 +4293,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
             String zimbraIdStr = LdapUtil.generateUUID();
             entry.setAttr(A_zimbraId, zimbraIdStr);
-            entry.setAttr(A_zimbraCreateTimestamp, DateUtil.toGeneralizedTime(new Date()));
+            entry.setAttr(A_zimbraCreateTimestamp, LdapDateUtil.toGeneralizedTime(new Date()));
             entry.setAttr(A_mail, listAddress);
 
             // unlike accounts (which have a zimbraMailDeliveryAddress for the primary,
@@ -4862,11 +4862,27 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
     @Override
     public Server getLocalServer() throws ServiceException {
+        return getLocalServer(false /* allowAbsent */);
+    }
+
+    @Override
+    public Server getLocalServerIfDefined() {
+        try {
+            return getLocalServer(true /* allowAbsent */);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private Server getLocalServer(boolean allowAbsent) throws ServiceException {
         String hostname = LC.zimbra_server_hostname.value();
         if (hostname == null) {
             Zimbra.halt("zimbra_server_hostname not specified in localconfig.xml");
         }
         Server local = getServerByNameInternal(hostname);
+        if (allowAbsent) {
+            return local;
+        }
         if (local == null) {
             Zimbra.halt("Could not find an LDAP entry for server '" + hostname + "'");
         }
@@ -5168,7 +5184,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         Date lastLogon = acct.getGeneralizedTimeAttr(Provisioning.A_zimbraLastLogonTimestamp, null);
         if (lastLogon == null) {
             Map<String, String> attrs = new HashMap<String, String>();
-            attrs.put(Provisioning.A_zimbraLastLogonTimestamp, DateUtil.toGeneralizedTime(new Date()));
+            attrs.put(Provisioning.A_zimbraLastLogonTimestamp, LdapDateUtil.toGeneralizedTime(new Date()));
             try {
                 modifyAttrs(acct, attrs);
             } catch (ServiceException e) {
@@ -5178,7 +5194,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             long current = System.currentTimeMillis();
             if (current - freq >= lastLogon.getTime()) {
                 Map<String, String> attrs = new HashMap<String , String>();
-                attrs.put(Provisioning.A_zimbraLastLogonTimestamp, DateUtil.toGeneralizedTime(new Date()));
+                attrs.put(Provisioning.A_zimbraLastLogonTimestamp, LdapDateUtil.toGeneralizedTime(new Date()));
                 try {
                     modifyAttrs(acct, attrs);
                 } catch (ServiceException e) {
@@ -5809,7 +5825,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         if (mustChange)
             attrs.put(Provisioning.A_zimbraPasswordMustChange, "");
 
-        attrs.put(Provisioning.A_zimbraPasswordModifiedTime, DateUtil.toGeneralizedTime(new Date()));
+        attrs.put(Provisioning.A_zimbraPasswordModifiedTime, LdapDateUtil.toGeneralizedTime(new Date()));
 
         // update the validity value to invalidate auto-standing auth tokens
         int tokenValidityValue = acct.getAuthTokenValidityValue();
@@ -5924,7 +5940,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             entry.setAttr(A_objectClass, "zimbraZimletEntry");
             entry.setAttr(A_zimbraZimletEnabled, ProvisioningConstants.FALSE);
             entry.setAttr(A_zimbraZimletIndexingEnabled, hasKeyword);
-            entry.setAttr(A_zimbraCreateTimestamp, DateUtil.toGeneralizedTime(new Date()));
+            entry.setAttr(A_zimbraCreateTimestamp, LdapDateUtil.toGeneralizedTime(new Date()));
 
             String dn = mDIT.zimletNameToDN(name);
             entry.setDN(dn);
@@ -7242,7 +7258,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
                 String identityId = LdapUtil.generateUUID();
                 entry.setAttr(A_zimbraPrefIdentityId, identityId);
             }
-            entry.setAttr(Provisioning.A_zimbraCreateTimestamp, DateUtil.toGeneralizedTime(new Date()));
+            entry.setAttr(Provisioning.A_zimbraCreateTimestamp, LdapDateUtil.toGeneralizedTime(new Date()));
 
             zlc.createEntry(entry);
 
@@ -7540,7 +7556,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             entry.mapToAttrs(signatureAttrs);
 
             entry.setAttr(A_objectClass, "zimbraSignature");
-            entry.setAttr(Provisioning.A_zimbraCreateTimestamp, DateUtil.toGeneralizedTime(new Date()));
+            entry.setAttr(Provisioning.A_zimbraCreateTimestamp, LdapDateUtil.toGeneralizedTime(new Date()));
 
             entry.setDN(dn);
             zlc.createEntry(entry);
@@ -7920,7 +7936,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
                 String encrypted = passwdAlreadyEncrypted ? smtpPassword : DataSource.encryptData(dsId, smtpPassword);
                 entry.setAttr(A_zimbraDataSourceSmtpAuthPassword, encrypted);
             }
-            entry.setAttr(Provisioning.A_zimbraCreateTimestamp, DateUtil.toGeneralizedTime(new Date()));
+            entry.setAttr(Provisioning.A_zimbraCreateTimestamp, LdapDateUtil.toGeneralizedTime(new Date()));
 
             zlc.createEntry(entry);
 
@@ -8172,7 +8188,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
             String compId = LdapUtil.generateUUID();
             entry.setAttr(A_zimbraId, compId);
-            entry.setAttr(A_zimbraCreateTimestamp, DateUtil.toGeneralizedTime(new Date()));
+            entry.setAttr(A_zimbraCreateTimestamp, LdapDateUtil.toGeneralizedTime(new Date()));
             entry.setAttr(A_cn, name);
             String dn = mDIT.xmppcomponentNameToDN(name);
             entry.setDN(dn);
@@ -9403,7 +9419,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             // create a UUID for the static unit entry
             String staticUnitZimbraId = LdapUtil.generateUUID();
 
-            String createTimestamp = DateUtil.toGeneralizedTime(new Date());
+            String createTimestamp = LdapDateUtil.toGeneralizedTime(new Date());
             entry.setAttr(A_zimbraId, zimbraId);
             entry.setAttr(A_zimbraCreateTimestamp, createTimestamp);
             entry.setAttr(A_mail, groupAddress);
@@ -10338,7 +10354,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
             String zimbraIdStr = LdapUtil.generateUUID();
             entry.setAttr(A_zimbraId, zimbraIdStr);
-            entry.setAttr(A_zimbraCreateTimestamp, DateUtil.toGeneralizedTime(new Date()));
+            entry.setAttr(A_zimbraCreateTimestamp, LdapDateUtil.toGeneralizedTime(new Date()));
             entry.setAttr(A_cn, name);
             String dn = mDIT.ucServiceNameToDN(name);
 

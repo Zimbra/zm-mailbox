@@ -1452,6 +1452,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public abstract void deleteCos(String zimbraId) throws ServiceException;
 
     public abstract Server getLocalServer() throws ServiceException;
+    public abstract Server getLocalServerIfDefined();
 
     public static final class Reasons {
         StringBuilder sb = new StringBuilder();

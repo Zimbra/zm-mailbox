@@ -258,6 +258,11 @@ public final class MockProvisioning extends Provisioning {
     }
 
     @Override
+    public Server getLocalServerIfDefined() {
+        return getLocalServer();
+    }
+
+    @Override
     public void modifyAttrs(Entry e, Map<String, ? extends Object> attrs,
             boolean checkImmutable, boolean allowCallback) {
         throw new UnsupportedOperationException();

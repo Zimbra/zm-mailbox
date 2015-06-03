@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -30,6 +30,7 @@ import com.zimbra.common.account.ZAttr;
 import com.zimbra.common.account.ZAttrProvisioning;
 import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.cs.ldap.LdapDateUtil;
 
 /**
  * AUTO-GENERATED. DO NOT EDIT.
@@ -6417,7 +6418,7 @@ public abstract class ZAttrServer extends NamedEntry {
     @ZAttr(id=790)
     public void setCreateTimestamp(Date zimbraCreateTimestamp) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraCreateTimestamp, zimbraCreateTimestamp==null ? "" : DateUtil.toGeneralizedTime(zimbraCreateTimestamp));
+        attrs.put(Provisioning.A_zimbraCreateTimestamp, zimbraCreateTimestamp==null ? "" : LdapDateUtil.toGeneralizedTime(zimbraCreateTimestamp));
         getProvisioning().modifyAttrs(this, attrs);
     }
 
@@ -6433,7 +6434,7 @@ public abstract class ZAttrServer extends NamedEntry {
     @ZAttr(id=790)
     public Map<String,Object> setCreateTimestamp(Date zimbraCreateTimestamp, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraCreateTimestamp, zimbraCreateTimestamp==null ? "" : DateUtil.toGeneralizedTime(zimbraCreateTimestamp));
+        attrs.put(Provisioning.A_zimbraCreateTimestamp, zimbraCreateTimestamp==null ? "" : LdapDateUtil.toGeneralizedTime(zimbraCreateTimestamp));
         return attrs;
     }
 
@@ -12449,6 +12450,108 @@ public abstract class ZAttrServer extends NamedEntry {
     public Map<String,Object> unsetLastPurgeMaxDuration(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraLastPurgeMaxDuration, "");
+        return attrs;
+    }
+
+    /**
+     * Whether to include fractional seconds in LDAP gentime values (e.g.
+     * zimbraPasswordLockoutFailureTime or
+     * zimbraGalLastSuccessfulSyncTimestamp). Releases prior to 8.7 are
+     * unable to parse gentime values which include fractional seconds;
+     * therefore this value must remain set to FALSE in environments where
+     * any release 8.6 or lower is present. It should be changed to TRUE once
+     * all systems are upgraded to 8.7 or higher.
+     *
+     * @return zimbraLdapGentimeFractionalSecondsEnabled, or true if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2018)
+    public boolean isLdapGentimeFractionalSecondsEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraLdapGentimeFractionalSecondsEnabled, true);
+    }
+
+    /**
+     * Whether to include fractional seconds in LDAP gentime values (e.g.
+     * zimbraPasswordLockoutFailureTime or
+     * zimbraGalLastSuccessfulSyncTimestamp). Releases prior to 8.7 are
+     * unable to parse gentime values which include fractional seconds;
+     * therefore this value must remain set to FALSE in environments where
+     * any release 8.6 or lower is present. It should be changed to TRUE once
+     * all systems are upgraded to 8.7 or higher.
+     *
+     * @param zimbraLdapGentimeFractionalSecondsEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2018)
+    public void setLdapGentimeFractionalSecondsEnabled(boolean zimbraLdapGentimeFractionalSecondsEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapGentimeFractionalSecondsEnabled, zimbraLdapGentimeFractionalSecondsEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to include fractional seconds in LDAP gentime values (e.g.
+     * zimbraPasswordLockoutFailureTime or
+     * zimbraGalLastSuccessfulSyncTimestamp). Releases prior to 8.7 are
+     * unable to parse gentime values which include fractional seconds;
+     * therefore this value must remain set to FALSE in environments where
+     * any release 8.6 or lower is present. It should be changed to TRUE once
+     * all systems are upgraded to 8.7 or higher.
+     *
+     * @param zimbraLdapGentimeFractionalSecondsEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2018)
+    public Map<String,Object> setLdapGentimeFractionalSecondsEnabled(boolean zimbraLdapGentimeFractionalSecondsEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapGentimeFractionalSecondsEnabled, zimbraLdapGentimeFractionalSecondsEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether to include fractional seconds in LDAP gentime values (e.g.
+     * zimbraPasswordLockoutFailureTime or
+     * zimbraGalLastSuccessfulSyncTimestamp). Releases prior to 8.7 are
+     * unable to parse gentime values which include fractional seconds;
+     * therefore this value must remain set to FALSE in environments where
+     * any release 8.6 or lower is present. It should be changed to TRUE once
+     * all systems are upgraded to 8.7 or higher.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2018)
+    public void unsetLdapGentimeFractionalSecondsEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapGentimeFractionalSecondsEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to include fractional seconds in LDAP gentime values (e.g.
+     * zimbraPasswordLockoutFailureTime or
+     * zimbraGalLastSuccessfulSyncTimestamp). Releases prior to 8.7 are
+     * unable to parse gentime values which include fractional seconds;
+     * therefore this value must remain set to FALSE in environments where
+     * any release 8.6 or lower is present. It should be changed to TRUE once
+     * all systems are upgraded to 8.7 or higher.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2018)
+    public Map<String,Object> unsetLdapGentimeFractionalSecondsEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLdapGentimeFractionalSecondsEnabled, "");
         return attrs;
     }
 
