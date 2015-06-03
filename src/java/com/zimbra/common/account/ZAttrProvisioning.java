@@ -7762,6 +7762,20 @@ public class ZAttrProvisioning {
     public static final String A_zimbraLdapGalSyncDisabled = "zimbraLdapGalSyncDisabled";
 
     /**
+     * Whether to include fractional seconds in LDAP gentime values (e.g.
+     * zimbraPasswordLockoutFailureTime or
+     * zimbraGalLastSuccessfulSyncTimestamp). Releases prior to 8.7 are
+     * unable to parse gentime values which include fractional seconds;
+     * therefore this value must remain set to FALSE in environments where
+     * any release 8.6 or lower is present. It should be changed to TRUE once
+     * all systems are upgraded to 8.7 or higher.
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2018)
+    public static final String A_zimbraLdapGentimeFractionalSecondsEnabled = "zimbraLdapGentimeFractionalSecondsEnabled";
+
+    /**
      * name to use in greeting and sign-off; if empty, uses hostname
      */
     @ZAttr(id=23)

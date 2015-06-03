@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -33,67 +33,6 @@ import com.google.common.collect.ImmutableMap;
 import com.zimbra.common.service.ServiceException;
 
 public final class DateUtil {
-
-    public static final String ZIMBRA_LDAP_GENERALIZED_TIME_FORMAT = "yyyyMMddHHmmss'Z'";
-    public static final String ZIMBRA_LDAP_GENERALIZED_TIME_FORMAT_WITH_MS = "yyyyMMddHHmmss.SSS'Z'";
-
-    private DateUtil() {
-    }
-
-    /**
-     * to LDAP generalized time string
-     */
-    public static String toGeneralizedTime(Date date) {
-        SimpleDateFormat fmt = new SimpleDateFormat(ZIMBRA_LDAP_GENERALIZED_TIME_FORMAT);
-        TimeZone tz = fmt.getCalendar().getTimeZone();
-        Date gmtDate;
-        if (tz.inDaylightTime(date))
-            gmtDate = new Date(date.getTime() - (tz.getRawOffset() + tz.getDSTSavings()));
-        else
-            gmtDate = new Date(date.getTime() - tz.getRawOffset());
-        return fmt.format(gmtDate);
-    }
-
-    public static String toGeneralizedTimeWithMs(Date date) {
-        SimpleDateFormat fmt = new SimpleDateFormat(ZIMBRA_LDAP_GENERALIZED_TIME_FORMAT_WITH_MS);
-        TimeZone tz = fmt.getCalendar().getTimeZone();
-        Date gmtDate;
-        if (tz.inDaylightTime(date))
-            gmtDate = new Date(date.getTime() - (tz.getRawOffset() + tz.getDSTSavings()));
-        else
-            gmtDate = new Date(date.getTime() - tz.getRawOffset());
-        return fmt.format(gmtDate);
-    }
-
-    public static Date parseGeneralizedTime(String time) {
-        return parseGeneralizedTime(time, true);
-    }
-
-    /**
-     * from LDAP generalized time string
-     */
-    public static Date parseGeneralizedTime(String time, boolean strict) {
-        int maxLen = strict ? 15 : 17;
-        if (time.length() < 14 || time.length() > maxLen)
-            return null;
-
-        TimeZone tz;
-        if (time.endsWith("Z"))
-            tz = TimeZone.getTimeZone("GMT");
-        else
-            tz = TimeZone.getDefault();
-        int year = Integer.parseInt(time.substring(0, 4));
-        int month = Integer.parseInt(time.substring(4, 6)) - 1;  // months are 0 base
-        int date = Integer.parseInt(time.substring(6, 8));
-        int hour = Integer.parseInt(time.substring(8, 10));
-        int min = Integer.parseInt(time.substring(10, 12));
-        int sec = Integer.parseInt(time.substring(12, 14));
-
-        Calendar calendar = new GregorianCalendar(tz);
-        calendar.clear();
-        calendar.set(year, month, date, hour, min, sec);
-        return calendar.getTime();
-    }
 
     /** Serializes a date in full ISO8601 date/time format.
      *    <pre>yyyy-MM-dd'T'HH:mm:ssZ</pre> */
@@ -148,9 +87,9 @@ public final class DateUtil {
         cal.setTime(date);
         return toRFC822Date(cal);
     }
-    
+
     public static String toRFC822Date(Calendar cal) {
-        
+
         String tzabbr = getTimezoneAbbreviation(cal.getTimeZone().getID(), cal.get(Calendar.DST_OFFSET) != 0);
         int tzoffset = (cal.get(Calendar.ZONE_OFFSET) + cal.get(Calendar.DST_OFFSET)) / 60000;
         char tzsign = tzoffset > 0 ? '+' : '-';
@@ -176,7 +115,7 @@ public final class DateUtil {
 
     public static String toRFC1123Date(Calendar cal) {
         cal.setTimeZone(TimeZone.getTimeZone("GMT"));
-        
+
         StringBuilder sb = new StringBuilder(40);
         sb.append(DAY_NAME[cal.get(Calendar.DAY_OF_WEEK)]);
         append2DigitNumber(sb, cal.get(Calendar.DAY_OF_MONTH)).append(' ');

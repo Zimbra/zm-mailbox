@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -275,38 +275,11 @@ public final class DateUtilTest {
     public void toImapDateTime() throws Exception {
         Assert.assertEquals("31-Dec-1969 16:00:00 -0800", DateUtil.toImapDateTime(new Date(0L), TimeZone.getTimeZone("US/Pacific")));
     }
-    
+
     public void toRFC1123Date() throws Exception {
         Calendar cal = new GregorianCalendar(TimeZone.getTimeZone("GMT"));
         cal.setTimeInMillis(1398412488000L);
         Assert.assertEquals(DateUtil.toRFC1123Date(cal), "Fri, 25 Apr 2014 07:54:48 GMT");
-    }
-
-    @Test
-    public void parseGeneralizedTime() throws Exception {
-        Calendar cal = Calendar.getInstance();
-        cal.clear();
-        cal.setTimeZone(TimeZone.getTimeZone("GMT"));
-        cal.set(2007, 2, 18, 5, 1, 24);
-        Assert.assertEquals(cal.getTime(), DateUtil.parseGeneralizedTime("20070318050124Z"));
-
-        cal.clear();
-        cal.setTimeZone(TimeZone.getTimeZone("GMT"));
-        cal.set(2007, 2, 18, 5, 1, 24);
-        Assert.assertEquals(cal.getTime(), DateUtil.parseGeneralizedTime("20070318050124Z", true));
-
-        cal.clear();
-        cal.setTimeZone(TimeZone.getTimeZone("GMT"));
-        cal.set(2007, 2, 18, 5, 1, 24);
-        Assert.assertEquals(cal.getTime(), DateUtil.parseGeneralizedTime("20070318050124Z", false));
-
-        Assert.assertEquals(null, DateUtil.parseGeneralizedTime("20070318050124.0Z"));
-        Assert.assertEquals(null, DateUtil.parseGeneralizedTime("20070318050124.0Z", true));
-
-        cal.clear();
-        cal.setTimeZone(TimeZone.getTimeZone("GMT"));
-        cal.set(2007, 2, 18, 5, 1, 24);
-        Assert.assertEquals(cal.getTime(), DateUtil.parseGeneralizedTime("20070318050124.0Z", false));
     }
 
     @Test
