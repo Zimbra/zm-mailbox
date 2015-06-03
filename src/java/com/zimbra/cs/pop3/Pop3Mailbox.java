@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -28,14 +28,14 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Closeables;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.index.MessageHit;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.index.ZimbraQueryResults;
-import com.zimbra.cs.index.MessageHit;
+import com.zimbra.cs.ldap.LdapDateUtil;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -72,7 +72,7 @@ final class Pop3Mailbox {
                     ImmutableSet.of(Mailbox.ID_FOLDER_INBOX, Mailbox.ID_FOLDER_SPAM) :
                         Collections.singleton(Mailbox.ID_FOLDER_INBOX);
             String dateConstraint = acct.getAttr(Provisioning.A_zimbraPrefPop3DownloadSince);
-            Date popSince = dateConstraint == null ? null : DateUtil.parseGeneralizedTime(dateConstraint);
+            Date popSince = dateConstraint == null ? null : LdapDateUtil.parseGeneralizedTime(dateConstraint);
             messages = mbox.openPop3Folder(opContext, folderIds, popSince);
             for (Pop3Message p3m : messages) {
                 totalSize += p3m.getSize();

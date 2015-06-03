@@ -28,8 +28,8 @@ import java.util.Map;
 
 import com.zimbra.common.account.ZAttr;
 import com.zimbra.common.account.ZAttrProvisioning;
-import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.cs.ldap.LdapDateUtil;
 
 /**
  * AUTO-GENERATED. DO NOT EDIT.
@@ -3408,7 +3408,7 @@ public abstract class ZAttrCos extends NamedEntry {
     @ZAttr(id=790)
     public void setCreateTimestamp(Date zimbraCreateTimestamp) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraCreateTimestamp, zimbraCreateTimestamp==null ? "" : DateUtil.toGeneralizedTime(zimbraCreateTimestamp));
+        attrs.put(Provisioning.A_zimbraCreateTimestamp, zimbraCreateTimestamp==null ? "" : LdapDateUtil.toGeneralizedTime(zimbraCreateTimestamp));
         getProvisioning().modifyAttrs(this, attrs);
     }
 
@@ -3424,7 +3424,7 @@ public abstract class ZAttrCos extends NamedEntry {
     @ZAttr(id=790)
     public Map<String,Object> setCreateTimestamp(Date zimbraCreateTimestamp, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraCreateTimestamp, zimbraCreateTimestamp==null ? "" : DateUtil.toGeneralizedTime(zimbraCreateTimestamp));
+        attrs.put(Provisioning.A_zimbraCreateTimestamp, zimbraCreateTimestamp==null ? "" : LdapDateUtil.toGeneralizedTime(zimbraCreateTimestamp));
         return attrs;
     }
 
@@ -15651,6 +15651,7 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @return zimbraId, or null if unset
      */
+    @Override
     @ZAttr(id=1)
     public String getId() {
         return getAttr(Provisioning.A_zimbraId, null);
@@ -36644,7 +36645,7 @@ public abstract class ZAttrCos extends NamedEntry {
     @ZAttr(id=653)
     public void setPrefPop3DownloadSince(Date zimbraPrefPop3DownloadSince) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefPop3DownloadSince, zimbraPrefPop3DownloadSince==null ? "" : DateUtil.toGeneralizedTime(zimbraPrefPop3DownloadSince));
+        attrs.put(Provisioning.A_zimbraPrefPop3DownloadSince, zimbraPrefPop3DownloadSince==null ? "" : LdapDateUtil.toGeneralizedTime(zimbraPrefPop3DownloadSince));
         getProvisioning().modifyAttrs(this, attrs);
     }
 
@@ -36660,7 +36661,7 @@ public abstract class ZAttrCos extends NamedEntry {
     @ZAttr(id=653)
     public Map<String,Object> setPrefPop3DownloadSince(Date zimbraPrefPop3DownloadSince, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefPop3DownloadSince, zimbraPrefPop3DownloadSince==null ? "" : DateUtil.toGeneralizedTime(zimbraPrefPop3DownloadSince));
+        attrs.put(Provisioning.A_zimbraPrefPop3DownloadSince, zimbraPrefPop3DownloadSince==null ? "" : LdapDateUtil.toGeneralizedTime(zimbraPrefPop3DownloadSince));
         return attrs;
     }
 

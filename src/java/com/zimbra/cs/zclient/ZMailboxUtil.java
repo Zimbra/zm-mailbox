@@ -132,6 +132,7 @@ import com.zimbra.cs.account.soap.SoapProvisioning.DelegateAuthResponse;
 import com.zimbra.cs.analytics.BehaviorManager;
 import com.zimbra.cs.analytics.MessageBehavior;
 import com.zimbra.cs.httpclient.URLUtil;
+import com.zimbra.cs.ldap.LdapDateUtil;
 import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.util.SoapCLI;
 import com.zimbra.soap.type.SearchSortBy;
@@ -1587,7 +1588,7 @@ public class ZMailboxUtil implements DebugListener {
         else {
             mMbox.addEventHandler(mTraceHandler);
             while(true) {
-                stdout.println("NoOp: "+DateUtil.toGeneralizedTime(new Date()));
+                stdout.println("NoOp: "+LdapDateUtil.toGeneralizedTime(new Date()));
                 mMbox.noOp();
                 try {
                     Thread.sleep(5000);

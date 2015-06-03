@@ -28,7 +28,6 @@ import org.json.JSONException;
 
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.GalContact;
@@ -37,6 +36,7 @@ import com.zimbra.cs.account.Provisioning.SearchGalResult;
 import com.zimbra.cs.datasource.MailItemImport;
 import com.zimbra.cs.db.DbDataSource;
 import com.zimbra.cs.db.DbDataSource.DataSourceItem;
+import com.zimbra.cs.ldap.LdapDateUtil;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -76,7 +76,7 @@ public class GalImport extends MailItemImport {
         String attr = success ?
                 Provisioning.A_zimbraGalLastSuccessfulSyncTimestamp :
                 Provisioning.A_zimbraGalLastFailedSyncTimestamp;
-        attrs.put(attr, DateUtil.toGeneralizedTime(now));
+        attrs.put(attr, LdapDateUtil.toGeneralizedTime(now));
         Provisioning.getInstance().modifyDataSource(ds.getAccount(), ds.getId(), attrs);
     }
 

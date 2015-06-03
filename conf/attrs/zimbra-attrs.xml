@@ -10186,4 +10186,10 @@ TODO: delete them permanently from here
   <desc>The total size (in bytes) of the in-memory queue of conversations to be purged for each data source</desc>
 </attr>
 
+<attr id="2018" name="zimbraLdapGentimeFractionalSecondsEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" affectsServices="service" requiresRestart="mailbox" since="8.7.0,9.0.0">
+  <globalConfigValue>TRUE</globalConfigValue>
+  <globalConfigValueUpgrade>FALSE</globalConfigValueUpgrade>
+  <desc>Whether to include fractional seconds in LDAP gentime values (e.g. zimbraPasswordLockoutFailureTime or zimbraGalLastSuccessfulSyncTimestamp). Releases prior to 8.7 are unable to parse gentime values which include fractional seconds; therefore this value must remain set to FALSE in environments where any release 8.6 or lower is present. It should be changed to TRUE once all systems are upgraded to 8.7 or higher.</desc>
+</attr>
+
 </attrs>

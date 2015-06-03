@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -25,7 +25,6 @@ import java.util.Map;
 import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.common.account.ZAttrProvisioning.AutoProvMode;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Domain;
@@ -35,6 +34,7 @@ import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.ldap.entry.LdapEntry;
 import com.zimbra.cs.ldap.IAttributes;
 import com.zimbra.cs.ldap.LdapClient;
+import com.zimbra.cs.ldap.LdapDateUtil;
 import com.zimbra.cs.ldap.LdapServerType;
 import com.zimbra.cs.ldap.LdapUsage;
 import com.zimbra.cs.ldap.SearchLdapOptions.SearchLdapVisitor;
@@ -197,7 +197,7 @@ public class AutoProvisionEager extends AutoProvision {
         //       See how TestLdapProvAutoProvision.eagerMode() does it.
         //
         if (!hitSizeLimitExceededException) {
-            String lastPolledAt = DateUtil.toGeneralizedTimeWithMs(new Date(polledAt));
+            String lastPolledAt = LdapDateUtil.toGeneralizedTimeWithMs(new Date(polledAt));
             ZimbraLog.autoprov.info("Auto Provisioning has finished for now, setting last polled timestamp: " + lastPolledAt);
             domain.setAutoProvLastPolledTimestampAsString(lastPolledAt);
         }

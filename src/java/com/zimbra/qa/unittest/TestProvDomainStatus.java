@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2008, 2009, 2010, 2011, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -17,16 +17,24 @@
 
 package com.zimbra.qa.unittest;
 
-import java.lang.reflect.Method;
-import java.lang.reflect.InvocationTargetException;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.junit.*;
-import static org.junit.Assert.*;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.lmtp.LmtpProtocolException;
 import com.zimbra.common.service.ServiceException;
@@ -35,86 +43,82 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.Element.XMLElement;
 import com.zimbra.common.util.CliUtil;
-import com.zimbra.common.util.DateUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.common.account.Key;
-import com.zimbra.common.account.Key.AccountBy;
-import com.zimbra.common.account.Key.DomainBy;
-import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.cs.account.Signature;
 import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.account.soap.SoapProvisioning.DelegateAuthResponse;
+import com.zimbra.cs.ldap.LdapDateUtil;
 
 public class TestProvDomainStatus {
     private Provisioning mProv;
     private SoapProvisioning mSoapProv;
     private SoapProvisioning mSoapProvAdmin;
-    
+
     private String TEST_ID;
     private static String TEST_CLASS_NAME = "test-domainstatus";
-    
+
     private static String PASSWORD = "test123";
     private static String NAMEPREFIX_ACCOUNT     = "acct-";
     private String DOMAIN_NAME;
-    
+
     private static final String NAME_PREFIX = TestLmtp.class.getSimpleName();
     private Account[] mAccts;
-    
+
     private static HashMap<String, Map<String, String>> sStatusMap;
-    
+
     @BeforeClass
     public static void init() throws Exception {
         CliUtil.toolSetup();
-        
+
         sStatusMap = new HashMap<String, Map<String, String>>();
-        
+
         Map<String, String> domainActive = new HashMap<String, String>();
         domainActive.put(Provisioning.ACCOUNT_STATUS_ACTIVE, Provisioning.ACCOUNT_STATUS_ACTIVE);
         domainActive.put(Provisioning.ACCOUNT_STATUS_LOCKOUT, Provisioning.ACCOUNT_STATUS_LOCKOUT);
         domainActive.put(Provisioning.ACCOUNT_STATUS_LOCKED, Provisioning.ACCOUNT_STATUS_LOCKED);
         domainActive.put(Provisioning.ACCOUNT_STATUS_MAINTENANCE, Provisioning.ACCOUNT_STATUS_MAINTENANCE);
         domainActive.put(Provisioning.ACCOUNT_STATUS_CLOSED, Provisioning.ACCOUNT_STATUS_CLOSED);
-        
+
         Map<String, String> domainLocked = new HashMap<String, String>();
         domainLocked.put(Provisioning.ACCOUNT_STATUS_ACTIVE, Provisioning.ACCOUNT_STATUS_LOCKED);
         domainLocked.put(Provisioning.ACCOUNT_STATUS_LOCKOUT, Provisioning.ACCOUNT_STATUS_LOCKED);
         domainLocked.put(Provisioning.ACCOUNT_STATUS_LOCKED, Provisioning.ACCOUNT_STATUS_LOCKED);
         domainLocked.put(Provisioning.ACCOUNT_STATUS_MAINTENANCE, Provisioning.ACCOUNT_STATUS_MAINTENANCE);
         domainLocked.put(Provisioning.ACCOUNT_STATUS_CLOSED, Provisioning.ACCOUNT_STATUS_CLOSED);
-        
+
         Map<String, String> domainMaintenance = new HashMap<String, String>();
         domainMaintenance.put(Provisioning.ACCOUNT_STATUS_ACTIVE, Provisioning.ACCOUNT_STATUS_MAINTENANCE);
         domainMaintenance.put(Provisioning.ACCOUNT_STATUS_LOCKOUT, Provisioning.ACCOUNT_STATUS_MAINTENANCE);
         domainMaintenance.put(Provisioning.ACCOUNT_STATUS_LOCKED, Provisioning.ACCOUNT_STATUS_MAINTENANCE);
         domainMaintenance.put(Provisioning.ACCOUNT_STATUS_MAINTENANCE, Provisioning.ACCOUNT_STATUS_MAINTENANCE);
         domainMaintenance.put(Provisioning.ACCOUNT_STATUS_CLOSED, Provisioning.ACCOUNT_STATUS_CLOSED);
-        
+
         Map<String, String> domainSuspended = new HashMap<String, String>();
         domainSuspended.put(Provisioning.ACCOUNT_STATUS_ACTIVE, Provisioning.ACCOUNT_STATUS_MAINTENANCE);
         domainSuspended.put(Provisioning.ACCOUNT_STATUS_LOCKOUT, Provisioning.ACCOUNT_STATUS_MAINTENANCE);
         domainSuspended.put(Provisioning.ACCOUNT_STATUS_LOCKED, Provisioning.ACCOUNT_STATUS_MAINTENANCE);
         domainSuspended.put(Provisioning.ACCOUNT_STATUS_MAINTENANCE, Provisioning.ACCOUNT_STATUS_MAINTENANCE);
         domainSuspended.put(Provisioning.ACCOUNT_STATUS_CLOSED, Provisioning.ACCOUNT_STATUS_CLOSED);
-        
+
         Map<String, String> domainClosed = new HashMap<String, String>();
         domainClosed.put(Provisioning.ACCOUNT_STATUS_ACTIVE, Provisioning.ACCOUNT_STATUS_CLOSED);
         domainClosed.put(Provisioning.ACCOUNT_STATUS_LOCKOUT, Provisioning.ACCOUNT_STATUS_CLOSED);
         domainClosed.put(Provisioning.ACCOUNT_STATUS_LOCKED, Provisioning.ACCOUNT_STATUS_CLOSED);
         domainClosed.put(Provisioning.ACCOUNT_STATUS_MAINTENANCE, Provisioning.ACCOUNT_STATUS_CLOSED);
         domainClosed.put(Provisioning.ACCOUNT_STATUS_CLOSED, Provisioning.ACCOUNT_STATUS_CLOSED);
-        
+
         sStatusMap.put(Provisioning.DOMAIN_STATUS_ACTIVE, domainActive);
         sStatusMap.put(Provisioning.DOMAIN_STATUS_LOCKED, domainLocked);
         sStatusMap.put(Provisioning.DOMAIN_STATUS_MAINTENANCE, domainMaintenance);
         sStatusMap.put(Provisioning.DOMAIN_STATUS_SUSPENDED, domainSuspended);
         sStatusMap.put(Provisioning.DOMAIN_STATUS_CLOSED, domainClosed);
-        
+
     }
-    
+
     private static enum DomainStatus {
         // must match ldap value
         EMPTY, // pseudo value for testing, meaning no value in zimbraDomainStatus
@@ -124,7 +128,7 @@ public class TestProvDomainStatus {
         suspended,
         closed;
     }
-    
+
     private static enum AccountStatus {
         // must match ldap value
         active,
@@ -133,38 +137,38 @@ public class TestProvDomainStatus {
         maintenance,
         closed;
     }
-    
+
     private static enum AccountType {
         ACCT_USER,
         ACCT_DOMAIN_ADMIN,
         ACCT_GLOBAL_ADMIN
     }
-    
+
     @Before
     public void setUp() throws Exception {
 
         TEST_ID = TestProvisioningUtil.genTestId();
-        
+
         System.out.println("\nTest " + TEST_ID + " setting up...\n");
-        
+
         mSoapProv = new SoapProvisioning();
         mSoapProv.soapSetURI(TestUtil.getSoapUrl());
-        
-        
+
+
         mSoapProvAdmin = new SoapProvisioning();
         mSoapProvAdmin.soapSetURI(TestUtil.getAdminSoapUrl());
         // mSoapProvAdmin.soapSetURI("https://phoebe.local:7071/service/admin/soap/");
         // mSoapProvAdmin.soapSetURI("https://localhost:7071/service/admin/soap/");
         mSoapProvAdmin.soapZimbraAdminAuthenticate();
-        
+
         mProv = mSoapProvAdmin;
-        
-        
+
+
         DOMAIN_NAME = TestProvisioningUtil.baseDomainName(TEST_CLASS_NAME, TEST_ID);
-        
+
         createDomain(DOMAIN_NAME);
         mAccts = new Account[AccountStatus.values().length];
-        
+
         for (AccountStatus as : AccountStatus.values()) {
             Account acct = createAccount(ACCOUNT_NAME(as), AccountType.ACCT_USER);
             mAccts[as.ordinal()] = acct;
@@ -173,14 +177,14 @@ public class TestProvDomainStatus {
                 lockoutAccount(acct, true);
         }
     }
-    
+
     private String ACCOUNT_NAME(AccountStatus as) {
         String localPart = NAMEPREFIX_ACCOUNT + as.name();
         return ACCOUNT_NAME(localPart);
     }
-    
+
     private String ACCOUNT_NAME(String localPart) {
-        return localPart + "@" + DOMAIN_NAME; 
+        return localPart + "@" + DOMAIN_NAME;
     }
 
     private void createDomain(String domainName) throws Exception {
@@ -188,26 +192,26 @@ public class TestProvDomainStatus {
         Domain domain = mProv.createDomain(domainName, attrs);
         assertNotNull(domain);
     }
-    
+
     private Account createAccount(String accountEmail, AccountType at) throws Exception {
         Map<String, Object> acctAttrs = new HashMap<String, Object>();
-        
+
         if (at == AccountType.ACCT_DOMAIN_ADMIN)
             acctAttrs.put(Provisioning.A_zimbraIsDomainAdminAccount, ProvisioningConstants.TRUE);
         else if (at == AccountType.ACCT_GLOBAL_ADMIN)
             acctAttrs.put(Provisioning.A_zimbraIsAdminAccount, ProvisioningConstants.TRUE);
-            
+
         Account acct = mProv.createAccount(accountEmail, PASSWORD, acctAttrs);
         assertNotNull(acct);
         return acct;
     }
-    
+
     private Domain getDomain() throws Exception {
         Domain domain = mProv.get(Key.DomainBy.name, DOMAIN_NAME);
         assertNotNull(domain);
         return domain;
     }
-    
+
     private Account getAccount(AccountStatus as) throws Exception {
         /*
         Account acct = mProv.get(Key.AccountBy.name, ACCOUNT_NAME(as));
@@ -216,17 +220,17 @@ public class TestProvDomainStatus {
         */
         return mAccts[as.ordinal()];
     }
-    
+
     private String expectedAccountStatus(String domainStatus, String acctStatus) throws Exception {
         return sStatusMap.get(domainStatus).get(acctStatus);
     }
-    
+
     private void lockoutAccount(Account acct, boolean set) throws Exception {
         Map<String, Object> attrs = new HashMap<String, Object>();
         if (set) {
             attrs.put(Provisioning.A_zimbraPasswordLockoutMaxFailures, "1");
             attrs.put(Provisioning.A_zimbraPasswordLockoutEnabled, ProvisioningConstants.TRUE);
-            attrs.put(Provisioning.A_zimbraPasswordLockoutLockedTime, DateUtil.toGeneralizedTime(new Date()));
+            attrs.put(Provisioning.A_zimbraPasswordLockoutLockedTime, LdapDateUtil.toGeneralizedTime(new Date()));
             mProv.modifyAttrs(acct, attrs);
         } else {
             attrs.put(Provisioning.A_zimbraPasswordLockoutMaxFailures, "");
@@ -235,18 +239,18 @@ public class TestProvDomainStatus {
             mProv.modifyAttrs(acct, attrs);
         }
     }
-    
+
     private void authTest(Account acct, String status) {
-        
+
         boolean ok = false;
-        
+
         try {
             // mSoapProv.authAccount(acct, PASSWORD, TEST_CLASS_NAME);
             mProv.authAccount(acct, PASSWORD, AuthContext.Protocol.test);
-            
+
             if (status.equals(Provisioning.ACCOUNT_STATUS_ACTIVE))
                 ok = true;
-            
+
         } catch (ServiceException e) {
             if (status.equals(Provisioning.ACCOUNT_STATUS_ACTIVE))
                 fail();
@@ -262,18 +266,18 @@ public class TestProvDomainStatus {
             } else if (status.equals(Provisioning.ACCOUNT_STATUS_CLOSED)) {
                 if (e.getCode().equals(AccountServiceException.AUTH_FAILED))
                     ok = true;
-            }  
-        } 
+            }
+        }
         assertTrue(ok);
     }
-    
+
     private void mailTest(Account acct, String status) throws Exception {
-        
+
         boolean ok = false;
-        
+
         try {
             TestUtil.addMessageLmtp(NAME_PREFIX + " 1", acct.getName(), "phoebeshao");
-            
+
             if (status.equals(Provisioning.ACCOUNT_STATUS_ACTIVE) ||
                 status.equals(Provisioning.ACCOUNT_STATUS_LOCKOUT) ||
                 status.equals(Provisioning.ACCOUNT_STATUS_LOCKED))
@@ -283,7 +287,7 @@ public class TestProvDomainStatus {
                     status.equals(Provisioning.ACCOUNT_STATUS_LOCKOUT) ||
                     status.equals(Provisioning.ACCOUNT_STATUS_LOCKED)) {
                 fail();
-            } else if (status.equals(Provisioning.ACCOUNT_STATUS_MAINTENANCE) || 
+            } else if (status.equals(Provisioning.ACCOUNT_STATUS_MAINTENANCE) ||
                        status.equals(Provisioning.ACCOUNT_STATUS_CLOSED)) {
                 if (e.getMessage().equals("503 5.5.1 No recipients"))
                     ok = true;
@@ -291,30 +295,30 @@ public class TestProvDomainStatus {
         }
         assertTrue(ok);
     }
-    
+
     private void statusTest(Account acct, String domainStatus, String acctStatus) throws Exception {
         String status = expectedAccountStatus(domainStatus, acctStatus);
         System.out.println(domainStatus + " " + acctStatus + " => " +  status);
-        
+
         authTest(acct, status);
         mailTest(acct, status);
     }
-    
+
     private void statusTest(String domainStatus) throws Exception {
         for (AccountStatus as : AccountStatus.values()) {
-            Account acct = getAccount(as); 
+            Account acct = getAccount(as);
             statusTest(acct, domainStatus, as.name());
         }
     }
-    
+
     private void assertCodeEquals(ServiceException e, String expectedCode) {
         assertEquals(e.getCode(), expectedCode);
     }
-    
+
     private void statusTest() throws Exception {
-        
+
         Domain domain = getDomain();
-               
+
         for (DomainStatus ds : DomainStatus.values()) {
             String domainStatus = ds.name();
             if (ds == DomainStatus.EMPTY) {
@@ -327,11 +331,11 @@ public class TestProvDomainStatus {
                 attrs.put(Provisioning.A_zimbraDomainStatus, domainStatus);
                 mProv.modifyAttrs(domain, attrs);
             }
-            
+
             statusTest(domainStatus);
         }
     }
-    
+
     static class SoapTestContext {
         private SoapClient mSoapClient;
         private AccountType mAuthedAcctType;
@@ -341,9 +345,9 @@ public class TestProvDomainStatus {
         private String mDomainId;
         private String[] mTesters;
         private String mTestId;
-        
-        SoapTestContext(SoapClient soapClient, AccountType authedAcctType, 
-                        Account targetAcct, boolean suspended, 
+
+        SoapTestContext(SoapClient soapClient, AccountType authedAcctType,
+                        Account targetAcct, boolean suspended,
                         String domainName, String domainId, // we don't want to pass a Domain object
                         String[] testers, String testId) {
             mSoapClient = soapClient;
@@ -356,54 +360,54 @@ public class TestProvDomainStatus {
             mTestId = testId;
         }
     }
-    
+
     static class SoapCommands {
-         
+
         private SoapTestContext mCtx;
-        
+
         public static enum TesterObjs {
             TESTER_ID_ACCOUNT_FOR_DELETE_ACCOUNT_REQUEST
         }
-        
-        // signature APIs only takes id, not name, 
+
+        // signature APIs only takes id, not name,
         // remember the signature ids, we need them for modify/delete signatures
         private Map<String, String> mSignatureNameIdMap;
 
         SoapCommands(SoapTestContext ctx) {
             mCtx = ctx;
-            
+
             mSignatureNameIdMap = new HashMap<String, String>();
         }
-        
+
         private String testCtxId() {
             return mCtx.mAuthedAcctType.name() + "-" + (mCtx.mSuspended?"suspended":"active");
         }
-        
+
         private String identityName() {
             return "identity-of-" + testCtxId();
         }
-        
+
         private String signatureName() {
             return "signature-of-" + testCtxId();
         }
-        
+
         private String accountName() {
             return "acct-created-by-" + testCtxId() + "@" + mCtx.mDomainName;
         }
-        
+
         private String aliasName() {
             return "alias-created-by-" + testCtxId() + "@" + mCtx.mDomainName;
         }
-        
+
         private String domainName() {
             return "domain-created-by-" + testCtxId() + "." + mCtx.mDomainName;
         }
-        
+
         private String cosName() {
             String cosName = "cos-created-by-" + testCtxId() + "-" + mCtx.mTestId;
             return cosName.replace("_", "-");
         }
-        
+
         /*
          * ================
          * account commands
@@ -412,16 +416,16 @@ public class TestProvDomainStatus {
         public void AUTH_REQUEST() throws Exception {
             mCtx.mSoapClient.authAccount(mCtx.mTargetAcct, PASSWORD, AuthContext.Protocol.test);
         }
-        
+
         public void CHANGE_PASSWORD_REQUEST() throws Exception {
             mCtx.mSoapClient.changePassword(mCtx.mTargetAcct, PASSWORD, PASSWORD);
         }
-        
+
         public void GET_PREFS_REQUEST() throws Exception {
             XMLElement req = new XMLElement(AccountConstants.GET_PREFS_REQUEST);
             mCtx.mSoapClient.invoke(req);
         }
-        
+
         public void MODIFY_PREFS_REQUEST() throws Exception {
             XMLElement req = new XMLElement(AccountConstants.MODIFY_PREFS_REQUEST);
             Element p = req.addElement(AccountConstants.E_PREF);
@@ -429,12 +433,12 @@ public class TestProvDomainStatus {
             p.setText("sand");
             mCtx.mSoapClient.invoke(req);
         }
-        
+
         public void GET_INFO_REQUEST() throws Exception {
             XMLElement req = new XMLElement(AccountConstants.GET_INFO_REQUEST);
             mCtx.mSoapClient.invoke(req);
         }
-        
+
         public void GET_ACCOUNT_INFO_REQUEST() throws Exception {
            XMLElement req = new XMLElement(AccountConstants.GET_ACCOUNT_INFO_REQUEST);
            Element a = req.addElement(AccountConstants.E_ACCOUNT);
@@ -442,14 +446,14 @@ public class TestProvDomainStatus {
            a.setText(mCtx.mTargetAcct.getName());
            mCtx.mSoapClient.invokeOnTargetAccount(req, mCtx.mTargetAcct.getId());
         }
-        
+
         public void SEARCH_GAL_REQUEST() throws Exception {
             XMLElement req = new XMLElement(AccountConstants.SEARCH_GAL_REQUEST);
             Element n = req.addElement(AccountConstants.E_NAME);
             n.setText("foo");
             mCtx.mSoapClient.invoke(req);
         }
-        
+
         public void AUTO_COMPLETE_GAL_REQUEST() throws Exception {
             XMLElement req = new XMLElement(AccountConstants.AUTO_COMPLETE_GAL_REQUEST);
             req.addAttribute(AccountConstants.A_LIMIT, "20");
@@ -457,12 +461,12 @@ public class TestProvDomainStatus {
             n.setText("foo");
             mCtx.mSoapClient.invoke(req);
         }
-        
+
         public void SYNC_GAL_REQUEST() throws Exception {
             XMLElement req = new XMLElement(AccountConstants.SYNC_GAL_REQUEST);
             mCtx.mSoapClient.invoke(req);
         }
-        
+
         public void SEARCH_CALENDAR_RESOURCES_REQUEST() throws Exception {
             XMLElement req = new XMLElement(AccountConstants.SEARCH_CALENDAR_RESOURCES_REQUEST);
             Element sf = req.addElement(AccountConstants.E_ENTRY_SEARCH_FILTER);
@@ -472,39 +476,39 @@ public class TestProvDomainStatus {
             cond.addAttribute(AccountConstants.A_ENTRY_SEARCH_FILTER_VALUE, "Equipment");
             mCtx.mSoapClient.invoke(req);
         }
-        
+
         public void MODIFY_PROPERTIES_REQUEST() throws Exception {
             XMLElement req = new XMLElement(AccountConstants.MODIFY_PROPERTIES_REQUEST);
             mCtx.mSoapClient.invoke(req);
          }
-        
+
         public void GET_ALL_LOCALES_REQUEST() throws Exception {
             XMLElement req = new XMLElement(AccountConstants.GET_ALL_LOCALES_REQUEST);
             mCtx.mSoapClient.invoke(req);
         }
-        
+
         public void GET_AVAILABLE_LOCALES_REQUEST() throws Exception {
             XMLElement req = new XMLElement(AccountConstants.GET_AVAILABLE_LOCALES_REQUEST);
             mCtx.mSoapClient.invoke(req);
         }
-        
+
         public void GET_AVAILABLE_SKINS_REQUEST() throws Exception {
             XMLElement req = new XMLElement(AccountConstants.GET_AVAILABLE_SKINS_REQUEST);
             mCtx.mSoapClient.invoke(req);
         }
-        
+
         public void CREATE_IDENTITY_REQUEST() throws Exception {
             mCtx.mSoapClient.createIdentity(mCtx.mTargetAcct, identityName(), new HashMap<String, Object>()) ;
         }
-        
+
         public void MODIFY_IDENTITY_REQUEST() throws Exception {
             mCtx.mSoapClient.modifyIdentity(mCtx.mTargetAcct, identityName(), new HashMap<String, Object>()) ;
         }
-        
+
         public void DELETE_IDENTITY_REQUEST() throws Exception {
             mCtx.mSoapClient.deleteIdentity(mCtx.mTargetAcct, identityName()) ;
         }
-        
+
         public void GET_IDENTITIES_REQUEST() throws Exception {
             mCtx.mSoapClient.getAllIdentities(mCtx.mTargetAcct) ;
         }
@@ -513,21 +517,21 @@ public class TestProvDomainStatus {
             Signature sig = mCtx.mSoapClient.createSignature(mCtx.mTargetAcct, signatureName(), new HashMap<String, Object>());
             mSignatureNameIdMap.put(sig.getName(), sig.getId());
         }
-        
+
         public void MODIFY_SIGNATURE_REQUEST() throws Exception {
             String sigId = mSignatureNameIdMap.get(signatureName());
             mCtx.mSoapClient.modifySignature(mCtx.mTargetAcct, sigId, new HashMap<String, Object>()) ;
         }
-        
+
         public void DELETE_SIGNATURE_REQUEST() throws Exception {
             String sigId = mSignatureNameIdMap.get(signatureName());
             mCtx.mSoapClient.deleteSignature(mCtx.mTargetAcct, sigId) ;
         }
-        
+
         public void GET_SIGNATURES_REQUEST() throws Exception {
             mCtx.mSoapClient.getAllSignatures(mCtx.mTargetAcct) ;
         }
-        
+
         /*
          * ==============
          * admin commands
@@ -537,26 +541,26 @@ public class TestProvDomainStatus {
             XMLElement req = new XMLElement(AdminConstants.PING_REQUEST);
             mCtx.mSoapClient.invoke(req);
         }
-        
+
         public void CHECK_HEALTH_REQUEST() throws Exception {
             mCtx.mSoapClient.healthCheck();
         }
-        
+
         public void ADMIN_AUTH_REQUEST() throws Exception {
             XMLElement req = new XMLElement(AdminConstants.AUTH_REQUEST);
             req.addElement(AdminConstants.E_NAME).setText(mCtx.mTargetAcct.getName());
             req.addElement(AdminConstants.E_PASSWORD).setText(PASSWORD);
             mCtx.mSoapClient.invoke(req);
         }
-        
+
         public void CREATE_ACCOUNT_REQUEST() throws Exception {
             Account acct = mCtx.mSoapClient.createAccount(accountName(), PASSWORD, null);
         }
-        
+
         public void DELEGATE_AUTH_REQUEST() throws Exception {
             DelegateAuthResponse r = mCtx.mSoapClient.delegateAuth(AccountBy.name, mCtx.mTargetAcct.getName(), 0);
         }
-        
+
         public void GET_ACCOUNT_REQUEST() throws Exception {
             XMLElement req = new XMLElement(AdminConstants.GET_ACCOUNT_REQUEST);
             Element a = req.addElement(AccountConstants.E_ACCOUNT);
@@ -564,11 +568,11 @@ public class TestProvDomainStatus {
             a.setText(mCtx.mTargetAcct.getName());
             mCtx.mSoapClient.invokeOnTargetAccount(req, mCtx.mTargetAcct.getId());
         }
-        
+
         public void ADMIN_GET_ACCOUNT_INFO_REQUEST() throws Exception {
             mCtx.mSoapClient.getAccountInfo(AccountBy.name, mCtx.mTargetAcct.getName());
         }
-        
+
         public void GET_ALL_ACCOUNTS_REQUEST() throws Exception {
             // the one in SOapProvisioning requires a Domain obj, so we write our own
             XMLElement req = new XMLElement(AdminConstants.GET_ALL_ACCOUNTS_REQUEST);
@@ -577,17 +581,17 @@ public class TestProvDomainStatus {
             eDomain.setText(mCtx.mDomainName);
             mCtx.mSoapClient.invoke(req);
         }
-        
+
         public void KNOWNBUG_GET_ALL_ACCOUNTS_REQUEST() throws Exception {
             // if invoked by global admin without a specific domain, accounts in the suspended domain will also be returned, they should not
             XMLElement req = new XMLElement(AdminConstants.GET_ALL_ACCOUNTS_REQUEST);
             mCtx.mSoapClient.invoke(req);
         }
-        
+
         public void GET_ALL_ADMIN_ACCOUNTS_REQUEST() throws Exception {
             mCtx.mSoapClient.getAllAdminAccounts();
         }
-        
+
         public void MODIFY_ACCOUNT_REQUEST() throws Exception {
             XMLElement req = new XMLElement(AdminConstants.MODIFY_ACCOUNT_REQUEST);
             Element eId = req.addElement(AccountConstants.E_ID);
@@ -596,46 +600,46 @@ public class TestProvDomainStatus {
             eA.addAttribute(AccountConstants.A_N, Provisioning.A_zimbraAttachmentsBlocked);
             mCtx.mSoapClient.invoke(req);
         }
-        
+
         public void DELETE_ACCOUNT_REQUEST() throws Exception {
             mCtx.mSoapClient.deleteAccount(mCtx.mTesters[TesterObjs.TESTER_ID_ACCOUNT_FOR_DELETE_ACCOUNT_REQUEST.ordinal()]);
         }
-        
+
         public void SET_PASSWORD_REQUEST() throws Exception {
             mCtx.mSoapClient.setPassword(mCtx.mTargetAcct, PASSWORD);
         }
-        
+
         public void CHECK_PASSWORD_STRENGTH_REQUEST() throws Exception {
             mCtx.mSoapClient.checkPasswordStrength(mCtx.mTargetAcct, PASSWORD);
         }
-        
+
         public void ADD_ACCOUNT_ALIAS_REQUEST() throws Exception {
             mCtx.mSoapClient.addAlias(mCtx.mTargetAcct, aliasName());
         }
-          
+
         public void REMOVE_ACCOUNT_ALIAS_REQUEST() throws Exception {
             mCtx.mSoapClient.removeAlias(mCtx.mTargetAcct, aliasName());
         }
-        
+
         /* ... TODO */
-        
+
         public void CREATE_DOMAIN_REQUEST() throws Exception {
             mCtx.mSoapClient.createDomain(domainName(), null);
         }
-        
+
         public void GET_DOMAIN_REQUEST() throws Exception {
             mCtx.mSoapClient.get(Key.DomainBy.name, mCtx.mDomainName) ;
         }
-        
+
         public void GET_DOMAIN_INFO_REQUEST() throws Exception {
             // KNOWNBU?? what is this API for and why doesn't it require any auth?
             mCtx.mSoapClient.getDomainInfo(Key.DomainBy.name, mCtx.mDomainName);
         }
-       
+
         public void GET_ALL_DOMAINS_REQUEST() throws Exception {
             mCtx.mSoapClient.getAllDomains();
         }
-        
+
         public void MODIFY_DOMAIN_REQUEST() throws Exception {
             XMLElement req = new XMLElement(AdminConstants.MODIFY_DOMAIN_REQUEST);
             Element eId = req.addElement(AdminConstants.E_ID);
@@ -644,12 +648,12 @@ public class TestProvDomainStatus {
             eA.addAttribute(AccountConstants.A_N, Provisioning.A_description).addText("this is a domain");
             mCtx.mSoapClient.invoke(req);
         }
-        
+
         /*
         public void MODIFY_DOMAIN_STATUS_REQUEST() throws Exception {
             String curStatus = (mCtx.mSuspended) ? Provisioning.DOMAIN_STATUS_SUSPENDED : Provisioning.DOMAIN_STATUS_ACTIVE;
-            
-            {   // change to a new status 
+
+            {   // change to a new status
                 XMLElement req = new XMLElement(AdminConstants.MODIFY_DOMAIN_STATUS_REQUEST);
                 Element eId = req.addElement(AccountConstants.E_ID);
                 eId.setText(mCtx.mDomainId);
@@ -657,7 +661,7 @@ public class TestProvDomainStatus {
                 eStatus.setText(Provisioning.DOMAIN_STATUS_LOCKED);
                 mCtx.mSoapClient.invoke(req);
             }
-            
+
             {
                 // set it back so our test can continue
                 XMLElement req = new XMLElement(AdminConstants.MODIFY_DOMAIN_STATUS_REQUEST);
@@ -669,22 +673,22 @@ public class TestProvDomainStatus {
             }
         }
         */
-        
+
         public void DELETE_DOMAIN_REQUEST() throws Exception {
             mCtx.mSoapClient.deleteDomain(mCtx.mDomainId);
         }
-        
-        
+
+
         /* ... TODO */
         public void CREATE_COS_REQUEST() throws Exception {
             mCtx.mSoapClient.createCos(cosName(), null);
         }
-        
-        
+
+
         private static enum Result {
             GOOD("G_O_O_D", "G_O_O_D"),
             BAD("B_A_D", "B_A_D"),
-            
+
             KNOWN_BUG("KNOWN_BUG", "KNOWN_BUG"),
             ACCOUNT_INACTIVE(AccountServiceException.ACCOUNT_INACTIVE, "account is not active"),
             AUTH_EXPIRED(ServiceException.AUTH_EXPIRED, "auth credentials have expired"),
@@ -693,10 +697,10 @@ public class TestProvDomainStatus {
             PERM_DENIED_1(ServiceException.PERM_DENIED, "permission denied: not an admin account"),
             PERM_DENIED_2(ServiceException.PERM_DENIED, "permission denied: need admin token"),
             PERM_DENIED_3(ServiceException.PERM_DENIED, "permission denied: domain is suspended");
-            
+
             String mCode;
             String mMsg;
-            
+
             private static class R {
                 static Map<String, Result> sMap = new HashMap<String, Result>();
                 static String getKey(String code, String msg) {
@@ -707,23 +711,23 @@ public class TestProvDomainStatus {
             Result(String code, String msg) {
                 mCode = code;
                 mMsg = msg;
-                
+
                 R.sMap.put(R.getKey(mCode, mMsg), this);
             }
-            
+
             static Result toResult(ServiceException e) {
                 String code = e.getCode();
                 String msg = e.getMessage();
-                
+
                 assertNotNull(code);
                 assertNotNull(msg);
-                    
+
                 /*
                 String key = R.getKey(code, msg);
                 Result r = R.sMap.get(key);
                 assertNotNull(key, r);  // unknown exception
                 */
-                
+
                 String key = R.getKey(code, msg);
                 for (String k : R.sMap.keySet()) {
                     if (key.startsWith(k))
@@ -759,8 +763,8 @@ public class TestProvDomainStatus {
             ACCOUNT_DELETE_SIGNATURE_REQUEST("DELETE_SIGNATURE_REQUEST",                   Result.GOOD,             Result.GOOD,             Result.GOOD,             Result.AUTH_EXPIRED,     Result.AUTH_EXPIRED,     Result.ACCOUNT_INACTIVE),
             ACCOUNT_GET_SIGNATURES_REQUEST("GET_SIGNATURES_REQUEST",                       Result.GOOD,             Result.GOOD,             Result.GOOD,             Result.AUTH_EXPIRED,     Result.AUTH_EXPIRED,     Result.ACCOUNT_INACTIVE),
             ACCOUNT_LAST_COMMAND(),
-          
-            
+
+
             ADMIN_FIRST_COMMAND(),
             ADMIN_PING_REQUEST("PING_REQUEST",                                             Result.GOOD,             Result.GOOD,             Result.GOOD,             Result.GOOD,             Result.GOOD,             Result.GOOD),
             ADMIN_CHECK_HEALTH_REQUEST("CHECK_HEALTH_REQUEST",                             Result.GOOD,             Result.GOOD,             Result.GOOD,             Result.GOOD,             Result.GOOD,             Result.GOOD),
@@ -778,7 +782,7 @@ public class TestProvDomainStatus {
             ADMIN_SET_PASSWORD_REQUEST("SET_PASSWORD_REQUEST",                             Result.PERM_DENIED_2,    Result.GOOD,             Result.GOOD,             Result.PERM_DENIED_2,    Result.AUTH_EXPIRED,     Result.PERM_DENIED_3),
             ADMIN_CHECK_PASSWORD_STRENGTH_REQUEST("CHECK_PASSWORD_STRENGTH_REQUEST",       Result.PERM_DENIED_2,    Result.GOOD,             Result.GOOD,             Result.PERM_DENIED_2,    Result.AUTH_EXPIRED,     Result.PERM_DENIED_3),
             ADMIN_ADD_ACCOUNT_ALIAS_REQUEST("ADD_ACCOUNT_ALIAS_REQUEST",                   Result.PERM_DENIED_2,    Result.GOOD,             Result.GOOD,             Result.PERM_DENIED_2,    Result.AUTH_EXPIRED,     Result.PERM_DENIED_3),
-            ADMIN_REMOVE_ACCOUNT_ALIAS_REQUEST("REMOVE_ACCOUNT_ALIAS_REQUEST",             Result.PERM_DENIED_2,    Result.GOOD,             Result.GOOD,             Result.PERM_DENIED_2,    Result.AUTH_EXPIRED,     Result.PERM_DENIED_3), 
+            ADMIN_REMOVE_ACCOUNT_ALIAS_REQUEST("REMOVE_ACCOUNT_ALIAS_REQUEST",             Result.PERM_DENIED_2,    Result.GOOD,             Result.GOOD,             Result.PERM_DENIED_2,    Result.AUTH_EXPIRED,     Result.PERM_DENIED_3),
             /* TODO skip for now, complete when have time
             dispatcher.registerHandler(AdminConstants.SEARCH_ACCOUNTS_REQUEST, new SearchAccounts());
             dispatcher.registerHandler(AdminConstants.RENAME_ACCOUNT_REQUEST, new RenameAccount());
@@ -796,20 +800,20 @@ public class TestProvDomainStatus {
             ADMIN_DELETE_DOMAIN_REQUEST("DELETE_DOMAIN_REQUEST",                           Result.PERM_DENIED_2,    Result.PERM_DENIED_2,    Result.DOMAIN_NOT_EMPTY, Result.PERM_DENIED_2,    Result.PERM_DENIED_2,    Result.DOMAIN_NOT_EMPTY),  // global admin should be able to delete domain if it is suspended??? TODO
             ADMIN_CREATE_COS_REQUEST("CREATE_COS_REQUEST",                                 Result.PERM_DENIED_2,    Result.PERM_DENIED_2,    Result.GOOD,             Result.PERM_DENIED_2,    Result.PERM_DENIED_2,    Result.GOOD),
             ADMIN_LAST_COMMAND();
-            
+
             private String mFuncName;
             private Result[][] mExpectedResult;
-            
+
             // for markers
             Command() {}
 
-            
-            Command(String funcName, 
+
+            Command(String funcName,
                     Result activeUser,    Result activeDomainAdmin,    Result activeGlobalAdmin,
                     Result suspendedUser, Result suspendedDomainAdmin, Result suspendedGlobalAdmin) {
                 mFuncName = funcName;
                 mExpectedResult = new Result[2][AccountType.values().length];
-                
+
                 mExpectedResult[0][AccountType.ACCT_USER.ordinal()] = activeUser;
                 mExpectedResult[0][AccountType.ACCT_DOMAIN_ADMIN.ordinal()] = activeDomainAdmin;
                 mExpectedResult[0][AccountType.ACCT_GLOBAL_ADMIN.ordinal()] = activeGlobalAdmin;
@@ -817,14 +821,14 @@ public class TestProvDomainStatus {
                 mExpectedResult[1][AccountType.ACCT_DOMAIN_ADMIN.ordinal()] = suspendedDomainAdmin;
                 mExpectedResult[1][AccountType.ACCT_GLOBAL_ADMIN.ordinal()] = suspendedGlobalAdmin;
             }
-            
+
             Result expectedResult(boolean suspended, AccountType acctType) {
                 int idx = (suspended)? 1 : 0;
                 return mExpectedResult[idx][acctType.ordinal()];
             }
-              
+
         }
-        
+
         /*
         dispatcher.registerHandler(AdminConstants.GET_COS_REQUEST, new GetCos());
         dispatcher.registerHandler(AdminConstants.GET_ALL_COS_REQUEST, new GetAllCos());
@@ -929,42 +933,42 @@ public class TestProvDomainStatus {
 
         // calendar time zone fixup
         dispatcher.registerHandler(AdminConstants.FIX_CALENDAR_TIME_ZONE_REQUEST, new FixCalendarTimeZone());
-        
+
         // admin saved searches
         dispatcher.registerHandler(AdminConstants.GET_ADMIN_SAVED_SEARCHES_REQUEST, new GetAdminSavedSearches());
         dispatcher.registerHandler(AdminConstants.MODIFY_ADMIN_SAVED_SEARCHES_REQUEST, new ModifyAdminSavedSearches());
-        
+
         dispatcher.registerHandler(AdminConstants.ADD_ACCOUNT_LOGGER_REQUEST, new AddAccountLogger());
         dispatcher.registerHandler(AdminConstants.REMOVE_ACCOUNT_LOGGER_REQUEST, new RemoveAccountLogger());
         dispatcher.registerHandler(AdminConstants.GET_ACCOUNT_LOGGERS_REQUEST, new GetAccountLoggers());
         dispatcher.registerHandler(AdminConstants.GET_ALL_ACCOUNT_LOGGERS_REQUEST, new GetAllAccountLoggers());
-        
+
         dispatcher.registerHandler(AdminConstants.CHECK_DIRECTORY_REQUEST, new CheckDirectory());
-        
+
         dispatcher.registerHandler(AdminConstants.FLUSH_CACHE_REQUEST, new FlushCache());
          */
-        
+
         public static void run(SoapTestContext ctx) throws Exception {
             SoapCommands cmds = new SoapCommands(ctx);
-           
+
             Class cls = cmds.getClass();
             for (Command c : Command.values()) {
-                
+
                 System.out.println((ctx.mSuspended?"suspended ":"active ") + ctx.mAuthedAcctType.name() + ": " + c.name());
-                
+
                 if (c.mFuncName == null)
                     continue;
-                
+
                 /*
                 if (authedAcctType == AccountType.ACCT_USER && c.name().startsWith("ADMIN"))
                     continue;
                 */
-                
+
                 Method method = cls.getMethod(c.mFuncName);
-                 
+
                 Result expectedResult = c.expectedResult(ctx.mSuspended, ctx.mAuthedAcctType);
                 Result actualResult = null;
-                
+
                 try {
                     method.invoke(cmds);
                     actualResult = Result.GOOD;
@@ -977,17 +981,17 @@ public class TestProvDomainStatus {
                     } else {
                         te.printStackTrace();
                     }
-                   
+
                 }
-                
+
                 if (expectedResult != Result.KNOWN_BUG)
                     assertEquals(c.name(), expectedResult, actualResult);
              }
         }
     }
-    
+
     private static class SoapClient extends SoapProvisioning {
-              
+
         private void soapAuthenticate(String name, String password) throws ServiceException {
             XMLElement req = new XMLElement(AccountConstants.AUTH_REQUEST);
             Element a = req.addElement(AccountConstants.E_ACCOUNT);
@@ -997,10 +1001,10 @@ public class TestProvDomainStatus {
             Element response = invoke(req);
             String authToken = response.getElement(AccountConstants.E_AUTH_TOKEN).getText();
             setAuthToken(new ZAuthToken(authToken));
-        }     
-        
+        }
+
         static SoapClient newInstance(Account acct, AccountType at) throws Exception {
-            
+
             SoapClient soapClient = new SoapClient();
             if (at == AccountType.ACCT_USER) {
                 // soapClient.soapSetURI(TestUtil.getSoapUrl());
@@ -1011,57 +1015,58 @@ public class TestProvDomainStatus {
                 soapClient.soapSetURI(TestUtil.getAdminSoapUrl());
                 soapClient.soapAdminAuthenticate(acct.getName(), PASSWORD);
             }
-                
+
             return soapClient;
         }
-        
+
+        @Override
         protected synchronized Element invokeOnTargetAccount(Element request, String targetId) throws ServiceException {
             return super.invokeOnTargetAccount(request, targetId);
         }
     }
-    
+
     String[] createTesters(DomainStatus ds, AccountType at) throws Exception {
         String[] testers = new String[SoapCommands.TesterObjs.values().length];
-        
+
         String objSuffix = "tester-" + ds.name() + "-" + at.name();
-        
+
         String name = ACCOUNT_NAME("acct-" + objSuffix);
         testers[SoapCommands.TesterObjs.TESTER_ID_ACCOUNT_FOR_DELETE_ACCOUNT_REQUEST.ordinal()] = createAccount(name, AccountType.ACCT_USER).getId();
-        
+
         return testers;
     }
-    
+
     private void suspendedDomainTest() throws Exception {
         Domain domain = getDomain();
         String domainId = domain.getId();
-        
+
         Map attrs = new HashMap<String, String>();
         attrs.put(Provisioning.A_zimbraDomainStatus, DomainStatus.active.name());
         mProv.modifyAttrs(domain, attrs);
-                
+
         // auth to user, domain admin and global admin before we suspend the domain
         Account user = createAccount(ACCOUNT_NAME("user"), AccountType.ACCT_USER);
         String[] testersActiveUser = createTesters(DomainStatus.active, AccountType.ACCT_USER);
         String[] testersSuspendedUser = createTesters(DomainStatus.suspended, AccountType.ACCT_USER);
         SoapClient clientUser = SoapClient.newInstance(user, AccountType.ACCT_USER);
-        
+
         Account domainAdmin = createAccount(ACCOUNT_NAME("domain-admin"), AccountType.ACCT_DOMAIN_ADMIN);
         String[] testersActiveDomainAdmin = createTesters(DomainStatus.active, AccountType.ACCT_DOMAIN_ADMIN);
         String[] testersSuspendedDomainAdmin = createTesters(DomainStatus.suspended, AccountType.ACCT_DOMAIN_ADMIN);
         SoapClient clientDomainAdmin = SoapClient.newInstance(domainAdmin, AccountType.ACCT_DOMAIN_ADMIN);
-        
+
         Account globalAdmin = createAccount(ACCOUNT_NAME("global-admin"), AccountType.ACCT_GLOBAL_ADMIN);
         String[] testersActiveGlobalAdmin = createTesters(DomainStatus.active, AccountType.ACCT_GLOBAL_ADMIN);
         String[] testersSuspendedGlobalAdmin = createTesters(DomainStatus.suspended, AccountType.ACCT_GLOBAL_ADMIN);
         SoapClient clientGlobalAdmin = SoapClient.newInstance(globalAdmin, AccountType.ACCT_GLOBAL_ADMIN);
-        
+
         attrs.clear();
         attrs.put(Provisioning.A_zimbraDomainStatus, DomainStatus.suspended.name());
         mProv.modifyAttrs(domain, attrs);
         SoapCommands.run(new SoapTestContext(clientUser, AccountType.ACCT_USER, user, true, DOMAIN_NAME, domainId, testersSuspendedUser, TEST_ID));
         SoapCommands.run(new SoapTestContext(clientDomainAdmin, AccountType.ACCT_DOMAIN_ADMIN, user, true, DOMAIN_NAME, domainId, testersSuspendedDomainAdmin, TEST_ID));
         SoapCommands.run(new SoapTestContext(clientGlobalAdmin, AccountType.ACCT_GLOBAL_ADMIN, user, true, DOMAIN_NAME, domainId, testersSuspendedGlobalAdmin, TEST_ID));
-        
+
         attrs.clear();
         attrs.put(Provisioning.A_zimbraDomainStatus, DomainStatus.active.name());
         mProv.modifyAttrs(domain, attrs);
@@ -1069,7 +1074,7 @@ public class TestProvDomainStatus {
         SoapCommands.run(new SoapTestContext(clientDomainAdmin, AccountType.ACCT_DOMAIN_ADMIN, user, false, DOMAIN_NAME, domainId, testersActiveDomainAdmin, TEST_ID));
         SoapCommands.run(new SoapTestContext(clientGlobalAdmin, AccountType.ACCT_GLOBAL_ADMIN, user, false, DOMAIN_NAME, domainId, testersActiveGlobalAdmin, TEST_ID));
     }
-    
+
     private void execute() throws Exception {
         // statusTest();
         suspendedDomainTest();
@@ -1083,7 +1088,7 @@ public class TestProvDomainStatus {
             System.out.println("\nTest " + TEST_ID + " done!");
         } catch (ServiceException e) {
             Throwable cause = e.getCause();
-            System.out.println("ERROR: " + e.getCode() + " (" + e.getMessage() + ")" + 
+            System.out.println("ERROR: " + e.getCode() + " (" + e.getMessage() + ")" +
                                (cause == null ? "" : " (cause: " + cause.getClass().getName() + " " + cause.getMessage() + ")"));
             e.printStackTrace(System.out);
             System.out.println("\nTest " + TEST_ID + " failed!");

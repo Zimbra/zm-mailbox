@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -23,11 +23,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.DateUtil;
-import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.ldap.LdapDateUtil;
 
 public class LdapLockoutPolicy {
 
@@ -40,7 +40,7 @@ public class LdapLockoutPolicy {
     private boolean mLockoutExpired;
     private boolean mIsLockedOut;
     private String mAccountStatus;
-    
+
     public LdapLockoutPolicy(Provisioning prov, Account account) throws ServiceException {
         mAccount = account;
         mProv = prov;
@@ -56,13 +56,13 @@ public class LdapLockoutPolicy {
         if (!mEnabled) return false;
 
         Date locked = mAccount.getGeneralizedTimeAttr(Provisioning.A_zimbraPasswordLockoutLockedTime, null);
-        
+
         // not locked
         if (locked == null) return false;
-        
+
         // see if still locked
         long duration = mAccount.getTimeInterval(Provisioning.A_zimbraPasswordLockoutDuration, 0);
-        
+
        //An account is considered locked if the current time is less than the
        //  value zimbraPasswordLockoutLockedTime + zimbraPasswordLockoutDuration.
 
@@ -83,17 +83,17 @@ public class LdapLockoutPolicy {
     /**
      * update the failure time attr list. remove oldest if it at limit, add new entry,
      * and return number of entries in the list.
-     *  
+     *
      * @param acct
      * @param attrs
      * @param max
-     * @return total number of failure time attrs 
+     * @return total number of failure time attrs
      */
     private int updateFailureTimes(Map<String, Object> attrs) {
-        // need to toss out any "expired" failures 
+        // need to toss out any "expired" failures
         long duration = mAccount.getTimeInterval(Provisioning.A_zimbraPasswordLockoutFailureLifetime, 0);
         if (duration != 0) {
-            String expiredTime = DateUtil.toGeneralizedTime(new Date(System.currentTimeMillis() - duration));
+            String expiredTime = LdapDateUtil.toGeneralizedTime(new Date(System.currentTimeMillis() - duration));
             for (String failure : mFailures) {
                 if (failure.compareTo(expiredTime) < 0) {
                     if (mFailuresToRemove == null) mFailuresToRemove = new ArrayList<String>();
@@ -102,8 +102,8 @@ public class LdapLockoutPolicy {
             }
         }
 
-        String currentFailure = DateUtil.toGeneralizedTime(new Date());
-        // need to toss out the oldest if we are at our limit        
+        String currentFailure = LdapDateUtil.toGeneralizedTime(new Date());
+        // need to toss out the oldest if we are at our limit
         boolean removeOldest = mFailures.length == mMaxFailures && mFailuresToRemove == null;
         if (removeOldest) {
             int i, j = 0;
@@ -128,7 +128,7 @@ public class LdapLockoutPolicy {
 
         // add latest failure
         attrs.put("+" + Provisioning.A_zimbraPasswordLockoutFailureTime, currentFailure);
-        
+
         // return total of all outstanding failures, including latest
         return 1 + mFailures.length - (removeOldest ? 1 : 0 ) - (mFailuresToRemove == null ? 0 : mFailuresToRemove.size());
     }
@@ -141,7 +141,7 @@ public class LdapLockoutPolicy {
         if (mLockoutExpired) {
             if (mAccountStatus.equalsIgnoreCase(Provisioning.ACCOUNT_STATUS_LOCKOUT)) {
                 ZimbraLog.security.info(ZimbraLog.encodeAttrs(
-                        new String[] {"cmd", "Auth","account", mAccount.getName(), 
+                        new String[] {"cmd", "Auth","account", mAccount.getName(),
                         "info", "account re-activated from lockout status upon successful login"}));
                 attrs.put(Provisioning.A_zimbraAccountStatus, Provisioning.ACCOUNT_STATUS_ACTIVE);
             }
@@ -152,7 +152,7 @@ public class LdapLockoutPolicy {
             if (attrs.size() > 0)
                 mProv.modifyAttrs(mAccount, attrs);
         } catch (Exception e) {
-            ZimbraLog.account.warn("Unable to update account password lockout attrs: "+mAccount.getName(), e);            
+            ZimbraLog.account.warn("Unable to update account password lockout attrs: "+mAccount.getName(), e);
         }
     }
 
@@ -165,10 +165,10 @@ public class LdapLockoutPolicy {
         if (totalFailures >= mMaxFailures && !mIsLockedOut) {
             ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                     new String[] {"cmd", "Auth","account", mAccount.getName(), "error", "account lockout due to too many failed logins"}));
-            attrs.put(Provisioning.A_zimbraPasswordLockoutLockedTime, DateUtil.toGeneralizedTime(new Date()));
+            attrs.put(Provisioning.A_zimbraPasswordLockoutLockedTime, LdapDateUtil.toGeneralizedTime(new Date()));
             attrs.put(Provisioning.A_zimbraAccountStatus, Provisioning.ACCOUNT_STATUS_LOCKOUT);
         }
-        
+
         try {
             mProv.modifyAttrs(mAccount, attrs);
         } catch (Exception e) {

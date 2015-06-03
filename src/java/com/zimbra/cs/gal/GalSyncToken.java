@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2009, 2010, 2011, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -16,14 +16,13 @@
  */
 package com.zimbra.cs.gal;
 
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.ldap.LdapDateUtil;
 import com.zimbra.cs.ldap.LdapUtil;
 
 public class GalSyncToken {
@@ -36,11 +35,10 @@ public class GalSyncToken {
 		mChangeIdMap = new HashMap<String,String>();
 		mChangeIdMap.put(accountId, "" + changeId);
 	}
-	
-	static final String LDAP_GENERALIZED_TIME_FORMAT = DateUtil.ZIMBRA_LDAP_GENERALIZED_TIME_FORMAT;
+
 	private String mLdapTimestamp;
 	private HashMap<String,String> mChangeIdMap;
-	
+
 	private void parse(String token) {
 		mChangeIdMap = new HashMap<String,String>();
 		int pos = token.indexOf(':');
@@ -68,40 +66,37 @@ public class GalSyncToken {
 			mChangeIdMap.put(key, value);
 		}
 	}
-	
+
 	public String getLdapTimestamp() {
 		return mLdapTimestamp;
 	}
-	
+
 	public String getLdapTimestamp(String format) throws ServiceException {
 	    // mLdapTimestamp should be always in this format
-	    SimpleDateFormat standardFormat = new SimpleDateFormat(DateUtil.ZIMBRA_LDAP_GENERALIZED_TIME_FORMAT);
 	    SimpleDateFormat fmt = new SimpleDateFormat(format);
-	    try {
-		Date ts = standardFormat.parse(mLdapTimestamp);
-		return fmt.format(ts); 
-	    } catch (ParseException e) {
-		// throw ServiceException.INVALID_REQUEST("invalid sync token:" + mLdapTimestamp, e);
-		// can't parse, just return the original
-		return mLdapTimestamp;
-	    }
+		Date ts = LdapDateUtil.parseGeneralizedTime(mLdapTimestamp);
+		if (ts == null) {
+		    return mLdapTimestamp;
+		} else {
+		    return fmt.format(ts);
+		}
 	}
-	
+
 	public int getChangeId(String accountId) {
 		String cid = mChangeIdMap.get(accountId);
 		if (cid != null)
 			return Integer.parseInt(cid);
 		return 0;
 	}
-	
+
 	public boolean doMailboxSync() {
 		return mLdapTimestamp.length() == 0 || mChangeIdMap.size() > 0;
 	}
-	
+
 	public boolean isEmpty() {
 	    return mLdapTimestamp.length() == 0 && mChangeIdMap.size() == 0;
 	}
-	
+
 	public void merge(GalSyncToken that) {
 		ZimbraLog.gal.debug("merging token "+this+" with "+that);
 		mLdapTimestamp = LdapUtil.getEarlierTimestamp(this.mLdapTimestamp, that.mLdapTimestamp);
@@ -109,8 +104,9 @@ public class GalSyncToken {
 			mChangeIdMap.put(aid, that.mChangeIdMap.get(aid));
 		ZimbraLog.gal.debug("result: "+this);
 	}
-	
-	public String toString() {
+
+	@Override
+    public String toString() {
 		StringBuilder buf = new StringBuilder(mLdapTimestamp);
 		for (String aid : mChangeIdMap.keySet())
 			buf.append(":").append(aid).append(":").append(mChangeIdMap.get(aid));

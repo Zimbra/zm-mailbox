@@ -1201,7 +1201,7 @@ public class AttributeManagerUtil {
                break;
            case TYPE_GENTIME:
                javaType = "Date";
-               putParam = String.format("%s==null ? \"\" : DateUtil.toGeneralizedTime(%s)", name, name);
+               putParam = String.format("%s==null ? \"\" : LdapDateUtil.toGeneralizedTime(%s)", name, name);
                break;
            case TYPE_ENUM:
                javaType = "ZAttrProvisioning." + enumName(ai);
