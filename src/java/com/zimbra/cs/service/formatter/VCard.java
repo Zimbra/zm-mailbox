@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2006, 2007, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -134,26 +134,33 @@ public class VCard {
             isEmpty = false;
         }
 
-        String parse(String line) throws ServiceException {
+        String parse(StringBuilder line) throws ServiceException {
             reset();
-            if ((isEmpty = line.trim().equals("")) == true)
+            isEmpty = isAllWhitespace(line);
+            if (isEmpty) {
                 return "";
+            }
 
             // find the delimiter between property name and property value
-            int colon = line.indexOf(':');
-            if (colon == -1)
-                throw ServiceException.PARSE_ERROR("missing ':' in line " + line, null);
+            int colon = line.indexOf(":");
+            if (colon == -1) {
+                throw ServiceException.PARSE_ERROR("missing ':' in line " + shortFormForLogging(line), null);
+            }
             value = line.substring(colon + 1);
 
             // find the property name, stripping off any groups (e.g. "FOO.ADR")
             int i, start;
             char c = '\0';
             for (i = start = 0; i < colon; i++) {
-                if ((c = line.charAt(i)) == '.')  start = i + 1;
-                else if (c == ';')                break;
+                if ((c = line.charAt(i)) == '.') {
+                    start = i + 1;
+                } else if (c == ';') {
+                    break;
+                }
             }
-            if (start != 0)
+            if (start != 0) {
                 group = line.substring(0, start - 1);
+            }
             name = line.substring(start, i).trim().toUpperCase();
 
             // get the property's parameters
@@ -226,33 +233,39 @@ public class VCard {
         int depth = 0;
         int cardstart = 0;
         String uid = null;
+        StringBuilder line = new StringBuilder(256);
         for (int start, pos = 0, limit = vcard.length(); pos < limit;) {
             // unfold the next line in the vcard
-            String line = "", name = null, value;
+            line.setLength(0);
+            String name = null;
+            String value;
             int linestart = pos;
             boolean folded = true;
             do {
                 start = pos;
-                while (pos < limit && vcard.charAt(pos) != '\r' && vcard.charAt(pos) != '\n')
+                while (pos < limit && vcard.charAt(pos) != '\r' && vcard.charAt(pos) != '\n') {
                     pos++;
-                line += vcard.substring(start, pos);
+                }
+                line.append(vcard.substring(start, pos));
                 if (pos < limit) {
                     if (pos < limit && vcard.charAt(pos) == '\r')  pos++;
                     if (pos < limit && vcard.charAt(pos) == '\n')  pos++;
                 }
-                if (pos < limit && (vcard.charAt(pos) == ' ' || vcard.charAt(pos) == '\t'))
+                if (pos < limit && (vcard.charAt(pos) == ' ' || vcard.charAt(pos) == '\t')) {
                     pos++;
-                else {
+                } else {
                     name = vcprop.parse(line);
-                    if (vcprop.getEncoding() != Encoding.Q || !line.endsWith("="))
+                    if (    (vcprop.getEncoding() != Encoding.Q) ||
+                            !((line.length() > 0) && ('=' == (line.charAt(line.length() - 1))))) {
                         folded = false;
+                    }
                 }
             } while (folded);
-            if (vcprop.isEmpty())
+            if (vcprop.isEmpty()) {
                 continue;
-
-            if (name.equals("")) {
-                throw ServiceException.PARSE_ERROR("missing property name in line " + line, null);
+            }
+            if (Strings.isNullOrEmpty(name)) {
+                throw ServiceException.PARSE_ERROR("missing property name in line " + shortFormForLogging(line), null);
             } else if (name.startsWith("X-") && !name.startsWith("X-ZIMBRA-")) {
                 String decodedValue = vcfDecode(vcprop.getValue());
                 // handle multiple occurrences of xprops with the same key
@@ -367,6 +380,24 @@ public class VCard {
         }
 
         return cards;
+    }
+
+    static String shortFormForLogging(StringBuilder line) {
+        if (line.length() <= 70) {
+            return line.toString();
+        } else {
+            return line.substring(0, 70) + "...";
+        }
+    }
+
+    static boolean isAllWhitespace(StringBuilder line) {
+        int length = line.length();
+        for (int ndx = 0; ndx < length; ndx++) {
+            if (!Character.isWhitespace(line.charAt(ndx))) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private static void removeField(String firstKey, boolean skipFirstKey, int firstSuffix, Map<String, String> fields) {
