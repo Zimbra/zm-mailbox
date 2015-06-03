@@ -412,8 +412,8 @@ public class SoapServlet extends ZimbraServlet {
 
             // Prepare mailstore tags
             List<String> versionTags = new ArrayList<>();
-            versionTags.add(BuildInfo.MAJORVERSION + "." + BuildInfo.MINORVERSION + ".x");
-            versionTags.add(BuildInfo.MAJORVERSION + "." + BuildInfo.MINORVERSION + "." + BuildInfo.MICROVERSION);
+            versionTags.add(BuildInfo.MAJORVERSION + "-" + BuildInfo.MINORVERSION + "-x");
+            versionTags.add(BuildInfo.MAJORVERSION + "-" + BuildInfo.MINORVERSION + "-" + BuildInfo.MICROVERSION);
 
             // Register http endpoint
             if (MailMode.http.equals(mailMode) || MailMode.both.equals(mailMode)) {

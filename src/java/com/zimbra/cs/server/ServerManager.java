@@ -173,8 +173,8 @@ public final class ServerManager {
         String name = getServiceLocatorServiceName(server);
         String id = name + ":" + server.getConfig().getBindPort();
         CatalogRegistration.Service service = new CatalogRegistration.Service(id, name, server.getConfig().getBindPort());
-        service.tags.add(BuildInfo.MAJORVERSION + "." + BuildInfo.MINORVERSION + ".x");
-        service.tags.add(BuildInfo.MAJORVERSION + "." + BuildInfo.MINORVERSION + "." + BuildInfo.MICROVERSION);
+        service.tags.add(BuildInfo.MAJORVERSION + "-" + BuildInfo.MINORVERSION + "-x");
+        service.tags.add(BuildInfo.MAJORVERSION + "-" + BuildInfo.MINORVERSION + "-" + BuildInfo.MICROVERSION);
         if (server.getConfig().isSslEnabled()) {
             service.tags.add("ssl");
         }
