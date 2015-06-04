@@ -3229,25 +3229,17 @@ abstract class ImapHandler {
             }
 
             if (ids.size() >= (i == max ? 1 : SUGGESTED_DELETE_BATCH_SIZE)) {
-                try {
-                    ZimbraLog.imap.debug("  ** deleting: %s", ids);
-                    selectedFolder.getMailbox().delete(getContext(), ArrayUtil.toIntArray(ids), MailItem.Type.UNKNOWN, null);
-                } catch (MailServiceException.NoSuchItemException e) {
-                    // FIXME: strongly suspect this is dead code (see Mailbox.delete() implementation)
-                    // something went wrong, so delete *this* batch one at a time
-                    for (int id : ids) {
-                        try {
-                            ZimbraLog.imap.debug("  ** fallback deleting: %d", id);
-                            i4folder.getMailbox().delete(getContext(), new int[] {id}, MailItem.Type.UNKNOWN, null);
-                        } catch (MailServiceException.NoSuchItemException nsie) {
-                            i4msg = i4folder.getById(id);
-                            if (i4msg != null) {
-                                i4msg.setExpunged(true);
-                            }
-                        }
+                List<Integer> nonExistingItems = new ArrayList<Integer>();
+                ZimbraLog.imap.debug("  ** deleting: %s", ids);
+                selectedFolder.getMailbox().delete(getContext(), ArrayUtil.toIntArray(ids), MailItem.Type.UNKNOWN, null, nonExistingItems);
+                ids.clear();
+                for (Integer itemId : nonExistingItems) {
+                    i4msg = i4folder.getById(itemId);
+                    if (i4msg != null) {
+                        i4msg.setExpunged(true);
                     }
                 }
-                ids.clear();
+                nonExistingItems.clear();
 
                 // send a gratuitous untagged response to keep pissy clients from closing the socket from inactivity
                 long now = System.currentTimeMillis();
