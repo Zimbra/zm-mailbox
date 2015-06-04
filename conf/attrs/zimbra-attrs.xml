@@ -922,19 +922,22 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>whether GAL features are enabled</desc>
 </attr>
 
-<attr id="150" name="zimbraNewMailNotificationFrom" type="string" max="1000" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+<attr id="150" name="zimbraNewMailNotificationFrom" type="string" max="1000" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" deprecatedSince="9.0.0">
   <defaultCOSValue>Postmaster &lt;postmaster@${RECIPIENT_DOMAIN}&gt;</defaultCOSValue>
   <desc>template used to construct the sender of an email notification message</desc>
+  <deprecateDesc>Deprecated in favor of the zimbraNewMailNotificationMessage</deprecateDesc>
 </attr>
 
-<attr id="151" name="zimbraNewMailNotificationSubject" type="string" max="1000" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+<attr id="151" name="zimbraNewMailNotificationSubject" type="string" max="1000" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" deprecatedSince="9.0.0">
   <defaultCOSValue>New message received at ${RECIPIENT_ADDRESS}</defaultCOSValue>
   <desc>template used to construct the subject of an email notification message</desc>
+  <deprecateDesc>Deprecated in favor of the zimbraNewMailNotificationMessage</deprecateDesc>
 </attr>
 
-<attr id="152" name="zimbraNewMailNotificationBody" type="string" max="10000" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+<attr id="152" name="zimbraNewMailNotificationBody" type="string" max="10000" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" deprecatedSince="9.0.0">
   <defaultCOSValue>New message received at ${RECIPIENT_ADDRESS}.${NEWLINE}Sender: ${SENDER_ADDRESS}${NEWLINE}Subject: ${SUBJECT}</defaultCOSValue>
   <desc>template used to construct the body of an email notification message</desc>
+  <deprecateDesc>Deprecated in favor of the zimbraNewMailNotificationMessage</deprecateDesc>
 </attr>
 
 <attr id="153" name="zimbraGalLdapAttrMap" type="string" max="4096" cardinality="multi" optionalIn="globalConfig,domain,galDataSource" flags="domainInherited">
@@ -10190,6 +10193,11 @@ TODO: delete them permanently from here
   <globalConfigValue>TRUE</globalConfigValue>
   <globalConfigValueUpgrade>FALSE</globalConfigValueUpgrade>
   <desc>Whether to include fractional seconds in LDAP gentime values (e.g. zimbraPasswordLockoutFailureTime or zimbraGalLastSuccessfulSyncTimestamp). Releases prior to 8.7 are unable to parse gentime values which include fractional seconds; therefore this value must remain set to FALSE in environments where any release 8.6 or lower is present. It should be changed to TRUE once all systems are upgraded to 8.7 or higher.</desc>
+</attr>
+
+<attr id="2019" name="zimbraNewMailNotificationMessage" type="string" max="10000" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="9.0.0">
+  <desc>Template used to construct an email notification message.
+  Sample configuration: From: Postmaster &lt;postmaster@${RECIPIENT_DOMAIN}&gt;${NEWLINE}To: &lt;${RECIPIENT_ADDRESS}&gt;${NEWLINE}Subject: New message received at ${RECIPIENT_ADDRESS}${NEWLINE}Date: ${DATE}${NEWLINE}Content-Type: text/plain${NEWLINE}${NEWLINE}New message received at ${RECIPIENT_ADDRESS}.${NEWLINE}Sender: ${SENDER_ADDRESS}${NEWLINE}Subject: ${SUBJECT}</desc>
 </attr>
 
 </attrs>

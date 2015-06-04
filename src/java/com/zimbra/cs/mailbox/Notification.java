@@ -17,7 +17,9 @@
 
 package com.zimbra.cs.mailbox;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Enumeration;
@@ -30,6 +32,7 @@ import javax.mail.Session;
 import javax.mail.Transport;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MailDateFormat;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
@@ -470,43 +473,15 @@ public class Notification implements LmtpCallback {
             }
         }
 
-        // Assemble message components
-        String from = account.getAttr(Provisioning.A_zimbraNewMailNotificationFrom);
-        String subject = account.getAttr(Provisioning.A_zimbraNewMailNotificationSubject);
-        String body = account.getAttr(Provisioning.A_zimbraNewMailNotificationBody);
-        if (from == null || subject == null || body == null) {
-            nfailed("null from, subject or body", destination, rcpt, msg);
-            return;
-        }
-        String recipientDomain = getDomain(rcpt);
-
-        Map<String, String> vars = new HashMap<String, String>();
-        vars.put("SENDER_ADDRESS", ZInternetHeader.decode(msg.getSender()));
-        vars.put("RECIPIENT_ADDRESS", rcpt);
-        vars.put("RECIPIENT_DOMAIN", recipientDomain);
-        vars.put("NOTIFICATION_ADDRESS", destination);
-        vars.put("SUBJECT", msg.getSubject());
-        vars.put("NEWLINE", "\n");
-
-        from = StringUtil.fillTemplate(from, vars);
-        subject = StringUtil.fillTemplate(subject, vars);
-        body = StringUtil.fillTemplate(body, vars);
-
         // Send the message
         try {
             Session smtpSession = JMSession.getSmtpSession();
-            MimeMessage out = new ZMimeMessage(smtpSession);
-            out.setHeader("Auto-Submitted", "auto-replied (notification; " + rcpt + ")");
-            InternetAddress address = new JavaMailInternetAddress(from);
-            out.setFrom(address);
-            address = new JavaMailInternetAddress(destination);
-            out.setRecipient(javax.mail.Message.RecipientType.TO, address);
 
-            String charset = getCharset(account, subject);
-            out.setSubject(subject, charset);
-            charset = getCharset(account, body);
-            out.setText(body, charset);
-
+            // Assemble message components
+            MimeMessage out = assembleNotificationMessage(account, msg, rcpt, destination, smtpSession);
+            if (out == null) {
+            	return;
+            }
             String envFrom = "<>";
             try {
                 if (!Provisioning.getInstance().getConfig().getBooleanAttr(Provisioning.A_zimbraAutoSubmittedNullReturnPath, true)) {
@@ -524,7 +499,62 @@ public class Notification implements LmtpCallback {
         }
     }
 
-    private static String getDomain(String address) {
+    private MimeMessage assembleNotificationMessage(Account account, Message msg, String rcpt,
+			String destination, Session smtpSession) 
+		throws MessagingException {
+
+    	String recipientDomain = getDomain(rcpt);
+
+        Map<String, String> vars = new HashMap<String, String>();
+        vars.put("SENDER_ADDRESS", ZInternetHeader.decode(msg.getSender()));
+        vars.put("RECIPIENT_ADDRESS", rcpt);
+        vars.put("RECIPIENT_DOMAIN", recipientDomain);
+        vars.put("NOTIFICATION_ADDRESS", destination);
+        vars.put("SUBJECT", msg.getSubject());
+        vars.put("DATE", new MailDateFormat().format(new Date()));
+        vars.put("NEWLINE", "\n");
+
+
+        MimeMessage out = null;
+        String template = account.getAttr(Provisioning.A_zimbraNewMailNotificationMessage, null);
+        if (template != null) {
+            String msgBody = StringUtil.fillTemplate(template, vars);
+            InputStream is = new ByteArrayInputStream(msgBody.getBytes());
+            out = new MimeMessage(smtpSession, is);
+            InternetAddress address = new JavaMailInternetAddress(destination);
+            out.setRecipient(javax.mail.Message.RecipientType.TO, address);
+        } else {
+            out = new ZMimeMessage(smtpSession);
+
+            String from = account.getAttr(Provisioning.A_zimbraNewMailNotificationFrom);
+            String subject = account.getAttr(Provisioning.A_zimbraNewMailNotificationSubject);
+            String body = account.getAttr(Provisioning.A_zimbraNewMailNotificationBody);
+            if (from == null || subject == null || body == null) {
+                nfailed("null from, subject or body", destination, rcpt, msg);
+                return null;
+            }
+
+            from = StringUtil.fillTemplate(from, vars);
+            subject = StringUtil.fillTemplate(subject, vars);
+            body = StringUtil.fillTemplate(body, vars);
+
+            InternetAddress address = new JavaMailInternetAddress(from);
+            out.setFrom(address);
+            address = new JavaMailInternetAddress(destination);
+            out.setRecipient(javax.mail.Message.RecipientType.TO, address);
+
+            String charset = getCharset(account, subject);
+            out.setSubject(subject, charset);
+            charset = getCharset(account, body);
+            out.setText(body, charset);
+        }
+        if (out != null) {
+                out.setHeader("Auto-Submitted", "auto-replied (notification; " + rcpt + ")");
+        }
+        return out;
+	}
+
+	private static String getDomain(String address) {
         String[] parts = EmailUtil.getLocalPartAndDomain(address);
         if (parts == null) {
             return null;
