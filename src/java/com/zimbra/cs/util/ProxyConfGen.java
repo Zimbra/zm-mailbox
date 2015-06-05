@@ -726,6 +726,11 @@ class WebServersVar extends ServersVar {
             mLog.debug("Failed locating an instance of " + ZimbraServiceNames.WEB);
             e.printStackTrace();
             List<Server> webservers = mProv.getAllWebClientServers();
+            if (webservers.isEmpty()) {
+                Server server = mProv.getLocalServer();
+                directives.add(generateServerDirective(server, "localhost", portName));
+                mLog.info("Added dummy server localhost to HTTP web upstream");
+            }
             for (Server server : webservers) {
                 String serverName = server.getAttr(Provisioning.A_zimbraServiceHostname, "");
                 if (isValidUpstream(server, serverName)) {
@@ -763,13 +768,18 @@ class MailstoreServersVar extends ServersVar {
                 String serverName = server.getAttr(Provisioning.A_zimbraServiceHostname, "");
                 if (isValidUpstream(server, serverName)) {
                     directives.add(generateServerDirective(server, serverName, portName));
-                    mLog.debug("Added server to HTTP mailstore upstream: " + serverName);
+                    mLog.debug("Added dummy server localhost to HTTP mailstore upstream: " + serverName);
                 }
             }
         } catch (IOException e) {
             mLog.debug("Failed locating an instance of " + ZimbraServiceNames.MAILSTORE);
             e.printStackTrace();
             List<Server> mailstoreservers = mProv.getAllMailClientServers();
+            if (mailstoreservers.isEmpty()) {
+                Server server = mProv.getLocalServer();
+                directives.add(generateServerDirective(server, "localhost", portName));
+                mLog.info("Added dummy server localhost to HTTP mailstore upstream");
+            }
             for (Server server : mailstoreservers) {
                 String serverName = server.getAttr(Provisioning.A_zimbraServiceHostname, "");
                 if (isValidUpstream(server, serverName)) {
@@ -812,6 +822,11 @@ class WebSSLServersVar extends ServersVar {
             mLog.debug("Failed locating an SSL instance of " + ZimbraServiceNames.WEB);
             e.printStackTrace();
             List<Server> webservers = mProv.getAllWebClientServers();
+            if (webservers.isEmpty()) {
+                Server server = mProv.getLocalServer();
+                directives.add(generateServerDirective(server, "localhost", portName));
+                mLog.info("Added dummy server localhost to HTTPS webclient upstream");
+            }
             for (Server server : webservers) {
                 String serverName = server.getAttr(Provisioning.A_zimbraServiceHostname, "");
                 if (isValidUpstream(server, serverName)) {
@@ -856,6 +871,11 @@ class MailstoreSSLServersVar extends ServersVar {
             mLog.debug("Failed locating an SSL instance of " + ZimbraServiceNames.MAILSTORE);
             e.printStackTrace();
             List<Server> mailstoreservers = mProv.getAllMailClientServers();
+            if (mailstoreservers.isEmpty()) {
+                Server server = mProv.getLocalServer();
+                directives.add(generateServerDirective(server, "localhost", portName));
+                mLog.info("Added dummy server localhost to HTTPS mailstore upstream");
+            }
             for (Server server : mailstoreservers) {
                 String serverName = server.getAttr(Provisioning.A_zimbraServiceHostname, "");
                 if (isValidUpstream(server, serverName)) {
@@ -871,7 +891,7 @@ class MailstoreSSLServersVar extends ServersVar {
 class WebAdminServersVar extends ServersVar {
 
     public WebAdminServersVar() throws ProxyConfException {
-        super("web.admin.upstream.:servers", Provisioning.A_zimbraReverseProxyAdminPortAttribute,
+        super("web.admin.upstream.adminclient.:servers", Provisioning.A_zimbraReverseProxyAdminPortAttribute,
                 "List of upstream HTTPS Admin client servers used by Web Proxy");
     }
 
@@ -888,6 +908,10 @@ class WebAdminServersVar extends ServersVar {
 
             for (ServiceLocator.Entry entry : entries) {
                 Server server = mProv.getServerByName(entry.hostName);
+                mLog.info("webadmin entry hostname: " + entry.hostName);
+                if (server == null) {
+                    mLog.info("webadmin server is null");
+                }
                 String serverName = server.getAttr(Provisioning.A_zimbraServiceHostname, "");
                 if (isValidUpstream(server, serverName)) {
                     directives.add(generateServerDirective(server, serverName, portName));
@@ -898,6 +922,11 @@ class WebAdminServersVar extends ServersVar {
             mLog.debug("Failed locating an SSL instance of " + ZimbraServiceNames.WEBADMIN);
             e.printStackTrace();
             List<Server> webadminservers = mProv.getAllAdminClientServers();
+            if (webadminservers.isEmpty()) {
+                Server server = mProv.getLocalServer();
+                directives.add(generateServerDirective(server, "localhost", portName));
+                mLog.info("Added dummy server localhost to HTTPS Admin client upstream");
+            }
             for (Server server : webadminservers) {
                 String serverName = server.getAttr(Provisioning.A_zimbraServiceHostname, "");
                 if (isValidUpstream(server, serverName)) {
@@ -937,9 +966,14 @@ class MailstoreAdminServersVar extends ServersVar {
                 }
             }
         } catch (IOException e) {
-            mLog.debug("Failed locating an SSL instance of " + ZimbraServiceNames.MAILSTOREADMIN); 
+            mLog.debug("Failed locating an SSL instance of " + ZimbraServiceNames.MAILSTOREADMIN);
             e.printStackTrace();
             List<Server> mailstoreadminservers = mProv.getAllMailClientServers();
+            if (mailstoreadminservers.isEmpty()) {
+                Server server = mProv.getLocalServer();
+                directives.add(generateServerDirective(server, "localhost", portName));
+                mLog.info("Added dummy server localhost to HTTPS Admin mailstore upstream");
+            }
             for (Server server : mailstoreadminservers) {
                 String serverName = server.getAttr(Provisioning.A_zimbraServiceHostname, "");
                 if (isValidUpstream(server, serverName)) {
@@ -1307,6 +1341,19 @@ class ZMLookupHandlerVar extends ProxyConfVar{
                     servers.add(f.toString());
                     mLog.debug("Route Lookup: Added server " + ip);
                 }
+            }
+            if (servers.isEmpty()) {
+                Server s = mProv.getLocalServer();
+                int port = s.getIntAttr(Provisioning.A_zimbraExtensionBindPort, 7072);
+                IPMode ipmode = IPModeEnablerVar.getZimbraIPMode();
+                Formatter f = new Formatter();
+                if (ipmode == IPMode.IPV6_ONLY) {
+                    f.format("[%s]:%d", "::1", port);
+                } else {
+                    f.format("%s:%d", "127.0.0.1", port);
+                }
+                servers.add(f.toString());
+                mLog.debug("Route Lookup: Added dummy server localhost");
             }
         }
 
@@ -3025,11 +3072,6 @@ public class ProxyConfGen
 
         if (webEnabled && (webSSLUpstreamServers.size() == 0 || webSSLUpstreamClientServers.size() == 0)) {
             mLog.info("Web is enabled but there are no HTTPS upstream webclient/mailclient servers (Config will not be written)");
-            validConf = false;
-        }
-
-        if ((webEnabled || mailEnabled) && (zmLookupHandlers.size() == 0)) {
-            mLog.info("Proxy is enabled but there are no lookup handlers (Config will not be written)");
             validConf = false;
         }
 
