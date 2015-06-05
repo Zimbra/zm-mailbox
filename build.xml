@@ -1062,12 +1062,13 @@
         <delete failonerror="false">
             <fileset dir="${dist.dir}/lib/jars" includes="zimbra*.jar"/>
         </delete>
-        <copy tofile="${dist.dir}/lib/jars/zimbracommon.jar" file="${common.jarfile}" overwrite="true"/>
-        <copy tofile="${dist.dir}/lib/jars/zimbrasoap.jar" file="${soap.jarfile}" overwrite="true"/>
-        <copy tofile="${dist.dir}/lib/jars/zimbraclient.jar" file="${client.jarfile}" overwrite="true"/>
-        <copy tofile="${dist.dir}/lib/jars/zimbrastore.jar" file="${server.jarfile}" overwrite="true"/>
-        <copy tofile="${dist.dir}/lib/jars/zimbranative.jar" file="${native.jarfile}" overwrite="true"/>
-        <copy tofile="${dist.dir}/lib/jars/zimbracharset.jar" file="${charset.jarfile}" overwrite="true"/>
+        <copy todir="${dist.dir}/lib/jars/" file="${common.jarfile}" overwrite="true"/>
+        <copy todir="${dist.dir}/lib/jars/" file="${soap.jarfile}" overwrite="true"/>
+        <copy todir="${dist.dir}/lib/jars/" file="${client.jarfile}" overwrite="true"/>
+        <copy todir="${dist.dir}/lib/jars/" file="${server.jarfile}" overwrite="true"/>
+        <copy todir="${dist.dir}/lib/jars/" file="${native.jarfile}" overwrite="true"/>
+        <copy todir="${dist.dir}/lib/jars/" file="${charset.jarfile}" overwrite="true"/>
+        <copy todir="${dist.dir}/lib/jars/" file="${jettycommon.jarfile}" overwrite="true"/>
 
         <!-- jetty windows service wrapper -->
         <if>
