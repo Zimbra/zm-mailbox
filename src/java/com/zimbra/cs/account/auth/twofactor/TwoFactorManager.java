@@ -227,14 +227,14 @@ public class TwoFactorManager {
     public void authenticateTOTP(String code) throws ServiceException {
         if (!checkTOTPCode(code)) {
             ZimbraLog.account.error("invalid TOTP code");
-            throw AuthFailedServiceException.AUTH_FAILED("invalid TOTP code");
+            throw AuthFailedServiceException.TWO_FACTOR_AUTH_FAILED("invalid TOTP code");
         }
     }
 
     public void authenticate(String code) throws ServiceException {
         if (code == null) {
             ZimbraLog.account.error("two-factor code missing");
-            throw AuthFailedServiceException.AUTH_FAILED("two-factor code missing");
+            throw AuthFailedServiceException.TWO_FACTOR_AUTH_FAILED("two-factor code missing");
         }
         Boolean codeIsScratchCode = isScratchCode(code);
         if (codeIsScratchCode == null || codeIsScratchCode.equals(false)) {
@@ -247,7 +247,7 @@ public class TwoFactorManager {
                 if (!success) {
                     failedLogin();
                     ZimbraLog.account.error("invalid two-factor code");
-                    throw AuthFailedServiceException.AUTH_FAILED("invalid two-factor code");
+                    throw AuthFailedServiceException.TWO_FACTOR_AUTH_FAILED("invalid two-factor code");
                 }
             }
         } else {
@@ -276,7 +276,7 @@ public class TwoFactorManager {
         if (!checkScratchCodes(scratchCode)) {
             failedLogin();
             ZimbraLog.account.error("invalid scratch code");
-            throw AuthFailedServiceException.AUTH_FAILED("invalid scratch code");
+            throw AuthFailedServiceException.TWO_FACTOR_AUTH_FAILED("invalid scratch code");
         }
     }
 
@@ -288,7 +288,7 @@ public class TwoFactorManager {
                 return;
             }
         }
-        throw AuthFailedServiceException.AUTH_FAILED("invalid app-specific password");
+        throw AuthFailedServiceException.TWO_FACTOR_AUTH_FAILED("invalid app-specific password");
     }
 
     private boolean checkScratchCodes(String scratchCode) throws ServiceException {
@@ -464,7 +464,7 @@ public class TwoFactorManager {
         ZimbraLog.account.debug("verifying trusted device");
         TrustedDevice td = TrustedDevice.byTrustedToken(account, token);
         if (!td.verify(attrs)) {
-            throw AuthFailedServiceException.AUTH_FAILED("trusted device cannot be verified");
+            throw AuthFailedServiceException.TWO_FACTOR_AUTH_FAILED("trusted device cannot be verified");
         }
     }
 

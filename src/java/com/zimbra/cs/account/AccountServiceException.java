@@ -88,6 +88,7 @@ public class AccountServiceException extends ServiceException {
     public static final String TOO_MANY_TRUSTED_SENDERS = "account.TOO_MANY_TRUSTED_SENDERS";
     public static final String TWO_FACTOR_SETUP_REQUIRED = "account.TWO_FACTOR_SETUP_REQUIRED";
     public static final String INVALID_TRUSTED_DEVICE_TOKEN = "account.INVALID_TRUSTED_DEVICE_TOKEN";
+    public static final String TWO_FACTOR_AUTH_FAILED = "account.TWO_FACTOR_AUTH_FAILED";
 
     private AccountServiceException(String message, String code, boolean isReceiversFault) {
         super(message, code, isReceiversFault);
@@ -392,5 +393,9 @@ public class AccountServiceException extends ServiceException {
 
     public static AccountServiceException INVALID_TRUSTED_DEVICE_TOKEN() {
         return new AccountServiceException("invalid trusted device token", INVALID_TRUSTED_DEVICE_TOKEN, SENDERS_FAULT, null);
+    }
+
+    public static AuthFailedServiceException TWO_FACTOR_AUTH_FAILED(String reason) {
+        return new AuthFailedServiceException("N/A", "N/A", reason, TWO_FACTOR_AUTH_FAILED, SENDERS_FAULT, null);
     }
 }
