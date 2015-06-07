@@ -198,7 +198,26 @@ public abstract class DocumentHandler {
         return false;
     }
 
-    public Boolean canAccessAccountCommon(ZimbraSoapContext zsc, Account target, boolean allowSelf) throws ServiceException {
+    /**
+     * Some requests need to always return valid looking output in able to provide consistent behavior between
+     * requests against non-existent accounts and those which don't allow access to the requested data.
+     * For instance FreeBusy requests.
+     * Only handlers which accept responsibility for measures to prevent account harvesting should return true
+     */
+    public boolean handlesAccountHarvesting() {
+        return false;
+    }
+
+    /**
+     * Only handlers which accept responsibility for measures to prevent account harvesting by delegate admins
+     * should return true
+     */
+    public boolean defendsAgainstDelegateAdminAccountHarvesting() {
+        return false;
+    }
+
+    public Boolean canAccessAccountCommon(ZimbraSoapContext zsc, Account target, boolean allowSelf)
+    throws ServiceException {
         if (zsc.getAuthtokenAccountId() == null || target == null) {
             return Boolean.FALSE;
         }

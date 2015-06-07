@@ -24,12 +24,15 @@ import java.util.Set;
 import com.google.common.base.Joiner;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.util.EmailUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.AuthToken;
@@ -43,6 +46,7 @@ import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
+import com.zimbra.cs.account.accesscontrol.PseudoTarget;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.cs.account.names.NameUtil;
@@ -101,6 +105,54 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
             cr = prov.get(crBy, value, false);
         }
         return cr;
+    }
+
+    /**
+     * Checks for a minimal access requirement to info about accounts
+     */
+    protected void defendAgainstAccountHarvesting(Account account, AccountBy accountBy, String accountSelectorKey,
+            ZimbraSoapContext zsc)
+    throws ServiceException {
+        defendAgainstAccountHarvesting(account, accountBy, accountSelectorKey, zsc, Admin.R_getAccountInfo);
+    }
+
+    protected void defendAgainstAccountHarvesting(Account account, AccountBy accountBy, String accountSelectorKey,
+            ZimbraSoapContext zsc, AdminRight right)
+    throws ServiceException {
+        AuthToken authToken = zsc.getAuthToken();
+        if (account == null) {
+            if (authToken.isAdmin()) {
+                throw AccountServiceException.NO_SUCH_ACCOUNT(accountSelectorKey);
+            } else {
+                if (AccountBy.name.equals(accountBy) && AuthToken.isAnyAdmin(authToken)) {
+                    try {
+                        String parts[] = EmailUtil.getLocalPartAndDomain(accountSelectorKey);
+                        if (parts == null || parts.length <2) {
+                            throw ServiceException.DEFEND_ACCOUNT_HARVEST(accountSelectorKey);
+                        }
+                        String domainStr = parts[1];
+                        Entry pseudoTarget = PseudoTarget.createPseudoTarget(
+                                Provisioning.getInstance(), TargetType.account, DomainBy.name, domainStr,
+                                false, null, null);
+                        checkAccountRight(zsc, (Account) pseudoTarget, right);
+                    } catch (ServiceException se) {
+                        throw ServiceException.DEFEND_ACCOUNT_HARVEST(accountSelectorKey);
+                    }
+                    throw AccountServiceException.NO_SUCH_ACCOUNT(accountSelectorKey);
+                }
+            }
+            throw ServiceException.DEFEND_ACCOUNT_HARVEST(accountSelectorKey);
+        }
+
+        try {
+            checkAccountRight(zsc, account, right);
+        } catch (ServiceException se) {
+            if (authToken.isAdmin()) {
+                throw se;
+            } else {
+                throw ServiceException.DEFEND_ACCOUNT_HARVEST(accountSelectorKey);
+            }
+        }
     }
 
     @Override
@@ -200,6 +252,11 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
         return Session.Type.ADMIN;
     }
 
+    protected Set<String> getReqAttrs(Element request, AttributeClass klass) throws ServiceException {
+        String attrsStr = request.getAttribute(AdminConstants.A_ATTRS, null);
+        return getReqAttrs(attrsStr, klass);
+    }
+
     /*
      * if specific attrs are requested on Get{ldap-object}:
      * - INVALID_REQUEST is thrown if any of the requested attrs is not a valid attribute on the entry
@@ -236,10 +293,6 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
         // probably not, to be compatible with SearchDirectory
 
         return validAttrs;
-    }
-
-    protected Set<String> getReqAttrs(Element request, AttributeClass klass) throws ServiceException {
-        return getReqAttrs(request.getAttribute(AdminConstants.A_ATTRS, null), klass);
     }
 
     public boolean isDomainAdminOnly(ZimbraSoapContext zsc) {
