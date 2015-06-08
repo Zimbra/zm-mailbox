@@ -66,9 +66,9 @@ import com.zimbra.cs.index.LocalIndexingQueueAdapter;
 import com.zimbra.cs.mailbox.AmqpMailboxListenerTransport;
 import com.zimbra.cs.mailbox.CacheManager;
 import com.zimbra.cs.mailbox.ConversationIdCache;
-import com.zimbra.cs.mailbox.DefaultMailboxLockFactory;
 import com.zimbra.cs.mailbox.FoldersAndTagsCache;
 import com.zimbra.cs.mailbox.LocalMailboxDataCache;
+import com.zimbra.cs.mailbox.LocalMailboxLockFactory;
 import com.zimbra.cs.mailbox.LocalSharedDeliveryCoordinator;
 import com.zimbra.cs.mailbox.MailboxDataCache;
 import com.zimbra.cs.mailbox.MailboxListenerManager;
@@ -382,7 +382,7 @@ public class ZimbraConfig {
 
     @Bean
     public MailboxLockFactory mailboxLockFactory() throws ServiceException {
-        return new DefaultMailboxLockFactory();
+        return new LocalMailboxLockFactory();
     }
 
     @Bean
