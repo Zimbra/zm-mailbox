@@ -68,6 +68,7 @@ public class ProvisioningServiceLocator implements ServiceLocator {
                 }
             } catch (ServiceException e) {
                 // TODO detect transport error & rethrow as IOException
+                throw e;
             }
         }
         return result;
