@@ -140,7 +140,7 @@ SECTION 2: Apache License, V2.0
    >>> juh-4.0.2
    >>> junixsocket-1.3
    >>> jurt-4.0.2
-   >>> lucene-3.5.0
+   >>> lucene-5.1.0
    >>> nekohtml-1.9.13
    >>> noggit-0.7
    >>> objenesis-2.1
@@ -151,7 +151,7 @@ SECTION 2: Apache License, V2.0
    >>> ridl-4.0.2
    >>> selenium-2.43.0
    >>> smack-3.2.1
-   >>> solr-4.9.0
+   >>> solr-5.1.0
    >>> spamassassin-3.4.1-r1669629
    >>> spring-amqp-1.4.3
    >>> spring-framework-3.2.10
@@ -27189,7 +27189,7 @@ License: Apache License 2.0
 License: Apache License 2.0
 
 
->>> lucene-3.5.0
+>>> lucene-5.1.0
 
 Apache Lucene
 Copyright 2011 The Apache Software Foundation
@@ -27633,7 +27633,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 
 
->>> solr-4.9.0
+>>> solr-5.1.0
 
 License: Apache 2.0
 
