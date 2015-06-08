@@ -417,30 +417,46 @@ public class SoapServlet extends ZimbraServlet {
 
             // Register http endpoint
             if (MailMode.http.equals(mailMode) || MailMode.both.equals(mailMode)) {
-                String checkScript = "zmhealthcheck-mailstore";
-                String checkUrl = "-url http://localhost:" + httpPort;
-                httpServiceID = registerWithServiceLocator(ZimbraServiceNames.MAILSTORE, versionTags, httpPort, checkScript, checkUrl);
+                if (ZimbraServlet.parseAllowedPortsSilent(getInitParameter(ZimbraServlet.PARAM_ALLOWED_PORTS)).contains(httpPort)) {
+                    String checkScript = "zmhealthcheck-mailstore";
+                    String checkUrl = "-url http://localhost:" + httpPort;
+                    httpServiceID = registerWithServiceLocator(ZimbraServiceNames.MAILSTORE, versionTags, httpPort, checkScript, checkUrl);
+                } else {
+                    ZimbraLog.soap.debug("Not registering MAILSTORE service due to disallowed port %d", httpPort);
+                }
             }
 
             // Register https endpoint
             if (MailMode.https.equals(mailMode) || MailMode.both.equals(mailMode)) {
-                String checkScript = "zmhealthcheck-mailstore";
-                String checkUrl = "-url https://localhost:" + httpsPort;
-                httpsServiceID = registerWithServiceLocator(ZimbraServiceNames.MAILSTORE, versionTags, httpsPort, checkScript, checkUrl);
+                if (ZimbraServlet.parseAllowedPortsSilent(getInitParameter(ZimbraServlet.PARAM_ALLOWED_PORTS)).contains(httpsPort)) {
+                    String checkScript = "zmhealthcheck-mailstore";
+                    String checkUrl = "-url https://localhost:" + httpsPort;
+                    httpsServiceID = registerWithServiceLocator(ZimbraServiceNames.MAILSTORE, versionTags, httpsPort, checkScript, checkUrl);
+                } else {
+                    ZimbraLog.soap.debug("Not registering MAILSTORE service due to disallowed port %d", httpsPort);
+                }
             }
 
             // Register admin endpoint
             String checkScript = "zmhealthcheck-mailstoreadmin";
             String checkUrl = "-url https://localhost:" + adminPort;
-            adminServiceID = registerWithServiceLocator(ZimbraServiceNames.MAILSTOREADMIN, versionTags, adminPort, checkScript, checkUrl);
+            if (ZimbraServlet.parseAllowedPortsSilent(getInitParameter(ZimbraServlet.PARAM_ALLOWED_PORTS)).contains(adminPort)) {
+                adminServiceID = registerWithServiceLocator(ZimbraServiceNames.MAILSTOREADMIN, versionTags, adminPort, checkScript, checkUrl);
+            } else {
+                ZimbraLog.soap.debug("Not registering MAILSTOREADMIN service due to disallowed port %d", httpsPort);
+            }
 
             // Register mailstore extensions
             int extensionPort = localServer.getExtensionBindPort();
             for (String extensionName: ExtensionManager.getInstance().getExtensionNames()) {
-                String serviceName = ZimbraServiceNames.getNameForMailstoreExtension(extensionName);
-                checkScript = "zmhealthcheck-mailstore-extension";
-                checkUrl = "https://localhost:" + extensionPort + "/service/extension/" + extensionName + "/healthcheck";
-                extensionServiceIDs.add(registerWithServiceLocator(serviceName, versionTags, extensionPort, checkScript, checkUrl));
+                if (ZimbraServlet.parseAllowedPortsSilent(getInitParameter(ZimbraServlet.PARAM_ALLOWED_PORTS)).contains(httpsPort)) {
+                    String serviceName = ZimbraServiceNames.getNameForMailstoreExtension(extensionName);
+                    checkScript = "zmhealthcheck-mailstore-extension";
+                    checkUrl = "https://localhost:" + extensionPort + "/service/extension/" + extensionName + "/healthcheck";
+                    extensionServiceIDs.add(registerWithServiceLocator(serviceName, versionTags, extensionPort, checkScript, checkUrl));
+                } else {
+                    ZimbraLog.soap.debug("Not registering MAILSTOREADMIN service due to disallowed port %d", httpsPort);
+                }
             }
 
         } catch (ServiceException e) {

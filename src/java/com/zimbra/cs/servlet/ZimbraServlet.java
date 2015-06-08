@@ -23,6 +23,7 @@ package com.zimbra.cs.servlet;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
@@ -73,11 +74,8 @@ import com.zimbra.cs.util.Zimbra;
  */
 public class ZimbraServlet extends HttpServlet {
     private static final long serialVersionUID = 5025244890767551679L;
-
     private static Log mLog = LogFactory.getLog(ZimbraServlet.class);
-
-    private static final String PARAM_ALLOWED_PORTS  = "allowed.ports";
-
+    public static final String PARAM_ALLOWED_PORTS  = "allowed.ports";
     public static final String QP_ZAUTHTOKEN = "zauthtoken";
 
     protected String getRealmHeader(String realm)  {
@@ -121,28 +119,7 @@ public class ZimbraServlet extends HttpServlet {
         try {
             String portsCSV = getInitParameter(PARAM_ALLOWED_PORTS);
             if (portsCSV != null) {
-                // Split on zero-or-more spaces followed by comma followed by
-                // zero-or-more spaces.
-                String[] vals = portsCSV.split("\\s*,\\s*");
-                if (vals == null || vals.length == 0)
-                    throw new ServletException("Must specify comma-separated list of port numbers for " +
-                                               PARAM_ALLOWED_PORTS + " parameter");
-                List<Integer> allowedPorts = new ArrayList<Integer>();
-                int port;
-                for (int i = 0; i < vals.length; i++) {
-                    try {
-                	port = Integer.parseInt(vals[i]);
-                    } catch (NumberFormatException e) {
-                        throw new ServletException("Invalid port number \"" + vals[i] + "\" in " +
-                                                   PARAM_ALLOWED_PORTS + " parameter");
-                    }
-                    if (port < 0)
-                	throw new ServletException("Invalid port number " + vals[i] + " in " +
-                                                   PARAM_ALLOWED_PORTS + " parameter; port number must be greater than zero");
-                    else if (port != 0)  // 0 is a legit value for those ports that are disabled
-                	allowedPorts.add(port);
-                }
-
+                List<Integer> allowedPorts = parseAllowedPorts(getInitParameter(PARAM_ALLOWED_PORTS));
                 mAllowedPorts = new int[allowedPorts.size()];
                 for (int i=0; i<allowedPorts.size(); i++)
                     mAllowedPorts[i] = allowedPorts.get(i);
@@ -160,6 +137,45 @@ public class ZimbraServlet extends HttpServlet {
         } catch (Throwable t) {
             Zimbra.halt("Unable to initialize servlet " + getServletName() + "; halting", t);
         }
+    }
+
+    public static List<Integer> parseAllowedPorts(String portsCSV) throws Throwable {
+        if (portsCSV != null) {
+            // Split on zero-or-more spaces followed by comma followed by
+            // zero-or-more spaces.
+            String[] vals = portsCSV.split("\\s*,\\s*");
+            if (vals == null || vals.length == 0)
+                throw new ServletException("Must specify comma-separated list of port numbers for " +
+                                           PARAM_ALLOWED_PORTS + " parameter");
+            List<Integer> allowedPorts = new ArrayList<Integer>();
+            int port;
+            for (int i = 0; i < vals.length; i++) {
+                try {
+                port = Integer.parseInt(vals[i]);
+                } catch (NumberFormatException e) {
+                    throw new ServletException("Invalid port number \"" + vals[i] + "\" in " +
+                                               PARAM_ALLOWED_PORTS + " parameter");
+                }
+                if (port < 0)
+                throw new ServletException("Invalid port number " + vals[i] + " in " +
+                                               PARAM_ALLOWED_PORTS + " parameter; port number must be greater than zero");
+                else if (port != 0)  // 0 is a legit value for those ports that are disabled
+                allowedPorts.add(port);
+            }
+
+            return allowedPorts;
+        }
+
+        return Collections.emptyList();
+    }
+
+    public static List<Integer> parseAllowedPortsSilent(String portsCSV) {
+        try {
+            return ZimbraServlet.parseAllowedPorts(portsCSV);
+        } catch (Throwable t) {
+            mLog.warn("Failed parsing allowed.ports servlet param", t);
+        }
+        return Collections.emptyList();
     }
 
     public static ZimbraServlet getServlet(String name) {
