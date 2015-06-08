@@ -50,7 +50,6 @@ import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.util.Bits;
 import org.apache.lucene.util.BytesRef;
-import org.apache.lucene.util.Version;
 
 import com.zimbra.common.account.Key;
 import com.zimbra.common.localconfig.LC;

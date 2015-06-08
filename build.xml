@@ -837,7 +837,7 @@
                 <echo>Deploying Solr web app to mailboxd</echo>
                 <delete dir="${jetty.home.dir}/webapps/solr"/>
                 <delete file="${jetty.hofme.dir}/webapps/solr.war"/>
-                <copy file="${solr.war}" todir="${jetty.home.dir}/webapps"/>
+                <copy file="${solr.war}" tofile="${jetty.home.dir}/webapps/solr.war"/>
                 <mkdir dir='${jetty.home.dir}/webapps/solr'/>
                 <unzip dest="${jetty.home.dir}/webapps/solr" src="${jetty.home.dir}/webapps/solr.war"/>
                 <copy todir="${jetty.home.dir}/webapps/solr/WEB-INF/lib">
@@ -862,7 +862,7 @@
     <target name="init-opt-zimbra" depends="dev-dist,localhost-ssl-cert" description="Copies build/dist to /opt/zimbra">
         <echo file="${zimbra.home.dir}/.platform">development</echo>
         <copy todir="${zimbra.home.dir}">
-          <fileset dir="${dist.dir}" excludes="**/spnego.war"/>
+          <fileset dir="${dist.dir}" excludes="**/spnego.war,**/solr.war"/>
         </copy>
         <chmod perm="a+rx">
             <fileset dir="${zimbra.home.dir}/bin"/>

@@ -37,34 +37,38 @@ import com.zimbra.cs.util.Zimbra;
  * @author ysasaki
  */
 public abstract class IndexStore {
-    private static Map<String, String> INDEX_FACTORIES = new HashMap<String,String>();
+    private static Map<String, String> INDEX_FACTORIES = new HashMap<String, String>();
     private static Factory factory;
 
     /**
-     * 
+     *
      * @param prefix - prefix that identifies this index factory in zimbraIndexURL
      * @param clazz - string name of the Factory class
      * @throws ServiceException
      */
-    public static void registerIndexFactory(String prefix, String clazz)  {
-        if(INDEX_FACTORIES.containsKey(prefix)) {
-            ZimbraLog.index.warn("Replacing index factory class '%s' registered for prefix '%s' with another factory class: '%s'", 
+    public static void registerIndexFactory(String prefix, String clazz) {
+        if (INDEX_FACTORIES.containsKey(prefix)) {
+            ZimbraLog.index.warn(
+                    "Replacing index factory class '%s' registered for prefix '%s' with another factory class: '%s'",
                     INDEX_FACTORIES.get(prefix), prefix, clazz);
-        } 
+        }
         INDEX_FACTORIES.put(prefix, clazz);
     }
-    
+
     public static String getIndexFactory(String prefix) {
         return INDEX_FACTORIES.get(prefix);
     }
+
     /**
      * {@link Indexer#close()} must be called after use.
+     *
      * @throws ServiceException
      */
     public abstract Indexer openIndexer() throws IOException, ServiceException;
 
     /**
      * {@link ZimbraIndexSearcher#close()} must be called after use.
+     *
      * @throws ServiceException
      */
     public abstract ZimbraIndexSearcher openSearcher() throws IOException, ServiceException;
@@ -81,6 +85,7 @@ public abstract class IndexStore {
 
     /**
      * Deletes the whole index data for the mailbox.
+     *
      * @throws ServiceException
      */
     public abstract void deleteIndex() throws IOException, ServiceException;
@@ -96,13 +101,15 @@ public abstract class IndexStore {
     public abstract void setPendingDelete(boolean pendingDelete);
 
     /**
-     * Primes the index for the fastest available search if the underlying IndexStore supports (and benefits from)
-     * an appropriate optimization feature.
+     * Primes the index for the fastest available search if the underlying
+     * IndexStore supports (and benefits from) an appropriate optimization
+     * feature.
      */
     public abstract void optimize();
 
     /**
-     * Runs a sanity check for the index data.  Used by the "VerifyIndexRequest" SOAP Admin request
+     * Runs a sanity check for the index data. Used by the "VerifyIndexRequest"
+     * SOAP Admin request
      */
     public abstract boolean verify(PrintStream out) throws IOException;
 
@@ -110,9 +117,9 @@ public abstract class IndexStore {
         if (factory == null) {
             String factoryClass = null;
             String indexURL = Provisioning.getInstance().getLocalServer().getIndexURL();
-            if(indexURL != null) {
+            if (indexURL != null) {
                 String[] toks = indexURL.split(":");
-                if(toks != null && toks.length > 0) {
+                if (toks != null && toks.length > 0) {
                     factoryClass = getIndexFactory(toks[0]);
                 }
             }
@@ -128,8 +135,10 @@ public abstract class IndexStore {
         doc.addSortName(item.getSortSender());
         doc.removeMailboxBlobId();
         doc.addMailboxBlobId(item.getId());
-        // If this doc is shared by multi threads, then the date might just be wrong,
-        // so remove and re-add the date here to make sure the right one gets written!
+        // If this doc is shared by multi threads, then the date might just be
+        // wrong,
+        // so remove and re-add the date here to make sure the right one gets
+        // written!
         doc.removeSortDate();
         doc.addSortDate(item.getDate());
         doc.removeSortSize();
@@ -140,9 +149,9 @@ public abstract class IndexStore {
         doc.addSortFlag(item.isFlagged());
         doc.removeSortPriority();
         doc.addSortPriority(item.getFlagBitmask());
-}
+    }
 
-@VisibleForTesting
+    @VisibleForTesting
     public static final void setFactory(String factoryClassName) {
         Class<? extends Factory> factoryClass = null;
         try {
@@ -150,8 +159,7 @@ public abstract class IndexStore {
                 factoryClass = Class.forName(factoryClassName).asSubclass(Factory.class);
             } catch (ClassNotFoundException e) {
                 try {
-                    factoryClass = ExtensionManager.getInstance().findClass(factoryClassName)
-                            .asSubclass(Factory.class);
+                    factoryClass = ExtensionManager.getInstance().findClass(factoryClassName).asSubclass(Factory.class);
                 } catch (ClassNotFoundException cnfe) {
                     Zimbra.halt("Unable to initialize Index Store for class " + factoryClassName, cnfe);
                 }
@@ -189,20 +197,18 @@ public abstract class IndexStore {
 
     public abstract void initIndex() throws IOException, ServiceException;
 
-	public long getLatestIndexGeneration(String accountId)
-			throws ServiceException {
-		return 0;
-	}
+    public abstract long getLatestIndexGeneration(String accountId) throws ServiceException;
 
-	/**
-	 * Fetches the list of index files
-	 * @param gen generation of index.
-	 * @param account ID
-	 * @throws ServiceException
-	 */
-	public List<Map<String, Object>> fetchFileList(long gen, String accountId) throws ServiceException {
-		return Collections.emptyList();
-	}
+    /**
+     * Fetches the list of index files
+     *
+     * @param gen - generation of index.
+     * @param accountId
+     * @throws ServiceException
+     */
+    public List<Map<String, Object>> fetchFileList(long gen, String accountId) throws ServiceException {
+        return Collections.emptyList();
+    }
 
     public abstract int waitForIndexCommit(int maxWaitTimeMillis) throws ServiceException;
 }

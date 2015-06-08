@@ -1,7 +1,7 @@
 package com.zimbra.cs.index.solr;
 
 import java.io.IOException;
-import java.util.Collections;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
@@ -9,24 +9,28 @@ import java.util.Map;
 
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrQuery;
-import org.apache.solr.client.solrj.SolrRequest;
-import org.apache.solr.client.solrj.SolrResponse;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.CloudSolrClient;
 import org.apache.solr.client.solrj.impl.LBHttpSolrClient;
 import org.apache.solr.client.solrj.request.AbstractUpdateRequest.ACTION;
+import org.apache.solr.client.solrj.request.CollectionAdminRequest;
 import org.apache.solr.client.solrj.request.CoreAdminRequest;
-import org.apache.solr.client.solrj.request.QueryRequest;
 import org.apache.solr.client.solrj.request.UpdateRequest;
+import org.apache.solr.client.solrj.response.CollectionAdminResponse;
 import org.apache.solr.client.solrj.response.CoreAdminResponse;
 import org.apache.solr.common.SolrException;
 import org.apache.solr.common.SolrInputDocument;
-import org.apache.solr.common.params.CollectionParams.CollectionAction;
-import org.apache.solr.common.params.CommonParams;
+import org.apache.solr.common.cloud.ClusterState;
+import org.apache.solr.common.cloud.Slice;
+import org.apache.solr.common.cloud.ZkCoreNodeProps;
+import org.apache.solr.common.cloud.ZkStateReader;
+import org.apache.solr.common.params.CoreAdminParams;
 import org.apache.solr.common.params.ModifiableSolrParams;
 import org.apache.solr.common.util.NamedList;
+import org.apache.zookeeper.KeeperException;
 import org.springframework.beans.BeansException;
 
+import com.google.common.io.Closeables;
 import com.zimbra.common.account.ZAttrProvisioning;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraHttpClientManager;
@@ -44,24 +48,25 @@ import com.zimbra.cs.mailbox.Mailbox.IndexItemEntry;
 import com.zimbra.cs.util.ProvisioningUtil;
 import com.zimbra.cs.util.Zimbra;
 
+/**
+ *
+ * @author Greg Solovyev
+ */
 public class SolrCloudIndex extends SolrIndexBase {
 
     private boolean solrCollectionProvisioned = false;
-    private CloudSolrClient solrServer = null;
+    private CloudSolrClient solrClient = null;
     private SolrCloudIndex(String accountId, CloudSolrClient cloudSolrServer) {
         this.accountId = accountId;
-        this.solrServer = cloudSolrServer;
+        this.solrClient = cloudSolrServer;
     }
 
     @Override
     public boolean indexExists() {
         if(!solrCollectionProvisioned) {
-            ModifiableSolrParams params = new ModifiableSolrParams();
-            params.set("action", CollectionAction.LIST.toString());
-            SolrRequest req = new QueryRequest(params);
-            req.setPath("/admin/collections");
+            CollectionAdminRequest.List listRequest = new CollectionAdminRequest.List();
             try {
-                SolrResponse resp = processRequest(solrServer, req);
+                CollectionAdminResponse resp = listRequest.process(solrClient);
                 if(resp != null) {
                     NamedList<Object> response = resp.getResponse();
                     Object collectionsObj = response.get("collections");
@@ -90,82 +95,19 @@ public class SolrCloudIndex extends SolrIndexBase {
     }
 
     @Override
-    /**
-     * Gets the latest commit version and generation from Solr
-     */
-    public long getLatestIndexGeneration(String accountId) throws ServiceException {
-        long version = 0L;
-        ModifiableSolrParams params = new ModifiableSolrParams();
-        params.set(COMMAND, CMD_INDEX_VERSION);
-        params.set(CommonParams.WT, "javabin");
-        params.set(CommonParams.QT, "/replication");
-        params.set("collection", accountId);
-        QueryRequest req = new QueryRequest(params);
-        setupRequest(req, solrServer);
-        @SuppressWarnings("rawtypes")
-        NamedList rsp;
-        try {
-            rsp = solrServer.request(req);
-            version = (Long) rsp.get(GENERATION);
-        } catch (SolrServerException | IOException e) {
-          throw ServiceException.FAILURE(e.getMessage(),e);
-        }
-        return version;
-    }
-
-    /**
-     * Fetches the list of index files from Solr using Solr Replication RequestHandler
-     * See {@link https://cwiki.apache.org/confluence/display/solr/Index+Replication}
-     * @param gen generation of index. Required by Replication RequestHandler
-     * @throws BackupServiceException
-     */
-    @Override
-    public List<Map<String, Object>> fetchFileList(long gen, String accountId) throws ServiceException {
-        ModifiableSolrParams params = new ModifiableSolrParams();
-        params.set(COMMAND, CMD_GET_FILE_LIST);
-        params.set(GENERATION, String.valueOf(gen));
-        params.set(CommonParams.WT, "javabin");
-        params.set(CommonParams.QT, "/replication");
-        params.set("collection", accountId);
-        QueryRequest req = new QueryRequest(params);
-        setupRequest(req, solrServer);
-        try {
-            @SuppressWarnings("rawtypes")
-            NamedList response = solrServer.request(req);
-
-            @SuppressWarnings("unchecked")
-            List<Map<String, Object>> files = (List<Map<String, Object>>) response
-                    .get(CMD_GET_FILE_LIST);
-            if (files != null) {
-                return files;
-            } else {
-                ZimbraLog.index.error("No files to download for index generation: "
-                        + gen + " account: " + accountId);
-                return Collections.emptyList();
-            }
-        } catch (SolrServerException | IOException e) {
-            throw ServiceException.FAILURE(e.getMessage(), e);
-        }
-    }
-    @Override
     public void initIndex() throws IOException, ServiceException {
         if (!indexExists()) {
             try {
                 Server server = Provisioning.getInstance().getLocalServer();
-                ModifiableSolrParams params = new ModifiableSolrParams();
-                params.set("action", CollectionAction.CREATE.toString());
-                params.set("name", accountId);
-                //TODO: get global/server config for num shards, configName, replication factor and max shards per node
-                params.set("numShards", 1);
-                params.set("replicationFactor", server.getSolrReplicationFactor());
-                params.set("maxShardsPerNode", server.getSolrMaxShardsPerNode());
-                params.set("collection.configName","zimbra");
-                SolrRequest req = new QueryRequest(params);
-                req.setPath("/admin/collections");
-                processRequest(solrServer, req);
-                //TODO check for errors
+                CollectionAdminRequest.Create createCollectionRequest = new CollectionAdminRequest.Create();
+                createCollectionRequest.setCollectionName(accountId);
+                createCollectionRequest.setNumShards(1);
+                createCollectionRequest.setReplicationFactor(server.getSolrReplicationFactor());
+                createCollectionRequest.setMaxShardsPerNode(server.getSolrMaxShardsPerNode());
+                createCollectionRequest.setConfigName("zimbra");
+                createCollectionRequest.process(solrClient);
             } catch (SolrServerException e) {
-            	if(e != null && e.getMessage() != null && e.getMessage().toLowerCase().indexOf("could not find collection") > -1) {
+                if(e != null && e.getMessage() != null && e.getMessage().toLowerCase().indexOf("could not find collection") > -1) {
                     solrCollectionProvisioned = false;
                 }
                 String errorMsg = String.format("Problem creating new Solr collection for account %s",accountId);
@@ -218,19 +160,15 @@ public class SolrCloudIndex extends SolrIndexBase {
     @Override
     public void evict() {
         // TODO Auto-generated method stub
-
     }
 
     @Override
     public void deleteIndex() throws IOException, ServiceException {
         if (indexExists()) {
             try {
-                ModifiableSolrParams params = new ModifiableSolrParams();
-                params.set("action", CollectionAction.DELETE.toString());
-                params.set("name", accountId);
-                SolrRequest req = new QueryRequest(params);
-                req.setPath("/admin/collections");
-                processRequest(solrServer, req);
+                CollectionAdminRequest.Delete deleteCollectionRequest = new CollectionAdminRequest.Delete();
+                deleteCollectionRequest.setCollectionName(accountId);
+                deleteCollectionRequest.process(solrClient);
                 solrCollectionProvisioned = false;
             } catch (SolrServerException e) {
                 if(e != null && e.getMessage() != null && e.getMessage().toLowerCase().indexOf("could not find collection") > -1) {
@@ -265,7 +203,11 @@ public class SolrCloudIndex extends SolrIndexBase {
          */
         @Override
         public void destroy() {
-            cloudSolrServer.shutdown();
+            try {
+                cloudSolrServer.close();
+            } catch (IOException e) {
+                ZimbraLog.index.error("Cought an exception trying to close ClourSolrClient instance", e);
+            }
             ZimbraLog.index.info("Destroyed SolrCloudIndex.Factory\n");
         }
     }
@@ -309,6 +251,7 @@ public class SolrCloudIndex extends SolrIndexBase {
             SolrClient solrServer = getSolrServer();
             UpdateRequest req = new UpdateRequest();
             setupRequest(req, solrServer);
+            boolean manualCommit = ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraIndexManualCommit, false);
             for (IndexItemEntry entry : entries) {
                 if (entry.documents == null) {
                     ZimbraLog.index.warn("NULL index data item=%s", entry);
@@ -331,6 +274,9 @@ public class SolrCloudIndex extends SolrIndexBase {
                 }
             }
             try {
+                if (manualCommit) {
+                    incrementUpdateCounter(solrServer);
+                }
                 processRequest(solrServer, req);
             } catch (SolrServerException e) {
                 if(e != null && e.getMessage() != null && e.getMessage().toLowerCase().indexOf("no live solrservers available to handle this request") > -1) {
@@ -372,17 +318,20 @@ public class SolrCloudIndex extends SolrIndexBase {
                 setupRequest(req, solrServer);
                 req.add(solrDoc);
                 try {
+                    if(ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraIndexManualCommit, false)) {
+                        incrementUpdateCounter(solrServer);
+                    }
                     processRequest(solrServer, req);
                 } catch (SolrServerException | IOException e) {
                     if(e != null && e.getMessage() != null && e.getMessage().toLowerCase().indexOf("no live solrservers available to handle this request") > -1) {
                         ZimbraLog.index.warn("The Collection %s has likely been lost. Account needs re-indexing." , accountId);
                         solrCollectionProvisioned = false;
-                    } 
+                    }
                     throw ServiceException.FAILURE(String.format(Locale.US, "Failed to index part %d of Mail Item with ID %d for Account %s ", partNum, item.getId(), accountId), e);
-                } 
+                }
             }
         }
-        
+
         @Override
         public void deleteDocument(List<Integer> ids) throws IOException,ServiceException {
             if(!indexExists()) {
@@ -393,24 +342,20 @@ public class SolrCloudIndex extends SolrIndexBase {
                 UpdateRequest req = new UpdateRequest().deleteByQuery(String.format("%s:%d",LuceneFields.L_MAILBOX_BLOB_ID,id));
                 setupRequest(req, solrServer);
                 try {
+                    if(ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraIndexManualCommit, false)) {
+                        incrementUpdateCounter(solrServer);
+                    }
                     processRequest(solrServer, req);
                     ZimbraLog.index.debug("Deleted document id=%d", id);
                 } catch (SolrServerException e) {
                     if(e != null && e.getMessage() != null && e.getMessage().toLowerCase().indexOf("no live solrservers available to handle this request") > -1) {
                         ZimbraLog.index.warn("The Collection %s has likely been lost. Account needs re-indexing." , accountId);
                         solrCollectionProvisioned = false;
-                    } 
+                    }
                     ZimbraLog.index.error("Problem deleting document with id=%d", id,e);
-                } 
+                }
             }
         }
-        
-        @Override
-        protected void incrementUpdateCounter(SolrClient solrServer)
-                throws ServiceException {
-            //Do nothing. This is not supported by SolrCloud
-        }
-
     }
 
     public class SolrIndexReader extends SolrIndexBase.SolrIndexReader {
@@ -444,31 +389,59 @@ public class SolrCloudIndex extends SolrIndexBase {
 
 
     @Override
-    public void setupRequest(Object obj, SolrClient solrServer) {
+    public void setupRequest(Object obj, SolrClient solrServer) throws ServiceException {
         if (obj instanceof UpdateRequest) {
-            ((UpdateRequest) obj).setParam("collection", accountId);
+            ((UpdateRequest) obj).setParam(CoreAdminParams.COLLECTION, accountId);
             if(ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraIndexManualCommit, false)) {
                 ((UpdateRequest) obj).setAction(ACTION.COMMIT, true, true, true);
+                ((UpdateRequest) obj).setParam(UpdateRequest.MIN_REPFACT, String.valueOf(Provisioning.getInstance().getLocalServer().getSolrReplicationFactor()));
             }
         } else if (obj instanceof SolrQuery) {
-            ((SolrQuery) obj).setParam("collection", accountId);
+            ((SolrQuery) obj).setParam(CoreAdminParams.COLLECTION, accountId);
+        } else if(obj instanceof ModifiableSolrParams) {
+            ((ModifiableSolrParams)obj).set(CoreAdminParams.COLLECTION, accountId);
         }
     }
 
     @Override
     public SolrClient getSolrServer() throws ServiceException {
-        return solrServer;
+        return solrClient;
     }
 
     @Override
     public void shutdown(SolrClient server) {
         //do nothing. CloudSolrServer is thread safe and should not be shut down after each request
     }
-    
-    @Override
-    public int waitForIndexCommit(int maxWaitTimeMillis)
-            throws ServiceException {
-        return maxWaitTimeMillis;
+
+    /**
+     * Utility method. Returns the URL of the leader replica for given account and given zookeeper URL list
+     * @param zkList
+     * @param accountID
+     * @return
+     * @throws ServiceException
+     */
+    public static String getLeaderURL(String zkList, String accountID) throws ServiceException {
+        //  String leaderURL = null;
+        ZkStateReader zkStateReader = null;
+        String leaderURL = null;
+        try {
+            zkStateReader = new ZkStateReader(zkList,15000,15000);
+            zkStateReader.createClusterStateWatchersAndUpdate();
+            ClusterState clusterState = zkStateReader.getClusterState();
+            Collection<Slice> shards = clusterState.getCollection(accountID).getSlices();
+            String shardName = "shard1";
+            if(!shards.isEmpty()) {
+                Slice mainShard = shards.iterator().next();
+                shardName = mainShard.getName();
+            }
+            ZkCoreNodeProps nodeProps = new ZkCoreNodeProps(clusterState.getLeader(accountID, shardName));
+            leaderURL = nodeProps.getBaseUrl();
+        } catch (InterruptedException | KeeperException e) {
+            throw ServiceException.FAILURE("Failed to obtain leader URL from ZooKeeper at " + zkList, e);
+        } finally {
+            Closeables.closeQuietly(zkStateReader);
+        }
+        return leaderURL;
     }
 }
 

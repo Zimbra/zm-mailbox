@@ -1,7 +1,6 @@
 package com.zimbra.cs.index.solr;
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
@@ -22,7 +21,6 @@ import org.apache.solr.client.solrj.response.CoreAdminResponse;
 import org.apache.solr.common.SolrException;
 import org.apache.solr.common.SolrInputDocument;
 import org.apache.solr.common.params.CollectionParams.CollectionAction;
-import org.apache.solr.common.params.CommonParams;
 import org.apache.solr.common.params.ModifiableSolrParams;
 import org.apache.solr.common.util.NamedList;
 
@@ -50,77 +48,14 @@ import com.zimbra.cs.util.Zimbra;
 public class SolrIndex extends SolrIndexBase {
     private final CloseableHttpClient httpClient;
     private boolean solrCoreProvisioned = false;
-    
-    protected String getBaseURL() throws ServiceException {
-       return Provisioning.getInstance().getLocalServer().getIndexURL().substring(5); 
-    }
-    
-    protected SolrIndex(String accountId, CloseableHttpClient httpClient) {
-        this.httpClient = httpClient; 
-        this.accountId = accountId;
-    }
-    
-    @Override
-    /**
-     * Gets the latest commit version and generation from Solr
-     */
-    public long getLatestIndexGeneration(String accountId) throws ServiceException {
-        long version = 0L;
-        ModifiableSolrParams params = new ModifiableSolrParams();
-        params.set(COMMAND, CMD_INDEX_VERSION);
-        params.set(CommonParams.WT, "javabin");
-        params.set(CommonParams.QT, "/replication");
-        QueryRequest req = new QueryRequest(params);
-        @SuppressWarnings("rawtypes")
-        NamedList rsp;
-        SolrClient solrServer = getSolrServer();
-        setupRequest(req, solrServer);
-        try {
-            rsp = solrServer.request(req);
-            version = (Long) rsp.get(GENERATION);
-        } catch (SolrServerException | IOException e) {
-          throw ServiceException.FAILURE(e.getMessage(),e);
-        } finally {
-            shutdown(solrServer);
-        }
-        return version;
-    }
-    
-    /**
-     * Fetches the list of index files from Solr using Solr Replication RequestHandler 
-     * See {@link https://cwiki.apache.org/confluence/display/solr/Index+Replication}
-     * @param gen generation of index. Required by Replication RequestHandler
-     * @throws BackupServiceException
-     */
-    @Override
-    public List<Map<String, Object>> fetchFileList(long gen, String accountId) throws ServiceException {
-        ModifiableSolrParams params = new ModifiableSolrParams();
-        params.set(COMMAND, CMD_GET_FILE_LIST);
-        params.set(GENERATION, String.valueOf(gen));
-        params.set(CommonParams.WT, "javabin");
-        params.set(CommonParams.QT, "/replication");
-        QueryRequest req = new QueryRequest(params);
-        SolrClient solrServer = getSolrServer();
-        setupRequest(req, solrServer);
-        try {
-            @SuppressWarnings("rawtypes")
-            NamedList response = solrServer.request(req);
 
-            @SuppressWarnings("unchecked")
-            List<Map<String, Object>> files = (List<Map<String, Object>>) response
-                    .get(CMD_GET_FILE_LIST);
-            if (files != null) {
-                return files;
-            } else {
-                ZimbraLog.index.error("No files to download for index generation: "
-                        + gen + " account: " + accountId);
-                return Collections.emptyList();
-            }
-        } catch (SolrServerException | IOException e) {
-            throw ServiceException.FAILURE(e.getMessage(), e);
-        } finally {
-            shutdown(solrServer);
-        }
+    protected String getBaseURL() throws ServiceException {
+       return Provisioning.getInstance().getLocalServer().getIndexURL().substring(5);
+    }
+
+    protected SolrIndex(String accountId, CloseableHttpClient httpClient) {
+        this.httpClient = httpClient;
+        this.accountId = accountId;
     }
 
     @Override
@@ -260,7 +195,11 @@ public class SolrIndex extends SolrIndexBase {
     @Override
     public void shutdown(SolrClient server) {
         if(server != null) {
-            server.shutdown();
+            try {
+                server.close();
+            } catch (IOException e) {
+                ZimbraLog.index.error("Cought an exception trying to close SolrClient instance", e);
+            }
         }
     }
 

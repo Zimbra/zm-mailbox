@@ -81,7 +81,7 @@ public class TestWildcardQueryParser {
         cleanup();
     }
 
-    private String debugQuery(String fields, String query) throws SolrServerException, ServiceException {
+    private String debugQuery(String fields, String query) throws Exception {
         StringBuilder sb = new StringBuilder("{!zimbrawildcard fields=\"").append(fields).append("\"}").append(query);
         SolrQuery q = new SolrQuery().setQuery(sb.toString()).setRows(0);
         q.setParam("debugQuery", true);
@@ -92,7 +92,7 @@ public class TestWildcardQueryParser {
     }
 
     @Test
-    public void testSingleTermWildcards() throws SolrServerException, ServiceException {
+    public void testSingleTermWildcards() throws Exception {
         //single-term leading and trailing wildcards pass through to the SolrQueryParser
         assertEquals("subject:foo*", debugQuery("subject", "foo*"));
         assertEquals("(subject:*foo)", debugQuery("subject", "*foo"));
@@ -105,7 +105,7 @@ public class TestWildcardQueryParser {
     }
 
     @Test
-    public void testMultiTermWildcards() throws SolrServerException, ServiceException {
+    public void testMultiTermWildcards() throws Exception {
         //wildcards at the end of terms are expanded into a MultiPhraseQuery
         assertEquals("MultiPhraseQuery(subject:\"foo (barbeque bard barmitzvah)\")", debugQuery("subject", "foo bar*"));
         assertEquals("MultiPhraseQuery(subject:\"(foo food) bar\")", debugQuery("subject", "foo* bar"));
@@ -139,19 +139,19 @@ public class TestWildcardQueryParser {
      * to an empty list, at which point the parser KNOWS that there must have been a stopword there and can reconstruct it.
      */
     @Test
-    public void testStopwordWildcards() throws SolrServerException, ServiceException {
+    public void testStopwordWildcards() throws Exception {
         assertEquals("MultiPhraseQuery(l.content:\"(them therr) ? foo\")", debugQuery("l.content", "the* the foo"));
         assertEquals("MultiPhraseQuery(l.content:\"(abc1 abc2) bar\")", debugQuery("l.content", "abc the* bar"));
     }
 
     @Test
-    public void testCJKWildcards() throws SolrServerException, ServiceException {
+    public void testCJKWildcards() throws Exception {
         assertEquals("MultiPhraseQuery(subject:\"\u3066\u3059 \u3059\u3068\")", debugQuery("subject", "\u30C6\u30B9\u30C8" + "*"));
         assertEquals("MultiPhraseQuery(subject:\"\u3066\u3059 \u3059\u3068 (abc abd)\")", debugQuery("subject", "\u30C6\u30B9\u30C8" + "ab*"));
     }
 
     @Test
-    public void testThaiWildcards() throws SolrServerException, ServiceException {
+    public void testThaiWildcards() throws Exception {
         assertEquals("MultiPhraseQuery(subject:\"" + thaiWord1 + " " + thaiWord2 + "\")", debugQuery("subject", thaiWord1 + thaiWord2 +"*"));
     }
 
@@ -160,7 +160,7 @@ public class TestWildcardQueryParser {
      * punctuation token.
      */
     @Test
-    public void testPunctuationWildcards() throws SolrServerException, ServiceException {
+    public void testPunctuationWildcards() throws Exception {
         //non-punctuation tokens present, so they are used as wildcards
         assertEquals("subject:foo*", debugQuery("subject", "foo?!*"));
         assertEquals("MultiPhraseQuery(subject:\"foo (barbeque bard barmitzvah)\")", debugQuery("subject", "foo bar?!*"));

@@ -39,10 +39,10 @@ import javax.mail.util.SharedByteArrayInputStream;
 
 import junit.framework.Assert;
 
-import org.apache.http.conn.HttpClientConnectionManager;
-import org.apache.http.impl.client.HttpClients;
 import org.apache.solr.client.solrj.SolrClient;
+import org.apache.solr.client.solrj.impl.CloudSolrClient;
 import org.apache.solr.client.solrj.impl.HttpSolrClient;
+import org.apache.solr.client.solrj.impl.LBHttpSolrClient;
 import org.junit.runner.JUnitCore;
 
 import com.google.common.collect.Lists;
@@ -109,6 +109,7 @@ import com.zimbra.common.soap.SoapTransport;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.ZimbraHttpClientManager;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.zmime.ZMimeMessage;
 import com.zimbra.cs.account.Account;
@@ -145,6 +146,7 @@ import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.store.file.FileBlobStore;
 import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.util.JMSession;
+import com.zimbra.cs.util.Zimbra;
 
 /**
  * @author bburtin
@@ -557,13 +559,34 @@ extends Assert {
     }
 
     /**
-     * return an instance of SolrJ client for a given account
+     * return an instance of SolrClient client for a given account
      * @param accountId
-     * @return
+     * @return SolrClient
      * @throws ServiceException
      */
-    public static SolrClient getSolrServer(String accountId, HttpClientConnectionManager cm) throws ServiceException {
-        return new HttpSolrClient(Provisioning.getInstance().getLocalServer().getIndexURL().substring(5) + "/" + accountId, HttpClients.createMinimal(cm));
+    public static SolrClient getSolrClient(String accountId) throws ServiceException {
+        String indexURL = Provisioning.getInstance().getLocalServer().getIndexURL();
+        String[] urlParts = indexURL.split(":",2);
+        String indexURLPrefix = urlParts[0];
+        String solrURL = urlParts[1];
+        if(indexURLPrefix.equalsIgnoreCase("solr")) {
+            return new HttpSolrClient(solrURL + "/" + accountId, Zimbra.getAppContext().getBean(ZimbraHttpClientManager.class).getInternalHttpClient());
+        } else if (indexURLPrefix.equalsIgnoreCase("solrcloud")) {
+            return new CloudSolrClient(solrURL, new LBHttpSolrClient(Zimbra.getAppContext().getBean(ZimbraHttpClientManager.class).getInternalHttpClient()));            
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * return an instance of CloudSolrClient client for a given account
+     * @return CloudSolrClient
+     * @throws ServiceException
+     */
+    public static CloudSolrClient getSolrCloudClient() throws ServiceException {
+        return new CloudSolrClient(
+                Provisioning.getInstance().getLocalServer().getIndexURL().substring(10),
+                new LBHttpSolrClient(Zimbra.getAppContext().getBean(ZimbraHttpClientManager.class).getInternalHttpClient()));
     }
 
     /**

@@ -14,6 +14,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
+import org.apache.lucene.document.StoredField;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanClause.Occur;
@@ -35,6 +36,9 @@ import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrDocumentList;
 import org.apache.solr.common.SolrInputDocument;
+import org.apache.solr.common.params.CommonParams;
+import org.apache.solr.common.params.ModifiableSolrParams;
+import org.apache.solr.common.util.NamedList;
 
 import com.google.common.base.Joiner;
 import com.google.common.cache.Cache;
@@ -66,7 +70,7 @@ import com.zimbra.cs.util.ProvisioningUtil;
 
 /**
  * Base class for standalone solr and solrcloud IndexStores
- * @author gsolovyev
+ * @author Greg Solovyev
  * @author raykini
  */
 
@@ -425,19 +429,24 @@ public abstract class SolrIndexBase extends IndexStore {
                             LuceneFields.L_SORT_ATTACH, LuceneFields.L_SORT_FLAG, LuceneFields.L_SORT_PRIORITY,
                             LuceneFields.L_MAILBOX_BLOB_ID, LuceneFields.L_SORT_DATE, LuceneFields.L_VERSION);
                     setupRequest(q, solrServer);
-                    QueryRequest req = new QueryRequest(q);
+                    QueryRequest req = null;
+                    if(ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraIndexManualCommit, false)) {
+                        req = new LeaderQueryRequest(q);
+                    } else {
+                        req = new QueryRequest(q);
+                    }
                     ZimbraLog.index.debug(String.format("retrieving document by query %s ",q.toString()));
                     try {
                         QueryResponse resp = (QueryResponse) processRequest(solrServer, req);
                         SolrDocument solrDoc = resp.getResults().get(0);
                         Document document = new Document();
                         for(String fieldName : solrDoc.getFieldNames()) {
-                            document.add(new Field(fieldName, solrDoc.getFieldValue(fieldName).toString(), Field.Store.YES, Field.Index.NO));
+                            document.add(new Field(fieldName, solrDoc.getFieldValue(fieldName).toString(), StoredField.TYPE));
                         }
                         return document;
                     } catch (SolrServerException e) {
                         ZimbraLog.index.error("Solr problem geting document %s, from mailbox %s",docID.toString(), accountId,e);
-                    } 
+                    }
                     return null;
                 }
             } finally {
@@ -458,7 +467,12 @@ public abstract class SolrIndexBase extends IndexStore {
                 }
                 SolrQuery q = new SolrQuery().setQuery(TermToQuery(term)).setRows(0);
                 setupRequest(q, solrServer);
-                QueryRequest req = new QueryRequest(q);
+                QueryRequest req = null;
+                if(ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraIndexManualCommit, false)) {
+                    req = new LeaderQueryRequest(q);
+                } else {
+                    req = new QueryRequest(q);
+                }
                 QueryResponse resp = (QueryResponse) processRequest(solrServer, req);
                 return (int) resp.getResults().getNumFound();
             } catch (SolrServerException e) {
@@ -521,7 +535,13 @@ public abstract class SolrIndexBase extends IndexStore {
             for (SortField sortField : sortFields) {
                 q.addSort(sortField.getField(), sortField.getReverse() ? SolrQuery.ORDER.desc : SolrQuery.ORDER.asc);
             }
-            QueryRequest req = new QueryRequest(q, METHOD.POST);
+            QueryRequest req = null;
+            if(ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraIndexManualCommit, false)) {
+                req = new LeaderQueryRequest(q,METHOD.POST);
+            } else {
+                req = new QueryRequest(q, METHOD.POST);
+            }
+
             ZimbraLog.index.debug(String.format("Searching Solr for %s with %d filter terms. First term %s ",szq, filter == null || filter.getTerms() == null ? 0 : filter.getTerms().size(),(filter == null || filter.getTerms() == null || filter.getTerms().size() == 0 ? "" : filter.getTerms().iterator().next().toString())));
             try {
                 QueryResponse resp = (QueryResponse) processRequest(solrServer, req);
@@ -721,15 +741,15 @@ public abstract class SolrIndexBase extends IndexStore {
                     return;
                 }
                 SolrQuery q = new SolrQuery().setParam("action", " increment");
-                QueryRequest req = new QueryRequest(q);
+                setupRequest(q, solrServer);
+                LeaderQueryRequest req = new LeaderQueryRequest(q);
                 req.setPath("/commitcount");
-                setupRequest(req, solrServer);
                 req.process(solrServer);
-            } catch (SolrServerException e) {
+            } catch (SolrServerException | IOException e) {
                 ZimbraLog.index.error("Problem increasing commit counter for Core %s", accountId,e);
             }
         }
-        
+
         @Override
         public void compact() {
             // TODO Auto-generated method stub
@@ -754,9 +774,9 @@ public abstract class SolrIndexBase extends IndexStore {
         while (maxWaitTimeMillis > 0) {
             if(indexExists()) {
                 SolrQuery q = new SolrQuery().setParam("action", "get");
-                QueryRequest req = new QueryRequest(q);
+                setupRequest(q, solrServer);
+                LeaderQueryRequest req = new LeaderQueryRequest(q);
                 req.setPath("/commitcount");
-                setupRequest(req, solrServer);
                 QueryResponse resp;
                 try {
                     resp = req.process(solrServer);
@@ -775,7 +795,7 @@ public abstract class SolrIndexBase extends IndexStore {
                         }
                         maxWaitTimeMillis = maxWaitTimeMillis - waitIncrement;
                     }
-                } catch (SolrServerException e) {
+                } catch (SolrServerException | IOException e) {
                     ZimbraLog.index.error("Problem waiting for index commit count to go to zero for Core: %s", accountId,e);
                     break;
                 }
@@ -791,4 +811,30 @@ public abstract class SolrIndexBase extends IndexStore {
         ZimbraLog.index.debug("waited %dms for commit", System.currentTimeMillis() - startWait);
         return maxWaitTimeMillis;
     }
+
+    @Override
+    /**
+    * Gets the latest commit version and generation from Solr
+    */
+   public long getLatestIndexGeneration(String accountId) throws ServiceException {
+       long version = 0L;
+       ModifiableSolrParams params = new ModifiableSolrParams();
+       params.set("command", "indexversion");
+       params.set(CommonParams.WT, "javabin");
+       params.set(CommonParams.QT, "/replication");
+       SolrClient solrServer = getSolrServer();
+       setupRequest(params, solrServer);
+       LeaderQueryRequest req = new LeaderQueryRequest(params);
+       @SuppressWarnings("rawtypes")
+       NamedList rsp;
+       try {
+           rsp = solrServer.request(req);
+           version = (Long) rsp.get(GENERATION);
+       } catch (SolrServerException | IOException e) {
+         throw ServiceException.FAILURE(e.getMessage(),e);
+       } finally {
+           shutdown(solrServer);
+       }
+       return version;
+   }
 }
