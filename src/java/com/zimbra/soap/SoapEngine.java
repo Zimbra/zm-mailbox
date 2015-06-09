@@ -30,7 +30,6 @@ import javax.xml.stream.XMLStreamReader;
 
 import org.eclipse.jetty.continuation.ContinuationSupport;
 
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.HeaderConstants;
@@ -133,10 +132,11 @@ public class SoapEngine {
             StackTraceElement[] s = Thread.currentThread().getStackTrace();
             StackTraceElement callSite = s[4]; // third frame from top is the caller
             e.setIdLabel(callSite);
-            LOG.warn("%s%s", e.getMessage(), (msg == null ? "" : ": " + msg)); // do not log stack
+            LOG.info("%s%s", e.getMessage(), (msg == null ? "" : ": " + msg)); // do not log stack
             LOG.debug(msg, e); // log stack
-        } else
+        } else {
             LOG.warn(msg, e);
+        }
     }
 
     private void logRequest(Map<String, Object> context, Element envelope) {
@@ -612,8 +612,7 @@ public class SoapEngine {
                 LOG.info("handler exception: %s%s", e.getMessage(), e.getReason(", %s"));
             }
         } catch (ServiceException e) {
-            response = soapProto.soapFault(e);
-            LOG.info("handler exception", e);
+            response = soapFault(soapProto, "handler exception", e);
             // XXX: if the session was new, do we want to delete it?
         } catch (Throwable e) {
             // don't interfere with Jetty Continuations -- pass the exception on up
