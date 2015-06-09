@@ -79,16 +79,8 @@
           <Item><New class="java.lang.String"><Arg><Property name="zimbraSSLIncludeCipherSuites" default=""/></Arg></New></Item>
         </Entry>
         <Entry>
-          <Item>zimbraImapNioEnabled</Item>
-          <Item><New class="java.lang.Boolean"><Arg><Property name="zimbraPop3NioEnabled" default="true"/></Arg></New></Item>
-        </Entry>
-        <Entry>
-          <Item>zimbraPop3NioEnabled</Item>
-          <Item><New class="java.lang.Boolean"><Arg><Property name="zimbraPop3NioEnabled" default="true"/></Arg></New></Item>
-        </Entry>
-        <Entry>
-          <Item>zimbra_ssl_enabled</Item>
-          <Item><New class="java.lang.Boolean"><Arg><Property name="zimbra_ssl_enabled" default="true"/></Arg></New></Item>
+          <Item>nio_imap_enabled</Item>
+          <Item><New class="java.lang.Boolean"><Arg><Property name="nio_imap_enabled" default="false"/></Arg></New></Item>
         </Entry>
         <Entry>
           <Item>mailboxd_keystore</Item>
