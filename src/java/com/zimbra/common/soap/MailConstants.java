@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -266,8 +266,6 @@ public final class MailConstants {
     public static final String E_GET_COMMENTS_RESPONSE = "GetCommentsResponse";
     public static final String E_GET_SHARE_NOTIFICATIONS_REQUEST = "GetShareNotificationsRequest";
     public static final String E_GET_SHARE_NOTIFICATIONS_RESPONSE = "GetShareNotificationsResponse";
-    public static final String E_GET_DATA_SOURCE_USAGE_REQUEST = "GetDataSourceUsageRequest";
-    public static final String E_GET_DATA_SOURCE_USAGE_RESPONSE = "GetDataSourceUsageResponse";
 
     public static final String E_GET_SYSTEM_RETENTION_POLICY_REQUEST = "GetSystemRetentionPolicyRequest";
     public static final String E_GET_SYSTEM_RETENTION_POLICY_RESPONSE = "GetSystemRetentionPolicyResponse";
@@ -485,8 +483,6 @@ public final class MailConstants {
     public static final QName IMPORT_DATA_RESPONSE = QName.get(E_IMPORT_DATA_RESPONSE, NAMESPACE);
     public static final QName GET_IMPORT_STATUS_REQUEST = QName.get(E_GET_IMPORT_STATUS_REQUEST, NAMESPACE);
     public static final QName GET_IMPORT_STATUS_RESPONSE = QName.get(E_GET_IMPORT_STATUS_RESPONSE, NAMESPACE);
-    public static final QName GET_DATA_SOURCE_USAGE_REQUEST = QName.get(E_GET_DATA_SOURCE_USAGE_REQUEST, NAMESPACE);
-    public static final QName GET_DATA_SOURCE_USAGE_RESPONSE = QName.get(E_GET_DATA_SOURCE_USAGE_RESPONSE, NAMESPACE);
 
     public static final QName CREATE_WAIT_SET_REQUEST = QName.get(E_CREATE_WAIT_SET_REQUEST, NAMESPACE);
     public static final QName CREATE_WAIT_SET_RESPONSE = QName.get(E_CREATE_WAIT_SET_RESPONSE, NAMESPACE);
@@ -763,7 +759,6 @@ public final class MailConstants {
     public static final String E_MSG_ID_HDR = "mid";
     public static final String E_IN_REPLY_TO = "irt";
     public static final String E_CONTENT = "content";
-    public static final String E_ORIG_CONTENT = "origContent";
     public static final String E_SHARE_NOTIFICATION = "shr";
     public static final String E_DL_SUBSCRIPTION_NOTIFICATION = "dlSubs";
     public static final String A_PART = "part";
@@ -784,7 +779,6 @@ public final class MailConstants {
     public static final String A_MAX_INLINED_LENGTH = "max";
     public static final String A_TRUNCATED_CONTENT = "truncated";
     public static final String A_FILTER_SENT = "filterSent";
-    public static final String A_WANT_CONTENT = "wantContent";
 
     // send/save draft
     public static final String E_ATTACH = "attach";
@@ -794,9 +788,7 @@ public final class MailConstants {
     public static final String A_ORIG_ID = "origid";
     public static final String A_REPLY_TYPE = "rt";
     public static final String A_IDENTITY_ID = "idnt";
-    public static final String A_DATASOURCE_ID = "dsId";
     public static final String A_NO_SAVE_TO_SENT = "noSave";
-    public static final String A_FETCH_SAVED_MSG = "fetchSavedMsg";
     public static final String A_SEND_UID = "suid";
     public static final String A_FOR_ACCOUNT = "forAcct";
     public static final String A_AUTO_SEND_TIME = "autoSendTime";
@@ -861,7 +853,7 @@ public final class MailConstants {
     public static final String A_GAL_DEFINITION_LAST_MODIFIED = "galDefinitionLastModified";
     public static final String A_GALSYNC_THROTTLED = "throttled";
     public static final String A_GALSYNC_FULLSYNC_RECOMMENDED = "fullSyncRecommended";
-    public static final String A_DELETE_LIMIT = "deleteLimit";
+
     // filter rules
     public static final String A_LHS = "k0";
     public static final String A_RHS = "k1";
@@ -1101,13 +1093,6 @@ public final class MailConstants {
     public static final String A_DS_CONNECTION_TYPE = "connectionType";
     public static final String A_DS_USERNAME = "username";
     public static final String A_DS_PASSWORD = "password";
-    public static final String A_DS_SMTP_ENABLED = "smtpEnabled";
-    public static final String A_DS_SMTP_HOST = "smtpHost";
-    public static final String A_DS_SMTP_PORT = "smtpPort";
-    public static final String A_DS_SMTP_CONNECTION_TYPE = "smtpConnectionType";
-    public static final String A_DS_SMTP_AUTH_REQUIRED = "smtpAuthRequired";
-    public static final String A_DS_SMTP_USERNAME = "smtpUsername";
-    public static final String A_DS_SMTP_PASSWORD = "smtpPassword";
     public static final String A_DS_TYPE = "type";
     public static final String A_DS_SUCCESS = "success";
     public static final String A_DS_ERROR = "error";
@@ -1123,15 +1108,6 @@ public final class MailConstants {
     public static final String A_DS_REPLYTO_DISPLAY = "replyToDisplay";
     public static final String A_DS_IMPORT_CLASS = "importClass";
     public static final String A_DS_FAILING_SINCE = "failingSince";
-    public static final String A_DS_OAUTH_TOKEN = "oauthToken";
-    public static final String A_DS_TEST = "test";
-    public static final String A_DS_USAGE = "usage";
-    public static final String A_DS_CLIENT_ID = "clientId";
-    public static final String A_DS_CLIENT_SECRET = "clientSecret";
-    public static final String A_DS_REFRESH_TOKEN = "refreshToken";
-    public static final String A_DS_REFRESH_TOKEN_URL = "refreshTokenUrl";
-
-    public static final String A_ACCT_RELATIVE_PATH = "acctRelPath";
 
     public static final String A_CREATOR = "cr";
     public static final String A_TYPE = "t";
@@ -1182,13 +1158,6 @@ public final class MailConstants {
     public static final String A_CANBECACHED = "canBeCached";
     public static final String A_DISPLAYNAME = "display";
     public static final String A_MATCH_TYPE = "type";
-    public static final String A_FIRSTNAME = "first";
-    public static final String A_MIDDLENAME = "middle";
-    public static final String A_LASTNAME = "last";
-    public static final String A_FULLNAME = "full";
-    public static final String A_NICKNAME = "nick";
-    public static final String A_COMPANY = "company";
-    public static final String A_FILEAS = "fileas";
 
     // device verification for reminders
     public static final String A_VERIFICATION_CODE = "code";

@@ -229,7 +229,6 @@ public class ZAttrProvisioning {
     public static enum DataSourceAuthMechanism {
         GSSAPI("GSSAPI"),
         PLAIN("PLAIN"),
-        XOAUTH2("XOAUTH2"),
         CRAM_MD5("CRAM-MD5");
         private String mValue;
         private DataSourceAuthMechanism(String value) { mValue = value; }
@@ -242,7 +241,6 @@ public class ZAttrProvisioning {
         }
         public boolean isGSSAPI() { return this == GSSAPI;}
         public boolean isPLAIN() { return this == PLAIN;}
-        public boolean isXOAUTH2() { return this == XOAUTH2;}
         public boolean isCRAM_MD5() { return this == CRAM_MD5;}
     }
 
@@ -262,22 +260,6 @@ public class ZAttrProvisioning {
         }
         public boolean isTls_if_available() { return this == tls_if_available;}
         public boolean isTls() { return this == tls;}
-        public boolean isSsl() { return this == ssl;}
-        public boolean isCleartext() { return this == cleartext;}
-    }
-
-    public static enum DataSourceSmtpConnectionType {
-        ssl("ssl"),
-        cleartext("cleartext");
-        private String mValue;
-        private DataSourceSmtpConnectionType(String value) { mValue = value; }
-        public String toString() { return mValue; }
-        public static DataSourceSmtpConnectionType fromString(String s) throws ServiceException {
-            for (DataSourceSmtpConnectionType value : values()) {
-                if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
-        }
         public boolean isSsl() { return this == ssl;}
         public boolean isCleartext() { return this == cleartext;}
     }
@@ -890,162 +872,6 @@ public class ZAttrProvisioning {
         public boolean isDelay() { return this == delay;}
         public boolean is_bounce() { return this == _bounce;}
         public boolean isBounce() { return this == bounce;}
-    }
-
-    public static enum MtaPostscreenBareNewlineAction {
-        drop("drop"),
-        enforce("enforce"),
-        ignore("ignore");
-        private String mValue;
-        private MtaPostscreenBareNewlineAction(String value) { mValue = value; }
-        public String toString() { return mValue; }
-        public static MtaPostscreenBareNewlineAction fromString(String s) throws ServiceException {
-            for (MtaPostscreenBareNewlineAction value : values()) {
-                if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
-        }
-        public boolean isDrop() { return this == drop;}
-        public boolean isEnforce() { return this == enforce;}
-        public boolean isIgnore() { return this == ignore;}
-    }
-
-    public static enum MtaPostscreenBareNewlineEnable {
-        yes("yes"),
-        no("no");
-        private String mValue;
-        private MtaPostscreenBareNewlineEnable(String value) { mValue = value; }
-        public String toString() { return mValue; }
-        public static MtaPostscreenBareNewlineEnable fromString(String s) throws ServiceException {
-            for (MtaPostscreenBareNewlineEnable value : values()) {
-                if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
-        }
-        public boolean isYes() { return this == yes;}
-        public boolean isNo() { return this == no;}
-    }
-
-    public static enum MtaPostscreenBlacklistAction {
-        drop("drop"),
-        enforce("enforce"),
-        ignore("ignore");
-        private String mValue;
-        private MtaPostscreenBlacklistAction(String value) { mValue = value; }
-        public String toString() { return mValue; }
-        public static MtaPostscreenBlacklistAction fromString(String s) throws ServiceException {
-            for (MtaPostscreenBlacklistAction value : values()) {
-                if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
-        }
-        public boolean isDrop() { return this == drop;}
-        public boolean isEnforce() { return this == enforce;}
-        public boolean isIgnore() { return this == ignore;}
-    }
-
-    public static enum MtaPostscreenDnsblAction {
-        drop("drop"),
-        enforce("enforce"),
-        ignore("ignore");
-        private String mValue;
-        private MtaPostscreenDnsblAction(String value) { mValue = value; }
-        public String toString() { return mValue; }
-        public static MtaPostscreenDnsblAction fromString(String s) throws ServiceException {
-            for (MtaPostscreenDnsblAction value : values()) {
-                if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
-        }
-        public boolean isDrop() { return this == drop;}
-        public boolean isEnforce() { return this == enforce;}
-        public boolean isIgnore() { return this == ignore;}
-    }
-
-    public static enum MtaPostscreenGreetAction {
-        drop("drop"),
-        enforce("enforce"),
-        ignore("ignore");
-        private String mValue;
-        private MtaPostscreenGreetAction(String value) { mValue = value; }
-        public String toString() { return mValue; }
-        public static MtaPostscreenGreetAction fromString(String s) throws ServiceException {
-            for (MtaPostscreenGreetAction value : values()) {
-                if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
-        }
-        public boolean isDrop() { return this == drop;}
-        public boolean isEnforce() { return this == enforce;}
-        public boolean isIgnore() { return this == ignore;}
-    }
-
-    public static enum MtaPostscreenNonSmtpCommandAction {
-        drop("drop"),
-        enforce("enforce"),
-        ignore("ignore");
-        private String mValue;
-        private MtaPostscreenNonSmtpCommandAction(String value) { mValue = value; }
-        public String toString() { return mValue; }
-        public static MtaPostscreenNonSmtpCommandAction fromString(String s) throws ServiceException {
-            for (MtaPostscreenNonSmtpCommandAction value : values()) {
-                if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
-        }
-        public boolean isDrop() { return this == drop;}
-        public boolean isEnforce() { return this == enforce;}
-        public boolean isIgnore() { return this == ignore;}
-    }
-
-    public static enum MtaPostscreenNonSmtpCommandEnable {
-        yes("yes"),
-        no("no");
-        private String mValue;
-        private MtaPostscreenNonSmtpCommandEnable(String value) { mValue = value; }
-        public String toString() { return mValue; }
-        public static MtaPostscreenNonSmtpCommandEnable fromString(String s) throws ServiceException {
-            for (MtaPostscreenNonSmtpCommandEnable value : values()) {
-                if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
-        }
-        public boolean isYes() { return this == yes;}
-        public boolean isNo() { return this == no;}
-    }
-
-    public static enum MtaPostscreenPipeliningAction {
-        drop("drop"),
-        enforce("enforce"),
-        ignore("ignore");
-        private String mValue;
-        private MtaPostscreenPipeliningAction(String value) { mValue = value; }
-        public String toString() { return mValue; }
-        public static MtaPostscreenPipeliningAction fromString(String s) throws ServiceException {
-            for (MtaPostscreenPipeliningAction value : values()) {
-                if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
-        }
-        public boolean isDrop() { return this == drop;}
-        public boolean isEnforce() { return this == enforce;}
-        public boolean isIgnore() { return this == ignore;}
-    }
-
-    public static enum MtaPostscreenPipeliningEnable {
-        yes("yes"),
-        no("no");
-        private String mValue;
-        private MtaPostscreenPipeliningEnable(String value) { mValue = value; }
-        public String toString() { return mValue; }
-        public static MtaPostscreenPipeliningEnable fromString(String s) throws ServiceException {
-            for (MtaPostscreenPipeliningEnable value : values()) {
-                if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
-        }
-        public boolean isYes() { return this == yes;}
-        public boolean isNo() { return this == no;}
     }
 
     public static enum MtaPropagateUnmatchedExtensions {
@@ -2130,56 +1956,6 @@ public class ZAttrProvisioning {
         public boolean isOPTIMIZE() { return this == OPTIMIZE;}
     }
 
-    public static enum TwoFactorAuthHashAlgorithm {
-        SHA512("SHA512"),
-        SHA256("SHA256"),
-        SHA1("SHA1");
-        private String mValue;
-        private TwoFactorAuthHashAlgorithm(String value) { mValue = value; }
-        public String toString() { return mValue; }
-        public static TwoFactorAuthHashAlgorithm fromString(String s) throws ServiceException {
-            for (TwoFactorAuthHashAlgorithm value : values()) {
-                if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
-        }
-        public boolean isSHA512() { return this == SHA512;}
-        public boolean isSHA256() { return this == SHA256;}
-        public boolean isSHA1() { return this == SHA1;}
-    }
-
-    public static enum TwoFactorAuthScratchCodeEncoding {
-        BASE32("BASE32"),
-        BASE64("BASE64");
-        private String mValue;
-        private TwoFactorAuthScratchCodeEncoding(String value) { mValue = value; }
-        public String toString() { return mValue; }
-        public static TwoFactorAuthScratchCodeEncoding fromString(String s) throws ServiceException {
-            for (TwoFactorAuthScratchCodeEncoding value : values()) {
-                if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
-        }
-        public boolean isBASE32() { return this == BASE32;}
-        public boolean isBASE64() { return this == BASE64;}
-    }
-
-    public static enum TwoFactorAuthSecretEncoding {
-        BASE32("BASE32"),
-        BASE64("BASE64");
-        private String mValue;
-        private TwoFactorAuthSecretEncoding(String value) { mValue = value; }
-        public String toString() { return mValue; }
-        public static TwoFactorAuthSecretEncoding fromString(String s) throws ServiceException {
-            for (TwoFactorAuthSecretEncoding value : values()) {
-                if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
-        }
-        public boolean isBASE32() { return this == BASE32;}
-        public boolean isBASE64() { return this == BASE64;}
-    }
-
     /**
      */
     @ZAttr(id=-1)
@@ -2868,9 +2644,8 @@ public class ZAttrProvisioning {
     public static final String A_zimbraAllowAnyFromAddress = "zimbraAllowAnyFromAddress";
 
     /**
-     * Addresses that this account is permitted to use in From: header on
-     * sent messages. Only applicable when zimbraAllowAnyFromAddress is set
-     * to false.
+     * Addresses that this account can as from address if
+     * arbitrary-addresses-allowed setting is not set
      */
     @ZAttr(id=428)
     public static final String A_zimbraAllowFromAddress = "zimbraAllowFromAddress";
@@ -3000,59 +2775,6 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1456)
     public static final String A_zimbraAntispamExtractionBatchSize = "zimbraAntispamExtractionBatchSize";
-
-    /**
-     * Certificate for Apple Push Notification Service
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1975)
-    public static final String A_zimbraAPNSCertificate = "zimbraAPNSCertificate";
-
-    /**
-     * Password for APNS certificate
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1976)
-    public static final String A_zimbraAPNSCertificatePassword = "zimbraAPNSCertificatePassword";
-
-    /**
-     * Boolean to decide whether APNS is being used for production or
-     * development
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1977)
-    public static final String A_zimbraAPNSProduction = "zimbraAPNSProduction";
-
-    /**
-     * application-specific password
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1836)
-    public static final String A_zimbraAppSpecificPassword = "zimbraAppSpecificPassword";
-
-    /**
-     * lifetime of app-specific passwords, or 0 for no expiry. Must be in
-     * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
-     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
-     * milliseconds. If time unit is not specified, the default is
-     * s(seconds).
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1839)
-    public static final String A_zimbraAppSpecificPasswordDuration = "zimbraAppSpecificPasswordDuration";
-
-    /**
-     * length of app-specific passwords
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1840)
-    public static final String A_zimbraAppSpecificPasswordLength = "zimbraAppSpecificPasswordLength";
 
     /**
      * Mailboxes in which the current account in archived. Multi-value attr
@@ -4423,24 +4145,6 @@ public class ZAttrProvisioning {
     public static final String A_zimbraContactRankingTableSize = "zimbraContactRankingTableSize";
 
     /**
-     * Specify the decomposition mode used for looking up the Contact items
-     * by the phonetic last/first name or last/first name. The accepted value
-     * is as follows: 0 = No decomposition. The accented characters will be
-     * compared &#039;as is&#039; (not be decomposed)
-     * (Collator.NO_DECOMPOSITION). 1 = Canonical decomposition mapping rules
-     * found in the Unicode Standard is used
-     * (Collator.CANONICAL_DECOMPOSITION). 2 = Unicode canonical and Unicode
-     * compatibility decomposition mapping rules found in the Unicode
-     * Standard is used. When this mode is selected, compatible characters,
-     * such as half-width and full-width katakana characters, are considered
-     * equivalent (Collator.FULL_DECOMPOSITION).
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1971)
-    public static final String A_zimbraContactSearchDecomposition = "zimbraContactSearchDecomposition";
-
-    /**
      * convertd URL
      *
      * @since ZCS 6.0.0_BETA1
@@ -4808,46 +4512,6 @@ public class ZAttrProvisioning {
     public static final String A_zimbraDataSourceName = "zimbraDataSourceName";
 
     /**
-     * Client Id for OAuth token
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=2021)
-    public static final String A_zimbraDataSourceOAuthClientId = "zimbraDataSourceOAuthClientId";
-
-    /**
-     * Client Secret for OAuth token
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=2022)
-    public static final String A_zimbraDataSourceOAuthClientSecret = "zimbraDataSourceOAuthClientSecret";
-
-    /**
-     * Refresh token for authentication using OAuth
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=2023)
-    public static final String A_zimbraDataSourceOAuthRefreshToken = "zimbraDataSourceOAuthRefreshToken";
-
-    /**
-     * Url for refreshing OAuth Token
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=2024)
-    public static final String A_zimbraDataSourceOAuthRefreshTokenUrl = "zimbraDataSourceOAuthRefreshTokenUrl";
-
-    /**
-     * OAuth token for authentication using OAuth
-     *
-     * @since ZCS 8.7.0
-     */
-    @ZAttr(id=1761)
-    public static final String A_zimbraDataSourceOAuthToken = "zimbraDataSourceOAuthToken";
-
-    /**
      * Password on server
      */
     @ZAttr(id=423)
@@ -4893,14 +4557,6 @@ public class ZAttrProvisioning {
     public static final String A_zimbraDataSourcePort = "zimbraDataSourcePort";
 
     /**
-     * Quota allotted to each data source
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=2015)
-    public static final String A_zimbraDataSourceQuota = "zimbraDataSourceQuota";
-
-    /**
      * Read timeout in seconds
      *
      * @since ZCS 6.0.7
@@ -4920,77 +4576,6 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=770)
     public static final String A_zimbraDataSourceRssPollingInterval = "zimbraDataSourceRssPollingInterval";
-
-    /**
-     * SMTP authentication password for this data source. If not set and if
-     * zimbraDataSourceSmtpAuthRequired is set to TRUE, then defaults to
-     * zimbraDataSourcePassword value.
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1916)
-    public static final String A_zimbraDataSourceSmtpAuthPassword = "zimbraDataSourceSmtpAuthPassword";
-
-    /**
-     * Whether SMTP server associated with this data source requires
-     * authentication
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1914)
-    public static final String A_zimbraDataSourceSmtpAuthRequired = "zimbraDataSourceSmtpAuthRequired";
-
-    /**
-     * SMTP authentication username for this data source. If not set and if
-     * zimbraDataSourceSmtpAuthRequired is set to TRUE, then defaults to
-     * zimbraDataSourceUsername value.
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1915)
-    public static final String A_zimbraDataSourceSmtpAuthUsername = "zimbraDataSourceSmtpAuthUsername";
-
-    /**
-     * Which security layer to use for connecting to SMTP host associated
-     * with this data source
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1913)
-    public static final String A_zimbraDataSourceSmtpConnectionType = "zimbraDataSourceSmtpConnectionType";
-
-    /**
-     * Whether sending outbound mail using external SMTP server is enabled in
-     * this data source
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1910)
-    public static final String A_zimbraDataSourceSmtpEnabled = "zimbraDataSourceSmtpEnabled";
-
-    /**
-     * SMTP host name associated with this data source
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1911)
-    public static final String A_zimbraDataSourceSmtpHost = "zimbraDataSourceSmtpHost";
-
-    /**
-     * SMTP port number associated with this data source
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1912)
-    public static final String A_zimbraDataSourceSmtpPort = "zimbraDataSourceSmtpPort";
-
-    /**
-     * Quota allotted to all data sources
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=2016)
-    public static final String A_zimbraDataSourceTotalQuota = "zimbraDataSourceTotalQuota";
 
     /**
      * type of data source (pop3, imap, caldav, etc)
@@ -5267,16 +4852,6 @@ public class ZAttrProvisioning {
     public static final String A_zimbraDomainAliasTargetId = "zimbraDomainAliasTargetId";
 
     /**
-     * Client IP/IPRange whitelist for this domain (IPRange needs to be in
-     * CIDR notation e.g:192.168.1.0/24). If configured, all IPs outside this
-     * whitelist will be blocked. If unset, all IPs are allowed
-     *
-     * @since ZCS 8.7.0
-     */
-    @ZAttr(id=1721)
-    public static final String A_zimbraDomainAllowedIPs = "zimbraDomainAllowedIPs";
-
-    /**
      * maximum number of accounts allowed to be assigned to specified COSes
      * in a domain. Values are in the format of
      * {zimbraId-of-a-cos}:{max-accounts}
@@ -5473,14 +5048,6 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1369)
     public static final String A_zimbraExtensionBindAddress = "zimbraExtensionBindAddress";
-
-    /**
-     * HTTPs port on which zimbra extension server should listen
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1980)
-    public static final String A_zimbraExtensionBindPort = "zimbraExtensionBindPort";
 
     /**
      * Time when external virtual account was last automatically disabled by
@@ -5691,18 +5258,6 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureAdminMailEnabled = "zimbraFeatureAdminMailEnabled";
 
     /**
-     * Whether email related configuration categories in Preference tab are
-     * enabled in the web client even if the zimbraFeatureAdminMailEnabled is
-     * set to FALSE (Email tab is disabled), and accessed from the admin
-     * console. If the zimbraFeatureAdminMailEnabled is TRUE, this key is
-     * ignored.
-     *
-     * @since ZCS 8.7.0
-     */
-    @ZAttr(id=1686)
-    public static final String A_zimbraFeatureAdminPreferencesEnabled = "zimbraFeatureAdminPreferencesEnabled";
-
-    /**
      * Deprecated since: 8.0.0. Deprecated as of bug 56924. Orig desc:
      * advanced search button enabled
      */
@@ -5718,16 +5273,6 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1168)
     public static final String A_zimbraFeatureAntispamEnabled = "zimbraFeatureAntispamEnabled";
-
-    /**
-     * Whether app-specific passwords are enabled when two-factor auth is
-     * enabled. If TRUE, the port specified by zimbraMtaAuthPort must be
-     * accessible by the MTA.
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1907)
-    public static final String A_zimbraFeatureAppSpecificPasswordsEnabled = "zimbraFeatureAppSpecificPasswordsEnabled";
 
     /**
      * Docs features enabled in briefcase
@@ -5856,14 +5401,6 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1381)
     public static final String A_zimbraFeatureCrocodocEnabled = "zimbraFeatureCrocodocEnabled";
-
-    /**
-     * Whether data source purging is enabled
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=2014)
-    public static final String A_zimbraFeatureDataSourcePurgingEnabled = "zimbraFeatureDataSourcePurgingEnabled";
 
     /**
      * enable end-user mail discarding defined in mail filters features
@@ -6314,14 +5851,6 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1636)
     public static final String A_zimbraFeatureTouchClientEnabled = "zimbraFeatureTouchClientEnabled";
-
-    /**
-     * whether two-factor authentication is required
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1820)
-    public static final String A_zimbraFeatureTwoFactorAuthRequired = "zimbraFeatureTwoFactorAuthRequired";
 
     /**
      * option to view attachments in html
@@ -7067,30 +6596,6 @@ public class ZAttrProvisioning {
     public static final String A_zimbraGalType = "zimbraGalType";
 
     /**
-     * Google Server API key used by sever to push notifications to GCM
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1955)
-    public static final String A_zimbraGCMAuthorizationKey = "zimbraGCMAuthorizationKey";
-
-    /**
-     * Sender Id used by android client to register for GCM
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1954)
-    public static final String A_zimbraGCMSenderId = "zimbraGCMSenderId";
-
-    /**
-     * Google Cloud Messaging URL
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1953)
-    public static final String A_zimbraGCMUrl = "zimbraGCMUrl";
-
-    /**
      * Object classes added on the global config entry. Unlike other
      * zimbra***ExtraObjectClass attributes, object classes specified in this
      * attributes will not be automatically added to the global config entry.
@@ -7379,14 +6884,6 @@ public class ZAttrProvisioning {
     public static final String A_zimbraImapDisabledCapability = "zimbraImapDisabledCapability";
 
     /**
-     * whether to display IMAP Mail folders only
-     *
-     * @since ZCS 8.7.0,9.0
-     */
-    @ZAttr(id=1909)
-    public static final String A_zimbraImapDisplayMailFoldersOnly = "zimbraImapDisplayMailFoldersOnly";
-
-    /**
      * whether IMAP is enabled for an account
      */
     @ZAttr(id=174)
@@ -7399,17 +6896,6 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=693)
     public static final String A_zimbraImapExposeVersionOnBanner = "zimbraImapExposeVersionOnBanner";
-
-    /**
-     * Ehcache: the maximum disk size of inactive IMAP cache in Bytes before
-     * eviction.By default this value is 10GB.This is a rough limit,Due to
-     * internals of ehcache actual size on disk will often exceed this limit
-     * by a modest margin.
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=2013)
-    public static final String A_zimbraImapInactiveSessionCacheMaxDiskSize = "zimbraImapInactiveSessionCacheMaxDiskSize";
 
     /**
      * Maximum number of concurrent IMAP connections allowed. New connections
@@ -7707,15 +7193,6 @@ public class ZAttrProvisioning {
     public static final String A_zimbraIsExternalVirtualAccount = "zimbraIsExternalVirtualAccount";
 
     /**
-     * whether or not an account represents a temporary/hidden mobile gateway
-     * app
-     *
-     * @since ZCS 8.7.0
-     */
-    @ZAttr(id=1760)
-    public static final String A_zimbraIsMobileGatewayAppAccount = "zimbraIsMobileGatewayAppAccount";
-
-    /**
      * true if this server is the monitor host
      */
     @ZAttr(id=132)
@@ -7792,20 +7269,6 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1420)
     public static final String A_zimbraLdapGalSyncDisabled = "zimbraLdapGalSyncDisabled";
-
-    /**
-     * Whether to include fractional seconds in LDAP gentime values (e.g.
-     * zimbraPasswordLockoutFailureTime or
-     * zimbraGalLastSuccessfulSyncTimestamp). Releases prior to 8.7 are
-     * unable to parse gentime values which include fractional seconds;
-     * therefore this value must remain set to FALSE in environments where
-     * any release 8.6 or lower is present. It should be changed to TRUE once
-     * all systems are upgraded to 8.7 or higher.
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=2018)
-    public static final String A_zimbraLdapGentimeFractionalSecondsEnabled = "zimbraLdapGentimeFractionalSecondsEnabled";
 
     /**
      * name to use in greeting and sign-off; if empty, uses hostname
@@ -8002,15 +7465,6 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1657)
     public static final String A_zimbraMailboxdSSLProtocols = "zimbraMailboxdSSLProtocols";
-
-    /**
-     * Whether TLS renegotiation is allowed. See also RFC 5746 and
-     * CVE-2011-1473 for concerns about possible SSL renegotiation DoS
-     *
-     * @since ZCS 8.7.0
-     */
-    @ZAttr(id=1832)
-    public static final String A_zimbraMailboxdSSLRenegotiationAllowed = "zimbraMailboxdSSLRenegotiationAllowed";
 
     /**
      * serverId:mboxId of mailbox before being moved
@@ -8665,15 +8119,6 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMailWhitelistMaxNumEntries = "zimbraMailWhitelistMaxNumEntries";
 
     /**
-     * maximum number of application-specific passwords allowed for an
-     * account
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1837)
-    public static final String A_zimbraMaxAppSpecificPasswords = "zimbraMaxAppSpecificPasswords";
-
-    /**
      * max number of contacts per page, Web client (not server) verifies that
      * zimbraPrefContactsPerPage should not exceed this attribute.
      *
@@ -8913,23 +8358,6 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1572)
     public static final String A_zimbraMobileForceSamsungProtocol25 = "zimbraMobileForceSamsungProtocol25";
-
-    /**
-     * id of the doamin under which temporary/hidden accounts for apps would
-     * be created
-     *
-     * @since ZCS 8.7.0
-     */
-    @ZAttr(id=1759)
-    public static final String A_zimbraMobileGatewayDefaultAppAccountDomainId = "zimbraMobileGatewayDefaultAppAccountDomainId";
-
-    /**
-     * Notifications Queue Thread Pool Size
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1956)
-    public static final String A_zimbraMobileGatewayPushNotificationsQueueThreadPoolSize = "zimbraMobileGatewayPushNotificationsQueueThreadPoolSize";
 
     /**
      * Max size of items in a folder that server tracks, categorized by
@@ -9578,15 +9006,6 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMtaAntiSpamLockMethod = "zimbraMtaAntiSpamLockMethod";
 
     /**
-     * interface address on which Admin HTTPS connector for MTA Auth should
-     * listen; defaults to localhost
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1908)
-    public static final String A_zimbraMtaAuthBindAddress = "zimbraMtaAuthBindAddress";
-
-    /**
      * Deprecated since: 6.0.0_BETA1. deprecated in favor of
      * zimbraMtaTlsSecurityLevel and zimbraMtaSaslAuthEnable. Orig desc:
      * Value for postconf smtpd_tls_security_level
@@ -9603,14 +9022,6 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=309)
     public static final String A_zimbraMtaAuthHost = "zimbraMtaAuthHost";
-
-    /**
-     * Internal port used by saslauthd to authenticate over SOAP
-     *
-     * @since ZCS 8.7,9.0.0
-     */
-    @ZAttr(id=1906)
-    public static final String A_zimbraMtaAuthPort = "zimbraMtaAuthPort";
 
     /**
      * whether this server is a mta auth target
@@ -9745,14 +9156,6 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMtaHeaderChecks = "zimbraMtaHeaderChecks";
 
     /**
-     * Value for postconf hopcount_limit
-     *
-     * @since ZCS 8.7.0
-     */
-    @ZAttr(id=1835)
-    public static final String A_zimbraMtaHopcountLimit = "zimbraMtaHopcountLimit";
-
-    /**
      * Value for postconf import_environment
      *
      * @since ZCS 8.5.0
@@ -9849,14 +9252,6 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1662)
     public static final String A_zimbraMtaLmtpTlsMandatoryCiphers = "zimbraMtaLmtpTlsMandatoryCiphers";
-
-    /**
-     * Value for postconf lmtp_tls_mandatory_protocols
-     *
-     * @since ZCS 8.7.0
-     */
-    @ZAttr(id=1784)
-    public static final String A_zimbraMtaLmtpTlsMandatoryProtocols = "zimbraMtaLmtpTlsMandatoryProtocols";
 
     /**
      * Value for postconf lmtp_tls_protocols
@@ -10009,210 +9404,6 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1530)
     public static final String A_zimbraMtaPolicyTimeLimit = "zimbraMtaPolicyTimeLimit";
-
-    /**
-     * Value for postconf postscreen_access_list. Single valued, commas
-     * separated list.
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1917)
-    public static final String A_zimbraMtaPostscreenAccessList = "zimbraMtaPostscreenAccessList";
-
-    /**
-     * Value for postconf postscreen_bare_newline_action.
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1918)
-    public static final String A_zimbraMtaPostscreenBareNewlineAction = "zimbraMtaPostscreenBareNewlineAction";
-
-    /**
-     * Value for postconf postscreen_bare_newline_enable.
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1919)
-    public static final String A_zimbraMtaPostscreenBareNewlineEnable = "zimbraMtaPostscreenBareNewlineEnable";
-
-    /**
-     * Value for postconf postscreen_bare_newline_ttl.
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1920)
-    public static final String A_zimbraMtaPostscreenBareNewlineTTL = "zimbraMtaPostscreenBareNewlineTTL";
-
-    /**
-     * Value for postconf postscreen_blacklist_action.
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1921)
-    public static final String A_zimbraMtaPostscreenBlacklistAction = "zimbraMtaPostscreenBlacklistAction";
-
-    /**
-     * Value for postconf postscreen_cache_cleanup_interval.
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1922)
-    public static final String A_zimbraMtaPostscreenCacheCleanupInterval = "zimbraMtaPostscreenCacheCleanupInterval";
-
-    /**
-     * Value for postconf postscreen_cache_retention_time.
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1923)
-    public static final String A_zimbraMtaPostscreenCacheRetentionTime = "zimbraMtaPostscreenCacheRetentionTime";
-
-    /**
-     * Value for postconf postscreen_command_count_limit.
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1924)
-    public static final String A_zimbraMtaPostscreenCommandCountLimit = "zimbraMtaPostscreenCommandCountLimit";
-
-    /**
-     * Value for postconf postscreen_dnsbl_action.
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1925)
-    public static final String A_zimbraMtaPostscreenDnsblAction = "zimbraMtaPostscreenDnsblAction";
-
-    /**
-     * Value for postconf postscreen_dnsbl_reply_map. Single valued, comma
-     * separated list.
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1941)
-    public static final String A_zimbraMtaPostscreenDnsblReplyMap = "zimbraMtaPostscreenDnsblReplyMap";
-
-    /**
-     * Value for postconf postscreen_dnsbl_sites. Multi valued, one DNSBL
-     * value pair per attribute value.
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1926)
-    public static final String A_zimbraMtaPostscreenDnsblSites = "zimbraMtaPostscreenDnsblSites";
-
-    /**
-     * Value for postconf postscreen_dnsbl_threshold.
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1927)
-    public static final String A_zimbraMtaPostscreenDnsblThreshold = "zimbraMtaPostscreenDnsblThreshold";
-
-    /**
-     * Value for postconf postscreen_dnsbl_timeout.
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1928)
-    public static final String A_zimbraMtaPostscreenDnsblTimeout = "zimbraMtaPostscreenDnsblTimeout";
-
-    /**
-     * Value for postconf postscreen_dnsbl_ttl.
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1929)
-    public static final String A_zimbraMtaPostscreenDnsblTTL = "zimbraMtaPostscreenDnsblTTL";
-
-    /**
-     * Value for postconf postscreen_dnsbl_whitelist_threshold.
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1930)
-    public static final String A_zimbraMtaPostscreenDnsblWhitelistThreshold = "zimbraMtaPostscreenDnsblWhitelistThreshold";
-
-    /**
-     * Value for postconf postscreen_greet_action.
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1931)
-    public static final String A_zimbraMtaPostscreenGreetAction = "zimbraMtaPostscreenGreetAction";
-
-    /**
-     * Value for postconf postscreen_greet_ttl.
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1932)
-    public static final String A_zimbraMtaPostscreenGreetTTL = "zimbraMtaPostscreenGreetTTL";
-
-    /**
-     * Value for postconf postscreen_non_smtp_command_action.
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1933)
-    public static final String A_zimbraMtaPostscreenNonSmtpCommandAction = "zimbraMtaPostscreenNonSmtpCommandAction";
-
-    /**
-     * Value for postconf postscreen_non_smtp_command_enable.
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1934)
-    public static final String A_zimbraMtaPostscreenNonSmtpCommandEnable = "zimbraMtaPostscreenNonSmtpCommandEnable";
-
-    /**
-     * Value for postconf postscreen_non_smtp_command_ttl.
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1935)
-    public static final String A_zimbraMtaPostscreenNonSmtpCommandTTL = "zimbraMtaPostscreenNonSmtpCommandTTL";
-
-    /**
-     * Value for postconf postscreen_pipelining_action.
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1936)
-    public static final String A_zimbraMtaPostscreenPipeliningAction = "zimbraMtaPostscreenPipeliningAction";
-
-    /**
-     * Value for postconf postscreen_pipelining_enable.
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1937)
-    public static final String A_zimbraMtaPostscreenPipeliningEnable = "zimbraMtaPostscreenPipeliningEnable";
-
-    /**
-     * Value for postconf postscreen_pipelining_ttl.
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1938)
-    public static final String A_zimbraMtaPostscreenPipeliningTTL = "zimbraMtaPostscreenPipeliningTTL";
-
-    /**
-     * Value for postconf postscreen_watchdog_timeout.
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1939)
-    public static final String A_zimbraMtaPostscreenWatchdogTimeout = "zimbraMtaPostscreenWatchdogTimeout";
-
-    /**
-     * Value for postconf postscreen_whitelist_interfaces. Single valued,
-     * comma separated list.
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1940)
-    public static final String A_zimbraMtaPostscreenWhitelistInterfaces = "zimbraMtaPostscreenWhitelistInterfaces";
 
     /**
      * Value for postconf propagate_unmatched_extensions
@@ -10493,14 +9684,6 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMtaSmtpdTlsMandatoryCiphers = "zimbraMtaSmtpdTlsMandatoryCiphers";
 
     /**
-     * Value for postconf smtpd_tls_mandatory_protocols
-     *
-     * @since ZCS 8.7.0
-     */
-    @ZAttr(id=1783)
-    public static final String A_zimbraMtaSmtpdTlsMandatoryProtocols = "zimbraMtaSmtpdTlsMandatoryProtocols";
-
-    /**
      * Value for postconf smtpd_tls_protocols
      *
      * @since ZCS 8.5.0
@@ -10604,14 +9787,6 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1514)
     public static final String A_zimbraMtaSmtpTlsMandatoryCiphers = "zimbraMtaSmtpTlsMandatoryCiphers";
-
-    /**
-     * Value for postconf smtp_tls_mandatory_protocols
-     *
-     * @since ZCS 8.7.0
-     */
-    @ZAttr(id=1782)
-    public static final String A_zimbraMtaSmtpTlsMandatoryProtocols = "zimbraMtaSmtpTlsMandatoryProtocols";
 
     /**
      * Value for postconf smtp_tls_protocols
@@ -11394,7 +10569,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefCalendarApptAllowAtendeeEdit = "zimbraPrefCalendarApptAllowAtendeeEdit";
 
     /**
-     * number of minutes (-1 = never) before appt to show reminder dialog
+     * number of minutes (0 = never) before appt to show reminder dialog
      */
     @ZAttr(id=341)
     public static final String A_zimbraPrefCalendarApptReminderWarningTime = "zimbraPrefCalendarApptReminderWarningTime";
@@ -12664,30 +11839,12 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefShortEmailAddress = "zimbraPrefShortEmailAddress";
 
     /**
-     * By default, new mail notifications are only displayed for new items
-     * placed in the inbox. To get new mail notifications for items filtered
-     * to other folders as well, set this to TRUE
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1904)
-    public static final String A_zimbraPrefShowAllNewMailNotifications = "zimbraPrefShowAllNewMailNotifications";
-
-    /**
      * show calendar week in calendar views
      *
      * @since ZCS 6.0.0_GA
      */
     @ZAttr(id=1045)
     public static final String A_zimbraPrefShowCalendarWeek = "zimbraPrefShowCalendarWeek";
-
-    /**
-     * Show Chats folder even if zimbraFeatureIMEnabled is false
-     *
-     * @since ZCS 8.7.0
-     */
-    @ZAttr(id=1787)
-    public static final String A_zimbraPrefShowChatsFolderInMail = "zimbraPrefShowChatsFolderInMail";
 
     /**
      * whether or not to show direction buttons in compose toolbar
@@ -12774,15 +11931,6 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefStandardClientAccessibilityMode = "zimbraPrefStandardClientAccessibilityMode";
 
     /**
-     * If true, Tab key inserts a tab into the editor body. If false, it
-     * moves focus.
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1972)
-    public static final String A_zimbraPrefTabInEditorEnabled = "zimbraPrefTabInEditorEnabled";
-
-    /**
      * whether or not tag tree is expanded
      *
      * @since ZCS 5.0.5
@@ -12825,14 +11973,6 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=541)
     public static final String A_zimbraPrefTrashLifetime = "zimbraPrefTrashLifetime";
-
-    /**
-     * whether two-factor authentication is enabled by the user
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1819)
-    public static final String A_zimbraPrefTwoFactorAuthEnabled = "zimbraPrefTwoFactorAuthEnabled";
 
     /**
      * Deprecated since: 5.0. no longer used in account or identity. Orig
@@ -12939,14 +12079,6 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefZimletTreeOpen = "zimbraPrefZimletTreeOpen";
 
     /**
-     * Option to turn on/off zimbra mobile gateway push notifications
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1952)
-    public static final String A_zimbraPrefZmgPushNotificationEnabled = "zimbraPrefZmgPushNotificationEnabled";
-
-    /**
      * Max number of previous residing folders server tracks for a mail item
      *
      * @since ZCS 8.5.0
@@ -13018,15 +12150,6 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1351)
     public static final String A_zimbraPublicSharingEnabled = "zimbraPublicSharingEnabled";
-
-    /**
-     * The total size (in bytes) of the in-memory queue of conversations to
-     * be purged for each data source
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=2017)
-    public static final String A_zimbraPurgedConversationsQueueSize = "zimbraPurgedConversationsQueueSize";
 
     /**
      * Last time a quota warning was sent.
@@ -13684,17 +12807,6 @@ public class ZAttrProvisioning {
     public static final String A_zimbraReverseProxyPortSearchBase = "zimbraReverseProxyPortSearchBase";
 
     /**
-     * Custom response headers to be added by the proxy. For example, can be
-     * used to add a HSTS header that will enforce SSL usage on the client
-     * side. Note: the value MUST be the entire header line (e.g. X-Foo: Bar,
-     * X-Zoo: &quot;Bar1; Bar2&quot;).
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1973)
-    public static final String A_zimbraReverseProxyResponseHeaders = "zimbraReverseProxyResponseHeaders";
-
-    /**
      * Time interval after which NGINX will fail over to the next route
      * lookup handler, if a handler does not respond to the route lookup
      * request within this time. Must be in valid duration format:
@@ -13748,15 +12860,6 @@ public class ZAttrProvisioning {
     public static final String A_zimbraReverseProxySSLCiphers = "zimbraReverseProxySSLCiphers";
 
     /**
-     * Specifies a file with DH parameters for EDH ciphers to be used by the
-     * proxy
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1968)
-    public static final String A_zimbraReverseProxySSLDHParam = "zimbraReverseProxySSLDHParam";
-
-    /**
      * SSL ECDH cipher curve for web proxy
      *
      * @since ZCS 8.5.0
@@ -13771,27 +12874,6 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1653)
     public static final String A_zimbraReverseProxySSLProtocols = "zimbraReverseProxySSLProtocols";
-
-    /**
-     * SSL session cache size in megabytes. Need to have &#039;m&#039; (for
-     * megabytes) suffix at the end
-     *
-     * @since ZCS 8.7.0
-     */
-    @ZAttr(id=1680)
-    public static final String A_zimbraReverseProxySSLSessionCacheSize = "zimbraReverseProxySSLSessionCacheSize";
-
-    /**
-     * SSL session timeout value for the proxy in minutes. Must be in valid
-     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
-     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
-     * milliseconds. If time unit is not specified, the default is
-     * s(seconds).
-     *
-     * @since ZCS 8.7.0
-     */
-    @ZAttr(id=1679)
-    public static final String A_zimbraReverseProxySSLSessionTimeout = "zimbraReverseProxySSLSessionTimeout";
 
     /**
      * If set as TRUE, proxy will use SSL to connect to the upstream mail
@@ -13960,67 +13042,6 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=724)
     public static final String A_zimbraReverseProxyWorkerProcesses = "zimbraReverseProxyWorkerProcesses";
-
-    /**
-     * Hostname of the external XMPP server where XMPP over BOSH requests
-     * need to be proxied
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1959)
-    public static final String A_zimbraReverseProxyXmppBoshHostname = "zimbraReverseProxyXmppBoshHostname";
-
-    /**
-     * Local HTTP-BIND URL prefix where ZWC sends XMPP over BOSH requests
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1957)
-    public static final String A_zimbraReverseProxyXmppBoshLocalHttpBindURL = "zimbraReverseProxyXmppBoshLocalHttpBindURL";
-
-    /**
-     * Port number of the external XMPP server where XMPP over BOSH requests
-     * need to be proxied
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1960)
-    public static final String A_zimbraReverseProxyXmppBoshPort = "zimbraReverseProxyXmppBoshPort";
-
-    /**
-     * Remote HTTP-BIND URL prefix for an external XMPP server where XMPP
-     * over BOSH requests need to be proxied. This needs to be configured
-     * only if its different from zimbraReverseProxyXmppBoshLocalHttpBindURL
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1958)
-    public static final String A_zimbraReverseProxyXmppBoshRemoteHttpBindURL = "zimbraReverseProxyXmppBoshRemoteHttpBindURL";
-
-    /**
-     * whether nginx should cache upstream routes in memcache
-     *
-     * @since ZCS 8.7.0
-     */
-    @ZAttr(id=1785)
-    public static final String A_zimbraReverseProxyZmlookupCachingEnabled = "zimbraReverseProxyZmlookupCachingEnabled";
-
-    /**
-     * Hostname of the upstream ZSS server being reverse-proxied
-     *
-     * @since ZCS 8.7.0
-     */
-    @ZAttr(id=1722)
-    public static final String A_zimbraReverseProxyZSSHostname = "zimbraReverseProxyZSSHostname";
-
-    /**
-     * whether or not to revoke app-specific passwords when the main password
-     * is changed
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1838)
-    public static final String A_zimbraRevokeAppSpecificPasswordsOnPasswordChange = "zimbraRevokeAppSpecificPasswordsOnPasswordChange";
 
     /**
      * whether TLS is required for IMAP/POP GSSAPI auth
@@ -14232,69 +13253,6 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1220)
     public static final String A_zimbraSharingUpdatePublishInterval = "zimbraSharingUpdatePublishInterval";
-
-    /**
-     * Maximum time an entry in the short term All Effective Rights cache
-     * will be regarded as valid. If value is 0, the cache is disabled. The
-     * cache is particularly useful when significant use is made of delegated
-     * administration. This cache can improve performance by avoiding
-     * recomputing All Effective Rights of named entries like accounts
-     * frequently in a short period of time. All Effective Rights are
-     * computations of the rights that named entries like accounts have -
-     * although when used, they are checked separately. The longer the value
-     * of this setting is, the more stale the view of the details is likely
-     * to be. For this reason, the maximum accepted value is 30m. Larger
-     * values will be treated as being 30m . Must be in valid duration
-     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
-     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
-     * unit is not specified, the default is s(seconds).
-     *
-     * @since ZCS 8.7.0
-     */
-    @ZAttr(id=1903)
-    public static final String A_zimbraShortTermAllEffectiveRightsCacheExpiration = "zimbraShortTermAllEffectiveRightsCacheExpiration";
-
-    /**
-     * Maximum number of entries in the short term All Effective Rights
-     * cache. This cache can improve performance by avoiding recomputing All
-     * Effective Rights of named entries like accounts frequently in a short
-     * period of time. Can disable the cache be specifying a value of 0
-     *
-     * @since ZCS 8.7.0
-     */
-    @ZAttr(id=1902)
-    public static final String A_zimbraShortTermAllEffectiveRightsCacheSize = "zimbraShortTermAllEffectiveRightsCacheSize";
-
-    /**
-     * Maximum time an entry in the Grantee cache will be regarded as valid.
-     * If value is 0, the cache is disabled. This cache can improve
-     * performance by avoiding recomputing details frequently in a short
-     * period of time, for instance for each entry in search results. The
-     * cache is particularly useful when significant use is made of delegated
-     * administration. Grantees objects provide a view of what rights a
-     * grantee has - although those are checked separately. The longer the
-     * value of this setting is, the more stale the view of the details is
-     * likely to be. For this reason, the maximum accepted value is 30m.
-     * Larger values will be treated as being 30m . Must be in valid duration
-     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
-     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
-     * unit is not specified, the default is s(seconds).
-     *
-     * @since ZCS 8.7.0
-     */
-    @ZAttr(id=1901)
-    public static final String A_zimbraShortTermGranteeCacheExpiration = "zimbraShortTermGranteeCacheExpiration";
-
-    /**
-     * Maximum number of entries in the short term Grantee cache. This cache
-     * can improve performance by avoiding recomputing details frequently in
-     * a short period of time, for instance for each entry in search results.
-     * Can disable the cache be specifying a value of 0
-     *
-     * @since ZCS 8.7.0
-     */
-    @ZAttr(id=1900)
-    public static final String A_zimbraShortTermGranteeCacheSize = "zimbraShortTermGranteeCacheSize";
 
     /**
      * Unique ID for an signature
@@ -14844,7 +13802,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraSSLCertificate = "zimbraSSLCertificate";
 
     /**
-     * exact name or regular expression of cipher suites to exclude
+     * excluded cipher suites
      *
      * @since ZCS 5.0.5
      */
@@ -15035,135 +13993,6 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1434)
     public static final String A_zimbraTouchJSErrorTrackingKey = "zimbraTouchJSErrorTrackingKey";
-
-    /**
-     * Hash algorithm used in TOTP generation. SHA1 is the current accepted
-     * standard per RFC 6238. Only consider changing this to another hashing
-     * function when working with authenticators that deviate from this
-     * standard.
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1825)
-    public static final String A_zimbraTwoFactorAuthHashAlgorithm = "zimbraTwoFactorAuthHashAlgorithm";
-
-    /**
-     * number of scratch codes to generate for two-factor auth
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1823)
-    public static final String A_zimbraTwoFactorAuthNumScratchCodes = "zimbraTwoFactorAuthNumScratchCodes";
-
-    /**
-     * scratch code encoding
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1831)
-    public static final String A_zimbraTwoFactorAuthScratchCodeEncoding = "zimbraTwoFactorAuthScratchCodeEncoding";
-
-    /**
-     * encrypted comma-separated list of valid scratch codes
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1822)
-    public static final String A_zimbraTwoFactorAuthScratchCodes = "zimbraTwoFactorAuthScratchCodes";
-
-    /**
-     * encrypted shared secret
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1821)
-    public static final String A_zimbraTwoFactorAuthSecret = "zimbraTwoFactorAuthSecret";
-
-    /**
-     * Shared secret encoding. Keep at BASE32 for compatability with common
-     * TOTP clients.
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1826)
-    public static final String A_zimbraTwoFactorAuthSecretEncoding = "zimbraTwoFactorAuthSecretEncoding";
-
-    /**
-     * length of shared secret
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1824)
-    public static final String A_zimbraTwoFactorAuthSecretLength = "zimbraTwoFactorAuthSecretLength";
-
-    /**
-     * Trusted devices currently registered on the account
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1949)
-    public static final String A_zimbraTwoFactorAuthTrustedDevices = "zimbraTwoFactorAuthTrustedDevices";
-
-    /**
-     * trusted device token secret key
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1964)
-    public static final String A_zimbraTwoFactorAuthTrustedDeviceTokenKey = "zimbraTwoFactorAuthTrustedDeviceTokenKey";
-
-    /**
-     * Lifetime of a trusted device token. Must be in valid duration format:
-     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
-     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
-     * specified, the default is s(seconds).
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1947)
-    public static final String A_zimbraTwoFactorAuthTrustedDeviceTokenLifetime = "zimbraTwoFactorAuthTrustedDeviceTokenLifetime";
-
-    /**
-     * Length of TOTP code required for two-factor authentication. Keep at 6
-     * for compatability with common TOTP clients.
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1828)
-    public static final String A_zimbraTwoFactorCodeLength = "zimbraTwoFactorCodeLength";
-
-    /**
-     * length of scratch codes
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1827)
-    public static final String A_zimbraTwoFactorScratchCodeLength = "zimbraTwoFactorScratchCodeLength";
-
-    /**
-     * length of time that a TOTP code is valid for. Must be in valid
-     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
-     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
-     * milliseconds. If time unit is not specified, the default is
-     * s(seconds).
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1829)
-    public static final String A_zimbraTwoFactorTimeWindowLength = "zimbraTwoFactorTimeWindowLength";
-
-    /**
-     * Determines the number of windows to check when trying to validate a
-     * TOTP code (NOW-n through NOW+n). This number should typically be
-     * small, but a minimum value of 1 is usually necessary to account for
-     * network latency and clock drift. See also:
-     * zimbraTwoFactorTimeWindowLength and
-     * https://tools.ietf.org/html/rfc6238#section-5.2
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1830)
-    public static final String A_zimbraTwoFactorTimeWindowOffset = "zimbraTwoFactorTimeWindowOffset";
 
     /**
      * call control service URL for the UC service
@@ -15509,15 +14338,6 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1047)
     public static final String A_zimbraWebClientShowOfflineLink = "zimbraWebClientShowOfflineLink";
-
-    /**
-     * Whether the Stay Signed In checkbox should be disabled on the login
-     * screen
-     *
-     * @since ZCS 8.7.0
-     */
-    @ZAttr(id=1687)
-    public static final String A_zimbraWebClientStaySignedInDisabled = "zimbraWebClientStaySignedInDisabled";
 
     /**
      * weclient URL to directly connect when making service to JS calls from

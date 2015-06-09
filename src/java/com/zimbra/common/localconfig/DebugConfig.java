@@ -207,7 +207,7 @@ public final class DebugConfig {
             "defang_valid_ext_url",
             "^(https?://[\\w-].*|mailto:.*|notes:.*|smb:.*|ftp:.*|gopher:.*|news:.*|tel:.*|callto:.*|webcal:.*|feed:.*:|file:.*|#.+)");
     public static final String defangValidImgFile = value(
-            "defang_valid_img_file", "\\.(jpg|jpeg|png|gif|bmp|aspx)((\\?)?)");
+            "defang_valid_img_file", "\\.(jpg|jpeg|png|gif)((\\?)?)");
     public static final String defangValidIntImg = value(
             "defang_valid_int_img", "^data:image/|^cid:");
 
@@ -267,9 +267,6 @@ public final class DebugConfig {
 
     public static final boolean imapForceSpecialUse = value("imap_force_special_use", true);
 
-    public static final boolean pushNotificationVerboseMode = value(
-        "push_notification_verbose_mode", false);
-
     /*
      * Use multiple threads to cut down time to calculate counts of objects for domain admin
      * where there are a large number of domains.
@@ -283,31 +280,6 @@ public final class DebugConfig {
      */
     public static final int numberOfThreadsToUseForDomainAdminCountObjects =
             value ("debug_number_of_threads_to_use_for_domain_admin_count_objects", 3);
-
-    /**
-     * "sync_maximum_change_count" page limit of maximum changes to be sent in a SyncResponse.
-     */
-    public static final int syncMaximumChangeCount = value ("sync_maximum_change_count", 3990);
-
-    /**
-     * "sync_maximum_delete_count" page limit of maximum deleted items to be sent in a SyncResponse.
-     */
-    public static final int syncMaximumDeleteCount = value ("sync_maximum_delete_count", 0);
-
-    /*
-     *  Turn off the detection logic of a series of symbol characters in the sender's
-     *  display name.  If this key is false (default), a sender's display name which
-     *  consists of a certain length of consecutive symbols will not be tokenized,
-     *  but treated as a whole, like a smiley mark.
-     */
-    public static boolean disableDetectConsecutiveSymbolsInSenderNameAsSmileyMark =
-            value("debug_disable_detect_consecutive_symbols_in_sender_name_as_smiley_mark", false);
-
-    /* If "debug_disable_detect_consecutive_symbols_in_sender_name_as_smiley_mark" is in effect,
-     * this determines the maximum length of the consecutive symbols.
-     */
-    public static int numberOfConsecutiveSymbolsInSenderName =
-            value("debug_number_of_consecutive_symbols_in_sender_name", 3);
 
     private static boolean value(String key, boolean defaultValue) {
         String value = LC.get(key);

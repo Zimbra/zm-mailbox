@@ -127,7 +127,7 @@ public class TimeZoneMap implements Cloneable {
             }
         }
         if (!DebugConfig.disableCalendarTZMatchByRule) {
-            ICalTimeZone ruleMatch = WellKnownTimeZones.getBestFuzzyMatch(tz);
+            ICalTimeZone ruleMatch = WellKnownTimeZones.getBestMatch(tz);
             if (ruleMatch != null) {
                 String realTzid = ruleMatch.getID();
                 mTzMap.put(realTzid, ruleMatch);

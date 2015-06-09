@@ -530,22 +530,22 @@ public final class LC {
     // with abundant precaution, re-generate my.cnf and restart MySQL server for
     // the change to take effect.
     @Supported
-    public static final KnownKey mysql_directory = KnownKey.newKey("/opt/zimbra/mariadb");
+    public static final KnownKey mysql_directory = KnownKey.newKey("${zimbra_home}/mariadb");
 
     @Supported
     public static final KnownKey mysql_data_directory = KnownKey.newKey("${zimbra_db_directory}/data");
 
     @Supported
-    public static final KnownKey mysql_socket = KnownKey.newKey("/opt/zimbra/data/tmp/mysql/mysql.sock");
+    public static final KnownKey mysql_socket = KnownKey.newKey("${zimbra_db_directory}/mysql.sock");
 
     @Supported
-    public static final KnownKey mysql_pidfile = KnownKey.newKey("/opt/zimbra/log/mysql.pid");
+    public static final KnownKey mysql_pidfile = KnownKey.newKey("${zimbra_db_directory}/mysql.pid");
 
     @Supported
-    public static final KnownKey mysql_mycnf = KnownKey.newKey("/opt/zimbra/conf/my.cnf");
+    public static final KnownKey mysql_mycnf = KnownKey.newKey("${zimbra_home}/conf/my.cnf");
 
     @Supported
-    public static final KnownKey mysql_errlogfile = KnownKey.newKey("/opt/zimbra/log/mysql_error.log");
+    public static final KnownKey mysql_errlogfile = KnownKey.newKey("${zimbra_home}/log/mysql_error.log");
 
     @Supported
     public static final KnownKey mysql_bind_address = KnownKey.newKey(null);
@@ -605,6 +605,8 @@ public final class LC {
             " -Dsun.net.inetaddr.ttl=${networkaddress_cache_ttl}" +
             " -Dorg.apache.jasper.compiler.disablejsr199=true" +
             " -XX:+UseConcMarkSweepGC" +
+            " -XX:PermSize=128m" +
+            " -XX:MaxPermSize=350m" +
             " -XX:SoftRefLRUPolicyMSPerMB=1" +
             " -verbose:gc" +
             " -XX:+PrintGCDetails" +
@@ -789,7 +791,7 @@ public final class LC {
 
     public static final KnownKey zimbra_class_accessmanager = KnownKey.newKey("com.zimbra.cs.account.accesscontrol.ACLAccessManager");
     public static final KnownKey zimbra_class_mboxmanager = KnownKey.newKey("com.zimbra.cs.mailbox.MailboxManager");
-    public static final KnownKey zimbra_class_database = KnownKey.newKey("com.zimbra.cs.db.MariaDB");
+    public static final KnownKey zimbra_class_database = KnownKey.newKey("com.zimbra.cs.db.MySQL");
     public static final KnownKey zimbra_class_store = KnownKey.newKey("com.zimbra.cs.store.file.FileBlobStore");
     public static final KnownKey zimbra_class_index_store_factory = KnownKey.newKey("com.zimbra.cs.index.LuceneIndex$Factory");
     // public static final KnownKey zimbra_class_index_store_factory = KnownKey.newKey("com.zimbra.cs.index.elasticsearch.ElasticSearchIndex$Factory");
@@ -801,7 +803,6 @@ public final class LC {
     public static final KnownKey zimbra_class_dbconnfactory = KnownKey.newKey("com.zimbra.cs.db.ZimbraConnectionFactory");
     public static final KnownKey zimbra_class_customproxyselector = KnownKey.newKey(""); //intentionally has no value; set one if u want to use a custom proxy selector
     public static final KnownKey zimbra_class_galgroupinfoprovider = KnownKey.newKey("com.zimbra.cs.gal.GalGroupInfoProvider");
-    public static final KnownKey zimbra_class_jsieve_comparators_ascii_casemap = KnownKey.newKey("org.apache.jsieve.comparators.AsciiCasemap");
 
     // XXX REMOVE AND RELEASE NOTE
     public static final KnownKey data_source_trust_self_signed_certs = KnownKey.newKey(false);
@@ -1255,7 +1256,13 @@ public final class LC {
 
     public static final KnownKey conversation_ignore_maillist_prefix = KnownKey.newKey(true);
 
+    public static final KnownKey short_term_all_effective_rights_cache_expiration = KnownKey.newKey(50000);
 
+    public static final KnownKey short_term_all_effective_rights_cache_size = KnownKey.newKey(128);
+
+    public static final KnownKey short_term_grantee_cache_expiration = KnownKey.newKey(50000);
+
+    public static final KnownKey short_term_grantee_cache_size = KnownKey.newKey(128);
 
     //EWS web service
     public static final KnownKey ews_service_wsdl_location =
