@@ -400,7 +400,7 @@ public class RemoteMailQueue {
         for (String field: fields) {
         	Terms fieldTerms = fields.terms(field);
         	if (fieldTerms == null) {continue; }
-        	TermsEnum terms = fieldTerms.iterator(null);
+        	TermsEnum terms = fieldTerms.iterator();
         	BytesRef term;
         	term = terms.next();
 	        do {
