@@ -82542,6 +82542,83 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * Subject prefix for the spam training messages used to sent to the
+     * zimbraSpamIsSpamAccount/zimbraSpamIsNotSpamAccount account.
+     *
+     * @return zimbraSpamTrainingSubjectPrefix, or "zimbra-spam-report:" if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2020)
+    public String getSpamTrainingSubjectPrefix() {
+        return getAttr(Provisioning.A_zimbraSpamTrainingSubjectPrefix, "zimbra-spam-report:");
+    }
+
+    /**
+     * Subject prefix for the spam training messages used to sent to the
+     * zimbraSpamIsSpamAccount/zimbraSpamIsNotSpamAccount account.
+     *
+     * @param zimbraSpamTrainingSubjectPrefix new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2020)
+    public void setSpamTrainingSubjectPrefix(String zimbraSpamTrainingSubjectPrefix) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSpamTrainingSubjectPrefix, zimbraSpamTrainingSubjectPrefix);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Subject prefix for the spam training messages used to sent to the
+     * zimbraSpamIsSpamAccount/zimbraSpamIsNotSpamAccount account.
+     *
+     * @param zimbraSpamTrainingSubjectPrefix new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2020)
+    public Map<String,Object> setSpamTrainingSubjectPrefix(String zimbraSpamTrainingSubjectPrefix, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSpamTrainingSubjectPrefix, zimbraSpamTrainingSubjectPrefix);
+        return attrs;
+    }
+
+    /**
+     * Subject prefix for the spam training messages used to sent to the
+     * zimbraSpamIsSpamAccount/zimbraSpamIsNotSpamAccount account.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2020)
+    public void unsetSpamTrainingSubjectPrefix() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSpamTrainingSubjectPrefix, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Subject prefix for the spam training messages used to sent to the
+     * zimbraSpamIsSpamAccount/zimbraSpamIsNotSpamAccount account.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2020)
+    public Map<String,Object> unsetSpamTrainingSubjectPrefix(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSpamTrainingSubjectPrefix, "");
+        return attrs;
+    }
+
+    /**
      * Aliases of Trash folder. In case some IMAP clients use different
      * folder names other than Trash, the spam filter still special-cases
      * those folders as if they are Trash.

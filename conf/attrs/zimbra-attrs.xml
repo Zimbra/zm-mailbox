@@ -10200,4 +10200,9 @@ TODO: delete them permanently from here
   Sample configuration: From: Postmaster &lt;postmaster@${RECIPIENT_DOMAIN}&gt;${NEWLINE}To: &lt;${RECIPIENT_ADDRESS}&gt;${NEWLINE}Subject: New message received at ${RECIPIENT_ADDRESS}${NEWLINE}Date: ${DATE}${NEWLINE}Content-Type: text/plain${NEWLINE}${NEWLINE}New message received at ${RECIPIENT_ADDRESS}.${NEWLINE}Sender: ${SENDER_ADDRESS}${NEWLINE}Subject: ${SUBJECT}</desc>
 </attr>
 
+<attr id="2020" name="zimbraSpamTrainingSubjectPrefix" type="astring" max="32" cardinality="single" optionalIn="globalConfig" since="8.7.0,9.0.0">
+  <globalConfigValue>zimbra-spam-report:</globalConfigValue>
+  <desc>Subject prefix for the spam training messages used to sent to the zimbraSpamIsSpamAccount/zimbraSpamIsNotSpamAccount account.</desc>
+</attr>
+
 </attrs>

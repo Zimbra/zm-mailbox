@@ -126,7 +126,7 @@ public class SpamHandler {
 
         out.setRecipient(javax.mail.Message.RecipientType.TO, sr.reportRecipient);
         out.setEnvelopeFrom(config.getSpamReportEnvelopeFrom());
-        out.setSubject("zimbra-spam-report: " + sr.accountName + ": " + isSpamString);
+        out.setSubject(config.getSpamTrainingSubjectPrefix() + " " + sr.accountName + ": " + isSpamString);
         Transport.send(out);
 
         ZimbraLog.misc.info("Sent " + sr);
