@@ -109,7 +109,7 @@
     <property name="solr.home.dir"  location="${zimbra.home.dir}/data/solr" />
     <property name="solr.home.dir1"  location="${zimbra.home.dir}/data/solr1" />
     <property name="solr.home.dir2"  location="${zimbra.home.dir}/data/solr2" />
-    <property name="solr.war" location="../ThirdParty/solr/binary/solr.war" />
+    <property name="solr.war" location="../ThirdParty/solr/binary/solr-${lucene.version}.war" />
 
     <property name="ical4j.jar" value="ical4j-0.9.16-patched.jar"/>
     <property name="ziputil.jar" value="ant-1.7.0-ziputil-patched.jar"/>
