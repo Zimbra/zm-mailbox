@@ -27,6 +27,7 @@ import java.util.TimerTask;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccessManager;
@@ -69,7 +70,7 @@ public class WaitSetMgr {
 
     private static final int WAITSET_SWEEP_DELAY = 1000 * 60; // once every minute
 
-    private static final int WAITSET_TIMEOUT = LC.zimbra_active_waitset_timeout_minutes.intValue();
+    private static final int WAITSET_TIMEOUT = (int) (LC.zimbra_active_waitset_timeout_minutes.intValue() * Constants.MILLIS_PER_MINUTE);
 
     /**
      * Create a new WaitSet, optionally specifying an initial set of accounts
@@ -284,6 +285,7 @@ public class WaitSetMgr {
         int removed = 0;
         int withCallback = 0;
         synchronized(sWaitSets) {
+            ZimbraLog.session.debug("active waitset timeout = %d ms", WAITSET_TIMEOUT);
             long cutoffTime = System.currentTimeMillis() - WAITSET_TIMEOUT;
 
             for (Iterator<WaitSetBase> iter = sWaitSets.values().iterator(); iter.hasNext();) {
