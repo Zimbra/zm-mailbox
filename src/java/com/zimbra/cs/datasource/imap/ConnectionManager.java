@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -23,11 +23,17 @@ import java.util.Map;
 
 import javax.security.auth.login.LoginException;
 
+import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.HttpStatus;
+import org.apache.commons.httpclient.methods.PostMethod;
+import org.json.JSONObject;
+
 import com.zimbra.common.account.ZAttrProvisioning.DataSourceAuthMechanism;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.net.SocketFactories;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
+import com.zimbra.common.util.ZimbraHttpConnectionManager;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Provisioning;
@@ -63,6 +69,12 @@ final class ConnectionManager {
     private static final int IDLE_READ_TIMEOUT = 30 * 60; // 30 minutes
 
     private static final Log LOG = ZimbraLog.datasource;
+
+    public static final String CLIENT_ID = "client_id";
+    public static final String CLIENT_SECRET = "client_secret";
+    public static final String GRANT_TYPE = "grant_type";
+    public static final String REFRESH_TOKEN = "refresh_token";
+    public static final String ACCESS_TOKEN = "access_token";
 
     public static ConnectionManager getInstance() {
         return INSTANCE;
@@ -162,7 +174,19 @@ final class ConnectionManager {
                     ic.authenticate(auth);
                 }
             } catch (CommandFailedException e) {
-                throw new LoginException(e.getError());
+                if (DataSourceAuthMechanism.XOAUTH2.name().equals(config.getMechanism())) {
+                    try {
+                        refreshOAuthToken(ds);
+                        auth = AuthenticatorFactory.getDefault().newAuthenticator(config,
+                            ds.getDecryptedOAuthToken());
+                        ic.authenticate(auth);
+                    } catch (CommandFailedException e1) {
+                        ZimbraLog.datasource.warn("Exception in connecting to data source", e);
+                        throw new LoginException(e1.getError());
+                    }
+                } else {
+                    throw new LoginException(e.getError());
+                }
             }
             if (isImportingSelf(ds, ic)) {
                 throw ServiceException.INVALID_REQUEST(
@@ -178,6 +202,40 @@ final class ConnectionManager {
         }
         LOG.debug("Created new connection: " + ic);
         return ic;
+    }
+
+    private static void refreshOAuthToken(DataSource ds) {
+        PostMethod postMethod = null;
+        try {
+            postMethod = new PostMethod(ds.getOauthRefreshTokenUrl());
+            postMethod.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+            postMethod.addParameter(CLIENT_ID, ds.getOauthClientId());
+            postMethod.addParameter(CLIENT_SECRET, ds.getDecryptedOAuthClientSecret());
+            postMethod.addParameter(REFRESH_TOKEN, ds.getOauthRefreshToken());
+            postMethod.addParameter(GRANT_TYPE, REFRESH_TOKEN);
+
+            HttpClient httpClient = ZimbraHttpConnectionManager.getExternalHttpConnMgr()
+                .getDefaultHttpClient();
+            int status = httpClient.executeMethod(postMethod);
+            if (status == HttpStatus.SC_OK) {
+                ZimbraLog.datasource.debug("Refreshed oauth token status=%d", status);
+                JSONObject response = new JSONObject(postMethod.getResponseBodyAsString());
+                String oauthToken = response.getString(ACCESS_TOKEN);
+                Map<String, Object> attrs = new HashMap<String, Object>();
+                attrs.put(Provisioning.A_zimbraDataSourceOAuthToken,
+                    DataSource.encryptData(ds.getId(), oauthToken));
+                Provisioning provisioning = Provisioning.getInstance();
+                provisioning.modifyAttrs(ds, attrs);
+            } else {
+                ZimbraLog.datasource.debug("Could not refresh oauth token status=%d", status);
+            }
+        } catch (Exception e) {
+            ZimbraLog.datasource.warn("Exception while refreshing oauth token", e);
+        } finally {
+            if (postMethod != null) {
+                postMethod.releaseConnection();
+            }
+        }
     }
 
     private static boolean isImportingSelf(DataSource ds, ImapConnection ic)

@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- *
+ * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -147,6 +147,12 @@ public class DataSource extends AccountProperty {
 
     public String getAuthMechanism() { return getAttr(Provisioning.A_zimbraDataSourceAuthMechanism); }
 
+    public String getOauthRefreshTokenUrl() { return getAttr(Provisioning.A_zimbraDataSourceOAuthRefreshTokenUrl); }
+
+    public String getOauthClientId() { return getAttr(Provisioning.A_zimbraDataSourceOAuthClientId); }
+
+    public String getOauthRefreshToken() { return getAttr(Provisioning.A_zimbraDataSourceOAuthRefreshToken); }
+
     public String getDomain() {
         String domain = getAttr(Provisioning.A_zimbraDataSourceDomain, null);
         if (domain == null) {
@@ -169,6 +175,11 @@ public class DataSource extends AccountProperty {
 
     public String getDecryptedOAuthToken() throws ServiceException {
         String data = getAttr(Provisioning.A_zimbraDataSourceOAuthToken);
+        return data == null ? null : decryptData(getId(), data);
+    }
+
+    public String getDecryptedOAuthClientSecret() throws ServiceException {
+        String data = getAttr(Provisioning.A_zimbraDataSourceOAuthClientSecret);
         return data == null ? null : decryptData(getId(), data);
     }
 

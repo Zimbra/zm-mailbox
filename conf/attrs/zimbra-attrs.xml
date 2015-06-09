@@ -8875,4 +8875,20 @@ TODO: delete them permanently from here
   <desc>Whether to include fractional seconds in LDAP gentime values (e.g. zimbraPasswordLockoutFailureTime or zimbraGalLastSuccessfulSyncTimestamp). Releases prior to 8.7 are unable to parse gentime values which include fractional seconds; therefore this value must remain set to FALSE in environments where any release 8.6 or lower is present. It should be changed to TRUE once all systems are upgraded to 8.7 or higher.</desc>
 </attr>
 
+<attr id="2021" name="zimbraDataSourceOAuthClientId" type="string" cardinality="single" optionalIn="imapDataSource" since="8.7.0,9.0.0">
+  <desc>Client Id for OAuth token</desc>
+</attr>
+
+<attr id="2022" name="zimbraDataSourceOAuthClientSecret" type="string" cardinality="single" optionalIn="imapDataSource" since="8.7.0,9.0.0">
+  <desc>Client Secret for OAuth token</desc>
+</attr>
+
+<attr id="2023" name="zimbraDataSourceOAuthRefreshToken" type="string" cardinality="single" optionalIn="imapDataSource" since="8.7.0,9.0.0">
+  <desc>Refresh token for authentication using OAuth</desc>
+</attr>
+
+<attr id="2024" name="zimbraDataSourceOAuthRefreshTokenUrl" type="string" cardinality="single" optionalIn="imapDataSource" since="8.7.0,9.0.0">
+  <desc>Url for refreshing OAuth Token</desc>
+</attr>
+
 </attrs>

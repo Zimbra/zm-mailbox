@@ -125,6 +125,26 @@ public class CreateDataSource extends MailDocumentHandler {
             dsAttrs.put(Provisioning.A_zimbraDataSourceAuthMechanism, DataSourceAuthMechanism.XOAUTH2.name());
         }
 
+        value = eDataSource.getAttribute(MailConstants.A_DS_CLIENT_ID, null);
+        if (value != null) {
+            dsAttrs.put(Provisioning.A_zimbraDataSourceOAuthClientId, value);
+        }
+
+        value = eDataSource.getAttribute(MailConstants.A_DS_CLIENT_SECRET, null);
+        if (value != null) {
+            dsAttrs.put(Provisioning.A_zimbraDataSourceOAuthClientSecret, value);
+        }
+
+        value = eDataSource.getAttribute(MailConstants.A_DS_REFRESH_TOKEN, null);
+        if (value != null) {
+            dsAttrs.put(Provisioning.A_zimbraDataSourceOAuthRefreshToken, value);
+        }
+
+        value = eDataSource.getAttribute(MailConstants.A_DS_REFRESH_TOKEN_URL, null);
+        if (value != null) {
+            dsAttrs.put(Provisioning.A_zimbraDataSourceOAuthRefreshTokenUrl, value);
+        }
+
         DataSource ds;
         try {
             ds = prov.createDataSource(account, type, name, dsAttrs);
