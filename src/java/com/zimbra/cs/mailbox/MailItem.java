@@ -36,6 +36,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
+import com.google.common.base.Objects.ToStringHelper;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -778,7 +779,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
             return mMailbox;
         } else if(mMailboxData != null) {
             mMailbox = MailboxManager.getInstance().getMailboxById(mMailboxData.id);
-        } 
+        }
         if(mMailbox == null ){
             throw ServiceException.NOT_FOUND("Failed to find Mailbox for MailItem or MailItem object was not properly initialized");
         }
@@ -1869,14 +1870,14 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
     }
 
     /** Adds this item to the {@link Mailbox}'s list of items created during
-     *  the transaction. 
+     *  the transaction.
      * @throws ServiceException */
     void markItemCreated() throws ServiceException {
         getMailbox().markItemCreated(this);
     }
 
     /** Adds this item to the {@link Mailbox}'s list of items deleted during
-     *  the transaction. 
+     *  the transaction.
      * @throws ServiceException */
     void markItemDeleted() throws ServiceException {
         getMailbox().markItemDeleted(this);
@@ -1903,7 +1904,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
 
     /** Adds this {@link MailboxBlob} to the {@link Mailbox}'s list of blobs
      *  to be removed upon <u>successful</u> completion of the current
-     *  transaction. 
+     *  transaction.
      * @throws ServiceException */
     void markBlobForDeletion(MailboxBlob mblob) throws ServiceException {
         if (mblob == null)
@@ -3962,5 +3963,13 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
             f = f.getFolder();
         }
         return false;
+    }
+
+    @Override
+    public String toString() {
+        ToStringHelper tsh = Objects.toStringHelper(this)
+            .add("mbox", mMailbox)
+            .add("data", mData);
+        return tsh.toString();
     }
 }

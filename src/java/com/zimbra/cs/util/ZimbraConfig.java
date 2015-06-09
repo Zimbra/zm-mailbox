@@ -99,6 +99,8 @@ import com.zimbra.cs.redolog.txn.RedisTxnIdGenerator;
 import com.zimbra.cs.redolog.txn.RedisTxnTracker;
 import com.zimbra.cs.redolog.txn.TxnIdGenerator;
 import com.zimbra.cs.redolog.txn.TxnTracker;
+import com.zimbra.cs.session.PendingModificationsJsonSerializer;
+import com.zimbra.cs.session.PendingModificationsSerializer;
 import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.store.file.FileBlobStore;
 import com.zimbra.qless.QlessClient;
@@ -416,6 +418,11 @@ public class ZimbraConfig {
     @Lazy(false)
     public ZimbraMemcachedClientConfigurer memcachedClientConfigurer() throws Exception {
         return new ZimbraMemcachedClientConfigurer();
+    }
+
+    @Bean
+    public PendingModificationsSerializer pendingModificationsSerialzier() {
+        return new PendingModificationsJsonSerializer();
     }
 
     @Bean

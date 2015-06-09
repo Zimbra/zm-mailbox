@@ -28,7 +28,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.PostConstruct;
 
 import org.apache.commons.lang.ObjectUtils;
-import org.apache.xerces.impl.dv.util.Base64;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -44,7 +43,10 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.MailboxListener.ChangeNotification;
 import com.zimbra.cs.memcached.MemcachedKeyPrefix;
 import com.zimbra.cs.session.PendingModifications;
+import com.zimbra.cs.session.PendingModificationsJsonSerializer;
+import com.zimbra.cs.session.PendingModificationsSerializer;
 import com.zimbra.cs.session.Session;
+import com.zimbra.cs.util.Zimbra;
 
 /**
  * Redis-based MailboxListenerTransport.
@@ -153,10 +155,10 @@ public class RedisMailboxListenerTransport implements MailboxListenerTransport {
             mailboxOp = notification.op == null ? null : notification.op.name();
             senderServerId = Provisioning.getInstance().getLocalServer().getId();
             timestamp = DateUtil.toISO8601(new Date(notification.timestamp));
-            // TODO BZ98708: send JSON, not serialized Java, so that other languages can work with these messages
-            contentType = "application/x-java-serialized-object; class=" + PendingModifications.class.getName();
-            contentEncoding = "base64";
-            content = Base64.encode(PendingModifications.JavaObjectSerializer.serialize(notification.mods));
+            PendingModificationsSerializer serializer = Zimbra.getAppContext().getBean(PendingModificationsSerializer.class);
+            contentType = serializer.getContentType();
+            contentEncoding = serializer.getContentEncoding();
+            content = new String(serializer.serialize(notification.mods));
         }
 
         public static Holder parseJSON(String json) throws IOException {
@@ -185,8 +187,8 @@ public class RedisMailboxListenerTransport implements MailboxListenerTransport {
                 }
 
                 for (Session session: getSubscribedSessions(holder.accountId)) {
-                    byte[] data = Base64.decode(holder.content);
-                    PendingModifications pm = PendingModifications.JavaObjectSerializer.deserialize(session.getMailbox(), data);
+                    byte[] data = holder.content.getBytes();
+                    PendingModifications pm = new PendingModificationsJsonSerializer().deserialize(session.getMailbox(), data);
                     Session source = null; // Foreign session is the publisher
                     session.notifyPendingChanges(pm, holder.changeId, source);
                 }

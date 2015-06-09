@@ -39,6 +39,9 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.amqp.AmqpConstants;
 import com.zimbra.cs.mailbox.MailboxListener.ChangeNotification;
 import com.zimbra.cs.session.PendingModifications;
+import com.zimbra.cs.session.PendingModificationsJavaSerializer;
+import com.zimbra.cs.session.PendingModificationsJsonSerializer;
+import com.zimbra.cs.session.PendingModificationsSerializer;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.util.Zimbra;
 
@@ -61,10 +64,10 @@ public class AmqpMailboxListenerTransport implements MailboxListenerTransport {
 
         try {
             // Generate a message to send
-            // TODO BZ98708: send JSON, not serialized Java, so that other languages can work with these messages
+            PendingModificationsSerializer serializer = Zimbra.getAppContext().getBean(PendingModificationsSerializer.class);
             org.springframework.amqp.core.Message message = MessageBuilder
-                    .withBody(PendingModifications.JavaObjectSerializer.serialize(notification.mods))
-                    .setContentType(MessageProperties.CONTENT_TYPE_SERIALIZED_OBJECT)
+                    .withBody(serializer.serialize(notification.mods))
+                    .setContentType(serializer.getContentType())
                     .setType(PendingModifications.class.getSimpleName())
                     .setHeader(AmqpConstants.HEADER_CHANGE_ID, notification.lastChangeId)
                     .setHeader(AmqpConstants.HEADER_MAILBOX_OP, notification.op.name())
@@ -131,8 +134,15 @@ public class AmqpMailboxListenerTransport implements MailboxListenerTransport {
                         return;
                     }
 
-                    if (MessageProperties.CONTENT_TYPE_SERIALIZED_OBJECT.equals(props.getContentType())) {
-                        PendingModifications pns = PendingModifications.JavaObjectSerializer.deserialize(session.getMailbox(), message.getBody());
+                    PendingModificationsSerializer serializer = null;
+                    if (PendingModificationsJavaSerializer.CONTENT_TYPE.equals(props.getContentType())) {
+                        serializer = new PendingModificationsJavaSerializer();
+                    } else if (PendingModificationsJsonSerializer.CONTENT_TYPE.equals(props.getContentType())) {
+                        serializer = new PendingModificationsJsonSerializer();
+                    }
+
+                    if (serializer != null) {
+                        PendingModifications pns = serializer.deserialize(session.getMailbox(), message.getBody());
                         Integer changeId = new Integer(props.getHeaders().get(AmqpConstants.HEADER_CHANGE_ID).toString());
                         session.notifyPendingChanges(pns, changeId, null);
                         return;

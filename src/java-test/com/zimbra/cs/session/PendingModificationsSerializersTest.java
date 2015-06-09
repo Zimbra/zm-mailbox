@@ -18,11 +18,13 @@ package com.zimbra.cs.session;
 
 import java.io.FileInputStream;
 import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.zimbra.cs.account.MockProvisioning;
@@ -32,10 +34,13 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
+import com.zimbra.cs.session.PendingModifications.Change;
+import com.zimbra.cs.session.PendingModifications.ModificationKey;
 
 /**
  * Unit test for {@link PendingModifications$JavaSerializer}.
  */
+@Ignore
 public final class PendingModificationsSerializersTest {
     private static final String TESTDATA_BASE_DIR = "./data/unittest/session/";
 
@@ -56,7 +61,7 @@ public final class PendingModificationsSerializersTest {
     public void testChange264JavaObjectSerializer() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
         byte[] data = IOUtils.toByteArray(new FileInputStream(TESTDATA_BASE_DIR + "change264.javaobject"));
-        PendingModifications pm = PendingModifications.JavaObjectSerializer.deserialize(mbox, data);
+        PendingModifications pm = new PendingModificationsJavaSerializer().deserialize(mbox, data);
         Assert.assertNotNull(pm);
 
         Assert.assertEquals(3, pm.changedTypes.size());
@@ -73,7 +78,50 @@ public final class PendingModificationsSerializersTest {
         Assert.assertTrue(change.what instanceof Folder);
         Assert.assertEquals(PendingModifications.Change.SIZE, change.why);
 
-        byte[] data_ = PendingModifications.JavaObjectSerializer.serialize(pm);
+        byte[] data_ = new PendingModificationsJavaSerializer().serialize(pm);
         Assert.assertArrayEquals(data, data_);
+    }
+
+    /**
+     * Load the PendingModification objects using the Java Object serializer, which is known to
+     * work. Then serialize to JSON and back. Then serialize back to a Java Object, to see
+     * whether the JSON serializer+deserializer had any losses.
+     **/
+    @Test
+    public void testChange264through271JsonSerializer() throws Exception {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        for (int i = 264; i <= 271; i++) {
+            String testDescr = "discrepancy after serializing + deserializing change" + i;
+
+            // 1. From serialized Java Object to Java object
+            String filename = TESTDATA_BASE_DIR + "change" + i + ".javaobject";
+            byte[] data = IOUtils.toByteArray(new FileInputStream(filename));
+            PendingModifications pm = new PendingModificationsJavaSerializer().deserialize(mbox, data);
+
+            // 2. Sanity check. Go back to serialized Java Object and compare
+            byte[] data_ = new PendingModificationsJavaSerializer().serialize(pm);
+            Assert.assertEquals(testDescr, new String(data), new String(data_));
+            Assert.assertArrayEquals(data, data_);
+
+            // 3. From Java Object to JSON and back
+            byte[] json = new PendingModificationsJsonSerializer().serialize(pm);
+            PendingModifications pm_ = new PendingModificationsJsonSerializer().deserialize(mbox, json);
+            byte[] json_ = new PendingModificationsJsonSerializer().serialize(pm_);
+            Assert.assertEquals(testDescr, new String(json), new String(json_));
+
+            // 4. From Java Object to serialized Java Object #2
+            data_ = new PendingModificationsJavaSerializer().serialize(pm_);
+
+            // 5. Compare with original
+            Assert.assertEquals(pm.toString(), pm_.toString());
+            assertEquals(pm.modified, pm_.modified);
+        }
+    }
+
+    protected void assertEquals(Map<ModificationKey, Change> map1, Map<ModificationKey, Change> map2) {
+        Assert.assertEquals(map1.keySet(), map2.keySet());
+        for (ModificationKey key: map1.keySet()) {
+            Assert.assertEquals(map1.get(key).toString(), map2.get(key).toString());
+        }
     }
 }

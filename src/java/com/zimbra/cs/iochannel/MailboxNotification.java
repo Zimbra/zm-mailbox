@@ -26,8 +26,10 @@ import java.util.concurrent.ExecutorService;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.session.PendingModifications;
+import com.zimbra.cs.session.PendingModificationsSerializer;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SessionCache;
+import com.zimbra.cs.util.Zimbra;
 
 public class MailboxNotification extends Message {
 
@@ -127,7 +129,7 @@ public class MailboxNotification extends Message {
                     log.debug("notifying session %s", session.toString());
                     if (pms == null) {
                         try {
-                            pms = PendingModifications.JavaObjectSerializer.deserialize(session.getMailbox(), message.getPayload());
+                            pms = Zimbra.getAppContext().getBean(PendingModificationsSerializer.class).deserialize(session.getMailbox(), message.getPayload());
                         } catch (IOException e) {
                             log.warn("could not deserialize notification", e);
                             return;
