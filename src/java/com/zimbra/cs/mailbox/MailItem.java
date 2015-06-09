@@ -3263,20 +3263,22 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
             // If there are any related items being deleted, log them in blocks of 200.
             int itemId = item == null ? 0 : Math.abs(item.getId()); // Use abs() for VirtualConversations
             Set<Integer> idSet = new TreeSet<Integer>();
-            for (int id : info.itemIds.getAllIds()) {
-                id = Math.abs(id); // Use abs() for VirtualConversations
-                if (id != itemId) {
-                    idSet.add(id);
+            for (MailItem.Type type : info.itemIds.types()) {
+                for (int id : info.itemIds.getIds(type)) {
+                    id = Math.abs(id); // Use abs() for VirtualConversations
+                    if (id != itemId) {
+                        idSet.add(id);
+                    }
+                    if (idSet.size() >= 200) {
+                        // More than 200 items.
+                        ZimbraLog.mailop.info("Deleting %sS: %s.", type.name(), StringUtil.join(",", idSet));
+                        idSet.clear();
+                    }
                 }
-                if (idSet.size() >= 200) {
-                    // More than 200 items.
-                    ZimbraLog.mailop.info("Deleting items: %s.", StringUtil.join(",", idSet));
-                    idSet.clear();
+                if (idSet.size() > 0) {
+                    // Less than 200 items or remainder.
+                    ZimbraLog.mailop.info("Deleting %sS: %s.", type.name(), StringUtil.join(",", idSet));
                 }
-            }
-            if (idSet.size() > 0) {
-                // Less than 200 items or remainder.
-                ZimbraLog.mailop.info("Deleting items: %s.", StringUtil.join(",", idSet));
             }
         }
 
