@@ -4808,6 +4808,38 @@ public class ZAttrProvisioning {
     public static final String A_zimbraDataSourceName = "zimbraDataSourceName";
 
     /**
+     * Client Id for OAuth token
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2021)
+    public static final String A_zimbraDataSourceOAuthClientId = "zimbraDataSourceOAuthClientId";
+
+    /**
+     * Client Secret for OAuth token
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2022)
+    public static final String A_zimbraDataSourceOAuthClientSecret = "zimbraDataSourceOAuthClientSecret";
+
+    /**
+     * Refresh token for authentication using OAuth
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2023)
+    public static final String A_zimbraDataSourceOAuthRefreshToken = "zimbraDataSourceOAuthRefreshToken";
+
+    /**
+     * Url for refreshing OAuth Token
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2024)
+    public static final String A_zimbraDataSourceOAuthRefreshTokenUrl = "zimbraDataSourceOAuthRefreshTokenUrl";
+
+    /**
      * OAuth token for authentication using OAuth
      *
      * @since ZCS 8.7.0
