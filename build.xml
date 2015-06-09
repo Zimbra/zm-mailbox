@@ -108,7 +108,7 @@
     <condition property="db-mysql">
       <not><isset property="db-sqlite"/></not>
     </condition>
-    <condition property="db.driver.jar" value="mariadb-java-client-*.jar">
+    <condition property="db.driver.jar" value="mysql-connector-java-*.jar">
         <isset property="db-mysql"/>
     </condition>
     <condition property="db.driver.jar" value="sqlitejdbc*.jar">
@@ -503,7 +503,7 @@
           <include name="${ziputil.jar}"/>
           <include name="${memcached.jar}"/>
           <include name="${db.driver.jar}"/>
-          <include name="mariadb-java-client-*.jar"/>
+          <include name="mysql-connector-java-*.jar"/>
           <include name="javamail-1.4.5.jar"/>
           <include name="zimbra-native.jar"/>
           <include name="bcprov-jdk15-146.jar"/>
@@ -515,7 +515,6 @@
           <include name="commons-digester*.jar"/>
           <include name="commons-fileupload*.jar"/>
           <include name="commons-httpclient*.jar"/>
-          <include name="commons-net*.jar"/>
           <include name="commons-io*.jar"/>
           <include name="commons-lang-*.jar"/>
           <include name="commons-logging.jar"/>
@@ -544,7 +543,6 @@
           <include name="log4j-*.jar"/>
           <include name="apache-log4j-extras-*.jar"/>
           <include name="icu4j-*.jar"/>
-          <include name="JavaPNS_2.2.jar"/>
         </fileset>
       </delete>
     </target>
@@ -591,7 +589,6 @@
 	      <include name="wsdl4j-*.jar"/>
 	      <include name="xmlschema-core-*.jar"/>
           <include name="stax2-api-*.jar"/>
-          <include name="JavaPNS_2.2.jar"/>
         </lib>
       	<lib dir="${aux.jars.dir}" includes="*.jar"/>
         <classes dir="${config.dir}" includes="sieveConfig.xml"/>
@@ -1085,7 +1082,6 @@
         <include name="commons-dbcp*.jar"/>
         <include name="commons-fileupload*.jar"/>
         <include name="commons-httpclient*.jar"/>
-        <include name="commons-net*.jar"/>
         <include name="commons-io*.jar"/>
         <include name="commons-lang-*.jar"/>
         <include name="commons-logging.jar"/>
@@ -1114,7 +1110,6 @@
         <include name="log4j-*.jar"/>
         <include name="apache-log4j-extras-*.jar"/>
         <include name="junit*.jar"/>
-        <include name="JavaPNS_2.2.jar"/>
       </fileset>
     </copy>
     <copy todir="${dist.jetty.dir}/common/endorsed" overwrite="true">
@@ -1342,7 +1337,7 @@
         <echo message="to stop (or stop jetty manually)"/>
         <echo message="and try again later."/>
         <delete failonerror="no">
-            <fileset dir="${zimbra.home.dir}/data/tmp" excludes="mysql/**,mysql.sock"/>
+            <fileset dir="${zimbra.home.dir}/db" excludes="data/**"/>
         </delete>
 
         <delete dir="${zimbra.home.dir}/zmstat"/>
@@ -1403,11 +1398,11 @@
     <target name="db-init" depends="choose-db-schema,mysql-init,sqlite-init"/>
 
     <target name="mysql-init" if="db-mysql">
-        <sql driver="org.mariadb.jdbc.Driver" url="jdbc:mysql://127.0.0.1:7306/" userid="root" password="zimbra"
+        <sql driver="com.mysql.jdbc.Driver" url="jdbc:mysql://127.0.0.1:7306/" userid="root" password="zimbra"
              classpathref="class.path" onerror="continue" src="${db.schema.dir}/dropdb.sql" print="false"/>
-        <sql driver="org.mariadb.jdbc.Driver" url="jdbc:mysql://127.0.0.1:7306/" userid="root" password="zimbra"
+        <sql driver="com.mysql.jdbc.Driver" url="jdbc:mysql://127.0.0.1:7306/" userid="root" password="zimbra"
              classpathref="class.path" onerror="abort" src="${db.schema.dir}/db.sql"/>
-        <sql driver="org.mariadb.jdbc.Driver" url="jdbc:mysql://127.0.0.1:7306/" userid="root" password="zimbra"
+        <sql driver="com.mysql.jdbc.Driver" url="jdbc:mysql://127.0.0.1:7306/" userid="root" password="zimbra"
              classpathref="class.path" onerror="abort" src="${build.dir}/versions-init.sql"/>
     </target>
 
@@ -1889,21 +1884,7 @@
         </for>
     </target>
 
-    <target name="stop-servers" depends="stop-webserver,stop-ldap"
-            description="stop LDAP and Jetty servers" />
-
-    <target name="start-servers"
-            description="start LDAP and Jetty servers">
-        <antcall target="start-ldap"/>
-        <sleep seconds="2"/>
-        <antcall target="start-webserver"/>
-    </target>
-
-    <target name="restart-servers"
-            description="stop LDAP and Jetty servers and start them again">
-        <antcall target="stop-servers"/>
-        <antcall target="start-servers"/>
-    </target>
+    <target name="stop-servers" depends="stop-webserver,stop-ldap"/>
 
     <!-- LDAP service control -->
     <target name="stop-ldap" depends="stop-ldap-windows,stop-ldap-unix"/>
@@ -1965,9 +1946,6 @@
     <target name="start-jetty-unix" if="is-unix">
         <exec executable="${zimbra.home.dir}/bin/jetty">
             <arg value="start"/>
-
-            <env key="JAVA_HOME" value="/opt/zimbra/java"/>
-            <env key="JAVA" value="/opt/zimbra/java/bin/java"/>
         </exec>
     </target>
 
@@ -2004,9 +1982,6 @@
             <then>
                 <exec executable="${zimbra.home.dir}/bin/jetty">
                     <arg value="stop"/>
-
-                    <env key="JAVA_HOME" value="/opt/zimbra/java"/>
-                    <env key="JAVA" value="/opt/zimbra/java/bin/java"/>
                 </exec>
             </then>
             <else>
