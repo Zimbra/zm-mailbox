@@ -10221,4 +10221,14 @@ TODO: delete them permanently from here
   <desc>Url for refreshing OAuth Token</desc>
 </attr>
 
+<attr id="2025" name="zimbraTwoFactorAuthTokenLifetime" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" callback="PositiveTimeInterval" since="8.7.0,9.0.0">
+  <defaultCOSValue>1h</defaultCOSValue>
+  <desc>Lifetime of auth tokens provisioned for completing the 2nd stage of two-factor authentication</desc>
+</attr>
+
+<attr id="2026" name="zimbraTwoFactorAuthEnablementTokenLifetime" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" callback="PositiveTimeInterval" since="8.7.0,9.0.0">
+  <defaultCOSValue>1h</defaultCOSValue>
+  <desc>Lifetime of auth tokens provisioned for completing the 2nd stage of enabling two-factor authentication</desc>
+</attr>
+
 </attrs>

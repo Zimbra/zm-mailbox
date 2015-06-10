@@ -478,7 +478,6 @@ public abstract class ZAttrUCService extends NamedEntry {
      *
      * @return zimbraId, or null if unset
      */
-    @Override
     @ZAttr(id=1)
     public String getId() {
         return getAttr(Provisioning.A_zimbraId, null);

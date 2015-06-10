@@ -221,7 +221,6 @@ public abstract class ZAttrDistributionList extends Group {
      *
      * @return displayName, or null if unset
      */
-    @Override
     @ZAttr(id=-1)
     public String getDisplayName() {
         return getAttr(Provisioning.A_displayName, null);
@@ -284,7 +283,6 @@ public abstract class ZAttrDistributionList extends Group {
      *
      * @return mail, or null if unset
      */
-    @Override
     @ZAttr(id=-1)
     public String getMail() {
         return getAttr(Provisioning.A_mail, null);
@@ -960,7 +958,6 @@ public abstract class ZAttrDistributionList extends Group {
      *
      * @since ZCS 8.0.0
      */
-    @Override
     @ZAttr(id=1275)
     public ZAttrProvisioning.DistributionListSubscriptionPolicy getDistributionListSubscriptionPolicy() {
         try { String v = getAttr(Provisioning.A_zimbraDistributionListSubscriptionPolicy); return v == null ? null : ZAttrProvisioning.DistributionListSubscriptionPolicy.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
@@ -1100,7 +1097,6 @@ public abstract class ZAttrDistributionList extends Group {
      *
      * @since ZCS 8.0.0
      */
-    @Override
     @ZAttr(id=1276)
     public ZAttrProvisioning.DistributionListUnsubscriptionPolicy getDistributionListUnsubscriptionPolicy() {
         try { String v = getAttr(Provisioning.A_zimbraDistributionListUnsubscriptionPolicy); return v == null ? null : ZAttrProvisioning.DistributionListUnsubscriptionPolicy.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
@@ -1297,7 +1293,6 @@ public abstract class ZAttrDistributionList extends Group {
      *
      * @return zimbraId, or null if unset
      */
-    @Override
     @ZAttr(id=1)
     public String getId() {
         return getAttr(Provisioning.A_zimbraId, null);
@@ -1699,7 +1694,6 @@ public abstract class ZAttrDistributionList extends Group {
      *
      * @return zimbraPrefReplyToAddress, or null if unset
      */
-    @Override
     @ZAttr(id=60)
     public String getPrefReplyToAddress() {
         return getAttr(Provisioning.A_zimbraPrefReplyToAddress, null);
@@ -1762,7 +1756,6 @@ public abstract class ZAttrDistributionList extends Group {
      *
      * @return zimbraPrefReplyToDisplay, or null if unset
      */
-    @Override
     @ZAttr(id=404)
     public String getPrefReplyToDisplay() {
         return getAttr(Provisioning.A_zimbraPrefReplyToDisplay, null);
@@ -1825,7 +1818,6 @@ public abstract class ZAttrDistributionList extends Group {
      *
      * @return zimbraPrefReplyToEnabled, or false if unset
      */
-    @Override
     @ZAttr(id=405)
     public boolean isPrefReplyToEnabled() {
         return getBooleanAttr(Provisioning.A_zimbraPrefReplyToEnabled, false);

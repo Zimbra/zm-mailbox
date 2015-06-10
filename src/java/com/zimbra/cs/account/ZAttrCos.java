@@ -15651,7 +15651,6 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @return zimbraId, or null if unset
      */
-    @Override
     @ZAttr(id=1)
     public String getId() {
         return getAttr(Provisioning.A_zimbraId, null);
@@ -41983,6 +41982,118 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
+     * Lifetime of auth tokens provisioned for completing the 2nd stage of
+     * enabling two-factor authentication. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * <p>Use getTwoFactorAuthEnablementTokenLifetimeAsString to access value as a string.
+     *
+     * @see #getTwoFactorAuthEnablementTokenLifetimeAsString()
+     *
+     * @return zimbraTwoFactorAuthEnablementTokenLifetime in millseconds, or 3600000 (1h)  if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2026)
+    public long getTwoFactorAuthEnablementTokenLifetime() {
+        return getTimeInterval(Provisioning.A_zimbraTwoFactorAuthEnablementTokenLifetime, 3600000L);
+    }
+
+    /**
+     * Lifetime of auth tokens provisioned for completing the 2nd stage of
+     * enabling two-factor authentication. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @return zimbraTwoFactorAuthEnablementTokenLifetime, or "1h" if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2026)
+    public String getTwoFactorAuthEnablementTokenLifetimeAsString() {
+        return getAttr(Provisioning.A_zimbraTwoFactorAuthEnablementTokenLifetime, "1h");
+    }
+
+    /**
+     * Lifetime of auth tokens provisioned for completing the 2nd stage of
+     * enabling two-factor authentication. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @param zimbraTwoFactorAuthEnablementTokenLifetime new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2026)
+    public void setTwoFactorAuthEnablementTokenLifetime(String zimbraTwoFactorAuthEnablementTokenLifetime) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorAuthEnablementTokenLifetime, zimbraTwoFactorAuthEnablementTokenLifetime);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Lifetime of auth tokens provisioned for completing the 2nd stage of
+     * enabling two-factor authentication. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @param zimbraTwoFactorAuthEnablementTokenLifetime new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2026)
+    public Map<String,Object> setTwoFactorAuthEnablementTokenLifetime(String zimbraTwoFactorAuthEnablementTokenLifetime, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorAuthEnablementTokenLifetime, zimbraTwoFactorAuthEnablementTokenLifetime);
+        return attrs;
+    }
+
+    /**
+     * Lifetime of auth tokens provisioned for completing the 2nd stage of
+     * enabling two-factor authentication. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2026)
+    public void unsetTwoFactorAuthEnablementTokenLifetime() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorAuthEnablementTokenLifetime, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Lifetime of auth tokens provisioned for completing the 2nd stage of
+     * enabling two-factor authentication. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2026)
+    public Map<String,Object> unsetTwoFactorAuthEnablementTokenLifetime(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorAuthEnablementTokenLifetime, "");
+        return attrs;
+    }
+
+    /**
      * number of scratch codes to generate for two-factor auth
      *
      * @return zimbraTwoFactorAuthNumScratchCodes, or 10 if unset
@@ -42051,6 +42162,118 @@ public abstract class ZAttrCos extends NamedEntry {
     public Map<String,Object> unsetTwoFactorAuthNumScratchCodes(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraTwoFactorAuthNumScratchCodes, "");
+        return attrs;
+    }
+
+    /**
+     * Lifetime of auth tokens provisioned for completing the 2nd stage of
+     * two-factor authentication. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * <p>Use getTwoFactorAuthTokenLifetimeAsString to access value as a string.
+     *
+     * @see #getTwoFactorAuthTokenLifetimeAsString()
+     *
+     * @return zimbraTwoFactorAuthTokenLifetime in millseconds, or 3600000 (1h)  if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2025)
+    public long getTwoFactorAuthTokenLifetime() {
+        return getTimeInterval(Provisioning.A_zimbraTwoFactorAuthTokenLifetime, 3600000L);
+    }
+
+    /**
+     * Lifetime of auth tokens provisioned for completing the 2nd stage of
+     * two-factor authentication. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @return zimbraTwoFactorAuthTokenLifetime, or "1h" if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2025)
+    public String getTwoFactorAuthTokenLifetimeAsString() {
+        return getAttr(Provisioning.A_zimbraTwoFactorAuthTokenLifetime, "1h");
+    }
+
+    /**
+     * Lifetime of auth tokens provisioned for completing the 2nd stage of
+     * two-factor authentication. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @param zimbraTwoFactorAuthTokenLifetime new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2025)
+    public void setTwoFactorAuthTokenLifetime(String zimbraTwoFactorAuthTokenLifetime) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorAuthTokenLifetime, zimbraTwoFactorAuthTokenLifetime);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Lifetime of auth tokens provisioned for completing the 2nd stage of
+     * two-factor authentication. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @param zimbraTwoFactorAuthTokenLifetime new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2025)
+    public Map<String,Object> setTwoFactorAuthTokenLifetime(String zimbraTwoFactorAuthTokenLifetime, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorAuthTokenLifetime, zimbraTwoFactorAuthTokenLifetime);
+        return attrs;
+    }
+
+    /**
+     * Lifetime of auth tokens provisioned for completing the 2nd stage of
+     * two-factor authentication. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2025)
+    public void unsetTwoFactorAuthTokenLifetime() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorAuthTokenLifetime, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Lifetime of auth tokens provisioned for completing the 2nd stage of
+     * two-factor authentication. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2025)
+    public Map<String,Object> unsetTwoFactorAuthTokenLifetime(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorAuthTokenLifetime, "");
         return attrs;
     }
 

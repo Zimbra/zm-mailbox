@@ -42,7 +42,6 @@ public class ZAttrCalendarResource extends Account {
      *
      * @return displayName, or null if unset
      */
-    @Override
     @ZAttr(id=-1)
     public String getDisplayName() {
         return getAttr(Provisioning.A_displayName, null);
@@ -54,7 +53,6 @@ public class ZAttrCalendarResource extends Account {
      * @param displayName new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
-    @Override
     @ZAttr(id=-1)
     public void setDisplayName(String displayName) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
@@ -69,7 +67,6 @@ public class ZAttrCalendarResource extends Account {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
-    @Override
     @ZAttr(id=-1)
     public Map<String,Object> setDisplayName(String displayName, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
@@ -82,7 +79,6 @@ public class ZAttrCalendarResource extends Account {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
-    @Override
     @ZAttr(id=-1)
     public void unsetDisplayName() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
@@ -96,7 +92,6 @@ public class ZAttrCalendarResource extends Account {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
-    @Override
     @ZAttr(id=-1)
     public Map<String,Object> unsetDisplayName(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
@@ -111,7 +106,6 @@ public class ZAttrCalendarResource extends Account {
      *
      * @return zimbraAccountCalendarUserType, or null if unset and/or has invalid value
      */
-    @Override
     @ZAttr(id=313)
     public ZAttrProvisioning.AccountCalendarUserType getAccountCalendarUserType() {
         try { String v = getAttr(Provisioning.A_zimbraAccountCalendarUserType); return v == null ? null : ZAttrProvisioning.AccountCalendarUserType.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
@@ -124,7 +118,6 @@ public class ZAttrCalendarResource extends Account {
      *
      * @return zimbraAccountCalendarUserType, or null if unset
      */
-    @Override
     @ZAttr(id=313)
     public String getAccountCalendarUserTypeAsString() {
         return getAttr(Provisioning.A_zimbraAccountCalendarUserType, null);
@@ -138,7 +131,6 @@ public class ZAttrCalendarResource extends Account {
      * @param zimbraAccountCalendarUserType new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
-    @Override
     @ZAttr(id=313)
     public void setAccountCalendarUserType(ZAttrProvisioning.AccountCalendarUserType zimbraAccountCalendarUserType) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
@@ -155,7 +147,6 @@ public class ZAttrCalendarResource extends Account {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
-    @Override
     @ZAttr(id=313)
     public Map<String,Object> setAccountCalendarUserType(ZAttrProvisioning.AccountCalendarUserType zimbraAccountCalendarUserType, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
@@ -171,7 +162,6 @@ public class ZAttrCalendarResource extends Account {
      * @param zimbraAccountCalendarUserType new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
-    @Override
     @ZAttr(id=313)
     public void setAccountCalendarUserTypeAsString(String zimbraAccountCalendarUserType) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
@@ -188,7 +178,6 @@ public class ZAttrCalendarResource extends Account {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
-    @Override
     @ZAttr(id=313)
     public Map<String,Object> setAccountCalendarUserTypeAsString(String zimbraAccountCalendarUserType, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
@@ -203,7 +192,6 @@ public class ZAttrCalendarResource extends Account {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
-    @Override
     @ZAttr(id=313)
     public void unsetAccountCalendarUserType() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
@@ -219,7 +207,6 @@ public class ZAttrCalendarResource extends Account {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
-    @Override
     @ZAttr(id=313)
     public Map<String,Object> unsetAccountCalendarUserType(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
@@ -1276,7 +1263,6 @@ public class ZAttrCalendarResource extends Account {
      *
      * @since ZCS 6.0.0_BETA1
      */
-    @Override
     @ZAttr(id=790)
     public Date getCreateTimestamp() {
         return getGeneralizedTimeAttr(Provisioning.A_zimbraCreateTimestamp, null);
@@ -1289,7 +1275,6 @@ public class ZAttrCalendarResource extends Account {
      *
      * @since ZCS 6.0.0_BETA1
      */
-    @Override
     @ZAttr(id=790)
     public String getCreateTimestampAsString() {
         return getAttr(Provisioning.A_zimbraCreateTimestamp, null);
@@ -1303,7 +1288,6 @@ public class ZAttrCalendarResource extends Account {
      *
      * @since ZCS 6.0.0_BETA1
      */
-    @Override
     @ZAttr(id=790)
     public void setCreateTimestamp(Date zimbraCreateTimestamp) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
@@ -1320,7 +1304,6 @@ public class ZAttrCalendarResource extends Account {
      *
      * @since ZCS 6.0.0_BETA1
      */
-    @Override
     @ZAttr(id=790)
     public Map<String,Object> setCreateTimestamp(Date zimbraCreateTimestamp, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
@@ -1336,7 +1319,6 @@ public class ZAttrCalendarResource extends Account {
      *
      * @since ZCS 6.0.0_BETA1
      */
-    @Override
     @ZAttr(id=790)
     public void setCreateTimestampAsString(String zimbraCreateTimestamp) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
@@ -1353,7 +1335,6 @@ public class ZAttrCalendarResource extends Account {
      *
      * @since ZCS 6.0.0_BETA1
      */
-    @Override
     @ZAttr(id=790)
     public Map<String,Object> setCreateTimestampAsString(String zimbraCreateTimestamp, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
@@ -1368,7 +1349,6 @@ public class ZAttrCalendarResource extends Account {
      *
      * @since ZCS 6.0.0_BETA1
      */
-    @Override
     @ZAttr(id=790)
     public void unsetCreateTimestamp() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
@@ -1384,7 +1364,6 @@ public class ZAttrCalendarResource extends Account {
      *
      * @since ZCS 6.0.0_BETA1
      */
-    @Override
     @ZAttr(id=790)
     public Map<String,Object> unsetCreateTimestamp(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
@@ -1397,7 +1376,6 @@ public class ZAttrCalendarResource extends Account {
      *
      * @return zimbraId, or null if unset
      */
-    @Override
     @ZAttr(id=1)
     public String getId() {
         return getAttr(Provisioning.A_zimbraId, null);
@@ -1409,7 +1387,6 @@ public class ZAttrCalendarResource extends Account {
      * @param zimbraId new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
-    @Override
     @ZAttr(id=1)
     public void setId(String zimbraId) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
@@ -1424,7 +1401,6 @@ public class ZAttrCalendarResource extends Account {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
-    @Override
     @ZAttr(id=1)
     public Map<String,Object> setId(String zimbraId, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
@@ -1437,7 +1413,6 @@ public class ZAttrCalendarResource extends Account {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
-    @Override
     @ZAttr(id=1)
     public void unsetId() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
@@ -1451,7 +1426,6 @@ public class ZAttrCalendarResource extends Account {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
-    @Override
     @ZAttr(id=1)
     public Map<String,Object> unsetId(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
@@ -1464,7 +1438,6 @@ public class ZAttrCalendarResource extends Account {
      *
      * @return zimbraLocale, or null if unset
      */
-    @Override
     @ZAttr(id=345)
     public String getLocaleAsString() {
         return getAttr(Provisioning.A_zimbraLocale, null);
@@ -1476,7 +1449,6 @@ public class ZAttrCalendarResource extends Account {
      * @param zimbraLocale new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
-    @Override
     @ZAttr(id=345)
     public void setLocale(String zimbraLocale) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
@@ -1491,7 +1463,6 @@ public class ZAttrCalendarResource extends Account {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
-    @Override
     @ZAttr(id=345)
     public Map<String,Object> setLocale(String zimbraLocale, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
@@ -1504,7 +1475,6 @@ public class ZAttrCalendarResource extends Account {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
-    @Override
     @ZAttr(id=345)
     public void unsetLocale() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
@@ -1518,7 +1488,6 @@ public class ZAttrCalendarResource extends Account {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      */
-    @Override
     @ZAttr(id=345)
     public Map<String,Object> unsetLocale(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
