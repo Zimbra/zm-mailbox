@@ -908,7 +908,6 @@ class WebAdminServersVar extends ServersVar {
 
             for (ServiceLocator.Entry entry : entries) {
                 Server server = mProv.getServerByName(entry.hostName);
-                mLog.info("webadmin entry hostname: " + entry.hostName);
                 if (server == null) {
                     mLog.info("webadmin server is null");
                 }
@@ -997,14 +996,34 @@ class WebEwsUpstreamServersVar extends ServersVar {
     public void update() throws ServiceException {
         ArrayList<String> directives = new ArrayList<String>();
         String portName = configSource.getAttr(Provisioning.A_zimbraReverseProxyHttpPortAttribute, "");
-        String[] upstreams = serverSource.getMultiAttr(Provisioning.A_zimbraReverseProxyUpstreamEwsServers);
+        String extName = ZimbraServiceNames.getNameForMailstoreExtension("zimbraews");
 
-        if (upstreams.length > 0) {
-            for (String serverName: upstreams) {
-                Server server = mProv.getServerByName(serverName);
+        try {
+            List<ServiceLocator.Entry> entries = serviceLocator.find(extName, null, true);
+            if (entries.isEmpty()) {
+                throw new IOException("No healthy instances of " + extName + " found in consul");
+            }
+
+            for (ServiceLocator.Entry entry : entries) {
+                Server server = mProv.getServerByName(entry.hostName);
+                String serverName = server.getAttr(Provisioning.A_zimbraServiceHostname, "");
                 if (isValidUpstream(server, serverName)) {
                     directives.add(generateServerDirective(server, serverName, portName));
                     mLog.debug("Added EWS server to HTTP upstream: " + serverName);
+                }
+            }
+        } catch (IOException e) {
+            mLog.debug("Failed locating an instance of " + extName);
+            e.printStackTrace();
+            String[] upstreams = serverSource.getMultiAttr(Provisioning.A_zimbraReverseProxyUpstreamEwsServers);
+
+            if (upstreams.length > 0) {
+                for (String serverName: upstreams) {
+                    Server server = mProv.getServerByName(serverName);
+                    if (isValidUpstream(server, serverName)) {
+                        directives.add(generateServerDirective(server, serverName, portName));
+                        mLog.debug("Added EWS server to HTTP upstream: " + serverName);
+                    }
                 }
             }
         }
@@ -1023,14 +1042,34 @@ class WebEwsSSLUpstreamServersVar extends ServersVar {
     public void update() throws ServiceException {
         ArrayList<String> directives = new ArrayList<String>();
         String portName = configSource.getAttr(Provisioning.A_zimbraReverseProxyHttpSSLPortAttribute, "");
-        String[] upstreams = serverSource.getMultiAttr(Provisioning.A_zimbraReverseProxyUpstreamEwsServers);
+        String extName = ZimbraServiceNames.getNameForMailstoreExtension("zimbraews");
 
-        if (upstreams.length > 0) {
-            for (String serverName: upstreams) {
-                Server server = mProv.getServerByName(serverName);
+        try {
+            List<ServiceLocator.Entry> entries = serviceLocator.find(extName, "ssl", true);
+            if (entries.isEmpty()) {
+                throw new IOException("No healthy SSL instances of " + extName + " found in consul");
+            }
+
+            for (ServiceLocator.Entry entry : entries) {
+                Server server = mProv.getServerByName(entry.hostName);
+                String serverName = server.getAttr(Provisioning.A_zimbraServiceHostname, "");
                 if (isValidUpstream(server, serverName)) {
                     directives.add(generateServerDirective(server, serverName, portName));
                     mLog.debug("Added EWS server to HTTPS upstream: " + serverName);
+                }
+            }
+        } catch (IOException e) {
+            mLog.debug("Failed locating an instance of " + extName);
+            e.printStackTrace();
+            String[] upstreams = serverSource.getMultiAttr(Provisioning.A_zimbraReverseProxyUpstreamEwsServers);
+
+            if (upstreams.length > 0) {
+                for (String serverName: upstreams) {
+                    Server server = mProv.getServerByName(serverName);
+                    if (isValidUpstream(server, serverName)) {
+                        directives.add(generateServerDirective(server, serverName, portName));
+                        mLog.debug("Added EWS server to HTTPS upstream: " + serverName);
+                    }
                 }
             }
         }
@@ -1302,11 +1341,16 @@ class ZMLookupHandlerVar extends ProxyConfVar{
     @Override
     public void update() throws ServiceException, ProxyConfException {
         ArrayList<String> servers = new ArrayList<String>();
+        String extName = ZimbraServiceNames.getNameForMailstoreExtension("nginx-lookup");
 
-        String[] handlerNames = serverSource.getMultiAttr("zimbraReverseProxyAvailableLookupTargets");
-        if (handlerNames.length > 0) {
-            for (String handlerName: handlerNames) {
-                Server s = mProv.getServerByName(handlerName);
+        try {
+            List<ServiceLocator.Entry> entries = serviceLocator.find(extName, "ssl", true);
+            if (entries.isEmpty()) {
+                throw new IOException("No healthy SSL instances of " + extName + " found in consul");
+            }
+
+            for (ServiceLocator.Entry entry : entries) {
+                Server s = mProv.getServerByName(entry.hostName);
                 String sn = s.getAttr(Provisioning.A_zimbraServiceHostname, "");
                 int port = s.getIntAttr(Provisioning.A_zimbraExtensionBindPort, 7072);
                 boolean isTarget = s.getBooleanAttr(Provisioning.A_zimbraReverseProxyLookupTarget, false);
@@ -1322,26 +1366,49 @@ class ZMLookupHandlerVar extends ProxyConfVar{
                     mLog.debug("Route Lookup: Added server " + ip);
                 }
             }
-        } else {
-            List<Server> allServers = mProv.getAllServers();
-
-            for (Server s : allServers)
-            {
-                String sn = s.getAttr(Provisioning.A_zimbraServiceHostname, "");
-                int port = s.getIntAttr(Provisioning.A_zimbraExtensionBindPort, 7072);
-                boolean isTarget = s.getBooleanAttr(Provisioning.A_zimbraReverseProxyLookupTarget, false);
-                if (isTarget) {
-                    InetAddress ip = ProxyConfUtil.getLookupTargetIPbyIPMode(sn);
-                    Formatter f = new Formatter();
-                    if (ip instanceof Inet4Address) {
-                        f.format("%s:%d", ip.getHostAddress(), port);
-                    } else {
-                        f.format("[%s]:%d", ip.getHostAddress(), port);
+        } catch (IOException e) {
+            mLog.debug("Failed locating an SSL instance of " + extName);
+            e.printStackTrace();
+            String[] handlerNames = serverSource.getMultiAttr("zimbraReverseProxyAvailableLookupTargets");
+            if (handlerNames.length > 0) {
+                for (String handlerName: handlerNames) {
+                    Server s = mProv.getServerByName(handlerName);
+                    String sn = s.getAttr(Provisioning.A_zimbraServiceHostname, "");
+                    int port = s.getIntAttr(Provisioning.A_zimbraExtensionBindPort, 7072);
+                    boolean isTarget = s.getBooleanAttr(Provisioning.A_zimbraReverseProxyLookupTarget, false);
+                    if (isTarget) {
+                        InetAddress ip = ProxyConfUtil.getLookupTargetIPbyIPMode(sn);
+                        Formatter f = new Formatter();
+                        if (ip instanceof Inet4Address) {
+                            f.format("%s:%d", ip.getHostAddress(), port);
+                        } else {
+                            f.format("[%s]:%d", ip.getHostAddress(), port);
+                        }
+                        servers.add(f.toString());
+                        mLog.debug("Route Lookup: Added server " + ip);
                     }
-                    servers.add(f.toString());
-                    mLog.debug("Route Lookup: Added server " + ip);
+                }
+            } else {
+                List<Server> allServers = mProv.getAllServers();
+                for (Server s : allServers)
+                {
+                    String sn = s.getAttr(Provisioning.A_zimbraServiceHostname, "");
+                    int port = s.getIntAttr(Provisioning.A_zimbraExtensionBindPort, 7072);
+                    boolean isTarget = s.getBooleanAttr(Provisioning.A_zimbraReverseProxyLookupTarget, false);
+                    if (isTarget) {
+                        InetAddress ip = ProxyConfUtil.getLookupTargetIPbyIPMode(sn);
+                        Formatter f = new Formatter();
+                        if (ip instanceof Inet4Address) {
+                            f.format("%s:%d", ip.getHostAddress(), port);
+                        } else {
+                            f.format("[%s]:%d", ip.getHostAddress(), port);
+                        }
+                        servers.add(f.toString());
+                        mLog.debug("Route Lookup: Added server " + ip);
+                    }
                 }
             }
+
             if (servers.isEmpty()) {
                 Server s = mProv.getLocalServer();
                 int port = s.getIntAttr(Provisioning.A_zimbraExtensionBindPort, 7072);
@@ -1356,7 +1423,6 @@ class ZMLookupHandlerVar extends ProxyConfVar{
                 mLog.debug("Route Lookup: Added dummy server localhost");
             }
         }
-
         mValue = servers;
     }
 
