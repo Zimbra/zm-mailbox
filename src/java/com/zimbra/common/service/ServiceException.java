@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -43,7 +43,6 @@ public class ServiceException extends Exception {
     public static final String TEMPORARILY_UNAVAILABLE = "service.TEMPORARILY_UNAVAILABLE";
     public static final String PERM_DENIED = "service.PERM_DENIED";
     public static final String AUTH_REQUIRED = "service.AUTH_REQUIRED";
-    public static final String TWO_FACTOR_AUTH_REQUIRED = "account.TWO_FACTOR_AUTH_REQUIRED";
     public static final String CANNOT_DISABLE_TWO_FACTOR_AUTH = "account.CANNOT_DISABLE_TWO_FACTOR_AUTH";
     public static final String AUTH_EXPIRED = "service.AUTH_EXPIRED";
     public static final String WRONG_HOST = "service.WRONG_HOST";
@@ -64,10 +63,11 @@ public class ServiceException extends Exception {
     private List<Argument> mArgs;
     private String mId;
 
-    public static final String HOST            = "host";
-    public static final String URL             = "url";
-    public static final String MAILBOX_ID      = "mboxId";
-    public static final String ACCOUNT_ID      = "acctId";
+    public static final String HOST                  = "host";
+    public static final String URL                   = "url";
+    public static final String MAILBOX_ID            = "mboxId";
+    public static final String ACCOUNT_ID            = "acctId";
+    public static final String TWO_FACTOR_AUTH_TOKEN = "twoFactorAuthToken";
 
     public static final String PROXIED_FROM_ACCT  = "proxiedFromAcct"; // exception proxied from remote account
 
@@ -100,7 +100,7 @@ public class ServiceException extends Exception {
             IID,       // mail-item ID or UUID or mailbox-id
             ACCTID,    // account ID
             STR,       // opaque string
-            NUM        // opaque number
+            NUM,       // opaque number
         }
 
         public Argument(String name, String value, Type type) {
@@ -312,10 +312,6 @@ public class ServiceException extends Exception {
 
     public static ServiceException AUTH_REQUIRED() {
         return new ServiceException("no valid authtoken present", AUTH_REQUIRED, SENDERS_FAULT);
-    }
-
-    public static ServiceException TWO_FACTOR_AUTH_REQUIRED() {
-        return new ServiceException("two-factor authentication required", TWO_FACTOR_AUTH_REQUIRED, SENDERS_FAULT);
     }
 
     public static ServiceException CANNOT_DISABLE_TWO_FACTOR_AUTH() {
