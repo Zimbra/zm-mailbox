@@ -2175,7 +2175,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * when the user account does not yet exist in Zimbra directory, an
      * account entry will be automatically created in Zimbra directory.
      *
-     * <p>Valid values: [PREAUTH, KRB5, SPNEGO, LDAP]
+     * <p>Valid values: [KRB5, SPNEGO, LDAP, PREAUTH]
      *
      * @return zimbraAutoProvAuthMech, or empty array if unset
      *
@@ -2193,7 +2193,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * when the user account does not yet exist in Zimbra directory, an
      * account entry will be automatically created in Zimbra directory.
      *
-     * <p>Valid values: [PREAUTH, KRB5, SPNEGO, LDAP]
+     * <p>Valid values: [KRB5, SPNEGO, LDAP, PREAUTH]
      *
      * @param zimbraAutoProvAuthMech new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -2214,7 +2214,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * when the user account does not yet exist in Zimbra directory, an
      * account entry will be automatically created in Zimbra directory.
      *
-     * <p>Valid values: [PREAUTH, KRB5, SPNEGO, LDAP]
+     * <p>Valid values: [KRB5, SPNEGO, LDAP, PREAUTH]
      *
      * @param zimbraAutoProvAuthMech new value
      * @param attrs existing map to populate, or null to create a new map
@@ -2236,7 +2236,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * when the user account does not yet exist in Zimbra directory, an
      * account entry will be automatically created in Zimbra directory.
      *
-     * <p>Valid values: [PREAUTH, KRB5, SPNEGO, LDAP]
+     * <p>Valid values: [KRB5, SPNEGO, LDAP, PREAUTH]
      *
      * @param zimbraAutoProvAuthMech new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -2257,7 +2257,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * when the user account does not yet exist in Zimbra directory, an
      * account entry will be automatically created in Zimbra directory.
      *
-     * <p>Valid values: [PREAUTH, KRB5, SPNEGO, LDAP]
+     * <p>Valid values: [KRB5, SPNEGO, LDAP, PREAUTH]
      *
      * @param zimbraAutoProvAuthMech new value
      * @param attrs existing map to populate, or null to create a new map
@@ -2279,7 +2279,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * when the user account does not yet exist in Zimbra directory, an
      * account entry will be automatically created in Zimbra directory.
      *
-     * <p>Valid values: [PREAUTH, KRB5, SPNEGO, LDAP]
+     * <p>Valid values: [KRB5, SPNEGO, LDAP, PREAUTH]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -2299,7 +2299,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * when the user account does not yet exist in Zimbra directory, an
      * account entry will be automatically created in Zimbra directory.
      *
-     * <p>Valid values: [PREAUTH, KRB5, SPNEGO, LDAP]
+     * <p>Valid values: [KRB5, SPNEGO, LDAP, PREAUTH]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -3481,7 +3481,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * account is populated with attributes mapped from the external entry
      * based on zimbraAutoProvAttrMap.
      *
-     * <p>Valid values: [EAGER, LAZY, MANUAL]
+     * <p>Valid values: [MANUAL, LAZY, EAGER]
      *
      * @return zimbraAutoProvMode, or empty array if unset
      *
@@ -3509,7 +3509,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * account is populated with attributes mapped from the external entry
      * based on zimbraAutoProvAttrMap.
      *
-     * <p>Valid values: [EAGER, LAZY, MANUAL]
+     * <p>Valid values: [MANUAL, LAZY, EAGER]
      *
      * @param zimbraAutoProvMode new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -3540,7 +3540,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * account is populated with attributes mapped from the external entry
      * based on zimbraAutoProvAttrMap.
      *
-     * <p>Valid values: [EAGER, LAZY, MANUAL]
+     * <p>Valid values: [MANUAL, LAZY, EAGER]
      *
      * @param zimbraAutoProvMode new value
      * @param attrs existing map to populate, or null to create a new map
@@ -3572,7 +3572,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * account is populated with attributes mapped from the external entry
      * based on zimbraAutoProvAttrMap.
      *
-     * <p>Valid values: [EAGER, LAZY, MANUAL]
+     * <p>Valid values: [MANUAL, LAZY, EAGER]
      *
      * @param zimbraAutoProvMode new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -3603,7 +3603,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * account is populated with attributes mapped from the external entry
      * based on zimbraAutoProvAttrMap.
      *
-     * <p>Valid values: [EAGER, LAZY, MANUAL]
+     * <p>Valid values: [MANUAL, LAZY, EAGER]
      *
      * @param zimbraAutoProvMode new value
      * @param attrs existing map to populate, or null to create a new map
@@ -3635,7 +3635,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * account is populated with attributes mapped from the external entry
      * based on zimbraAutoProvAttrMap.
      *
-     * <p>Valid values: [EAGER, LAZY, MANUAL]
+     * <p>Valid values: [MANUAL, LAZY, EAGER]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -3665,7 +3665,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * account is populated with attributes mapped from the external entry
      * based on zimbraAutoProvAttrMap.
      *
-     * <p>Valid values: [EAGER, LAZY, MANUAL]
+     * <p>Valid values: [MANUAL, LAZY, EAGER]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -5065,7 +5065,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * policy for a domain whose quota usage is above
      * zimbraDomainAggregateQuota
      *
-     * <p>Valid values: [BLOCKSENDRECEIVE, ALLOWSENDRECEIVE, BLOCKSEND]
+     * <p>Valid values: [BLOCKSENDRECEIVE, BLOCKSEND, ALLOWSENDRECEIVE]
      *
      * @return zimbraDomainAggregateQuotaPolicy, or ZAttrProvisioning.DomainAggregateQuotaPolicy.ALLOWSENDRECEIVE if unset and/or has invalid value
      *
@@ -5080,7 +5080,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * policy for a domain whose quota usage is above
      * zimbraDomainAggregateQuota
      *
-     * <p>Valid values: [BLOCKSENDRECEIVE, ALLOWSENDRECEIVE, BLOCKSEND]
+     * <p>Valid values: [BLOCKSENDRECEIVE, BLOCKSEND, ALLOWSENDRECEIVE]
      *
      * @return zimbraDomainAggregateQuotaPolicy, or "ALLOWSENDRECEIVE" if unset
      *
@@ -5095,7 +5095,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * policy for a domain whose quota usage is above
      * zimbraDomainAggregateQuota
      *
-     * <p>Valid values: [BLOCKSENDRECEIVE, ALLOWSENDRECEIVE, BLOCKSEND]
+     * <p>Valid values: [BLOCKSENDRECEIVE, BLOCKSEND, ALLOWSENDRECEIVE]
      *
      * @param zimbraDomainAggregateQuotaPolicy new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -5113,7 +5113,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * policy for a domain whose quota usage is above
      * zimbraDomainAggregateQuota
      *
-     * <p>Valid values: [BLOCKSENDRECEIVE, ALLOWSENDRECEIVE, BLOCKSEND]
+     * <p>Valid values: [BLOCKSENDRECEIVE, BLOCKSEND, ALLOWSENDRECEIVE]
      *
      * @param zimbraDomainAggregateQuotaPolicy new value
      * @param attrs existing map to populate, or null to create a new map
@@ -5132,7 +5132,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * policy for a domain whose quota usage is above
      * zimbraDomainAggregateQuota
      *
-     * <p>Valid values: [BLOCKSENDRECEIVE, ALLOWSENDRECEIVE, BLOCKSEND]
+     * <p>Valid values: [BLOCKSENDRECEIVE, BLOCKSEND, ALLOWSENDRECEIVE]
      *
      * @param zimbraDomainAggregateQuotaPolicy new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -5150,7 +5150,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * policy for a domain whose quota usage is above
      * zimbraDomainAggregateQuota
      *
-     * <p>Valid values: [BLOCKSENDRECEIVE, ALLOWSENDRECEIVE, BLOCKSEND]
+     * <p>Valid values: [BLOCKSENDRECEIVE, BLOCKSEND, ALLOWSENDRECEIVE]
      *
      * @param zimbraDomainAggregateQuotaPolicy new value
      * @param attrs existing map to populate, or null to create a new map
@@ -5169,7 +5169,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * policy for a domain whose quota usage is above
      * zimbraDomainAggregateQuota
      *
-     * <p>Valid values: [BLOCKSENDRECEIVE, ALLOWSENDRECEIVE, BLOCKSEND]
+     * <p>Valid values: [BLOCKSENDRECEIVE, BLOCKSEND, ALLOWSENDRECEIVE]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -5186,7 +5186,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * policy for a domain whose quota usage is above
      * zimbraDomainAggregateQuota
      *
-     * <p>Valid values: [BLOCKSENDRECEIVE, ALLOWSENDRECEIVE, BLOCKSEND]
+     * <p>Valid values: [BLOCKSENDRECEIVE, BLOCKSEND, ALLOWSENDRECEIVE]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -6531,7 +6531,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * pending or closed, else maintenance shutdown zimbraAccountStatus if it
      * is pending or closed, else maintenance closed closed
      *
-     * <p>Valid values: [active, closed, locked, maintenance, suspended, shutdown]
+     * <p>Valid values: [active, closed, locked, suspended, maintenance, shutdown]
      *
      * @return zimbraDomainStatus, or null if unset and/or has invalid value
      *
@@ -6564,7 +6564,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * pending or closed, else maintenance shutdown zimbraAccountStatus if it
      * is pending or closed, else maintenance closed closed
      *
-     * <p>Valid values: [active, closed, locked, maintenance, suspended, shutdown]
+     * <p>Valid values: [active, closed, locked, suspended, maintenance, shutdown]
      *
      * @return zimbraDomainStatus, or null if unset
      *
@@ -6597,7 +6597,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * pending or closed, else maintenance shutdown zimbraAccountStatus if it
      * is pending or closed, else maintenance closed closed
      *
-     * <p>Valid values: [active, closed, locked, maintenance, suspended, shutdown]
+     * <p>Valid values: [active, closed, locked, suspended, maintenance, shutdown]
      *
      * @param zimbraDomainStatus new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -6633,7 +6633,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * pending or closed, else maintenance shutdown zimbraAccountStatus if it
      * is pending or closed, else maintenance closed closed
      *
-     * <p>Valid values: [active, closed, locked, maintenance, suspended, shutdown]
+     * <p>Valid values: [active, closed, locked, suspended, maintenance, shutdown]
      *
      * @param zimbraDomainStatus new value
      * @param attrs existing map to populate, or null to create a new map
@@ -6670,7 +6670,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * pending or closed, else maintenance shutdown zimbraAccountStatus if it
      * is pending or closed, else maintenance closed closed
      *
-     * <p>Valid values: [active, closed, locked, maintenance, suspended, shutdown]
+     * <p>Valid values: [active, closed, locked, suspended, maintenance, shutdown]
      *
      * @param zimbraDomainStatus new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -6706,7 +6706,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * pending or closed, else maintenance shutdown zimbraAccountStatus if it
      * is pending or closed, else maintenance closed closed
      *
-     * <p>Valid values: [active, closed, locked, maintenance, suspended, shutdown]
+     * <p>Valid values: [active, closed, locked, suspended, maintenance, shutdown]
      *
      * @param zimbraDomainStatus new value
      * @param attrs existing map to populate, or null to create a new map
@@ -6743,7 +6743,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * pending or closed, else maintenance shutdown zimbraAccountStatus if it
      * is pending or closed, else maintenance closed closed
      *
-     * <p>Valid values: [active, closed, locked, maintenance, suspended, shutdown]
+     * <p>Valid values: [active, closed, locked, suspended, maintenance, shutdown]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -6778,7 +6778,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * pending or closed, else maintenance shutdown zimbraAccountStatus if it
      * is pending or closed, else maintenance closed closed
      *
-     * <p>Valid values: [active, closed, locked, maintenance, suspended, shutdown]
+     * <p>Valid values: [active, closed, locked, suspended, maintenance, shutdown]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -9312,7 +9312,7 @@ public abstract class ZAttrDomain extends NamedEntry {
     /**
      * auth scheme to use
      *
-     * <p>Valid values: [basic, form]
+     * <p>Valid values: [form, basic]
      *
      * @return zimbraFreebusyExchangeAuthScheme, or null if unset and/or has invalid value
      *
@@ -9326,7 +9326,7 @@ public abstract class ZAttrDomain extends NamedEntry {
     /**
      * auth scheme to use
      *
-     * <p>Valid values: [basic, form]
+     * <p>Valid values: [form, basic]
      *
      * @return zimbraFreebusyExchangeAuthScheme, or null if unset
      *
@@ -9340,7 +9340,7 @@ public abstract class ZAttrDomain extends NamedEntry {
     /**
      * auth scheme to use
      *
-     * <p>Valid values: [basic, form]
+     * <p>Valid values: [form, basic]
      *
      * @param zimbraFreebusyExchangeAuthScheme new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -9357,7 +9357,7 @@ public abstract class ZAttrDomain extends NamedEntry {
     /**
      * auth scheme to use
      *
-     * <p>Valid values: [basic, form]
+     * <p>Valid values: [form, basic]
      *
      * @param zimbraFreebusyExchangeAuthScheme new value
      * @param attrs existing map to populate, or null to create a new map
@@ -9375,7 +9375,7 @@ public abstract class ZAttrDomain extends NamedEntry {
     /**
      * auth scheme to use
      *
-     * <p>Valid values: [basic, form]
+     * <p>Valid values: [form, basic]
      *
      * @param zimbraFreebusyExchangeAuthScheme new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -9392,7 +9392,7 @@ public abstract class ZAttrDomain extends NamedEntry {
     /**
      * auth scheme to use
      *
-     * <p>Valid values: [basic, form]
+     * <p>Valid values: [form, basic]
      *
      * @param zimbraFreebusyExchangeAuthScheme new value
      * @param attrs existing map to populate, or null to create a new map
@@ -9410,7 +9410,7 @@ public abstract class ZAttrDomain extends NamedEntry {
     /**
      * auth scheme to use
      *
-     * <p>Valid values: [basic, form]
+     * <p>Valid values: [form, basic]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -9426,7 +9426,7 @@ public abstract class ZAttrDomain extends NamedEntry {
     /**
      * auth scheme to use
      *
-     * <p>Valid values: [basic, form]
+     * <p>Valid values: [form, basic]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -10683,7 +10683,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * set kerberos5: zimbraGalLdapKerberos5Principal and
      * zimbraGalLdapKerberos5Keytab has to be set
      *
-     * <p>Valid values: [kerberos5, simple, none]
+     * <p>Valid values: [none, kerberos5, simple]
      *
      * @return zimbraGalLdapAuthMech, or null if unset and/or has invalid value
      *
@@ -10700,7 +10700,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * set kerberos5: zimbraGalLdapKerberos5Principal and
      * zimbraGalLdapKerberos5Keytab has to be set
      *
-     * <p>Valid values: [kerberos5, simple, none]
+     * <p>Valid values: [none, kerberos5, simple]
      *
      * @return zimbraGalLdapAuthMech, or null if unset
      *
@@ -10717,7 +10717,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * set kerberos5: zimbraGalLdapKerberos5Principal and
      * zimbraGalLdapKerberos5Keytab has to be set
      *
-     * <p>Valid values: [kerberos5, simple, none]
+     * <p>Valid values: [none, kerberos5, simple]
      *
      * @param zimbraGalLdapAuthMech new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -10737,7 +10737,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * set kerberos5: zimbraGalLdapKerberos5Principal and
      * zimbraGalLdapKerberos5Keytab has to be set
      *
-     * <p>Valid values: [kerberos5, simple, none]
+     * <p>Valid values: [none, kerberos5, simple]
      *
      * @param zimbraGalLdapAuthMech new value
      * @param attrs existing map to populate, or null to create a new map
@@ -10758,7 +10758,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * set kerberos5: zimbraGalLdapKerberos5Principal and
      * zimbraGalLdapKerberos5Keytab has to be set
      *
-     * <p>Valid values: [kerberos5, simple, none]
+     * <p>Valid values: [none, kerberos5, simple]
      *
      * @param zimbraGalLdapAuthMech new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -10778,7 +10778,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * set kerberos5: zimbraGalLdapKerberos5Principal and
      * zimbraGalLdapKerberos5Keytab has to be set
      *
-     * <p>Valid values: [kerberos5, simple, none]
+     * <p>Valid values: [none, kerberos5, simple]
      *
      * @param zimbraGalLdapAuthMech new value
      * @param attrs existing map to populate, or null to create a new map
@@ -10799,7 +10799,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * set kerberos5: zimbraGalLdapKerberos5Principal and
      * zimbraGalLdapKerberos5Keytab has to be set
      *
-     * <p>Valid values: [kerberos5, simple, none]
+     * <p>Valid values: [none, kerberos5, simple]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -10818,7 +10818,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * set kerberos5: zimbraGalLdapKerberos5Principal and
      * zimbraGalLdapKerberos5Keytab has to be set
      *
-     * <p>Valid values: [kerberos5, simple, none]
+     * <p>Valid values: [none, kerberos5, simple]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -11796,7 +11796,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * &quot;ldap&quot; (query external directory only), or &quot;both&quot;
      * (query internal and external directory)
      *
-     * <p>Valid values: [ldap, zimbra, both]
+     * <p>Valid values: [ldap, both, zimbra]
      *
      * @return zimbraGalMode, or null if unset and/or has invalid value
      */
@@ -11810,7 +11810,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * &quot;ldap&quot; (query external directory only), or &quot;both&quot;
      * (query internal and external directory)
      *
-     * <p>Valid values: [ldap, zimbra, both]
+     * <p>Valid values: [ldap, both, zimbra]
      *
      * @return zimbraGalMode, or null if unset
      */
@@ -11824,7 +11824,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * &quot;ldap&quot; (query external directory only), or &quot;both&quot;
      * (query internal and external directory)
      *
-     * <p>Valid values: [ldap, zimbra, both]
+     * <p>Valid values: [ldap, both, zimbra]
      *
      * @param zimbraGalMode new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -11841,7 +11841,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * &quot;ldap&quot; (query external directory only), or &quot;both&quot;
      * (query internal and external directory)
      *
-     * <p>Valid values: [ldap, zimbra, both]
+     * <p>Valid values: [ldap, both, zimbra]
      *
      * @param zimbraGalMode new value
      * @param attrs existing map to populate, or null to create a new map
@@ -11859,7 +11859,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * &quot;ldap&quot; (query external directory only), or &quot;both&quot;
      * (query internal and external directory)
      *
-     * <p>Valid values: [ldap, zimbra, both]
+     * <p>Valid values: [ldap, both, zimbra]
      *
      * @param zimbraGalMode new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -11876,7 +11876,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * &quot;ldap&quot; (query external directory only), or &quot;both&quot;
      * (query internal and external directory)
      *
-     * <p>Valid values: [ldap, zimbra, both]
+     * <p>Valid values: [ldap, both, zimbra]
      *
      * @param zimbraGalMode new value
      * @param attrs existing map to populate, or null to create a new map
@@ -11894,7 +11894,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * &quot;ldap&quot; (query external directory only), or &quot;both&quot;
      * (query internal and external directory)
      *
-     * <p>Valid values: [ldap, zimbra, both]
+     * <p>Valid values: [ldap, both, zimbra]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -11910,7 +11910,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * &quot;ldap&quot; (query external directory only), or &quot;both&quot;
      * (query internal and external directory)
      *
-     * <p>Valid values: [ldap, zimbra, both]
+     * <p>Valid values: [ldap, both, zimbra]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -12016,7 +12016,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * zimbraGalLdapKerberos5Principal and zimbraGalLdapKerberos5Keytab has
      * to be set if not set fallback to zimbraGalLdapAuthMech
      *
-     * <p>Valid values: [kerberos5, simple, none]
+     * <p>Valid values: [none, kerberos5, simple]
      *
      * @return zimbraGalSyncLdapAuthMech, or null if unset and/or has invalid value
      *
@@ -12034,7 +12034,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * zimbraGalLdapKerberos5Principal and zimbraGalLdapKerberos5Keytab has
      * to be set if not set fallback to zimbraGalLdapAuthMech
      *
-     * <p>Valid values: [kerberos5, simple, none]
+     * <p>Valid values: [none, kerberos5, simple]
      *
      * @return zimbraGalSyncLdapAuthMech, or null if unset
      *
@@ -12052,7 +12052,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * zimbraGalLdapKerberos5Principal and zimbraGalLdapKerberos5Keytab has
      * to be set if not set fallback to zimbraGalLdapAuthMech
      *
-     * <p>Valid values: [kerberos5, simple, none]
+     * <p>Valid values: [none, kerberos5, simple]
      *
      * @param zimbraGalSyncLdapAuthMech new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -12073,7 +12073,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * zimbraGalLdapKerberos5Principal and zimbraGalLdapKerberos5Keytab has
      * to be set if not set fallback to zimbraGalLdapAuthMech
      *
-     * <p>Valid values: [kerberos5, simple, none]
+     * <p>Valid values: [none, kerberos5, simple]
      *
      * @param zimbraGalSyncLdapAuthMech new value
      * @param attrs existing map to populate, or null to create a new map
@@ -12095,7 +12095,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * zimbraGalLdapKerberos5Principal and zimbraGalLdapKerberos5Keytab has
      * to be set if not set fallback to zimbraGalLdapAuthMech
      *
-     * <p>Valid values: [kerberos5, simple, none]
+     * <p>Valid values: [none, kerberos5, simple]
      *
      * @param zimbraGalSyncLdapAuthMech new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -12116,7 +12116,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * zimbraGalLdapKerberos5Principal and zimbraGalLdapKerberos5Keytab has
      * to be set if not set fallback to zimbraGalLdapAuthMech
      *
-     * <p>Valid values: [kerberos5, simple, none]
+     * <p>Valid values: [none, kerberos5, simple]
      *
      * @param zimbraGalSyncLdapAuthMech new value
      * @param attrs existing map to populate, or null to create a new map
@@ -12138,7 +12138,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * zimbraGalLdapKerberos5Principal and zimbraGalLdapKerberos5Keytab has
      * to be set if not set fallback to zimbraGalLdapAuthMech
      *
-     * <p>Valid values: [kerberos5, simple, none]
+     * <p>Valid values: [none, kerberos5, simple]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -12158,7 +12158,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * zimbraGalLdapKerberos5Principal and zimbraGalLdapKerberos5Keytab has
      * to be set if not set fallback to zimbraGalLdapAuthMech
      *
-     * <p>Valid values: [kerberos5, simple, none]
+     * <p>Valid values: [none, kerberos5, simple]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -13094,7 +13094,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * whether to tokenize key and AND or OR the tokenized queries for GAL
      * auto complete, if not set, key is not tokenized
      *
-     * <p>Valid values: [and, or]
+     * <p>Valid values: [or, and]
      *
      * @return zimbraGalTokenizeAutoCompleteKey, or ZAttrProvisioning.GalTokenizeAutoCompleteKey.and if unset and/or has invalid value
      *
@@ -13109,7 +13109,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * whether to tokenize key and AND or OR the tokenized queries for GAL
      * auto complete, if not set, key is not tokenized
      *
-     * <p>Valid values: [and, or]
+     * <p>Valid values: [or, and]
      *
      * @return zimbraGalTokenizeAutoCompleteKey, or "and" if unset
      *
@@ -13124,7 +13124,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * whether to tokenize key and AND or OR the tokenized queries for GAL
      * auto complete, if not set, key is not tokenized
      *
-     * <p>Valid values: [and, or]
+     * <p>Valid values: [or, and]
      *
      * @param zimbraGalTokenizeAutoCompleteKey new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -13142,7 +13142,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * whether to tokenize key and AND or OR the tokenized queries for GAL
      * auto complete, if not set, key is not tokenized
      *
-     * <p>Valid values: [and, or]
+     * <p>Valid values: [or, and]
      *
      * @param zimbraGalTokenizeAutoCompleteKey new value
      * @param attrs existing map to populate, or null to create a new map
@@ -13161,7 +13161,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * whether to tokenize key and AND or OR the tokenized queries for GAL
      * auto complete, if not set, key is not tokenized
      *
-     * <p>Valid values: [and, or]
+     * <p>Valid values: [or, and]
      *
      * @param zimbraGalTokenizeAutoCompleteKey new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -13179,7 +13179,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * whether to tokenize key and AND or OR the tokenized queries for GAL
      * auto complete, if not set, key is not tokenized
      *
-     * <p>Valid values: [and, or]
+     * <p>Valid values: [or, and]
      *
      * @param zimbraGalTokenizeAutoCompleteKey new value
      * @param attrs existing map to populate, or null to create a new map
@@ -13198,7 +13198,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * whether to tokenize key and AND or OR the tokenized queries for GAL
      * auto complete, if not set, key is not tokenized
      *
-     * <p>Valid values: [and, or]
+     * <p>Valid values: [or, and]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -13215,7 +13215,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * whether to tokenize key and AND or OR the tokenized queries for GAL
      * auto complete, if not set, key is not tokenized
      *
-     * <p>Valid values: [and, or]
+     * <p>Valid values: [or, and]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -13233,7 +13233,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * whether to tokenize key and AND or OR the tokenized queries for GAL
      * search, if not set, key is not tokenized
      *
-     * <p>Valid values: [and, or]
+     * <p>Valid values: [or, and]
      *
      * @return zimbraGalTokenizeSearchKey, or ZAttrProvisioning.GalTokenizeSearchKey.and if unset and/or has invalid value
      *
@@ -13248,7 +13248,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * whether to tokenize key and AND or OR the tokenized queries for GAL
      * search, if not set, key is not tokenized
      *
-     * <p>Valid values: [and, or]
+     * <p>Valid values: [or, and]
      *
      * @return zimbraGalTokenizeSearchKey, or "and" if unset
      *
@@ -13263,7 +13263,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * whether to tokenize key and AND or OR the tokenized queries for GAL
      * search, if not set, key is not tokenized
      *
-     * <p>Valid values: [and, or]
+     * <p>Valid values: [or, and]
      *
      * @param zimbraGalTokenizeSearchKey new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -13281,7 +13281,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * whether to tokenize key and AND or OR the tokenized queries for GAL
      * search, if not set, key is not tokenized
      *
-     * <p>Valid values: [and, or]
+     * <p>Valid values: [or, and]
      *
      * @param zimbraGalTokenizeSearchKey new value
      * @param attrs existing map to populate, or null to create a new map
@@ -13300,7 +13300,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * whether to tokenize key and AND or OR the tokenized queries for GAL
      * search, if not set, key is not tokenized
      *
-     * <p>Valid values: [and, or]
+     * <p>Valid values: [or, and]
      *
      * @param zimbraGalTokenizeSearchKey new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -13318,7 +13318,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * whether to tokenize key and AND or OR the tokenized queries for GAL
      * search, if not set, key is not tokenized
      *
-     * <p>Valid values: [and, or]
+     * <p>Valid values: [or, and]
      *
      * @param zimbraGalTokenizeSearchKey new value
      * @param attrs existing map to populate, or null to create a new map
@@ -13337,7 +13337,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * whether to tokenize key and AND or OR the tokenized queries for GAL
      * search, if not set, key is not tokenized
      *
-     * <p>Valid values: [and, or]
+     * <p>Valid values: [or, and]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -13354,7 +13354,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * whether to tokenize key and AND or OR the tokenized queries for GAL
      * search, if not set, key is not tokenized
      *
-     * <p>Valid values: [and, or]
+     * <p>Valid values: [or, and]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -16736,7 +16736,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * enable authentication via X.509 Client Certificate in nginx proxy
      * (https only)
      *
-     * <p>Valid values: [off, optional, on]
+     * <p>Valid values: [off, on, optional]
      *
      * @return zimbraReverseProxyClientCertMode, or ZAttrProvisioning.ReverseProxyClientCertMode.off if unset and/or has invalid value
      *
@@ -16751,7 +16751,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * enable authentication via X.509 Client Certificate in nginx proxy
      * (https only)
      *
-     * <p>Valid values: [off, optional, on]
+     * <p>Valid values: [off, on, optional]
      *
      * @return zimbraReverseProxyClientCertMode, or "off" if unset
      *
@@ -16766,7 +16766,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * enable authentication via X.509 Client Certificate in nginx proxy
      * (https only)
      *
-     * <p>Valid values: [off, optional, on]
+     * <p>Valid values: [off, on, optional]
      *
      * @param zimbraReverseProxyClientCertMode new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -16784,7 +16784,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * enable authentication via X.509 Client Certificate in nginx proxy
      * (https only)
      *
-     * <p>Valid values: [off, optional, on]
+     * <p>Valid values: [off, on, optional]
      *
      * @param zimbraReverseProxyClientCertMode new value
      * @param attrs existing map to populate, or null to create a new map
@@ -16803,7 +16803,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * enable authentication via X.509 Client Certificate in nginx proxy
      * (https only)
      *
-     * <p>Valid values: [off, optional, on]
+     * <p>Valid values: [off, on, optional]
      *
      * @param zimbraReverseProxyClientCertMode new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -16821,7 +16821,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * enable authentication via X.509 Client Certificate in nginx proxy
      * (https only)
      *
-     * <p>Valid values: [off, optional, on]
+     * <p>Valid values: [off, on, optional]
      *
      * @param zimbraReverseProxyClientCertMode new value
      * @param attrs existing map to populate, or null to create a new map
@@ -16840,7 +16840,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * enable authentication via X.509 Client Certificate in nginx proxy
      * (https only)
      *
-     * <p>Valid values: [off, optional, on]
+     * <p>Valid values: [off, on, optional]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -16857,7 +16857,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * enable authentication via X.509 Client Certificate in nginx proxy
      * (https only)
      *
-     * <p>Valid values: [off, optional, on]
+     * <p>Valid values: [off, on, optional]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -22293,6 +22293,78 @@ public abstract class ZAttrDomain extends NamedEntry {
     public Map<String,Object> unsetZimletDomainAvailableZimlets(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraZimletDomainAvailableZimlets, "");
+        return attrs;
+    }
+
+    /**
+     * maximum number of user properties for zimlet allowed on an account
+     *
+     * @return zimbraZimletUserPropertiesMaxNumEntries, or -1 if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2027)
+    public int getZimletUserPropertiesMaxNumEntries() {
+        return getIntAttr(Provisioning.A_zimbraZimletUserPropertiesMaxNumEntries, -1);
+    }
+
+    /**
+     * maximum number of user properties for zimlet allowed on an account
+     *
+     * @param zimbraZimletUserPropertiesMaxNumEntries new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2027)
+    public void setZimletUserPropertiesMaxNumEntries(int zimbraZimletUserPropertiesMaxNumEntries) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraZimletUserPropertiesMaxNumEntries, Integer.toString(zimbraZimletUserPropertiesMaxNumEntries));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * maximum number of user properties for zimlet allowed on an account
+     *
+     * @param zimbraZimletUserPropertiesMaxNumEntries new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2027)
+    public Map<String,Object> setZimletUserPropertiesMaxNumEntries(int zimbraZimletUserPropertiesMaxNumEntries, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraZimletUserPropertiesMaxNumEntries, Integer.toString(zimbraZimletUserPropertiesMaxNumEntries));
+        return attrs;
+    }
+
+    /**
+     * maximum number of user properties for zimlet allowed on an account
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2027)
+    public void unsetZimletUserPropertiesMaxNumEntries() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraZimletUserPropertiesMaxNumEntries, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * maximum number of user properties for zimlet allowed on an account
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2027)
+    public Map<String,Object> unsetZimletUserPropertiesMaxNumEntries(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraZimletUserPropertiesMaxNumEntries, "");
         return attrs;
     }
 
