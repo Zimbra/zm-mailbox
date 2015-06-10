@@ -106,6 +106,26 @@ public class ModifyDataSource extends MailDocumentHandler {
             dsAttrs.put(Provisioning.A_zimbraDataSourceAuthMechanism, ZAttrProvisioning.DataSourceAuthMechanism.XOAUTH2.name());
         }
 
+        value = eDataSource.getAttribute(MailConstants.A_DS_CLIENT_ID, null);
+        if (value != null) {
+            dsAttrs.put(Provisioning.A_zimbraDataSourceOAuthClientId, value);
+        }
+
+        value = eDataSource.getAttribute(MailConstants.A_DS_CLIENT_SECRET, null);
+        if (value != null) {
+            dsAttrs.put(Provisioning.A_zimbraDataSourceOAuthClientSecret, value);
+        }
+
+        value = eDataSource.getAttribute(MailConstants.A_DS_REFRESH_TOKEN, null);
+        if (value != null) {
+            dsAttrs.put(Provisioning.A_zimbraDataSourceOAuthRefreshToken, value);
+        }
+
+        value = eDataSource.getAttribute(MailConstants.A_DS_REFRESH_TOKEN_URL, null);
+        if (value != null) {
+            dsAttrs.put(Provisioning.A_zimbraDataSourceOAuthRefreshTokenUrl, value);
+        }
+
         value = eDataSource.getAttribute(MailConstants.A_DS_LEAVE_ON_SERVER, null);
         if (value != null) {
             if (type != DataSourceType.pop3) {

@@ -146,7 +146,13 @@ public class DataSource extends AccountProperty {
     public String getAuthId() { return getAttr(Provisioning.A_zimbraDataSourceAuthorizationId); }
 
     public String getAuthMechanism() { return getAttr(Provisioning.A_zimbraDataSourceAuthMechanism); }
-    
+
+    public String getOauthRefreshTokenUrl() { return getAttr(Provisioning.A_zimbraDataSourceOAuthRefreshTokenUrl); }
+
+    public String getOauthClientId() { return getAttr(Provisioning.A_zimbraDataSourceOAuthClientId); }
+
+    public String getOauthRefreshToken() { return getAttr(Provisioning.A_zimbraDataSourceOAuthRefreshToken); }
+
     public String getDomain() {
         String domain = getAttr(Provisioning.A_zimbraDataSourceDomain, null);
         if (domain == null) {
@@ -169,6 +175,11 @@ public class DataSource extends AccountProperty {
     
     public String getDecryptedOAuthToken() throws ServiceException {
         String data = getAttr(Provisioning.A_zimbraDataSourceOAuthToken);
+        return data == null ? null : decryptData(getId(), data);
+    }
+
+    public String getDecryptedOAuthClientSecret() throws ServiceException {
+        String data = getAttr(Provisioning.A_zimbraDataSourceOAuthClientSecret);
         return data == null ? null : decryptData(getId(), data);
     }
 

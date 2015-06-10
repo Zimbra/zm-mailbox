@@ -3624,7 +3624,9 @@ emailAddress="changed-phoebe@google.com"
   or
 
   <imap name="My IMAP Account" isEnabled="0|1" host="imap.myisp.com" port="143" connectionType="cleartext|ssl"
-    username="mylogin" [password="mypassword"] [oauthToken="myOAuthToken"] l="{folder-id}"
+    username="mylogin" [password="mypassword"] l="{folder-id}"
+    [oauthToken="myOAuthToken" clientId="clientId" clientSecret="clientSecret"
+    refreshToken="refreshToken" refreshTokenUrl="refreshTokenUrl"]
     [smtpEnabled="0|1" smtpHost="smtp.myisp.com" smtpPort="465" smtpConnectionType="cleartext|ssl"
     smtpAuthRequired="0|1" smtpUsername="mylogin" smtpPassword="mypassword"]
     [pollingInterval="10m"]
@@ -3716,7 +3718,9 @@ Client can refresh the OAuthToken in two ways
     [replyToAddress="{replyto-address}"]
     [replyToDisplay="{replyto-display}"]/>
   *[<imap name="My IMAP Account" isEnabled="0|1" host="imap.myisp.com" port="143" connectionType="cleartext|ssl"
-    username="mylogin" [password="mypassword"] [oauthToken="myOAuthToken"] l="{folder-id}"
+    username="mylogin" [password="mypassword"] l="{folder-id}"
+    [oauthToken="myOAuthToken" clientId="clientId" clientSecret="clientSecret"
+    refreshToken="refreshToken" refreshTokenUrl="refreshTokenUrl"]
     [smtpEnabled="0|1" smtpHost="smtp.myisp.com" smtpPort="465" smtpConnectionType="cleartext|ssl"
     smtpAuthRequired="0|1" smtpUsername="mylogin" smtpPassword="mypassword"]
     [pollingInterval="10m"]
