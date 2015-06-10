@@ -35,6 +35,7 @@ import com.zimbra.soap.account.type.Pref;
 import com.zimbra.soap.account.type.Session;
 import com.zimbra.soap.json.jackson.annotate.ZimbraJsonAttribute;
 import com.zimbra.soap.json.jackson.annotate.ZimbraKeyValuePairs;
+import com.zimbra.soap.type.ZmBoolean;
 
 
 /*
@@ -129,6 +130,9 @@ public class AuthResponse {
     @XmlElement(name=AccountConstants.E_ATTR /* attr */)
     private final List<Attr> attrs = new ArrayList<Attr>();
 
+    @XmlElement(name=AccountConstants.E_TWO_FACTOR_AUTH_REQUIRED, required =false)
+    private ZmBoolean twoFactorAuthRequired;
+
     public AuthResponse() {
     }
 
@@ -212,4 +216,7 @@ public class AuthResponse {
 
     public Long getTrustLifetime() { return trustLifetime; }
     public AuthResponse setTrustLifetime(Long trustLifetime) { this.trustLifetime = trustLifetime; return this; }
+
+    public ZmBoolean getTwoFactorAuthRequired() { return twoFactorAuthRequired; }
+    public AuthResponse setTwoFactorAuthRequired(boolean bool) { this.twoFactorAuthRequired = ZmBoolean.fromBool(bool); return this; }
 }
