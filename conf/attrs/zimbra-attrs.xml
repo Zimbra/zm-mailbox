@@ -10231,4 +10231,9 @@ TODO: delete them permanently from here
   <desc>Lifetime of auth tokens provisioned for completing the 2nd stage of enabling two-factor authentication</desc>
 </attr>
 
+<attr id="2027" name="zimbraZimletUserPropertiesMaxNumEntries" type="integer" min="0" cardinality="single" optionalIn="account,cos,domain" flags="accountCosDomainInherited,domainAdminModifiable" since="8.7.0,9.0.0">
+  <defaultCOSValue>150</defaultCOSValue>
+  <desc>maximum number of user properties for zimlets allowed on an account</desc>
+</attr>
+
 </attrs>

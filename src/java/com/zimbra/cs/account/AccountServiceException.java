@@ -80,6 +80,7 @@ public class AccountServiceException extends ServiceException {
     public static final String TOO_MANY_IDENTITIES = "account.TOO_MANY_IDENTITIES";
     public static final String SIGNATURE_EXISTS = "account.SIGNATURE_EXISTS";
     public static final String TOO_MANY_SIGNATURES = "account.TOO_MANY_SIGNATURES";
+    public static final String TOO_MANY_ZIMLETUSERPROPERTIES = "account.TOO_MANY_ZIMLETUSERPROPERTIES";
     public static final String DATA_SOURCE_EXISTS = "account.DATA_SOURCE_EXISTS";
     public static final String IM_COMPONENT_EXISTS = "account.IM_COMPONENT_EXISTS";
     public static final String TOO_MANY_DATA_SOURCES = "account.TOO_MANY_DATA_SOURCES";
@@ -349,7 +350,9 @@ public class AccountServiceException extends ServiceException {
     public static AccountServiceException TOO_MANY_SIGNATURES() {
         return new AccountServiceException("too many signatures. can't create any more", TOO_MANY_SIGNATURES, SENDERS_FAULT, null);
     }
-
+    public static AccountServiceException TOO_MANY_ZIMLETUSERPROPERTIES() {
+        return new AccountServiceException("too many user properties for zimlets. can't create any more", TOO_MANY_ZIMLETUSERPROPERTIES, SENDERS_FAULT, null);
+    }
     public static AccountServiceException DATA_SOURCE_EXISTS(String name) {
         return new AccountServiceException("data source already exists: " + name, DATA_SOURCE_EXISTS, SENDERS_FAULT, null);
     }

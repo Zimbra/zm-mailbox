@@ -22547,6 +22547,78 @@ public abstract class ZAttrDomain extends NamedEntry {
         return attrs;
     }
 
+    /**
+     * maximum number of user properties for zimlets allowed on an account
+     *
+     * @return zimbraZimletUserPropertiesMaxNumEntries, or -1 if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2027)
+    public int getZimletUserPropertiesMaxNumEntries() {
+        return getIntAttr(Provisioning.A_zimbraZimletUserPropertiesMaxNumEntries, -1);
+    }
+
+    /**
+     * maximum number of user properties for zimlets allowed on an account
+     *
+     * @param zimbraZimletUserPropertiesMaxNumEntries new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2027)
+    public void setZimletUserPropertiesMaxNumEntries(int zimbraZimletUserPropertiesMaxNumEntries) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraZimletUserPropertiesMaxNumEntries, Integer.toString(zimbraZimletUserPropertiesMaxNumEntries));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * maximum number of user properties for zimlets allowed on an account
+     *
+     * @param zimbraZimletUserPropertiesMaxNumEntries new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2027)
+    public Map<String,Object> setZimletUserPropertiesMaxNumEntries(int zimbraZimletUserPropertiesMaxNumEntries, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraZimletUserPropertiesMaxNumEntries, Integer.toString(zimbraZimletUserPropertiesMaxNumEntries));
+        return attrs;
+    }
+
+    /**
+     * maximum number of user properties for zimlets allowed on an account
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2027)
+    public void unsetZimletUserPropertiesMaxNumEntries() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraZimletUserPropertiesMaxNumEntries, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * maximum number of user properties for zimlets allowed on an account
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2027)
+    public Map<String,Object> unsetZimletUserPropertiesMaxNumEntries(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraZimletUserPropertiesMaxNumEntries, "");
+        return attrs;
+    }
+
     ///// END-AUTO-GEN-REPLACE
 
 }
