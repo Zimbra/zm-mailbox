@@ -9,7 +9,9 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.zimbra.client.ZAuthResult;
 import com.zimbra.client.ZMailbox;
+import com.zimbra.client.ZMailbox.Options;
 import com.zimbra.common.auth.twofactor.AuthenticatorConfig;
 import com.zimbra.common.auth.twofactor.AuthenticatorConfig.CodeLength;
 import com.zimbra.common.auth.twofactor.AuthenticatorConfig.HashAlgorithm;
@@ -64,12 +66,8 @@ public class TestTwoFactorAuth extends TestCase {
 
     @Test
     public void testAuthenticateWithoutCode() throws ServiceException {
-        try {
-            TestUtil.testAuth(mbox, USER_NAME, PASSWORD);
-            fail();
-        } catch (ServiceException e) {
-            assertEquals(ServiceException.TWO_FACTOR_AUTH_REQUIRED, e.getCode());
-        }
+        ZAuthResult res = TestUtil.testAuth(mbox, USER_NAME, PASSWORD);
+        assertTrue(res.getTwoFactorAuthRequired());
     }
 
     @Test
@@ -166,6 +164,29 @@ public class TestTwoFactorAuth extends TestCase {
             fail();
         } catch (ServiceException e) {
             assertEquals(AuthFailedServiceException.AUTH_FAILED, e.getCode());
+        }
+    }
+
+    @Test
+    public void testTwoFactorToken() throws ServiceException {
+        Options options = new ZMailbox.Options();
+        options.setAccount(USER_NAME);
+        ZAuthResult res = mbox.authByPassword(options, PASSWORD);
+        assertTrue(res.getTwoFactorAuthRequired());
+        options = new ZMailbox.Options();
+        options.setAccount(USER_NAME);
+        options.setTwoFactorCode(scratchCodes.remove(0));
+        options.setAuthToken(res.getAuthToken());
+        try {
+            mbox.authByPassword(options, null);
+        } catch (ServiceException e2) {
+            fail("should be able to authenticate with a two-factor code and token");
+        }
+        options.setTwoFactorCode(scratchCodes.remove(0));
+        try {
+            mbox.authByPassword(options, null);
+            fail("should not be able to use the two-factor auth token twice");
+        } catch (ServiceException e3) {
         }
     }
 }
