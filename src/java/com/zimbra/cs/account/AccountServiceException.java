@@ -89,6 +89,7 @@ public class AccountServiceException extends ServiceException {
     public static final String TWO_FACTOR_SETUP_REQUIRED = "account.TWO_FACTOR_SETUP_REQUIRED";
     public static final String INVALID_TRUSTED_DEVICE_TOKEN = "account.INVALID_TRUSTED_DEVICE_TOKEN";
     public static final String TWO_FACTOR_AUTH_FAILED = "account.TWO_FACTOR_AUTH_FAILED";
+    public static final String TWO_FACTOR_AUTH_REQUIRED = "account.TWO_FACTOR_AUTH_REQUIRED";
 
     private AccountServiceException(String message, String code, boolean isReceiversFault) {
         super(message, code, isReceiversFault);
@@ -397,5 +398,9 @@ public class AccountServiceException extends ServiceException {
 
     public static AuthFailedServiceException TWO_FACTOR_AUTH_FAILED(String reason) {
         return new AuthFailedServiceException("N/A", "N/A", reason, TWO_FACTOR_AUTH_FAILED, SENDERS_FAULT, null);
+    }
+
+    public static AccountServiceException TWO_FACTOR_AUTH_REQUIRED() {
+        return new AccountServiceException("two-factor auth required", TWO_FACTOR_AUTH_REQUIRED, SENDERS_FAULT, null);
     }
 }
