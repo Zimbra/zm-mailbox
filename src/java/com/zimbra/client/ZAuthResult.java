@@ -24,11 +24,13 @@ import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.util.MapUtil;
 import com.zimbra.soap.account.message.AuthResponse;
 import com.zimbra.soap.account.type.Session;
+import com.zimbra.soap.type.ZmBoolean;
 
 public class ZAuthResult {
 
     private long expires;
     private long trustExpires;
+    private boolean twoFactorAuthRequired;
     private AuthResponse data;
 
     /*
@@ -50,6 +52,7 @@ public class ZAuthResult {
         if (data.getTrustedToken() != null) {
             trustExpires = data.getTrustLifetime() + System.currentTimeMillis();
         }
+        twoFactorAuthRequired = ZmBoolean.toBool(data.getTwoFactorAuthRequired(), false);
     }
 
     public ZAuthToken getAuthToken() {
@@ -111,5 +114,9 @@ public class ZAuthResult {
 
     public String getDeviceId() {
         return data.getDeviceId();
+    }
+
+    public boolean getTwoFactorAuthRequired() {
+        return twoFactorAuthRequired;
     }
 }

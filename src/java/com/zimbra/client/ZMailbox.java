@@ -655,7 +655,6 @@ public class ZMailbox implements ToZJSONObject {
         }
     }
 
-
     public ZAuthResult authByPassword(Options options, String password) throws ServiceException {
         if (mTransport == null) {
             throw ZClientException.CLIENT_ERROR("must call setURI before calling authenticate", null);
@@ -5592,6 +5591,7 @@ public class ZMailbox implements ToZJSONObject {
         long timestamp = System.currentTimeMillis() / 1000;
         String totp = auth.generateCode(secret, timestamp, Encoding.BASE32);
         req.setTwoFactorCode(totp);
+        req.setAuthToken(resp.getAuthToken());
         resp = invokeJaxb(req);
         resp.setSecret(secret);
         return resp;
@@ -5600,6 +5600,10 @@ public class ZMailbox implements ToZJSONObject {
     public DisableTwoFactorAuthResponse disableTwoFactorAuth(String password) throws ServiceException {
         DisableTwoFactorAuthRequest req = new DisableTwoFactorAuthRequest();
         return invokeJaxb(req);
+    }
+
+    public SoapHttpTransport getTransport() {
+        return mTransport;
     }
 }
 
