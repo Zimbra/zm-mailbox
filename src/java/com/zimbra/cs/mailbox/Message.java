@@ -1379,27 +1379,32 @@ public class Message extends MailItem {
         return moved;
     }
 
+    public ParsedMessage getParsedMessage() throws ServiceException {
+        ParsedMessage pm = null;
+        Mailbox mbox = getMailbox();
+        mbox.lock.lock();
+        try {
+            // force the pm's received-date to be the correct one
+            ParsedMessageOptions opt = new ParsedMessageOptions().setContent(getMimeMessage(false))
+                .setReceivedDate(getDate())
+                .setAttachmentIndexing(getMailbox().attachmentsIndexingEnabled())
+                .setSize(getSize())
+                .setDigest(getDigest());
+            pm = new ParsedMessage(opt);
+            return pm;
+        } finally {
+            mbox.lock.release();
+        }
+    }
+
     @Override
     /**
      * holds mailbox lock while retrieving message content
      */
     public List<IndexDocument> generateIndexData() throws TemporaryIndexingException {
         try {
-            ParsedMessage pm = null;
             Mailbox mbox = getMailbox();
-            mbox.lock.lock();
-            try {
-                // force the pm's received-date to be the correct one
-                ParsedMessageOptions opt = new ParsedMessageOptions().setContent(getMimeMessage(false))
-                    .setReceivedDate(getDate())
-                    .setAttachmentIndexing(mbox.attachmentsIndexingEnabled())
-                    .setSize(getSize())
-                    .setDigest(getDigest());
-                pm = new ParsedMessage(opt);
-            } finally {
-                mbox.lock.release();
-            }
-
+            ParsedMessage pm = getParsedMessage();
             pm.setDefaultCharset(getAccount().getPrefMailDefaultCharset());
 
             if (mbox.index.isReIndexInProgress()) {

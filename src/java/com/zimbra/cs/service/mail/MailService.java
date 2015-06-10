@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -187,6 +187,7 @@ public final class MailService implements DocumentService {
         dispatcher.registerHandler(MailConstants.DELETE_DATA_SOURCE_REQUEST, new DeleteDataSource());
         dispatcher.registerHandler(MailConstants.IMPORT_DATA_REQUEST, new ImportData());
         dispatcher.registerHandler(MailConstants.GET_IMPORT_STATUS_REQUEST, new GetImportStatus());
+        dispatcher.registerHandler(MailConstants.GET_DATA_SOURCE_USAGE_REQUEST, new GetDataSourceUsage());
 
         // waitset
         dispatcher.registerHandler(MailConstants.CREATE_WAIT_SET_REQUEST, new CreateWaitSet());

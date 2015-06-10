@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -38,7 +38,10 @@ import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.db.DbDataSource;
+import com.zimbra.cs.db.DbDataSource.PurgedConversation;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
@@ -241,7 +244,7 @@ public final class Threader {
 
 
     /** Returns whether threading is enabled for this {@code Mailbox}. */
-    boolean isEnabled() {
+    public boolean isEnabled() {
         return !mode.isNone();
     }
 
@@ -262,7 +265,7 @@ public final class Threader {
      *  threading modes, 0, 1 or multiple {@code Conversation}s may be returned;
      *  in the multi-{@code Conversation} case, the caller is responsible for
      *  choosing one or merging them all. */
-    List<Conversation> lookupConversation() throws ServiceException {
+     List<Conversation> lookupConversation() throws ServiceException {
         if (matchedConversations == null) {
             if (mode.isNone()) {
                 return Collections.emptyList();
@@ -350,6 +353,27 @@ public final class Threader {
         }
         assert matches != null;
         return matches;
+    }
+
+    private List<String> getCurrentHashes() {
+        List<String> hashes = new ArrayList<String>();
+        if (refHashes != null) {
+            hashes.addAll(refHashes);
+        }
+        if (subjHash != null) {
+            hashes.add(subjHash);
+        }
+        return hashes;
+    }
+
+    public void storePurgedConversationHashes(Integer convId, String dsId) throws ServiceException {
+        for (String hash: getCurrentHashes()) {
+            DbDataSource.storePurgedConversationHash(mbox, dsId, convId, hash);
+        }
+    }
+
+    public List<PurgedConversation> lookupPurgedConversations(DataSource ds) throws ServiceException {
+        return DbDataSource.lookupPurgedConversationsByHash(ds, getCurrentHashes());
     }
 
     /** The number of milliseconds of inactivity (i.e. time since last message

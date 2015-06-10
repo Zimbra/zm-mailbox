@@ -160,7 +160,7 @@ final class ConnectionManager {
         return ds.isOffline() && REUSE_CONNECTIONS;
     }
 
-    private static ImapConnection newConnection(DataSource ds, Authenticator auth)
+    public static ImapConnection newConnection(DataSource ds, Authenticator auth)
         throws ServiceException {
         ImapConfig config = newImapConfig(ds);
         ImapConnection ic = new ImapConnection(config);

@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -15,6 +15,8 @@
  * ***** END LICENSE BLOCK *****
  */
 package com.zimbra.cs.datasource.imap;
+
+import static com.zimbra.common.util.ArrayUtil.toIntArray;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -41,12 +43,15 @@ import com.zimbra.cs.datasource.SyncErrorManager;
 import com.zimbra.cs.datasource.SyncUtil;
 import com.zimbra.cs.db.Db;
 import com.zimbra.cs.db.DbDataSource.DataSourceItem;
+import com.zimbra.cs.db.DbDataSource.PurgedConversation;
+import com.zimbra.cs.db.DbDataSource.PurgedMessage;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mailbox.Threader;
 import com.zimbra.cs.mailclient.CommandFailedException;
 import com.zimbra.cs.mailclient.MailException;
 import com.zimbra.cs.mailclient.imap.Body;
@@ -60,11 +65,10 @@ import com.zimbra.cs.mailclient.imap.MessageData;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.util.Zimbra;
 
-import static com.zimbra.common.util.ArrayUtil.toIntArray;
-
 class ImapFolderSync {
     private final ImapSync imapSync;
     private final ImapConnection connection;
+    private ImapConnection refetchConnection;
     private final DataSource ds;
     private final Mailbox mailbox;
     private final Statistics stats = new Statistics();
@@ -104,7 +108,7 @@ class ImapFolderSync {
         int msgsCopiedRemotely;
     }
 
-    public ImapFolderSync(ImapSync imapSync) {
+    public ImapFolderSync(ImapSync imapSync) throws ServiceException {
         this.imapSync = imapSync;
         connection = imapSync.getConnection();
         ds = imapSync.getDataSource();
@@ -356,7 +360,9 @@ class ImapFolderSync {
             }
         }
         remoteFolder.close();
-
+        if (refetchConnection != null && !refetchConnection.isClosed()) {
+            refetchConnection.close();
+        }
         // Clean up tracked message state no longer in use
         trackedMsgs = null;
         localMsgIds = null;
@@ -595,7 +601,7 @@ class ImapFolderSync {
                         localFolder.deleteMessage(id);
                     }
                 } catch (MailServiceException.NoSuchItemException e) {
-                    storeImapMessage(uid, id, msg.getFlagBitmask());
+                    storeImapMessage(uid, id, msg.getFlagBitmask(), true);
                 }
             } catch (Exception e) {
                 syncMessageFailed(id, "Append message failed", e);
@@ -611,11 +617,13 @@ class ImapFolderSync {
         }
     }
 
-    private void storeImapMessage(long uid, int msgId, int flags)
+    private void storeImapMessage(long uid, int msgId, int flags, boolean updateLastFetchedUid)
         throws ServiceException {
         ImapMessage msgTracker = new ImapMessage(ds, localFolder.getId(), msgId, flags, uid);
         msgTracker.add();
-        syncState.updateLastFetchedUid(uid);
+        if (updateLastFetchedUid) {
+            syncState.updateLastFetchedUid(uid);
+        }
     }
 
     /**
@@ -681,14 +689,14 @@ class ImapFolderSync {
                         clearError(msgId);
                     } catch (MailServiceException.NoSuchItemException e) {
                         // Message was deleted locally
-                           deletedUids.add(uid);
+                        addDeletedUid(uid);
 
                         clearError(msgId);
                     } catch (Exception e) {
                         syncMessageFailed(msgId, "Unable to update message flags", e);
                     }
                 } else {
-                    deletedUids.add(uid);
+                    addDeletedUid(uid);
                     clearError(msgId);
                 }
             } else {
@@ -699,6 +707,11 @@ class ImapFolderSync {
         }
     }
 
+    private void addDeletedUid(Long uid) throws ServiceException {
+        if (!purgedUid(uid)) {
+            deletedUids.add(uid);
+        }
+    }
     // Updates flags for specified message.
     private void updateFlags(ImapMessage msg, Flags flags)
         throws ServiceException, IOException {
@@ -764,6 +777,9 @@ class ImapFolderSync {
                 }
                 // Check for newly arrived messages...
                 fetchNewMessages();
+                if (refetchConnection != null) {
+                    refetchConnection.close();
+                }
             }
         }
     }
@@ -826,7 +842,7 @@ class ImapFolderSync {
                 long uid = md.getUid();
                 IOExceptionHandler.getInstance().trackSyncItem(mailbox, uid);
                 try {
-                    handleFetch(md, flagsByUid);
+                    handleFetch(md, flagsByUid, true);
                     clearError(uid);
                 } catch (OutOfMemoryError e) {
                     Zimbra.halt("Out of memory", e);
@@ -900,7 +916,70 @@ class ImapFolderSync {
         return uids;
     }
 
-    private void handleFetch(MessageData md, Map<Long, MessageData> flagsByUid)
+    private ImapConnection getRefetchConnection() throws ServiceException {
+        if (refetchConnection == null || refetchConnection.isClosed()) {
+            refetchConnection = ConnectionManager.newConnection(ds, imapSync.getAuthenticator());
+        }
+        return refetchConnection;
+    }
+
+    protected void refetchPurgedMsgsInConversation(ParsedMessage pm)
+            throws ServiceException, IOException {
+        if (!mailbox.getAccount().isFeatureDataSourcePurgingEnabled()) {
+            return;
+        }
+        Threader threader = pm.getThreader(ds.getMailbox());
+        List<PurgedConversation> purgedConvs = threader.lookupPurgedConversations(ds);
+        if (purgedConvs.size() == 0) {
+            return;
+        } else {
+            for (PurgedConversation conv: purgedConvs) {
+                ImapConnection conn;
+                try {
+                    conn = getRefetchConnection();
+                } catch (ServiceException e) {
+                    ZimbraLog.datasource.warn("could not establish IMAP connection to refetch purged messages");
+                    return;
+                }
+                for (PurgedMessage msg: conv.getMessages()) {
+                    String remoteFolderId = msg.getRemoteFolder();
+                    String msgUid = msg.getUid();
+                    final Integer folderId = msg.getLocalFolderId();
+                    ZimbraLog.datasource.info("restoring message " + msgUid + " in remote folder " + remoteFolderId);
+                    conn.select(remoteFolderId);
+                    final Map<Long, MessageData> msgFlags =
+                            conn.uidFetch(msgUid, "(FLAGS INTERNALDATE)");
+                    FetchResponseHandler handler = new FetchResponseHandler() {
+                        @Override
+                        public void handleFetchResponse(MessageData md) throws Exception {
+                            long uid = md.getUid();
+                            IOExceptionHandler.getInstance().trackSyncItem(mailbox, uid);
+                            try {
+                                handleFetch(md, msgFlags, folderId, false, false);
+                                clearError(uid);
+                            } catch (OutOfMemoryError e) {
+                                Zimbra.halt("Out of memory", e);
+                            } catch (Exception e) {
+                                if (!IOExceptionHandler.getInstance().isRecoverable(mailbox, uid, "Exception re-fetching UID "+uid, e)) {
+                                    syncFailed("re-fetch failed for uid " + uid, e);
+                                    SyncErrorManager.incrementErrorCount(ds, remoteId(uid));
+                                }
+                            }
+                        }
+                    };
+                    conn.uidFetch(msgUid, "BODY.PEEK[]", handler);
+                }
+                conv.unpurge();
+            }
+        }
+    }
+
+    private void handleFetch(MessageData md, Map<Long, MessageData> flagsByUid, boolean restorePurged)
+        throws ServiceException, IOException {
+        handleFetch(md, flagsByUid, localFolder.getId(), true, restorePurged);
+    }
+
+    private void handleFetch(MessageData md, Map<Long, MessageData> flagsByUid, int folderId, boolean storeSync, boolean restorePurged)
         throws ServiceException, IOException {
         long uid = md.getUid();
         if (uid == -1) {
@@ -912,7 +991,6 @@ class ImapFolderSync {
         Date date = flagsData.getInternalDate();
         Long receivedDate = date != null ? date.getTime() : null;
         int zflags = SyncUtil.imapToZimbraFlags(flagsData.getFlags());
-        int folderId = localFolder.getId();
         MessageContent mc = getContent(md);
         Message msg;
         try {
@@ -921,12 +999,20 @@ class ImapFolderSync {
                 remoteFolder.warn("Empty message body for UID %d. Must be ignored.", uid);
                 return;
             }
+            if (restorePurged) {
+                try {
+                    refetchPurgedMsgsInConversation(pm);
+                } catch (ServiceException e) {
+                    // refetching error should not halt import
+                    ZimbraLog.datasource.error("error refetching purged message", e);
+                }
+            }
             msg = imapSync.addMessage(null, pm, mc.getSize(), folderId, zflags, mc.getDeliveryContext());
         } finally {
             mc.cleanup();
         }
         if (msg != null && msg.getFolderId() == folderId) {
-            storeImapMessage(uid, msg.getId(), zflags);
+            storeImapMessage(uid, msg.getId(), zflags, storeSync);
             stats.msgsAddedLocally++;
         } else {
             // Message was filtered and discarded or moved to another folder.
@@ -935,7 +1021,7 @@ class ImapFolderSync {
             // do not create a local tracker. If message was moved to another
             // folder we will append it to the remote folder when we sync
             // that folder.
-            deletedUids.add(uid);
+            addDeletedUid(uid);
         }
     }
 
@@ -967,6 +1053,11 @@ class ImapFolderSync {
             // Fall through...
         }
         return true;
+    }
+
+    private boolean purgedUid(long uid) throws ServiceException {
+        String remoteId = String.format("%d_%d", localFolder.getId(), uid);
+        return mailbox.dataSourceMessageIsPurged(ds, remoteId);
     }
 
     private void moveMessages() throws IOException, ServiceException {

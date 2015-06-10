@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -16,37 +16,37 @@
  */
 package com.zimbra.cs.datasource.imap;
 
+import static com.zimbra.common.util.SystemUtil.coalesce;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.regex.Pattern;
+
+import com.zimbra.common.service.RemoteServiceException;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.Log;
+import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.datasource.DataSourceManager;
 import com.zimbra.cs.datasource.IOExceptionHandler;
 import com.zimbra.cs.datasource.MailItemImport;
 import com.zimbra.cs.datasource.SyncUtil;
-import com.zimbra.cs.mailclient.auth.Authenticator;
-import com.zimbra.cs.mailclient.imap.ImapConnection;
-import com.zimbra.cs.mailclient.imap.ListData;
-import com.zimbra.cs.mailclient.CommandFailedException;
-import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.service.RemoteServiceException;
-import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.common.util.Log;
-import com.zimbra.common.util.StringUtil;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.Set;
-import java.util.regex.Pattern;
-
-import static com.zimbra.common.util.SystemUtil.coalesce;
+import com.zimbra.cs.mailclient.CommandFailedException;
+import com.zimbra.cs.mailclient.auth.Authenticator;
+import com.zimbra.cs.mailclient.imap.ImapConnection;
+import com.zimbra.cs.mailclient.imap.ListData;
 
 public class ImapSync extends MailItemImport {
     private ImapConnection connection;
@@ -172,6 +172,7 @@ public class ImapSync extends MailItemImport {
         } catch (Exception e) {
             throw ServiceException.FAILURE("Folder sync failed", e);
         } finally {
+            purgeIfNecessary(null);
             closeConnection();
         }
     }
@@ -516,5 +517,9 @@ public class ImapSync extends MailItemImport {
             imapPath = StringUtil.join(String.valueOf(delimiter), parts);
         }
         return imapPath;
+    }
+
+    Authenticator getAuthenticator() {
+        return authenticator;
     }
 }

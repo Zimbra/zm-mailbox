@@ -142,6 +142,7 @@ public class Pop3Sync extends MailItemImport {
             throw ServiceException.FAILURE(
                 "Synchronization of POP3 folder failed", e);
         } finally {
+            purgeIfNecessary(null);
             connection.close();
         }
     }

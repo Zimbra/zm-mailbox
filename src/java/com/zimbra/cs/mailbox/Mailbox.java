@@ -96,6 +96,7 @@ import com.zimbra.cs.account.ShareLocator;
 import com.zimbra.cs.analytics.BehaviorManager;
 import com.zimbra.cs.analytics.MessageBehavior;
 import com.zimbra.cs.datasource.DataSourceManager;
+import com.zimbra.cs.db.DbDataSource;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbMailItem.QueryParams;
 import com.zimbra.cs.db.DbMailbox;
@@ -9707,6 +9708,49 @@ public class Mailbox {
             itemIdsWithDeletedFlag = null;
         } else {
             ZimbraLog.purge.debug("IMAP deleted message life time is not set, so bypassed purging messages with IMAP \\Deleted flag");
+        }
+    }
+
+    public long getTotalDataSourceUsage() throws ServiceException {
+        long usage = 0L;
+        for (DataSource ds: getAccount().getAllDataSources()) {
+            usage += getDataSourceUsage(ds);
+        }
+        return usage;
+    }
+
+    public void purgeDataSourceMessage(OperationContext octxt, Message msg, String dataSourceId) throws ServiceException {
+        beginTransaction("purgeMessage", octxt);
+        boolean success = false;
+        try {
+            DbDataSource.purgeMessage(this, msg, dataSourceId);
+            success = true;
+        } finally {
+            endTransaction(success);
+        }
+    }
+
+    public boolean dataSourceMessageIsPurged(DataSource ds, String remoteId) throws ServiceException {
+        beginReadTransaction("checkUidPurged", null);
+        boolean success = false;
+        try {
+            boolean isPurged = DbDataSource.uidIsPurged(ds, remoteId);
+            success = true;
+            return isPurged;
+        } finally {
+            endTransaction(success);
+        }
+    }
+
+    public long getDataSourceUsage(DataSource dataSource) throws ServiceException {
+        beginReadTransaction("dataSourceUsage", null);
+        boolean success = false;
+        try {
+            long usage = DbDataSource.getDataSourceUsage(dataSource);
+            success = true;
+            return usage;
+        } finally {
+            endTransaction(success);
         }
     }
 }
