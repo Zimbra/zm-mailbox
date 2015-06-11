@@ -39,6 +39,7 @@ import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.db.Db.DbOperation;
 import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -411,6 +412,8 @@ public final class DbMailbox {
                 tables.addAll(callback.getTableNames());
             }
             Collections.reverse(tables);
+            boolean isSharedDb = ProvisioningUtil.getServerAttribute(Provisioning.A_zimbraMailboxSharedDbEnabled, false);
+
 
             for (String tableName : tables) {
                 if (tableName == null) {
@@ -421,7 +424,11 @@ public final class DbMailbox {
                 try {
                     stmt = conn.prepareStatement("DELETE FROM " + qualifyTableName(mbox, tableName) +
                             (DebugConfig.disableMailboxGroups ? "" : " WHERE mailbox_id = " + mailboxId));
-                    stmt.executeUpdate();
+                    if (!isSharedDb) {
+                        stmt.executeUpdate();
+                    } else {
+                        DbUtil.checkAndRetryTransaction(stmt, isSharedDb, Db.DbOperation.EXECUTE_UPDATE, null);
+                    }
                 } finally {
                     DbPool.closeStatement(stmt);
                 }
@@ -673,7 +680,12 @@ public final class DbMailbox {
             int pos = 1;
             stmt.setString(pos++, version == null ? null : version.toString());
             pos = DbMailItem.setMailboxId(stmt, mbox, pos++);
-            stmt.executeUpdate();
+            boolean isSharedDb = ProvisioningUtil.getServerAttribute(Provisioning.A_zimbraMailboxSharedDbEnabled, false);
+            if (isSharedDb) {
+                DbUtil.checkAndRetryTransaction(stmt, true, DbOperation.EXECUTE_UPDATE, null);
+            } else {
+                stmt.executeUpdate();
+            }
         } catch (SQLException e) {
             throw ServiceException.FAILURE("setting mailbox version to '" + version + "' in mailbox " + mbox.getId(), e);
         } finally {

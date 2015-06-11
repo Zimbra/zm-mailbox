@@ -80,6 +80,12 @@ public abstract class Db {
 
     private static String ESCAPE_SEQUENCE = "\\";
 
+    public static enum DbOperation {
+        COMMIT,
+        ROLLBACK,
+        EXECUTE_UPDATE;
+    }
+
     public synchronized static Db getInstance() {
         if (sDatabase == null) {
             String className = LC.zimbra_class_database.value();

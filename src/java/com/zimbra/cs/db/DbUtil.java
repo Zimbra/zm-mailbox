@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -33,7 +34,11 @@ import java.util.regex.Pattern;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.db.Db.DbOperation;
 import com.zimbra.cs.db.DbPool.DbConnection;
+import com.zimbra.cs.util.ProvisioningUtil;
 
 /**
  * <code>DbUtil</code> contains some database utility methods and
@@ -433,5 +438,82 @@ public final class DbUtil {
 
     public static String whereNotIn(String column, int size) {
         return whereIn(column, false, size);
+    }
+
+
+    /**
+     * @param stmt
+     * @param isSharedDb
+     * @throws ServiceException
+     */
+    public static void checkAndRetryTransaction(PreparedStatement stmt, boolean isSharedDb,
+        DbOperation oprType, Connection connection) throws ServiceException {
+        int retryCount = ProvisioningUtil.getServerAttribute(
+            Provisioning.A_zimbraMailboxSharedDbTransRetryCount, 0);
+        long delay = ProvisioningUtil.getServerAttribute(
+            Provisioning.A_zimbraMailboxSharedDbTransRetryDelay, 0);
+        boolean hasException = false;
+        Exception excptn = null;
+        do {
+            try {
+                retryCount--;
+                hasException = false;
+                excptn = null;
+                switch (oprType) {
+
+                    case COMMIT: {
+                        connection.commit();
+                        break;
+                    }
+                    case ROLLBACK: {
+                        connection.rollback();
+                        ;
+                        break;
+                    }
+                    case EXECUTE_UPDATE: {
+                        stmt.executeUpdate();
+                    }
+                    default: {
+                        break;
+                    }
+                }
+                break;
+            } catch (SQLException e) {
+                ZimbraLog.dbconn.info(e.getMessage() + ", " + e.getSQLState() + ","
+                    + e.getErrorCode(), e);
+                if (Db.errorMatches(e, Db.Error.DEADLOCK_DETECTED) ||
+                     Db.stateMatches(e, Db.SqlState.COMMUNICATION_FAILURE_DURING_TRANS)) {
+                    hasException = true;
+                    excptn = e;
+                    if (ZimbraLog.dbconn.isDebugEnabled()) {
+                        if (Db.errorMatches(e, Db.Error.DEADLOCK_DETECTED)) {
+                            ZimbraLog.dbconn.debug("Deadlock detected retrying transaction, retry count: %d", retryCount);
+                        } else  {
+                            ZimbraLog.dbconn.debug(e.getMessage() + ", "
+                                + "retry count: %d", retryCount);
+                        }
+                    }
+                    if (delay > 0) {
+                        try {
+                            Thread.sleep(delay * 1000);
+                        } catch (InterruptedException ie) {
+                            ZimbraLog.dbconn.info("Retry delay for database transaction "
+                                + "caused error.", ie);
+                        }
+                    }
+                } else {
+                    ZimbraLog.dbconn.info("This SQL Exception does not fall under the retry category,"
+                        + " so no retries.");
+                    throw ServiceException.FAILURE(" with database transaction", e);
+                }
+            }
+        } while (retryCount > 0);
+
+        if (hasException && excptn != null) {
+            ZimbraLog.dbconn.warn("Retries failed, throwing exception.", excptn);
+            throw ServiceException.FAILURE("Retries for database transaction failed, unrecoverable error.",
+                excptn);
+        }
+
     }
 }
