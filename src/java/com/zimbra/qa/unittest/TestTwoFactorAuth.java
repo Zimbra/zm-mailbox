@@ -97,15 +97,19 @@ public class TestTwoFactorAuth extends TestCase {
 
     @Test
     public void testBadCredentials() throws ServiceException {
-        tryCode("wrongpassword", generateCode(curTime()), false);
-        tryCode(PASSWORD, "badcode", false);
+        tryCode("wrongpassword", generateCode(curTime()), false, AccountServiceException.AUTH_FAILED);
+        tryCode(PASSWORD, "badcode", false, AccountServiceException.TWO_FACTOR_AUTH_FAILED);
     }
 
     private long curTime() {
         return System.currentTimeMillis() / 1000;
     }
 
-    private void tryCode(String password, String code, boolean shouldWork)
+    private void tryCode(String password, String code, boolean shouldWork) throws ServiceException {
+        tryCode(password, code, shouldWork, AccountServiceException.TWO_FACTOR_AUTH_FAILED);
+    }
+
+    private void tryCode(String password, String code, boolean shouldWork, String expectedError)
             throws ServiceException {
         try {
             TestUtil.testAuth(mbox, USER_NAME, password, code);
@@ -116,7 +120,7 @@ public class TestTwoFactorAuth extends TestCase {
             if (shouldWork) {
                 fail();
             } else {
-                assertEquals(AccountServiceException.AUTH_FAILED, e.getCode());
+                assertEquals(expectedError, e.getCode());
             }
         }
     }
