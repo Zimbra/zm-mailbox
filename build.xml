@@ -537,7 +537,7 @@
           <include name="${db.driver.jar}"/>
           <include name="apache-log4j-extras-*.jar"/>
           <include name="aopalliance-*.jar"/>
-      <include name="aspectjweaver-*.jar"/>
+          <include name="aspectjweaver-*.jar"/>
           <include name="mariadb-java-client-*.jar"/>
           <include name="mail-*.jar"/>
           <include name="zimbranative*.jar"/>
@@ -2199,7 +2199,7 @@
         </exec>
     </target>
 
-    <target name="start-jetty" depends="start-jetty-windows,start-jetty-unix">
+    <target name="start-jetty" depends="delete-solr-lock-files,start-jetty-windows,start-jetty-unix">
         <echo>Waiting for jetty to start</echo>
         <waitfor checkevery="1" checkeveryunit="second" maxwait="60" maxwaitunit="second" timeoutproperty="jetty.timeout">
             <http url="http://${deploy.host}:${deploy.port}/service/soap" errorsBeginAt="500"/>
@@ -2243,11 +2243,23 @@
         </if>
     </target>
 
+    <target name="delete-solr-lock-files">
+        <if>
+            <not><isset property="solr-standalone"/></not>
+            <then>
+                <delete failonerror="false">
+                    <fileset dir="${zimbra.home.dir}/data/solr" includes="**/write.lock" />
+                </delete>
+            </then>
+        </if>
+    </target>
+
     <target name="stop-jetty" depends="stop-jetty-windows,stop-jetty-unix">
         <echo>Waiting for jetty to stop</echo>
         <waitfor checkevery="1" checkeveryunit="second" maxwait="10" maxwaitunit="second">
             <not><http url="http://${deploy.host}:${deploy.port}/"/></not>
         </waitfor>
+        <antcall target="delete-solr-lock-files"/>
     </target>
 
     <target name="start-jetty-java">
