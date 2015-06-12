@@ -6308,7 +6308,9 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureTasksEnabled = "zimbraFeatureTasksEnabled";
 
     /**
-     * Whether to allow a user to access touch client
+     * Whether to allow a user to access touch client. Note: touch client is
+     * a Network feature, this attribute is effective only if touch client is
+     * permitted by license.
      *
      * @since ZCS 8.5.0
      */
