@@ -628,8 +628,6 @@ public final class JaxbUtil {
             com.zimbra.soap.admin.message.GetAllAccountLoggersResponse.class,
             com.zimbra.soap.admin.message.GetAllAccountsRequest.class,
             com.zimbra.soap.admin.message.GetAllAccountsResponse.class,
-            com.zimbra.soap.admin.message.GetAllActiveServersRequest.class,
-            com.zimbra.soap.admin.message.GetAllActiveServersResponse.class,
             com.zimbra.soap.admin.message.GetAllAdminAccountsRequest.class,
             com.zimbra.soap.admin.message.GetAllAdminAccountsResponse.class,
             com.zimbra.soap.admin.message.GetAllAlwaysOnClustersRequest.class,
@@ -916,12 +914,8 @@ public final class JaxbUtil {
             com.zimbra.soap.admin.message.SearchMultiMailboxResponse.class,
             com.zimbra.soap.admin.message.SetCurrentVolumeRequest.class,
             com.zimbra.soap.admin.message.SetCurrentVolumeResponse.class,
-            com.zimbra.soap.admin.message.SetLocalServerOnlineRequest.class,
-            com.zimbra.soap.admin.message.SetLocalServerOnlineResponse.class,
             com.zimbra.soap.admin.message.SetPasswordRequest.class,
             com.zimbra.soap.admin.message.SetPasswordResponse.class,
-            com.zimbra.soap.admin.message.SetServerOfflineRequest.class,
-            com.zimbra.soap.admin.message.SetServerOfflineResponse.class,
             com.zimbra.soap.admin.message.SuspendDeviceRequest.class,
             com.zimbra.soap.admin.message.SuspendDeviceResponse.class,
             com.zimbra.soap.admin.message.SyncGalAccountRequest.class,
@@ -948,6 +942,8 @@ public final class JaxbUtil {
             com.zimbra.soap.admin.message.VerifyStoreManagerResponse.class,
             com.zimbra.soap.admin.message.VersionCheckRequest.class,
             com.zimbra.soap.admin.message.VersionCheckResponse.class,
+            com.zimbra.soap.admin.message.ResetLdapClientRequest.class,
+            com.zimbra.soap.admin.message.ResetLdapClientResponse.class,
 
             // zimbraAdminExt
             com.zimbra.soap.adminext.message.BulkIMAPDataImportRequest.class,
@@ -1026,12 +1022,6 @@ public final class JaxbUtil {
             com.zimbra.soap.voice.message.VoiceMsgActionResponse.class,
 
             //zimbra mobile gateway
-            com.zimbra.soap.account.message.BootstrapMobileGatewayAppRequest.class,
-            com.zimbra.soap.account.message.BootstrapMobileGatewayAppResponse.class,
-            com.zimbra.soap.account.message.RenewMobileGatewayAppTokenRequest.class,
-            com.zimbra.soap.account.message.RenewMobileGatewayAppTokenResponse.class,
-            com.zimbra.soap.account.message.RegisterMobileGatewayAppRequest.class,
-            com.zimbra.soap.account.message.RegisterMobileGatewayAppResponse.class,
             com.zimbra.soap.account.message.GetGcmSenderIdRequest.class,
             com.zimbra.soap.account.message.GetGcmSenderIdResponse.class
         };

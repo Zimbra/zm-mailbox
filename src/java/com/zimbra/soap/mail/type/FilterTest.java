@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -27,6 +27,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlEnum;
+import javax.xml.bind.annotation.XmlType;
 
 import org.codehaus.jackson.annotate.JsonPropertyOrder;
 
@@ -87,6 +88,7 @@ public class FilterTest {
     }
 
     @XmlAccessorType(XmlAccessType.NONE)
+    @XmlType(namespace="urn:zimbraMail")
     public static final class AddressTest extends FilterTest {
 
         /**
@@ -182,6 +184,7 @@ public class FilterTest {
     }
 
     @XmlAccessorType(XmlAccessType.NONE)
+    @XmlType(namespace="urn:zimbraMail")
     public static final class AddressBookTest extends FilterTest {
 
         /**
@@ -211,10 +214,12 @@ public class FilterTest {
     }
 
     @XmlAccessorType(XmlAccessType.NONE)
+    @XmlType(namespace="urn:zimbraMail")
     public static final class AttachmentTest extends FilterTest {
     }
 
     @XmlAccessorType(XmlAccessType.NONE)
+    @XmlType(namespace="urn:zimbraMail")
     public static final class BodyTest extends FilterTest {
 
         /**
@@ -258,11 +263,13 @@ public class FilterTest {
     }
 
     @XmlAccessorType(XmlAccessType.NONE)
+    @XmlType(namespace="urn:zimbraMail")
     public static final class BulkTest extends FilterTest {
     }
 
 
     @XmlAccessorType(XmlAccessType.NONE)
+    @XmlType(namespace="urn:zimbraMail")
     public static final class ContactRankingTest extends FilterTest {
 
         /**
@@ -293,6 +300,7 @@ public class FilterTest {
     }
 
     @XmlAccessorType(XmlAccessType.NONE)
+    @XmlType(namespace="urn:zimbraMail")
     public static final class ConversationTest extends FilterTest {
 
         /**
@@ -317,6 +325,7 @@ public class FilterTest {
     }
 
     @XmlAccessorType(XmlAccessType.NONE)
+    @XmlType(namespace="urn:zimbraMail")
     public static final class CurrentDayOfWeekTest extends FilterTest {
 
         /**
@@ -341,6 +350,7 @@ public class FilterTest {
     }
 
     @XmlAccessorType(XmlAccessType.NONE)
+    @XmlType(namespace="urn:zimbraMail")
     public static final class CurrentTimeTest extends FilterTest {
 
         /**
@@ -380,6 +390,7 @@ public class FilterTest {
     }
 
     @XmlAccessorType(XmlAccessType.NONE)
+    @XmlType(namespace="urn:zimbraMail")
     public static final class DateTest extends FilterTest {
 
         /**
@@ -419,10 +430,12 @@ public class FilterTest {
     }
 
     @XmlAccessorType(XmlAccessType.NONE)
+    @XmlType(namespace="urn:zimbraMail")
     public static final class FacebookTest extends FilterTest {
     }
 
     @XmlAccessorType(XmlAccessType.NONE)
+    @XmlType(namespace="urn:zimbraMail")
     public static final class FlaggedTest extends FilterTest {
 
         /**
@@ -452,6 +465,7 @@ public class FilterTest {
     }
 
     @XmlAccessorType(XmlAccessType.NONE)
+    @XmlType(namespace="urn:zimbraMail")
     public static final class HeaderExistsTest extends FilterTest {
 
         /**
@@ -481,6 +495,7 @@ public class FilterTest {
     }
 
     @XmlAccessorType(XmlAccessType.NONE)
+    @XmlType(namespace="urn:zimbraMail")
     @JsonPropertyOrder({ "index", "negative", "header", "caseSensitive", "stringComparison", "value" })
     public static final class HeaderTest extends FilterTest {
 
@@ -571,6 +586,7 @@ public class FilterTest {
         }
     }
 
+    @XmlType(namespace="urn:zimbraMail")
     @XmlEnum
     public enum Importance {
         high, normal, low;
@@ -589,6 +605,7 @@ public class FilterTest {
     }
 
     @XmlAccessorType(XmlAccessType.NONE)
+    @XmlType(namespace="urn:zimbraMail")
     public static final class ImportanceTest extends FilterTest {
 
         /**
@@ -620,6 +637,7 @@ public class FilterTest {
     }
 
     @XmlAccessorType(XmlAccessType.NONE)
+    @XmlType(namespace="urn:zimbraMail")
     public static final class InviteTest extends FilterTest {
 
         /**
@@ -655,14 +673,17 @@ public class FilterTest {
     }
 
     @XmlAccessorType(XmlAccessType.NONE)
+    @XmlType(namespace="urn:zimbraMail")
     public static final class LinkedInTest extends FilterTest {
     }
 
     @XmlAccessorType(XmlAccessType.NONE)
+    @XmlType(namespace="urn:zimbraMail")
     public static final class ListTest extends FilterTest {
     }
 
     @XmlAccessorType(XmlAccessType.NONE)
+    @XmlType(namespace="urn:zimbraMail")
     public static final class MeTest extends FilterTest {
 
         /**
@@ -693,6 +714,7 @@ public class FilterTest {
     }
 
     @XmlAccessorType(XmlAccessType.NONE)
+    @XmlType(namespace="urn:zimbraMail")
     public static final class MimeHeaderTest extends FilterTest {
 
         /**
@@ -771,6 +793,7 @@ public class FilterTest {
     }
 
     @XmlAccessorType(XmlAccessType.NONE)
+    @XmlType(namespace="urn:zimbraMail")
     public static final class SizeTest extends FilterTest {
 
         /**
@@ -811,26 +834,32 @@ public class FilterTest {
     }
 
     @XmlAccessorType(XmlAccessType.NONE)
+    @XmlType(namespace="urn:zimbraMail")
     public static final class SocialcastTest extends FilterTest {
     }
 
     @XmlAccessorType(XmlAccessType.NONE)
+    @XmlType(namespace="urn:zimbraMail")
     public static final class TrueTest extends FilterTest {
     }
 
     @XmlAccessorType(XmlAccessType.NONE)
+    @XmlType(namespace="urn:zimbraMail")
     public static final class TwitterTest extends FilterTest {
     }
 
     @XmlAccessorType(XmlAccessType.NONE)
+    @XmlType(namespace="urn:zimbraMail")
     public static final class CommunityRequestsTest extends FilterTest {
     }
 
     @XmlAccessorType(XmlAccessType.NONE)
+    @XmlType(namespace="urn:zimbraMail")
     public static final class CommunityContentTest extends FilterTest {
     }
 
     @XmlAccessorType(XmlAccessType.NONE)
+    @XmlType(namespace="urn:zimbraMail")
     public static final class CommunityConnectionsTest extends FilterTest {
     }
 }
