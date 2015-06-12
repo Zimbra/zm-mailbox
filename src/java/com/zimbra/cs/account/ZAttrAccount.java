@@ -50950,78 +50950,6 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * whether two-factor authentication is enabled by the user
-     *
-     * @return zimbraPrefTwoFactorAuthEnabled, or false if unset
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1819)
-    public boolean isPrefTwoFactorAuthEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraPrefTwoFactorAuthEnabled, false);
-    }
-
-    /**
-     * whether two-factor authentication is enabled by the user
-     *
-     * @param zimbraPrefTwoFactorAuthEnabled new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1819)
-    public void setPrefTwoFactorAuthEnabled(boolean zimbraPrefTwoFactorAuthEnabled) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefTwoFactorAuthEnabled, zimbraPrefTwoFactorAuthEnabled ? Provisioning.TRUE : Provisioning.FALSE);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * whether two-factor authentication is enabled by the user
-     *
-     * @param zimbraPrefTwoFactorAuthEnabled new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1819)
-    public Map<String,Object> setPrefTwoFactorAuthEnabled(boolean zimbraPrefTwoFactorAuthEnabled, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefTwoFactorAuthEnabled, zimbraPrefTwoFactorAuthEnabled ? Provisioning.TRUE : Provisioning.FALSE);
-        return attrs;
-    }
-
-    /**
-     * whether two-factor authentication is enabled by the user
-     *
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1819)
-    public void unsetPrefTwoFactorAuthEnabled() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefTwoFactorAuthEnabled, "");
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * whether two-factor authentication is enabled by the user
-     *
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1819)
-    public Map<String,Object> unsetPrefTwoFactorAuthEnabled(Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefTwoFactorAuthEnabled, "");
-        return attrs;
-    }
-
-    /**
      * Deprecated since: 5.0. no longer used in account or identity. Orig
      * desc: TRUE if we this identity should get settings from the default
      * identity
@@ -54569,6 +54497,78 @@ public abstract class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetTouchJSErrorTrackingKey(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraTouchJSErrorTrackingKey, "");
+        return attrs;
+    }
+
+    /**
+     * whether two-factor authentication is enabled by the user
+     *
+     * @return zimbraTwoFactorAuthEnabled, or false if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1819)
+    public boolean isTwoFactorAuthEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraTwoFactorAuthEnabled, false);
+    }
+
+    /**
+     * whether two-factor authentication is enabled by the user
+     *
+     * @param zimbraTwoFactorAuthEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1819)
+    public void setTwoFactorAuthEnabled(boolean zimbraTwoFactorAuthEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorAuthEnabled, zimbraTwoFactorAuthEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether two-factor authentication is enabled by the user
+     *
+     * @param zimbraTwoFactorAuthEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1819)
+    public Map<String,Object> setTwoFactorAuthEnabled(boolean zimbraTwoFactorAuthEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorAuthEnabled, zimbraTwoFactorAuthEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * whether two-factor authentication is enabled by the user
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1819)
+    public void unsetTwoFactorAuthEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorAuthEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether two-factor authentication is enabled by the user
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1819)
+    public Map<String,Object> unsetTwoFactorAuthEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorAuthEnabled, "");
         return attrs;
     }
 

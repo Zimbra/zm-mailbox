@@ -46,7 +46,7 @@ public class EnableTwoFactorAuth extends AccountDocumentHandler {
         Element twoFactorCode = request.getOptionalElement(AccountConstants.E_TWO_FACTOR_CODE);
         if (twoFactorCode == null) {
             account.authAccount(password, Protocol.soap);
-            if (account.isPrefTwoFactorAuthEnabled()) {
+            if (account.isTwoFactorAuthEnabled()) {
                 encodeAlreadyEnabled(response);
             } else {
                 TOTPCredentials newCredentials = manager.generateCredentials();
