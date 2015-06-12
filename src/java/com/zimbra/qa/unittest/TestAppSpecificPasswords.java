@@ -11,6 +11,7 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.zimbra.client.ZAuthResult;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.client.ZMailbox.Options;
 import com.zimbra.common.account.Key;
@@ -149,8 +150,6 @@ public class TestAppSpecificPasswords extends TestCase {
     }
 
     private void testPassword(String password, boolean shouldWork, String errMessage) throws IOException {
-
-
         try {
             TestUtil.testAuth(mbox, USER, password);
             fail("app-specific passwords shouldn't work over SOAP");
@@ -284,7 +283,10 @@ public class TestAppSpecificPasswords extends TestCase {
     @Test
     public void testAppSpecificPasswordsDisabled() throws ServiceException, IOException {
         disableAppSpecificPasswords();
-        testPassword(PASSWORD, false);
+        ZAuthResult res = TestUtil.testAuth(mbox, USER, PASSWORD);
+        assertTrue(res.getTwoFactorAuthRequired());
+        testImap(PASSWORD, false, null);
+        testPop3(PASSWORD, false, null);
         enableAppSpecificPasswords();
     }
 
