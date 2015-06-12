@@ -49932,6 +49932,83 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Flag to put a server in maintenance mode, so that new work or accounts
+     * are not assigned to it.
+     *
+     * @return zimbraOfflineForMaintenance, or false if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2028)
+    public boolean isOfflineForMaintenance() {
+        return getBooleanAttr(Provisioning.A_zimbraOfflineForMaintenance, false);
+    }
+
+    /**
+     * Flag to put a server in maintenance mode, so that new work or accounts
+     * are not assigned to it.
+     *
+     * @param zimbraOfflineForMaintenance new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2028)
+    public void setOfflineForMaintenance(boolean zimbraOfflineForMaintenance) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraOfflineForMaintenance, zimbraOfflineForMaintenance ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Flag to put a server in maintenance mode, so that new work or accounts
+     * are not assigned to it.
+     *
+     * @param zimbraOfflineForMaintenance new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2028)
+    public Map<String,Object> setOfflineForMaintenance(boolean zimbraOfflineForMaintenance, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraOfflineForMaintenance, zimbraOfflineForMaintenance ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Flag to put a server in maintenance mode, so that new work or accounts
+     * are not assigned to it.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2028)
+    public void unsetOfflineForMaintenance() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraOfflineForMaintenance, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Flag to put a server in maintenance mode, so that new work or accounts
+     * are not assigned to it.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=2028)
+    public Map<String,Object> unsetOfflineForMaintenance(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraOfflineForMaintenance, "");
+        return attrs;
+    }
+
+    /**
      * whether stateless mode (not establishing an association with the
      * OpenID Provider) in OpenID Consumer is enabled
      *

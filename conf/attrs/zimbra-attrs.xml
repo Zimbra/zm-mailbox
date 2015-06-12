@@ -10236,4 +10236,8 @@ TODO: delete them permanently from here
   <desc>maximum number of user properties for zimlets allowed on an account</desc>
 </attr>
 
+<attr id="2028" name="zimbraOfflineForMaintenance" type="boolean" cardinality="single" optionalIn="server" since="9.0.0">
+  <desc>Flag to put a server in maintenance mode, so that new work or accounts are not assigned to it.</desc>
+</attr>
+
 </attrs>

@@ -17,6 +17,7 @@
 package com.zimbra.cs.util;
 
 import java.io.IOException;
+import java.util.List;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.servicelocator.RoundRobinSelector;
@@ -24,6 +25,8 @@ import com.zimbra.common.servicelocator.Selector;
 import com.zimbra.common.servicelocator.ServiceLocator;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
 
 
 public class ServerAssigner {
@@ -47,19 +50,32 @@ public class ServerAssigner {
      */
     public ServiceLocator.Entry reassign(Account acct, String serviceID) throws ServiceException {
         ZimbraLog.account.debug("No mailhost found for account %s; using service locator to select a new upstream", acct.getName());
-        ServiceLocator.Entry serviceInfo = null;
+        ServiceLocator.Entry serviceEntry = null;
         try {
-            serviceInfo = serviceLocator.findOne(serviceID, selector, null, true);
+            List<ServiceLocator.Entry> result = serviceLocator.find(serviceID, null, true);
+            int iterations = result.size();
+            Provisioning prov = Provisioning.getInstance();
+            for (int i = 0; i < iterations; i++) {
+                ServiceLocator.Entry entry = result.get(i);
+
+                // Determine if server is in maintenance mode
+                Server server = prov.getServerByName(entry.hostName);
+                if (server != null && server.isOfflineForMaintenance()) {
+                    continue;
+                }
+
+                serviceEntry = entry;
+            }
         } catch (IOException e) {
             ZimbraLog.account.warn("Could not reach service locator to select a new mailstore for account %s and service id %s; skipping mailstore assignment", acct.getName(), serviceID, e);
         }
 
         // permanently assign the account to the newly selected server
-        if (serviceInfo != null) {
-            acct.setMailHost(serviceInfo.hostName);
-            ZimbraLog.account.info("Account %s is now assigned to mailhost %s", acct.getName(), serviceInfo.hostName);
+        if (serviceEntry != null) {
+            acct.setMailHost(serviceEntry.hostName);
+            ZimbraLog.account.info("Account %s is now assigned to mailhost %s", acct.getName(), serviceEntry.hostName);
         }
 
-        return serviceInfo;
+        return serviceEntry;
     }
 }
