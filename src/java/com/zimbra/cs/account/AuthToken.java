@@ -43,6 +43,8 @@ import com.zimbra.cs.account.auth.AuthMechanism.AuthMech;
 public abstract class AuthToken {
 
     public static final long DEFAULT_AUTH_LIFETIME = 60*60*12;
+    public static final long DEFAULT_TWO_FACTOR_AUTH_LIFETIME = 60*60;
+    public static final long DEFAULT_TWO_FACTOR_ENABLEMENT_AUTH_LIFETIME = 60*60;
 
     public static String generateDigest(String a, String b) {
         if (a == null)
@@ -229,4 +231,28 @@ public abstract class AuthToken {
         return ZimbraAuthToken.getInfo(encoded);
     }
 
+    public abstract Usage getUsage();
+
+    public static enum Usage {
+        AUTH("a"), ENABLE_TWO_FACTOR_AUTH("etfa"), TWO_FACTOR_AUTH("tfa");
+
+        private String code;
+
+        private Usage(String code) {
+            this.code = code;
+        }
+
+        public String getCode() {
+            return code;
+        }
+
+        public static Usage fromCode(String code) throws ServiceException {
+            for (Usage usage: Usage.values()) {
+                if (usage.code.equals(code)) {
+                    return usage;
+                }
+            }
+            throw ServiceException.FAILURE("unknown auth token usage value: " + code, null);
+        }
+    }
 }

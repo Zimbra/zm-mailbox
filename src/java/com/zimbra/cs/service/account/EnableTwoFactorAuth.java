@@ -6,12 +6,17 @@ import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
+import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.account.AuthToken.Usage;
+import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.auth.AuthContext.Protocol;
 import com.zimbra.cs.account.auth.twofactor.TOTPCredentials;
 import com.zimbra.cs.account.auth.twofactor.TwoFactorManager;
+import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.account.message.EnableTwoFactorAuthResponse;
 
@@ -33,17 +38,55 @@ public class EnableTwoFactorAuth extends AccountDocumentHandler {
         }
         TwoFactorManager manager = new TwoFactorManager(account);
         EnableTwoFactorAuthResponse response = new EnableTwoFactorAuthResponse();
-        String password = request.getElement(AccountConstants.E_PASSWORD).getText();
-        account.authAccount(password, Protocol.soap);
+        Element passwordEl = request.getOptionalElement(AccountConstants.E_PASSWORD);
+        String password = null;
+        if (passwordEl != null) {
+            password = passwordEl.getText();
+        }
         Element twoFactorCode = request.getOptionalElement(AccountConstants.E_TWO_FACTOR_CODE);
         if (twoFactorCode == null) {
+            account.authAccount(password, Protocol.soap);
             if (account.isPrefTwoFactorAuthEnabled()) {
                 encodeAlreadyEnabled(response);
             } else {
                 TOTPCredentials newCredentials = manager.generateCredentials();
                 response.setSecret(newCredentials.getSecret());
+                try {
+                String token = AuthProvider.getAuthToken(account, Usage.ENABLE_TWO_FACTOR_AUTH).getEncoded();
+                com.zimbra.soap.account.type.AuthToken at = new com.zimbra.soap.account.type.AuthToken(token, false);
+                response.setAuthToken(at);
+                } catch (AuthTokenException e) {
+                    throw ServiceException.FAILURE("cannot generate auth token", e);
+                }
             }
         } else {
+            Element authTokenEl = request.getOptionalElement(AccountConstants.E_AUTH_TOKEN);
+            if (authTokenEl != null) {
+                AuthToken at;
+                try {
+                    at = AuthProvider.getAuthToken(authTokenEl, account);
+                } catch (AuthTokenException e) {
+                    throw AuthFailedServiceException.AUTH_FAILED("invalid auth token");
+                } try {
+                    Account authTokenAcct = AuthProvider.validateAuthToken(prov, at, false, Usage.ENABLE_TWO_FACTOR_AUTH);
+                    boolean verifyAccount = authTokenEl.getAttributeBool(AccountConstants.A_VERIFY_ACCOUNT, false);
+                    if (verifyAccount && !authTokenAcct.getId().equalsIgnoreCase(account.getId())) {
+                        throw AuthFailedServiceException.AUTH_FAILED("auth token doesn't match the named account");
+                    }
+                } finally {
+                    if (at != null) {
+                        try {
+                            at.deRegister();
+                        } catch (AuthTokenException e) {
+                            ZimbraLog.account.warn("could not de-register two-factor authentication auth token");
+                        }
+                    }
+                }
+            } else if (password != null) {
+                account.authAccount(password, Protocol.soap);
+            } else {
+                throw AuthFailedServiceException.AUTH_FAILED("auth token and password missing");
+            }
             manager.authenticateTOTP(twoFactorCode.getText());
             manager.enableTwoFactorAuth();
             response.setScratchCodes(manager.getScratchCodes());

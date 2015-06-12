@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -34,6 +34,7 @@ import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.account.AuthToken.Usage;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.auth.AuthMechanism.AuthMech;
@@ -554,6 +555,32 @@ public abstract class AuthProvider {
         throw AuthProviderException.FAILURE("cannot get authtoken from account " + acct.getName());
     }
 
+    public static AuthToken getAuthToken(Account account, Usage usage) throws AuthProviderException {
+        List<AuthProvider> providers = getProviders();
+        for (AuthProvider ap : providers) {
+            try {
+                AuthToken at = ap.authToken(account, usage);
+                if (at == null) {
+                    throw AuthProviderException.FAILURE("auth provider " + ap.getName() + " returned null");
+                } else {
+                    return at;
+                }
+            } catch (AuthProviderException e) {
+                if (e.canIgnore()) {
+                    logger().debug(ap.getName() + ":" + e.getMessage());
+                } else {
+                    throw e;
+                }
+            }
+        }
+
+        throw AuthProviderException.FAILURE("cannot get authtoken from account " + account.getName());
+    }
+
+    protected AuthToken authToken(Account acct, Usage usage) throws AuthProviderException {
+        throw AuthProviderException.NOT_SUPPORTED();
+    }
+
     public static boolean allowBasicAuth(HttpServletRequest req, ZimbraServlet servlet) {
         List<AuthProvider> providers = getProviders();
         for (AuthProvider ap : providers) {
@@ -576,8 +603,13 @@ public abstract class AuthProvider {
 
     public static Account validateAuthToken(Provisioning prov, AuthToken at,
             boolean addToLoggingContext) throws ServiceException {
+        return validateAuthToken(prov, at, addToLoggingContext, Usage.AUTH);
+    }
+
+    public static Account validateAuthToken(Provisioning prov, AuthToken at,
+            boolean addToLoggingContext, Usage usage) throws ServiceException {
         try {
-            return validateAuthTokenInternal(prov, at, addToLoggingContext);
+            return validateAuthTokenInternal(prov, at, addToLoggingContext, usage);
         } catch (ServiceException e) {
             if (ServiceException.AUTH_EXPIRED.equals(e.getCode())) {
                 // we may not want to expose the details to malicious caller
@@ -592,11 +624,14 @@ public abstract class AuthProvider {
     }
 
     private static Account validateAuthTokenInternal(Provisioning prov, AuthToken at,
-            boolean addToLoggingContext) throws ServiceException {
+            boolean addToLoggingContext, Usage usage) throws ServiceException {
         if (prov == null) {
             prov = Provisioning.getInstance();
         }
 
+        if (at.getUsage() != usage) {
+            throw ServiceException.AUTH_EXPIRED("invalid usage value");
+        }
         if (at.isExpired()) {
             if(at.isRegistered()) {
             	try {
@@ -663,5 +698,4 @@ public abstract class AuthProvider {
 
         return acct;
     }
-
 }

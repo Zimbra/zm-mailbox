@@ -67,6 +67,7 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
     private static final String C_DIGEST = "digest";
     private static final String C_VALIDITY_VALUE  = "vv";
     private static final String C_AUTH_MECH = "am";
+    private static final String C_USAGE = "u";
     //cookie ID for keeping track of account's cookies
     private static final String C_TOKEN_ID = "tid";
     //mailbox server version where this account resides
@@ -92,6 +93,7 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
     private Integer tokenID = -1;
     private String server_version;   // version of the mailbox server where this account resides
     private boolean csrfTokenEnabled;
+    private Usage usage; // what this token will be used for
 
     @Override
     public String toString() {
@@ -184,7 +186,12 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
 
             String authMechStr = (String)map.get(C_AUTH_MECH);
             authMech = AuthMech.fromString(authMechStr);
-
+            String usageCode = (String)map.get(C_USAGE);
+            if (usageCode != null) {
+                usage = Usage.fromCode(usageCode);
+            } else {
+                usage = Usage.AUTH;
+            }
             externalUserEmail = (String)map.get(C_EXTERNAL_USER_EMAIL);
             digest = (String)map.get(C_DIGEST);
             String vv = (String)map.get(C_VALIDITY_VALUE);
@@ -223,12 +230,21 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
         this(acct, false, null);
     }
 
+    public ZimbraAuthToken(Account acct, Usage usage) {
+        this(acct, 0, false, null, null, usage);
+    }
+
     public ZimbraAuthToken(Account acct, boolean isAdmin, AuthMech authMech) {
         this(acct, 0, isAdmin, null, authMech);
     }
 
     public ZimbraAuthToken(Account acct, long expires) {
         this(acct, expires, false, null, null);
+    }
+
+    public ZimbraAuthToken(Account acct, long expires, boolean isAdmin, Account adminAcct,
+            AuthMech authMech) {
+        this(acct, expires, isAdmin, adminAcct, authMech, Usage.AUTH);
     }
 
     /**
@@ -240,11 +256,23 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
      * @throws AuthTokenException
      */
     public ZimbraAuthToken(Account acct, long expires, boolean isAdmin, Account adminAcct,
-            AuthMech authMech) {
+            AuthMech authMech, Usage usage) {
         if(expires == 0) {
-            long lifetime = isAdmin || isDomainAdmin || isDelegatedAdmin ?
-                    acct.getTimeInterval(Provisioning.A_zimbraAdminAuthTokenLifetime, DEFAULT_AUTH_LIFETIME * 1000) :
-                    acct.getTimeInterval(Provisioning.A_zimbraAuthTokenLifetime, DEFAULT_AUTH_LIFETIME * 1000);
+            long lifetime;
+            switch (usage) {
+            case ENABLE_TWO_FACTOR_AUTH:
+                lifetime = acct.getTimeInterval(Provisioning.A_zimbraTwoFactorAuthTokenLifetime, DEFAULT_TWO_FACTOR_AUTH_LIFETIME * 1000);
+                break;
+            case TWO_FACTOR_AUTH:
+                lifetime = acct.getTimeInterval(Provisioning.A_zimbraTwoFactorAuthEnablementTokenLifetime, DEFAULT_TWO_FACTOR_ENABLEMENT_AUTH_LIFETIME * 1000);
+                break;
+            case AUTH:
+            default:
+                lifetime = isAdmin || isDomainAdmin || isDelegatedAdmin ?
+                        acct.getTimeInterval(Provisioning.A_zimbraAdminAuthTokenLifetime, DEFAULT_AUTH_LIFETIME * 1000) :
+                        acct.getTimeInterval(Provisioning.A_zimbraAuthTokenLifetime, DEFAULT_AUTH_LIFETIME * 1000);
+                break;
+            }
             expires = System.currentTimeMillis() + lifetime;
         }
         accountId = acct.getId();
@@ -255,6 +283,7 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
         isDomainAdmin = isAdmin && "TRUE".equals(acct.getAttr(Provisioning.A_zimbraIsDomainAdminAccount));
         isDelegatedAdmin = isAdmin && "TRUE".equals(acct.getAttr(Provisioning.A_zimbraIsDelegatedAdminAccount));
         this.authMech = authMech;
+        this.usage = usage;
         encoded = null;
         if (acct instanceof GuestAccount) {
             type = C_TYPE_EXTERNAL_USER;
@@ -432,6 +461,9 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
                 BlobMetaData.encodeMetaData(C_AUTH_MECH, authMech.name(), encodedBuff);
             }
 
+            if (usage != null) {
+                BlobMetaData.encodeMetaData(C_USAGE, usage.getCode(), encodedBuff);
+            }
             BlobMetaData.encodeMetaData(C_TOKEN_ID, tokenID, encodedBuff);
             BlobMetaData.encodeMetaData(C_EXTERNAL_USER_EMAIL, externalUserEmail, encodedBuff);
             BlobMetaData.encodeMetaData(C_DIGEST, digest, encodedBuff);
@@ -604,6 +636,11 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
             // force re-encoding of the token
             encoded = null;
         }
+    }
+
+    @Override
+    public Usage getUsage() {
+        return usage;
     }
 
     /**

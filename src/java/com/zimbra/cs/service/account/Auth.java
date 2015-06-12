@@ -45,6 +45,7 @@ import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 import com.zimbra.cs.account.AttributeFlag;
 import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.account.AuthToken.Usage;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
@@ -107,12 +108,13 @@ public class Auth extends AccountDocumentHandler {
         }
 
         String password = request.getAttribute(AccountConstants.E_PASSWORD, null);
-
+//        Element twoFactorTokenEl = request.getOptionalElement(AccountConstants.E_TWO_FACTOR_AUTH_TOKEN);
         boolean generateDeviceId = request.getAttributeBool(AccountConstants.A_GENERATE_DEVICE_ID, false);
+        String twoFactorCode = request.getAttribute(AccountConstants.E_TWO_FACTOR_CODE, null);
         String newDeviceId = generateDeviceId? UUIDUtil.generateUUID(): null;
 
         Element authTokenEl = request.getOptionalElement(AccountConstants.E_AUTH_TOKEN);
-        if (authTokenEl != null) {
+        if (authTokenEl != null && twoFactorCode == null) {
             boolean verifyAccount = authTokenEl.getAttributeBool(AccountConstants.A_VERIFY_ACCOUNT, false);
             if (verifyAccount && acctEl == null) {
                 throw ServiceException.INVALID_REQUEST("missing required element: " + AccountConstants.E_ACCOUNT, null);
@@ -155,7 +157,6 @@ public class Auth extends AccountDocumentHandler {
             }
 
             Element preAuthEl = request.getOptionalElement(AccountConstants.E_PREAUTH);
-            String twoFactorCode = request.getAttribute(AccountConstants.E_TWO_FACTOR_CODE, null);
             Boolean registerTrustedDevice = false;
             if (acct != null && TwoFactorManager.twoFactorAuthEnabled(acct)) {
                 registerTrustedDevice = trustedToken != null? false: request.getAttributeBool(AccountConstants.A_TRUSTED_DEVICE, false);
@@ -235,24 +236,53 @@ public class Auth extends AccountDocumentHandler {
 
             // if account was auto provisioned, we had already authenticated the principal
             if (!acctAutoProvisioned) {
-                if (password != null) {
-                    if (usingTwoFactorAuth && twoFactorCode == null) {
+                boolean twoFactorAuthWithToken = usingTwoFactorAuth && authTokenEl != null;
+                if (password != null || twoFactorAuthWithToken) {
+                    // authentication logic can be reached with either a password, or a 2FA auth token
+                    if (usingTwoFactorAuth && twoFactorCode == null && password != null) {
                         int mtaAuthPort = acct.getServer().getMtaAuthPort();
                         boolean supportsAppSpecificPaswords =  acct.getServer().isFeatureAppSpecificPasswordsEnabled() && zsc.getPort() == mtaAuthPort;
-                        if (supportsAppSpecificPaswords) {
+                        if (supportsAppSpecificPaswords && password != null) {
                             // if we are here, it means we are authenticating SMTP,
                             // so app-specific passwords are accepted. Other protocols (pop, imap)
                             // doesn't touch this code, so their authentication happens in ZimbraAuth.
                             TwoFactorManager manager = new TwoFactorManager(acct);
                             manager.authenticateAppSpecificPassword(password);
                         } else {
-                            //if two-factor auth enabled but credentials not specified, throw error
                             prov.authAccount(acct, password, AuthContext.Protocol.soap, authCtxt);
-                            needTwoFactorAuth(acct);
+                            return needTwoFactorAuth(acct, zsc);
                         }
                     } else {
-                        prov.authAccount(acct, password, AuthContext.Protocol.soap, authCtxt);
+                        if (password != null) {
+                            prov.authAccount(acct, password, AuthContext.Protocol.soap, authCtxt);
+                        } else {
+                            // it's ok to not have a password if the client is using a 2FA auth token for the 2nd step of 2FA
+                            if (!twoFactorAuthWithToken) {
+                                throw ServiceException.AUTH_REQUIRED();
+                            }
+                        }
                         if (usingTwoFactorAuth) {
+                            AuthToken twoFactorToken = null;
+                            if (password == null) {
+                                try {
+                                    twoFactorToken = AuthProvider.getAuthToken(authTokenEl, acct);
+                                    Account twoFactorTokenAcct = AuthProvider.validateAuthToken(prov, twoFactorToken, false, Usage.TWO_FACTOR_AUTH);
+                                    boolean verifyAccount = authTokenEl.getAttributeBool(AccountConstants.A_VERIFY_ACCOUNT, false);
+                                    if (verifyAccount && !twoFactorTokenAcct.getId().equalsIgnoreCase(acct.getId())) {
+                                        throw new AuthTokenException("two-factor auth token doesn't match the named account");
+                                    }
+                                } catch (AuthTokenException e) {
+                                    throw AuthFailedServiceException.AUTH_FAILED("bad auth token");
+                               } finally {
+                                   if (twoFactorToken != null) {
+                                       try {
+                                        twoFactorToken.deRegister();
+                                    } catch (AuthTokenException e) {
+                                        throw ServiceException.FAILURE("cannot de-register two-factor auth token", e);
+                                    }
+                                   }
+                               }
+                            }
                             TwoFactorManager manager = new TwoFactorManager(acct);
                             if (twoFactorCode != null) {
                                 manager.authenticate(twoFactorCode);
@@ -299,16 +329,24 @@ public class Auth extends AccountDocumentHandler {
         new TwoFactorManager(account).verifyTrustedDevice(td, attrs);
     }
 
-    private void needTwoFactorAuth(Account account) throws ServiceException {
+    private Element needTwoFactorAuth(Account account, ZimbraSoapContext zsc) throws ServiceException {
         /* two cases here:
-         * 1) the user needs to provide a two-factor token
+         * 1) the user needs to provide a two-factor code.
+         *    in this case, the server returns a two-factor auth token in the response header that the client
+         *    must send back, along with the code, in order to finish the authentication process.
          * 2) the user needs to set up two-factor auth.
-         *    this can happen if it's required at the COS level but the user hasn't received a secret yet.
+         *    this can happen if it's required for the account but the user hasn't received a secret yet.
          */
         if (!TwoFactorManager.twoFactorAuthEnabled(account)) {
             throw AccountServiceException.TWO_FACTOR_SETUP_REQUIRED();
+        } else {
+            Element response = zsc.createElement(AccountConstants.AUTH_RESPONSE);
+            AuthToken twoFactorToken = AuthProvider.getAuthToken(account, Usage.TWO_FACTOR_AUTH);
+            response.addUniqueElement(AccountConstants.E_TWO_FACTOR_AUTH_REQUIRED).setText("true");
+            response.addAttribute(AccountConstants.E_LIFETIME, twoFactorToken.getExpires() - System.currentTimeMillis(), Element.Disposition.CONTENT);
+            twoFactorToken.encodeAuthResp(response, false);
+            return response;
         }
-        throw ServiceException.TWO_FACTOR_AUTH_REQUIRED();
     }
 
     private Element doResponse(Element request, AuthToken at, ZimbraSoapContext zsc,
