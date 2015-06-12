@@ -8214,7 +8214,7 @@ TODO: delete them permanently from here
 
 <attr id="1636" name="zimbraFeatureTouchClientEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="8.5.0">
   <defaultCOSValue>FALSE</defaultCOSValue>
-  <desc>Whether to allow a user to access touch client</desc>
+  <desc>Whether to allow a user to access touch client. Note: touch client is a Network feature, this attribute is effective only if touch client is permitted by license.</desc>
 </attr>
 
 <attr id="1637" name="zimbraCommunityAPIClientID" type="string" cardinality="single" optionalIn="globalConfig,domain,cos,account" flags="domainInherited,accountCosDomainInherited" since="8.5.0">
