@@ -8436,7 +8436,7 @@ TODO: delete them permanently from here
   <desc>Show Chats folder even if zimbraFeatureIMEnabled is false</desc>
 </attr>
 
-<attr id="1819" name="zimbraPrefTwoFactorAuthEnabled" type="boolean" cardinality="single" optionalIn="account" flags="domainAdminModifiable" since="8.7.0,9.0.0">
+<attr id="1819" name="zimbraTwoFactorAuthEnabled" type="boolean" cardinality="single" optionalIn="account" flags="domainAdminModifiable" since="8.7.0,9.0.0">
   <desc>whether two-factor authentication is enabled by the user</desc>
 </attr>
 

@@ -55,7 +55,7 @@ public class TwoFactorManager {
     /* Determine if a second factor is necessary for authenticating this account */
     public static boolean twoFactorAuthRequired(Account account) throws ServiceException {
         boolean isRequired = account.isFeatureTwoFactorAuthRequired();
-        boolean isUserEnabled = account.isPrefTwoFactorAuthEnabled();
+        boolean isUserEnabled = account.isTwoFactorAuthEnabled();
         return isUserEnabled || isRequired;
     }
 
@@ -311,7 +311,7 @@ public class TwoFactorManager {
     }
 
     public TOTPCredentials generateCredentials() throws ServiceException {
-        if (!account.isPrefTwoFactorAuthEnabled()) {
+        if (!account.isTwoFactorAuthEnabled()) {
             TOTPCredentials creds = generateNewCredentials();
             storeCredentials(creds);
             return creds;
@@ -322,7 +322,7 @@ public class TwoFactorManager {
     }
 
     public void enableTwoFactorAuth() throws ServiceException {
-        account.setPrefTwoFactorAuthEnabled(true);
+        account.setTwoFactorAuthEnabled(true);
     }
 
     public boolean disableTwoFactorAuth() throws ServiceException {
@@ -332,8 +332,8 @@ public class TwoFactorManager {
     public boolean disableTwoFactorAuth(boolean deleteCredentials) throws ServiceException {
         if (account.isFeatureTwoFactorAuthRequired()) {
             throw ServiceException.CANNOT_DISABLE_TWO_FACTOR_AUTH();
-        } else if (account.isPrefTwoFactorAuthEnabled()) {
-            account.setPrefTwoFactorAuthEnabled(false);
+        } else if (account.isTwoFactorAuthEnabled()) {
+            account.setTwoFactorAuthEnabled(false);
             if (deleteCredentials) {
                 account.setTwoFactorAuthSecret(null);
                 account.setTwoFactorAuthScratchCodes(null);
@@ -463,7 +463,7 @@ public class TwoFactorManager {
     public void verifyTrustedDevice(TrustedDeviceToken token, Map<String, Object> attrs) throws ServiceException {
         ZimbraLog.account.debug("verifying trusted device");
         TrustedDevice td = TrustedDevice.byTrustedToken(account, token);
-        if (!td.verify(attrs)) {
+        if (td == null || !td.verify(attrs)) {
             throw AuthFailedServiceException.TWO_FACTOR_AUTH_FAILED("trusted device cannot be verified");
         }
     }
