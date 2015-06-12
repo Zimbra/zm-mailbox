@@ -12829,14 +12829,6 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefTrashLifetime = "zimbraPrefTrashLifetime";
 
     /**
-     * whether two-factor authentication is enabled by the user
-     *
-     * @since ZCS 8.7.0,9.0.0
-     */
-    @ZAttr(id=1819)
-    public static final String A_zimbraPrefTwoFactorAuthEnabled = "zimbraPrefTwoFactorAuthEnabled";
-
-    /**
      * Deprecated since: 5.0. no longer used in account or identity. Orig
      * desc: TRUE if we this identity should get settings from the default
      * identity
@@ -15037,6 +15029,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1434)
     public static final String A_zimbraTouchJSErrorTrackingKey = "zimbraTouchJSErrorTrackingKey";
+
+    /**
+     * whether two-factor authentication is enabled by the user
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=1819)
+    public static final String A_zimbraTwoFactorAuthEnabled = "zimbraTwoFactorAuthEnabled";
 
     /**
      * Lifetime of auth tokens provisioned for completing the 2nd stage of
